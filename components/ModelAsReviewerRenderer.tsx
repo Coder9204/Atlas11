@@ -1,138 +1,273 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+'use client';
 
-// Game event interface for AI coach integration
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// -----------------------------------------------------------------------------
+// Model as Reviewer - Complete 10-Phase Game
+// How independent critique catches bugs that generation misses
+// -----------------------------------------------------------------------------
+
 export interface GameEvent {
-  type: 'phase_change' | 'prediction' | 'interaction' | 'answer' | 'completion';
-  phase?: string;
-  data?: Record<string, unknown>;
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
   timestamp: number;
 }
 
 interface ModelAsReviewerRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: string;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
-// Phase type for internal state management
-type MRPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const validPhases: MRPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseOrder: MRPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseLabels: Record<MRPhase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Explore',
-  review: 'Review',
-  twist_predict: 'Twist',
-  twist_play: 'Test Twist',
-  twist_review: 'Twist Review',
-  transfer: 'Apply',
-  test: 'Test',
-  mastery: 'Mastery',
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#f59e0b',
-  accentGlow: 'rgba(245, 158, 11, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  review: {
-    pass: '#22c55e',
-    fail: '#ef4444',
-    warning: '#f59e0b',
-    info: '#3b82f6',
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A developer asks an LLM to write a kinetic energy function. It produces: energy = mass * velocity * velocity. The code compiles and runs.",
+    question: "What fundamental error does this code contain?",
+    options: [
+      { id: 'a', label: "The variable names are incorrect" },
+      { id: 'b', label: "Missing the 1/2 factor - KE = (1/2)mv^2, not mv^2", correct: true },
+      { id: 'c', label: "Velocity should be cubed, not squared" },
+      { id: 'd', label: "Mass and velocity should be added, not multiplied" }
+    ],
+    explanation: "Kinetic energy is KE = (1/2)mv^2. LLMs often produce formulas that look correct but have subtle dimensional or constant errors. A review pass checking 'unit consistency' would catch this."
   },
-};
+  {
+    scenario: "An AI generates F = mass + acceleration as a force calculation. A second review pass with prompt 'Check for physics law violations' immediately flags this.",
+    question: "Why did the review pass catch what generation missed?",
+    options: [
+      { id: 'a', label: "The review model is smarter than the generation model" },
+      { id: 'b', label: "Review mode optimizes for finding errors, not for producing plausible code", correct: true },
+      { id: 'c', label: "Review always catches every error" },
+      { id: 'd', label: "The same model cannot be used for both generation and review" }
+    ],
+    explanation: "Generation optimizes for plausibility - code that looks correct. Review mode with specific prompts optimizes for error detection. Different objectives reveal different issues."
+  },
+  {
+    scenario: "A momentum calculation returns 0 for negative velocities. The original LLM prompt was 'write a momentum calculator' without further specification.",
+    question: "What type of review check would catch this error?",
+    options: [
+      { id: 'a', label: "Unit consistency check" },
+      { id: 'b', label: "Edge case review - checking boundary conditions and unusual inputs", correct: true },
+      { id: 'c', label: "Code style check" },
+      { id: 'd', label: "Performance optimization check" }
+    ],
+    explanation: "Edge case review examines boundary conditions like negative values, zero, and extreme inputs. Momentum can be negative (opposite direction), so excluding negative velocities is a logic error."
+  },
+  {
+    scenario: "A financial calculation AI produces code that sometimes creates money from nothing by adding interest incorrectly. The error was not caught by the same model in review mode.",
+    question: "What additional review strategy would help catch this?",
+    options: [
+      { id: 'a', label: "Using prettier code formatting" },
+      { id: 'b', label: "Cross-checking with a different model or static analysis tool", correct: true },
+      { id: 'c', label: "Running the code faster" },
+      { id: 'd', label: "Using a smaller model" }
+    ],
+    explanation: "Different models have different blind spots. Cross-checking with a different model or tool (like a static analyzer) reduces correlated mistakes that same-model review might miss."
+  },
+  {
+    scenario: "A team implements 'Review for units, conservation laws, edge cases' as a standard second pass for all physics code. Bug rates drop by 60%.",
+    question: "Why is this checklist-based approach effective?",
+    options: [
+      { id: 'a', label: "It makes the review take longer" },
+      { id: 'b', label: "It directs focused attention to common error categories systematically", correct: true },
+      { id: 'c', label: "Checklists are always better than free-form review" },
+      { id: 'd', label: "The specific words in the checklist don't matter" }
+    ],
+    explanation: "Checklist-based review systematically verifies specific criteria. Each item (units, conservation, edge cases) targets a known category of errors, ensuring comprehensive coverage."
+  },
+  {
+    scenario: "Model A generates API code. Model B reviews it and finds authentication edge cases. Model A reviews Model B's fixes and finds input validation issues. Neither found all bugs alone.",
+    question: "What does this demonstrate about multi-model review?",
+    options: [
+      { id: 'a', label: "Multiple models are always slower" },
+      { id: 'b', label: "Different models catch different errors - cross-checking improves coverage", correct: true },
+      { id: 'c', label: "The models are randomly guessing" },
+      { id: 'd', label: "One model is clearly superior" }
+    ],
+    explanation: "Different models have different training data and architectures, leading to different blind spots. Cross-checking leverages these differences for better overall coverage."
+  },
+  {
+    scenario: "A race condition bug in concurrent code was not caught by any single-model review pass but was found when the prompt explicitly said 'identify potential race conditions and deadlocks'.",
+    question: "What principle does this illustrate?",
+    options: [
+      { id: 'a', label: "Race conditions are impossible to find" },
+      { id: 'b', label: "Specific prompts focus the model's attention on specific error types", correct: true },
+      { id: 'c', label: "Only humans can find concurrency bugs" },
+      { id: 'd', label: "Random prompts work equally well" }
+    ],
+    explanation: "Directed prompts focus the model's reasoning on specific concerns. Without explicit focus, the model may not allocate attention to complex issues like race conditions."
+  },
+  {
+    scenario: "A review pass that finds no issues is presented to the development team. An experienced engineer asks 'Was the checklist comprehensive enough?'",
+    question: "Why is this a valid concern?",
+    options: [
+      { id: 'a', label: "All code must have bugs" },
+      { id: 'b', label: "A clean review might indicate incomplete checklist rather than perfect code", correct: true },
+      { id: 'c', label: "Review passes should always find exactly 3 bugs" },
+      { id: 'd', label: "The engineer is being unnecessarily skeptical" }
+    ],
+    explanation: "A clean review should prompt reflection on checklist completeness. If the checklist didn't cover relevant error types for this domain, bugs might still exist undetected."
+  },
+  {
+    scenario: "Company A uses single-pass generation. Company B adds review passes with domain-specific checklists. After 6 months, Company B has 40% fewer production incidents.",
+    question: "What is the key insight from this comparison?",
+    options: [
+      { id: 'a', label: "Company B's developers are smarter" },
+      { id: 'b', label: "Independent critique in review mode catches errors that generation mode misses", correct: true },
+      { id: 'c', label: "Company A should use a different model" },
+      { id: 'd', label: "Production incidents are unpredictable" }
+    ],
+    explanation: "The model-as-reviewer pattern - using a separate pass focused on error detection - systematically catches bugs that single-pass generation tends to produce but not notice."
+  },
+  {
+    scenario: "A scientific simulation produces results that look reasonable but violate conservation of energy. The bug was a subtle sign error in the integration routine.",
+    question: "Which review prompt would most likely catch this?",
+    options: [
+      { id: 'a', label: "Make the code run faster" },
+      { id: 'b', label: "Verify that conservation laws are satisfied in all calculations", correct: true },
+      { id: 'c', label: "Add more comments to the code" },
+      { id: 'd', label: "Rename variables for clarity" }
+    ],
+    explanation: "Conservation law verification is essential for physics code. A review pass specifically checking that energy, momentum, and mass are conserved catches non-physical results."
+  }
+];
 
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
+const realWorldApps = [
+  {
+    icon: 'Physics',
+    title: 'Scientific Computing',
+    short: 'Catching dimension and conservation errors',
+    tagline: 'Physics simulations require mathematical precision',
+    description: 'Physics simulations demand dimensional consistency and conservation law adherence. A single missing factor or wrong operator can produce plausible-looking but completely wrong results.',
+    connection: 'Review prompts like "check units and conservation laws" catch subtle errors like missing 1/2 factors in kinetic energy, wrong operators (+ vs *), and violations of energy conservation.',
+    howItWorks: 'After generation, a review pass verifies: (1) All terms have consistent units, (2) Conservation laws are satisfied, (3) Edge cases like negative values are handled, (4) Numerical stability is maintained.',
+    stats: [
+      { value: '60%', label: 'Bugs caught by units check', icon: 'Measure' },
+      { value: '3x', label: 'Fewer physics errors', icon: 'Target' },
+      { value: '$2M', label: 'Saved in sim reruns', icon: 'Dollar' }
+    ],
+    examples: ['NASA simulations', 'CERN data analysis', 'Climate models', 'Fusion research'],
+    companies: ['NVIDIA SimNet', 'Ansys', 'COMSOL', 'OpenFOAM'],
+    futureImpact: 'AI-assisted physics verification will become standard, with specialized review models trained on physics principles.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: 'Bank',
+    title: 'Financial Calculations',
+    short: 'Preventing money-from-nothing errors',
+    tagline: 'Financial code must handle every edge case',
+    description: 'Financial systems must handle edge cases like zero balances, negative values, rounding errors, and overflow conditions. Subtle bugs can create or destroy money.',
+    connection: 'Review checklists for financial code include: bounds checking, precision handling, audit trail requirements, and regulatory compliance. Cross-checking catches rounding errors same-model review misses.',
+    howItWorks: 'Review passes verify: (1) No negative balances where prohibited, (2) Proper rounding modes for currency, (3) Overflow protection, (4) Transaction atomicity, (5) Audit logging.',
+    stats: [
+      { value: '$4.5B', label: 'Annual bug losses prevented', icon: 'Shield' },
+      { value: '99.99%', label: 'Transaction accuracy', icon: 'Check' },
+      { value: '45%', label: 'Faster audit compliance', icon: 'Clock' }
+    ],
+    examples: ['Trading systems', 'Payment processing', 'Risk calculations', 'Tax computations'],
+    companies: ['Stripe', 'Bloomberg', 'Two Sigma', 'Citadel'],
+    futureImpact: 'Regulatory bodies may require AI review passes for financial code, creating new compliance standards.',
+    color: '#10B981'
+  },
+  {
+    icon: 'API',
+    title: 'API Design',
+    short: 'Covering failure modes systematically',
+    tagline: 'APIs must handle invalid inputs gracefully',
+    description: 'APIs must handle invalid inputs, rate limits, authentication failures, and error conditions. Generation tends to focus on the happy path, leaving edge cases unhandled.',
+    connection: 'Review prompts asking "what happens with invalid input? Missing auth? Rate limited?" force consideration of failure modes that would otherwise become production incidents.',
+    howItWorks: 'Review verifies: (1) All inputs are validated, (2) Error responses are informative, (3) Authentication is checked before action, (4) Rate limiting is enforced, (5) Timeouts are handled.',
+    stats: [
+      { value: '70%', label: 'Fewer security vulns', icon: 'Lock' },
+      { value: '3hr', label: 'Mean time to detect', icon: 'Bell' },
+      { value: '99.9%', label: 'Uptime improvement', icon: 'Server' }
+    ],
+    examples: ['REST APIs', 'GraphQL endpoints', 'Webhooks', 'OAuth flows'],
+    companies: ['Twilio', 'Plaid', 'Auth0', 'Postman'],
+    futureImpact: 'API contracts will be automatically verified against implementation, with review passes checking for specification compliance.',
+    color: '#3B82F6'
+  },
+  {
+    icon: 'Threads',
+    title: 'Concurrent Code',
+    short: 'Finding race conditions and deadlocks',
+    tagline: 'Concurrency bugs hide until production',
+    description: 'Multi-threaded code has subtle race conditions and deadlock risks that are notoriously hard to spot. These bugs often appear only under production load.',
+    connection: 'Directed review prompts like "identify potential race conditions and deadlocks" apply focused attention that generation mode lacks. Different models may spot different threading issues.',
+    howItWorks: 'Review checks: (1) Shared state is properly synchronized, (2) Lock ordering prevents deadlock, (3) Atomic operations are used correctly, (4) Thread-safe data structures are used.',
+    stats: [
+      { value: '85%', label: 'Race conditions found', icon: 'Zap' },
+      { value: '12x', label: 'Faster than manual review', icon: 'Fast' },
+      { value: '50%', label: 'Less debugging time', icon: 'Bug' }
+    ],
+    examples: ['Database engines', 'Game servers', 'Trading platforms', 'Real-time systems'],
+    companies: ['Intel TBB', 'Uber', 'Discord', 'Epic Games'],
+    futureImpact: 'Static analysis tools will integrate with LLM review for comprehensive concurrency verification.',
+    color: '#F59E0B'
+  }
+];
+
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
 const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
   onGameEvent,
   gamePhase,
   onCorrectAnswer,
-  onIncorrectAnswer,
+  onIncorrectAnswer
 }) => {
-  // Internal phase state management
-  const getInitialPhase = (): MRPhase => {
-    if (gamePhase && validPhases.includes(gamePhase)) {
-      return gamePhase;
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
     }
     return 'hook';
   };
 
-  const [phase, setPhase] = useState<MRPhase>(getInitialPhase);
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-
-  // Navigation state to prevent double-clicks
-  const isNavigating = useRef(false);
-  const lastClickRef = useRef(0);
-
-  // Sync with external gamePhase prop if provided (for resume functionality)
-  useEffect(() => {
-    if (gamePhase && validPhases.includes(gamePhase) && gamePhase !== phase) {
-      setPhase(gamePhase);
-    }
-  }, [gamePhase]);
-
-  // Check for mobile viewport
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Emit game events for AI coach integration
-  const emitGameEvent = useCallback((type: GameEvent['type'], data?: Record<string, unknown>) => {
-    if (onGameEvent) {
-      onGameEvent({
-        type,
-        phase,
-        data,
-        timestamp: Date.now(),
-      });
-    }
-  }, [onGameEvent, phase]);
-
-  // Navigation function with debouncing
-  const goToPhase = useCallback((targetPhase: MRPhase) => {
-    const now = Date.now();
-    if (isNavigating.current || now - lastClickRef.current < 300) {
-      return;
-    }
-    lastClickRef.current = now;
-    isNavigating.current = true;
-
-    setPhase(targetPhase);
-    emitGameEvent('phase_change', { from: phase, to: targetPhase });
-
-    setTimeout(() => {
-      isNavigating.current = false;
-    }, 300);
-  }, [phase, emitGameEvent]);
 
   // Simulation state
   const [useReviewPass, setUseReviewPass] = useState(false);
@@ -142,14 +277,26 @@ const ModelAsReviewerRenderer: React.FC<ModelAsReviewerRendererProps> = ({
   const [checkBounds, setCheckBounds] = useState(false);
   const [useCrossChecker, setUseCrossChecker] = useState(false);
 
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Sample code with hidden bugs
   const codeSample = {
@@ -169,19 +316,20 @@ def calculate_momentum(mass, velocity):
         return momentum
     return 0`,
     bugs: [
-      { line: 3, type: 'units', description: 'Missing 1/2 factor: KE = (1/2)mv^2, not mv^2' },
-      { line: 8, type: 'logic', description: 'Using + instead of *: F = m*a, not m+a' },
-      { line: 12, type: 'edge_case', description: 'Negative velocity excluded: momentum can be negative' },
+      { line: 3, type: 'units', description: 'Missing 1/2 factor: KE = (1/2)mv^2' },
+      { line: 8, type: 'logic', description: 'Using + instead of *: F = m*a' },
+      { line: 12, type: 'edge_case', description: 'Negative velocity excluded' }
     ]
   };
 
+  // Calculate review effectiveness
   const calculateReviewScore = useCallback(() => {
     let detected = 0;
-    let total = codeSample.bugs.length;
+    const total = codeSample.bugs.length;
 
-    if (checkUnits) detected++; // Catches the 1/2 factor
-    if (checkConservation) detected++; // Catches F=ma error
-    if (checkEdgeCases) detected++; // Catches negative velocity
+    if (checkUnits) detected++;
+    if (checkConservation) detected++;
+    if (checkEdgeCases) detected++;
 
     const reviewEffectiveness = (detected / total) * 100;
     const crossCheckBonus = useCrossChecker ? 20 : 0;
@@ -194,1069 +342,611 @@ def calculate_momentum(mass, velocity):
         units: checkUnits,
         conservation: checkConservation,
         edgeCases: checkEdgeCases,
-        bounds: checkBounds,
+        bounds: checkBounds
       }
     };
-  }, [checkUnits, checkConservation, checkEdgeCases, checkBounds, useCrossChecker]);
+  }, [checkUnits, checkConservation, checkEdgeCases, checkBounds, useCrossChecker, codeSample.bugs.length]);
 
-  const predictions = [
-    { id: 'perfect', label: 'One pass is enough - modern LLMs can write correct code' },
-    { id: 'review_helps', label: 'A second review pass catches errors that slip through in generation' },
-    { id: 'no_difference', label: 'Review passes do not help - the same model makes the same mistakes' },
-    { id: 'manual_only', label: 'Only human review can catch AI errors' },
-  ];
-
-  const twistPredictions = [
-    { id: 'same_model', label: 'Using the same model twice is sufficient for review' },
-    { id: 'different_models', label: 'Different models/tools catch different errors - cross-checking improves coverage' },
-    { id: 'more_expensive', label: 'Using multiple models is too expensive to be practical' },
-    { id: 'one_is_best', label: 'One good model is better than two mediocre ones' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'Scientific Computing',
-      description: 'Physics simulations require dimensional consistency and conservation law adherence.',
-      question: 'Why add "check units and conservation laws" to review prompts?',
-      answer: 'LLMs often produce formulas that look correct but have subtle dimensional errors (e.g., E=mv instead of E=mv^2/2). A review pass specifically checking units catches these. Conservation law checks catch non-physical results like energy appearing from nowhere.',
-    },
-    {
-      title: 'Financial Calculations',
-      description: 'Financial code must handle edge cases like zero balances, negative values, and rounding.',
-      question: 'What review checklist items matter most for financial code?',
-      answer: 'Bounds checking (no negative balances where prohibited), precision handling (rounding modes), edge cases (zero division, overflow), and audit trail requirements. A second pass with "check for financial edge cases" catches many subtle bugs.',
-    },
-    {
-      title: 'API Design',
-      description: 'APIs must handle invalid inputs, rate limits, and error conditions.',
-      question: 'How does a review pass improve API code quality?',
-      answer: 'Generation focuses on the happy path. A review pass asking "what happens with invalid input? Missing auth? Rate limited?" forces consideration of failure modes that would otherwise become production incidents.',
-    },
-    {
-      title: 'Concurrent Code',
-      description: 'Multi-threaded code has subtle race conditions and deadlock risks.',
-      question: 'Why is review especially valuable for concurrent code?',
-      answer: 'Concurrency bugs are notoriously hard to spot. A review pass checking "identify potential race conditions and deadlocks" applies focused attention that generation mode often lacks. Different models may spot different threading issues.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'Why can one-pass LLM code generation produce plausible nonsense?',
-      options: [
-        { text: 'LLMs are unintelligent', correct: false },
-        { text: 'Generation optimizes for plausibility, not correctness - review forces verification', correct: true },
-        { text: 'Code is too hard for AI', correct: false },
-        { text: 'One pass is always enough', correct: false },
-      ],
-    },
-    {
-      question: 'What does "independent critique" mean in the context of LLM review?',
-      options: [
-        { text: 'Criticism from a human', correct: false },
-        { text: 'A separate pass focused on finding errors, not defending the code', correct: true },
-        { text: 'Using a competitor product', correct: false },
-        { text: 'Running the code to find bugs', correct: false },
-      ],
-    },
-    {
-      question: 'A review prompt should check for "unit consistency." This catches errors like:',
-      options: [
-        { text: 'Typos in variable names', correct: false },
-        { text: 'Mixing meters and feet, or missing dimensional factors like 1/2 in formulas', correct: true },
-        { text: 'Code style violations', correct: false },
-        { text: 'Performance issues', correct: false },
-      ],
-    },
-    {
-      question: 'Why check for "conservation laws" in physics code review?',
-      options: [
-        { text: 'It is a legal requirement', correct: false },
-        { text: 'It catches non-physical results where energy, momentum, or mass appear/disappear', correct: true },
-        { text: 'Conservation is just a naming convention', correct: false },
-        { text: 'Only physicists need to worry about this', correct: false },
-      ],
-    },
-    {
-      question: 'Edge case review is important because:',
-      options: [
-        { text: 'Edge cases are rare and unimportant', correct: false },
-        { text: 'Generation often focuses on typical cases, missing boundary conditions', correct: true },
-        { text: 'Edge cases only matter in production', correct: false },
-        { text: 'Users never trigger edge cases', correct: false },
-      ],
-    },
-    {
-      question: 'The prompt "Review for unit consistency, conservation laws, edge cases" is effective because:',
-      options: [
-        { text: 'It makes responses longer', correct: false },
-        { text: 'It directs focused attention to common error categories', correct: true },
-        { text: 'It sounds professional', correct: false },
-        { text: 'These are the only possible errors', correct: false },
-      ],
-    },
-    {
-      question: 'Why use different models/tools as cross-checkers?',
-      options: [
-        { text: 'To increase costs', correct: false },
-        { text: 'Different models have different blind spots - cross-checking reduces correlated mistakes', correct: true },
-        { text: 'All models are identical', correct: false },
-        { text: 'Cross-checking is never worth the effort', correct: false },
-      ],
-    },
-    {
-      question: 'A "checklist-based review" works by:',
-      options: [
-        { text: 'Randomly checking code', correct: false },
-        { text: 'Systematically verifying specific criteria one by one', correct: true },
-        { text: 'Checking only what looks suspicious', correct: false },
-        { text: 'Trusting the original output', correct: false },
-      ],
-    },
-    {
-      question: 'Independent critique reduces correlated mistakes because:',
-      options: [
-        { text: 'The same model cannot be wrong twice', correct: false },
-        { text: 'Review mode looks for errors, not defends choices - different perspective catches different bugs', correct: true },
-        { text: 'Mistakes are always random', correct: false },
-        { text: 'Critique is always correct', correct: false },
-      ],
-    },
-    {
-      question: 'A review pass that finds no issues should:',
-      options: [
-        { text: 'Be trusted completely', correct: false },
-        { text: 'Prompt consideration of whether the checklist was comprehensive enough', correct: true },
-        { text: 'Indicate the code is perfect', correct: false },
-        { text: 'Be repeated until issues are found', correct: false },
-      ],
-    },
-  ];
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#F59E0B',
+    accentGlow: 'rgba(245, 158, 11, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    review: {
+      pass: '#22c55e',
+      fail: '#ef4444',
+      warning: '#f59e0b',
+      info: '#3b82f6'
+    }
   };
 
-  const submitTest = () => {
-    let score = 0;
-    testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
-    if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 }
   };
 
-  const renderVisualization = (interactive: boolean, showCrossCheck: boolean = false) => {
-    const width = 700;
-    const height = 480;
-    const score = calculateReviewScore();
-
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ borderRadius: '16px', maxWidth: '750px' }}
-        >
-          {/* ============= COMPREHENSIVE DEFS SECTION ============= */}
-          <defs>
-            {/* Premium background gradient with depth */}
-            <linearGradient id="marvLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a0f1a" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a0f1a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
-
-            {/* Code editor panel gradient */}
-            <linearGradient id="marvCodePanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="20%" stopColor="#0f172a" />
-              <stop offset="80%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* AI Model housing gradient with metallic look */}
-            <linearGradient id="marvAIModelMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="25%" stopColor="#475569" />
-              <stop offset="50%" stopColor="#64748b" />
-              <stop offset="75%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* Review checklist panel gradient */}
-            <linearGradient id="marvChecklistGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.9" />
-              <stop offset="30%" stopColor="#0c4a6e" stopOpacity="0.7" />
-              <stop offset="70%" stopColor="#164e63" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.9" />
-            </linearGradient>
-
-            {/* Results panel gradient */}
-            <linearGradient id="marvResultsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1f2937" />
-              <stop offset="50%" stopColor="#111827" />
-              <stop offset="100%" stopColor="#1f2937" />
-            </linearGradient>
-
-            {/* Success status radial gradient */}
-            <radialGradient id="marvSuccessGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="1" />
-              <stop offset="30%" stopColor="#059669" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#047857" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#064e3b" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Error status radial gradient */}
-            <radialGradient id="marvErrorGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
-              <stop offset="30%" stopColor="#dc2626" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#b91c1c" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Warning status radial gradient */}
-            <radialGradient id="marvWarningGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
-              <stop offset="30%" stopColor="#d97706" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#b45309" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#78350f" stopOpacity="0" />
-            </radialGradient>
-
-            {/* AI processing radial gradient */}
-            <radialGradient id="marvAIProcessGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="1" />
-              <stop offset="30%" stopColor="#7c3aed" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#6d28d9" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#4c1d95" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Review pass active indicator gradient */}
-            <radialGradient id="marvReviewActiveGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="1" />
-              <stop offset="30%" stopColor="#0891b2" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#0e7490" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#155e75" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Effectiveness meter gradient */}
-            <linearGradient id="marvEffectivenessGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="33%" stopColor="#f59e0b" />
-              <stop offset="66%" stopColor="#84cc16" />
-              <stop offset="100%" stopColor="#10b981" />
-            </linearGradient>
-
-            {/* Cross-checker model gradient */}
-            <linearGradient id="marvCrossCheckGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.3" />
-            </linearGradient>
-
-            {/* Connection beam gradient */}
-            <linearGradient id="marvConnectionBeam" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
-              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
-              <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Bug indicator pulse gradient */}
-            <radialGradient id="marvBugPulse" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
-              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Glow filter for success elements */}
-            <filter id="marvSuccessBlur" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Glow filter for error/bug elements */}
-            <filter id="marvErrorBlur" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* AI processing glow filter */}
-            <filter id="marvAIGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Soft inner shadow for panels */}
-            <filter id="marvInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            {/* Status indicator pulse animation */}
-            <filter id="marvPulseGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Subtle grid pattern for background */}
-            <pattern id="marvLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-            </pattern>
-          </defs>
-
-          {/* ============= PREMIUM BACKGROUND ============= */}
-          <rect width={width} height={height} fill="url(#marvLabBg)" />
-          <rect width={width} height={height} fill="url(#marvLabGrid)" />
-
-          {/* Title with premium styling */}
-          <text x={width/2} y={32} fill={colors.textPrimary} fontSize={18} fontWeight="bold" textAnchor="middle" letterSpacing="0.5">
-            AI Code Review Dashboard
-          </text>
-          <text x={width/2} y={50} fill={colors.textMuted} fontSize={11} textAnchor="middle">
-            Model-as-Reviewer Pattern Visualization
-          </text>
-
-          {/* ============= CODE PANEL WITH PREMIUM STYLING ============= */}
-          <g transform="translate(20, 65)">
-            {/* Panel background with gradient */}
-            <rect x={0} y={0} width={280} height={220} rx={12} fill="url(#marvCodePanelGrad)" stroke="#334155" strokeWidth="1" />
-
-            {/* Panel header */}
-            <rect x={0} y={0} width={280} height={28} rx={12} fill="#1e293b" />
-            <rect x={0} y={14} width={280} height={14} fill="#1e293b" />
-
-            {/* Window controls */}
-            <circle cx={16} cy={14} r={5} fill="#ef4444" />
-            <circle cx={34} cy={14} r={5} fill="#f59e0b" />
-            <circle cx={52} cy={14} r={5} fill="#10b981" />
-
-            <text x={140} y={18} fill={colors.textSecondary} fontSize={11} fontWeight="600" textAnchor="middle">
-              physics_calculations.py
-            </text>
-
-            {/* Code lines with syntax highlighting */}
-            {codeSample.code.split('\n').slice(0, 14).map((line, i) => {
-              const hasBug = codeSample.bugs.some(b => b.line === i + 1);
-              const bugDetected = hasBug && useReviewPass && (
-                (i + 1 === 3 && checkUnits) ||
-                (i + 1 === 8 && checkConservation) ||
-                (i + 1 === 12 && checkEdgeCases)
-              );
-              const bugHighlighted = hasBug && useReviewPass && !bugDetected;
-
-              return (
-                <g key={i}>
-                  {/* Line number background */}
-                  <rect x={5} y={35 + i * 13} width={25} height={12} fill="rgba(0,0,0,0.3)" />
-                  <text x={17} y={44 + i * 13} fill={colors.textMuted} fontSize={8} textAnchor="middle" fontFamily="monospace">
-                    {i + 1}
-                  </text>
-
-                  {/* Bug highlight background */}
-                  {bugDetected && (
-                    <rect
-                      x={32}
-                      y={34 + i * 13}
-                      width={243}
-                      height={13}
-                      fill="rgba(239, 68, 68, 0.25)"
-                      rx={2}
-                    />
-                  )}
-                  {bugHighlighted && (
-                    <rect
-                      x={32}
-                      y={34 + i * 13}
-                      width={243}
-                      height={13}
-                      fill="rgba(245, 158, 11, 0.15)"
-                      rx={2}
-                    />
-                  )}
-
-                  {/* Code text */}
-                  <text
-                    x={38}
-                    y={44 + i * 13}
-                    fill={bugDetected ? colors.error : bugHighlighted ? colors.warning : line.startsWith('#') || line.includes('#') ? '#6b7280' : line.includes('def ') ? '#a78bfa' : colors.textMuted}
-                    fontSize={9}
-                    fontFamily="monospace"
-                  >
-                    {line.substring(0, 35)}{line.length > 35 ? '...' : ''}
-                  </text>
-
-                  {/* Bug indicator with glow */}
-                  {bugDetected && (
-                    <g filter="url(#marvErrorBlur)">
-                      <circle cx={268} cy={40 + i * 13} r={5} fill="url(#marvErrorGlow)" />
-                      <circle cx={268} cy={40 + i * 13} r={3} fill={colors.error} />
-                    </g>
-                  )}
-                </g>
-              );
-            })}
-          </g>
-
-          {/* ============= AI MODEL VISUALIZATION ============= */}
-          <g transform="translate(320, 65)">
-            {/* AI Model housing */}
-            <rect x={0} y={0} width={160} height={100} rx={12} fill="url(#marvAIModelMetal)" stroke="#475569" strokeWidth="1.5" />
-            <rect x={5} y={5} width={150} height={90} rx={10} fill="#0f172a" opacity="0.6" />
-
-            {/* AI brain visualization */}
-            <g transform="translate(80, 50)">
-              <circle r={30} fill={useReviewPass ? 'url(#marvReviewActiveGlow)' : 'rgba(100,116,139,0.3)'} filter={useReviewPass ? 'url(#marvAIGlow)' : 'none'} />
-              <circle r={20} fill={useReviewPass ? 'rgba(6,182,212,0.4)' : 'rgba(71,85,105,0.4)'} />
-              <circle r={10} fill={useReviewPass ? colors.accent : '#475569'} />
-
-              {/* Neural network lines */}
-              {[0, 60, 120, 180, 240, 300].map((angle, i) => (
-                <line
-                  key={i}
-                  x1={0} y1={0}
-                  x2={Math.cos(angle * Math.PI / 180) * 28}
-                  y2={Math.sin(angle * Math.PI / 180) * 28}
-                  stroke={useReviewPass ? '#22d3ee' : '#475569'}
-                  strokeWidth="1"
-                  opacity={useReviewPass ? 0.8 : 0.3}
-                />
-              ))}
-            </g>
-
-            <text x={80} y={95} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="600">
-              {useReviewPass ? 'REVIEWING...' : 'STANDBY'}
-            </text>
-          </g>
-
-          {/* ============= REVIEW CHECKLIST PANEL ============= */}
-          <g transform="translate(500, 65)">
-            <rect x={0} y={0} width={180} height={220} rx={12} fill="url(#marvChecklistGrad)" stroke="#0e7490" strokeWidth="1" filter="url(#marvInnerShadow)" />
-
-            {/* Panel header */}
-            <rect x={0} y={0} width={180} height={30} rx={12} fill="rgba(6,182,212,0.2)" />
-            <rect x={0} y={15} width={180} height={15} fill="rgba(6,182,212,0.2)" />
-            <text x={90} y={20} fill={colors.textPrimary} fontSize={11} fontWeight="bold" textAnchor="middle">
-              Review Checklist
-            </text>
-
-            {/* Checklist items */}
-            {[
-              { label: 'Unit Consistency', checked: checkUnits, key: 'units', icon: 'U' },
-              { label: 'Conservation Laws', checked: checkConservation, key: 'conservation', icon: 'C' },
-              { label: 'Edge Cases', checked: checkEdgeCases, key: 'edge', icon: 'E' },
-              { label: 'Bounds Checking', checked: checkBounds, key: 'bounds', icon: 'B' },
-            ].map((item, i) => (
-              <g key={item.key} transform={`translate(10, ${40 + i * 38})`}>
-                <rect
-                  x={0}
-                  y={0}
-                  width={160}
-                  height={32}
-                  fill={item.checked ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255,255,255,0.05)'}
-                  stroke={item.checked ? colors.success : 'rgba(255,255,255,0.15)'}
-                  strokeWidth={1.5}
-                  rx={8}
-                  style={{ cursor: interactive ? 'pointer' : 'default' }}
-                  onClick={interactive ? () => {
-                    if (item.key === 'units') setCheckUnits(!checkUnits);
-                    if (item.key === 'conservation') setCheckConservation(!checkConservation);
-                    if (item.key === 'edge') setCheckEdgeCases(!checkEdgeCases);
-                    if (item.key === 'bounds') setCheckBounds(!checkBounds);
-                  } : undefined}
-                />
-
-                {/* Check indicator with glow */}
-                <g filter={item.checked ? 'url(#marvSuccessBlur)' : 'none'}>
-                  <circle cx={20} cy={16} r={10} fill={item.checked ? 'url(#marvSuccessGlow)' : 'rgba(100,116,139,0.3)'} />
-                  <text x={20} y={20} fill={item.checked ? 'white' : colors.textMuted} fontSize={10} fontWeight="bold" textAnchor="middle">
-                    {item.checked ? '✓' : item.icon}
-                  </text>
-                </g>
-
-                <text x={40} y={20} fill={item.checked ? colors.success : colors.textSecondary} fontSize={11} fontWeight={item.checked ? '600' : '400'}>
-                  {item.label}
-                </text>
-              </g>
-            ))}
-
-            {/* Cross-checker option */}
-            {showCrossCheck && (
-              <g transform="translate(10, 195)">
-                <rect
-                  x={0}
-                  y={0}
-                  width={160}
-                  height={22}
-                  fill={useCrossChecker ? 'url(#marvCrossCheckGrad)' : 'rgba(255,255,255,0.05)'}
-                  stroke={useCrossChecker ? '#8b5cf6' : 'rgba(255,255,255,0.15)'}
-                  strokeWidth={1.5}
-                  rx={6}
-                  style={{ cursor: interactive ? 'pointer' : 'default' }}
-                  onClick={interactive ? () => setUseCrossChecker(!useCrossChecker) : undefined}
-                />
-                <g filter={useCrossChecker ? 'url(#marvAIGlow)' : 'none'}>
-                  <circle cx={15} cy={11} r={6} fill={useCrossChecker ? 'url(#marvAIProcessGlow)' : 'rgba(100,116,139,0.3)'} />
-                </g>
-                <text x={28} y={15} fill={useCrossChecker ? '#a78bfa' : colors.textMuted} fontSize={9} fontWeight={useCrossChecker ? '600' : '400'}>
-                  {useCrossChecker ? 'Cross-Check Active' : '+ Add Cross-Checker'}
-                </text>
-              </g>
-            )}
-          </g>
-
-          {/* ============= CONNECTION BEAM (Code -> AI -> Checklist) ============= */}
-          {useReviewPass && (
-            <g>
-              <line x1={300} y1={175} x2={320} y2={115} stroke="url(#marvConnectionBeam)" strokeWidth="3" opacity="0.8" />
-              <line x1={480} y1={115} x2={500} y2={175} stroke="url(#marvConnectionBeam)" strokeWidth="3" opacity="0.8" />
-            </g>
-          )}
-
-          {/* ============= RESULTS PANEL ============= */}
-          <g transform="translate(20, 300)">
-            <rect x={0} y={0} width={660} height={160} rx={12} fill="url(#marvResultsGrad)" stroke="#374151" strokeWidth="1" />
-
-            {/* Panel header */}
-            <rect x={0} y={0} width={660} height={32} rx={12} fill="rgba(55,65,81,0.5)" />
-            <rect x={0} y={16} width={660} height={16} fill="rgba(55,65,81,0.5)" />
-            <text x={330} y={22} fill={colors.textPrimary} fontSize={13} fontWeight="bold" textAnchor="middle">
-              Review Results & AI Feedback
-            </text>
-
-            {/* Effectiveness meter with gradient */}
-            <g transform="translate(20, 45)">
-              <text x={0} y={0} fill={colors.textSecondary} fontSize={10} fontWeight="600">Effectiveness</text>
-              <rect x={0} y={8} width={280} height={24} rx={6} fill="rgba(0,0,0,0.4)" />
-              <rect x={2} y={10} width={276} height={20} rx={5} fill="rgba(255,255,255,0.05)" />
-              <rect
-                x={2}
-                y={10}
-                width={Math.max(0, (score.effectiveness / 100) * 276)}
-                height={20}
-                rx={5}
-                fill={score.effectiveness > 80 ? colors.success : score.effectiveness > 50 ? colors.warning : colors.error}
-                filter={score.effectiveness > 0 ? 'url(#marvPulseGlow)' : 'none'}
-              />
-              <text x={140} y={25} fill={colors.textPrimary} fontSize={12} fontWeight="bold" textAnchor="middle">
-                {score.effectiveness.toFixed(0)}%
-              </text>
-            </g>
-
-            {/* Bug detection status with visual indicators */}
-            <g transform="translate(320, 45)">
-              <text x={0} y={0} fill={colors.textSecondary} fontSize={10} fontWeight="600">Bugs Detected</text>
-              <g transform="translate(0, 12)">
-                {[0, 1, 2].map((i) => (
-                  <g key={i} transform={`translate(${i * 35}, 0)`}>
-                    <circle
-                      cx={12} cy={12} r={12}
-                      fill={i < score.detected ? 'url(#marvErrorGlow)' : 'rgba(100,116,139,0.2)'}
-                      filter={i < score.detected ? 'url(#marvErrorBlur)' : 'none'}
-                    />
-                    <circle
-                      cx={12} cy={12} r={8}
-                      fill={i < score.detected ? colors.error : 'rgba(100,116,139,0.3)'}
-                    />
-                    <text x={12} y={16} fill="white" fontSize={10} fontWeight="bold" textAnchor="middle">
-                      {i < score.detected ? '!' : '?'}
-                    </text>
-                  </g>
-                ))}
-                <text x={120} y={18} fill={score.detected === score.total ? colors.success : colors.warning} fontSize={14} fontWeight="bold">
-                  {score.detected} / {score.total}
-                </text>
-              </g>
-            </g>
-
-            {/* AI Feedback messages */}
-            <g transform="translate(500, 45)">
-              <text x={0} y={0} fill={colors.textSecondary} fontSize={10} fontWeight="600">Status</text>
-              <g transform="translate(0, 10)">
-                <circle
-                  cx={12} cy={12} r={12}
-                  fill={useReviewPass ? (score.effectiveness > 80 ? 'url(#marvSuccessGlow)' : 'url(#marvWarningGlow)') : 'rgba(100,116,139,0.2)'}
-                  filter="url(#marvPulseGlow)"
-                />
-                <text x={32} y={16} fill={useReviewPass ? (score.effectiveness > 80 ? colors.success : colors.warning) : colors.textMuted} fontSize={11} fontWeight="600">
-                  {useReviewPass ? (score.effectiveness > 80 ? 'PASSING' : 'ISSUES') : 'INACTIVE'}
-                </text>
-              </g>
-            </g>
-
-            {/* Detailed findings */}
-            <g transform="translate(20, 95)">
-              <text x={0} y={0} fill={colors.textSecondary} fontSize={10} fontWeight="600">AI Findings:</text>
-              {useReviewPass ? (
-                <g transform="translate(0, 8)">
-                  {score.bugsFound.units && (
-                    <g transform="translate(0, 0)">
-                      <circle cx={6} cy={8} r={4} fill={colors.error} filter="url(#marvErrorBlur)" />
-                      <text x={16} y={12} fill={colors.error} fontSize={10}>Line 3: Missing 1/2 factor - KE = (1/2)mv², not mv²</text>
-                    </g>
-                  )}
-                  {score.bugsFound.conservation && (
-                    <g transform="translate(0, 18)">
-                      <circle cx={6} cy={8} r={4} fill={colors.error} filter="url(#marvErrorBlur)" />
-                      <text x={16} y={12} fill={colors.error} fontSize={10}>Line 8: Operator error - F = m*a, not m+a</text>
-                    </g>
-                  )}
-                  {score.bugsFound.edgeCases && (
-                    <g transform="translate(0, 36)">
-                      <circle cx={6} cy={8} r={4} fill={colors.error} filter="url(#marvErrorBlur)" />
-                      <text x={16} y={12} fill={colors.error} fontSize={10}>Line 12: Negative velocity excluded - momentum can be negative</text>
-                    </g>
-                  )}
-                  {!score.bugsFound.units && !score.bugsFound.conservation && !score.bugsFound.edgeCases && (
-                    <text x={0} y={15} fill={colors.warning} fontSize={10}>Enable checklist items to detect specific bug types...</text>
-                  )}
-                </g>
-              ) : (
-                <text x={0} y={20} fill={colors.textMuted} fontSize={10} fontStyle="italic">Enable review pass to activate AI bug detection...</text>
-              )}
-            </g>
-          </g>
-        </svg>
-
-        {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
-            <button
-              onClick={() => setUseReviewPass(!useReviewPass)}
-              style={{
-                padding: '14px 28px',
-                borderRadius: '12px',
-                border: 'none',
-                background: useReviewPass
-                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                color: 'white',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                boxShadow: useReviewPass
-                  ? '0 4px 20px rgba(16, 185, 129, 0.4)'
-                  : '0 4px 20px rgba(239, 68, 68, 0.4)',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {useReviewPass ? 'Review Pass ON' : 'Review Pass OFF'}
-            </button>
-            <button
-              onClick={() => {
-                setCheckUnits(true);
-                setCheckConservation(true);
-                setCheckEdgeCases(true);
-                setCheckBounds(true);
-              }}
-              style={{
-                padding: '14px 28px',
-                borderRadius: '12px',
-                border: `2px solid ${colors.accent}`,
-                background: 'transparent',
-                color: colors.accent,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Enable All Checks
-            </button>
-          </div>
-        )}
-      </div>
-    );
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Cross-Check',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
   };
 
-  const renderControls = (showCrossCheck: boolean = false) => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Review Checklist Items:
-        </label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {[
-            { label: 'Units', checked: checkUnits, set: setCheckUnits },
-            { label: 'Conservation', checked: checkConservation, set: setCheckConservation },
-            { label: 'Edge Cases', checked: checkEdgeCases, set: setCheckEdgeCases },
-            { label: 'Bounds', checked: checkBounds, set: setCheckBounds },
-          ].map(item => (
-            <button
-              key={item.label}
-              onClick={() => item.set(!item.checked)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: item.checked ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                background: item.checked ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                color: item.checked ? colors.success : colors.textMuted,
-                cursor: 'pointer',
-                fontSize: '12px',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'model-as-reviewer',
+        gameTitle: 'Model as Reviewer',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-      {showCrossCheck && (
-        <div>
-          <label style={{
-            color: colors.textSecondary,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            cursor: 'pointer',
-          }}>
-            <input
-              type="checkbox"
-              checked={useCrossChecker}
-              onChange={(e) => setUseCrossChecker(e.target.checked)}
-              style={{ width: '20px', height: '20px' }}
-            />
-            Use second model/tool as cross-checker (+20% effectiveness)
-          </label>
-        </div>
-      )}
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100
+    }}>
       <div style={{
-        background: 'rgba(245, 158, 11, 0.2)',
-        padding: '12px',
-        borderRadius: '8px',
-        borderLeft: `3px solid ${colors.accent}`,
-      }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          Prompt: "Review for unit consistency, conservation laws, edge cases"
-        </div>
-        <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
-          Effectiveness = (checksEnabled * bugsMatchingChecks) {showCrossCheck && useCrossChecker ? '+ crossCheckBonus' : ''}
-        </div>
-      </div>
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease'
+      }} />
     </div>
   );
 
-  // Progress bar showing all 10 phases
-  const renderProgressBar = () => {
-    const currentIndex = phaseOrder.indexOf(phase);
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0'
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease'
+  };
+
+  // Code Review Visualization
+  const renderVisualization = (interactive: boolean, showCrossCheck: boolean = false) => {
+    const width = isMobile ? 340 : 700;
+    const height = isMobile ? 380 : 480;
+    const score = calculateReviewScore();
 
     return (
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${isMobile ? 340 : 700} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '750px' }}
+      >
+        <defs>
+          <linearGradient id="reviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <rect width="100%" height="100%" fill="url(#reviewBg)" rx="12" />
+
+        {/* Title */}
+        <text x={width / 2} y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="600">
+          AI Code Review Dashboard
+        </text>
+
+        {/* Code panel */}
+        <g transform={`translate(${isMobile ? 10 : 20}, 50)`}>
+          <rect width={isMobile ? 160 : 280} height={isMobile ? 160 : 220} rx="8" fill="#0f172a" stroke="#334155" />
+          <rect width={isMobile ? 160 : 280} height="24" rx="8" fill="#1e293b" />
+          <circle cx="12" cy="12" r="4" fill="#ef4444" />
+          <circle cx="26" cy="12" r="4" fill="#f59e0b" />
+          <circle cx="40" cy="12" r="4" fill="#10b981" />
+          <text x={isMobile ? 80 : 140} y="16" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+            physics_calc.py
+          </text>
+
+          {/* Code lines */}
+          {codeSample.code.split('\n').slice(0, isMobile ? 8 : 14).map((line, i) => {
+            const hasBug = codeSample.bugs.some(b => b.line === i + 1);
+            const bugDetected = hasBug && useReviewPass && (
+              (i + 1 === 3 && checkUnits) ||
+              (i + 1 === 8 && checkConservation) ||
+              (i + 1 === 12 && checkEdgeCases)
+            );
+
+            return (
+              <g key={i}>
+                <text x="8" y={38 + i * 12} fill={colors.textMuted} fontSize="8" fontFamily="monospace">
+                  {i + 1}
+                </text>
+                {bugDetected && (
+                  <rect x="20" y={30 + i * 12} width={isMobile ? 130 : 250} height="12" fill="rgba(239,68,68,0.2)" rx="2" />
+                )}
+                <text
+                  x="24"
+                  y={38 + i * 12}
+                  fill={bugDetected ? colors.error : line.includes('#') ? '#6b7280' : colors.textMuted}
+                  fontSize="8"
+                  fontFamily="monospace"
+                >
+                  {line.substring(0, isMobile ? 20 : 35)}
+                </text>
+                {bugDetected && (
+                  <circle cx={isMobile ? 155 : 270} cy={35 + i * 12} r="4" fill={colors.error} filter="url(#glow)" />
+                )}
+              </g>
+            );
+          })}
+        </g>
+
+        {/* AI Model indicator */}
+        <g transform={`translate(${isMobile ? 180 : 320}, 80)`}>
+          <circle
+            cx="40"
+            cy="40"
+            r="35"
+            fill={useReviewPass ? 'rgba(6,182,212,0.2)' : 'rgba(100,116,139,0.2)'}
+            stroke={useReviewPass ? '#06b6d4' : '#475569'}
+            strokeWidth="2"
+          />
+          <circle cx="40" cy="40" r="20" fill={useReviewPass ? 'rgba(6,182,212,0.4)' : 'rgba(71,85,105,0.4)'} />
+          <circle cx="40" cy="40" r="8" fill={useReviewPass ? colors.accent : '#475569'} />
+          <text x="40" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+            {useReviewPass ? 'REVIEWING...' : 'STANDBY'}
+          </text>
+        </g>
+
+        {/* Checklist panel */}
+        <g transform={`translate(${isMobile ? 180 : 500}, ${isMobile ? 180 : 50})`}>
+          <rect width={isMobile ? 150 : 180} height={isMobile ? 130 : 220} rx="8" fill="rgba(30,58,95,0.5)" stroke="#0e7490" />
+          <text x={isMobile ? 75 : 90} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="600">
+            Review Checklist
+          </text>
+
+          {[
+            { label: 'Unit Consistency', checked: checkUnits, key: 'units' },
+            { label: 'Conservation Laws', checked: checkConservation, key: 'conservation' },
+            { label: 'Edge Cases', checked: checkEdgeCases, key: 'edge' },
+            { label: 'Bounds Check', checked: checkBounds, key: 'bounds' }
+          ].map((item, i) => (
+            <g key={item.key} transform={`translate(8, ${32 + i * (isMobile ? 24 : 38)})`}>
+              <rect
+                width={isMobile ? 134 : 164}
+                height={isMobile ? 20 : 32}
+                rx="6"
+                fill={item.checked ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}
+                stroke={item.checked ? colors.success : 'rgba(255,255,255,0.1)'}
+                style={{ cursor: interactive ? 'pointer' : 'default' }}
+                onClick={interactive ? () => {
+                  if (item.key === 'units') setCheckUnits(!checkUnits);
+                  if (item.key === 'conservation') setCheckConservation(!checkConservation);
+                  if (item.key === 'edge') setCheckEdgeCases(!checkEdgeCases);
+                  if (item.key === 'bounds') setCheckBounds(!checkBounds);
+                } : undefined}
+              />
+              <circle cx={isMobile ? 12 : 18} cy={isMobile ? 10 : 16} r={isMobile ? 6 : 8} fill={item.checked ? colors.success : 'rgba(100,116,139,0.3)'} />
+              <text x={isMobile ? 12 : 18} y={isMobile ? 13 : 20} textAnchor="middle" fill="white" fontSize={isMobile ? 8 : 10}>
+                {item.checked ? 'Y' : ''}
+              </text>
+              <text x={isMobile ? 26 : 34} y={isMobile ? 14 : 20} fill={item.checked ? colors.success : colors.textSecondary} fontSize={isMobile ? 9 : 11}>
+                {item.label}
+              </text>
+            </g>
+          ))}
+
+          {showCrossCheck && (
+            <g transform={`translate(8, ${isMobile ? 130 : 195})`}>
+              <rect
+                width={isMobile ? 134 : 164}
+                height={isMobile ? 18 : 22}
+                rx="6"
+                fill={useCrossChecker ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.05)'}
+                stroke={useCrossChecker ? '#8b5cf6' : 'rgba(255,255,255,0.1)'}
+                style={{ cursor: interactive ? 'pointer' : 'default' }}
+                onClick={interactive ? () => setUseCrossChecker(!useCrossChecker) : undefined}
+              />
+              <text x={isMobile ? 67 : 82} y={isMobile ? 12 : 15} textAnchor="middle" fill={useCrossChecker ? '#a78bfa' : colors.textMuted} fontSize="9">
+                {useCrossChecker ? 'Cross-Check ON' : '+ Cross-Checker'}
+              </text>
+            </g>
+          )}
+        </g>
+
+        {/* Results panel */}
+        <g transform={`translate(${isMobile ? 10 : 20}, ${isMobile ? 320 : 290})`}>
+          <rect width={isMobile ? 320 : 660} height={isMobile ? 50 : 80} rx="8" fill="rgba(31,41,55,0.8)" stroke="#374151" />
+
+          <text x="16" y="20" fill={colors.textSecondary} fontSize="10">Effectiveness</text>
+          <rect x="16" y="28" width={isMobile ? 120 : 200} height="12" rx="4" fill="rgba(0,0,0,0.4)" />
+          <rect
+            x="16"
+            y="28"
+            width={Math.max(0, (score.effectiveness / 100) * (isMobile ? 120 : 200))}
+            height="12"
+            rx="4"
+            fill={score.effectiveness > 80 ? colors.success : score.effectiveness > 50 ? colors.warning : colors.error}
+          />
+          <text x={isMobile ? 76 : 116} y="37" textAnchor="middle" fill="white" fontSize="9" fontWeight="600">
+            {score.effectiveness.toFixed(0)}%
+          </text>
+
+          <text x={isMobile ? 160 : 240} y="20" fill={colors.textSecondary} fontSize="10">Bugs Found</text>
+          <text x={isMobile ? 160 : 240} y="40" fill={colors.accent} fontSize="16" fontWeight="700">
+            {score.detected} / {score.total}
+          </text>
+
+          <text x={isMobile ? 240 : 400} y="20" fill={colors.textSecondary} fontSize="10">Status</text>
+          <circle
+            cx={isMobile ? 250 : 410}
+            cy="35"
+            r="8"
+            fill={useReviewPass ? (score.effectiveness > 80 ? colors.success : colors.warning) : 'rgba(100,116,139,0.3)'}
+          />
+          <text x={isMobile ? 264 : 424} y="38" fill={useReviewPass ? (score.effectiveness > 80 ? colors.success : colors.warning) : colors.textMuted} fontSize="10">
+            {useReviewPass ? (score.effectiveness > 80 ? 'PASSING' : 'ISSUES') : 'INACTIVE'}
+          </text>
+        </g>
+      </svg>
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
       <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: isMobile ? '4px' : '8px',
-        padding: '16px',
-        flexWrap: 'wrap',
+        padding: '24px',
+        textAlign: 'center'
       }}>
-        {phaseOrder.map((p, index) => {
-          const isCompleted = index < currentIndex;
-          const isCurrent = index === currentIndex;
-          const isClickable = index <= currentIndex;
+        {renderProgressBar()}
 
-          return (
-            <div
-              key={p}
-              onClick={() => isClickable && goToPhase(p)}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                cursor: isClickable ? 'pointer' : 'default',
-                opacity: isClickable ? 1 : 0.5,
-              }}
-            >
-              <div
-                style={{
-                  width: isMobile ? '24px' : '32px',
-                  height: isMobile ? '24px' : '32px',
-                  borderRadius: '50%',
-                  background: isCompleted
-                    ? colors.success
-                    : isCurrent
-                      ? colors.accent
-                      : 'rgba(255,255,255,0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: isMobile ? '10px' : '12px',
-                  fontWeight: 'bold',
-                  color: isCompleted || isCurrent ? 'white' : colors.textMuted,
-                  border: isCurrent ? `2px solid ${colors.accent}` : 'none',
-                  boxShadow: isCurrent ? `0 0 12px ${colors.accentGlow}` : 'none',
-                }}
-              >
-                {isCompleted ? '✓' : index + 1}
-              </div>
-              {!isMobile && (
-                <span style={{
-                  fontSize: '9px',
-                  color: isCurrent ? colors.accent : colors.textMuted,
-                  marginTop: '4px',
-                  textAlign: 'center',
-                  maxWidth: '60px',
-                }}>
-                  {phaseLabels[p]}
-                </span>
-              )}
-            </div>
-          );
-        })}
+        <div style={{ fontSize: '64px', marginBottom: '24px' }}>
+          Review AI
+        </div>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Model as Reviewer
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px'
+        }}>
+          "Can one pass write <span style={{ color: colors.error }}>plausible nonsense</span>?
+          Learn why <span style={{ color: colors.success }}>independent critique</span> catches
+          bugs that generation mode misses."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "LLMs optimize for plausibility during generation - code that looks correct.
+            But looking correct and being correct are different things. A second pass
+            in reviewer mode applies different objectives that catch hidden errors."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - AI Safety Research Principles
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Learn Review Patterns
+        </button>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // Bottom navigation bar with Back/Next buttons
-  const renderBottomBar = () => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    const isFirst = currentIndex === 0;
-    const isLast = currentIndex === phaseOrder.length - 1;
-
-    const canProceed = (): boolean => {
-      switch (phase) {
-        case 'predict':
-          return !!prediction;
-        case 'twist_predict':
-          return !!twistPrediction;
-        case 'transfer':
-          return transferCompleted.size >= 4;
-        case 'test':
-          return testSubmitted && testScore >= 8;
-        default:
-          return true;
-      }
-    };
-
-    const getNextLabel = (): string => {
-      switch (phase) {
-        case 'hook':
-          return 'Make a Prediction';
-        case 'predict':
-          return 'Test My Prediction';
-        case 'play':
-          return 'Continue to Review';
-        case 'review':
-          return 'Next: A Twist!';
-        case 'twist_predict':
-          return 'Test My Prediction';
-        case 'twist_play':
-          return 'See the Explanation';
-        case 'twist_review':
-          return 'Apply This Knowledge';
-        case 'transfer':
-          return 'Take the Test';
-        case 'test':
-          return testSubmitted ? (testScore >= 8 ? 'Complete Mastery' : 'Review & Retry') : 'Submit Test';
-        case 'mastery':
-          return 'Complete Game';
-        default:
-          return 'Next';
-      }
-    };
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'One pass is enough - modern LLMs can write correct code' },
+      { id: 'b', text: 'A second review pass catches errors that slip through in generation', correct: true },
+      { id: 'c', text: 'Review passes do not help - the same model makes the same mistakes' }
+    ];
 
     return (
       <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: '16px 24px',
-        background: colors.bgDark,
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1000,
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px'
       }}>
-        <button
-          onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
-          disabled={isFirst}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.textMuted}`,
-            background: 'transparent',
-            color: isFirst ? colors.textMuted : colors.textPrimary,
-            fontWeight: 'bold',
-            cursor: isFirst ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            opacity: isFirst ? 0.5 : 1,
-          }}
-        >
-          Back
-        </button>
+        {renderProgressBar()}
 
-        <button
-          onClick={() => {
-            if (phase === 'test' && !testSubmitted) {
-              submitTest();
-            } else if (!isLast && canProceed()) {
-              goToPhase(phaseOrder[currentIndex + 1]);
-            } else if (isLast && canProceed()) {
-              emitGameEvent('completion', { score: testScore });
-            }
-          }}
-          disabled={!canProceed() && phase !== 'test'}
-          style={{
-            padding: '12px 32px',
-            borderRadius: '8px',
-            border: 'none',
-            background: canProceed() ? colors.accent : 'rgba(255,255,255,0.1)',
-            color: canProceed() ? 'white' : colors.textMuted,
-            fontWeight: 'bold',
-            cursor: canProceed() ? 'pointer' : 'not-allowed',
-            fontSize: '16px',
-          }}
-        >
-          {getNextLabel()}
-        </button>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            An LLM generates physics code. A second pass reviews it with "check for unit errors, conservation violations, edge cases." What happens?
+          </h2>
+
+          {/* Visualization preview */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px'
+          }}>
+            {renderVisualization(false)}
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // Main content renderer
-  const renderContent = () => {
-    switch (phase) {
-      case 'hook':
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ padding: '24px', textAlign: 'center' }}>
-              <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-                Model as Reviewer
-              </h1>
-              <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-                Can one pass write plausible nonsense?
-              </p>
+  // PLAY PHASE - Interactive Review Simulator
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px'
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Code Review Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Toggle review checks to see which bugs they catch
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              {renderVisualization(true)}
             </div>
 
-            {renderVisualization(true)}
-
-            <div style={{ padding: '24px', textAlign: 'center' }}>
-              <div style={{
-                background: colors.bgCard,
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-              }}>
-                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                  When an LLM generates code, it optimizes for plausibility - code that looks
-                  correct. But looking correct and being correct are different things. A
-                  second pass in "reviewer mode" catches dimension errors, missing constraints,
-                  and edge cases that generation mode often misses.
-                </p>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                  The code above has three bugs. Can you spot them without a review checklist?
-                </p>
-              </div>
-
-              <div style={{
-                background: 'rgba(245, 158, 11, 0.2)',
-                padding: '16px',
-                borderRadius: '8px',
-                borderLeft: `3px solid ${colors.accent}`,
-              }}>
-                <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                  Toggle the review checklist items to see what they catch!
-                </p>
-              </div>
+            {/* Review toggle */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button
+                onClick={() => setUseReviewPass(!useReviewPass)}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: useReviewPass
+                    ? `linear-gradient(135deg, ${colors.success}, #059669)`
+                    : `linear-gradient(135deg, ${colors.error}, #dc2626)`,
+                  color: 'white',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                {useReviewPass ? 'Review Pass ON' : 'Review Pass OFF'}
+              </button>
+              <button
+                onClick={() => {
+                  setCheckUnits(true);
+                  setCheckConservation(true);
+                  setCheckEdgeCases(true);
+                  setCheckBounds(true);
+                }}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '12px',
+                  border: `2px solid ${colors.accent}`,
+                  background: 'transparent',
+                  color: colors.accent,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Enable All Checks
+              </button>
             </div>
-          </div>
-        );
 
-      case 'predict':
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            {renderVisualization(false)}
-
+            {/* Checklist controls */}
             <div style={{
-              background: colors.bgCard,
-              margin: '16px',
-              padding: '16px',
+              background: colors.bgSecondary,
               borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px'
             }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Scenario:</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-                You ask an LLM to write physics calculations. It produces code that compiles
-                and runs. But is it correct? A second prompt says "Review for unit consistency,
-                conservation laws, edge cases." Does this help?
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>
+                Click checklist items to toggle them:
               </p>
-            </div>
-
-            <div style={{ padding: '0 16px 16px 16px' }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-                Does a review pass improve code quality?
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {predictions.map((p) => (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {[
+                  { label: 'Units', checked: checkUnits, set: setCheckUnits },
+                  { label: 'Conservation', checked: checkConservation, set: setCheckConservation },
+                  { label: 'Edge Cases', checked: checkEdgeCases, set: setCheckEdgeCases },
+                  { label: 'Bounds', checked: checkBounds, set: setCheckBounds }
+                ].map(item => (
                   <button
-                    key={p.id}
-                    onClick={() => setPrediction(p.id)}
+                    key={item.label}
+                    onClick={() => item.set(!item.checked)}
                     style={{
-                      padding: '16px',
-                      borderRadius: '8px',
-                      border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                      background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                      color: colors.textPrimary,
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: item.checked ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
+                      background: item.checked ? 'rgba(16,185,129,0.2)' : 'transparent',
+                      color: item.checked ? colors.success : colors.textMuted,
                       cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      WebkitTapHighlightColor: 'transparent',
+                      fontSize: '12px'
                     }}
                   >
-                    {p.label}
+                    {item.label}
                   </button>
                 ))}
               </div>
             </div>
-          </div>
-        );
 
-      case 'play':
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ padding: '16px', textAlign: 'center' }}>
-              <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Review Effectiveness</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                Enable different checklist items to see which bugs they catch
-              </p>
-            </div>
-
-            {renderVisualization(true)}
-            {renderControls()}
-
+            {/* Key observations */}
             <div style={{
-              background: colors.bgCard,
-              margin: '16px',
-              padding: '16px',
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
               borderRadius: '12px',
+              padding: '16px'
             }}>
-              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Key Observations:</h4>
-              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Key Observations:
+              </h4>
+              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
                 <li>Unit check catches missing 1/2 in kinetic energy formula</li>
                 <li>Conservation check catches F=m+a (should be F=m*a)</li>
                 <li>Edge case check catches excluded negative velocities</li>
@@ -1264,381 +954,841 @@ def calculate_momentum(mass, velocity):
               </ul>
             </div>
           </div>
-        );
 
-      case 'review':
-        const wasCorrect = prediction === 'review_helps';
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '20px',
-              borderRadius: '12px',
-              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-            }}>
-              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-                {wasCorrect ? 'Correct!' : 'The Answer: Review Passes Help'}
-              </h3>
-              <p style={{ color: colors.textPrimary }}>
-                A second pass in review mode catches errors that slip through generation.
-                The key is directing attention with specific checks: units, conservation,
-                edge cases, bounds - each targets different error types.
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    const wasCorrect = prediction === 'b';
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px'
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
+            border: `1px solid ${wasCorrect ? colors.success : colors.error}`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px'
+          }}>
+            <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+              {wasCorrect ? 'Correct!' : 'The Answer: Review Passes Help'}
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              A second pass in review mode catches errors that slip through generation.
+              The key is directing attention with specific checks.
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px'
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              Why Independent Critique Works
+            </h3>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.accent }}>Different Objectives:</strong> Generation
+                mode optimizes for "write code that does X." Review mode optimizes for "find
+                problems with this code." Different objectives reveal different issues.
               </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              margin: '16px',
-              padding: '20px',
-              borderRadius: '12px',
-            }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Why Independent Critique Works</h3>
-              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Different Objectives:</strong> Generation
-                  mode optimizes for "write code that does X." Review mode optimizes for "find
-                  problems with this code." Different objectives reveal different issues.
-                </p>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Directed Attention:</strong> Asking
-                  "check units" forces examination of dimensional analysis. Without this prompt,
-                  the model might not think about units at all.
-                </p>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Correlated Mistakes:</strong> If the
-                  same model generates and reviews, it might make the same mistakes. But review
-                  mode is sufficiently different that many bugs are caught.
-                </p>
-                <p>
-                  <strong style={{ color: colors.textPrimary }}>The Prompt:</strong> "Review for
-                  unit consistency, conservation laws, edge cases, failure modes."
-                </p>
-              </div>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.accent }}>Directed Attention:</strong> Asking
+                "check units" forces examination of dimensional analysis. Without this prompt,
+                the model might not think about units at all.
+              </p>
+              <p>
+                <strong style={{ color: colors.accent }}>The Key Prompt:</strong> "Review for
+                unit consistency, conservation laws, edge cases, failure modes."
+              </p>
             </div>
           </div>
-        );
 
-      case 'twist_predict':
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ padding: '16px', textAlign: 'center' }}>
-              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-              <p style={{ color: colors.textSecondary }}>
-                What if we use different models or tools as cross-checkers?
-              </p>
-            </div>
+          <div style={{
+            background: `${colors.review.info}22`,
+            border: `1px solid ${colors.review.info}`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px'
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.review.info, marginBottom: '12px' }}>
+              The Bugs Found
+            </h3>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li><strong>Line 3:</strong> Missing 1/2 factor - KE = (1/2)mv^2, not mv^2</li>
+              <li><strong>Line 8:</strong> Wrong operator - F = m*a, not m+a</li>
+              <li><strong>Line 12:</strong> Logic error - momentum can be negative</li>
+            </ul>
+          </div>
 
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover the Twist
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Using the same model twice is sufficient for review' },
+      { id: 'b', text: 'Different models/tools catch different errors - cross-checking improves coverage', correct: true },
+      { id: 'c', text: 'Using multiple models is too expensive to be practical' }
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px'
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Cross-Checking
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What if we use different models or tools as cross-checkers instead of the same model reviewing itself?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px'
+          }}>
             {renderVisualization(false, true)}
-
-            <div style={{
-              background: colors.bgCard,
-              margin: '16px',
-              padding: '16px',
-              borderRadius: '12px',
-            }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Question:</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-                Same-model review catches many bugs. But what about using a different model
-                or static analysis tool as a cross-checker? Does this improve bug detection
-                even further?
-              </p>
-            </div>
-
-            <div style={{ padding: '0 16px 16px 16px' }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-                Do cross-checkers with different models/tools help?
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {twistPredictions.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setTwistPrediction(p.id)}
-                    style={{
-                      padding: '16px',
-                      borderRadius: '8px',
-                      border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                      background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                      color: colors.textPrimary,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '14px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
-        );
 
-      case 'twist_play':
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ padding: '16px', textAlign: 'center' }}>
-              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Cross-Checking</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                Enable the cross-checker to see improved coverage
-              </p>
-            </div>
-
-            {renderVisualization(true, true)}
-            {renderControls(true)}
-
-            <div style={{
-              background: 'rgba(139, 92, 246, 0.2)',
-              margin: '16px',
-              padding: '16px',
-              borderRadius: '12px',
-              borderLeft: `3px solid #8b5cf6`,
-            }}>
-              <h4 style={{ color: '#8b5cf6', marginBottom: '8px' }}>Cross-Checker Benefits:</h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                Different models have different blind spots:
-                <br />- Model A might miss edge cases but catch unit errors
-                <br />- Model B might catch edge cases but miss unit errors
-                <br />- A static analyzer catches yet different issues
-                <br />- Cross-checking reduces correlated blind spots
-              </p>
-            </div>
-          </div>
-        );
-
-      case 'twist_review':
-        const twistWasCorrect = twistPrediction === 'different_models';
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: twistWasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '20px',
-              borderRadius: '12px',
-              borderLeft: `4px solid ${twistWasCorrect ? colors.success : colors.error}`,
-            }}>
-              <h3 style={{ color: twistWasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-                {twistWasCorrect ? 'Correct!' : 'The Answer: Cross-Checking Improves Coverage'}
-              </h3>
-              <p style={{ color: colors.textPrimary }}>
-                Different models and tools have different training data, architectures, and
-                blind spots. Cross-checking with diverse reviewers catches bugs that any
-                single reviewer might miss.
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              margin: '16px',
-              padding: '20px',
-              borderRadius: '12px',
-            }}>
-              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Building a Review Pipeline</h3>
-              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Level 1:</strong> Same-model
-                  review with checklist (units, conservation, edge cases)
-                </p>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Level 2:</strong> Cross-check
-                  with different LLM (Claude + GPT, for example)
-                </p>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Level 3:</strong> Static
-                  analysis tools (linters, type checkers, dimensional analysis tools)
-                </p>
-                <p>
-                  <strong style={{ color: colors.textPrimary }}>Level 4:</strong> Property-based
-                  testing to verify invariants automatically
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'transfer':
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ padding: '16px' }}>
-              <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-                Real-World Applications
-              </h2>
-              <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-                Review passes apply to many domains beyond physics
-              </p>
-              <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-                Complete all 4 applications to unlock the test
-              </p>
-            </div>
-
-            {transferApplications.map((app, index) => (
-              <div
-                key={index}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
                 style={{
-                  background: colors.bgCard,
-                  margin: '16px',
-                  padding: '16px',
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
                   borderRadius: '12px',
-                  border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                  {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See Cross-Check Effect
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px'
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Cross-Check Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Enable the cross-checker to see improved coverage
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              {renderVisualization(true, true)}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button
+                onClick={() => setUseReviewPass(!useReviewPass)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: useReviewPass ? colors.success : colors.error,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {useReviewPass ? 'Review ON' : 'Review OFF'}
+              </button>
+              <button
+                onClick={() => setUseCrossChecker(!useCrossChecker)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  border: useCrossChecker ? 'none' : `2px solid #8b5cf6`,
+                  background: useCrossChecker ? '#8b5cf6' : 'transparent',
+                  color: useCrossChecker ? 'white' : '#8b5cf6',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {useCrossChecker ? 'Cross-Check ON' : 'Cross-Check OFF'}
+              </button>
+            </div>
+
+            <div style={{
+              background: 'rgba(139,92,246,0.1)',
+              border: '1px solid rgba(139,92,246,0.3)',
+              borderRadius: '12px',
+              padding: '16px'
+            }}>
+              <h4 style={{ ...typo.small, color: '#a78bfa', marginBottom: '8px', fontWeight: 600 }}>
+                Cross-Checker Benefits:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                Different models have different blind spots. Model A might miss edge cases
+                but catch unit errors. Model B might catch edge cases but miss unit errors.
+                Cross-checking reduces correlated blind spots by +20% effectiveness.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Solution
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    const twistWasCorrect = twistPrediction === 'b';
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px'
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: twistWasCorrect ? `${colors.success}22` : `${colors.error}22`,
+            border: `1px solid ${twistWasCorrect ? colors.success : colors.error}`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px'
+          }}>
+            <h3 style={{ ...typo.h3, color: twistWasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+              {twistWasCorrect ? 'Correct!' : 'Cross-Checking Improves Coverage'}
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Different models have different blind spots. Cross-checking reduces correlated mistakes.
+            </p>
+          </div>
+
+          <h3 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Building a Review Pipeline
+          </h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            {[
+              { level: 1, title: 'Same-Model Review', desc: 'Review with checklist (units, conservation, edge cases)', color: colors.success },
+              { level: 2, title: 'Cross-Model Review', desc: 'Different LLM reviews (Claude + GPT, for example)', color: colors.review.info },
+              { level: 3, title: 'Static Analysis', desc: 'Linters, type checkers, dimensional analysis tools', color: colors.warning },
+              { level: 4, title: 'Property Testing', desc: 'Automated verification of invariants', color: '#8b5cf6' }
+            ].map(item => (
+              <div
+                key={item.level}
+                style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '20px',
+                  borderLeft: `4px solid ${item.color}`
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                  <span style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: item.color,
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '14px'
+                  }}>
+                    {item.level}
+                  </span>
+                  <h4 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{item.title}</h4>
                 </div>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                  <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-                </div>
-                {!transferCompleted.has(index) ? (
-                  <button
-                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      border: `1px solid ${colors.accent}`,
-                      background: 'transparent',
-                      color: colors.accent,
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    Reveal Answer
-                  </button>
-                ) : (
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                  </div>
-                )}
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '40px' }}>
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
-        );
 
-      case 'test':
-        if (testSubmitted) {
-          return (
-            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-              <div style={{
-                background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                margin: '16px',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-              }}>
-                <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                  {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-                </h2>
-                <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-                <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                  {testScore >= 8 ? 'You understand model-as-reviewer patterns!' : 'Review the material and try again.'}
-                </p>
-              </div>
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                return (
-                  <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                      </div>
-                    ))}
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px'
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px'
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative'
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px'
+                  }}>
+                    Y
                   </div>
-                );
-              })}
-            </div>
-          );
-        }
-
-        const currentQ = testQuestions[currentTestQuestion];
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-                <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-              </div>
-              <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-                {testQuestions.map((_, i) => (
-                  <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-                ))}
-              </div>
-              <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {currentQ.options.map((opt, oIndex) => (
-                  <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', WebkitTapHighlightColor: 'transparent' }}>
-                    {opt.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-              <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
-              {currentTestQuestion < testQuestions.length - 1 ? (
-                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
-              ) : null}
-            </div>
+                )}
+                <div style={{ fontSize: '12px', marginBottom: '4px', color: a.color }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
           </div>
-        );
 
-      case 'mastery':
-        return (
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ padding: '24px', textAlign: 'center' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-              <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-              <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered model-as-reviewer patterns</p>
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '28px', color: app.color }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
             </div>
-            <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Prompt Patterns:</h3>
-              <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-                <li>"Review for unit consistency"</li>
-                <li>"Check conservation laws are satisfied"</li>
-                <li>"Identify edge cases and failure modes"</li>
-                <li>"Verify bounds and constraints"</li>
-                <li>"Cross-check with [different tool/model]"</li>
-              </ul>
-            </div>
-            <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Remember:</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-                One pass can write plausible nonsense. Independent critique in review mode catches
-                dimension errors, missing constraints, and edge cases. Cross-checking with different
-                models or tools reduces correlated mistakes. Always verify generated code with a
-                structured review checklist.
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px'
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Review Patterns Apply:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
               </p>
             </div>
-            {renderVisualization(true, true)}
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px'
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '16px', marginBottom: '4px', color: app.color }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        );
 
-      default:
-        return null;
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+
+      if (passed && onCorrectAnswer) onCorrectAnswer();
+      if (!passed && onIncorrectAnswer) onIncorrectAnswer();
+
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px'
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              {passed ? 'Trophy' : 'Book'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand model-as-reviewer patterns!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
     }
-  };
 
-  return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-      background: colors.bgPrimary,
-    }}>
-      {renderProgressBar()}
-      {renderContent()}
-      {renderBottomBar()}
-    </div>
-  );
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px'
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px'
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer'
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center'
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite'
+        }}>
+          Trophy
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Model-as-Reviewer Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how independent critique catches bugs that generation mode misses.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px'
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Takeaways:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Generation optimizes for plausibility, not correctness',
+              'Review mode applies different objectives',
+              'Checklists direct attention to error categories',
+              'Cross-checking reduces correlated blind spots',
+              'Specific prompts catch specific bug types'
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>Y</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          background: `${colors.accent}22`,
+          border: `1px solid ${colors.accent}`,
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '32px',
+          maxWidth: '500px'
+        }}>
+          <h4 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
+            The Key Prompt:
+          </h4>
+          <p style={{ ...typo.body, color: colors.textSecondary, fontStyle: 'italic', margin: 0 }}>
+            "Review for unit consistency, conservation laws, edge cases, failure modes."
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer'
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block'
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default ModelAsReviewerRenderer;

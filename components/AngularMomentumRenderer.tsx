@@ -2,1206 +2,1932 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// ─────────────────────────────────────────────────────────────────────────────
+// Angular Momentum Conservation - Complete 10-Phase Game
+// Why figure skaters spin faster when they pull their arms in
+// ─────────────────────────────────────────────────────────────────────────────
 
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Introduction',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Understanding',
-  twist_predict: 'New Variable',
-  twist_play: 'Observer Effect',
-  twist_review: 'Deep Insight',
-  transfer: 'Real World',
-  test: 'Knowledge Test',
-  mastery: 'Mastery'
-};
-
-interface Props {
+interface AngularMomentumRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
 }
 
-const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) ?? 'hook');
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    scenario: "A figure skater begins a spin with arms extended, rotating at 2 revolutions per second. She then pulls her arms tightly against her body, reducing her moment of inertia by half.",
+    question: "What happens to her rotational speed?",
+    options: [
+      { id: 'a', label: "She slows down to 1 rev/s because she's using energy to pull arms in" },
+      { id: 'b', label: "She speeds up to 4 rev/s because angular momentum is conserved", correct: true },
+      { id: 'c', label: "She maintains 2 rev/s because the ice is frictionless" },
+      { id: 'd', label: "She speeds up to 3 rev/s due to reduced air resistance" }
+    ],
+    explanation: "When moment of inertia (I) is halved, angular velocity (omega) must double to keep angular momentum (L = I * omega) constant. Since she started at 2 rev/s, she ends at 4 rev/s."
+  },
+  {
+    scenario: "A diver jumps from a 10-meter platform, initially in a straight layout position. During the dive, she tucks into a tight ball to perform multiple somersaults before straightening out to enter the water.",
+    question: "Why does tucking help complete more rotations?",
+    options: [
+      { id: 'a', label: "Tucking reduces air resistance, allowing faster rotation" },
+      { id: 'b', label: "Tucking reduces moment of inertia, so angular velocity increases to conserve momentum", correct: true },
+      { id: 'c', label: "Tucking adds rotational energy from muscle contraction" },
+      { id: 'd', label: "Gravity accelerates tucked bodies faster than extended ones" }
+    ],
+    explanation: "In a tuck position, the diver's mass is closer to the rotation axis, dramatically reducing moment of inertia. Since angular momentum cannot change during flight (no external torques), angular velocity must increase proportionally."
+  },
+  {
+    scenario: "Engineers at NASA are designing a spacecraft that needs to rotate to orient its solar panels. They're considering using internal reaction wheels versus external thrusters.",
+    question: "Why are reaction wheels preferred for routine attitude adjustments?",
+    options: [
+      { id: 'a', label: "Reaction wheels are cheaper to manufacture than thrusters" },
+      { id: 'b', label: "Spinning wheels transfer angular momentum to the spacecraft without expelling propellant", correct: true },
+      { id: 'c', label: "Thrusters cannot work in the vacuum of space" },
+      { id: 'd', label: "Reaction wheels generate electrical power while spinning" }
+    ],
+    explanation: "Reaction wheels exploit conservation of angular momentum internally. When a wheel spins faster in one direction, the spacecraft rotates in the opposite direction. No propellant is consumed, making this sustainable for decades of operation."
+  },
+  {
+    scenario: "A star collapses at the end of its life, shrinking from a radius of 700,000 km to become a neutron star with a radius of just 10 km. The original star rotated once every 30 days.",
+    question: "What happens to the neutron star's rotation rate?",
+    options: [
+      { id: 'a', label: "It rotates at the same rate - 30 days per rotation" },
+      { id: 'b', label: "It rotates much slower due to the immense gravitational compression" },
+      { id: 'c', label: "It rotates extremely fast - potentially hundreds of times per second", correct: true },
+      { id: 'd', label: "Rotation stops completely as the star collapses" }
+    ],
+    explanation: "With radius decreasing by a factor of 70,000, moment of inertia decreases enormously (proportional to r-squared). To conserve angular momentum, rotation rate must increase by approximately the same factor, resulting in millisecond rotation periods."
+  },
+  {
+    scenario: "A physics teacher sits on a rotating stool holding a spinning bicycle wheel with its axis horizontal. She then tilts the wheel so its axis becomes vertical.",
+    question: "What happens to the teacher on the stool?",
+    options: [
+      { id: 'a', label: "Nothing changes - the stool remains stationary" },
+      { id: 'b', label: "The teacher begins rotating on the stool to conserve the system's total angular momentum", correct: true },
+      { id: 'c', label: "The wheel stops spinning completely" },
+      { id: 'd', label: "The teacher is pushed sideways by gyroscopic force" }
+    ],
+    explanation: "When the wheel's angular momentum vector changes direction from horizontal to vertical, the teacher must acquire angular momentum in the opposite vertical direction. The total system angular momentum remains constant, causing her to rotate."
+  },
+  {
+    scenario: "A helicopter's main rotor spins counterclockwise when viewed from above. Without any counter-torque system, the helicopter body would spin in the opposite direction.",
+    question: "What is the purpose of the tail rotor?",
+    options: [
+      { id: 'a', label: "To provide forward thrust for horizontal flight" },
+      { id: 'b', label: "To counteract the torque from the main rotor and prevent the body from spinning", correct: true },
+      { id: 'c', label: "To cool the engine by creating airflow" },
+      { id: 'd', label: "To provide lift during hovering" }
+    ],
+    explanation: "By Newton's third law, the main rotor exerts a reaction torque on the helicopter body. The tail rotor produces a sideways thrust that creates an equal and opposite torque, maintaining angular momentum balance and keeping the body from spinning."
+  },
+  {
+    scenario: "An ice dancer performs a spin while holding heavy 2 kg weights in each hand. During the spin, she drops both weights outward.",
+    question: "What happens to her rotation after dropping the weights?",
+    options: [
+      { id: 'a', label: "She speeds up because she's now lighter" },
+      { id: 'b', label: "She slows down because the weights carried angular momentum away", correct: true },
+      { id: 'c', label: "Her speed stays the same because she only changed mass, not configuration" },
+      { id: 'd', label: "She stops spinning immediately" }
+    ],
+    explanation: "When the weights are dropped outward, they carry away their share of the system's angular momentum. The dancer retains less angular momentum, so even though her moment of inertia decreased, her angular velocity also decreases."
+  },
+  {
+    scenario: "A cat always lands on its feet when dropped. High-speed cameras show that during a fall, the cat twists its body in a specific sequence without any external surface to push against.",
+    question: "How does a cat rotate in mid-air without violating conservation of angular momentum?",
+    options: [
+      { id: 'a', label: "The cat pushes against air molecules to generate rotation" },
+      { id: 'b', label: "The cat changes its moment of inertia differently for different body parts, enabling net rotation while total L stays zero", correct: true },
+      { id: 'c', label: "The cat stores angular momentum in its tail" },
+      { id: 'd', label: "Conservation of angular momentum doesn't apply to falling cats" }
+    ],
+    explanation: "The cat bends its spine, creating two body segments. By extending legs on one side while retracting on the other, it rotates the front half independently of the back half. The total angular momentum remains zero throughout, but the cat still manages to reorient."
+  },
+  {
+    scenario: "A merry-go-round (rotational inertia 500 kg*m^2) rotates at 0.5 rad/s. A 50 kg child runs tangentially and jumps onto the edge at radius 2 m, initially moving at 4 m/s in the same direction.",
+    question: "How does the merry-go-round's speed change?",
+    options: [
+      { id: 'a', label: "It slows down because the child adds mass" },
+      { id: 'b', label: "It speeds up because the child brings in angular momentum", correct: true },
+      { id: 'c', label: "It maintains the same speed - conservation of energy" },
+      { id: 'd', label: "It depends on where on the platform the child lands" }
+    ],
+    explanation: "The child brings angular momentum L = mvr = 50 * 4 * 2 = 400 kg*m^2/s. The platform initially has L = I*omega = 500 * 0.5 = 250 kg*m^2/s. Total becomes 650 kg*m^2/s. With new I = 500 + 50*4 = 700 kg*m^2, new omega = 650/700 = 0.93 rad/s. Faster!"
+  },
+  {
+    scenario: "Astronomers observe a pulsar (rapidly rotating neutron star) gradually slowing down from 30 rotations per second to 29 rotations per second over many years. The star's radius hasn't changed.",
+    question: "Where does the lost angular momentum go?",
+    options: [
+      { id: 'a', label: "It converts to heat inside the star" },
+      { id: 'b', label: "It radiates away as electromagnetic waves and particle beams", correct: true },
+      { id: 'c', label: "Angular momentum simply disappears over time" },
+      { id: 'd', label: "It transfers to nearby planets in the system" }
+    ],
+    explanation: "Pulsars emit intense beams of electromagnetic radiation and charged particle winds from their magnetic poles. These emissions carry away angular momentum, causing the pulsar to spin down over millions of years. Angular momentum is conserved - it's transferred to the radiation field."
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '⛸️',
+    title: 'Figure Skating & Gymnastics',
+    short: 'Athletes control spin speed through body position',
+    tagline: 'From 2 to 6 rotations per second in an instant',
+    description: 'Figure skaters and gymnasts routinely exploit angular momentum conservation to perform spectacular spins. By changing their body configuration, athletes can increase or decrease their rotation rate at will, creating the beautiful, dynamic movements that define these sports.',
+    connection: 'When a skater pulls their arms from extended (high moment of inertia) to tucked (low moment of inertia), angular momentum L = I times omega stays constant. Halving I doubles omega. This is pure physics in action.',
+    howItWorks: 'The skater initiates rotation with arms and one leg extended, building angular momentum from the ice. Once airborne or on one skate, no external torque can change L. By pulling limbs inward, I decreases dramatically - arm position alone can change I by 3x. Angular velocity increases proportionally, reaching 300+ RPM in elite skaters.',
+    stats: [
+      { value: '342 RPM', label: 'World record spin', icon: '🏆' },
+      { value: '3-4x', label: 'Speed increase possible', icon: '⚡' },
+      { value: '<0.3s', label: 'Arm pull duration', icon: '⏱️' }
+    ],
+    examples: [
+      'Scratch spin - arms extended to tucked transition',
+      'Flying camel - horizontal leg changes I distribution',
+      'Biellmann spin - overhead leg creates distinctive silhouette',
+      'Quadruple jumps - tucked rotation for 4 revolutions in 0.7s'
+    ],
+    companies: [
+      'International Skating Union (ISU)',
+      'US Figure Skating',
+      'Federation Internationale de Gymnastique',
+      'Cirque du Soleil'
+    ],
+    futureImpact: 'Biomechanical analysis with motion capture is helping athletes optimize body positions for maximum speed and aesthetic appeal, potentially enabling quintuple jumps.',
+    color: '#60A5FA'
+  },
+  {
+    icon: '🛰️',
+    title: 'Spacecraft Attitude Control',
+    short: 'Satellites rotate without using fuel',
+    tagline: 'Steering through space with spinning wheels',
+    description: 'Spacecraft use internal reaction wheels to orient themselves in the vacuum of space. By spinning wheels in one direction, the satellite body rotates in the opposite direction - all without expelling a single molecule of propellant.',
+    connection: 'In space, there are no external torques to change angular momentum. The spacecraft-plus-wheels system has zero total L. When a wheel speeds up (gaining +L), the spacecraft gains equal -L and rotates oppositely. This is pure angular momentum exchange.',
+    howItWorks: 'Three or more reaction wheels are mounted along perpendicular axes. Each wheel can spin at variable speeds (typically 0-6000 RPM). To rotate the spacecraft clockwise, spin the appropriate wheel counterclockwise. Computer control achieves arcsecond pointing precision. Control moment gyroscopes (CMGs) provide even higher torque by tilting spinning gyroscopes.',
+    stats: [
+      { value: '0.001°', label: 'Pointing precision', icon: '🎯' },
+      { value: '20+ yrs', label: 'Operational life', icon: '📅' },
+      { value: '6000 RPM', label: 'Wheel speed', icon: '⚙️' }
+    ],
+    examples: [
+      'Hubble Space Telescope - 4 reaction wheels for mirror pointing',
+      'James Webb Space Telescope - maintains perfect sun alignment',
+      'International Space Station - 4 CMGs for 420-ton station',
+      'Mars rovers - orient antennas for Earth communication'
+    ],
+    companies: [
+      'NASA / JPL',
+      'SpaceX',
+      'Honeywell Aerospace',
+      'Collins Aerospace',
+      'Northrop Grumman'
+    ],
+    futureImpact: 'Superconducting magnetic bearings will eliminate friction in reaction wheels, enabling centuries of maintenance-free attitude control for interstellar probes.',
+    color: '#A855F7'
+  },
+  {
+    icon: '🌟',
+    title: 'Neutron Stars & Pulsars',
+    short: 'Stars that spin 716 times per second',
+    tagline: 'Cosmic figure skaters on the grandest scale',
+    description: 'When massive stars collapse, they conserve their angular momentum while shrinking by a factor of 100,000 in radius. The result: neutron stars spinning at mind-boggling rates, with surfaces moving at significant fractions of the speed of light.',
+    connection: 'Moment of inertia I scales as mass times radius squared. When a star shrinks from 700,000 km to 10 km radius, I decreases by (70,000)^2 = 5 billion times. To conserve L, rotation rate increases by the same factor - turning monthly rotations into millisecond periods.',
+    howItWorks: 'A dying massive star collapses when fusion stops. The core implodes in seconds, conserving angular momentum. The resulting neutron star spins rapidly, its intense magnetic field sweeping through space like a lighthouse beam. These pulsars emit radio waves, X-rays, and gamma rays detectable across the galaxy.',
+    stats: [
+      { value: '716 Hz', label: 'Fastest known pulsar', icon: '⚡' },
+      { value: '24% c', label: 'Surface velocity', icon: '🚀' },
+      { value: '10^15 G', label: 'Magnetic field', icon: '🧲' }
+    ],
+    examples: [
+      'PSR J1748-2446ad - fastest known pulsar at 716 Hz',
+      'Crab Pulsar - 30 Hz spin, visible in optical telescopes',
+      'Vela Pulsar - navigation beacon for spacecraft',
+      'Magnetars - neutron stars with extreme magnetic fields'
+    ],
+    companies: [
+      'LIGO Scientific Collaboration',
+      'Event Horizon Telescope',
+      'NASA Fermi Gamma-ray Telescope',
+      'CSIRO Parkes Observatory'
+    ],
+    futureImpact: 'Pulsar timing arrays may detect gravitational waves, and pulsar navigation could guide spacecraft across the galaxy with GPS-like precision.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔋',
+    title: 'Flywheel Energy Storage',
+    short: 'Storing power in pure rotation',
+    tagline: 'Angular momentum meets the power grid',
+    description: 'Flywheel batteries store energy as rotational kinetic energy, exploiting the relationship E = (1/2) I omega^2. These systems can absorb and release power in milliseconds, providing grid stabilization far faster than chemical batteries.',
+    connection: 'A flywheel stores both energy (E proportional to omega squared) and angular momentum (L proportional to omega). The rotational inertia provides stability - like a spinning top resisting disturbances. Energy is extracted by slowing the flywheel, reducing both L and E.',
+    howItWorks: 'Modern flywheels use carbon fiber composite rotors spinning at 20,000-50,000 RPM in vacuum chambers. Magnetic bearings eliminate friction. A motor-generator accelerates the rotor to store energy and decelerates it to release power. Response time is milliseconds, making flywheels ideal for frequency regulation and power quality.',
+    stats: [
+      { value: '50,000 RPM', label: 'Maximum speed', icon: '🔄' },
+      { value: '<4 ms', label: 'Response time', icon: '⚡' },
+      { value: '20+ yrs', label: 'Operational life', icon: '📅' }
+    ],
+    examples: [
+      'Beacon Power - 20 MW grid stabilization facility',
+      'Formula 1 KERS - regenerative braking energy recovery',
+      'UPS systems - bridging power during grid outages',
+      'Tokamak fusion reactors - pulsed power delivery'
+    ],
+    companies: [
+      'Beacon Power',
+      'Amber Kinetics',
+      'Calnetix / Vycon',
+      'GKN Hybrid Power'
+    ],
+    futureImpact: 'Superconducting flywheels may enable hour-scale energy storage with minimal losses, complementing batteries for 100% renewable grids.',
+    color: '#10B981'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PREMIUM DESIGN SYSTEM
-  // ─────────────────────────────────────────────────────────────────────────
-  const colors = {
-    primary: '#8b5cf6',       // violet-500
-    primaryDark: '#7c3aed',   // violet-600
-    accent: '#ec4899',        // pink-500
-    secondary: '#a855f7',     // purple-500
-    success: '#10b981',       // emerald-500
-    danger: '#ef4444',        // red-500
-    warning: '#f59e0b',       // amber-500
-    bgDark: '#020617',        // slate-950
-    bgCard: '#0f172a',        // slate-900
-    bgCardLight: '#1e293b',   // slate-800
-    textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
-    border: '#334155',        // slate-700
-  };
-
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px'
-  };
-
-  // Simulation state
-  const [angle, setAngle] = useState(0);
-  const [armExtension, setArmExtension] = useState(0.8);
+  // Simulation state - spinning figure
+  const [armExtension, setArmExtension] = useState(0.8); // 0 = tucked, 1 = extended
   const [hasWeights, setHasWeights] = useState(true);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [experimentCount, setExperimentCount] = useState(0);
-  const [initialOmega] = useState(2);
+  const [angle, setAngle] = useState(0);
+  const [animationFrame, setAnimationFrame] = useState(0);
 
-  const lastClickRef = useRef(0);
+  // Physics constants and calculations
+  const bodyInertia = 2.5; // kg*m^2 - core body moment of inertia
+  const weightMass = hasWeights ? 2.0 : 0.2; // kg per hand weight
+  const armRadius = 0.3 + armExtension * 0.5; // meters from axis
+  const momentOfInertia = bodyInertia + 2 * weightMass * armRadius * armRadius;
+
+  // Reference state for conservation
+  const initialArmRadius = 0.8; // Reference starting position
+  const initialMomentOfInertia = bodyInertia + 2 * weightMass * initialArmRadius * initialArmRadius;
+  const initialOmega = 2.0; // Starting angular velocity (rad/s)
+  const angularMomentum = initialMomentOfInertia * initialOmega; // Conserved quantity
+  const currentOmega = angularMomentum / momentOfInertia; // Current angular velocity
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
   const animationRef = useRef<number>();
 
-  // Physics calculations
-  const bodyInertia = 2.5;
-  const weightMass = hasWeights ? 2 : 0.2;
-  const armRadius = 0.3 + armExtension * 0.5;
-  const momentOfInertia = bodyInertia + 2 * weightMass * armRadius * armRadius;
-  const initialMomentOfInertia = bodyInertia + 2 * weightMass * 0.8 * 0.8;
-  const angularMomentum = initialMomentOfInertia * initialOmega;
-  const calculatedOmega = angularMomentum / momentOfInertia;
-
+  // Responsive design
   useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Animation loop for frame counter
   useEffect(() => {
-    if (gamePhase !== undefined && gamePhase !== phase) {
-      setPhase(gamePhase as Phase);
-    }
-  }, [gamePhase, phase]);
+    const timer = setInterval(() => {
+      setAnimationFrame(f => f + 1);
+    }, 50);
+    return () => clearInterval(timer);
+  }, []);
 
-  // Animation
+  // Spinning animation
   useEffect(() => {
     if (isSpinning && (phase === 'play' || phase === 'twist_play')) {
       const animate = () => {
-        setAngle(prev => (prev + calculatedOmega * 0.04) % (2 * Math.PI));
+        setAngle(prev => (prev + currentOmega * 0.04) % (2 * Math.PI));
         animationRef.current = requestAnimationFrame(animate);
       };
       animationRef.current = requestAnimationFrame(animate);
-      return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
-    }
-  }, [isSpinning, calculatedOmega, phase]);
-
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      return () => {
+        if (animationRef.current) cancelAnimationFrame(animationRef.current);
       };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
-  const goToPhase = useCallback((newPhase: Phase) => {
-    playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-  }, [playSound, onPhaseComplete, onGameEvent]);
-
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-    playSound(prediction === 'B' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-    playSound(prediction === 'B' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-  }, [playSound]);
-
-  const testQuestions = [
-    {
-      question: "When a figure skater pulls their arms in during a spin:",
-      options: [
-        { text: "They slow down", correct: false },
-        { text: "They stay the same speed", correct: false },
-        { text: "They speed up", correct: true },
-        { text: "They stop spinning", correct: false }
-      ]
-    },
-    {
-      question: "What quantity is conserved when a skater pulls arms in?",
-      options: [
-        { text: "Angular velocity", correct: false },
-        { text: "Moment of inertia", correct: false },
-        { text: "Angular momentum", correct: true },
-        { text: "Kinetic energy", correct: false }
-      ]
-    },
-    {
-      question: "If moment of inertia decreases by half, angular velocity:",
-      options: [
-        { text: "Halves", correct: false },
-        { text: "Stays same", correct: false },
-        { text: "Doubles", correct: true },
-        { text: "Quadruples", correct: false }
-      ]
-    },
-    {
-      question: "Moment of inertia depends on:",
-      options: [
-        { text: "Mass only", correct: false },
-        { text: "Radius only", correct: false },
-        { text: "Both mass and radius squared", correct: true },
-        { text: "Neither", correct: false }
-      ]
-    },
-    {
-      question: "Why do divers tuck into a ball during somersaults?",
-      options: [
-        { text: "Reduce air resistance", correct: false },
-        { text: "Decrease moment of inertia to spin faster", correct: true },
-        { text: "Look more aerodynamic", correct: false },
-        { text: "Feel safer", correct: false }
-      ]
-    },
-    {
-      question: "A neutron star spins incredibly fast because:",
-      options: [
-        { text: "Nuclear reactions", correct: false },
-        { text: "Angular momentum conserved as it collapsed", correct: true },
-        { text: "Magnetic fields", correct: false },
-        { text: "Dark matter", correct: false }
-      ]
-    },
-    {
-      question: "Why do helicopters need tail rotors?",
-      options: [
-        { text: "For steering", correct: false },
-        { text: "To counter main rotor's angular momentum", correct: true },
-        { text: "Extra lift", correct: false },
-        { text: "Cooling", correct: false }
-      ]
-    },
-    {
-      question: "When you extend arms on a spinning chair:",
-      options: [
-        { text: "You speed up", correct: false },
-        { text: "Nothing happens", correct: false },
-        { text: "You slow down", correct: true },
-        { text: "You fly off", correct: false }
-      ]
-    },
-    {
-      question: "L = Iω represents:",
-      options: [
-        { text: "Linear momentum", correct: false },
-        { text: "Angular momentum", correct: true },
-        { text: "Torque", correct: false },
-        { text: "Energy", correct: false }
-      ]
-    },
-    {
-      question: "Gyroscopes resist tilting because:",
-      options: [
-        { text: "They're heavy", correct: false },
-        { text: "Angular momentum is conserved", correct: true },
-        { text: "Friction", correct: false },
-        { text: "Magnetic forces", correct: false }
-      ]
     }
-  ];
+  }, [isSpinning, currentOmega, phase]);
 
-  const calculateScore = (): number => {
-    return testAnswers.reduce((score, answer, index) => {
-      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
-    }, 0);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#8B5CF6', // Purple for angular momentum
+    accentGlow: 'rgba(139, 92, 246, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    pink: '#EC4899',
   };
 
-  const applications = [
-    { title: "Figure Skating", icon: "⛸️", description: "Skaters pull arms in to spin faster. Starting with arms out, they can increase speed 3-4x.", details: "Olympic skaters reach 300+ RPM. World record is 342 RPM by Natalia Kanounnikova." },
-    { title: "Platform Diving", icon: "🏊", description: "Divers tuck tightly to complete multiple somersaults in just 2 seconds from a 10m platform.", details: "Tuck position reduces I by up to 4x compared to pike or layout position." },
-    { title: "Gyroscopes", icon: "🔄", description: "Spinning gyroscopes maintain orientation due to angular momentum conservation.", details: "Hubble Space Telescope uses gyroscopes for precise pointing. Your phone has MEMS gyroscopes." },
-    { title: "Neutron Stars", icon: "⭐", description: "When massive stars collapse, angular momentum is compressed into tiny volume.", details: "Fastest pulsar spins 716 times per second. Surface moves at 24% speed of light!" }
-  ];
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // REAL WORLD APPLICATIONS - Comprehensive data for transfer phase
-  // ─────────────────────────────────────────────────────────────────────────
-  const realWorldApps = [
-    {
-      icon: "⛸️",
-      title: "Figure Skating",
-      short: "Spin Speed Control",
-      tagline: "Mastering the art of controlled rotation",
-      description: "Figure skaters manipulate their moment of inertia by changing body position during spins. By pulling arms and legs close to the body, they dramatically reduce their moment of inertia, causing angular velocity to increase proportionally to conserve angular momentum.",
-      connection: "When a skater pulls their arms in, moment of inertia decreases. Since angular momentum (L = Iω) must be conserved, angular velocity must increase. This allows skaters to accelerate from 2 rotations per second to over 6 rotations per second without any external push.",
-      howItWorks: "Starting with arms extended (high I, low ω), the skater initiates rotation. By smoothly pulling arms to the chest, I decreases by up to 4x. Conservation of L means ω increases by the same factor. The skater controls spin speed by adjusting arm position, using muscle work to change I while L remains constant throughout the spin.",
-      stats: [
-        { value: "342", label: "RPM World Record", icon: "🏆" },
-        { value: "6+", label: "Rotations/Second", icon: "🔄" },
-        { value: "4x", label: "Speed Increase", icon: "⚡" }
-      ],
-      examples: [
-        "Scratch spin - starting position with one leg extended",
-        "Camel spin - horizontal leg position changes I distribution",
-        "Sit spin - compact position for maximum speed",
-        "Layback spin - artistic variation with controlled deceleration"
-      ],
-      companies: [
-        "International Skating Union",
-        "US Figure Skating",
-        "Skate Canada",
-        "Japan Skating Federation"
-      ],
-      futureImpact: "Advanced motion capture and biomechanical analysis will enable skaters to optimize their body positions for maximum angular momentum transfer, potentially breaking the 400 RPM barrier.",
-      color: "#60a5fa"
-    },
-    {
-      icon: "🛰️",
-      title: "Satellites and Spacecraft",
-      short: "Attitude Control",
-      tagline: "Precision orientation in the void of space",
-      description: "Spacecraft use angular momentum principles for attitude control without expending fuel. Reaction wheels and control moment gyroscopes store and transfer angular momentum, allowing precise orientation adjustments for communication antennas, solar panels, and scientific instruments.",
-      connection: "In the vacuum of space, there's nothing to push against. Spacecraft rotate reaction wheels in one direction, causing the spacecraft body to rotate in the opposite direction. The total angular momentum of the system remains zero, but momentum transfers between components.",
-      howItWorks: "Reaction wheels are flywheels mounted inside the spacecraft. When a wheel spins faster, the spacecraft rotates in the opposite direction to conserve total angular momentum. Three orthogonal wheels provide full 3-axis control. Control moment gyroscopes (CMGs) provide higher torque by tilting spinning gyroscopes, transferring their angular momentum to the spacecraft.",
-      stats: [
-        { value: "0.001°", label: "Pointing Accuracy", icon: "🎯" },
-        { value: "6000", label: "RPM Wheel Speed", icon: "⚙️" },
-        { value: "20+", label: "Years Lifespan", icon: "📅" }
-      ],
-      examples: [
-        "Hubble Space Telescope - 4 reaction wheels for arcsecond precision",
-        "International Space Station - 4 CMGs for station attitude",
-        "Mars rovers - reaction wheels for communication pointing",
-        "James Webb Telescope - reaction wheels for mirror alignment"
-      ],
-      companies: [
-        "NASA",
-        "SpaceX",
-        "Northrop Grumman",
-        "Honeywell Aerospace",
-        "Collins Aerospace"
-      ],
-      futureImpact: "Next-generation spacecraft will use superconducting magnetic bearings for frictionless reaction wheels, enabling decades of maintenance-free attitude control for deep space missions.",
-      color: "#a855f7"
-    },
-    {
-      icon: "🧭",
-      title: "Gyroscope Navigation",
-      short: "Inertial Navigation",
-      tagline: "Finding your way without looking outside",
-      description: "Gyroscopes exploit angular momentum conservation to maintain a fixed orientation in space regardless of how their mounting platform moves. This enables inertial navigation systems that can track position and orientation without external references like GPS.",
-      connection: "A spinning gyroscope resists changes to its axis of rotation due to conservation of angular momentum. Any attempt to tilt the gyroscope requires applying torque, which the gyro resists. This rigidity in space makes gyroscopes ideal for maintaining reference directions.",
-      howItWorks: "A mechanical gyroscope consists of a rapidly spinning rotor mounted in gimbals that allow free rotation. The rotor's angular momentum vector maintains its direction in inertial space. Modern systems use ring laser gyroscopes or fiber optic gyroscopes that measure rotation through the Sagnac effect, detecting phase shifts in counter-propagating light beams.",
-      stats: [
-        { value: "0.01°", label: "Drift Per Hour", icon: "📐" },
-        { value: "1M+", label: "Aircraft Using INS", icon: "✈️" },
-        { value: "99.99%", label: "Reliability Rate", icon: "✓" }
-      ],
-      examples: [
-        "Aircraft inertial navigation - backup when GPS fails",
-        "Submarine navigation - weeks underwater without surfacing",
-        "Missile guidance - precision targeting without external signals",
-        "Smartphone orientation - MEMS gyros detect rotation"
-      ],
-      companies: [
-        "Honeywell",
-        "Northrop Grumman",
-        "Safran",
-        "KVH Industries",
-        "STMicroelectronics"
-      ],
-      futureImpact: "Quantum gyroscopes using atom interferometry will achieve navigation accuracy 1000x better than current systems, enabling GPS-free navigation for autonomous vehicles and urban environments.",
-      color: "#f59e0b"
-    },
-    {
-      icon: "🔋",
-      title: "Flywheels for Energy Storage",
-      short: "Grid Stabilization",
-      tagline: "Storing power in pure rotation",
-      description: "Flywheel energy storage systems store kinetic energy in a rotating mass, exploiting the relationship between angular momentum and rotational kinetic energy. They provide rapid response grid stabilization, bridging gaps between power generation and demand.",
-      connection: "A flywheel's stored energy depends on its angular momentum and moment of inertia (E = ½Iω²). By spinning a massive rotor at high speed, significant energy can be stored. The flywheel maintains its angular momentum until energy is extracted by a motor-generator.",
-      howItWorks: "Modern flywheels use carbon fiber composite rotors spinning at 20,000-50,000 RPM in vacuum chambers on magnetic bearings to eliminate friction. Energy is added by using electricity to spin up the rotor. Energy is extracted by using the spinning rotor to drive a generator. Response time is milliseconds, making flywheels ideal for frequency regulation.",
-      stats: [
-        { value: "50,000", label: "RPM Maximum", icon: "🔄" },
-        { value: "20MW", label: "Grid Installations", icon: "⚡" },
-        { value: "20+", label: "Year Lifespan", icon: "📅" }
-      ],
-      examples: [
-        "Grid frequency regulation - instant power balancing",
-        "UPS systems - bridging power during outages",
-        "Regenerative braking - storing vehicle kinetic energy",
-        "Renewable integration - smoothing solar and wind output"
-      ],
-      companies: [
-        "Beacon Power",
-        "Amber Kinetics",
-        "Temporal Power",
-        "Stornetic",
-        "Chakratec"
-      ],
-      futureImpact: "Advanced superconducting flywheels will store gigawatt-hours of renewable energy, replacing chemical batteries for grid-scale storage and enabling 100% renewable electricity grids.",
-      color: "#10b981"
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Mass Effects',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'angular-momentum',
+        gameTitle: 'Angular Momentum Conservation',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
     }
-  ];
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-  const renderSpinningFigure = () => {
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Speed ratio for display
+  const speedRatio = currentOmega / initialOmega;
+
+  // Spinning Figure SVG Component
+  const SpinningFigureVisualization = () => {
+    const width = isMobile ? 340 : 420;
+    const height = isMobile ? 340 : 400;
+    const centerX = width / 2;
+    const centerY = height / 2 - 20;
     const personRotation = angle * 180 / Math.PI;
     const armLength = 20 + armExtension * 50;
     const weightSize = hasWeights ? 14 : 5;
-    const speedRatio = calculatedOmega / initialOmega;
 
     return (
-      <div className="bg-gradient-to-b from-purple-900/30 to-slate-900/50 rounded-2xl p-6 border border-slate-700/50">
-        <svg viewBox="0 0 360 300" className="w-full max-w-[360px] mx-auto block">
-          <defs>
-            {/* Premium background gradient */}
-            <linearGradient id="angMomLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a0f1a" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a0f1a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <radialGradient id="spinGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.6" />
+            <stop offset="60%" stopColor={colors.accent} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={colors.accent} stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="bodyGrad" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#334155" />
+          </radialGradient>
+          <radialGradient id="headGrad" cx="35%" cy="30%" r="65%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#475569" />
+          </radialGradient>
+          <radialGradient id="weightGrad" cx="30%" cy="25%" r="65%">
+            <stop offset="0%" stopColor="#f9a8d4" />
+            <stop offset="50%" stopColor="#ec4899" />
+            <stop offset="100%" stopColor="#9d174d" />
+          </radialGradient>
+          <linearGradient id="armGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+          <linearGradient id="vectorGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#7c3aed" />
+            <stop offset="100%" stopColor="#c084fc" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Platform/stage gradient with 3D depth */}
-            <radialGradient id="angMomPlatform" cx="50%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#334155" />
-              <stop offset="40%" stopColor="#1e293b" />
-              <stop offset="70%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
-            </radialGradient>
+        {/* Background grid */}
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke={colors.border} strokeWidth="0.3" strokeOpacity="0.4" />
+        </pattern>
+        <rect width={width} height={height} fill={`url(#grid)`} />
 
-            {/* Platform rim highlight */}
-            <linearGradient id="angMomPlatformRim" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
+        {/* Platform/base */}
+        <ellipse cx={centerX} cy={centerY + 100} rx="70" ry="18" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+        <rect x={centerX - 8} y={centerY + 40} width="16" height="62" fill="url(#armGrad)" rx="3" />
 
-            {/* Pole/stand metallic gradient */}
-            <linearGradient id="angMomPole" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#334155" />
-              <stop offset="25%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#94a3b8" />
-              <stop offset="75%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#334155" />
-            </linearGradient>
+        {/* Spin glow when spinning */}
+        {isSpinning && (
+          <ellipse
+            cx={centerX}
+            cy={centerY}
+            rx={75 + armLength}
+            ry={28 + armLength / 3}
+            fill="url(#spinGlow)"
+          >
+            <animate attributeName="opacity" values="0.4;0.7;0.4" dur="0.5s" repeatCount="indefinite" />
+          </ellipse>
+        )}
 
-            {/* Body gradient with 3D shading */}
-            <radialGradient id="angMomBody" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="30%" stopColor="#475569" />
-              <stop offset="70%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </radialGradient>
+        {/* Angular momentum vector L pointing up when spinning */}
+        {isSpinning && (
+          <g filter="url(#glow)">
+            <line x1={centerX} y1={centerY - 50} x2={centerX} y2={centerY - 110} stroke="url(#vectorGrad)" strokeWidth="4" strokeLinecap="round" />
+            <polygon points={`${centerX},${centerY - 120} ${centerX - 8},${centerY - 104} ${centerX},${centerY - 110} ${centerX + 8},${centerY - 104}`} fill="url(#vectorGrad)" />
+            <text x={centerX + 15} y={centerY - 105} fill={colors.accent} fontSize="14" fontWeight="bold">L</text>
+            <circle cx={centerX} cy={centerY - 120} r="5" fill="#c084fc" fillOpacity="0.5">
+              <animate attributeName="r" values="3;7;3" dur="1s" repeatCount="indefinite" />
+            </circle>
+          </g>
+        )}
 
-            {/* Head gradient with premium 3D effect */}
-            <radialGradient id="angMomHead" cx="35%" cy="30%" r="65%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="30%" stopColor="#64748b" />
-              <stop offset="60%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
-            </radialGradient>
-
-            {/* Arm gradient */}
-            <linearGradient id="angMomArm" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="30%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
-            </linearGradient>
-
-            {/* Weight gradient - pink/magenta with 3D sphere effect */}
-            <radialGradient id="angMomWeight" cx="30%" cy="25%" r="65%">
-              <stop offset="0%" stopColor="#f9a8d4" />
-              <stop offset="20%" stopColor="#f472b6" />
-              <stop offset="50%" stopColor="#ec4899" />
-              <stop offset="80%" stopColor="#db2777" />
-              <stop offset="100%" stopColor="#9d174d" />
-            </radialGradient>
-
-            {/* Weight without weights - subtle gray */}
-            <radialGradient id="angMomWeightNone" cx="30%" cy="25%" r="65%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="50%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#334155" />
-            </radialGradient>
-
-            {/* Spin glow effect - purple aura */}
-            <radialGradient id="angMomSpinGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.6" />
-              <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.4" />
-              <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Motion blur / rotation trail */}
-            <linearGradient id="angMomMotionTrail" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a855f7" stopOpacity="0" />
-              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Angular momentum vector arrow gradient */}
-            <linearGradient id="angMomVectorArrow" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#7c3aed" />
-              <stop offset="30%" stopColor="#8b5cf6" />
-              <stop offset="60%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#c084fc" />
-            </linearGradient>
-
-            {/* Glow filters */}
-            <filter id="angMomGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="angMomWeightGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="angMomSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" />
-            </filter>
-
-            {/* Shadow filter for depth */}
-            <filter id="angMomShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.4" />
-            </filter>
-          </defs>
-
-          {/* Premium background */}
-          <rect width="360" height="300" fill="url(#angMomLabBg)" />
-
-          {/* Subtle grid pattern for lab feel */}
-          <pattern id="angMomGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
-          </pattern>
-          <rect width="360" height="300" fill="url(#angMomGrid)" />
-
-          {/* Floor/ground ellipse with depth */}
-          <ellipse cx="180" cy="275" rx="150" ry="22" fill="url(#angMomPlatform)" />
-          <ellipse cx="180" cy="275" rx="150" ry="22" fill="none" stroke="url(#angMomPlatformRim)" strokeWidth="1.5" />
-          <ellipse cx="180" cy="275" rx="145" ry="18" fill="none" stroke="#475569" strokeWidth="0.5" strokeOpacity="0.3" />
-
-          {/* Spin glow when spinning */}
-          {isSpinning && (
-            <ellipse
-              cx="180" cy="160"
-              rx={75 + armLength}
-              ry={28 + armLength/3}
-              fill="url(#angMomSpinGlow)"
-              filter="url(#angMomSoftGlow)"
-            >
-              <animate attributeName="opacity" values="0.4;0.7;0.4" dur="0.5s" repeatCount="indefinite" />
+        {/* Rotating figure */}
+        <g transform={`translate(${centerX}, ${centerY}) rotate(${personRotation})`}>
+          {/* Motion trail when fast */}
+          {isSpinning && speedRatio > 1.3 && (
+            <ellipse cx="0" cy="2" rx={armLength + 30} ry="8" fill={colors.accent} opacity="0.2">
+              <animate attributeName="opacity" values="0.1;0.25;0.1" dur="0.3s" repeatCount="indefinite" />
             </ellipse>
           )}
 
-          {/* Base/stand ellipse */}
-          <ellipse cx="180" cy="252" rx="32" ry="12" fill="url(#angMomPlatform)" stroke="#475569" strokeWidth="1" />
-          <ellipse cx="180" cy="250" rx="30" ry="10" fill="url(#angMomPlatform)" />
-          <ellipse cx="180" cy="248" rx="26" ry="8" fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
+          {/* Body */}
+          <ellipse cx="0" cy="15" rx="24" ry="35" fill="url(#bodyGrad)" />
 
-          {/* Pole/stand with metallic gradient */}
-          <rect x="172" y="192" width="16" height="58" fill="url(#angMomPole)" rx="3" />
-          <rect x="174" y="194" width="2" height="54" fill="#94a3b8" fillOpacity="0.3" rx="1" />
+          {/* Head */}
+          <circle cx="0" cy="-28" r="20" fill="url(#headGrad)" />
+          <ellipse cx="-5" cy="-32" rx="6" ry="4" fill="#cbd5e1" fillOpacity="0.2" />
 
-          {/* Angular momentum vector (L) pointing up when spinning */}
-          {isSpinning && (
-            <g filter="url(#angMomGlow)">
-              {/* Vector line */}
-              <line
-                x1="180" y1="90"
-                x2="180" y2="20"
-                stroke="url(#angMomVectorArrow)"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-              {/* Arrowhead */}
-              <polygon
-                points="180,8 172,24 180,18 188,24"
-                fill="url(#angMomVectorArrow)"
-              />
-              {/* Pulsing glow */}
-              <circle cx="180" cy="14" r="6" fill="#c084fc" fillOpacity="0.5">
-                <animate attributeName="r" values="4;8;4" dur="1s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1s" repeatCount="indefinite" />
-              </circle>
-            </g>
+          {/* Eyes */}
+          <circle cx="-6" cy="-30" r="3" fill="#0f172a" />
+          <circle cx="6" cy="-30" r="3" fill="#0f172a" />
+          <circle cx="-7" cy="-31" r="1" fill="#94a3b8" />
+          <circle cx="5" cy="-31" r="1" fill="#94a3b8" />
+
+          {/* Left arm */}
+          <line x1="-20" y1="0" x2={-20 - armLength} y2="0" stroke="url(#armGrad)" strokeWidth="9" strokeLinecap="round" />
+          <circle cx={-20 - armLength} cy="0" r={weightSize} fill={hasWeights ? "url(#weightGrad)" : "#64748b"} filter={hasWeights ? "url(#glow)" : undefined} />
+          {hasWeights && (
+            <ellipse cx={-20 - armLength - weightSize * 0.25} cy={-weightSize * 0.3} rx={weightSize * 0.25} ry={weightSize * 0.15} fill="white" fillOpacity="0.3" />
           )}
 
-          {/* Rotating figure group */}
-          <g transform={`translate(180, 155) rotate(${personRotation})`} filter="url(#angMomShadow)">
-            {/* Motion trails when spinning fast */}
-            {isSpinning && speedRatio > 1.3 && (
-              <>
-                <ellipse cx="0" cy="2" rx={armLength + 30} ry="8" fill="url(#angMomMotionTrail)" opacity="0.3">
-                  <animate attributeName="opacity" values="0.1;0.3;0.1" dur="0.3s" repeatCount="indefinite" />
-                </ellipse>
-              </>
-            )}
+          {/* Right arm */}
+          <line x1="20" y1="0" x2={20 + armLength} y2="0" stroke="url(#armGrad)" strokeWidth="9" strokeLinecap="round" />
+          <circle cx={20 + armLength} cy="0" r={weightSize} fill={hasWeights ? "url(#weightGrad)" : "#64748b"} filter={hasWeights ? "url(#glow)" : undefined} />
+          {hasWeights && (
+            <ellipse cx={20 + armLength - weightSize * 0.25} cy={-weightSize * 0.3} rx={weightSize * 0.25} ry={weightSize * 0.15} fill="white" fillOpacity="0.3" />
+          )}
+        </g>
 
-            {/* Body - torso with 3D gradient */}
-            <ellipse cx="0" cy="20" rx="26" ry="38" fill="url(#angMomBody)" />
-            <ellipse cx="-8" cy="10" rx="8" ry="18" fill="#64748b" fillOpacity="0.3" />
-
-            {/* Head with premium 3D effect */}
-            <circle cx="0" cy="-28" r="22" fill="url(#angMomHead)" />
-            {/* Head highlight */}
-            <ellipse cx="-6" cy="-34" rx="8" ry="6" fill="#cbd5e1" fillOpacity="0.25" />
-
-            {/* Eyes */}
-            <circle cx="-7" cy="-32" r="4" fill="#0f172a" />
-            <circle cx="7" cy="-32" r="4" fill="#0f172a" />
-            {/* Eye highlights */}
-            <circle cx="-8" cy="-33" r="1.5" fill="#94a3b8" />
-            <circle cx="6" cy="-33" r="1.5" fill="#94a3b8" />
-
-            {/* Left arm with gradient */}
-            <line
-              x1="-22" y1="2"
-              x2={-22 - armLength} y2="2"
-              stroke="url(#angMomArm)"
-              strokeWidth="10"
-              strokeLinecap="round"
-            />
-            {/* Arm highlight line */}
-            <line
-              x1="-22" y1="0"
-              x2={-22 - armLength} y2="0"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeOpacity="0.4"
-            />
-
-            {/* Left weight with 3D sphere effect */}
-            <g filter={hasWeights ? "url(#angMomWeightGlow)" : undefined}>
-              <circle
-                cx={-22 - armLength} cy="2"
-                r={weightSize}
-                fill={hasWeights ? "url(#angMomWeight)" : "url(#angMomWeightNone)"}
-              />
-              {/* Weight highlight */}
-              <ellipse
-                cx={-22 - armLength - weightSize * 0.25}
-                cy={2 - weightSize * 0.3}
-                rx={weightSize * 0.3}
-                ry={weightSize * 0.2}
-                fill="white"
-                fillOpacity={hasWeights ? "0.4" : "0.2"}
-              />
-            </g>
-
-            {/* Right arm with gradient */}
-            <line
-              x1="22" y1="2"
-              x2={22 + armLength} y2="2"
-              stroke="url(#angMomArm)"
-              strokeWidth="10"
-              strokeLinecap="round"
-            />
-            {/* Arm highlight line */}
-            <line
-              x1="22" y1="0"
-              x2={22 + armLength} y2="0"
-              stroke="#94a3b8"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeOpacity="0.4"
-            />
-
-            {/* Right weight with 3D sphere effect */}
-            <g filter={hasWeights ? "url(#angMomWeightGlow)" : undefined}>
-              <circle
-                cx={22 + armLength} cy="2"
-                r={weightSize}
-                fill={hasWeights ? "url(#angMomWeight)" : "url(#angMomWeightNone)"}
-              />
-              {/* Weight highlight */}
-              <ellipse
-                cx={22 + armLength - weightSize * 0.25}
-                cy={2 - weightSize * 0.3}
-                rx={weightSize * 0.3}
-                ry={weightSize * 0.2}
-                fill="white"
-                fillOpacity={hasWeights ? "0.4" : "0.2"}
-              />
-            </g>
-          </g>
-        </svg>
-
-        {/* Stats display with React divs - using typo system */}
-        <div className="grid grid-cols-3 gap-2 mt-4">
-          <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700/30">
-            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>SPIN SPEED</div>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>{calculatedOmega.toFixed(1)} rad/s</div>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700/30">
-            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>MOMENT I</div>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.warning }}>{momentOfInertia.toFixed(2)} kg·m²</div>
-          </div>
-          <div
-            className="rounded-lg p-3 text-center"
-            style={{
-              backgroundColor: speedRatio > 1.2 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(51, 65, 85, 0.5)',
-              border: speedRatio > 1.2 ? `1px solid rgba(16, 185, 129, 0.4)` : '1px solid rgba(51, 65, 85, 0.3)'
-            }}
-          >
-            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>SPEED GAIN</div>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: speedRatio > 1.2 ? colors.success : colors.textPrimary }}>{speedRatio.toFixed(1)}×</div>
-          </div>
-        </div>
-
-        {/* Angular momentum conservation display */}
-        <div
-          className="mt-4 p-4 rounded-xl text-center"
-          style={{
-            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-            border: `1px solid rgba(139, 92, 246, 0.3)`
-          }}
-        >
-          <span style={{ fontSize: typo.label, color: colors.primary, fontWeight: 600, letterSpacing: '0.05em' }}>ANGULAR MOMENTUM (CONSERVED)</span>
-          <div style={{ fontSize: typo.heading, fontWeight: 700, color: colors.primary, marginTop: '4px' }}>L = {angularMomentum.toFixed(2)} kg·m²/s ✓</div>
-        </div>
-      </div>
+        {/* Labels and values */}
+        <text x={width / 2} y={height - 20} textAnchor="middle" fill={colors.textMuted} fontSize="12">
+          Arm position: {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
+        </text>
+      </svg>
     );
   };
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-purple-400 tracking-wide">PHYSICS EXPLORATION</span>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.pink})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, ${colors.pink})`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // Stats display component
+  const StatsDisplay = () => (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gap: '12px',
+      marginTop: '16px',
+    }}>
+      <div style={{
+        background: colors.bgSecondary,
+        borderRadius: '8px',
+        padding: '12px',
+        textAlign: 'center',
+      }}>
+        <div style={{ ...typo.h3, color: colors.accent }}>{currentOmega.toFixed(1)} rad/s</div>
+        <div style={{ ...typo.small, color: colors.textMuted }}>Angular Velocity</div>
       </div>
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-pink-200 bg-clip-text text-transparent">
-        The Spinning Secret
-      </h1>
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover why figure skaters spin faster when they pull their arms in
-      </p>
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 rounded-3xl" />
-        <div className="relative">
-          <div className="text-6xl mb-6">⛸️</div>
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              A skater starts spinning slowly with arms outstretched.
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              They pull their arms in close to their body and suddenly spin much faster!
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-purple-400 font-semibold">
-                How do they speed up without pushing off anything?
-              </p>
-            </div>
-          </div>
+      <div style={{
+        background: colors.bgSecondary,
+        borderRadius: '8px',
+        padding: '12px',
+        textAlign: 'center',
+      }}>
+        <div style={{ ...typo.h3, color: colors.warning }}>{momentOfInertia.toFixed(2)} kg*m2</div>
+        <div style={{ ...typo.small, color: colors.textMuted }}>Moment of Inertia</div>
+      </div>
+      <div style={{
+        background: speedRatio > 1.2 ? `${colors.success}22` : colors.bgSecondary,
+        borderRadius: '8px',
+        padding: '12px',
+        textAlign: 'center',
+        border: speedRatio > 1.2 ? `1px solid ${colors.success}44` : 'none',
+      }}>
+        <div style={{ ...typo.h3, color: speedRatio > 1.2 ? colors.success : colors.textPrimary }}>{speedRatio.toFixed(2)}x</div>
+        <div style={{ ...typo.small, color: colors.textMuted }}>Speed Gain</div>
+      </div>
+    </div>
+  );
+
+  // Angular momentum display
+  const AngularMomentumDisplay = () => (
+    <div style={{
+      background: `${colors.accent}11`,
+      border: `1px solid ${colors.accent}33`,
+      borderRadius: '12px',
+      padding: '16px',
+      marginTop: '16px',
+      textAlign: 'center',
+    }}>
+      <div style={{ ...typo.small, color: colors.accent, fontWeight: 600, letterSpacing: '0.05em', marginBottom: '4px' }}>
+        ANGULAR MOMENTUM (CONSERVED)
+      </div>
+      <div style={{ ...typo.h3, color: colors.accent }}>
+        L = {angularMomentum.toFixed(2)} kg*m2/s
+      </div>
+    </div>
+  );
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          ⛸️🔄
         </div>
-      </div>
-      <button
-        onPointerDown={() => goToPhase('predict')}
-        onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
-        style={{ minHeight: '48px' }}
-      >
-        <span className="relative z-10 flex items-center gap-3">
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          The Spinning Secret
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Watch any figure skater perform a spin. They start slowly with arms outstretched, then pull their arms in and <span style={{ color: colors.accent }}>suddenly spin three times faster</span>. How do they accelerate without pushing off anything?"
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Angular momentum must be conserved. When a skater pulls her arms in, reducing her moment of inertia, her angular velocity must increase proportionally. It's pure physics, beautifully demonstrated."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            — Classical Mechanics
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
           Discover the Physics
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2"><span className="text-purple-400">✦</span>Interactive Lab</div>
-        <div className="flex items-center gap-2"><span className="text-purple-400">✦</span>Real-World Examples</div>
-        <div className="flex items-center gap-2"><span className="text-purple-400">✦</span>Knowledge Test</div>
-      </div>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          WHY does pulling arms in make a skater spin faster?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Arms push air outward, reaction pushes skater faster' },
-          { id: 'B', text: 'Angular momentum conserved—smaller radius needs faster speed' },
-          { id: 'C', text: 'Muscles add energy when pulling arms in' },
-          { id: 'D', text: 'Gravity affects you less with arms closer to body' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onPointerDown={() => handlePrediction(option.id)}
-            onTouchEnd={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            disabled={showPredictionFeedback}
-            style={{ minHeight: '48px' }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            ✓ Correct! Angular momentum L = Iω is conserved. When I decreases, ω must increase!
-          </p>
-          <button
-            onPointerDown={() => goToPhase('play')}
-            onTouchEnd={(e) => { e.preventDefault(); goToPhase('play'); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-            style={{ minHeight: '48px' }}
-          >
-            Try the Experiment →
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Spinning Chair Lab</h2>
-      {renderSpinningFigure()}
-      <div className="w-full max-w-md mt-6 space-y-4">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Arm Position: {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}</label>
-          <input type="range" min="0" max="1" step="0.1" value={armExtension} onChange={(e) => setArmExtension(parseFloat(e.target.value))} className="w-full accent-purple-500" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setHasWeights(true)}
-            className={`p-4 rounded-xl font-medium transition-all ${hasWeights ? 'bg-pink-500/30 border-2 border-pink-500' : 'bg-slate-700/50 border-2 border-transparent'} text-white`}
-          >
-            🏋️ With Weights
-          </button>
-          <button
-            onClick={() => setHasWeights(false)}
-            className={`p-4 rounded-xl font-medium transition-all ${!hasWeights ? 'bg-purple-500/30 border-2 border-purple-500' : 'bg-slate-700/50 border-2 border-transparent'} text-white`}
-          >
-            🙌 Arms Only
-          </button>
-        </div>
-        <button
-          onClick={() => { setIsSpinning(!isSpinning); setExperimentCount(c => c + 1); }}
-          className={`w-full py-4 rounded-xl font-semibold text-white ${isSpinning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
-        >
-          {isSpinning ? '⏹ Stop Spinning' : '▶ Start Spinning'}
         </button>
-      </div>
-      <button
-        onPointerDown={() => goToPhase('review')}
-        onTouchEnd={(e) => { e.preventDefault(); goToPhase('review'); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-        style={{ minHeight: '48px' }}
-      >
-        Review the Physics →
-      </button>
-    </div>
-  );
 
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Conservation of Angular Momentum</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">🔄 Angular Momentum (L)</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• L = I × ω (moment of inertia × angular velocity)</li>
-            <li>• CONSERVED when no external torque acts</li>
-            <li>• Like a "spinning memory" that must be preserved</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-amber-400 mb-3">⚖️ Moment of Inertia (I)</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• I = Σmr² (mass × distance² from axis)</li>
-            <li>• Farther mass = larger I</li>
-            <li>• Extended arms = large I, tucked = small I</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">🎯 The Conservation Law</h3>
-          <p className="text-slate-300 text-sm">
-            <strong>L = Iω = constant</strong> — When you pull arms in, I decreases. Since L must stay constant, ω must INCREASE!<br/>
-            If I drops by half, ω doubles. That's how skaters spin 3-4× faster!
-          </p>
-        </div>
+        {renderNavDots()}
       </div>
-      <button onClick={() => goToPhase('twist_predict')} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        Try a Challenge →
-      </button>
-    </div>
-  );
+    );
+  }
 
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">🌟 The Twist Challenge</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          You've seen heavy weights make a big difference. What if you spin with NO weights (just your arms)?
-        </p>
-        <p className="text-lg text-purple-400 font-medium">
-          Will the speed increase be bigger, smaller, or the same?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Same speed increase (arms have mass too)' },
-          { id: 'B', text: 'SMALLER speed increase (less mass being moved)' },
-          { id: 'C', text: 'LARGER speed increase (weights were slowing you)' },
-          { id: 'D', text: 'No change at all (weights don\'t matter)' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            ✓ Correct! Less mass means smaller change in I, so smaller change in ω!
-          </p>
-          <button onClick={() => goToPhase('twist_play')} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-            Compare Both →
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Arms push air outward, and the reaction force speeds up the spin' },
+      { id: 'b', text: 'Angular momentum is conserved - smaller radius needs faster speed', correct: true },
+      { id: 'c', text: 'Muscles add rotational energy when pulling arms against centrifugal force' },
+      { id: 'd', text: 'Gravity affects the body less when arms are closer to center of mass' },
+    ];
 
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Compare With/Without Weights</h2>
-      <div className="grid grid-cols-2 gap-3 w-full max-w-md mb-4">
-        <button
-          onClick={() => setHasWeights(true)}
-          className={`p-4 rounded-xl font-medium transition-all ${hasWeights ? 'bg-pink-500/30 border-2 border-pink-500' : 'bg-slate-700/50 border-2 border-transparent'} text-white`}
-        >
-          🏋️ Heavy Weights
-        </button>
-        <button
-          onClick={() => setHasWeights(false)}
-          className={`p-4 rounded-xl font-medium transition-all ${!hasWeights ? 'bg-purple-500/30 border-2 border-purple-500' : 'bg-slate-700/50 border-2 border-transparent'} text-white`}
-        >
-          🙌 Arms Only
-        </button>
-      </div>
-      {renderSpinningFigure()}
-      <div className="bg-slate-700/50 rounded-xl p-4 w-full max-w-md mt-4">
-        <label className="text-slate-300 text-sm block mb-2">Arm Position</label>
-        <input type="range" min="0" max="1" step="0.1" value={armExtension} onChange={(e) => setArmExtension(parseFloat(e.target.value))} className="w-full accent-amber-500" />
-      </div>
-      <button
-        onClick={() => setIsSpinning(!isSpinning)}
-        className={`w-full max-w-md mt-4 py-4 rounded-xl font-semibold text-white ${isSpinning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
-      >
-        {isSpinning ? '⏹ Stop' : '▶ Spin'}
-      </button>
-      <button onClick={() => goToPhase('twist_review')} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        See Why →
-      </button>
-    </div>
-  );
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">🌟 Mass Distribution is Key!</h2>
-      <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-slate-300 mb-4">Since <strong className="text-purple-400">I = Σmr²</strong>, the mass (m) multiplies the effect of changing position (r):</p>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-800/50 p-4 rounded-xl text-center">
-            <div className="text-3xl mb-2">🏋️</div>
-            <div className="text-pink-400 font-bold">Heavy weights</div>
-            <div className="text-slate-400 text-sm">Large ΔI → Large Δω</div>
-            <div className="text-emerald-400 mt-2">Spin 3× faster!</div>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
           </div>
-          <div className="bg-slate-800/50 p-4 rounded-xl text-center">
-            <div className="text-3xl mb-2">🙌</div>
-            <div className="text-purple-400 font-bold">Arms only</div>
-            <div className="text-slate-400 text-sm">Small ΔI → Small Δω</div>
-            <div className="text-amber-400 mt-2">Spin 1.2× faster</div>
-          </div>
-        </div>
-      </div>
-      <button onClick={() => goToPhase('transfer')} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
-        Real-World Applications →
-      </button>
-    </div>
-  );
 
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveAppTab(index)}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index ? 'bg-purple-600 text-white'
-              : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
-          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
-        </div>
-        <p className="text-lg text-slate-300 mb-3">{applications[activeAppTab].description}</p>
-        <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
-        {!completedApps.has(activeAppTab) && (
-          <button onClick={() => handleAppComplete(activeAppTab)} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
-            ✓ Mark as Understood
-          </button>
-        )}
-      </div>
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">{applications.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-      {completedApps.size >= 4 && (
-        <button onClick={() => goToPhase('test')} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
-          Take the Knowledge Test →
-        </button>
-      )}
-    </div>
-  );
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            WHY does pulling arms in make a skater spin faster?
+          </h2>
 
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-purple-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+          {/* Visual diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>🙆</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Arms Extended</p>
+                <p style={{ ...typo.small, color: colors.warning }}>Slow Spin</p>
+              </div>
+              <div style={{ fontSize: '32px', color: colors.accent }}>→</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>🧘</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Arms Tucked</p>
+                <p style={{ ...typo.small, color: colors.success }}>Fast Spin!</p>
               </div>
             </div>
-          ))}
-          <button
-            onClick={() => setShowTestResults(true)}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'}`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
-          <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered angular momentum!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() >= 7 ? (
-            <button onClick={() => goToPhase('mastery')} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
-              Claim Your Mastery Badge →
-            </button>
-          ) : (
-            <button onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }} className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
-              Review & Try Again
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-purple-900/50 via-pink-900/50 to-amber-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">⛸️</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Angular Momentum Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">You've mastered the conservation of angular momentum!</p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔄</div><p className="text-sm text-slate-300">L = Iω</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⚖️</div><p className="text-sm text-slate-300">I = Σmr²</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⛸️</div><p className="text-sm text-slate-300">Figure Skating</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⭐</div><p className="text-sm text-slate-300">Neutron Stars</p></div>
-        </div>
-        <button onClick={() => goToPhase('hook')} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">↺ Explore Again</button>
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+  // PLAY PHASE - Interactive Spinning Chair Simulation
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-500/3 rounded-full blur-3xl" />
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Spinning Chair Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Change arm position and watch angular velocity respond to keep L constant
+          </p>
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Angular Momentum</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-purple-400 w-6 shadow-lg shadow-purple-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <SpinningFigureVisualization />
+            </div>
+
+            <StatsDisplay />
+            <AngularMomentumDisplay />
+          </div>
+
+          {/* Controls */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {/* Arm position slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Position</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                  {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value={armExtension}
+                onChange={(e) => setArmExtension(parseFloat(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.accent} ${armExtension * 100}%, ${colors.border} ${armExtension * 100}%)`,
+                  cursor: 'pointer',
+                }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Tucked (Fast)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Extended (Slow)</span>
+              </div>
+            </div>
+
+            {/* Weight toggle */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+              marginBottom: '20px',
+            }}>
+              <button
+                onClick={() => setHasWeights(true)}
+                style={{
+                  background: hasWeights ? `${colors.pink}22` : colors.bgSecondary,
+                  border: `2px solid ${hasWeights ? colors.pink : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  color: colors.textPrimary,
+                  fontWeight: 600,
+                }}
+              >
+                With Weights
+              </button>
+              <button
+                onClick={() => setHasWeights(false)}
+                style={{
+                  background: !hasWeights ? `${colors.accent}22` : colors.bgSecondary,
+                  border: `2px solid ${!hasWeights ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  color: colors.textPrimary,
+                  fontWeight: 600,
+                }}
+              >
+                Arms Only
+              </button>
+            </div>
+
+            {/* Spin button */}
+            <button
+              onClick={() => setIsSpinning(!isSpinning)}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: isSpinning ? colors.error : colors.success,
+                color: 'white',
+                fontSize: '18px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {isSpinning ? 'Stop Spinning' : 'Start Spinning'}
+            </button>
+          </div>
+
+          {/* Discovery prompt */}
+          {speedRatio > 1.5 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Notice how pulling arms in increases speed while L stays constant!
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Conservation of Angular Momentum
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>The Fundamental Law: L = I x omega = constant</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <span style={{ color: colors.accent, fontWeight: 600 }}>Angular Momentum (L)</span> is like a "spinning memory" - it must be preserved when no external torque acts on the system.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <span style={{ color: colors.warning, fontWeight: 600 }}>Moment of Inertia (I)</span> measures resistance to rotation change. It depends on mass AND how far that mass is from the rotation axis: I = Sum of m*r squared.
+              </p>
+              <p>
+                <span style={{ color: colors.success, fontWeight: 600 }}>Angular Velocity (omega)</span> is how fast you're spinning. When I decreases (arms in), omega must increase to keep L constant!
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Key Insight: The r-squared Effect
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Because I includes r-squared, doubling the distance of mass from the axis QUADRUPLES the moment of inertia. This is why arm position has such a dramatic effect on spin speed.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '12px' }}>
+                The Math in Action
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                If a skater reduces her moment of inertia from 4.8 kg*m2 to 1.6 kg*m2 (3x reduction), her angular velocity must TRIPLE. Starting at 2 rev/s, she reaches 6 rev/s!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore the Mass Effect
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Same speed increase - arms have mass too, so the physics is identical' },
+      { id: 'b', text: 'SMALLER speed increase - less mass moving means smaller change in I', correct: true },
+      { id: 'c', text: 'LARGER speed increase - weights were slowing the spin down' },
+      { id: 'd', text: 'No change at all - weights dont matter for angular momentum' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Mass Distribution
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            You saw heavy weights make a big difference. What if you spin with NO weights (just your arms)?
+          </h2>
+
+          <p style={{ ...typo.body, color: colors.accent, marginBottom: '24px' }}>
+            Will the speed increase when pulling arms in be bigger, smaller, or the same?
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-purple-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Compare Both Scenarios
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Compare With/Without Weights
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Toggle between heavy weights and arms only - watch the difference in speed gain
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {/* Weight toggle at top */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+              marginBottom: '20px',
+            }}>
+              <button
+                onClick={() => setHasWeights(true)}
+                style={{
+                  background: hasWeights ? `${colors.pink}22` : colors.bgSecondary,
+                  border: `2px solid ${hasWeights ? colors.pink : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  color: colors.textPrimary,
+                  fontWeight: 600,
+                }}
+              >
+                Heavy Weights (2 kg each)
+              </button>
+              <button
+                onClick={() => setHasWeights(false)}
+                style={{
+                  background: !hasWeights ? `${colors.accent}22` : colors.bgSecondary,
+                  border: `2px solid ${!hasWeights ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  color: colors.textPrimary,
+                  fontWeight: 600,
+                }}
+              >
+                Arms Only (0.2 kg each)
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <SpinningFigureVisualization />
+            </div>
+
+            {/* Arm slider */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Position</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                  {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value={armExtension}
+                onChange={(e) => setArmExtension(parseFloat(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            <StatsDisplay />
+            <AngularMomentumDisplay />
+
+            {/* Spin button */}
+            <button
+              onClick={() => setIsSpinning(!isSpinning)}
+              style={{
+                width: '100%',
+                padding: '14px',
+                marginTop: '16px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isSpinning ? colors.error : colors.success,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {isSpinning ? 'Stop' : 'Spin'}
+            </button>
+          </div>
+
+          {/* Comparison insight */}
+          <div style={{
+            background: `${colors.warning}22`,
+            border: `1px solid ${colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+              {hasWeights
+                ? 'With heavy weights: Large change in I when moving arms = Large change in omega'
+                : 'Arms only: Small change in I when moving arms = Small change in omega'}
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Why
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Mass Distribution is Key!
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>I = Sum of m * r squared</span>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The mass (m) directly multiplies the effect of position change (r). More mass at the ends = bigger change in I when you move it.
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+            }}>
+              <div style={{
+                background: `${colors.pink}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.pink}33`,
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '36px', marginBottom: '8px' }}>🏋️</div>
+                <h3 style={{ ...typo.h3, color: colors.pink, marginBottom: '8px' }}>Heavy Weights</h3>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>Large Delta-I</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>= Large Delta-omega</p>
+                <p style={{ ...typo.body, color: colors.success, marginTop: '8px', fontWeight: 600 }}>Spin 3x faster!</p>
+              </div>
+              <div style={{
+                background: `${colors.accent}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.accent}33`,
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '36px', marginBottom: '8px' }}>🙌</div>
+                <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Arms Only</h3>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>Small Delta-I</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>= Small Delta-omega</p>
+                <p style={{ ...typo.body, color: colors.warning, marginTop: '8px', fontWeight: 600 }}>Spin 1.2x faster</p>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+                This is why figure skaters matter
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Elite skaters have lean, distributed limbs. The mass of arms and legs, positioned far from the rotation axis, creates large moment of inertia changes. Combined with technique and strength, this enables the spectacular spins we see in competition.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Angular Momentum Applies:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>Examples:</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.examples.map((ex, i) => (
+                  <span key={i} style={{
+                    background: colors.bgSecondary,
+                    padding: '6px 12px',
+                    borderRadius: '16px',
+                    ...typo.small,
+                    color: colors.textSecondary,
+                  }}>
+                    {ex}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>Key Organizations:</h4>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                {app.companies.join(' | ')}
+              </p>
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You have mastered angular momentum conservation!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          ⛸️
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Angular Momentum Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand why figure skaters spin faster when they pull their arms in, and how this principle applies throughout the universe.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'L = I times omega = constant (no external torque)',
+              'Moment of inertia I = sum of m times r-squared',
+              'Smaller I means larger omega to conserve L',
+              'Mass distribution dramatically affects I',
+              'Applications from skating to neutron stars',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '12px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '4px' }}>🔄</div>
+            <div style={{ ...typo.small, color: colors.textSecondary }}>L = Iw</div>
+          </div>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '4px' }}>⚖️</div>
+            <div style={{ ...typo.small, color: colors.textSecondary }}>I = Sum mr2</div>
+          </div>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '4px' }}>⛸️</div>
+            <div style={{ ...typo.small, color: colors.textSecondary }}>Skating</div>
+          </div>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+            <div style={{ fontSize: '24px', marginBottom: '4px' }}>🌟</div>
+            <div style={{ ...typo.small, color: colors.textSecondary }}>Pulsars</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default AngularMomentumRenderer;

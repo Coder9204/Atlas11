@@ -1,812 +1,869 @@
 'use client';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
-// BUOYANCY RENDERER - PREMIUM PHYSICS GAME
-// Archimedes' Principle: Why things float or sink
+// BUOYANCY RENDERER - Complete 10-Phase Premium Physics Game
+// Archimedes' Principle: Understanding why things float or sink
 // ============================================================================
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseLabels: Record<Phase, string> = {
-  'hook': 'Hook',
-  'predict': 'Predict',
-  'play': 'Lab',
-  'review': 'Review',
-  'twist_predict': 'Twist Predict',
-  'twist_play': 'Twist Lab',
-  'twist_review': 'Twist Review',
-  'transfer': 'Transfer',
-  'test': 'Test',
-  'mastery': 'Mastery'
-};
-
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
 interface BuoyancyRendererProps {
-  onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
 }
 
-// Real-World Applications Data
-const applications = [
-  {
-    id: 'ships',
-    icon: '🚢',
-    title: 'Ships',
-    subtitle: 'Naval Architecture',
-    color: '#3B82F6',
-    description: 'A massive steel ship floats because its hull displaces an enormous volume of water. The key is shape, not material - the same steel rolled into a ball would sink immediately.',
-    physics: 'Ships are designed so total weight < buoyant force. A ship\'s "displacement" refers to the weight of water it pushes aside, which equals its own weight when floating.',
-    insight: 'The Plimsoll line on ships marks the maximum safe loading depth. In denser saltwater, ships float higher, so load limits differ by water type.',
-    stats: [
-      { value: '228k tons', label: 'Largest Ship' },
-      { value: '400m', label: 'Symphony Length' },
-      { value: '1.025', label: 'Seawater ρ' },
-    ],
-  },
-  {
-    id: 'submarines',
-    icon: '🛥️',
-    title: 'Submarines',
-    subtitle: 'Underwater Engineering',
-    color: '#06B6D4',
-    description: 'Submarines control depth by adjusting buoyancy using ballast tanks. Fill tanks with water to dive (heavier), pump out water to surface (lighter).',
-    physics: 'At neutral buoyancy, weight exactly equals buoyant force. Submarines fine-tune with trim tanks and can hover at any depth. Compressed air systems evacuate ballast for emergency surfacing.',
-    insight: 'Modern submarines can dive to 600+ meters. The crush depth depends on hull strength vs. water pressure (which increases by 1 atm per 10m).',
-    stats: [
-      { value: '600m', label: 'Max Depth' },
-      { value: '240', label: 'Days Submerged' },
-      { value: '25 knots', label: 'Speed' },
-    ],
-  },
-  {
-    id: 'hotair',
-    icon: '🎈',
-    title: 'Hot Air Balloons',
-    subtitle: 'Atmospheric Buoyancy',
-    color: '#F59E0B',
-    description: 'Hot air balloons use buoyancy in air! Heating air inside the balloon makes it less dense than surrounding cool air, creating an upward buoyant force.',
-    physics: 'Same principle as water: F_buoyancy = ρ_air × V × g. Hot air (100°C) has ρ ≈ 0.95 kg/m³ vs cold air at 1.2 kg/m³. A 2800 m³ balloon can lift ~600 kg.',
-    insight: 'Altitude control is through temperature - burn propane to rise, let air cool to descend. Morning flights are best due to stable, cool air conditions.',
-    stats: [
-      { value: '2800 m³', label: 'Envelope Vol' },
-      { value: '100°C', label: 'Hot Air Temp' },
-      { value: '600 kg', label: 'Lift Capacity' },
-    ],
-  },
-  {
-    id: 'lifejackets',
-    icon: '🦺',
-    title: 'Life Jackets',
-    subtitle: 'Personal Flotation',
-    color: '#10B981',
-    description: 'Life jackets contain foam or inflatable chambers filled with air, dramatically lowering your average density to ensure you float face-up even when unconscious.',
-    physics: 'The foam or air pockets have very low density (~0.03 kg/L for air). Combined with your body, the average density becomes less than water, guaranteeing flotation.',
-    insight: 'Life jackets are rated by buoyancy force in Newtons. A Type I offshore jacket provides 150+ N, enough to keep an adult\'s head above water in rough seas.',
-    stats: [
-      { value: '150 N', label: 'Offshore Rating' },
-      { value: '0.03', label: 'Air Density' },
-      { value: '35 lbs', label: 'Min Buoyancy' },
-    ],
-  },
-];
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
 
-// Test Questions
+// ============================================================================
+// TEST QUESTIONS - 10 scenario-based multiple choice questions with explanations
+// ============================================================================
 const testQuestions = [
   {
-    question: 'A 5 kg object displaces 3 liters of water when fully submerged. What is the buoyant force? (g = 10 m/s²)',
+    scenario: "A cruise ship weighing 228,000 tons floats gracefully in the ocean, while a small steel ball bearing weighing just 5 grams sinks immediately when dropped in water.",
+    question: "How can a massive steel ship float while a tiny steel ball sinks?",
     options: [
-      { text: '50 N', correct: false },
-      { text: '30 N', correct: true },
-      { text: '20 N', correct: false },
-      { text: '15 N', correct: false },
+      { id: 'a', label: "Ships are made of special lightweight steel that floats" },
+      { id: 'b', label: "The ship's hollow hull displaces more water than its weight, creating greater buoyant force", correct: true },
+      { id: 'c', label: "Saltwater is denser so it can support heavier objects" },
+      { id: 'd', label: "The ship's engines push it upward" }
     ],
-    explanation: 'F_b = ρ_water × V × g = 1000 × 0.003 × 10 = 30 N',
+    explanation: "The key is SHAPE, not material. The ship's hull is hollow, displacing a huge volume of water. The weight of this displaced water (buoyant force) exceeds the ship's weight. The solid ball displaces little water relative to its mass, so buoyancy cannot overcome gravity."
   },
   {
-    question: 'An object floats with 40% of its volume above water. What is its density relative to water?',
+    scenario: "A 10 kg object displaces 8 liters of water when fully submerged. The object is released from rest at the water surface. (g = 10 m/s^2, water density = 1 kg/L)",
+    question: "What will happen to this object?",
     options: [
-      { text: '0.4', correct: false },
-      { text: '0.6', correct: true },
-      { text: '1.0', correct: false },
-      { text: '1.4', correct: false },
+      { id: 'a', label: "It will float with 80% of its volume submerged" },
+      { id: 'b', label: "It will sink to the bottom", correct: true },
+      { id: 'c', label: "It will float with 20% of its volume submerged" },
+      { id: 'd', label: "It will hover at neutral buoyancy" }
     ],
-    explanation: 'If 40% above, 60% below. At equilibrium, ρ_object/ρ_water = fraction submerged = 0.6',
+    explanation: "Weight = 10 kg x 10 m/s^2 = 100 N. Max buoyant force = 8 L x 1 kg/L x 10 m/s^2 = 80 N. Since weight (100N) > max buoyancy (80N), the object sinks. The object's density is 10kg/8L = 1.25 kg/L, which is greater than water's 1 kg/L."
   },
   {
-    question: 'A steel ship floats but a steel ball sinks. Why?',
+    scenario: "An ice cube floats in a glass of water with exactly 10% of its volume above the waterline. The ice slowly melts over the next hour.",
+    question: "What happens to the water level in the glass after the ice completely melts?",
     options: [
-      { text: 'Ship steel is lighter', correct: false },
-      { text: 'Ship shape displaces more water', correct: true },
-      { text: 'Water pressure is different', correct: false },
-      { text: 'Ships have special coatings', correct: false },
+      { id: 'a', label: "The water level rises because ice expands when frozen" },
+      { id: 'b', label: "The water level drops because the melted ice takes up less space" },
+      { id: 'c', label: "The water level stays exactly the same", correct: true },
+      { id: 'd', label: "It depends on the room temperature" }
     ],
-    explanation: 'The hollow ship shape displaces much more water than a ball of the same mass, creating greater buoyant force.',
+    explanation: "This is a famous result! The floating ice displaces exactly its own weight in water. When it melts, the liquid water fills precisely the same volume that was displaced. This is why melting sea ice doesn't raise ocean levels (but melting land ice does!)."
   },
   {
-    question: 'What happens to a floating object if you move it from fresh water (ρ=1.0) to salt water (ρ=1.025)?',
+    scenario: "A submarine at periscope depth (60 feet) needs to dive to 400 feet to avoid detection. The captain orders the ballast tanks flooded.",
+    question: "What physical principle allows the submarine to control its depth by adjusting ballast tanks?",
     options: [
-      { text: 'Sinks lower', correct: false },
-      { text: 'Floats higher', correct: true },
-      { text: 'No change', correct: false },
-      { text: 'Depends on object density', correct: false },
+      { id: 'a', label: "Changing ballast changes the submarine's volume" },
+      { id: 'b', label: "Adding water increases weight without changing volume, making buoyancy less than weight", correct: true },
+      { id: 'c', label: "Water pressure at depth pushes the submarine down" },
+      { id: 'd', label: "The propellers push the submarine downward" }
     ],
-    explanation: 'Denser water provides more buoyant force per volume displaced, so less volume needs to be submerged.',
+    explanation: "Flooding ballast tanks adds weight (water mass) without significantly changing the hull's displaced volume. This increases the submarine's average density above water's density, causing negative buoyancy. To surface, compressed air forces water out, reducing weight and achieving positive buoyancy."
   },
   {
-    question: 'A submarine wants to dive deeper. It should:',
+    scenario: "A swimmer floats easily in the Dead Sea (density 1.24 kg/L) but struggles to float in a freshwater lake (density 1.00 kg/L). In both cases, the swimmer's body hasn't changed.",
+    question: "Why does the same person float more easily in the Dead Sea?",
     options: [
-      { text: 'Pump air into ballast tanks', correct: false },
-      { text: 'Pump water into ballast tanks', correct: true },
-      { text: 'Heat the hull', correct: false },
-      { text: 'Spin its propeller faster', correct: false },
+      { id: 'a', label: "The Dead Sea has no waves to push you under" },
+      { id: 'b', label: "Denser water provides more buoyant force per unit volume displaced", correct: true },
+      { id: 'c', label: "Salt water is warmer, reducing body density" },
+      { id: 'd', label: "The Dead Sea is at low elevation, changing gravity" }
     ],
-    explanation: 'Adding water increases weight without changing volume, making weight > buoyant force, so it sinks.',
+    explanation: "Buoyant force = density x volume x g. In denser water, less volume needs to be submerged to displace enough water weight to equal your body weight. In the Dead Sea (1.24 kg/L), you only need to displace about 80% as much volume as in fresh water to achieve the same buoyant force."
   },
   {
-    question: 'A 60 kg person feels they weigh only 6 kg in a swimming pool. The buoyant force is:',
+    scenario: "A hot air balloon pilot is preparing for takeoff. The envelope volume is 2,800 cubic meters. Outside air is at 15C (density 1.225 kg/m^3), and the pilot heats the air inside to 100C (density 0.95 kg/m^3).",
+    question: "What is the approximate lifting force generated by this balloon?",
     options: [
-      { text: '60 N', correct: false },
-      { text: '540 N', correct: true },
-      { text: '600 N', correct: false },
-      { text: '6 N', correct: false },
+      { id: 'a', label: "About 7,500 N (770 kg of lift)", correct: true },
+      { id: 'b', label: "About 34,000 N (3,400 kg of lift)" },
+      { id: 'c', label: "About 2,660 N (265 kg of lift)" },
+      { id: 'd', label: "About 28,000 N (2,800 kg of lift)" }
     ],
-    explanation: 'Apparent weight = True weight - Buoyant force. 60 N apparent means F_b = 600 - 60 = 540 N.',
+    explanation: "Lift = (density_outside - density_inside) x Volume x g = (1.225 - 0.95) x 2800 x 10 = 0.275 x 2800 x 10 = 7,700 N or about 770 kg. This must support the balloon envelope (~250 kg), basket (~100 kg), passengers, and fuel while maintaining positive buoyancy."
   },
   {
-    question: 'Two objects have the same mass. Object A floats, Object B sinks. Which has greater volume?',
+    scenario: "A hydrometer is placed in three different liquids. In liquid A, it floats with mark '0.8' at the surface. In liquid B, mark '1.0' is at the surface. In liquid C, mark '1.2' is at the surface.",
+    question: "Which liquid is the densest?",
     options: [
-      { text: 'Object A', correct: true },
-      { text: 'Object B', correct: false },
-      { text: 'They have equal volume', correct: false },
-      { text: 'Cannot determine', correct: false },
+      { id: 'a', label: "Liquid A (0.8 mark visible)" },
+      { id: 'b', label: "Liquid B (1.0 mark visible)" },
+      { id: 'c', label: "Liquid C (1.2 mark visible)", correct: true },
+      { id: 'd', label: "They all have the same density" }
     ],
-    explanation: 'Same mass but A floats means A has lower density, therefore greater volume (ρ = m/V).',
+    explanation: "A hydrometer floats higher in denser liquids because less volume needs to be submerged to displace enough weight. The scale is calibrated so that when the '1.2' mark is at the surface, the liquid density is 1.2 g/cm^3. The hydrometer's constant weight is supported by a smaller submerged volume in denser fluids."
   },
   {
-    question: 'A hot air balloon rises because:',
+    scenario: "A diver wearing a wetsuit descends from the surface to 30 meters depth. At the surface, the wetsuit's air bubbles gave her slight positive buoyancy. At 30 meters, she notices she's now sinking.",
+    question: "Why did the diver's buoyancy change with depth?",
     options: [
-      { text: 'Hot air is less dense than cold air', correct: true },
-      { text: 'Heat creates upward convection', correct: false },
-      { text: 'Fire produces lift gas', correct: false },
-      { text: 'Thermal radiation pushes up', correct: false },
+      { id: 'a', label: "Water density increases significantly at depth" },
+      { id: 'b', label: "Pressure compressed the air bubbles, reducing the wetsuit's displaced volume", correct: true },
+      { id: 'c', label: "The diver's body absorbed water, increasing her mass" },
+      { id: 'd', label: "Gravity is stronger at greater depths" }
     ],
-    explanation: 'Hot air has lower density than surrounding cold air, creating buoyancy in the atmosphere.',
+    explanation: "At 30m depth, pressure is 4 atmospheres. By Boyle's law, the trapped air in the wetsuit compresses to 1/4 its surface volume. This reduces the total volume displaced by the diver-wetsuit system while mass stays constant, decreasing buoyancy. Divers compensate using a BCD (buoyancy control device)."
   },
   {
-    question: 'An ice cube floats with 90% of its volume underwater. When it melts, the water level:',
+    scenario: "A cargo ship's hull is marked with Plimsoll lines indicating maximum safe loading depths for different water types: TF (Tropical Fresh), F (Fresh), T (Tropical), S (Summer), W (Winter), WNA (Winter North Atlantic).",
+    question: "Why can ships be loaded deeper in saltwater than freshwater?",
     options: [
-      { text: 'Rises', correct: false },
-      { text: 'Falls', correct: false },
-      { text: 'Stays exactly the same', correct: true },
-      { text: 'Depends on temperature', correct: false },
+      { id: 'a', label: "Saltwater is warmer, making steel more buoyant" },
+      { id: 'b', label: "Saltwater has lower surface tension" },
+      { id: 'c', label: "Denser saltwater provides more lift per depth of submersion", correct: true },
+      { id: 'd', label: "Wave action in saltwater helps support the ship" }
     ],
-    explanation: 'The melted ice takes exactly the same volume as the water it was displacing while floating.',
+    explanation: "Saltwater (density ~1.025 kg/L) is about 2.5% denser than freshwater. For the same submerged hull volume, saltwater provides 2.5% more buoyant force. This means ships can carry more cargo (be heavier) in saltwater while maintaining the same freeboard height. The Plimsoll lines ensure safe loading limits for each water type."
   },
   {
-    question: 'Archimedes\' principle states that buoyant force equals:',
+    scenario: "An offshore oil platform uses massive hollow concrete structures called 'gravity-based structures' that float during transport but then sink to the seabed at the installation site, where they're anchored by their own weight.",
+    question: "How can the same structure both float during transport and sink when installed?",
     options: [
-      { text: 'Weight of submerged object', correct: false },
-      { text: 'Weight of displaced fluid', correct: true },
-      { text: 'Volume of object × density of object', correct: false },
-      { text: 'Pressure × surface area', correct: false },
+      { id: 'a', label: "The concrete hardens and becomes denser over time" },
+      { id: 'b', label: "The hollow chambers are flooded with water at the installation site, increasing weight", correct: true },
+      { id: 'c', label: "Cranes push the structure down until it sinks" },
+      { id: 'd', label: "The seabed creates suction that pulls the structure down" }
     ],
-    explanation: 'Buoyant force = weight of the fluid displaced by the submerged part of the object.',
-  },
+    explanation: "These structures are designed with controlled buoyancy. During tow-out, the chambers contain air, giving positive buoyancy. At the installation site, valves open to flood the chambers with seawater. This dramatically increases mass while keeping volume nearly constant, creating negative buoyancy that sinks the structure. The same principle is used in floating dry docks."
+  }
 ];
 
-export default function BuoyancyRenderer({ onComplete, onGameEvent, gamePhase, onPhaseComplete }: BuoyancyRendererProps) {
-  // Core state
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [prediction, setPrediction] = useState<number | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
-  const [activeApp, setActiveApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [testIndex, setTestIndex] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+// ============================================================================
+// REAL WORLD APPLICATIONS - 4 detailed applications with comprehensive data
+// ============================================================================
+const realWorldApps = [
+  {
+    icon: '🚢',
+    title: 'Naval Architecture & Ship Design',
+    short: 'How massive steel ships stay afloat',
+    tagline: 'Displacing water is an art form worth billions',
+    description: 'Modern ship design is fundamentally an exercise in buoyancy optimization. The largest cruise ships displace over 228,000 tons of water yet carry 6,000+ passengers in luxury. Container ships move 90% of world trade by carefully balancing cargo weight against hull displacement.',
+    connection: 'Every ship design starts with Archimedes: the hull must displace enough water to support the total loaded weight. Naval architects calculate the "displacement" (water weight pushed aside) which must equal the ship weight for flotation. Stability requires the center of buoyancy to create a restoring moment against heeling.',
+    howItWorks: 'Ship hulls are essentially large hollow containers. The underwater volume (draft x beam x length, adjusted for hull shape) determines displacement. As cargo is added, the ship sinks deeper, displacing more water until buoyancy equals the new weight. The Plimsoll line marks maximum safe draft. Hull shape affects both buoyancy and stability - wider hulls are more stable but slower.',
+    stats: [
+      { value: '228,081', label: 'tons - Wonder of Seas displacement', icon: '🛳️' },
+      { value: '400m', label: 'length of largest ships', icon: '📏' },
+      { value: '$1.35B', label: 'cost per mega cruise ship', icon: '💰' }
+    ],
+    examples: [
+      'Wonder of the Seas (Royal Caribbean) - World largest cruise ship at 236,857 GT',
+      'Ever Ace - 24,000 TEU container capacity, displaces 235,579 tons fully loaded',
+      'Pioneering Spirit - Largest construction vessel, can lift 48,000 tons using buoyancy',
+      'FPSO vessels combine tanker hull buoyancy with offshore oil production'
+    ],
+    companies: ['Hyundai Heavy Industries', 'Samsung Heavy Industries', 'China State Shipbuilding', 'Fincantieri', 'Meyer Werft'],
+    futureImpact: 'Next-generation ships will feature air lubrication systems that release bubbles under the hull to reduce friction, hull forms optimized by AI, and composite materials that improve the buoyancy-to-weight ratio. Ammonia and hydrogen fuel will require redesigning fuel tank buoyancy calculations.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🛥️',
+    title: 'Submarine Buoyancy Control Systems',
+    short: 'Precision depth control through variable buoyancy',
+    tagline: 'Mastering the deep through controlled displacement',
+    description: 'Submarines achieve precise three-dimensional maneuverability by controlling their buoyancy. Unlike surface ships that simply float, submarines must actively manage their density to dive, surface, or hover at any depth. Nuclear submarines can remain submerged for months, continuously adjusting buoyancy as fuel is consumed and waste accumulates.',
+    connection: 'The fundamental equation is simple: if submarine density > water density, it sinks; if less, it rises. Submarines manipulate their effective density by filling or emptying ballast tanks with water. Main ballast tanks (MBT) handle large buoyancy changes; variable ballast tanks (VBT) provide precise trim control.',
+    howItWorks: 'To dive: open vents at top of MBTs while flood ports at bottom admit seawater. Air escapes, water enters, weight increases, submarine descends. To surface: compressed air (stored at 3,000+ psi) forces water out through flood ports. Hovering requires neutral buoyancy - weight exactly equals displaced water weight. Trim tanks fore and aft adjust the submarine horizontal attitude.',
+    stats: [
+      { value: '600m+', label: 'operating depth for attack subs', icon: '⬇️' },
+      { value: '33 knots', label: 'submerged speed possible', icon: '⚡' },
+      { value: '90 days', label: 'submerged endurance', icon: '📅' }
+    ],
+    examples: [
+      'Virginia-class submarines use advanced ballast management for ultra-quiet operations',
+      'Seawolf-class achieves 600m+ depth through titanium hull and precise buoyancy control',
+      'Deep submergence rescue vehicles (DSRV) hover precisely to mate with stricken subs',
+      'Research submersible Limiting Factor reached Challenger Deep (10,927m) using syntactic foam buoyancy'
+    ],
+    companies: ['General Dynamics Electric Boat', 'BAE Systems Submarines', 'Naval Group', 'ThyssenKrupp Marine Systems', 'Huntington Ingalls Industries'],
+    futureImpact: 'Future submarines will feature variable buoyancy materials that can change density on command, eliminating noisy ballast pump operations. Unmanned underwater vehicles (UUVs) will use these systems for months-long missions. Bio-inspired designs mimicking fish swim bladders promise nearly silent depth changes.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '🎈',
+    title: 'Lighter-Than-Air Flight & Balloons',
+    short: 'Buoyancy in the atmosphere',
+    tagline: 'When hot air becomes your lifting force',
+    description: 'Hot air balloons, helium blimps, and weather balloons all exploit atmospheric buoyancy - the same principle as floating in water, but in air. By reducing the density of gas inside an envelope below ambient air density, an upward buoyant force is created. This ancient technology is experiencing a renaissance for tourism, scientific research, and even cargo transport.',
+    connection: 'Archimedes principle works identically in gases: F_buoyancy = rho_air x V x g. For hot air balloons, heating air from 20C to 100C reduces its density from 1.2 kg/m^3 to 0.95 kg/m^3. The density difference (0.25 kg/m^3) multiplied by envelope volume gives the lifting force. Helium (0.17 kg/m^3) provides even more lift but at higher cost.',
+    howItWorks: 'Hot air balloons: propane burners heat air inside the envelope. Hotter air = lower density = more lift. To descend, let air cool or open the parachute valve to release hot air. Helium/hydrogen balloons: the lifting gas is permanently lighter than air. Altitude control via ballast release (up) or gas venting (down). Weather balloons expand as they rise into lower pressure, eventually bursting.',
+    stats: [
+      { value: '2,800 m3', label: 'typical hot air balloon volume', icon: '🎈' },
+      { value: '600 kg', label: 'lifting capacity (passengers + fuel)', icon: '⬆️' },
+      { value: '35 km', label: 'altitude for stratospheric balloons', icon: '🌍' }
+    ],
+    examples: [
+      'Project Loon used helium balloons at 20km altitude to provide internet to remote areas',
+      'Stratolaunch uses balloon-lifted platforms for high-altitude research',
+      'RedBull Stratos: Felix Baumgartner jumped from 39km balloon altitude',
+      'Zeppelin NT modern airships carry 12 passengers on sightseeing tours'
+    ],
+    companies: ['Cameron Balloons', 'Lindstrand Technologies', 'World View Enterprises', 'Aerostar International', 'Zeppelin Luftschifftechnik'],
+    futureImpact: 'High-altitude pseudo-satellites (HAPS) will provide persistent surveillance and communications from the stratosphere at a fraction of satellite cost. Solar-heated balloons operating 24/7 in the upper atmosphere could form a new layer of global infrastructure. Hybrid airships may revolutionize cargo transport to remote areas without runways.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🧪',
+    title: 'Hydrometry & Density Measurement',
+    short: 'Precision measurement through buoyancy equilibrium',
+    tagline: 'Ancient science enabling modern industry',
+    description: 'The hydrometer - a weighted float with a graduated stem - has measured liquid density for over 2,000 years. From ancient winemakers checking fermentation to modern battery technicians testing electrolyte, the hydrometer applies Archimedes principle as a precision instrument. Digital density meters now achieve 6-decimal-place accuracy using the same fundamental physics.',
+    connection: 'At equilibrium, a floating hydrometer displaces exactly its own weight in liquid. In denser liquids, less volume needs to be submerged, so it floats higher. The graduated stem converts float height directly to density reading. Since the hydrometer mass is constant, the submerged volume is inversely proportional to liquid density.',
+    howItWorks: 'A glass tube with a weighted bulb bottom floats upright in liquid. The narrow stem amplifies small density differences into readable scale movements. A hydrometer in water (1.0 g/cm^3) sinks to a certain level. The same hydrometer in alcohol (0.79 g/cm^3) sinks deeper. In concentrated sugar solution (1.4 g/cm^3), it rides high. Specialized scales measure alcohol %, sugar content (Brix), battery specific gravity, etc.',
+    stats: [
+      { value: '0.0001', label: 'g/cm3 - digital density meter precision', icon: '🎯' },
+      { value: '2000+', label: 'years of hydrometer use', icon: '📜' },
+      { value: '$2B+', label: 'annual density measurement market', icon: '💰' }
+    ],
+    examples: [
+      'Brewers measure wort specific gravity to calculate alcohol content (OG/FG method)',
+      'Automotive technicians test battery electrolyte (1.265 SG = full charge)',
+      'Dairy inspectors detect watered-down milk (should be 1.028-1.035 g/cm^3)',
+      'Petroleum industry classifies crude oil by API gravity (buoyancy-derived scale)'
+    ],
+    companies: ['Anton Paar', 'Mettler Toledo', 'Thermo Fisher Scientific', 'Kruess', 'Rudolph Research'],
+    futureImpact: 'Microfluidic density sensors are enabling real-time inline process monitoring in pharmaceuticals and food production. Lab-on-a-chip devices use nanoliter samples. AI-powered density analysis can detect adulteration and contamination. Smart hydrometers with Bluetooth connectivity are modernizing traditional brewing and winemaking.',
+    color: '#10B981'
+  }
+];
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Simulation state
+  const [objectDensity, setObjectDensity] = useState(0.8); // kg/L
+  const [fluidDensity, setFluidDensity] = useState(1.0); // kg/L (water)
+  const [objectVolume, setObjectVolume] = useState(10); // liters
+  const [hasDropped, setHasDropped] = useState(false);
+  const [animationProgress, setAnimationProgress] = useState(0);
+
+  // Twist phase - different fluids
+  const [twistFluid, setTwistFluid] = useState<'water' | 'oil' | 'saltwater' | 'deadsea'>('water');
+  const [twistObjectType, setTwistObjectType] = useState<'wood' | 'ice' | 'human' | 'steel'>('ice');
+  const [twistHasDropped, setTwistHasDropped] = useState(false);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [showExplanation, setShowExplanation] = useState(false);
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
-  // Simulation state
-  const [objectDensity, setObjectDensity] = useState(0.8); // kg/L (less than water = floats)
-  const [fluidDensity, setFluidDensity] = useState(1.0); // kg/L (water)
-  const [objectVolume, setObjectVolume] = useState(10); // liters
-  const [submersionDepth, setSubmersionDepth] = useState(0); // 0-100%
-  const [isAnimating, setIsAnimating] = useState(false);
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
-  // Animation ref
+  // Navigation ref
+  const isNavigating = useRef(false);
   const animationRef = useRef<number | null>(null);
 
-  // Responsive detection
-  const [isMobile, setIsMobile] = useState(false);
+  // Responsive design
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Premium Design System
+  // Animation for dropping object
+  useEffect(() => {
+    if (hasDropped && animationProgress < 100) {
+      animationRef.current = requestAnimationFrame(() => {
+        setAnimationProgress(prev => Math.min(prev + 4, 100));
+      });
+    }
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [hasDropped, animationProgress]);
+
+  // Premium design colors
   const colors = {
-    primary: '#06b6d4',       // cyan-500
-    primaryDark: '#0891b2',   // cyan-600
-    accent: '#10b981',        // emerald-500 (for floating objects)
-    secondary: '#3b82f6',     // blue-500 (for water)
-    success: '#10b981',       // emerald-500
-    danger: '#ef4444',        // red-500 (for sinking objects)
-    warning: '#f59e0b',       // amber-500
-    bgDark: '#020617',        // slate-950
-    bgCard: '#0f172a',        // slate-900
-    bgCardLight: '#1e293b',   // slate-800
-    textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
-    border: '#334155',        // slate-700
-    borderLight: '#475569',   // slate-600
-    // Theme-specific
-    water: '#3b82f6',         // blue-500
-    floatColor: '#10b981',    // emerald-500
-    sinkColor: '#ef4444',     // red-500
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#06B6D4', // Cyan
+    accentGlow: 'rgba(6, 182, 212, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    water: '#3B82F6',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
   };
 
   const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
   };
 
-  // Sync with external phase control
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
-      setPhase(gamePhase as Phase);
-    }
-  }, [gamePhase, phase]);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Fluid Comparison',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  // Web Audio API sound
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete' = 'click') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
-  // Emit events
-  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
     if (onGameEvent) {
-      onGameEvent({ type, data });
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'buoyancy',
+        gameTitle: 'Buoyancy & Archimedes Principle',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
     }
+    setTimeout(() => { isNavigating.current = false; }, 300);
   }, [onGameEvent]);
 
-  // Phase navigation
-  const goToPhase = useCallback((newPhase: Phase) => {
-    playSound('transition');
-    setPhase(newPhase);
-    emitEvent('phase_change', { from: phase, to: newPhase });
-    if (onPhaseComplete) onPhaseComplete(newPhase);
-  }, [phase, playSound, onPhaseComplete, emitEvent]);
-
-  const goNext = useCallback(() => {
+  const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
-    } else if (onComplete) {
-      onComplete();
     }
-  }, [phase, goToPhase, onComplete]);
+  }, [phase, goToPhase, phaseOrder]);
 
-  const goBack = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phaseOrder[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
+  // Calculate buoyancy physics
+  const calculateBuoyancy = useCallback((objDensity: number, flDensity: number, volume: number) => {
+    const g = 10;
+    const volumeM3 = volume / 1000;
+    const fluidDensityKgM3 = flDensity * 1000;
+    const objectDensityKgM3 = objDensity * 1000;
 
-  // Calculate buoyancy values
-  const calculateBuoyancy = useCallback(() => {
-    const g = 10; // m/s²
-    const volumeM3 = objectVolume / 1000; // liters to m³
-    const fluidDensityKgM3 = fluidDensity * 1000; // kg/L to kg/m³
-    const objectDensityKgM3 = objectDensity * 1000; // kg/L to kg/m³
+    const objectMass = objectDensityKgM3 * volumeM3;
+    const weight = objectMass * g;
+    const maxBuoyancy = fluidDensityKgM3 * volumeM3 * g;
 
-    const objectMass = objectDensityKgM3 * volumeM3; // kg
-    const weight = objectMass * g; // N
-    const maxBuoyancy = fluidDensityKgM3 * volumeM3 * g; // N (fully submerged)
-    const currentBuoyancy = maxBuoyancy * (submersionDepth / 100);
-
-    const floats = objectDensity < fluidDensity;
-    const equilibriumSubmersion = floats ? (objectDensity / fluidDensity) * 100 : 100;
-
-    const apparentWeight = weight - currentBuoyancy;
+    const floats = objDensity < flDensity;
+    const equilibriumSubmersion = floats ? (objDensity / flDensity) * 100 : 100;
+    const currentSubmersion = hasDropped ? Math.min(equilibriumSubmersion, animationProgress * equilibriumSubmersion / 100) : 0;
+    const currentBuoyancy = maxBuoyancy * (currentSubmersion / 100);
 
     return {
       weight,
       maxBuoyancy,
       currentBuoyancy,
-      apparentWeight,
-      objectDensity,
       floats,
       equilibriumSubmersion,
+      currentSubmersion,
       objectMass,
     };
-  }, [objectDensity, objectVolume, fluidDensity, submersionDepth]);
+  }, [hasDropped, animationProgress]);
 
-  // Animation to equilibrium
-  const animateToEquilibrium = useCallback(() => {
-    const values = calculateBuoyancy();
-    const targetSubmersion = Math.min(100, values.equilibriumSubmersion);
+  const buoyancyValues = calculateBuoyancy(objectDensity, fluidDensity, objectVolume);
 
-    setIsAnimating(true);
+  // Get twist fluid density
+  const getTwistFluidDensity = (fluid: string) => {
+    switch (fluid) {
+      case 'oil': return 0.9;
+      case 'saltwater': return 1.025;
+      case 'deadsea': return 1.24;
+      default: return 1.0;
+    }
+  };
 
-    let current = 0;
-    const animate = () => {
-      current += 2;
-      const progress = Math.min(current / 50, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // ease out cubic
-      setSubmersionDepth(targetSubmersion * eased);
+  const getTwistObjectDensity = (obj: string) => {
+    switch (obj) {
+      case 'wood': return 0.6;
+      case 'ice': return 0.92;
+      case 'human': return 1.06;
+      case 'steel': return 7.8;
+      default: return 0.92;
+    }
+  };
 
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        setIsAnimating(false);
-      }
-    };
+  // Water tank visualization component
+  const WaterTankVisualization = ({
+    objDensity,
+    flDensity,
+    showObject = true,
+    dropped = false,
+    progress = 100
+  }: {
+    objDensity: number;
+    flDensity: number;
+    showObject?: boolean;
+    dropped?: boolean;
+    progress?: number;
+  }) => {
+    const width = isMobile ? 320 : 440;
+    const height = isMobile ? 280 : 340;
 
-    setSubmersionDepth(0);
-    animationRef.current = requestAnimationFrame(animate);
-  }, [calculateBuoyancy]);
+    const floats = objDensity < flDensity;
+    const equilibrium = floats ? (objDensity / flDensity) * 100 : 100;
+    const currentSubmersion = dropped ? Math.min(equilibrium, progress * equilibrium / 100) : 0;
 
-  // Cleanup animation
-  useEffect(() => {
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
+    const waterTop = height * 0.35;
+    const waterHeight = height * 0.55;
+    const objectSize = isMobile ? 50 : 60;
+    const objectX = width / 2 - objectSize / 2;
 
-  // Water tank visualization - Premium graphics
-  const WaterTankVisualization = ({ isStatic = false }: { isStatic?: boolean }) => {
-    const values = calculateBuoyancy();
-    const displaySubmersion = isStatic ? values.equilibriumSubmersion : submersionDepth;
-    const objectTop = 20 + (100 - displaySubmersion) * 0.6;
-    const waterTop = 80;
-    const buoyancyScale = Math.min(1, values.currentBuoyancy / Math.max(values.weight, 1));
+    // Object position: starts above water, drops to equilibrium
+    const aboveWaterY = waterTop - objectSize - 10;
+    const equilibriumY = waterTop + (equilibrium / 100) * waterHeight - objectSize * (1 - equilibrium/100);
+    const currentY = dropped
+      ? aboveWaterY + (equilibriumY - aboveWaterY) * (progress / 100)
+      : aboveWaterY;
+
+    const objectColor = floats ? colors.success : colors.error;
 
     return (
-      <div style={{
-        background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgDark} 100%)`,
-        borderRadius: '16px',
-        padding: typo.cardPadding,
-        border: `1px solid ${colors.border}`,
-      }}>
-        <svg
-          viewBox="0 0 300 200"
-          style={{
-            width: '100%',
-            height: isMobile ? 200 : 260,
-            borderRadius: '12px',
-          }}
-        >
-          {/* Premium gradients and filters */}
-          <defs>
-            {/* Water gradient - realistic depth effect */}
-            <linearGradient id="buoyWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.3" />
-              <stop offset="30%" stopColor="#0284c7" stopOpacity="0.4" />
-              <stop offset="70%" stopColor="#0369a1" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#075985" stopOpacity="0.6" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#0284c7" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#075985" stopOpacity="0.6" />
+          </linearGradient>
+          <linearGradient id="objectGradFloat" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+          <linearGradient id="objectGradSink" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Tank glass effect */}
-            <linearGradient id="buoyTankGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#475569" stopOpacity="0.8" />
-              <stop offset="10%" stopColor="#64748b" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#94a3b8" stopOpacity="0.1" />
-              <stop offset="90%" stopColor="#64748b" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#475569" stopOpacity="0.8" />
-            </linearGradient>
+        {/* Tank walls */}
+        <rect x="40" y="30" width={width - 80} height={height - 60} fill="none" stroke={colors.border} strokeWidth="3" rx="8" />
 
-            {/* Object gradient - 3D effect */}
-            <linearGradient id="buoyObjectFloat" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#34d399" />
-              <stop offset="50%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#059669" />
-            </linearGradient>
-            <linearGradient id="buoyObjectSink" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#f87171" />
-              <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#dc2626" />
-            </linearGradient>
+        {/* Water */}
+        <rect x="43" y={waterTop} width={width - 86} height={waterHeight} fill="url(#waterGradient)" rx="4" />
 
-            {/* Force arrow gradients */}
-            <linearGradient id="buoyWeightArrow" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-            <linearGradient id="buoyBuoyancyArrow" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#67e8f9" />
-              <stop offset="100%" stopColor="#06b6d4" />
-            </linearGradient>
+        {/* Water surface shimmer */}
+        <line x1="43" y1={waterTop} x2={width - 43} y2={waterTop} stroke="#7dd3fc" strokeWidth="3" />
 
-            {/* Glow filters */}
-            <filter id="buoyGlowCyan" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="buoyGlowRed" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="buoyObjectGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        {/* Depth markers */}
+        <text x="30" y={waterTop + waterHeight * 0.25} fill={colors.textMuted} fontSize="10" textAnchor="end">25%</text>
+        <text x="30" y={waterTop + waterHeight * 0.5} fill={colors.textMuted} fontSize="10" textAnchor="end">50%</text>
+        <text x="30" y={waterTop + waterHeight * 0.75} fill={colors.textMuted} fontSize="10" textAnchor="end">75%</text>
 
-            {/* Water surface shimmer */}
-            <linearGradient id="buoyWaterSurface" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
-              <stop offset="25%" stopColor="#7dd3fc" stopOpacity="1" />
-              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.8" />
-              <stop offset="75%" stopColor="#7dd3fc" stopOpacity="1" />
-              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.8" />
-            </linearGradient>
-          </defs>
-
-          {/* Background */}
-          <rect x="0" y="0" width="300" height="200" fill="#0f172a" rx="8" />
-
-          {/* Subtle grid pattern */}
-          <g opacity="0.1">
-            {[60, 90, 120, 150].map(y => (
-              <line key={y} x1="52" y1={y} x2="248" y2={y} stroke="#64748b" strokeWidth="0.5" strokeDasharray="2,4" />
-            ))}
-          </g>
-
-          {/* Tank - glass effect */}
-          <rect x="50" y="20" width="200" height="160" fill="url(#buoyTankGrad)" rx="6" />
-          <rect x="50" y="20" width="200" height="160" fill="none" stroke="#64748b" strokeWidth="2" rx="6" />
-
-          {/* Water body */}
-          <rect x="52" y={waterTop} width="196" height="98" fill="url(#buoyWaterGrad)" rx="2" />
-
-          {/* Water surface with shimmer */}
-          <line x1="52" y1={waterTop} x2="248" y2={waterTop} stroke="url(#buoyWaterSurface)" strokeWidth="3" />
-
-          {/* Depth markers */}
-          <g opacity="0.6">
-            <text x="46" y={waterTop + 25} textAnchor="end" fill="#64748b" fontSize="8">25%</text>
-            <text x="46" y={waterTop + 50} textAnchor="end" fill="#64748b" fontSize="8">50%</text>
-            <text x="46" y={waterTop + 75} textAnchor="end" fill="#64748b" fontSize="8">75%</text>
-          </g>
-
-          {/* Object with 3D effect and glow */}
-          <g transform={`translate(125, ${objectTop})`} filter="url(#buoyObjectGlow)">
+        {/* Object */}
+        {showObject && (
+          <g filter="url(#glow)">
             <rect
-              x="0" y="0" width="50" height="50" rx="6"
-              fill={values.floats ? 'url(#buoyObjectFloat)' : 'url(#buoyObjectSink)'}
+              x={objectX}
+              y={currentY}
+              width={objectSize}
+              height={objectSize}
+              rx="8"
+              fill={floats ? 'url(#objectGradFloat)' : 'url(#objectGradSink)'}
             />
-            {/* Object highlight */}
-            <rect x="5" y="5" width="20" height="8" rx="2" fill="rgba(255,255,255,0.3)" />
-            {/* Mass label on object */}
-            <text x="25" y="32" textAnchor="middle" fill="#FFFFFF" fontSize="14" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
-              {values.objectMass.toFixed(1)}
-            </text>
-            <text x="25" y="44" textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize="10">
-              kg
-            </text>
-          </g>
-
-          {/* Weight arrow (down) with glow */}
-          <g transform={`translate(195, ${objectTop + 25})`} filter="url(#buoyGlowRed)">
-            <line x1="0" y1="0" x2="0" y2={Math.min(40, values.weight / 3)} stroke="url(#buoyWeightArrow)" strokeWidth="4" strokeLinecap="round" />
-            <polygon points="-6,32 6,32 0,42" fill="#ef4444" />
-          </g>
-
-          {/* Buoyancy arrow (up) with glow - only when in water */}
-          {displaySubmersion > 0 && (
-            <g transform={`translate(105, ${objectTop + 25})`} filter="url(#buoyGlowCyan)">
-              <line x1="0" y1={Math.min(40, values.currentBuoyancy / 3)} x2="0" y2="0" stroke="url(#buoyBuoyancyArrow)" strokeWidth="4" strokeLinecap="round" />
-              <polygon points="-6,8 6,8 0,-2" fill="#06b6d4" />
-            </g>
-          )}
-
-          {/* Status indicator - moved outside SVG clutter zone */}
-          <g transform="translate(150, 12)">
-            <rect x="-45" y="-8" width="90" height="16" rx="8" fill={values.floats ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'} />
-            <text x="0" y="4" textAnchor="middle" fill={values.floats ? '#34d399' : '#f87171'} fontSize="11" fontWeight="600">
-              {values.floats ? '● FLOATS' : '● SINKS'}
+            <text
+              x={objectX + objectSize/2}
+              y={currentY + objectSize/2 + 5}
+              textAnchor="middle"
+              fill="white"
+              fontSize="14"
+              fontWeight="bold"
+            >
+              {objDensity.toFixed(1)}
             </text>
           </g>
-        </svg>
-
-        {/* Force labels - moved outside SVG for better readability */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginTop: typo.elementGap,
-          padding: `0 ${typo.elementGap}`,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#06b6d4', boxShadow: '0 0 8px #06b6d4' }} />
-            <span style={{ fontSize: typo.small, color: '#67e8f9', fontWeight: 600 }}>
-              F_b = {values.currentBuoyancy.toFixed(0)} N
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: typo.small, color: '#fca5a5', fontWeight: 600 }}>
-              W = {values.weight.toFixed(0)} N
-            </span>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
-          </div>
-        </div>
-
-        {/* Force comparison bars - Premium design */}
-        {!isStatic && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: typo.elementGap,
-            marginTop: typo.sectionGap,
-          }}>
-            {[
-              { label: 'Weight', value: values.weight, max: Math.max(values.weight, values.maxBuoyancy), color: '#ef4444', glow: '#fca5a5' },
-              { label: 'Buoyancy', value: values.currentBuoyancy, max: Math.max(values.weight, values.maxBuoyancy), color: '#06b6d4', glow: '#67e8f9' },
-              { label: 'Apparent', value: Math.max(0, values.apparentWeight), max: values.weight, color: '#3b82f6', glow: '#93c5fd' },
-            ].map((item) => (
-              <div key={item.label}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: typo.label, fontWeight: 600, color: item.glow }}>{item.label}</span>
-                  <span style={{ fontSize: typo.label, fontWeight: 600, color: item.glow }}>{item.value.toFixed(0)}N</span>
-                </div>
-                <div style={{
-                  height: '8px',
-                  background: colors.bgCardLight,
-                  borderRadius: '4px',
-                  overflow: 'hidden',
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: `${(item.value / item.max) * 100}%`,
-                    background: `linear-gradient(90deg, ${item.color}, ${item.glow})`,
-                    borderRadius: '4px',
-                    transition: 'width 0.15s ease-out',
-                    boxShadow: `0 0 8px ${item.color}40`,
-                  }} />
-                </div>
-              </div>
-            ))}
-          </div>
         )}
-      </div>
+
+        {/* Status indicator */}
+        <g transform={`translate(${width/2}, 20)`}>
+          <rect x="-50" y="-12" width="100" height="24" rx="12" fill={floats ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'} />
+          <text x="0" y="5" textAnchor="middle" fill={objectColor} fontSize="13" fontWeight="600">
+            {floats ? 'FLOATS' : 'SINKS'}
+          </text>
+        </g>
+
+        {/* Fluid density label */}
+        <text x={width - 50} y={waterTop + 25} fill="#7dd3fc" fontSize="12" textAnchor="end">
+          {flDensity.toFixed(2)} kg/L
+        </text>
+
+        {/* Force arrows when dropped */}
+        {dropped && progress > 20 && (
+          <>
+            {/* Weight arrow (down) */}
+            <g transform={`translate(${objectX + objectSize + 15}, ${currentY + objectSize/2})`}>
+              <line x1="0" y1="0" x2="0" y2="30" stroke={colors.error} strokeWidth="3" />
+              <polygon points="-6,24 6,24 0,34" fill={colors.error} />
+              <text x="10" y="20" fill={colors.error} fontSize="10">W</text>
+            </g>
+            {/* Buoyancy arrow (up) - only when in water */}
+            {currentSubmersion > 0 && (
+              <g transform={`translate(${objectX - 15}, ${currentY + objectSize/2})`}>
+                <line x1="0" y1={30 * currentSubmersion/100} x2="0" y2="0" stroke={colors.accent} strokeWidth="3" />
+                <polygon points="-6,6 6,6 0,-4" fill={colors.accent} />
+                <text x="-15" y="20" fill={colors.accent} fontSize="10">Fb</text>
+              </g>
+            )}
+          </>
+        )}
+      </svg>
     );
   };
 
-  // ============================================================================
-  // PHASE RENDERERS
-  // ============================================================================
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
-      </div>
-
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
-        Buoyancy & Archimedes' Principle
-      </h1>
-
-      <p className="text-lg text-slate-400 max-w-lg mb-10">
-        Discover why some objects float while others sink. Learn about Archimedes' principle: the buoyant force on an object equals the weight of the fluid it displaces.
-      </p>
-
-      {/* Visual Preview */}
-      <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 mb-10">
-        <div className="flex justify-around items-center">
-          <div className="text-center">
-            <div className="text-5xl mb-3">🪨</div>
-            <div className="text-2xl font-bold text-red-400">Sinks</div>
-            <div className="text-sm text-slate-400">Dense objects</div>
-          </div>
-          <div className="text-3xl text-slate-500">vs</div>
-          <div className="text-center">
-            <div className="text-5xl mb-3">🚢</div>
-            <div className="text-2xl font-bold text-emerald-400">Floats</div>
-            <div className="text-sm text-slate-400">Less dense objects</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Premium CTA button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        style={{ zIndex: 10 }}
-        className="group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Start Learning
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderPredict = () => {
-    const predictions = [
-      { id: 0, label: 'Its density compared to the fluid', icon: '📊', description: 'Object density vs fluid density' },
-      { id: 1, label: 'Its weight alone', icon: '⚖️', description: 'Heavier objects always sink' },
-      { id: 2, label: 'Its shape', icon: '🔷', description: 'Only the shape matters' },
-      { id: 3, label: 'Its color', icon: '🎨', description: 'Dark objects sink faster' },
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // ============================================================================
+  // PHASE RENDERS
+  // ============================================================================
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'float 3s ease-in-out infinite',
+        }}>
+          🚢 🪨
+        </div>
+        <style>{`@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Buoyancy & Archimedes' Principle
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "A massive steel cruise ship carrying 6,000 passengers floats serenely, while a tiny steel marble sinks instantly. How can <span style={{ color: colors.accent }}>228,000 tons of steel float</span> when a 5-gram ball cannot?"
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Any object, wholly or partially immersed in a fluid, is buoyed up by a force equal to the weight of the fluid displaced by the object."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            — Archimedes of Syracuse, c. 250 BCE
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover Why Things Float
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Its weight - heavier objects sink, lighter objects float' },
+      { id: 'b', text: 'Its density compared to the fluid - less dense floats, more dense sinks', correct: true },
+      { id: 'c', text: 'Its shape - flat objects float, round objects sink' },
+      { id: 'd', text: 'Its color - darker objects absorb more water and sink' },
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
-        <div className="max-w-xl w-full">
-          {/* Static visualization */}
-          <div className="mb-6">
-            <WaterTankVisualization isStatic={true} />
-          </div>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-          {/* Question */}
-          <div className="text-center mb-8">
-            <span className="text-xs font-bold text-cyan-400 tracking-widest uppercase mb-2 block">
-              YOUR PREDICTION
-            </span>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              What determines if an object floats or sinks?
-            </h2>
-            <p className="text-slate-400">
-              Look at the object in the water. What property decides its fate?
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
             </p>
           </div>
 
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What property of an object determines whether it will float or sink in water?
+          </h2>
+
+          {/* Visual comparison */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '20px',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🪨</div>
+              <p style={{ ...typo.small, color: colors.error }}>Stone: Sinks</p>
+              <p style={{ ...typo.small, color: colors.textMuted }}>Heavy & Dense</p>
+            </div>
+            <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🪵</div>
+              <p style={{ ...typo.small, color: colors.success }}>Wood: Floats</p>
+              <p style={{ ...typo.small, color: colors.textMuted }}>Light & Porous</p>
+            </div>
+            <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🚢</div>
+              <p style={{ ...typo.small, color: colors.success }}>Ship: Floats</p>
+              <p style={{ ...typo.small, color: colors.textMuted }}>Heavy but Hollow</p>
+            </div>
+          </div>
+
           {/* Options */}
-          <div className="flex flex-col gap-3 mb-8">
-            {predictions.map((p) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                key={p.id}
-                onClick={() => setPrediction(p.id)}
-                style={{ zIndex: 10 }}
-                className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-200 border-2 ${
-                  prediction === p.id
-                    ? 'border-cyan-500 bg-cyan-500/10'
-                    : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
-                }`}
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
               >
-                <span className="text-3xl">{p.icon}</span>
-                <div>
-                  <div className={`font-semibold ${prediction === p.id ? 'text-cyan-400' : 'text-white'}`}>
-                    {p.label}
-                  </div>
-                  <div className="text-sm text-slate-400">
-                    {p.description}
-                  </div>
-                </div>
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
               </button>
             ))}
           </div>
 
-          {/* Navigation */}
-          <div className="flex gap-3">
+          {prediction && (
             <button
-              onClick={goBack}
-              style={{ zIndex: 10 }}
-              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Back
+              Test My Prediction
             </button>
-            <button
-              onClick={() => {
-                if (prediction !== null) {
-                  emitEvent('prediction_made', { prediction });
-                  goToPhase('play');
-                }
-              }}
-              disabled={prediction === null}
-              style={{ zIndex: 10 }}
-              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
-                prediction !== null
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-cyan-500/25'
-                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-              }`}
-            >
-              Experiment
-            </button>
-          </div>
+          )}
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderPlay = () => {
-    const values = calculateBuoyancy();
-
+  // PLAY PHASE - Interactive Buoyancy Simulator
+  if (phase === 'play') {
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-2xl w-full">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <span className="text-xs font-bold text-cyan-400 tracking-widest uppercase mb-2 block">
-              BUOYANCY LAB
-            </span>
-            <h2 className="text-2xl font-bold text-white mb-1">
-              Sink or Float?
-            </h2>
-            <p className="text-slate-400">
-              Adjust object density, fluid density, and volume to see what happens
-            </p>
-          </div>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-          {/* Visualization */}
-          <WaterTankVisualization />
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Buoyancy Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust the object and fluid densities to see what floats and what sinks
+          </p>
 
-          {/* Controls */}
-          <div className={`grid gap-3 mt-4 mb-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-3'}`}>
-            {/* Object Density */}
-            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-semibold text-emerald-400">Object Density</span>
-                <span className="text-lg font-bold text-white">{objectDensity.toFixed(2)} kg/L</span>
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <WaterTankVisualization
+                objDensity={objectDensity}
+                flDensity={fluidDensity}
+                dropped={hasDropped}
+                progress={animationProgress}
+              />
+            </div>
+
+            {/* Object Density slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Object Density</span>
+                <span style={{ ...typo.small, color: buoyancyValues.floats ? colors.success : colors.error, fontWeight: 600 }}>
+                  {objectDensity.toFixed(2)} kg/L
+                </span>
               </div>
               <input
                 type="range"
@@ -814,16 +871,26 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, gamePhase, o
                 max="2.5"
                 step="0.1"
                 value={objectDensity}
-                onChange={(e) => setObjectDensity(Number(e.target.value))}
-                className="w-full accent-emerald-500"
+                onChange={(e) => {
+                  setObjectDensity(parseFloat(e.target.value));
+                  setHasDropped(false);
+                  setAnimationProgress(0);
+                }}
+                style={{ width: '100%', cursor: 'pointer' }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Cork (0.3)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Steel (2.5)</span>
+              </div>
             </div>
 
-            {/* Fluid Density */}
-            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-semibold text-blue-400">Fluid Density</span>
-                <span className="text-lg font-bold text-white">{fluidDensity.toFixed(2)} kg/L</span>
+            {/* Fluid Density slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Fluid Density</span>
+                <span style={{ ...typo.small, color: colors.water, fontWeight: 600 }}>
+                  {fluidDensity.toFixed(2)} kg/L
+                </span>
               </div>
               <input
                 type="range"
@@ -831,998 +898,1291 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, gamePhase, o
                 max="1.5"
                 step="0.05"
                 value={fluidDensity}
-                onChange={(e) => setFluidDensity(Number(e.target.value))}
-                className="w-full accent-blue-500"
+                onChange={(e) => {
+                  setFluidDensity(parseFloat(e.target.value));
+                  setHasDropped(false);
+                  setAnimationProgress(0);
+                }}
+                style={{ width: '100%', cursor: 'pointer' }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Oil (0.8)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Dead Sea (1.5)</span>
+              </div>
             </div>
 
-            {/* Volume */}
-            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-semibold text-cyan-400">Object Volume</span>
-                <span className="text-lg font-bold text-white">{objectVolume} L</span>
+            {/* Object Volume slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Object Volume</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                  {objectVolume} liters
+                </span>
               </div>
               <input
                 type="range"
                 min="1"
                 max="20"
                 value={objectVolume}
-                onChange={(e) => setObjectVolume(Number(e.target.value))}
-                className="w-full accent-cyan-500"
+                onChange={(e) => {
+                  setObjectVolume(parseInt(e.target.value));
+                  setHasDropped(false);
+                  setAnimationProgress(0);
+                }}
+                style={{ width: '100%', cursor: 'pointer' }}
               />
             </div>
-          </div>
 
-          {/* Drop button */}
-          <div className="flex gap-3 justify-center mb-4">
-            <button
-              onClick={animateToEquilibrium}
-              disabled={isAnimating}
-              style={{ zIndex: 10 }}
-              className={`px-8 py-3 rounded-xl font-semibold transition-all ${
-                isAnimating
-                  ? 'bg-slate-700 text-slate-400 cursor-default'
-                  : 'bg-blue-500 text-white hover:bg-blue-400'
-              }`}
-            >
-              {isAnimating ? 'Dropping...' : 'Drop in Water'}
-            </button>
-            <button
-              onClick={() => setSubmersionDepth(0)}
-              style={{ zIndex: 10 }}
-              className="px-6 py-3 rounded-xl font-medium text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
-            >
-              Reset
-            </button>
-          </div>
-
-          {/* Density comparison */}
-          <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6">
-            <div className="text-xs font-bold text-slate-500 tracking-widest uppercase mb-3">
-              DENSITY COMPARISON
+            {/* Drop button */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setHasDropped(true);
+                  setAnimationProgress(0);
+                }}
+                disabled={hasDropped}
+                style={{
+                  ...primaryButtonStyle,
+                  opacity: hasDropped ? 0.5 : 1,
+                  cursor: hasDropped ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Drop Object
+              </button>
+              <button
+                onClick={() => {
+                  setHasDropped(false);
+                  setAnimationProgress(0);
+                }}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Reset
+              </button>
             </div>
-            <div className="flex items-center justify-center gap-8">
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${values.floats ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {objectDensity.toFixed(2)}
+
+            {/* Physics display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.error }}>{buoyancyValues.weight.toFixed(0)} N</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Weight</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{buoyancyValues.currentBuoyancy.toFixed(0)} N</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Buoyant Force</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: buoyancyValues.floats ? colors.success : colors.error }}>
+                  {buoyancyValues.equilibriumSubmersion.toFixed(0)}%
                 </div>
-                <div className="text-xs text-slate-400">Object (kg/L)</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Submerged</div>
               </div>
-              <div className={`text-3xl font-bold ${values.floats ? 'text-emerald-400' : 'text-red-400'}`}>
-                {values.floats ? '<' : '>'}
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">{fluidDensity.toFixed(2)}</div>
-                <div className="text-xs text-slate-400">Fluid (kg/L)</div>
-              </div>
-            </div>
-            <div className={`text-center mt-3 font-semibold ${values.floats ? 'text-emerald-400' : 'text-red-400'}`}>
-              {values.floats ? 'Object floats!' : 'Object sinks!'}
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="flex gap-3">
-            <button
-              onClick={goBack}
-              style={{ zIndex: 10 }}
-              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={goNext}
-              style={{ zIndex: 10 }}
-              className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-            >
-              Continue to Review
-            </button>
-          </div>
+          {/* Key insight */}
+          {hasDropped && animationProgress >= 100 && (
+            <div style={{
+              background: buoyancyValues.floats ? `${colors.success}22` : `${colors.error}22`,
+              border: `1px solid ${buoyancyValues.floats ? colors.success : colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: buoyancyValues.floats ? colors.success : colors.error, margin: 0 }}>
+                {buoyancyValues.floats
+                  ? `Object floats! It sinks until buoyancy (${buoyancyValues.currentBuoyancy.toFixed(0)} N) equals weight (${buoyancyValues.weight.toFixed(0)} N)`
+                  : `Object sinks! Even fully submerged, buoyancy (${buoyancyValues.maxBuoyancy.toFixed(0)} N) cannot overcome weight (${buoyancyValues.weight.toFixed(0)} N)`
+                }
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderReview = () => {
-    const userWasRight = prediction === 0;
+  // REVIEW PHASE
+  if (phase === 'review') {
+    const userWasCorrect = prediction === 'b';
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-xl w-full">
-          {/* Result */}
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">
-              {userWasRight ? '🎯' : '💡'}
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Result feedback */}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>
+              {userWasCorrect ? '🎯' : '💡'}
             </div>
-            <h2 className={`text-2xl font-bold mb-2 ${userWasRight ? 'text-emerald-400' : 'text-cyan-400'}`}>
-              {userWasRight ? 'Exactly Right!' : 'The Key is Density!'}
+            <h2 style={{ ...typo.h2, color: userWasCorrect ? colors.success : colors.accent }}>
+              {userWasCorrect ? 'Exactly Right!' : 'The Key is Density!'}
             </h2>
-            <p className="text-slate-400">
-              Archimedes discovered this over 2000 years ago
-            </p>
           </div>
 
-          {/* Core Concept */}
-          <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-6">
-            <h3 className="text-xl font-bold text-white mb-4">
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
               Archimedes' Principle
             </h3>
 
-            <div className="bg-slate-900/60 rounded-lg p-4 text-center mb-4">
-              <p className="text-xl font-bold text-cyan-400 mb-1">
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px',
+              textAlign: 'center',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
                 Buoyant Force = Weight of Displaced Fluid
               </p>
-              <p className="text-lg font-mono text-slate-300">
-                F<sub>b</sub> = ρ<sub>fluid</sub> × V<sub>submerged</sub> × g
+              <p style={{ ...typo.body, color: colors.textSecondary, fontFamily: 'monospace' }}>
+                F<sub>b</sub> = ρ<sub>fluid</sub> x V<sub>submerged</sub> x g
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
-                <div className="font-semibold text-emerald-400 mb-1">If object density &lt; fluid density:</div>
-                <div className="text-sm text-slate-300">Object floats! It only submerges enough to displace its weight in fluid.</div>
-              </div>
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                <div className="font-semibold text-red-400 mb-1">If object density &gt; fluid density:</div>
-                <div className="text-sm text-slate-300">Object sinks! Even fully submerged, buoyant force can't support its weight.</div>
-              </div>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.success }}>Float condition:</strong> Object density &lt; Fluid density
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                When an object is less dense than the fluid, it only needs to displace part of its volume to balance its weight. It floats with some portion above the surface.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.error }}>Sink condition:</strong> Object density &gt; Fluid density
+              </p>
+              <p>
+                When an object is denser than the fluid, even complete submersion doesn't generate enough buoyant force to overcome its weight. It sinks to the bottom.
+              </p>
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="flex gap-3">
-            <button
-              onClick={goBack}
-              style={{ zIndex: 10 }}
-              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={goNext}
-              style={{ zIndex: 10 }}
-              className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-            >
-              Try a Twist
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTwistPredict = () => {
-    const twistOptions = [
-      { id: 0, label: 'Float higher in oil', icon: '⬆️', description: 'Less submerged than in water' },
-      { id: 1, label: 'Float lower in oil', icon: '⬇️', description: 'More submerged than in water' },
-      { id: 2, label: 'Float the same', icon: '⚖️', description: 'Oil vs water makes no difference' },
-      { id: 3, label: 'Sink in oil', icon: '🫧', description: 'Oil can\'t support objects' },
-    ];
-
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
-        <div className="max-w-xl w-full">
-          {/* Twist Introduction */}
-          <div className="text-center mb-8">
-            <span className="text-xs font-bold text-amber-400 tracking-widest uppercase mb-2 block">
-              TWIST SCENARIO
-            </span>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Water vs Oil
-            </h2>
-            <p className="text-slate-400">
-              An object floats in water (density 1.0 kg/L). What happens if you put it in oil (density 0.9 kg/L)?
+          <div style={{
+            background: `${colors.warning}11`,
+            border: `1px solid ${colors.warning}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
+              Why Weight Alone Doesn't Determine Floating
+            </h4>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              A 228,000-ton cruise ship floats while a 5-gram steel ball sinks. The ship's hollow hull means its average density (total mass / total volume) is less than water. The solid steel ball's density (7.8 kg/L) far exceeds water (1.0 kg/L). <strong>Shape determines the volume, which determines density!</strong>
             </p>
           </div>
 
-          {/* Options */}
-          <div className="flex flex-col gap-3 mb-8">
-            {twistOptions.map((opt) => (
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore a Twist
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Float higher (less submerged) - the oil provides more support' },
+      { id: 'b', text: 'Float lower (more submerged) - less dense fluid means less buoyancy per volume', correct: true },
+      { id: 'c', text: 'Float at the same level - all liquids provide the same buoyancy' },
+      { id: 'd', text: 'Sink completely - objects can only float in water' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Fluid Type
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Ice floats in water with 10% above the surface. If you place the same ice cube in vegetable oil (density 0.9 kg/L instead of water's 1.0 kg/L), what happens?
+          </h2>
+
+          {/* Visual comparison */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '20px',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '36px', marginBottom: '8px' }}>🧊</div>
+              <p style={{ ...typo.small, color: colors.textPrimary }}>Ice</p>
+              <p style={{ ...typo.small, color: colors.textMuted }}>0.92 kg/L</p>
+            </div>
+            <div style={{ fontSize: '24px', color: colors.textMuted }}>in</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '36px', marginBottom: '8px' }}>💧</div>
+              <p style={{ ...typo.small, color: colors.water }}>Water: 1.0 kg/L</p>
+              <p style={{ ...typo.small, color: colors.textMuted }}>90% submerged</p>
+            </div>
+            <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '36px', marginBottom: '8px' }}>🫒</div>
+              <p style={{ ...typo.small, color: colors.warning }}>Oil: 0.9 kg/L</p>
+              <p style={{ ...typo.small, color: colors.textMuted }}>???</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
                 key={opt.id}
-                onClick={() => setTwistPrediction(opt.id)}
-                style={{ zIndex: 10 }}
-                className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-200 border-2 ${
-                  twistPrediction === opt.id
-                    ? 'border-amber-500 bg-amber-500/10'
-                    : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
-                }`}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
               >
-                <span className="text-3xl">{opt.icon}</span>
-                <div>
-                  <div className={`font-semibold ${twistPrediction === opt.id ? 'text-amber-400' : 'text-white'}`}>
-                    {opt.label}
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test in Different Fluids
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const currentFluidDensity = getTwistFluidDensity(twistFluid);
+    const currentObjectDensity = getTwistObjectDensity(twistObjectType);
+    const floats = currentObjectDensity < currentFluidDensity;
+    const submersionPercent = floats ? (currentObjectDensity / currentFluidDensity) * 100 : 100;
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Fluid Comparison Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Test different objects in different fluids
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <WaterTankVisualization
+                objDensity={currentObjectDensity}
+                flDensity={currentFluidDensity}
+                dropped={twistHasDropped}
+                progress={100}
+              />
+            </div>
+
+            {/* Fluid selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>Select Fluid:</p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[
+                  { id: 'oil', label: 'Oil', density: 0.9, color: colors.warning },
+                  { id: 'water', label: 'Fresh Water', density: 1.0, color: colors.water },
+                  { id: 'saltwater', label: 'Salt Water', density: 1.025, color: '#38bdf8' },
+                  { id: 'deadsea', label: 'Dead Sea', density: 1.24, color: colors.success },
+                ].map(fluid => (
+                  <button
+                    key={fluid.id}
+                    onClick={() => {
+                      playSound('click');
+                      setTwistFluid(fluid.id as any);
+                      setTwistHasDropped(false);
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: '8px',
+                      border: `2px solid ${twistFluid === fluid.id ? fluid.color : colors.border}`,
+                      background: twistFluid === fluid.id ? `${fluid.color}22` : 'transparent',
+                      color: twistFluid === fluid.id ? fluid.color : colors.textSecondary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {fluid.label} ({fluid.density})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Object selector */}
+            <div style={{ marginBottom: '24px' }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>Select Object:</p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[
+                  { id: 'wood', label: 'Wood', density: 0.6, emoji: '🪵' },
+                  { id: 'ice', label: 'Ice', density: 0.92, emoji: '🧊' },
+                  { id: 'human', label: 'Human Body', density: 1.06, emoji: '🏊' },
+                  { id: 'steel', label: 'Steel Ball', density: 7.8, emoji: '⚫' },
+                ].map(obj => (
+                  <button
+                    key={obj.id}
+                    onClick={() => {
+                      playSound('click');
+                      setTwistObjectType(obj.id as any);
+                      setTwistHasDropped(false);
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      borderRadius: '8px',
+                      border: `2px solid ${twistObjectType === obj.id ? colors.accent : colors.border}`,
+                      background: twistObjectType === obj.id ? `${colors.accent}22` : 'transparent',
+                      color: twistObjectType === obj.id ? colors.accent : colors.textSecondary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {obj.emoji} {obj.label} ({obj.density})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Drop button */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+              <button
+                onClick={() => {
+                  playSound('click');
+                  setTwistHasDropped(true);
+                }}
+                disabled={twistHasDropped}
+                style={{
+                  ...primaryButtonStyle,
+                  opacity: twistHasDropped ? 0.5 : 1,
+                  cursor: twistHasDropped ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Drop Object
+              </button>
+              <button
+                onClick={() => setTwistHasDropped(false)}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Reset
+              </button>
+            </div>
+
+            {/* Results display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{currentObjectDensity.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Object kg/L</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.water }}>{currentFluidDensity.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Fluid kg/L</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: floats ? colors.success : colors.error }}>
+                  {floats ? `${submersionPercent.toFixed(0)}%` : 'Sinks'}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Submerged</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Insight after experimenting */}
+          {twistHasDropped && (
+            <div style={{
+              background: `${colors.accent}22`,
+              border: `1px solid ${colors.accent}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.accent, margin: 0, textAlign: 'center' }}>
+                {floats
+                  ? `In ${twistFluid} (${currentFluidDensity} kg/L), the object submerges ${submersionPercent.toFixed(0)}%. Denser fluid = less submersion!`
+                  : `The object sinks because its density (${currentObjectDensity}) exceeds the fluid density (${currentFluidDensity}).`
+                }
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Insight
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    const userWasCorrect = twistPrediction === 'b';
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>
+              {userWasCorrect ? '🎯' : '🔍'}
+            </div>
+            <h2 style={{ ...typo.h2, color: userWasCorrect ? colors.success : colors.warning }}>
+              {userWasCorrect ? 'Correct!' : 'Less Dense Fluid = Deeper Submersion'}
+            </h2>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📐</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>The Math Behind It</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                At equilibrium: ρ<sub>object</sub> / ρ<sub>fluid</sub> = fraction submerged
+                <br /><br />
+                Ice (0.92) in water (1.0): 0.92/1.0 = 92% submerged (8% above)<br />
+                Ice (0.92) in oil (0.9): 0.92/0.9 = 102% - <strong>it sinks in oil!</strong>
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🚢</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Plimsoll Lines on Ships</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Ships have different maximum load lines for different waters! In denser saltwater (1.025 kg/L), ships ride higher and can carry more cargo. In fresh water (1.0 kg/L), the same ship sinks deeper and must carry less. The Plimsoll line ensures safety across all water types.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🏊</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Dead Sea Effect</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The Dead Sea (1.24 kg/L) is so dense that humans (1.06 kg/L) float effortlessly! You'd need to submerge only 85% of your volume to float, compared to 100%+ in fresh water (meaning you'd sink without effort in pure fresh water).
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
                   </div>
-                  <div className="text-sm text-slate-400">
-                    {opt.description}
-                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.short}
                 </div>
               </button>
             ))}
           </div>
 
-          {/* Navigation */}
-          <div className="flex gap-3">
-            <button
-              onClick={goBack}
-              style={{ zIndex: 10 }}
-              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => {
-                if (twistPrediction !== null) {
-                  emitEvent('twist_prediction_made', { prediction: twistPrediction });
-                  goToPhase('twist_play');
-                }
-              }}
-              disabled={twistPrediction === null}
-              style={{ zIndex: 10 }}
-              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
-                twistPrediction !== null
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25'
-                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-              }`}
-            >
-              Test It
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTwistPlay = () => {
-    return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-2xl w-full">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <span className="text-xs font-bold text-amber-400 tracking-widest uppercase mb-2 block">
-              TWIST EXPERIMENT
-            </span>
-            <h2 className="text-2xl font-bold text-white">
-              Compare Different Fluids
-            </h2>
-          </div>
-
-          {/* Visualization */}
-          <WaterTankVisualization />
-
-          {/* Fluid presets */}
-          <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mt-4 mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-semibold text-blue-400">
-                Fluid Type
-              </span>
-              <span className="text-xl font-bold text-blue-400">
-                {fluidDensity.toFixed(2)} kg/L
-              </span>
-            </div>
-            <div className="flex gap-2 justify-center flex-wrap">
-              {[
-                { label: 'Oil', value: 0.9, color: 'amber' },
-                { label: 'Fresh Water', value: 1.0, color: 'blue' },
-                { label: 'Salt Water', value: 1.025, color: 'cyan' },
-                { label: 'Dead Sea', value: 1.24, color: 'emerald' },
-              ].map((preset) => (
-                <button
-                  key={preset.label}
-                  onClick={() => {
-                    setFluidDensity(preset.value);
-                    setSubmersionDepth(0);
-                  }}
-                  style={{ zIndex: 10 }}
-                  className={`px-5 py-2 rounded-lg font-semibold transition-all border-2 ${
-                    fluidDensity === preset.value
-                      ? `border-${preset.color}-500 bg-${preset.color}-500/15 text-${preset.color}-400`
-                      : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Object presets */}
-          <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-4">
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-semibold text-emerald-400">
-                Object Type
-              </span>
-              <span className="text-xl font-bold text-emerald-400">
-                {objectDensity.toFixed(2)} kg/L
-              </span>
-            </div>
-            <div className="flex gap-2 justify-center flex-wrap">
-              {[
-                { label: 'Wood', value: 0.6 },
-                { label: 'Ice', value: 0.92 },
-                { label: 'Plastic', value: 0.95 },
-                { label: 'Human', value: 1.06 },
-                { label: 'Steel', value: 7.8 },
-              ].map((preset) => (
-                <button
-                  key={preset.label}
-                  onClick={() => {
-                    setObjectDensity(preset.value);
-                    setSubmersionDepth(0);
-                  }}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all border-2 ${
-                    objectDensity === preset.value
-                      ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400'
-                      : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Drop button */}
-          <div className="flex gap-3 justify-center mb-6">
-            <button
-              onClick={animateToEquilibrium}
-              disabled={isAnimating}
-              style={{ zIndex: 10 }}
-              className={`px-8 py-3 rounded-xl font-semibold transition-all ${
-                isAnimating
-                  ? 'bg-slate-700 text-slate-400 cursor-default'
-                  : 'bg-blue-500 text-white hover:bg-blue-400'
-              }`}
-            >
-              {isAnimating ? 'Dropping...' : 'Drop Object'}
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex gap-3">
-            <button
-              onClick={goBack}
-              style={{ zIndex: 10 }}
-              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={goNext}
-              style={{ zIndex: 10 }}
-              className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25 transition-all"
-            >
-              See the Insight
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTwistReview = () => {
-    const userWasRight = twistPrediction === 1;
-
-    return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-xl w-full">
-          {/* Result */}
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">
-              {userWasRight ? '🎯' : '⬇️'}
-            </div>
-            <h2 className={`text-2xl font-bold mb-2 ${userWasRight ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {userWasRight ? 'Correct!' : 'You Float Lower in Less Dense Fluids!'}
-            </h2>
-          </div>
-
-          {/* Core Insight */}
-          <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-6">
-            <h3 className="text-xl font-bold text-white mb-4">
-              Density Relationships
-            </h3>
-
-            <div className="bg-slate-900/60 rounded-lg p-4 text-center mb-4">
-              <p className="text-cyan-400">
-                Less dense fluid = Less buoyant force per volume
-              </p>
-              <p className="text-slate-400 text-sm mt-2">
-                You need to displace MORE fluid to support the same weight
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-center">
-                <div className="text-lg font-semibold text-blue-400">Water</div>
-                <div className="text-slate-400">ρ = 1.0 kg/L</div>
-                <div className="text-xs text-slate-500 mt-2">
-                  Less submersion needed
-                </div>
-              </div>
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-center">
-                <div className="text-lg font-semibold text-amber-400">Oil</div>
-                <div className="text-slate-400">ρ = 0.9 kg/L</div>
-                <div className="text-xs text-slate-500 mt-2">
-                  More submersion needed
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Fun Fact */}
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
-            <p className="text-amber-400 font-semibold mb-2">
-              Practical Example
-            </p>
-            <p className="text-slate-300 text-sm">
-              This is why ships ride higher in saltwater than freshwater! The Plimsoll line on ships marks different loading limits for different water types.
-            </p>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex gap-3">
-            <button
-              onClick={goBack}
-              style={{ zIndex: 10 }}
-              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={goNext}
-              style={{ zIndex: 10 }}
-              className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-cyan-500/25 transition-all"
-            >
-              Real World Applications
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTransfer = () => {
-    const app = applications[activeApp];
-    const allRead = completedApps.size >= applications.length;
-
-    return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-2xl w-full">
-          {/* Progress indicator */}
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <span className="text-sm text-slate-400">
-              {completedApps.size} of {applications.length} applications read
-            </span>
-            <div className="flex gap-1.5">
-              {applications.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                    completedApps.has(idx) ? 'bg-emerald-500' : idx === activeApp ? 'bg-cyan-500' : 'bg-slate-700'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="flex gap-2 mb-4 flex-wrap justify-center">
-            {applications.map((a, i) => {
-              const isCompleted = completedApps.has(i);
-              return (
-                <button
-                  key={a.id}
-                  onClick={() => setActiveApp(i)}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
-                    activeApp === i
-                      ? 'text-white'
-                      : isCompleted
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'
-                  }`}
-                  style={activeApp === i ? { background: a.color, zIndex: 10 } : { zIndex: 10 }}
-                >
-                  {isCompleted ? '✓' : a.icon} {a.title}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Content */}
-          <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-6">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-4">
-              <div
-                className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl"
-                style={{ background: `${app.color}20` }}
-              >
-                {app.icon}
-              </div>
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
               <div>
-                <h2 className="text-xl font-bold text-white">{app.title}</h2>
-                <p className="text-sm font-medium" style={{ color: app.color }}>{app.subtitle}</p>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
               </div>
             </div>
 
-            {/* Description */}
-            <p className="text-slate-300 mb-4 leading-relaxed">{app.description}</p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
 
-            {/* Physics Connection */}
-            <div
-              className="rounded-lg p-4 mb-4 border"
-              style={{ background: `${app.color}10`, borderColor: `${app.color}30` }}
-            >
-              <p className="font-semibold mb-1" style={{ color: app.color }}>Physics Connection</p>
-              <p className="text-sm text-slate-300">{app.physics}</p>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Physics Connection:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
             </div>
 
-            {/* Insight */}
-            <div className="bg-slate-900/60 rounded-lg p-4 mb-4 border border-slate-700/50">
-              <p className="font-semibold text-white mb-1">Key Insight</p>
-              <p className="text-sm text-slate-400">{app.insight}</p>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
               {app.stats.map((stat, i) => (
-                <div key={i} className="bg-slate-900/60 rounded-lg p-3 text-center">
-                  <div className="text-lg font-bold" style={{ color: app.color }}>{stat.value}</div>
-                  <div className="text-xs text-slate-400">{stat.label}</div>
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
             </div>
 
-            {/* Mark as Read Button */}
-            {!completedApps.has(activeApp) ? (
-              <button
-                onClick={() => {
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  emitEvent('app_explored', { app: app.id });
-                  playSound('complete');
-                  if (activeApp < applications.length - 1) {
-                    setTimeout(() => setActiveApp(activeApp + 1), 300);
-                  }
-                }}
-                style={{ zIndex: 10 }}
-                className="w-full py-3 rounded-lg font-semibold bg-emerald-500 text-white hover:bg-emerald-400 transition-colors"
-              >
-                Mark "{app.title}" as Read
-              </button>
-            ) : (
-              <div className="w-full py-3 rounded-lg font-semibold text-center bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                Completed
+            {/* Examples */}
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+                Examples:
+              </h4>
+              <ul style={{ ...typo.small, color: colors.textMuted, margin: 0, paddingLeft: '20px' }}>
+                {app.examples.map((ex, i) => (
+                  <li key={i} style={{ marginBottom: '4px' }}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Companies */}
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+                Key Companies:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.companies.map((company, i) => (
+                  <span key={i} style={{
+                    padding: '4px 10px',
+                    background: colors.bgSecondary,
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    color: colors.textMuted,
+                  }}>
+                    {company}
+                  </span>
+                ))}
               </div>
-            )}
+            </div>
+
+            {/* Future Impact */}
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '16px',
+              border: `1px solid ${app.color}33`,
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
           </div>
 
-          {/* Navigation */}
-          <div className="flex gap-3">
+          {allAppsCompleted ? (
             <button
-              onClick={goBack}
-              style={{ zIndex: 10 }}
-              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Back
+              Take the Knowledge Test
             </button>
-            <button
-              onClick={() => goToPhase('test')}
-              disabled={!allRead}
-              style={{ zIndex: 10 }}
-              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
-                allRead
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-cyan-500/25'
-                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-              }`}
-            >
-              Take the Quiz
-            </button>
-          </div>
+          ) : (
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+              Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4 completed)
+            </p>
+          )}
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderTest = () => {
-    const q = testQuestions[testIndex];
-    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
-
+  // TEST PHASE
+  if (phase === 'test') {
     if (testSubmitted) {
-      const passed = totalCorrect >= 7;
+      const passed = testScore >= 7;
       return (
-        <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
-          <div className="text-center max-w-md">
-            <div className="text-7xl mb-4">{passed ? '🎉' : '📚'}</div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent Work!' : 'Keep Learning!'}
             </h2>
-            <div className={`text-6xl font-bold mb-4 ${passed ? 'text-emerald-400' : 'text-amber-400'}`}>
-              {totalCorrect}/10
-            </div>
-            <p className="text-slate-400 mb-8">
-              {passed ? 'You\'ve mastered buoyancy!' : 'Review the concepts and try again.'}
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
             </p>
-            <button
-              onClick={() => {
-                if (passed) {
-                  setTestScore(totalCorrect);
-                  goToPhase('mastery');
-                } else {
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You have mastered buoyancy and Archimedes\' Principle!'
+                : 'Review the concepts and try again to achieve mastery.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Achieve Mastery
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  setShowExplanation(false);
                   goToPhase('review');
-                }
-              }}
-              style={{ zIndex: 10 }}
-              className={`px-8 py-4 rounded-xl font-semibold text-lg ${
-                passed
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
-                  : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'
-              }`}
-            >
-              {passed ? 'Complete!' : 'Review Material'}
-            </button>
+                }}
+                style={primaryButtonStyle}
+              >
+                Review & Try Again
+              </button>
+            )}
           </div>
+          {renderNavDots()}
         </div>
       );
     }
 
+    const question = testQuestions[currentQuestion];
+    const selectedAnswer = testAnswers[currentQuestion];
+    const isCorrect = selectedAnswer === question.options.find(o => o.correct)?.id;
+
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="max-w-xl w-full">
-          {/* Question Header */}
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-xs font-bold text-cyan-400 tracking-widest uppercase">
-              QUESTION {testIndex + 1} OF 10
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
             </span>
-            <div className="flex gap-1">
+            <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full ${
-                    testAnswers[i] !== null
-                      ? testQuestions[i].options[testAnswers[i] as number]?.correct ? 'bg-emerald-500' : 'bg-red-500'
-                      : i === testIndex ? 'bg-cyan-500' : 'bg-slate-700'
-                  }`}
-                />
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
               ))}
             </div>
           </div>
 
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0, fontStyle: 'italic' }}>
+              {question.scenario}
+            </p>
+          </div>
+
           {/* Question */}
-          <h2 className="text-xl font-semibold text-white mb-6 leading-relaxed">
-            {q.question}
-          </h2>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
 
           {/* Options */}
-          <div className="flex flex-col gap-3 mb-6">
-            {q.options.map((opt, i) => {
-              const isSelected = testAnswers[testIndex] === i;
-              const isCorrect = opt.correct;
-              const showResult = testAnswers[testIndex] !== null;
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => {
+              const isSelected = selectedAnswer === opt.id;
+              const showCorrectness = showExplanation;
+
+              let borderColor = colors.border;
+              let bgColor = colors.bgCard;
+
+              if (showCorrectness) {
+                if (opt.correct) {
+                  borderColor = colors.success;
+                  bgColor = `${colors.success}22`;
+                } else if (isSelected && !opt.correct) {
+                  borderColor = colors.error;
+                  bgColor = `${colors.error}22`;
+                }
+              } else if (isSelected) {
+                borderColor = colors.accent;
+                bgColor = `${colors.accent}22`;
+              }
 
               return (
                 <button
-                  key={i}
+                  key={opt.id}
                   onClick={() => {
-                    if (testAnswers[testIndex] === null) {
+                    if (!showExplanation) {
+                      playSound('click');
                       const newAnswers = [...testAnswers];
-                      newAnswers[testIndex] = i;
+                      newAnswers[currentQuestion] = opt.id;
                       setTestAnswers(newAnswers);
-                      emitEvent('test_answered', { questionIndex: testIndex, correct: opt.correct });
                     }
                   }}
-                  style={{ zIndex: 10 }}
-                  className={`p-4 rounded-xl text-left transition-all border-2 ${
-                    showResult
-                      ? isCorrect
-                        ? 'bg-emerald-500/10 border-emerald-500'
-                        : isSelected
-                          ? 'bg-red-500/10 border-red-500'
-                          : 'bg-slate-800/50 border-slate-700'
-                      : isSelected
-                        ? 'bg-cyan-500/10 border-cyan-500'
-                        : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/50'
-                  }`}
+                  disabled={showExplanation}
+                  style={{
+                    background: bgColor,
+                    border: `2px solid ${borderColor}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    textAlign: 'left',
+                    cursor: showExplanation ? 'default' : 'pointer',
+                  }}
                 >
-                  <span className={`font-bold mr-3 ${
-                    showResult
-                      ? isCorrect ? 'text-emerald-400' : isSelected ? 'text-red-400' : 'text-slate-500'
-                      : 'text-cyan-400'
-                  }`}>
-                    {String.fromCharCode(65 + i)}
+                  <span style={{
+                    display: 'inline-block',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: isSelected ? colors.accent : colors.bgSecondary,
+                    color: isSelected ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
                   </span>
-                  <span className="text-white">{opt.text}</span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Explanation (after answer) */}
-          {testAnswers[testIndex] !== null && (
-            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6">
-              <p className="font-semibold text-white mb-1">Explanation</p>
-              <p className="text-sm text-slate-400">{q.explanation}</p>
+          {/* Explanation */}
+          {showExplanation && (
+            <div style={{
+              background: isCorrect ? `${colors.success}22` : `${colors.error}22`,
+              border: `1px solid ${isCorrect ? colors.success : colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.small, color: isCorrect ? colors.success : colors.error, fontWeight: 600, marginBottom: '8px' }}>
+                {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.explanation}
+              </p>
             </div>
           )}
 
           {/* Navigation */}
-          <div className="flex justify-between">
-            {testIndex > 0 ? (
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
               <button
-                onClick={() => setTestIndex(testIndex - 1)}
-                style={{ zIndex: 10 }}
-                className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+                onClick={() => {
+                  setCurrentQuestion(currentQuestion - 1);
+                  setShowExplanation(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
               >
                 Previous
               </button>
-            ) : <div />}
-            {testAnswers[testIndex] !== null && (
-              testIndex < testQuestions.length - 1 ? (
-                <button
-                  onClick={() => setTestIndex(testIndex + 1)}
-                  style={{ zIndex: 10 }}
-                  className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 text-white"
-                >
-                  Next Question
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setTestSubmitted(true);
-                    emitEvent('test_completed', { score: totalCorrect });
-                  }}
-                  style={{ zIndex: 10 }}
-                  className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
-                >
-                  See Results
-                </button>
-              )
+            )}
+
+            {!showExplanation && selectedAnswer && (
+              <button
+                onClick={() => {
+                  playSound(isCorrect ? 'success' : 'failure');
+                  setShowExplanation(true);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: colors.accent,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Check Answer
+              </button>
+            )}
+
+            {showExplanation && currentQuestion < 9 && (
+              <button
+                onClick={() => {
+                  setCurrentQuestion(currentQuestion + 1);
+                  setShowExplanation(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: colors.accent,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Next Question
+              </button>
+            )}
+
+            {showExplanation && currentQuestion === 9 && (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: colors.success,
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                See Results
+              </button>
             )}
           </div>
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-12 text-center">
-      <div className="max-w-md">
-        {/* Trophy */}
-        <div className="w-28 h-28 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center mx-auto mb-8 text-6xl">
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
           🏆
         </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-white mb-3">
-          Congratulations!
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Buoyancy Master!
         </h1>
-        <h2 className="text-xl font-semibold text-cyan-400 mb-4">
-          Buoyancy Master
-        </h2>
 
-        <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-          You now understand Archimedes' principle and why objects float or sink. From ships to submarines to hot air balloons!
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand Archimedes' Principle and the physics of why things float or sink. From ships to submarines to hot air balloons!
         </p>
 
-        {/* Score */}
-        <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6">
-          <div className="text-sm text-slate-400 mb-1">Quiz Score</div>
-          <div className="text-3xl font-bold text-emerald-400">{testScore}/10</div>
-        </div>
-
-        {/* Achievements */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          {[
-            { icon: '🚢', label: 'Float/Sink' },
-            { icon: '🧂', label: 'Density' },
-            { icon: '⬆️', label: 'Archimedes' },
-          ].map((achievement, i) => (
-            <div key={i} className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
-              <div className="text-3xl mb-2">{achievement.icon}</div>
-              <div className="text-xs text-slate-400">{achievement.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Key Formula */}
-        <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-8">
-          <p className="text-xs font-bold text-cyan-400 tracking-widest uppercase mb-3">
-            KEY FORMULA MASTERED
-          </p>
-          <p className="text-xl font-bold text-white">
-            F<sub>b</sub> = ρ<sub>fluid</sub> × V × g
-          </p>
-        </div>
-
-        {/* CTA */}
-        <button
-          onClick={() => {
-            emitEvent('mastery_achieved', { game: 'buoyancy', score: testScore });
-            if (onComplete) onComplete();
-          }}
-          style={{ zIndex: 10 }}
-          className="px-8 py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
-        >
-          Complete Lesson
-        </button>
-      </div>
-    </div>
-  );
-
-  // ============================================================================
-  // REAL-WORLD APPLICATIONS DATA
-  // Comprehensive applications showcasing buoyancy principles in action
-  // ============================================================================
-  const realWorldApps = [
-    {
-      icon: '🛥️',
-      title: 'Submarine Ballast Systems',
-      short: 'Naval Engineering',
-      tagline: 'Mastering depth through controlled buoyancy',
-      description: 'Submarines achieve precise depth control by manipulating their buoyancy through ballast tanks. By filling tanks with seawater, the submarine becomes heavier and descends. By forcing water out with compressed air, it becomes lighter and ascends. This elegant application of Archimedes\' principle allows submarines to hover at any depth, transition between surface and submerged operations, and perform emergency surfacing maneuvers.',
-      connection: 'The ballast system directly applies the buoyancy equation F_b = ρ_fluid × V × g. By changing the submarine\'s total mass while keeping volume constant, operators shift between positive buoyancy (floating), neutral buoyancy (hovering), and negative buoyancy (sinking). Fine-tuning with trim tanks allows for precise attitude control.',
-      howItWorks: 'Main ballast tanks (MBT) handle large buoyancy changes for diving/surfacing. Variable ballast tanks (VBT) provide fine depth control. Trim tanks adjust fore-aft balance. Compressed air stored in flasks can rapidly evacuate ballast for emergency surfacing. Modern submarines also use pump-jet propulsion and hydroplanes for dynamic depth control during movement.',
-      stats: [
-        { value: '600m+', label: 'Operating Depth' },
-        { value: '240 days', label: 'Submerged Duration' },
-        { value: '99.7%', label: 'Buoyancy Precision' }
-      ],
-      examples: [
-        'Virginia-class attack submarines use advanced ballast systems for stealth operations',
-        'Research submersibles like Alvin reach 4,500m depths with precise buoyancy control',
-        'Nuclear submarines maintain neutral buoyancy while stationary for months',
-        'Rescue submarines adjust buoyancy to mate with distressed vessels'
-      ],
-      companies: [
-        'General Dynamics Electric Boat',
-        'BAE Systems Submarines',
-        'ThyssenKrupp Marine Systems',
-        'Naval Group'
-      ],
-      futureImpact: 'Next-generation submarines will feature automated buoyancy management systems using AI to optimize depth control, reduce noise signatures, and improve energy efficiency. Biomimetic designs inspired by fish swim bladders promise even more precise and silent depth adjustment.',
-      color: '#06B6D4'
-    },
-    {
-      icon: '🎈',
-      title: 'Hot Air Balloons',
-      short: 'Aviation',
-      tagline: 'Riding the atmosphere through thermal buoyancy',
-      description: 'Hot air balloons demonstrate buoyancy in a gaseous medium - the atmosphere. By heating air inside the envelope to approximately 100°C, its density drops to about 0.95 kg/m³ compared to ambient air at 1.2 kg/m³. This density difference creates an upward buoyant force. A typical balloon envelope of 2,800 m³ can generate enough lift to carry 600+ kg, including passengers, basket, and fuel.',
-      connection: 'The same buoyancy principle applies: F_b = ρ_air × V × g. Hot air is less dense than cold air because heating causes gas molecules to move faster and spread apart. The weight of displaced cool air exceeds the weight of hot air inside, creating net upward force. Pilots control altitude by adjusting burner output.',
-      howItWorks: 'Propane burners heat air inside the envelope, decreasing its density. Opening the parachute valve at the top releases hot air, allowing cooling and descent. Pilots use natural wind patterns at different altitudes for directional control. Morning flights preferred for stable atmospheric conditions and predictable thermal behavior.',
-      stats: [
-        { value: '2,800 m³', label: 'Typical Envelope Volume' },
-        { value: '100°C', label: 'Operating Air Temp' },
-        { value: '600 kg', label: 'Lifting Capacity' }
-      ],
-      examples: [
-        'Tourist balloon rides over Cappadocia carry passengers using thermal buoyancy',
-        'Scientific balloons reach stratosphere heights of 40+ km for research',
-        'Balloon festivals demonstrate precise buoyancy control in formation flights',
-        'Long-distance balloon races cross continents using altitude-based wind navigation'
-      ],
-      companies: [
-        'Cameron Balloons',
-        'Lindstrand Technologies',
-        'Ultramagic',
-        'Kubicek Balloons',
-        'Aerostar International'
-      ],
-      futureImpact: 'Solar-powered hot air balloons using transparent envelopes are being developed for sustainable tourism. High-altitude pseudo-satellites (HAPS) use buoyancy principles to maintain position in the stratosphere for telecommunications and Earth observation.',
-      color: '#F59E0B'
-    },
-    {
-      icon: '🧪',
-      title: 'Hydrometer Density Measurement',
-      short: 'Chemistry',
-      tagline: 'Precision measurement through equilibrium buoyancy',
-      description: 'Hydrometers are elegant instruments that measure liquid density by exploiting buoyancy equilibrium. A weighted glass tube floats at different depths depending on fluid density - sinking deeper in less dense liquids and riding higher in denser ones. The scale on the stem directly reads density or related measurements like specific gravity, alcohol content, or sugar concentration.',
-      connection: 'At equilibrium, buoyant force exactly equals the hydrometer\'s weight: ρ_liquid × V_submerged × g = m_hydrometer × g. Since the hydrometer\'s mass is constant, the submerged volume inversely relates to liquid density. More dense liquid means less volume submerged, so the instrument floats higher.',
-      howItWorks: 'The hydrometer\'s weighted bulb provides stability and ensures it floats upright. The narrow stem amplifies small density differences into readable scale movements. Specialized hydrometers are calibrated for specific applications - saccharometers for sugar content, alcoholmeters for ethanol percentage, lactometers for milk quality.',
-      stats: [
-        { value: '0.001', label: 'Density Resolution' },
-        { value: '±0.1%', label: 'Measurement Accuracy' },
-        { value: '3000+ yrs', label: 'Technology Age' }
-      ],
-      examples: [
-        'Winemakers measure sugar content to predict alcohol levels during fermentation',
-        'Battery technicians check electrolyte density to assess charge state',
-        'Dairy inspectors verify milk hasn\'t been diluted with water',
-        'Petroleum engineers measure crude oil API gravity for classification'
-      ],
-      companies: [
-        'Thermo Fisher Scientific',
-        'Anton Paar',
-        'METTLER TOLEDO',
-        'Brannan Thermometers'
-      ],
-      futureImpact: 'Digital density meters using oscillating U-tube technology offer higher precision than traditional hydrometers. Integration with IoT enables real-time density monitoring in industrial processes, while microfluidic devices bring hydrometer principles to lab-on-a-chip applications.',
-      color: '#8B5CF6'
-    },
-    {
-      icon: '🦺',
-      title: 'Life Jackets and Flotation Devices',
-      short: 'Safety Equipment',
-      tagline: 'Engineering survival through applied buoyancy',
-      description: 'Life jackets save lives by dramatically reducing the wearer\'s effective density below that of water. Closed-cell foam or inflatable chambers filled with air (density ~0.03 kg/L) combine with the human body (density ~1.06 kg/L) to create an average density well below water\'s 1.0 kg/L. This guarantees flotation and, in advanced designs, automatically orients an unconscious person face-up.',
-      connection: 'The combined system floats when average density < water density. A 70 kg person with 10 L of foam (mass ~0.3 kg) has average density = 70.3 kg / (66 + 10) L ≈ 0.92 kg/L. Since 0.92 < 1.0, the person floats. The buoyant force is distributed to keep airways above water.',
-      howItWorks: 'Inherently buoyant jackets use closed-cell foam that cannot absorb water. Inflatable jackets use CO2 cartridges triggered manually or automatically by water contact. Type ratings indicate buoyancy force: Type I (150+ N) for offshore, Type II (100 N) for nearshore, Type III (100 N) for conscious swimmers. Placement of flotation material determines self-righting capability.',
-      stats: [
-        { value: '150 N', label: 'Offshore Buoyancy Rating' },
-        { value: '35 lbs', label: 'Minimum Buoyancy Force' },
-        { value: '< 5 sec', label: 'Self-Righting Time' }
-      ],
-      examples: [
-        'Offshore workers wear auto-inflating jackets with integrated harnesses',
-        'Pilots use survival vests combining flotation with emergency equipment',
-        'Children\'s swim aids use graduated buoyancy for learning to swim',
-        'Military personnel use tactical flotation devices compatible with equipment'
-      ],
-      companies: [
-        'Survitec Group',
-        'Mustang Survival',
-        'Spinlock',
-        'Stearns',
-        'Kent Sporting Goods'
-      ],
-      futureImpact: 'Smart life jackets with GPS, AIS beacons, and biometric sensors are becoming standard. Research into thermally-activated inflation and self-deploying designs promises to save more lives. Sustainable materials are replacing petroleum-based foams in next-generation flotation devices.',
-      color: '#10B981'
-    }
-  ];
-
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/3 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Buoyancy</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '450px',
+          width: '100%',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Concepts Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
+            {[
+              'Buoyant force equals weight of displaced fluid',
+              'Density comparison determines float/sink behavior',
+              'Shape affects volume, which affects average density',
+              'Denser fluids provide more buoyancy per volume',
+              'Real applications: ships, submarines, balloons, hydrometers',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success, fontSize: '18px' }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
             ))}
           </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
-}
+        <div style={{
+          background: `${colors.accent}22`,
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '32px',
+          maxWidth: '450px',
+          width: '100%',
+          border: `1px solid ${colors.accent}44`,
+        }}>
+          <p style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
+            Archimedes' Formula
+          </p>
+          <p style={{ ...typo.body, color: colors.textSecondary, fontFamily: 'monospace' }}>
+            F<sub>buoyancy</sub> = ρ<sub>fluid</sub> x V<sub>displaced</sub> x g
+          </p>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '12px',
+          marginBottom: '32px',
+          maxWidth: '450px',
+          width: '100%',
+        }}>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🚢</div>
+            <div style={{ ...typo.small, color: colors.textMuted }}>Naval Design</div>
+          </div>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🛥️</div>
+            <div style={{ ...typo.small, color: colors.textMuted }}>Submarines</div>
+          </div>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎈</div>
+            <div style={{ ...typo.small, color: colors.textMuted }}>Balloons</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default BuoyancyRenderer;

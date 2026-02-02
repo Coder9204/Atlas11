@@ -10,8 +10,16 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // of circle of confusion and how it creates artistic blur in photography.
 // =============================================================================
 
+// String phases
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook', 'predict': 'Predict', 'play': 'Lab', 'review': 'Review', 'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
+};
+
 interface DepthOfFieldRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  phase: Phase;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -55,6 +63,7 @@ const defined = {
       xl: '1.25rem',
       '2xl': '1.5rem',
       '3xl': '1.875rem',
+      '4xl': '2.25rem',
     },
     weights: {
       normal: 400,
@@ -69,6 +78,7 @@ const defined = {
     md: '1rem',
     lg: '1.5rem',
     xl: '2rem',
+    '2xl': '3rem',
   },
   radius: {
     sm: '0.375rem',
@@ -77,195 +87,254 @@ const defined = {
     xl: '1rem',
     full: '9999px',
   },
+  shadows: {
+    sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+    glow: '0 0 20px rgba(99, 102, 241, 0.3)',
+  },
 };
 
 // =============================================================================
-// QUESTIONS DATA
+// REAL WORLD APPLICATIONS DATA - Enhanced with full details
 // =============================================================================
-interface QuestionOption {
-  text: string;
-  correct: boolean;
-}
-
-interface Question {
-  id: number;
-  question: string;
-  options: QuestionOption[];
-  explanation: string;
-}
-
-const questions: Question[] = [
+const realWorldApps = [
   {
-    id: 1,
-    question: 'What is the "circle of confusion" in photography?',
-    options: [
-      { text: 'A type of lens distortion', correct: false },
-      { text: 'The blur disk formed when light from an out-of-focus point spreads on the sensor', correct: true },
-      { text: 'A measurement of lens quality', correct: false },
-      { text: 'The confusion photographers feel about settings', correct: false },
+    icon: 'Camera',
+    title: 'Portrait Photography',
+    short: 'Creating artistic background blur to isolate subjects',
+    tagline: 'Where focus meets artistry',
+    description: 'Portrait photography leverages shallow depth of field to separate subjects from their backgrounds, creating the iconic "bokeh" effect that makes professional portraits stand out. By using wide apertures and careful distance management, photographers can transform distracting backgrounds into creamy, aesthetically pleasing blur that draws all attention to the subject.',
+    connection: 'The depth of field simulation demonstrates exactly how aperture size and subject distance work together to create portrait blur. A wider aperture (lower f-number) creates larger circles of confusion for out-of-focus areas, producing smoother bokeh. Moving closer to the subject while maintaining the same framing amplifies this effect dramatically.',
+    howItWorks: 'Portrait photographers typically use fast prime lenses (f/1.4 to f/2.8) at focal lengths between 50mm and 135mm. The wide aperture creates a narrow plane of focus, often just centimeters deep at close distances. Light from out-of-focus points spreads into circular disks (the circle of confusion), and when these disks overlap sufficiently, they create the smooth, painterly blur characteristic of professional portraits.',
+    stats: [
+      { value: 'f/1.2-f/2.8', label: 'Typical portrait aperture range' },
+      { value: '85mm', label: 'Classic portrait focal length' },
+      { value: '2-5cm', label: 'Depth of field at close range with wide aperture' },
+      { value: '$1,500-4,000', label: 'Professional portrait lens cost' },
     ],
-    explanation: 'When a point is out of focus, rays from that point don\'t converge to a single point on the sensor. Instead, they form a disk called the circle of confusion.',
+    examples: [
+      'Wedding photography with bride sharp against blurred venue backgrounds',
+      'Headshot photography for actors and executives with creamy studio bokeh',
+      'Environmental portraits balancing subject focus with contextual blur',
+      'Pet photography using shallow depth to emphasize eyes and expressions',
+    ],
+    companies: [
+      'Canon',
+      'Sony',
+      'Nikon',
+      'Sigma Art',
+      'Zeiss',
+    ],
+    futureImpact: 'The demand for portrait-quality blur is driving innovation in both optical and computational photography. New lens designs with aspherical elements create smoother bokeh, while AI-powered cameras can now optimize aperture and focus in real-time for ideal subject separation. Mirrorless cameras with eye-tracking autofocus maintain razor-sharp focus on subjects even at f/1.2.',
+    color: '#a855f7',
   },
   {
-    id: 2,
-    question: 'What happens to depth of field when you open the aperture wider (smaller f-number)?',
-    options: [
-      { text: 'Depth of field increases (more in focus)', correct: false },
-      { text: 'Depth of field decreases (more blur)', correct: true },
-      { text: 'No change to depth of field', correct: false },
-      { text: 'Only background blur changes', correct: false },
+    icon: 'Search',
+    title: 'Macro & Scientific Photography',
+    short: 'Extreme close-ups revealing microscopic worlds',
+    tagline: 'Where millimeters become mountains',
+    description: 'Macro photography pushes depth of field to its absolute limits. At extreme magnifications, the depth of field can shrink to fractions of a millimeter, making focus precision critical. This razor-thin focus plane creates stunning images where tiny subjects emerge from completely abstract, blurred surroundings. Scientific and medical imaging relies on these same principles for microscopy and diagnostic applications.',
+    connection: 'The depth of field principles shown in this simulation become dramatically amplified at macro distances. When the subject distance approaches the focal length, depth of field collapses exponentially. Even at f/16 or f/22, macro photographers may have less than a millimeter in focus, requiring techniques like focus stacking to achieve full sharpness.',
+    howItWorks: 'Macro lenses allow 1:1 or greater magnification ratios, projecting life-size or larger images onto the sensor. At these close distances, the circle of confusion grows rapidly for any point not precisely at the focus distance. Photographers combat this by using smaller apertures (higher f-numbers), focus stacking multiple exposures, or specialized tilt-shift techniques to angle the focal plane. Microscopes use similar optical principles at even higher magnifications.',
+    stats: [
+      { value: '1:1 to 5:1', label: 'Macro magnification ratios' },
+      { value: '0.1-2mm', label: 'Typical macro depth of field' },
+      { value: '50-200', label: 'Images stacked for full-depth macro shots' },
+      { value: '1000x', label: 'Optical microscope magnification limit' },
     ],
-    explanation: 'A wider aperture (like f/1.8) creates a larger cone of light rays, which spreads into a larger blur circle for out-of-focus objects. This narrows the depth of field.',
+    examples: [
+      'Insect photography revealing compound eye structures in sharp detail',
+      'Botanical macro showing pollen grains and stamen at cellular scale',
+      'Semiconductor inspection imaging chip features at nanometer scales',
+      'Medical pathology slides capturing tissue structures for diagnosis',
+    ],
+    companies: [
+      'Laowa',
+      'Canon MP-E 65mm',
+      'Olympus',
+      'Zerene Stacker',
+      'Zeiss Microscopy',
+    ],
+    futureImpact: 'Computational focus stacking is becoming automated in cameras, with some mirrorless systems capturing and combining dozens of focal planes in-camera. Light field cameras may eventually capture the entire focus range in a single exposure. AI-powered depth estimation is revolutionizing microscopy, enabling 3D reconstructions from 2D slices.',
+    color: '#22c55e',
   },
   {
-    id: 3,
-    question: 'Why do portrait photographers often use large apertures (f/1.4, f/2)?',
-    options: [
-      { text: 'To let in more light for dark rooms', correct: false },
-      { text: 'To create shallow depth of field with blurred backgrounds', correct: true },
-      { text: 'To reduce lens aberrations', correct: false },
-      { text: 'To make the camera lighter', correct: false },
+    icon: 'Film',
+    title: 'Cinematography & Film',
+    short: 'Focus pulling for visual storytelling',
+    tagline: 'Guiding eyes through motion',
+    description: 'Cinematographers use depth of field as a powerful storytelling tool, controlling exactly where audiences look within each frame. The technique of "pulling focus" - smoothly transitioning focus between subjects - creates dramatic reveals and emotional connections that have defined the visual language of cinema for over a century. Large-format cinema cameras achieve the signature shallow depth of field that separates movies from video.',
+    connection: 'This simulation shows why cinema cameras use large sensors and fast lenses: to achieve shallow depth of field that isolates subjects from backgrounds. The rack focus technique exploits the transition zone between sharp focus and blur, smoothly shifting the circle of confusion from one subject to another to redirect viewer attention.',
+    howItWorks: 'Cinema cameras use sensors ranging from Super 35 (APS-C equivalent) to full-frame or larger (IMAX), paired with cinema lenses featuring smooth, precise focus rings with long rotation throws (270-330 degrees vs 90 degrees on photo lenses). A first assistant camera operator (focus puller) uses wireless focus motors, distance markers, and rehearsed timing to execute planned focus transitions. The shallow depth of field means errors of just centimeters can result in soft subjects.',
+    stats: [
+      { value: 'T1.3-T2.0', label: 'Common cinema lens aperture range' },
+      { value: '270-330 degrees', label: 'Focus ring rotation for precision' },
+      { value: '$15K-75K', label: 'Professional cinema lens set cost' },
+      { value: '24-65mm', label: 'IMAX sensor diagonal size' },
     ],
-    explanation: 'Large apertures create shallow depth of field, blurring distracting backgrounds while keeping the subject sharp. This isolates the subject and creates pleasing bokeh.',
+    examples: [
+      'Rack focus from foreground character to approaching threat in thrillers',
+      'Shallow DOF close-ups isolating actors from busy set environments',
+      'Split diopter shots keeping two focal planes sharp simultaneously',
+      'Deep focus compositions in Citizen Kane using small apertures and lighting',
+    ],
+    companies: [
+      'ARRI',
+      'RED Digital Cinema',
+      'Cooke Optics',
+      'Zeiss Cinema',
+      'Panavision',
+    ],
+    futureImpact: 'Autofocus technology is revolutionizing cinema production. Eye-tracking AF systems can now maintain perfect focus on moving subjects, potentially reducing the need for dedicated focus pullers while enabling new creative possibilities for small crews and documentary filmmakers. Virtual production with LED volumes is creating new depth of field challenges and opportunities.',
+    color: '#f59e0b',
   },
   {
-    id: 4,
-    question: 'What happens to background blur when you move closer to your subject?',
-    options: [
-      { text: 'Background blur decreases', correct: false },
-      { text: 'Background blur increases', correct: true },
-      { text: 'Background blur stays the same', correct: false },
-      { text: 'The background becomes sharper', correct: false },
+    icon: 'Smartphone',
+    title: 'Smartphone Computational Photography',
+    short: 'AI-powered bokeh simulation',
+    tagline: 'Making physics optional',
+    description: 'Smartphone cameras face a fundamental physics problem: their tiny sensors and short focal lengths create naturally deep depth of field, making everything sharp. Computational photography solves this by using AI and depth sensing to artificially blur backgrounds, simulating the optical bokeh of much larger cameras entirely through software. Modern Portrait Modes can now rival professional cameras in many scenarios.',
+    connection: 'This simulation explains exactly why phones struggle with natural bokeh - small sensors require short focal lengths, which creates large depth of field regardless of aperture. Portrait Mode reverse-engineers the optical process: instead of blur arising naturally from circles of confusion, AI estimates depth and artificially enlarges the "virtual" circle of confusion for each pixel based on its distance from the subject.',
+    howItWorks: 'Modern smartphones use multiple techniques to estimate scene depth: stereo vision from dual cameras, phase-detection patterns, structured light projectors, or LIDAR sensors. AI models trained on millions of images then segment the subject from the background and apply distance-based blur. The most advanced systems even simulate lens-specific bokeh characteristics, including the shape of out-of-focus highlights and realistic light falloff.',
+    stats: [
+      { value: '4-7mm', label: 'Typical smartphone focal length (vs 50mm+ for DSLRs)' },
+      { value: 'LIDAR', label: 'Most advanced depth sensing technology' },
+      { value: '1M+', label: 'Depth points mapped per frame on modern phones' },
+      { value: '95%', label: 'Accuracy of AI subject segmentation' },
     ],
-    explanation: 'Moving closer to the subject while maintaining focus on them increases the relative distance to the background, making the background\'s circle of confusion larger.',
-  },
-  {
-    id: 5,
-    question: 'Why do smartphone cameras struggle to create natural background blur?',
-    options: [
-      { text: 'Their sensors are too small', correct: false },
-      { text: 'Their small sensor and short focal length create deep depth of field naturally', correct: true },
-      { text: 'They use digital sensors instead of film', correct: false },
-      { text: 'They don\'t have manual focus', correct: false },
+    examples: [
+      'Portrait Mode on iPhones separating subjects from backgrounds',
+      'Google Pixel computational bokeh using machine learning depth estimation',
+      'Samsung dual-camera systems for live focus adjustment',
+      'Cinematic Mode on iPhone applying rack focus to video in real-time',
     ],
-    explanation: 'Small sensors require short focal lengths, and shorter focal lengths create deeper depth of field. Phones use computational blur (portrait mode) to simulate what large cameras do optically.',
-  },
-  {
-    id: 6,
-    question: 'What is "bokeh" in photography?',
-    options: [
-      { text: 'A type of camera brand', correct: false },
-      { text: 'The aesthetic quality of blur in out-of-focus areas', correct: true },
-      { text: 'A Japanese word for sharp focus', correct: false },
-      { text: 'A lens cleaning technique', correct: false },
+    companies: [
+      'Apple',
+      'Google',
+      'Samsung',
+      'Qualcomm',
+      'Sony Semiconductor',
     ],
-    explanation: 'Bokeh (Japanese for "blur") refers to the aesthetic quality of the blur produced by circles of confusion. Smooth, round bokeh is generally considered pleasing.',
-  },
-  {
-    id: 7,
-    question: 'Why does aperture shape affect bokeh appearance?',
-    options: [
-      { text: 'It doesn\'t - all apertures create round bokeh', correct: false },
-      { text: 'The aperture shape determines the shape of each circle of confusion', correct: true },
-      { text: 'Aperture shape only affects sharpness', correct: false },
-      { text: 'Modern lenses don\'t have aperture blades', correct: false },
-    ],
-    explanation: 'Out-of-focus points become little images of the aperture. A 6-blade aperture creates hexagonal bokeh; a perfectly round aperture creates circular bokeh.',
-  },
-  {
-    id: 8,
-    question: 'In the formula for depth of field, what does focal length affect?',
-    options: [
-      { text: 'Longer focal length = deeper depth of field', correct: false },
-      { text: 'Longer focal length = shallower depth of field at same framing', correct: true },
-      { text: 'Focal length doesn\'t affect depth of field', correct: false },
-      { text: 'Only wide-angle lenses create blur', correct: false },
-    ],
-    explanation: 'At the same subject magnification (framing), longer focal lengths produce shallower depth of field because you\'re further away, creating a larger angular difference to background.',
-  },
-  {
-    id: 9,
-    question: 'What is "hyperfocal distance"?',
-    options: [
-      { text: 'The closest distance a lens can focus', correct: false },
-      { text: 'The focus distance that maximizes depth of field from half that distance to infinity', correct: true },
-      { text: 'The distance where bokeh is most beautiful', correct: false },
-      { text: 'The distance at which lenses work best', correct: false },
-    ],
-    explanation: 'Focusing at the hyperfocal distance makes everything from half that distance to infinity acceptably sharp. Landscape photographers use this to maximize sharpness throughout the scene.',
-  },
-  {
-    id: 10,
-    question: 'Why do cinema cameras use large sensors?',
-    options: [
-      { text: 'To capture more megapixels', correct: false },
-      { text: 'For shallow depth of field that mimics human visual attention', correct: true },
-      { text: 'Because film was large', correct: false },
-      { text: 'For better low-light performance only', correct: false },
-    ],
-    explanation: 'Large sensors allow shallow depth of field at normal apertures, letting filmmakers guide viewer attention. The "cinematic look" partly comes from this selective focus.',
+    futureImpact: 'Computational photography is advancing rapidly toward optical-quality results. Future systems may render bokeh indistinguishable from large-format cameras, complete with accurate lens aberrations and light diffraction. Generative AI may soon allow users to change focus and aperture after the photo is taken, fundamentally changing how we think about depth of field.',
+    color: '#06b6d4',
   },
 ];
 
 // =============================================================================
-// APPLICATIONS DATA
+// TEST QUESTIONS DATA - Scenario-based multiple choice questions
 // =============================================================================
-interface Application {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
-  details: string[];
-}
-
-const applications: Application[] = [
+const testQuestions = [
   {
-    id: 1,
-    title: 'Portrait Photography',
-    description: 'Isolating subjects with blur',
-    icon: '📸',
-    details: [
-      'Large apertures (f/1.4-f/2.8) create creamy background blur',
-      'Subject stays sharp while background melts away',
-      'Directs viewer attention to the face and eyes',
-      '85mm lenses are popular for flattering perspective + blur',
+    scenario: "A photography student is learning about depth of field and wants to understand what physically creates the blur in out-of-focus areas.",
+    question: "What is the primary optical phenomenon that determines depth of field in a photograph?",
+    options: [
+      { id: 'a', label: 'The resolution of the camera sensor' },
+      { id: 'b', label: 'The circle of confusion formed by out-of-focus light rays', correct: true },
+      { id: 'c', label: 'The shutter speed setting' },
+      { id: 'd', label: 'The ISO sensitivity of the camera' }
     ],
+    explanation: "Depth of field is determined by the circle of confusion - when light from a point doesn't converge perfectly on the sensor, it forms a disk rather than a point. If this disk is small enough (below the 'acceptable' threshold), we perceive it as sharp. Larger disks create visible blur."
   },
   {
-    id: 2,
-    title: 'Microscopy',
-    description: 'Extreme shallow depth of field',
-    icon: '🔬',
-    details: [
-      'High magnification means extremely shallow depth of field',
-      'Only a thin slice of specimen is sharp at once',
-      'Z-stacking combines multiple focal planes computationally',
-      'Confocal microscopy uses this for 3D reconstruction',
+    scenario: "A portrait photographer wants to capture a headshot with a beautifully blurred background that separates the subject from distracting elements behind them.",
+    question: "Which aperture setting should they choose for maximum background blur?",
+    options: [
+      { id: 'a', label: 'f/16 for maximum sharpness throughout the image' },
+      { id: 'b', label: 'f/8 as a balanced middle ground' },
+      { id: 'c', label: 'f/1.8 for the widest opening and shallowest depth of field', correct: true },
+      { id: 'd', label: 'f/22 to capture more detail in every part of the frame' }
     ],
+    explanation: "f/1.8 creates a wide aperture opening, producing a large cone of light rays. This results in bigger circles of confusion for the background, creating creamy bokeh that isolates the subject. Portrait photographers commonly use f/1.4 to f/2.8 for this effect."
   },
   {
-    id: 3,
-    title: 'Cinema',
-    description: 'The "film look" through selective focus',
-    icon: '🎬',
-    details: [
-      'Shallow depth of field guides audience attention',
-      'Rack focus transitions between subjects dramatically',
-      'Large format cameras (IMAX) have even shallower DOF',
-      'Focus pulling is a skilled craft in filmmaking',
+    scenario: "A landscape photographer is shooting a mountain scene and wants everything from nearby wildflowers to distant peaks to be sharp and in focus.",
+    question: "What camera settings and technique should they use?",
+    options: [
+      { id: 'a', label: 'Wide aperture (f/2.8) focused on infinity for distant sharpness' },
+      { id: 'b', label: 'Narrow aperture (f/11-f/16) focused at hyperfocal distance', correct: true },
+      { id: 'c', label: 'Any aperture with focus set on the closest flowers' },
+      { id: 'd', label: 'Maximum aperture with image stabilization enabled' }
     ],
+    explanation: "A narrow aperture (f/11-f/16) minimizes the circle of confusion size, extending depth of field. Focusing at the hyperfocal distance maximizes sharpness from half that distance to infinity, ensuring both foreground flowers and distant mountains are acceptably sharp."
   },
   {
-    id: 4,
-    title: 'Computational Blur',
-    description: 'How phones fake bokeh',
-    icon: '📱',
-    details: [
-      'Depth sensing (dual cameras or LIDAR) maps scene distances',
-      'Software applies variable blur based on depth',
-      'Can simulate any aperture size or shape digitally',
-      'Struggles with fine details like hair at edges',
+    scenario: "A macro photographer is shooting a tiny insect at 1:1 magnification and notices that even at f/16, only a thin slice of the subject is in focus while most of the body is blurred.",
+    question: "Why is depth of field so extremely shallow in macro photography?",
+    options: [
+      { id: 'a', label: 'Macro lenses have inherently defective optics' },
+      { id: 'b', label: 'The close focusing distance dramatically increases the circle of confusion size', correct: true },
+      { id: 'c', label: 'Small subjects always appear blurry due to their size' },
+      { id: 'd', label: 'Camera sensors struggle to resolve objects at close distances' }
     ],
+    explanation: "At macro distances, the subject is extremely close to the lens, which dramatically increases the angular spread of light rays from any point. This creates larger circles of confusion even at narrow apertures, resulting in razor-thin depth of field measured in millimeters or less."
+  },
+  {
+    scenario: "A smartphone user wonders why their phone's 'Portrait Mode' uses computational processing while their friend's full-frame DSLR creates natural background blur without any software tricks.",
+    question: "Why do smartphones struggle to create optical background blur like DSLRs?",
+    options: [
+      { id: 'a', label: 'Smartphone cameras have lower megapixel counts' },
+      { id: 'b', label: 'Their tiny sensors require short focal lengths, which create naturally deep depth of field', correct: true },
+      { id: 'c', label: 'Smartphones only use digital zoom instead of optical zoom' },
+      { id: 'd', label: 'Phone camera apps are not optimized for bokeh effects' }
+    ],
+    explanation: "Smartphones have tiny sensors (around 1/2.3 inch) requiring very short focal lengths (typically 4-7mm equivalent). The combination of small sensor and short focal length creates inherently deep depth of field. DSLRs with larger sensors use longer focal lengths at equivalent fields of view, enabling shallow depth of field optically."
+  },
+  {
+    scenario: "A photographer learns about hyperfocal distance and wants to maximize the depth of field in their landscape shot using a 35mm lens at f/11 on a full-frame camera.",
+    question: "What is the hyperfocal distance technique and how does it maximize depth of field?",
+    options: [
+      { id: 'a', label: 'Focusing on the closest object in the frame to emphasize foreground' },
+      { id: 'b', label: 'Focusing at infinity to ensure distant mountains are sharp' },
+      { id: 'c', label: 'Focusing at a calculated distance where everything from half that distance to infinity appears acceptably sharp', correct: true },
+      { id: 'd', label: 'Using autofocus to automatically find the optimal focus point' }
+    ],
+    explanation: "The hyperfocal distance is the focus distance that maximizes depth of field. When focused at this distance, acceptable sharpness extends from half the hyperfocal distance to infinity. It's calculated based on focal length, aperture, and the acceptable circle of confusion size for the sensor format."
+  },
+  {
+    scenario: "An optical engineer is designing a new camera system and must specify the maximum acceptable circle of confusion for their sensor to define what counts as 'sharp.'",
+    question: "What determines the acceptable circle of confusion size for a camera system?",
+    options: [
+      { id: 'a', label: 'The maximum aperture of the lens' },
+      { id: 'b', label: 'The sensor size, expected viewing distance, and print size', correct: true },
+      { id: 'c', label: 'The shutter speed range of the camera' },
+      { id: 'd', label: 'The focal length of the lens' }
+    ],
+    explanation: "The acceptable circle of confusion depends on sensor size and how the final image will be viewed. A larger print viewed up close requires a smaller CoC to appear sharp. For a full-frame sensor, the standard is about 0.03mm, but this varies based on output medium and viewing conditions."
+  },
+  {
+    scenario: "A cinematographer is filming a dialogue scene and needs to shift audience attention from one actor to another mid-shot without cutting the camera.",
+    question: "What technique uses depth of field to guide viewer attention in cinema?",
+    options: [
+      { id: 'a', label: 'Zooming between subjects during the shot' },
+      { id: 'b', label: 'Rack focus or focus pulling to smoothly transition between subjects', correct: true },
+      { id: 'c', label: 'Changing the aperture while filming' },
+      { id: 'd', label: 'Moving the camera closer to subjects' }
+    ],
+    explanation: "Rack focus (focus pulling) smoothly shifts focus between subjects at different distances. Using shallow depth of field, only one subject is sharp at a time. A skilled focus puller adjusts focus during the shot, directing audience attention by making the intended subject sharp while others blur."
+  },
+  {
+    scenario: "An architectural photographer is using a tilt-shift lens to photograph a tall building while keeping the entire facade sharp, even though the camera is tilted upward at an angle.",
+    question: "How do tilt-shift lenses manipulate depth of field differently than standard lenses?",
+    options: [
+      { id: 'a', label: 'They use larger apertures to gather more light' },
+      { id: 'b', label: 'They tilt the focus plane using the Scheimpflug principle so it no longer parallels the sensor', correct: true },
+      { id: 'c', label: 'They digitally extend the depth of field through in-lens processing' },
+      { id: 'd', label: 'They mechanically reduce the circle of confusion size' }
+    ],
+    explanation: "Tilt-shift lenses can angle the focus plane relative to the sensor using the Scheimpflug principle. This allows the plane of focus to align with non-parallel surfaces like building facades or tabletops, achieving sharp focus across subjects at varying distances without stopping down to tiny apertures."
+  },
+  {
+    scenario: "A wildlife photographer notices that using a 600mm telephoto lens produces much more background blur than their 50mm lens, even when both are set to the same f/4 aperture.",
+    question: "Why do longer focal length lenses create more background blur at the same aperture?",
+    options: [
+      { id: 'a', label: 'Longer lenses have larger glass elements that collect more light' },
+      { id: 'b', label: 'Longer lenses have physically larger aperture openings and compress the perspective, magnifying background blur', correct: true },
+      { id: 'c', label: 'Telephoto lenses have special coatings that enhance blur' },
+      { id: 'd', label: 'The blur is an optical illusion caused by the narrow field of view' }
+    ],
+    explanation: "At f/4, a 600mm lens has a 150mm physical aperture opening (600/4), while a 50mm lens has only 12.5mm (50/4). The larger physical aperture creates larger circles of confusion. Additionally, the telephoto compression magnifies the background relative to the subject, making the blur appear even more pronounced."
   },
 ];
 
@@ -284,7 +353,7 @@ export default function DepthOfFieldRenderer({
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -295,11 +364,9 @@ export default function DepthOfFieldRenderer({
   const [subjectDistance, setSubjectDistance] = useState(100);
   const [focusDistance, setFocusDistance] = useState(100);
   const [showRayCone, setShowRayCone] = useState(true);
-  const [animationFrame, setAnimationFrame] = useState(0);
 
   // Navigation refs
   const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
   const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
 
@@ -351,25 +418,14 @@ export default function DepthOfFieldRenderer({
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  // Animation loop
-  useEffect(() => {
-    const animate = () => {
-      setAnimationFrame((prev) => (prev + 1) % 360);
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    animationRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
-
   // Cleanup
   useEffect(() => {
     return () => {
       if (navigationTimeoutRef.current) {
         clearTimeout(navigationTimeoutRef.current);
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
     };
   }, []);
@@ -396,30 +452,40 @@ export default function DepthOfFieldRenderer({
     newCompleted[selectedApp] = true;
     setCompletedApps(newCompleted);
 
-    if (selectedApp < applications.length - 1) {
+    if (selectedApp < realWorldApps.length - 1) {
       setSelectedApp(selectedApp + 1);
     }
   }, [completedApps, selectedApp]);
 
   const handleAnswerSelect = useCallback(
-    (index: number) => {
-      if (showResult) return;
-      setSelectedAnswer(index);
+    (answerId: string) => {
+      if (showResult || navigationLockRef.current) return;
+      navigationLockRef.current = true;
+
+      setSelectedAnswer(answerId);
       setShowResult(true);
 
-      const isCorrect = questions[currentQuestion].options[index].correct;
+      const currentQ = testQuestions[currentQuestion];
+      const isCorrect = currentQ.options.find(o => o.id === answerId)?.correct || false;
+
       if (isCorrect) {
         setScore((prev) => prev + 1);
+        playSound('success');
         if (onCorrectAnswer) onCorrectAnswer();
       } else {
+        playSound('failure');
         if (onIncorrectAnswer) onIncorrectAnswer();
       }
+
+      navigationTimeoutRef.current = setTimeout(() => {
+        navigationLockRef.current = false;
+      }, 300);
     },
-    [showResult, currentQuestion, onCorrectAnswer, onIncorrectAnswer]
+    [showResult, currentQuestion, onCorrectAnswer, onIncorrectAnswer, playSound]
   );
 
   const handleNextQuestion = useCallback(() => {
-    if (currentQuestion < questions.length - 1) {
+    if (currentQuestion < testQuestions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
       setSelectedAnswer(null);
       setShowResult(false);
@@ -429,11 +495,17 @@ export default function DepthOfFieldRenderer({
   }, [currentQuestion]);
 
   const handlePhaseComplete = useCallback(() => {
+    if (navigationLockRef.current) return;
+    navigationLockRef.current = true;
     playSound('transition');
     if (onPhaseComplete) onPhaseComplete();
+    navigationTimeoutRef.current = setTimeout(() => {
+      navigationLockRef.current = false;
+    }, 500);
   }, [playSound, onPhaseComplete]);
 
   const allAppsCompleted = completedApps.every(Boolean);
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
 
   // =============================================================================
   // RAY CONE VISUALIZATION - Premium SVG Graphics
@@ -926,241 +998,43 @@ export default function DepthOfFieldRenderer({
   }, [isMobile, apertureSize, subjectDistance, focusDistance, showRayCone, getBlurAmount, typo]);
 
   // =============================================================================
-  // TEST QUESTIONS DATA - Scenario-based multiple choice questions
+  // ICON COMPONENT
   // =============================================================================
-  const testQuestions = [
-    {
-      scenario: "A photography student is learning about depth of field and wants to understand what physically creates the blur in out-of-focus areas.",
-      question: "What is the primary factor that determines depth of field in a photograph?",
-      options: [
-        { id: 'a', label: 'The resolution of the camera sensor' },
-        { id: 'b', label: 'The aperture size relative to focal length', correct: true },
-        { id: 'c', label: 'The shutter speed setting' },
-        { id: 'd', label: 'The ISO sensitivity' }
-      ],
-      explanation: "Depth of field is primarily determined by the aperture size (f-number). A wider aperture (lower f-number) creates a larger cone of light rays passing through the lens, which spreads into larger circles of confusion for out-of-focus objects, resulting in shallower depth of field."
-    },
-    {
-      scenario: "A portrait photographer wants to capture a headshot with a beautifully blurred background that separates the subject from distracting elements.",
-      question: "Which aperture setting should they choose for maximum background blur?",
-      options: [
-        { id: 'a', label: 'f/16 for maximum sharpness throughout' },
-        { id: 'b', label: 'f/8 as a balanced middle ground' },
-        { id: 'c', label: 'f/1.8 for shallow depth of field', correct: true },
-        { id: 'd', label: 'f/22 to capture more detail' }
-      ],
-      explanation: "f/1.8 creates a wide aperture opening, producing a large cone of light rays. This results in bigger circles of confusion for the background, creating creamy bokeh that isolates the subject. Portrait photographers commonly use f/1.4 to f/2.8 for this effect."
-    },
-    {
-      scenario: "A landscape photographer is shooting a mountain scene and wants everything from nearby wildflowers to distant peaks to be sharp.",
-      question: "What camera settings and technique should they use?",
-      options: [
-        { id: 'a', label: 'Wide aperture (f/2.8) focused on infinity' },
-        { id: 'b', label: 'Narrow aperture (f/11-f/16) focused at hyperfocal distance', correct: true },
-        { id: 'c', label: 'Any aperture focused on the flowers' },
-        { id: 'd', label: 'Maximum aperture with image stabilization' }
-      ],
-      explanation: "A narrow aperture (f/11-f/16) minimizes the circle of confusion size, extending depth of field. Focusing at the hyperfocal distance maximizes sharpness from half that distance to infinity, ensuring both foreground flowers and distant mountains are acceptably sharp."
-    },
-    {
-      scenario: "A macro photographer is shooting a tiny insect at 1:1 magnification and notices that even at f/16, only a thin slice of the subject is in focus.",
-      question: "Why is depth of field so extremely shallow in macro photography?",
-      options: [
-        { id: 'a', label: 'Macro lenses have defective optics' },
-        { id: 'b', label: 'The close focusing distance dramatically reduces depth of field', correct: true },
-        { id: 'c', label: 'Small subjects always appear blurry' },
-        { id: 'd', label: 'Camera sensors struggle with close objects' }
-      ],
-      explanation: "At macro distances, the subject is extremely close to the lens, which dramatically increases the angular spread of light rays from any point. This creates larger circles of confusion even at narrow apertures, resulting in razor-thin depth of field measured in millimeters."
-    },
-    {
-      scenario: "A smartphone user wonders why their phone's 'Portrait Mode' uses computational processing while their friend's DSLR creates natural background blur.",
-      question: "Why do smartphones struggle to create optical background blur like DSLRs?",
-      options: [
-        { id: 'a', label: 'Smartphone cameras have lower megapixel counts' },
-        { id: 'b', label: 'Their small sensors and short focal lengths create deep depth of field naturally', correct: true },
-        { id: 'c', label: 'Smartphones only use digital zoom' },
-        { id: 'd', label: 'Phone apps are not optimized for bokeh' }
-      ],
-      explanation: "Smartphones have tiny sensors requiring very short focal lengths (typically 4-6mm equivalent). The combination of small sensor and short focal length creates inherently deep depth of field. DSLRs with larger sensors use longer focal lengths at equivalent fields of view, enabling shallow depth of field optically."
-    },
-    {
-      scenario: "A landscape photographer learns about hyperfocal distance and wants to maximize the depth of field in their 35mm lens shot at f/11.",
-      question: "What is the hyperfocal distance technique and how does it work?",
-      options: [
-        { id: 'a', label: 'Focusing on the closest object in frame' },
-        { id: 'b', label: 'Focusing at infinity for distant sharpness' },
-        { id: 'c', label: 'Focusing at a specific distance where everything from half that distance to infinity appears sharp', correct: true },
-        { id: 'd', label: 'Using autofocus to find the best focus point' }
-      ],
-      explanation: "The hyperfocal distance is the focus distance that maximizes depth of field. When focused at this distance, acceptable sharpness extends from half the hyperfocal distance to infinity. It's calculated based on focal length, aperture, and the acceptable circle of confusion size for the format."
-    },
-    {
-      scenario: "An optical engineer is designing a camera system and must specify the maximum acceptable circle of confusion for their sensor.",
-      question: "What is the circle of confusion and why does it matter for depth of field?",
-      options: [
-        { id: 'a', label: 'A lens aberration that reduces image quality' },
-        { id: 'b', label: 'The blur disk formed when light from an out-of-focus point spreads on the sensor', correct: true },
-        { id: 'c', label: 'The area of the lens that light passes through' },
-        { id: 'd', label: 'A measurement of lens sharpness at the center' }
-      ],
-      explanation: "When a point is out of focus, light rays don't converge to a single point on the sensor but form a disk called the circle of confusion. If this disk is smaller than the sensor's resolving ability, we perceive it as sharp. This threshold defines the boundaries of acceptable depth of field."
-    },
-    {
-      scenario: "A cinematographer is filming a dialogue scene and needs to shift audience attention from one actor to another mid-shot without cutting.",
-      question: "What technique uses depth of field to guide viewer attention in cinema?",
-      options: [
-        { id: 'a', label: 'Zooming between subjects' },
-        { id: 'b', label: 'Rack focus or focus pulling between sharp and blurred subjects', correct: true },
-        { id: 'c', label: 'Changing the aperture during the shot' },
-        { id: 'd', label: 'Moving the camera closer to subjects' }
-      ],
-      explanation: "Rack focus (focus pulling) smoothly shifts focus between subjects at different distances. Using shallow depth of field, only one subject is sharp at a time. A skilled focus puller adjusts focus during the shot, directing audience attention by making the intended subject sharp while others blur."
-    },
-    {
-      scenario: "An architectural photographer is using a tilt-shift lens to photograph a tall building while keeping the entire facade sharp despite the camera angle.",
-      question: "How do tilt-shift lenses manipulate depth of field differently than standard lenses?",
-      options: [
-        { id: 'a', label: 'They use larger apertures for more light' },
-        { id: 'b', label: 'They tilt the focus plane so it no longer parallels the sensor', correct: true },
-        { id: 'c', label: 'They digitally extend the depth of field' },
-        { id: 'd', label: 'They reduce the circle of confusion size' }
-      ],
-      explanation: "Tilt-shift lenses can angle the focus plane relative to the sensor using the Scheimpflug principle. This allows the plane of focus to align with non-parallel surfaces like building facades or tables, achieving sharp focus across subjects at varying distances without stopping down to tiny apertures."
-    },
-    {
-      scenario: "A smartphone manufacturer is developing a new Portrait Mode feature that simulates DSLR-like background blur using dual cameras and AI processing.",
-      question: "How does computational bokeh work in modern smartphones?",
-      options: [
-        { id: 'a', label: 'By using larger physical apertures in the lens' },
-        { id: 'b', label: 'By capturing depth information and applying variable blur based on distance from subject', correct: true },
-        { id: 'c', label: 'By mechanically adjusting the sensor position' },
-        { id: 'd', label: 'By using optical zoom to compress perspective' }
-      ],
-      explanation: "Computational bokeh uses depth sensing (from dual cameras, structured light, or LIDAR) to create a depth map of the scene. Software then applies progressive blur based on each pixel's distance from the focused subject, simulating optical bokeh. Challenges include accurate edge detection around fine details like hair."
-    }
-  ];
-
-  // =============================================================================
-  // REAL WORLD APPLICATIONS DATA
-  // =============================================================================
-  const realWorldApps = [
-    {
-      icon: 'Camera',
-      title: 'Portrait Photography',
-      short: 'Creating artistic background blur to isolate subjects',
-      tagline: 'Where focus meets artistry',
-      description: 'Portrait photography leverages shallow depth of field to separate subjects from their backgrounds, creating the iconic "bokeh" effect that makes professional portraits stand out. By using wide apertures and careful distance management, photographers can transform distracting backgrounds into creamy, aesthetically pleasing blur that draws all attention to the subject.',
-      connection: 'The depth of field simulation demonstrates exactly how aperture size and subject distance work together to create portrait blur. A wider aperture (lower f-number) creates larger circles of confusion for out-of-focus areas, producing smoother bokeh. Moving closer to the subject while maintaining the same framing amplifies this effect dramatically.',
-      howItWorks: 'Portrait photographers typically use fast prime lenses (f/1.4 to f/2.8) at focal lengths between 50mm and 135mm. The wide aperture creates a narrow plane of focus, often just centimeters deep at close distances. Light from out-of-focus points spreads into circular disks (the circle of confusion), and when these disks overlap sufficiently, they create the smooth, painterly blur characteristic of professional portraits.',
-      stats: [
-        { value: 'f/1.2-f/2.8', label: 'Typical portrait aperture range' },
-        { value: '85mm', label: 'Classic portrait focal length' },
-        { value: '2-5cm', label: 'Depth of field at close range with wide aperture' },
-      ],
-      examples: [
-        'Wedding photography with bride sharp against blurred venue backgrounds',
-        'Headshot photography for actors and executives with creamy studio bokeh',
-        'Environmental portraits balancing subject focus with contextual blur',
-        'Pet photography using shallow depth to emphasize eyes and expressions',
-      ],
-      companies: [
-        'Canon',
-        'Sony',
-        'Nikon',
-        'Sigma Art',
-        'Zeiss',
-      ],
-      futureImpact: 'The demand for portrait-quality blur is driving innovation in both optical and computational photography. New lens designs with aspherical elements create smoother bokeh, while AI-powered cameras can now optimize aperture and focus in real-time for ideal subject separation.',
-      color: '#a855f7',
-    },
-    {
-      icon: 'Search',
-      title: 'Macro Photography',
-      short: 'Extreme close-ups revealing microscopic worlds',
-      tagline: 'Where millimeters become mountains',
-      description: 'Macro photography pushes depth of field to its absolute limits. At extreme magnifications, the depth of field can shrink to fractions of a millimeter, making focus precision critical. This razor-thin focus plane creates stunning images where tiny subjects emerge from completely abstract, blurred surroundings.',
-      connection: 'The depth of field principles shown in this simulation become dramatically amplified at macro distances. When the subject distance approaches the focal length, depth of field collapses exponentially. Even at f/16 or f/22, macro photographers may have less than a millimeter in focus, requiring techniques like focus stacking to achieve full sharpness.',
-      howItWorks: 'Macro lenses allow 1:1 or greater magnification ratios, projecting life-size or larger images onto the sensor. At these close distances, the circle of confusion grows rapidly for any point not precisely at the focus distance. Photographers combat this by using smaller apertures (higher f-numbers), focus stacking multiple exposures, or specialized tilt-shift techniques to angle the focal plane.',
-      stats: [
-        { value: '1:1', label: 'Life-size magnification ratio' },
-        { value: '0.5-2mm', label: 'Typical macro depth of field' },
-        { value: '50-100', label: 'Images stacked for full-depth macro shots' },
-      ],
-      examples: [
-        'Insect photography revealing compound eye structures in sharp detail',
-        'Botanical macro showing pollen grains and stamen at cellular scale',
-        'Product photography for jewelry with selective focus on gemstone facets',
-        'Scientific imaging of specimens requiring precise focal plane control',
-      ],
-      companies: [
-        'Laowa',
-        'Canon MP-E 65mm',
-        'Olympus',
-        'Zerene Stacker',
-      ],
-      futureImpact: 'Computational focus stacking is becoming automated in cameras, with some mirrorless systems capturing and combining dozens of focal planes in-camera. This democratizes macro photography by eliminating the need for complex post-processing workflows.',
-      color: '#22c55e',
-    },
-    {
-      icon: 'Film',
-      title: 'Cinematography',
-      short: 'Focus pulling for visual storytelling',
-      tagline: 'Guiding eyes through motion',
-      description: 'Cinematographers use depth of field as a powerful storytelling tool, controlling exactly where audiences look within each frame. The technique of "pulling focus" - smoothly transitioning focus between subjects - creates dramatic reveals and emotional connections that have defined the visual language of cinema for over a century.',
-      connection: 'This simulation shows why cinema cameras use large sensors and fast lenses: to achieve shallow depth of field that isolates subjects from backgrounds. The rack focus technique exploits the transition zone between sharp focus and blur, smoothly shifting the circle of confusion from one subject to another to redirect viewer attention.',
-      howItWorks: 'Cinema cameras use sensors ranging from Super 35 to full-frame or larger, paired with cinema lenses featuring smooth, precise focus rings with long rotation throws. A first assistant camera operator (focus puller) uses wireless focus motors and distance markers to execute planned focus transitions. The shallow depth of field means errors of just centimeters can result in soft subjects.',
-      stats: [
-        { value: 'T1.3-T2.0', label: 'Common cinema lens aperture range' },
-        { value: '270-330 degrees', label: 'Focus ring rotation for precision' },
-        { value: '$50K+', label: 'Professional cinema lens set cost' },
-      ],
-      examples: [
-        'Rack focus from foreground character to approaching threat in thrillers',
-        'Shallow DOF close-ups isolating actors from busy set environments',
-        'Split diopter shots keeping two focal planes sharp simultaneously',
-        'Deep focus compositions in Citizen Kane using small apertures and lighting',
-      ],
-      companies: [
-        'ARRI',
-        'RED Digital Cinema',
-        'Cooke Optics',
-        'Zeiss Cinema',
-        'Panavision',
-      ],
-      futureImpact: 'Autofocus technology is revolutionizing cinema production. Eye-tracking AF systems can now maintain perfect focus on moving subjects, potentially reducing the need for dedicated focus pullers while enabling new creative possibilities for small crews and documentary filmmakers.',
-      color: '#f59e0b',
-    },
-    {
-      icon: 'Smartphone',
-      title: 'Smartphone Computational Photography',
-      short: 'AI-powered bokeh simulation',
-      tagline: 'Making physics optional',
-      description: 'Smartphone cameras face a fundamental physics problem: their tiny sensors and short focal lengths create naturally deep depth of field, making everything sharp. Computational photography solves this by using AI and depth sensing to artificially blur backgrounds, simulating the optical bokeh of much larger cameras entirely through software.',
-      connection: 'This simulation explains exactly why phones struggle with natural bokeh - small sensors require short focal lengths, which creates large depth of field regardless of aperture. Portrait Mode reverses-engineers the optical process: instead of blur arising naturally from circles of confusion, AI estimates depth and artificially enlarges the "virtual" circle of confusion for each pixel based on its distance from the subject.',
-      howItWorks: 'Modern smartphones use multiple techniques to estimate scene depth: stereo vision from dual cameras, phase-detection patterns, structured light projectors, or LIDAR sensors. AI models trained on millions of images then segment the subject from the background and apply distance-based blur. The most advanced systems even simulate lens-specific bokeh characteristics, including the shape of out-of-focus highlights.',
-      stats: [
-        { value: '4.5mm', label: 'Typical smartphone focal length (vs 50mm+ for DSLRs)' },
-        { value: 'LIDAR', label: 'Most advanced depth sensing technology' },
-        { value: '1M+', label: 'Depth points mapped per frame' },
-      ],
-      examples: [
-        'Portrait Mode on iPhones separating subjects from backgrounds',
-        'Google Pixel computational bokeh using machine learning depth estimation',
-        'Samsung dual-camera systems for live focus adjustment',
-        'Cinematic Mode on iPhone applying rack focus to video in real-time',
-      ],
-      companies: [
-        'Apple',
-        'Google',
-        'Samsung',
-        'Qualcomm',
-        'Sony Semiconductor',
-      ],
-      futureImpact: 'Computational photography is advancing rapidly toward optical-quality results. Future systems may render bokeh indistinguishable from large-format cameras, complete with accurate lens aberrations and light diffraction. The line between computational and optical imaging continues to blur - pun intended.',
-      color: '#06b6d4',
-    },
-  ];
+  const getIcon = (iconName: string) => {
+    const icons: Record<string, JSX.Element> = {
+      Camera: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      ),
+      Search: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      ),
+      Film: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+          <line x1="7" y1="2" x2="7" y2="22"/>
+          <line x1="17" y1="2" x2="17" y2="22"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <line x1="2" y1="7" x2="7" y2="7"/>
+          <line x1="2" y1="17" x2="7" y2="17"/>
+          <line x1="17" y1="17" x2="22" y2="17"/>
+          <line x1="17" y1="7" x2="22" y2="7"/>
+        </svg>
+      ),
+      Smartphone: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+          <line x1="12" y1="18" x2="12.01" y2="18"/>
+        </svg>
+      ),
+    };
+    return icons[iconName] || icons.Camera;
+  };
 
   // =============================================================================
   // PHASE RENDERERS
@@ -1190,8 +1064,9 @@ export default function DepthOfFieldRenderer({
         fontWeight: defined.typography.weights.bold,
         color: defined.colors.text.primary,
         marginBottom: defined.spacing.md,
+        lineHeight: 1.2,
       }}>
-        What Actually Controls Blur: Zoom, Distance, or Aperture?
+        Why Do Professional Photos Have That Dreamy Blur?
       </h1>
 
       <p style={{
@@ -1199,23 +1074,34 @@ export default function DepthOfFieldRenderer({
         fontSize: defined.typography.sizes.lg,
         maxWidth: '500px',
         marginBottom: defined.spacing.xl,
+        lineHeight: 1.6,
       }}>
-        Professional photos have creamy, blurred backgrounds. Phone cameras struggle to match this. Why?
+        You've seen it a thousand times: a portrait where the person is razor-sharp but the background melts into smooth, creamy blur. Your phone's "Portrait Mode" tries to fake it. But what's actually happening with light to create this effect?
       </p>
 
       <div style={{
         background: defined.colors.background.card,
         borderRadius: defined.radius.xl,
         padding: defined.spacing.xl,
-        maxWidth: '400px',
+        maxWidth: '450px',
         marginBottom: defined.spacing.xl,
+        border: '1px solid rgba(99, 102, 241, 0.2)',
       }}>
-        <div style={{ fontSize: '4rem', marginBottom: defined.spacing.md }}>📷</div>
-        <p style={{ color: defined.colors.text.primary, fontSize: defined.typography.sizes.base }}>
-          The secret lies in geometry: how light rays form cones through the lens and spread into blur circles on the sensor.
+        <div style={{ fontSize: '4rem', marginBottom: defined.spacing.md }}>
+          <svg width="80" height="80" viewBox="0 0 80 80" style={{ margin: '0 auto', display: 'block' }}>
+            <circle cx="40" cy="40" r="35" fill="none" stroke="#6366F1" strokeWidth="3"/>
+            <circle cx="40" cy="40" r="20" fill="none" stroke="#6366F1" strokeWidth="2"/>
+            <circle cx="40" cy="40" r="8" fill="#6366F1"/>
+            <circle cx="25" cy="25" r="3" fill="#F472B6" opacity="0.7"/>
+            <circle cx="55" cy="55" r="5" fill="#F472B6" opacity="0.5"/>
+            <circle cx="60" cy="25" r="4" fill="#F472B6" opacity="0.6"/>
+          </svg>
+        </div>
+        <p style={{ color: defined.colors.text.primary, fontSize: defined.typography.sizes.base, lineHeight: 1.6 }}>
+          The answer lies in something photographers call the <span style={{ color: defined.colors.lens.blur, fontWeight: defined.typography.weights.semibold }}>"circle of confusion"</span> - how light rays spread when they don't converge perfectly on the camera's sensor.
         </p>
-        <p style={{ color: defined.colors.lens.blur, marginTop: defined.spacing.md, fontWeight: defined.typography.weights.semibold }}>
-          Understanding the "circle of confusion" unlocks the mystery!
+        <p style={{ color: defined.colors.accent, marginTop: defined.spacing.md, fontWeight: defined.typography.weights.semibold }}>
+          Master this, and you'll understand every camera ever made!
         </p>
       </div>
 
@@ -1230,16 +1116,17 @@ export default function DepthOfFieldRenderer({
           fontSize: defined.typography.sizes.lg,
           fontWeight: defined.typography.weights.semibold,
           cursor: 'pointer',
+          boxShadow: defined.shadows.glow,
         }}
       >
-        Master Depth of Field
+        Discover Depth of Field
       </button>
     </div>
   );
 
   const renderPredict = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
+      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg, fontSize: typo.heading }}>
         Make Your Prediction
       </h2>
 
@@ -1248,12 +1135,13 @@ export default function DepthOfFieldRenderer({
         borderRadius: defined.radius.lg,
         padding: defined.spacing.lg,
         marginBottom: defined.spacing.lg,
+        border: '1px solid rgba(99, 102, 241, 0.2)',
       }}>
-        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md }}>
-          You want to photograph a flower with a blurred background. You can either: open your aperture wider, move closer to the flower, or both.
+        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md, lineHeight: 1.6 }}>
+          You want to photograph a flower with a beautifully blurred background. You have three options: open your aperture wider (lower f-number), move closer to the flower, or use a longer focal length lens.
         </p>
         <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold }}>
-          Which factor has the BIGGEST effect on background blur?
+          Which single factor has the BIGGEST direct effect on background blur?
         </p>
       </div>
 
@@ -1270,12 +1158,16 @@ export default function DepthOfFieldRenderer({
             width: '100%',
             padding: defined.spacing.md,
             marginBottom: defined.spacing.sm,
-            background: prediction === option.id ? defined.colors.primary : defined.colors.background.tertiary,
+            background: prediction === option.id
+              ? `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`
+              : defined.colors.background.tertiary,
             color: defined.colors.text.primary,
             border: prediction === option.id ? `2px solid ${defined.colors.primary}` : '2px solid transparent',
             borderRadius: defined.radius.md,
             cursor: 'pointer',
             textAlign: 'left',
+            fontSize: typo.body,
+            transition: 'all 0.2s ease',
           }}
         >
           {option.id}. {option.text}
@@ -1284,28 +1176,29 @@ export default function DepthOfFieldRenderer({
 
       {prediction && (
         <div style={{
-          background: prediction === 'A' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+          background: prediction === 'A' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
           border: `1px solid ${prediction === 'A' ? defined.colors.success : defined.colors.warning}`,
           borderRadius: defined.radius.lg,
           padding: defined.spacing.lg,
           marginTop: defined.spacing.lg,
         }}>
-          <p style={{ color: prediction === 'A' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold }}>
-            {prediction === 'A' ? 'Correct!' : 'Good thinking, but...'}
+          <p style={{ color: prediction === 'A' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold, marginBottom: defined.spacing.sm }}>
+            {prediction === 'A' ? 'Correct!' : 'Good thinking, but not quite!'}
           </p>
-          <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.sm }}>
-            Aperture has the most direct effect. A wider aperture (like f/1.8) creates a larger cone of rays, which forms a larger blur circle (circle of confusion) for out-of-focus objects. All factors matter, but aperture is king!
+          <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+            Aperture has the most direct effect on depth of field. A wider aperture (like f/1.8) creates a larger cone of rays passing through the lens, which forms a larger blur disk (circle of confusion) for out-of-focus objects. All factors matter, but aperture is the most powerful tool photographers have!
           </p>
           <button
             onClick={handlePhaseComplete}
             style={{
               marginTop: defined.spacing.md,
-              background: defined.colors.primary,
+              background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
               color: defined.colors.text.primary,
               border: 'none',
               borderRadius: defined.radius.md,
               padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
               cursor: 'pointer',
+              fontWeight: defined.typography.weights.semibold,
             }}
           >
             See the Ray Diagram
@@ -1317,14 +1210,16 @@ export default function DepthOfFieldRenderer({
 
   const renderPlay = () => (
     <div style={{ padding: defined.spacing.lg }}>
-      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.md }}>
+      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.md, fontSize: typo.heading }}>
         Depth of Field Lab
       </h2>
-      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
+      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg, maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
         Adjust aperture, subject distance, and focus to see how blur circles form on the sensor.
       </p>
 
-      {renderRayConeVisualization()}
+      <div style={{ marginTop: defined.spacing.lg }}>
+        {renderRayConeVisualization()}
+      </div>
 
       <div style={{
         background: defined.colors.background.card,
@@ -1332,14 +1227,15 @@ export default function DepthOfFieldRenderer({
         padding: defined.spacing.lg,
         marginTop: defined.spacing.lg,
         maxWidth: '550px',
-        margin: '0 auto',
+        margin: `${defined.spacing.lg} auto 0`,
+        border: '1px solid rgba(99, 102, 241, 0.2)',
       }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>Key Observations:</h3>
-        <ul style={{ color: defined.colors.text.secondary, paddingLeft: defined.spacing.lg, lineHeight: '1.8' }}>
-          <li>Wider aperture = larger ray cone = bigger blur circles</li>
-          <li>Objects at the focus distance form a point (no blur)</li>
-          <li>Objects farther from focus plane have larger circles of confusion</li>
-          <li>The blur circle shape matches the aperture shape</li>
+        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>Try These Experiments:</h3>
+        <ul style={{ color: defined.colors.text.secondary, paddingLeft: defined.spacing.lg, lineHeight: '2' }}>
+          <li>Open the aperture wide - watch the blur circles grow</li>
+          <li>Move the subject away from the focus distance</li>
+          <li>Match subject distance to focus distance - see sharp focus</li>
+          <li>Notice how the background is always more blurred than the foreground</li>
         </ul>
       </div>
 
@@ -1347,13 +1243,14 @@ export default function DepthOfFieldRenderer({
         <button
           onClick={handlePhaseComplete}
           style={{
-            background: defined.colors.primary,
+            background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
             color: defined.colors.text.primary,
             border: 'none',
             borderRadius: defined.radius.md,
             padding: `${defined.spacing.md} ${defined.spacing.xl}`,
             cursor: 'pointer',
-            fontSize: defined.typography.sizes.base,
+            fontSize: typo.body,
+            fontWeight: defined.typography.weights.semibold,
           }}
         >
           Understand the Physics
@@ -1364,7 +1261,7 @@ export default function DepthOfFieldRenderer({
 
   const renderReview = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
+      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg, fontSize: typo.heading }}>
         The Physics of Depth of Field
       </h2>
 
@@ -1374,52 +1271,60 @@ export default function DepthOfFieldRenderer({
         gap: defined.spacing.md,
         marginBottom: defined.spacing.lg,
       }}>
-        <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg }}>
+        <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, border: '1px solid rgba(244, 114, 182, 0.3)' }}>
           <h3 style={{ color: defined.colors.lens.blur, marginBottom: defined.spacing.sm }}>Circle of Confusion</h3>
-          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
-            When a point is out of focus, light from it doesn't converge to a point on the sensor. Instead, it forms a disk. If this disk is small enough, we perceive it as sharp.
+          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, lineHeight: 1.6 }}>
+            When a point is out of focus, light from it doesn't converge to a point on the sensor. Instead, it forms a disk. If this disk is small enough (below the eye's resolving ability), we perceive it as sharp. Larger disks appear blurred.
           </p>
         </div>
-        <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg }}>
-          <h3 style={{ color: defined.colors.accent, marginBottom: defined.spacing.sm }}>F-Number</h3>
-          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
-            f-number = focal length / aperture diameter. Lower f-number means wider aperture, larger blur circles, shallower depth of field.
+        <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+          <h3 style={{ color: defined.colors.accent, marginBottom: defined.spacing.sm }}>F-Number Explained</h3>
+          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, lineHeight: 1.6 }}>
+            f-number = focal length / aperture diameter. A lower f-number means a wider physical aperture opening, which creates a larger cone of light and bigger blur circles for out-of-focus areas.
           </p>
         </div>
       </div>
 
-      <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, marginBottom: defined.spacing.lg }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md, textAlign: 'center' }}>Depth of Field Factors</h3>
+      <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, marginBottom: defined.spacing.lg, border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md, textAlign: 'center' }}>Aperture vs. Depth of Field</h3>
         <div style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
           gap: defined.spacing.md,
         }}>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs }}>f/1.8</div>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Wide aperture<br/>Shallow DOF</p>
+            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs, color: defined.colors.success }}>f/1.4</div>
+            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Wide aperture<br/>Very shallow DOF<br/>Maximum blur</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs }}>f/8</div>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Medium aperture<br/>Moderate DOF</p>
+            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs, color: defined.colors.accent }}>f/8</div>
+            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Medium aperture<br/>Moderate DOF<br/>Balanced</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs }}>f/22</div>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Narrow aperture<br/>Deep DOF</p>
+            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs, color: defined.colors.primary }}>f/22</div>
+            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Narrow aperture<br/>Very deep DOF<br/>Everything sharp</p>
           </div>
         </div>
+      </div>
+
+      <div style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: defined.radius.lg, padding: defined.spacing.lg, marginBottom: defined.spacing.lg }}>
+        <h4 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>The Key Insight</h4>
+        <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+          A point of light becomes a blur disk when out of focus. The size of this disk depends on the aperture opening size. Larger aperture = larger blur disk = shallower depth of field. This is pure geometry!
+        </p>
       </div>
 
       <div style={{ textAlign: 'center' }}>
         <button
           onClick={handlePhaseComplete}
           style={{
-            background: defined.colors.secondary,
+            background: `linear-gradient(135deg, ${defined.colors.secondary}, ${defined.colors.primary})`,
             color: defined.colors.text.primary,
             border: 'none',
             borderRadius: defined.radius.md,
             padding: `${defined.spacing.md} ${defined.spacing.xl}`,
             cursor: 'pointer',
+            fontWeight: defined.typography.weights.semibold,
           }}
         >
           See the Twist
@@ -1430,8 +1335,21 @@ export default function DepthOfFieldRenderer({
 
   const renderTwistPredict = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        The Twist: Distance Matters Too
+      <div style={{
+        background: 'rgba(139, 92, 246, 0.1)',
+        border: '1px solid rgba(139, 92, 246, 0.3)',
+        borderRadius: defined.radius.full,
+        padding: `${defined.spacing.xs} ${defined.spacing.md}`,
+        marginBottom: defined.spacing.lg,
+        textAlign: 'center',
+        width: 'fit-content',
+        margin: '0 auto',
+      }}>
+        <span style={{ color: defined.colors.secondary, fontSize: defined.typography.sizes.sm }}>THE TWIST</span>
+      </div>
+
+      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.lg, fontSize: typo.heading }}>
+        Distance Matters More Than You Think!
       </h2>
 
       <div style={{
@@ -1439,20 +1357,21 @@ export default function DepthOfFieldRenderer({
         borderRadius: defined.radius.lg,
         padding: defined.spacing.lg,
         marginBottom: defined.spacing.lg,
+        border: '1px solid rgba(139, 92, 246, 0.2)',
       }}>
-        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md }}>
-          You're photographing a person with a tree in the background. Without changing aperture, you walk closer to the person and refocus.
+        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md, lineHeight: 1.6 }}>
+          You're photographing a person with a tree 10 meters behind them. Without changing your aperture setting at all, you walk closer to the person (from 3m to 1.5m away) and refocus on their face.
         </p>
         <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold }}>
-          What happens to the background blur?
+          What happens to the background tree's blur?
         </p>
       </div>
 
       {[
-        { id: 'A', text: 'Background blur decreases (more in focus)' },
-        { id: 'B', text: 'Background blur increases (more blurred)' },
-        { id: 'C', text: 'Background blur stays the same' },
-        { id: 'D', text: 'The background disappears' },
+        { id: 'A', text: 'Background blur decreases (tree becomes sharper)' },
+        { id: 'B', text: 'Background blur increases (tree becomes more blurred)' },
+        { id: 'C', text: 'Background blur stays exactly the same' },
+        { id: 'D', text: 'The tree disappears from the frame entirely' },
       ].map((option) => (
         <button
           key={option.id}
@@ -1461,12 +1380,15 @@ export default function DepthOfFieldRenderer({
             width: '100%',
             padding: defined.spacing.md,
             marginBottom: defined.spacing.sm,
-            background: twistPrediction === option.id ? defined.colors.secondary : defined.colors.background.tertiary,
+            background: twistPrediction === option.id
+              ? `linear-gradient(135deg, ${defined.colors.secondary}, ${defined.colors.primary})`
+              : defined.colors.background.tertiary,
             color: defined.colors.text.primary,
             border: twistPrediction === option.id ? `2px solid ${defined.colors.secondary}` : '2px solid transparent',
             borderRadius: defined.radius.md,
             cursor: 'pointer',
             textAlign: 'left',
+            fontSize: typo.body,
           }}
         >
           {option.id}. {option.text}
@@ -1475,31 +1397,32 @@ export default function DepthOfFieldRenderer({
 
       {twistPrediction && (
         <div style={{
-          background: twistPrediction === 'B' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+          background: twistPrediction === 'B' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
           border: `1px solid ${twistPrediction === 'B' ? defined.colors.success : defined.colors.warning}`,
           borderRadius: defined.radius.lg,
           padding: defined.spacing.lg,
           marginTop: defined.spacing.lg,
         }}>
-          <p style={{ color: twistPrediction === 'B' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold }}>
-            {twistPrediction === 'B' ? 'Exactly right!' : 'Surprising, isn\'t it?'}
+          <p style={{ color: twistPrediction === 'B' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold, marginBottom: defined.spacing.sm }}>
+            {twistPrediction === 'B' ? 'Exactly right!' : "Surprising, isn't it?"}
           </p>
-          <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.sm }}>
-            Moving closer to the subject while maintaining focus on them increases the angular difference to the background. This makes the background's circle of confusion larger - more blur!
+          <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+            Moving closer to the subject while maintaining focus on them dramatically increases background blur! This is because the angular difference between the subject and background increases. The closer your subject, the relatively "farther" the background appears optically, creating larger circles of confusion.
           </p>
           <button
             onClick={handlePhaseComplete}
             style={{
               marginTop: defined.spacing.md,
-              background: defined.colors.secondary,
+              background: `linear-gradient(135deg, ${defined.colors.secondary}, ${defined.colors.primary})`,
               color: defined.colors.text.primary,
               border: 'none',
               borderRadius: defined.radius.md,
               padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
               cursor: 'pointer',
+              fontWeight: defined.typography.weights.semibold,
             }}
           >
-            Test This Effect
+            Experiment With This
           </button>
         </div>
       )}
@@ -1508,14 +1431,16 @@ export default function DepthOfFieldRenderer({
 
   const renderTwistPlay = () => (
     <div style={{ padding: defined.spacing.lg }}>
-      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.md }}>
+      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.md, fontSize: typo.heading }}>
         Distance and Background Blur
       </h2>
-      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        Keep aperture constant. Move the subject closer while keeping it in focus. Watch the background blur!
+      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg, maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
+        Keep aperture constant. Move the subject closer while keeping it in focus. Watch the background blur intensify!
       </p>
 
-      {renderRayConeVisualization()}
+      <div style={{ marginTop: defined.spacing.lg }}>
+        {renderRayConeVisualization()}
+      </div>
 
       <div style={{
         display: 'grid',
@@ -1523,7 +1448,7 @@ export default function DepthOfFieldRenderer({
         gap: defined.spacing.md,
         marginTop: defined.spacing.lg,
         maxWidth: '600px',
-        margin: '0 auto',
+        margin: `${defined.spacing.lg} auto 0`,
       }}>
         <div style={{
           background: 'rgba(16, 185, 129, 0.1)',
@@ -1531,11 +1456,12 @@ export default function DepthOfFieldRenderer({
           borderRadius: defined.radius.lg,
           padding: defined.spacing.md,
         }}>
-          <h4 style={{ color: defined.colors.success, marginBottom: defined.spacing.sm }}>Closer to Subject</h4>
-          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md }}>
-            <li>Larger subject in frame</li>
-            <li>Background becomes more blurred</li>
-            <li>Shallower effective DOF</li>
+          <h4 style={{ color: defined.colors.success, marginBottom: defined.spacing.sm }}>Subject Closer (50-80)</h4>
+          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md, lineHeight: 1.8 }}>
+            <li>Subject fills more of the frame</li>
+            <li>Background blur increases dramatically</li>
+            <li>Shallower effective depth of field</li>
+            <li>More "professional" portrait look</li>
           </ul>
         </div>
         <div style={{
@@ -1544,11 +1470,12 @@ export default function DepthOfFieldRenderer({
           borderRadius: defined.radius.lg,
           padding: defined.spacing.md,
         }}>
-          <h4 style={{ color: defined.colors.lens.ray, marginBottom: defined.spacing.sm }}>Farther from Subject</h4>
-          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md }}>
-            <li>Smaller subject in frame</li>
-            <li>Background becomes less blurred</li>
-            <li>Deeper effective DOF</li>
+          <h4 style={{ color: defined.colors.lens.ray, marginBottom: defined.spacing.sm }}>Subject Farther (150-180)</h4>
+          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md, lineHeight: 1.8 }}>
+            <li>Subject smaller in frame</li>
+            <li>Background blur decreases</li>
+            <li>Deeper effective depth of field</li>
+            <li>More context visible and sharper</li>
           </ul>
         </div>
       </div>
@@ -1557,12 +1484,13 @@ export default function DepthOfFieldRenderer({
         <button
           onClick={handlePhaseComplete}
           style={{
-            background: defined.colors.secondary,
+            background: `linear-gradient(135deg, ${defined.colors.secondary}, ${defined.colors.primary})`,
             color: defined.colors.text.primary,
             border: 'none',
             borderRadius: defined.radius.md,
             padding: `${defined.spacing.md} ${defined.spacing.xl}`,
             cursor: 'pointer',
+            fontWeight: defined.typography.weights.semibold,
           }}
         >
           Review the Discovery
@@ -1573,41 +1501,52 @@ export default function DepthOfFieldRenderer({
 
   const renderTwistReview = () => (
     <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        Key Discovery: It's All About Angles
+      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.lg, fontSize: typo.heading }}>
+        Key Discovery: Three Paths to Blur
       </h2>
 
-      <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, marginBottom: defined.spacing.lg }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md }}>Three Ways to Increase Background Blur</h3>
+      <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, marginBottom: defined.spacing.lg, border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md, textAlign: 'center' }}>Three Ways to Increase Background Blur</h3>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: defined.spacing.md }}>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs }}>1</div>
-            <h4 style={{ color: defined.colors.accent }}>Open Aperture</h4>
+            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs }}>1</div>
+            <h4 style={{ color: defined.colors.accent, marginBottom: defined.spacing.xs }}>Open Aperture</h4>
             <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>f/2.8 to f/1.4</p>
+            <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Larger cone of light = bigger blur circles</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs }}>2</div>
-            <h4 style={{ color: defined.colors.success }}>Move Closer</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Increases angle to BG</p>
+            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs }}>2</div>
+            <h4 style={{ color: defined.colors.success, marginBottom: defined.spacing.xs }}>Move Closer</h4>
+            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>3m to 1m</p>
+            <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Increases angular difference to background</p>
           </div>
           <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md, textAlign: 'center' }}>
-            <div style={{ fontSize: '2rem', marginBottom: defined.spacing.xs }}>3</div>
-            <h4 style={{ color: defined.colors.lens.ray }}>Longer Lens</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>Compresses perspective</p>
+            <div style={{ fontSize: '2.5rem', marginBottom: defined.spacing.xs }}>3</div>
+            <h4 style={{ color: defined.colors.lens.ray, marginBottom: defined.spacing.xs }}>Longer Lens</h4>
+            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>50mm to 200mm</p>
+            <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.xs, marginTop: defined.spacing.xs }}>Larger physical aperture at same f-number</p>
           </div>
         </div>
+      </div>
+
+      <div style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: defined.radius.lg, padding: defined.spacing.lg, marginBottom: defined.spacing.lg }}>
+        <h4 style={{ color: defined.colors.secondary, marginBottom: defined.spacing.sm }}>Pro Tip: Combine All Three!</h4>
+        <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+          Professional portrait photographers use all three factors together: an 85mm lens (longer focal length) at f/1.4 (wide aperture) shot from about 2 meters (close distance). This combination creates the maximum possible subject isolation with beautifully smooth background blur.
+        </p>
       </div>
 
       <div style={{ textAlign: 'center' }}>
         <button
           onClick={handlePhaseComplete}
           style={{
-            background: defined.colors.primary,
+            background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
             color: defined.colors.text.primary,
             border: 'none',
             borderRadius: defined.radius.md,
             padding: `${defined.spacing.md} ${defined.spacing.xl}`,
             cursor: 'pointer',
+            fontWeight: defined.typography.weights.semibold,
           }}
         >
           Real-World Applications
@@ -1616,120 +1555,222 @@ export default function DepthOfFieldRenderer({
     </div>
   );
 
-  const renderTransfer = () => (
-    <div style={{ padding: defined.spacing.lg, maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        Real-World Applications
-      </h2>
+  const renderTransfer = () => {
+    const app = realWorldApps[selectedApp];
 
-      <div style={{
-        display: 'flex',
-        gap: defined.spacing.sm,
-        marginBottom: defined.spacing.lg,
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-      }}>
-        {applications.map((app, i) => (
-          <button
-            key={app.id}
-            onClick={() => setSelectedApp(i)}
-            style={{
-              padding: `${defined.spacing.sm} ${defined.spacing.md}`,
-              background: selectedApp === i ? defined.colors.primary : defined.colors.background.tertiary,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              cursor: 'pointer',
-              opacity: completedApps[i] ? 0.7 : 1,
-            }}
-          >
-            {app.icon} {app.title} {completedApps[i] && '✓'}
-          </button>
-        ))}
-      </div>
-
-      <div style={{
-        background: defined.colors.background.card,
-        borderRadius: defined.radius.xl,
-        padding: defined.spacing.xl,
-      }}>
-        <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: defined.spacing.md }}>
-          {applications[selectedApp].icon}
-        </div>
-        <h3 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.sm }}>
-          {applications[selectedApp].title}
-        </h3>
-        <p style={{ color: defined.colors.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-          {applications[selectedApp].description}
+    return (
+      <div style={{ padding: defined.spacing.lg, maxWidth: '900px', margin: '0 auto' }}>
+        <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.md, fontSize: typo.heading }}>
+          Real-World Applications
+        </h2>
+        <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
+          Depth of field principles power industries worth billions of dollars
         </p>
-        <ul style={{ color: defined.colors.text.secondary, lineHeight: '2' }}>
-          {applications[selectedApp].details.map((detail, i) => (
-            <li key={i}>{detail}</li>
+
+        {/* App selector tabs */}
+        <div style={{
+          display: 'flex',
+          gap: defined.spacing.sm,
+          marginBottom: defined.spacing.lg,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}>
+          {realWorldApps.map((a, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedApp(i)}
+              style={{
+                padding: `${defined.spacing.sm} ${defined.spacing.md}`,
+                background: selectedApp === i
+                  ? `linear-gradient(135deg, ${a.color}, ${defined.colors.primaryDark})`
+                  : defined.colors.background.tertiary,
+                color: defined.colors.text.primary,
+                border: selectedApp === i ? `2px solid ${a.color}` : '2px solid transparent',
+                borderRadius: defined.radius.md,
+                cursor: 'pointer',
+                fontSize: typo.small,
+                fontWeight: selectedApp === i ? defined.typography.weights.semibold : defined.typography.weights.normal,
+                opacity: completedApps[i] ? 0.8 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: defined.spacing.xs,
+              }}
+            >
+              <span style={{ color: a.color }}>{getIcon(a.icon)}</span>
+              {a.title}
+              {completedApps[i] && <span style={{ color: defined.colors.success }}>+</span>}
+            </button>
           ))}
-        </ul>
-
-        {!completedApps[selectedApp] && (
-          <button
-            onClick={handleCompleteApp}
-            style={{
-              display: 'block',
-              margin: `${defined.spacing.lg} auto 0`,
-              padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-              background: defined.colors.success,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              cursor: 'pointer',
-            }}
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-
-      {allAppsCompleted && (
-        <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
-          <button
-            onClick={handlePhaseComplete}
-            style={{
-              background: defined.colors.primary,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.lg,
-              padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-              cursor: 'pointer',
-              fontSize: defined.typography.sizes.lg,
-            }}
-          >
-            Take the Test
-          </button>
         </div>
-      )}
-    </div>
-  );
+
+        {/* Main application card */}
+        <div style={{
+          background: defined.colors.background.card,
+          borderRadius: defined.radius.xl,
+          padding: defined.spacing.xl,
+          border: `1px solid ${app.color}40`,
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: defined.spacing.md, marginBottom: defined.spacing.lg }}>
+            <div style={{ color: app.color }}>{getIcon(app.icon)}</div>
+            <div>
+              <h3 style={{ color: defined.colors.text.primary, fontSize: typo.heading, marginBottom: '4px' }}>{app.title}</h3>
+              <p style={{ color: app.color, fontSize: typo.small, fontStyle: 'italic' }}>{app.tagline}</p>
+            </div>
+          </div>
+
+          {/* Description */}
+          <p style={{ color: defined.colors.text.secondary, lineHeight: 1.7, marginBottom: defined.spacing.lg }}>
+            {app.description}
+          </p>
+
+          {/* Connection to physics */}
+          <div style={{ background: 'rgba(99, 102, 241, 0.1)', borderRadius: defined.radius.lg, padding: defined.spacing.md, marginBottom: defined.spacing.lg, border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+            <h4 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm, fontSize: typo.body }}>Connection to Depth of Field</h4>
+            <p style={{ color: defined.colors.text.secondary, fontSize: typo.small, lineHeight: 1.6 }}>{app.connection}</p>
+          </div>
+
+          {/* How it works */}
+          <div style={{ marginBottom: defined.spacing.lg }}>
+            <h4 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.sm }}>How It Works</h4>
+            <p style={{ color: defined.colors.text.secondary, fontSize: typo.small, lineHeight: 1.7 }}>{app.howItWorks}</p>
+          </div>
+
+          {/* Stats grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+            gap: defined.spacing.md,
+            marginBottom: defined.spacing.lg,
+          }}>
+            {app.stats.map((stat, i) => (
+              <div key={i} style={{
+                background: defined.colors.background.secondary,
+                borderRadius: defined.radius.md,
+                padding: defined.spacing.md,
+                textAlign: 'center',
+              }}>
+                <div style={{ color: app.color, fontSize: typo.bodyLarge, fontWeight: defined.typography.weights.bold, marginBottom: '4px' }}>
+                  {stat.value}
+                </div>
+                <div style={{ color: defined.colors.text.muted, fontSize: typo.label }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Examples */}
+          <div style={{ marginBottom: defined.spacing.lg }}>
+            <h4 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.sm }}>Real Examples</h4>
+            <ul style={{ color: defined.colors.text.secondary, fontSize: typo.small, lineHeight: 2, paddingLeft: defined.spacing.lg }}>
+              {app.examples.map((ex, i) => (
+                <li key={i}>{ex}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Companies */}
+          <div style={{ marginBottom: defined.spacing.lg }}>
+            <h4 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.sm }}>Key Companies</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: defined.spacing.sm }}>
+              {app.companies.map((company, i) => (
+                <span key={i} style={{
+                  background: defined.colors.background.secondary,
+                  color: defined.colors.text.secondary,
+                  padding: `${defined.spacing.xs} ${defined.spacing.sm}`,
+                  borderRadius: defined.radius.sm,
+                  fontSize: typo.label,
+                }}>
+                  {company}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Future impact */}
+          <div style={{ background: `${app.color}15`, borderRadius: defined.radius.lg, padding: defined.spacing.md, border: `1px solid ${app.color}30` }}>
+            <h4 style={{ color: app.color, marginBottom: defined.spacing.sm, fontSize: typo.body }}>Future Impact</h4>
+            <p style={{ color: defined.colors.text.secondary, fontSize: typo.small, lineHeight: 1.6 }}>{app.futureImpact}</p>
+          </div>
+
+          {/* Mark complete button */}
+          {!completedApps[selectedApp] && (
+            <button
+              onClick={handleCompleteApp}
+              style={{
+                display: 'block',
+                margin: `${defined.spacing.lg} auto 0`,
+                padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
+                background: `linear-gradient(135deg, ${defined.colors.success}, #059669)`,
+                color: defined.colors.text.primary,
+                border: 'none',
+                borderRadius: defined.radius.md,
+                cursor: 'pointer',
+                fontWeight: defined.typography.weights.semibold,
+              }}
+            >
+              Mark as Understood
+            </button>
+          )}
+        </div>
+
+        {/* Progress indicator */}
+        <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
+          <p style={{ color: defined.colors.text.muted, marginBottom: defined.spacing.md }}>
+            {completedApps.filter(Boolean).length} of {realWorldApps.length} applications explored
+          </p>
+          {allAppsCompleted && (
+            <button
+              onClick={handlePhaseComplete}
+              style={{
+                background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
+                color: defined.colors.text.primary,
+                border: 'none',
+                borderRadius: defined.radius.lg,
+                padding: `${defined.spacing.md} ${defined.spacing.xl}`,
+                cursor: 'pointer',
+                fontSize: typo.body,
+                fontWeight: defined.typography.weights.semibold,
+                boxShadow: defined.shadows.glow,
+              }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const renderTest = () => {
-    const question = questions[currentQuestion];
+    const question = testQuestions[currentQuestion];
 
     if (testSubmitted) {
       const passed = score >= 7;
+      const percentage = Math.round((score / testQuestions.length) * 100);
+
       return (
         <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
-            background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            borderRadius: defined.radius.lg,
+            background: passed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            border: `1px solid ${passed ? defined.colors.success : defined.colors.error}`,
+            borderRadius: defined.radius.xl,
             padding: defined.spacing.xl,
             textAlign: 'center',
             marginBottom: defined.spacing.lg,
           }}>
-            <h2 style={{ color: passed ? defined.colors.success : defined.colors.error, marginBottom: defined.spacing.md }}>
+            <div style={{ fontSize: '4rem', marginBottom: defined.spacing.md }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ color: passed ? defined.colors.success : defined.colors.error, marginBottom: defined.spacing.md, fontSize: typo.heading }}>
               {passed ? 'Excellent Work!' : 'Keep Learning!'}
             </h2>
             <p style={{ color: defined.colors.text.primary, fontSize: defined.typography.sizes['2xl'], fontWeight: defined.typography.weights.bold }}>
-              {score} / {questions.length}
+              {score} / {testQuestions.length} ({percentage}%)
             </p>
             <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.md }}>
-              {passed ? 'You\'ve mastered depth of field!' : 'Review the material and try again.'}
+              {passed
+                ? 'You have demonstrated mastery of depth of field concepts!'
+                : 'Review the material and try again to strengthen your understanding.'}
             </p>
           </div>
           {passed && (
@@ -1737,12 +1778,14 @@ export default function DepthOfFieldRenderer({
               <button
                 onClick={handlePhaseComplete}
                 style={{
-                  background: defined.colors.primary,
+                  background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
                   color: defined.colors.text.primary,
                   border: 'none',
                   borderRadius: defined.radius.md,
                   padding: `${defined.spacing.md} ${defined.spacing.xl}`,
                   cursor: 'pointer',
+                  fontWeight: defined.typography.weights.semibold,
+                  boxShadow: defined.shadows.glow,
                 }}
               >
                 Continue to Mastery
@@ -1755,6 +1798,7 @@ export default function DepthOfFieldRenderer({
 
     return (
       <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
+        {/* Progress header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -1762,85 +1806,135 @@ export default function DepthOfFieldRenderer({
           marginBottom: defined.spacing.lg,
         }}>
           <span style={{ color: defined.colors.text.secondary }}>
-            Question {currentQuestion + 1} of {questions.length}
+            Question {currentQuestion + 1} of {testQuestions.length}
           </span>
-          <span style={{ color: defined.colors.success }}>Score: {score}</span>
+          <span style={{ color: defined.colors.success, fontWeight: defined.typography.weights.semibold }}>
+            Score: {score}/{currentQuestion + (showResult ? 1 : 0)}
+          </span>
         </div>
 
+        {/* Progress bar */}
+        <div style={{
+          width: '100%',
+          height: '4px',
+          background: defined.colors.background.tertiary,
+          borderRadius: defined.radius.full,
+          marginBottom: defined.spacing.lg,
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            width: `${((currentQuestion + (showResult ? 1 : 0)) / testQuestions.length) * 100}%`,
+            height: '100%',
+            background: `linear-gradient(90deg, ${defined.colors.primary}, ${defined.colors.secondary})`,
+            transition: 'width 0.3s ease',
+          }} />
+        </div>
+
+        {/* Question card */}
         <div style={{
           background: defined.colors.background.card,
           borderRadius: defined.radius.lg,
           padding: defined.spacing.xl,
           marginBottom: defined.spacing.lg,
+          border: '1px solid rgba(99, 102, 241, 0.2)',
         }}>
-          <h3 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.lg }}>
+          {/* Scenario */}
+          <div style={{
+            background: 'rgba(99, 102, 241, 0.1)',
+            borderRadius: defined.radius.md,
+            padding: defined.spacing.md,
+            marginBottom: defined.spacing.lg,
+            borderLeft: `3px solid ${defined.colors.primary}`,
+          }}>
+            <p style={{ color: defined.colors.text.secondary, fontSize: typo.small, lineHeight: 1.6, fontStyle: 'italic' }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.lg, fontSize: typo.bodyLarge, lineHeight: 1.5 }}>
             {question.question}
           </h3>
 
-          {question.options.map((option, i) => {
+          {/* Options */}
+          {question.options.map((option) => {
             let bg = defined.colors.background.tertiary;
             let border = 'transparent';
+            let textColor = defined.colors.text.primary;
 
             if (showResult) {
               if (option.correct) {
-                bg = 'rgba(16, 185, 129, 0.3)';
+                bg = 'rgba(16, 185, 129, 0.2)';
                 border = defined.colors.success;
-              } else if (i === selectedAnswer) {
-                bg = 'rgba(239, 68, 68, 0.3)';
+                textColor = defined.colors.success;
+              } else if (option.id === selectedAnswer) {
+                bg = 'rgba(239, 68, 68, 0.2)';
                 border = defined.colors.error;
+                textColor = defined.colors.error;
               }
-            } else if (i === selectedAnswer) {
-              bg = defined.colors.primary;
+            } else if (option.id === selectedAnswer) {
+              bg = `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`;
             }
 
             return (
               <button
-                key={i}
-                onClick={() => handleAnswerSelect(i)}
+                key={option.id}
+                onClick={() => handleAnswerSelect(option.id)}
                 disabled={showResult}
                 style={{
                   width: '100%',
                   padding: defined.spacing.md,
                   marginBottom: defined.spacing.sm,
                   background: bg,
-                  color: defined.colors.text.primary,
+                  color: textColor,
                   border: `2px solid ${border}`,
                   borderRadius: defined.radius.md,
                   cursor: showResult ? 'default' : 'pointer',
                   textAlign: 'left',
+                  fontSize: typo.body,
+                  opacity: showResult && !option.correct && option.id !== selectedAnswer ? 0.5 : 1,
+                  transition: 'all 0.2s ease',
                 }}
               >
-                {option.text}
+                <span style={{ fontWeight: defined.typography.weights.semibold, marginRight: defined.spacing.sm }}>
+                  {option.id.toUpperCase()}.
+                </span>
+                {option.label}
               </button>
             );
           })}
 
+          {/* Explanation */}
           {showResult && (
             <div style={{
-              background: defined.colors.background.secondary,
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
               borderRadius: defined.radius.md,
               padding: defined.spacing.md,
               marginTop: defined.spacing.lg,
             }}>
-              <p style={{ color: defined.colors.text.secondary }}>{question.explanation}</p>
+              <h4 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>Explanation</h4>
+              <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6, fontSize: typo.small }}>{question.explanation}</p>
             </div>
           )}
         </div>
 
+        {/* Next button */}
         {showResult && (
           <div style={{ textAlign: 'center' }}>
             <button
               onClick={handleNextQuestion}
               style={{
-                background: defined.colors.primary,
+                background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
                 color: defined.colors.text.primary,
                 border: 'none',
                 borderRadius: defined.radius.md,
                 padding: `${defined.spacing.md} ${defined.spacing.xl}`,
                 cursor: 'pointer',
+                fontWeight: defined.typography.weights.semibold,
               }}
             >
-              {currentQuestion < questions.length - 1 ? 'Next Question' : 'See Results'}
+              {currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
             </button>
           </div>
         )}
@@ -1855,11 +1949,11 @@ export default function DepthOfFieldRenderer({
       margin: '0 auto',
       textAlign: 'center',
     }}>
-      <div style={{ fontSize: '4rem', marginBottom: defined.spacing.lg }}>
+      <div style={{ fontSize: '5rem', marginBottom: defined.spacing.lg }}>
         🏆
       </div>
 
-      <h2 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.md }}>
+      <h2 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.md, fontSize: typo.heading }}>
         Depth of Field Master!
       </h2>
 
@@ -1868,6 +1962,7 @@ export default function DepthOfFieldRenderer({
         borderRadius: defined.radius.xl,
         padding: defined.spacing.xl,
         marginBottom: defined.spacing.lg,
+        border: '1px solid rgba(16, 185, 129, 0.3)',
       }}>
         <div style={{
           fontSize: defined.typography.sizes['3xl'],
@@ -1875,10 +1970,10 @@ export default function DepthOfFieldRenderer({
           color: defined.colors.success,
           marginBottom: defined.spacing.md,
         }}>
-          {score} / {questions.length}
+          {score} / {testQuestions.length}
         </div>
-        <p style={{ color: defined.colors.text.secondary }}>
-          You understand how aperture, distance, and focus create depth of field!
+        <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+          You have demonstrated mastery of how aperture, distance, and focus interact to create depth of field effects in photography and optical systems!
         </p>
       </div>
 
@@ -1888,25 +1983,45 @@ export default function DepthOfFieldRenderer({
         padding: defined.spacing.lg,
         marginBottom: defined.spacing.lg,
         textAlign: 'left',
+        border: '1px solid rgba(99, 102, 241, 0.2)',
       }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md }}>Key Takeaways</h3>
-        <ul style={{ color: defined.colors.text.secondary, lineHeight: '2' }}>
-          <li>Circle of confusion determines perceived sharpness</li>
-          <li>Wider aperture = shallower depth of field</li>
-          <li>Closer subject = more background blur</li>
-          <li>Bokeh quality depends on aperture shape and lens design</li>
+        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md }}>Key Concepts Mastered</h3>
+        <ul style={{ color: defined.colors.text.secondary, lineHeight: '2.2', paddingLeft: defined.spacing.lg }}>
+          <li><strong style={{ color: defined.colors.text.primary }}>Circle of Confusion:</strong> The blur disk formed by out-of-focus light</li>
+          <li><strong style={{ color: defined.colors.text.primary }}>Aperture Effect:</strong> Wider aperture = shallower depth of field</li>
+          <li><strong style={{ color: defined.colors.text.primary }}>Distance Effect:</strong> Closer subject = more background blur</li>
+          <li><strong style={{ color: defined.colors.text.primary }}>Focal Length Effect:</strong> Longer lens = larger physical aperture and more blur</li>
+          <li><strong style={{ color: defined.colors.text.primary }}>Hyperfocal Distance:</strong> Maximizing depth of field for landscapes</li>
+          <li><strong style={{ color: defined.colors.text.primary }}>Computational Photography:</strong> AI-powered bokeh simulation</li>
         </ul>
+      </div>
+
+      <div style={{
+        background: 'rgba(139, 92, 246, 0.1)',
+        border: '1px solid rgba(139, 92, 246, 0.3)',
+        borderRadius: defined.radius.lg,
+        padding: defined.spacing.lg,
+        marginBottom: defined.spacing.lg,
+        textAlign: 'left',
+      }}>
+        <h4 style={{ color: defined.colors.secondary, marginBottom: defined.spacing.sm }}>Next Steps</h4>
+        <p style={{ color: defined.colors.text.secondary, lineHeight: 1.6, fontSize: typo.small }}>
+          Try experimenting with your camera (or phone's manual mode) to see these principles in action. Practice shooting at f/1.8 vs f/8, or moving closer and further from subjects while maintaining focus. The more you practice, the more intuitive depth of field control becomes!
+        </p>
       </div>
 
       <button
         onClick={handlePhaseComplete}
         style={{
-          background: defined.colors.primary,
+          background: `linear-gradient(135deg, ${defined.colors.success}, #059669)`,
           color: defined.colors.text.primary,
           border: 'none',
-          borderRadius: defined.radius.md,
+          borderRadius: defined.radius.lg,
           padding: `${defined.spacing.md} ${defined.spacing.xl}`,
           cursor: 'pointer',
+          fontWeight: defined.typography.weights.bold,
+          fontSize: typo.body,
+          boxShadow: '0 0 30px rgba(16, 185, 129, 0.4)',
         }}
       >
         Complete Game
@@ -1932,22 +2047,6 @@ export default function DepthOfFieldRenderer({
       default: return renderHook();
     }
   };
-
-  const phaseLabels: Record<string, string> = {
-    hook: 'Hook',
-    predict: 'Predict',
-    play: 'Lab',
-    review: 'Review',
-    twist_predict: 'Twist Predict',
-    twist_play: 'Twist Lab',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
-    mastery: 'Mastery',
-  };
-
-  const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const currentPhaseIndex = phaseOrder.indexOf(phase);
 
   return (
     <div style={{
@@ -1987,7 +2086,11 @@ export default function DepthOfFieldRenderer({
                   width: phase === p ? '24px' : '8px',
                   height: '8px',
                   borderRadius: defined.radius.full,
-                  background: phase === p ? defined.colors.primary : index < currentPhaseIndex ? defined.colors.success : defined.colors.background.tertiary,
+                  background: phase === p
+                    ? defined.colors.primary
+                    : index < currentPhaseIndex
+                      ? defined.colors.success
+                      : defined.colors.background.tertiary,
                   transition: 'all 0.3s ease',
                 }}
                 title={phaseLabels[p]}
@@ -2028,7 +2131,7 @@ export default function DepthOfFieldRenderer({
           onClick={handlePhaseComplete}
           style={{
             padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-            background: defined.colors.primary,
+            background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
             color: defined.colors.text.primary,
             border: 'none',
             borderRadius: defined.radius.md,

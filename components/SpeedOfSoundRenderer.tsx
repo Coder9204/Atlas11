@@ -1,48 +1,173 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
 
-// ─────────────────────────────────────────────────────────────
-// SpeedOfSoundRenderer – Measure the speed of sound
-// ─────────────────────────────────────────────────────────────
-// Physics: v = d/t, speed of sound ≈ 343 m/s at 20°C
-// Temperature dependence: v ≈ 331 + 0.6T (m/s)
-// Methods: echo timing, two microphones, resonance tube
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// -----------------------------------------------------------------------------
+// Speed of Sound - Complete 10-Phase Game
+// Measure and understand the speed of sound through interactive experiments
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
 
 interface SpeedOfSoundRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
 
-const phaseOrder: Phase[] = [
-  'hook',
-  'predict',
-  'play',
-  'review',
-  'twist_predict',
-  'twist_play',
-  'twist_review',
-  'transfer',
-  'test',
-  'mastery',
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "You're watching a fireworks display from a safe distance. You see a beautiful explosion in the sky, then about 3 seconds later you hear the boom.",
+    question: "Approximately how far away are the fireworks?",
+    options: [
+      { id: 'a', label: "About 100 meters" },
+      { id: 'b', label: "About 500 meters" },
+      { id: 'c', label: "About 1 kilometer", correct: true },
+      { id: 'd', label: "About 3 kilometers" }
+    ],
+    explanation: "Sound travels at about 343 m/s at room temperature. In 3 seconds, sound travels approximately 3 x 343 = 1,029 meters, or about 1 kilometer. Light arrives almost instantly, so the delay is entirely due to sound travel time."
+  },
+  {
+    scenario: "A submarine captain needs to determine the depth of the ocean floor. The sonar pulse takes 4 seconds to return after being sent.",
+    question: "What is the approximate depth to the ocean floor?",
+    options: [
+      { id: 'a', label: "About 1,500 meters" },
+      { id: 'b', label: "About 3,000 meters", correct: true },
+      { id: 'c', label: "About 6,000 meters" },
+      { id: 'd', label: "About 750 meters" }
+    ],
+    explanation: "Sound travels at about 1,500 m/s in seawater. The sonar pulse travels down AND back, so the one-way distance is half the total time: 2 seconds x 1,500 m/s = 3,000 meters depth."
+  },
+  {
+    scenario: "An outdoor concert is held on a hot summer day (35°C) versus a cold winter evening (-10°C). The stage is 100 meters from the back row.",
+    question: "How does temperature affect when the back row hears the music?",
+    options: [
+      { id: 'a', label: "No difference - sound speed is constant" },
+      { id: 'b', label: "Sound arrives faster on the hot day", correct: true },
+      { id: 'c', label: "Sound arrives faster on the cold night" },
+      { id: 'd', label: "Temperature only affects loudness, not speed" }
+    ],
+    explanation: "Sound speed increases with temperature (v = 331 + 0.6T m/s). At 35°C, v ≈ 352 m/s. At -10°C, v ≈ 325 m/s. The hot day sound arrives about 8 milliseconds faster - enough to affect musicians' timing!"
+  },
+  {
+    scenario: "A geologist taps a steel rail with a hammer. Her colleague 1 km away puts his ear to the rail and hears TWO sounds - one through the rail, then one through the air.",
+    question: "Why does sound through the steel rail arrive first?",
+    options: [
+      { id: 'a', label: "Steel is less dense than air" },
+      { id: 'b', label: "The rail guides the sound like a pipe" },
+      { id: 'c', label: "Sound travels about 15x faster in steel than in air", correct: true },
+      { id: 'd', label: "Air absorbs more sound energy" }
+    ],
+    explanation: "Sound travels at about 5,100 m/s in steel versus 343 m/s in air - roughly 15 times faster! The molecules in solids are tightly bonded, allowing vibrations to propagate much faster. Through steel: ~0.2s. Through air: ~2.9s."
+  },
+  {
+    scenario: "A bat emits ultrasonic pulses and uses the echoes to navigate and hunt insects in complete darkness. This is called echolocation.",
+    question: "What does the bat's brain calculate from the echo timing?",
+    options: [
+      { id: 'a', label: "Only the size of the object" },
+      { id: 'b', label: "Only the direction of the object" },
+      { id: 'c', label: "Distance to the object using v = d/t", correct: true },
+      { id: 'd', label: "The color of the object" }
+    ],
+    explanation: "The bat's brain instinctively uses v = d/t. Knowing sound speed and measuring the time for echoes to return, the bat calculates distance with incredible precision - accurate to within millimeters, allowing it to catch tiny insects mid-flight."
+  },
+  {
+    scenario: "Thunder rumbles for several seconds instead of being a single sharp crack. This happens because lightning bolts are often several kilometers long.",
+    question: "Why does thunder from a long lightning bolt rumble instead of crack?",
+    options: [
+      { id: 'a', label: "The clouds absorb some frequencies" },
+      { id: 'b', label: "Different parts of the bolt are at different distances, so sounds arrive at different times", correct: true },
+      { id: 'c', label: "Thunder naturally vibrates at low frequencies" },
+      { id: 'd', label: "Rain droplets scatter the sound" }
+    ],
+    explanation: "A lightning bolt several km long means different parts are at different distances from you. Sound from the closest part arrives first, then sounds from progressively farther parts arrive later, creating the rumbling effect that can last several seconds."
+  },
+  {
+    scenario: "A medical ultrasound technician is imaging a patient. The ultrasound probe emits pulses and receives echoes from internal organs at different depths.",
+    question: "What assumption must the ultrasound machine make to calculate organ positions?",
+    options: [
+      { id: 'a', label: "All organs have the same density" },
+      { id: 'b', label: "Sound speed in body tissue is approximately constant (~1,540 m/s)", correct: true },
+      { id: 'c', label: "Sound travels in straight lines only" },
+      { id: 'd', label: "Organs don't move during the scan" }
+    ],
+    explanation: "Ultrasound machines assume sound travels at about 1,540 m/s through soft tissue. This allows them to convert echo timing to distance. Different tissues (fat, muscle, bone) have slightly different speeds, which can cause small imaging errors."
+  },
+  {
+    scenario: "At a track and field event, the starter uses a gun that produces both a flash and a bang. Timers at the finish line start their stopwatches when they see the flash.",
+    question: "Why do timers use the flash, not the bang, to start timing?",
+    options: [
+      { id: 'a', label: "The flash is more visible" },
+      { id: 'b', label: "Light arrives almost instantly while sound would add ~0.3 seconds delay for a 100m track", correct: true },
+      { id: 'c', label: "Sound might not be loud enough" },
+      { id: 'd', label: "The gun flash happens before the sound is made" }
+    ],
+    explanation: "Light travels at 300,000,000 m/s (essentially instant). Sound at 343 m/s takes about 0.3 seconds to travel 100 meters. In a 100m dash where records differ by hundredths of seconds, this would be a massive timing error!"
+  },
+  {
+    scenario: "Dolphins use echolocation to find fish. They emit clicking sounds and listen for echoes. In tropical waters, the speed of sound is about 1,530 m/s.",
+    question: "If a dolphin detects an echo 0.02 seconds after clicking, how far away is the fish?",
+    options: [
+      { id: 'a', label: "About 30 meters" },
+      { id: 'b', label: "About 15 meters", correct: true },
+      { id: 'c', label: "About 60 meters" },
+      { id: 'd', label: "About 7.5 meters" }
+    ],
+    explanation: "Distance = (speed × time) / 2 (divided by 2 because sound travels to the fish AND back). So: (1,530 m/s × 0.02 s) / 2 = 15.3 meters. The dolphin's brain does this calculation unconsciously in milliseconds!"
+  },
+  {
+    scenario: "Engineers designing a concert hall must carefully plan the shape so that sound reflections enhance rather than distort the music. First reflections should arrive within 20ms of direct sound.",
+    question: "For the 20ms rule, how close must the first reflecting surface be to the sound path?",
+    options: [
+      { id: 'a', label: "About 3.4 meters extra path length" },
+      { id: 'b', label: "About 6.9 meters extra path length", correct: true },
+      { id: 'c', label: "About 20 meters extra path length" },
+      { id: 'd', label: "About 1 meter extra path length" }
+    ],
+    explanation: "In 20ms = 0.02s, sound travels 343 m/s × 0.02s = 6.86 meters. The reflected path can be at most 6.9 meters longer than the direct path. This determines where walls and ceiling panels must be placed for good acoustics."
+  }
 ];
 
-function isValidPhase(p: string): p is Phase {
-  return phaseOrder.includes(p as Phase);
-}
-
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '🔊',
@@ -50,7 +175,7 @@ const realWorldApps = [
     short: 'Underwater navigation using sound waves',
     tagline: 'Seeing with sound in the deep',
     description: 'Submarines and marine vessels use sonar to detect objects underwater by measuring the time for sound to echo back. Since light cannot penetrate deep water, sound is the primary sensing method in oceans.',
-    connection: 'Sonar directly applies v = d/t. Knowing the speed of sound in water (about 1500 m/s) allows calculating distance from echo time. Temperature and salinity affect speed, requiring careful calibration.',
+    connection: 'Sonar directly applies v = d/t. Knowing the speed of sound in water (about 1,500 m/s) allows calculating distance from echo time. Temperature and salinity affect speed, requiring careful calibration.',
     howItWorks: 'Active sonar emits pulses and times echoes. Passive sonar listens for sounds. The speed of sound in seawater varies with depth, temperature, and salinity, creating "sound channels" that bend acoustic rays.',
     stats: [
       { value: '1500', label: 'm/s in seawater', icon: '🌊' },
@@ -60,7 +185,7 @@ const realWorldApps = [
     examples: ['Submarine detection', 'Fish finding', 'Seafloor mapping', 'Underwater communication'],
     companies: ['Raytheon', 'Thales', 'Kongsberg', 'L3Harris'],
     futureImpact: 'Autonomous underwater vehicles will use advanced sonar arrays and AI to explore ocean depths, map the seafloor, and monitor marine ecosystems.',
-    color: '#3b82f6'
+    color: '#3B82F6'
   },
   {
     icon: '🏥',
@@ -68,7 +193,7 @@ const realWorldApps = [
     short: 'Imaging inside the body with sound',
     tagline: 'Safe imaging without radiation',
     description: 'Ultrasound imaging uses high-frequency sound waves to create images of organs, fetuses, and blood flow. It is safe, real-time, and portable, making it essential in medicine.',
-    connection: 'Medical ultrasound measures the time for sound echoes to return from tissue interfaces. The speed of sound in tissue (about 1540 m/s) is used to calculate depths and create images.',
+    connection: 'Medical ultrasound measures the time for sound echoes to return from tissue interfaces. The speed of sound in tissue (about 1,540 m/s) is used to calculate depths and create images.',
     howItWorks: 'A transducer emits ultrasound pulses (1-20 MHz) and detects echoes. Different tissues reflect sound differently based on acoustic impedance. The time delay gives depth; amplitude gives brightness.',
     stats: [
       { value: '1540', label: 'm/s in soft tissue', icon: '🫀' },
@@ -78,7 +203,7 @@ const realWorldApps = [
     examples: ['Fetal imaging', 'Cardiac echo', 'Guided biopsies', 'Vascular doppler'],
     companies: ['GE Healthcare', 'Philips', 'Siemens Healthineers', 'Canon Medical'],
     futureImpact: 'Portable AI-powered ultrasound devices will bring imaging to remote areas and enable point-of-care diagnostics globally.',
-    color: '#ec4899'
+    color: '#EC4899'
   },
   {
     icon: '🎭',
@@ -96,7 +221,7 @@ const realWorldApps = [
     examples: ['Sydney Opera House', 'Carnegie Hall', 'Berlin Philharmonie', 'Walt Disney Concert Hall'],
     companies: ['Arup Acoustics', 'Nagata Acoustics', 'Kirkegaard', 'Threshold Acoustics'],
     futureImpact: 'Variable acoustics systems using movable panels and electronic enhancement will allow single venues to optimize for symphony, opera, or amplified music.',
-    color: '#f59e0b'
+    color: '#F59E0B'
   },
   {
     icon: '⛈️',
@@ -114,54 +239,28 @@ const realWorldApps = [
     examples: ['Outdoor safety protocols', 'Sports event decisions', 'Aviation weather', 'Emergency management'],
     companies: ['Vaisala', 'Earth Networks', 'AccuWeather', 'National Weather Service'],
     futureImpact: 'Lightning location networks using arrival time differences at multiple sensors provide real-time mapping of storm electrical activity for safety and research.',
-    color: '#8b5cf6'
+    color: '#8B5CF6'
   }
 ];
 
-const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const SpeedOfSoundRenderer: React.FC<SpeedOfSoundRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-    const soundConfig = {
-      click: { frequency: 440, duration: 0.1, oscType: 'sine' as OscillatorType, volume: 0.2 },
-      success: { frequency: 600, duration: 0.15, oscType: 'sine' as OscillatorType, volume: 0.3 },
-      failure: { frequency: 200, duration: 0.2, oscType: 'sawtooth' as OscillatorType, volume: 0.3 },
-      transition: { frequency: 520, duration: 0.15, oscType: 'sine' as OscillatorType, volume: 0.2 },
-      complete: { frequency: 800, duration: 0.3, oscType: 'sine' as OscillatorType, volume: 0.3 },
-    };
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
 
-    const config = soundConfig[type];
-    oscillator.frequency.value = config.frequency;
-    oscillator.type = config.oscType;
-    gainNode.gain.setValueAtTime(config.volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + config.duration);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + config.duration);
-  } catch {}
-};
-
-// ─────────────────────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────────────────────
-export default function SpeedOfSoundRenderer({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer
-}: SpeedOfSoundRendererProps) {
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistResult, setShowTwistResult] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<Record<number, number>>({});
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
 
   // Simulation state - echo method
   const [distance, setDistance] = useState(170); // meters to wall (340m round trip)
@@ -174,10 +273,21 @@ export default function SpeedOfSoundRenderer({
 
   // Twist - temperature effect
   const [temperature, setTemperature] = useState(20); // °C
-  const [twistMeasuring, setTwistMeasuring] = useState(false);
-  const [twistTime, setTwistTime] = useState(0);
-  const [twistSpeed, setTwistSpeed] = useState(0);
 
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -185,31 +295,71 @@ export default function SpeedOfSoundRenderer({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  const goToPhase = (newPhase: Phase) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-
-    onPhaseComplete?.();
-    playSound('transition');
-  };
-
   // Speed of sound at temperature (simplified formula)
   const speedAtTemp = (temp: number) => 331 + 0.6 * temp;
+
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#3B82F6', // Blue for sound/waves theme
+    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Temperature',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'speed-of-sound',
+        gameTitle: 'Speed of Sound',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
   // Simulate echo measurement
   const makeSound = () => {
@@ -226,7 +376,6 @@ export default function SpeedOfSoundRenderer({
     const roundTripDistance = distance * 2;
     const totalTime = roundTripDistance / actualSpeed;
 
-    // Animation: sound wave travels to wall
     const startTime = Date.now();
     const waveToWall = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
@@ -261,850 +410,519 @@ export default function SpeedOfSoundRenderer({
     setMeasuring(false);
   };
 
-  // Twist simulation - temperature effect
-  const measureTwist = () => {
-    if (twistMeasuring) return;
-    setTwistMeasuring(true);
-    setTwistTime(0);
-    setTwistSpeed(0);
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-    playSound('click');
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-    const actualSpeed = speedAtTemp(temperature);
-    const roundTripDistance = 340; // Fixed distance
-    const totalTime = roundTripDistance / actualSpeed;
-
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      setTwistTime(elapsed);
-
-      if (elapsed >= totalTime) {
-        clearInterval(interval);
-        setTwistTime(totalTime);
-        setTwistSpeed(roundTripDistance / totalTime);
-        setTwistMeasuring(false);
-        playSound('success');
-      }
-    }, 30);
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #1D4ED8)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  const handlePrediction = (choice: string) => {
-    setPrediction(choice);
-    playSound('click');
+  // Echo Visualization Component
+  const EchoVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 180 : 220;
+
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="soundWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.3" />
+          </linearGradient>
+          <linearGradient id="echoWaveGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#10B981" stopOpacity="0.3" />
+          </linearGradient>
+          <filter id="waveGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Title */}
+        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Echo Measurement
+        </text>
+
+        {/* Person */}
+        <g transform="translate(40, 80)">
+          <circle cx="0" cy="0" r="12" fill="#FCD34D" />
+          <rect x="-8" y="14" width="16" height="30" fill="#3B82F6" rx="3" />
+          <line x1="-4" y1="44" x2="-6" y2="65" stroke="#1E293B" strokeWidth="5" strokeLinecap="round" />
+          <line x1="4" y1="44" x2="6" y2="65" stroke="#1E293B" strokeWidth="5" strokeLinecap="round" />
+          <text x="0" y="85" textAnchor="middle" fill={colors.textMuted} fontSize="10">You</text>
+        </g>
+
+        {/* Wall */}
+        <rect x={width - 50} y="40" width="30" height="120" fill="#475569" rx="3" />
+        <text x={width - 35} y="175" textAnchor="middle" fill={colors.textMuted} fontSize="10">Wall</text>
+
+        {/* Sound wave going out */}
+        {soundWavePos >= 0 && (
+          <g filter="url(#waveGlow)">
+            <circle
+              cx={60 + soundWavePos * (width - 130) / 100}
+              cy="95"
+              r="15"
+              fill="none"
+              stroke="#F59E0B"
+              strokeWidth="4"
+              opacity={1 - soundWavePos / 150}
+            />
+            <circle
+              cx={60 + soundWavePos * (width - 130) / 100}
+              cy="95"
+              r="8"
+              fill="none"
+              stroke="#FBBF24"
+              strokeWidth="2"
+              opacity={1 - soundWavePos / 120}
+            />
+          </g>
+        )}
+
+        {/* Echo wave coming back */}
+        {echoWavePos >= 0 && (
+          <g filter="url(#waveGlow)">
+            <circle
+              cx={60 + echoWavePos * (width - 130) / 100}
+              cy="95"
+              r="15"
+              fill="none"
+              stroke="#10B981"
+              strokeWidth="4"
+              opacity={echoWavePos / 100}
+            />
+            <circle
+              cx={60 + echoWavePos * (width - 130) / 100}
+              cy="95"
+              r="8"
+              fill="none"
+              stroke="#34D399"
+              strokeWidth="2"
+              opacity={echoWavePos / 80}
+            />
+          </g>
+        )}
+
+        {/* Distance label */}
+        <line x1="60" y1="35" x2={width - 55} y2="35" stroke={colors.success} strokeWidth="2" />
+        <polygon points={`${width - 55},35 ${width - 65},30 ${width - 65},40`} fill={colors.success} />
+        <polygon points="60,35 70,30 70,40" fill={colors.success} />
+        <text x={width/2} y="28" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="600">
+          {distance} m
+        </text>
+
+        {/* Timer */}
+        <rect x={width/2 - 55} y={height - 35} width="110" height="28" rx="6" fill={colors.bgSecondary} stroke={colors.border} />
+        <text x={width/2} y={height - 16} textAnchor="middle" fill={colors.success} fontSize="14" fontFamily="monospace" fontWeight="bold">
+          {elapsedTime.toFixed(3)} s
+        </text>
+      </svg>
+    );
   };
 
-  const handleTwistPrediction = (choice: string) => {
-    setTwistPrediction(choice);
-    playSound('click');
+  // Temperature Visualization
+  const TemperatureVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 200 : 240;
+    const expectedSpeed = speedAtTemp(temperature);
+
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="hotGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FCA5A5" />
+            <stop offset="100%" stopColor="#DC2626" />
+          </linearGradient>
+          <linearGradient id="coldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#93C5FD" />
+            <stop offset="100%" stopColor="#2563EB" />
+          </linearGradient>
+        </defs>
+
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Temperature Effect on Sound Speed
+        </text>
+
+        {/* Thermometer */}
+        <g transform="translate(60, 50)">
+          <rect x="-8" y="0" width="16" height="100" fill={colors.bgSecondary} rx="8" stroke={colors.border} />
+          <rect
+            x="-5"
+            y={90 - Math.max(5, (temperature + 30) * 1.3)}
+            width="10"
+            height={Math.max(5, (temperature + 30) * 1.3)}
+            fill={temperature > 20 ? 'url(#hotGrad)' : 'url(#coldGrad)'}
+            rx="5"
+          />
+          <circle cx="0" cy="115" r="18" fill={temperature > 20 ? 'url(#hotGrad)' : 'url(#coldGrad)'} />
+
+          {/* Scale */}
+          {[-20, 0, 20, 40].map(t => (
+            <g key={t}>
+              <line x1="12" y1={90 - (t + 25) * 1.3} x2="20" y2={90 - (t + 25) * 1.3} stroke={colors.textMuted} />
+              <text x="25" y={93 - (t + 25) * 1.3} fill={colors.textMuted} fontSize="10">{t}°</text>
+            </g>
+          ))}
+        </g>
+
+        {/* Speed display */}
+        <g transform={`translate(${width/2 + 40}, 70)`}>
+          <rect x="-80" y="-20" width="160" height="80" rx="12" fill={colors.bgSecondary} stroke={colors.border} />
+          <text x="0" y="0" textAnchor="middle" fill={colors.textMuted} fontSize="12">
+            At {temperature}°C:
+          </text>
+          <text x="0" y="30" textAnchor="middle" fill={colors.textPrimary} fontSize="28" fontWeight="700">
+            {expectedSpeed.toFixed(0)} m/s
+          </text>
+          <text x="0" y="48" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+            v = 331 + 0.6T
+          </text>
+        </g>
+
+        {/* Speed comparison bar */}
+        <g transform={`translate(${width/2 - 80}, ${height - 55})`}>
+          <text x="80" y="-8" textAnchor="middle" fill={colors.textMuted} fontSize="11">Speed Range</text>
+          <rect x="0" y="0" width="160" height="20" rx="4" fill={colors.bgSecondary} />
+          <rect
+            x="0"
+            y="0"
+            width={Math.max(10, (expectedSpeed - 300) * 2)}
+            height="20"
+            rx="4"
+            fill={temperature > 20 ? '#EF4444' : '#3B82F6'}
+          />
+          <text x="0" y="35" fill={colors.textMuted} fontSize="9">300</text>
+          <text x="160" y="35" textAnchor="end" fill={colors.textMuted} fontSize="9">380 m/s</text>
+        </g>
+      </svg>
+    );
   };
 
-  const handleTestAnswer = (q: number, a: number) => {
-    if (!testSubmitted) {
-      setTestAnswers(prev => ({ ...prev, [q]: a }));
-      playSound('click');
-    }
-  };
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
-  const submitTest = () => {
-    setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, q, i) => {
-      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
-        return acc + 1;
-      }
-      return acc;
-    }, 0);
-    if (score >= 7) {
-      onCorrectAnswer?.();
-      playSound('success');
-    } else {
-      onIncorrectAnswer?.();
-      playSound('failure');
-    }
-  };
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-  const testQuestions = [
-    {
-      question: "What is the approximate speed of sound in air at 20°C?",
-      options: [
-        { text: "100 m/s", correct: false },
-        { text: "343 m/s", correct: true },
-        { text: "768 m/s", correct: false },
-        { text: "1,000 m/s", correct: false }
-      ],
-    },
-    {
-      question: "How does temperature affect the speed of sound in air?",
-      options: [
-        { text: "No effect at all", correct: false },
-        { text: "Higher temperature = faster sound", correct: true },
-        { text: "Higher temperature = slower sound", correct: false },
-        { text: "Only affects volume, not speed", correct: false }
-      ],
-    },
-    {
-      question: "To measure sound speed using an echo, you need:",
-      options: [
-        { text: "Just the distance to the wall", correct: false },
-        { text: "Distance to wall and round-trip time", correct: true },
-        { text: "Only the time for echo to return", correct: false },
-        { text: "The frequency of the sound", correct: false }
-      ],
-    },
-    {
-      question: "Why can you see lightning before you hear thunder?",
-      options: [
-        { text: "Thunder is quieter than lightning", correct: false },
-        { text: "Light is much faster than sound", correct: true },
-        { text: "Thunder travels through ground", correct: false },
-        { text: "Lightning heats the air", correct: false }
-      ],
-    },
-    {
-      question: "Approximately how far away is a storm if thunder arrives 5 seconds after lightning?",
-      options: [
-        { text: "About 500 meters", correct: false },
-        { text: "About 1 mile (1.6 km)", correct: true },
-        { text: "About 5 miles", correct: false },
-        { text: "About 10 km", correct: false }
-      ],
-    },
-    {
-      question: "In which medium does sound travel fastest?",
-      options: [
-        { text: "Air", correct: false },
-        { text: "Water", correct: false },
-        { text: "Steel", correct: true },
-        { text: "Vacuum", correct: false }
-      ],
-    },
-    {
-      question: "Why does sound travel faster in solids than in gases?",
-      options: [
-        { text: "Solids are denser", correct: false },
-        { text: "Molecules are closer together and more tightly bonded", correct: true },
-        { text: "Solids have more air pockets", correct: false },
-        { text: "Gravity is stronger in solids", correct: false }
-      ],
-    },
-    {
-      question: "What is the 'flash-to-bang' method?",
-      options: [
-        { text: "Creating sound with explosions", correct: false },
-        { text: "Counting seconds between lightning and thunder to estimate distance", correct: true },
-        { text: "Measuring brightness of lightning", correct: false },
-        { text: "A type of sound recording", correct: false }
-      ],
-    },
-    {
-      question: "If sound speed is 343 m/s and you hear an echo 2 seconds after clapping, how far is the wall?",
-      options: [
-        { text: "171.5 meters", correct: false },
-        { text: "343 meters", correct: true },
-        { text: "686 meters", correct: false },
-        { text: "34.3 meters", correct: false }
-      ],
-    },
-    {
-      question: "Why might your measured speed of sound differ from the textbook value?",
-      options: [
-        { text: "Textbooks are always wrong", correct: false },
-        { text: "Temperature, humidity, and measurement errors", correct: true },
-        { text: "Sound changes speed randomly", correct: false },
-        { text: "Distance doesn't matter", correct: false }
-      ],
-    }
-  ];
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          ⚡🔊
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-  const applications = [
-    {
-      title: "Storm Distance",
-      description: "Lightning-thunder delay",
-      detail: "Count seconds between lightning flash and thunder, divide by 3 for km or 5 for miles. This works because light is nearly instant while sound takes about 3 seconds per kilometer.",
-      icon: "⛈️"
-    },
-    {
-      title: "Sonar Navigation",
-      description: "Submarines and depth finding",
-      detail: "Sonar sends sound pulses and times echoes. Knowing sound speed in water (~1,500 m/s), submarines can map ocean floors and detect objects. Dolphins use the same principle!",
-      icon: "🚢"
-    },
-    {
-      title: "Ultrasound Imaging",
-      description: "Medical imaging",
-      detail: "Medical ultrasound uses high-frequency sound waves. By timing echoes from body tissues (which have different speeds), doctors create detailed images of organs and babies.",
-      icon: "🏥"
-    },
-    {
-      title: "Acoustic Thermometry",
-      description: "Temperature from sound speed",
-      detail: "Since sound speed depends on temperature, measuring sound speed precisely can determine temperature. This is used in ocean monitoring and industrial processes.",
-      icon: "🌡️"
-    }
-  ];
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Speed of Sound
+        </h1>
 
-  const renderPhase = () => {
-    switch (phase) {
-      // ───────────────────────────────────────────────────
-      // HOOK
-      // ───────────────────────────────────────────────────
-      case 'hook':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.title, marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
-              How Fast Is Sound?
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
-              You see the lightning... 1... 2... 3... BOOM! The thunder arrives.
-              Can we use this to measure how fast sound travels?
-            </p>
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          You see the lightning flash... 1... 2... 3... <span style={{ color: colors.warning }}>BOOM!</span> The thunder arrives.
+          How far away was that storm? And <span style={{ color: colors.accent }}>how fast does sound travel</span>?
+        </p>
 
-            <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
-              <defs>
-                {/* Premium sky gradient with depth */}
-                <linearGradient id="sosSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#0f172a" />
-                  <stop offset="30%" stopColor="#1e293b" />
-                  <stop offset="60%" stopColor="#334155" />
-                  <stop offset="100%" stopColor="#1e293b" />
-                </linearGradient>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Count the seconds between lightning and thunder, divide by 5, and you have the distance in miles.
+            This simple trick uses one of the most fundamental properties of waves - their speed through a medium."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Basic Physics of Sound
+          </p>
+        </div>
 
-                {/* Storm cloud gradient */}
-                <radialGradient id="sosCloudGrad" cx="50%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#475569" />
-                  <stop offset="50%" stopColor="#334155" />
-                  <stop offset="100%" stopColor="#1e293b" />
-                </radialGradient>
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Measure Sound Speed
+        </button>
 
-                {/* Lightning glow gradient */}
-                <linearGradient id="sosLightningGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#fef3c7" />
-                  <stop offset="30%" stopColor="#fbbf24" />
-                  <stop offset="70%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
-                {/* Ground gradient with depth */}
-                <linearGradient id="sosGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#166534" />
-                  <stop offset="40%" stopColor="#14532d" />
-                  <stop offset="100%" stopColor="#052e16" />
-                </linearGradient>
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'About 34 m/s - similar to a fast car on the highway' },
+      { id: 'b', text: 'About 343 m/s - faster than most commercial jets!', correct: true },
+      { id: 'c', text: 'About 3,000 m/s - almost as fast as a bullet' },
+    ];
 
-                {/* Sound wave gradient */}
-                <radialGradient id="sosSoundWaveGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
-                  <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-                </radialGradient>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-                {/* Person skin gradient */}
-                <radialGradient id="sosSkinGrad" cx="30%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#fef3c7" />
-                  <stop offset="50%" stopColor="#fed7aa" />
-                  <stop offset="100%" stopColor="#fdba74" />
-                </radialGradient>
-
-                {/* Person shirt gradient */}
-                <linearGradient id="sosShirtGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#60a5fa" />
-                  <stop offset="50%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#2563eb" />
-                </linearGradient>
-
-                {/* Lightning glow filter */}
-                <filter id="sosLightningGlow" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Sound wave glow filter */}
-                <filter id="sosSoundGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Sky with gradient */}
-              <rect x="0" y="0" width="400" height="180" fill="url(#sosSkyGrad)" />
-
-              {/* Storm clouds */}
-              <ellipse cx="180" cy="25" rx="80" ry="25" fill="url(#sosCloudGrad)" opacity="0.8" />
-              <ellipse cx="220" cy="35" rx="60" ry="20" fill="url(#sosCloudGrad)" opacity="0.9" />
-              <ellipse cx="160" cy="40" rx="50" ry="18" fill="url(#sosCloudGrad)" opacity="0.7" />
-
-              {/* Lightning bolt with glow */}
-              <path
-                d="M 200,20 L 180,60 L 200,60 L 170,120 L 190,120 L 150,180"
-                fill="none"
-                stroke="url(#sosLightningGrad)"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#sosLightningGlow)"
-              >
-                <animate attributeName="opacity" values="1;0.2;1;0.3;1" dur="0.5s" repeatCount="indefinite" />
-              </path>
-              {/* Lightning core (brighter) */}
-              <path
-                d="M 200,20 L 180,60 L 200,60 L 170,120 L 190,120 L 150,180"
-                fill="none"
-                stroke="#fef9c3"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <animate attributeName="opacity" values="1;0.2;1;0.3;1" dur="0.5s" repeatCount="indefinite" />
-              </path>
-
-              {/* Ground with gradient */}
-              <rect x="0" y="180" width="400" height="70" fill="url(#sosGroundGrad)" />
-              {/* Ground texture lines */}
-              <line x1="0" y1="185" x2="400" y2="185" stroke="#22c55e" strokeWidth="1" opacity="0.3" />
-              <line x1="0" y1="195" x2="400" y2="195" stroke="#14532d" strokeWidth="1" opacity="0.5" />
-
-              {/* Person with premium gradients */}
-              <g transform="translate(320, 140)">
-                {/* Head with skin gradient */}
-                <circle cx="0" cy="0" r="12" fill="url(#sosSkinGrad)" />
-                {/* Hair */}
-                <ellipse cx="0" cy="-8" rx="10" ry="5" fill="#44403c" />
-                {/* Body with shirt gradient */}
-                <rect x="-8" y="12" width="16" height="25" fill="url(#sosShirtGrad)" rx="3" />
-                {/* Legs */}
-                <line x1="-5" y1="37" x2="-8" y2="55" stroke="#1e293b" strokeWidth="5" strokeLinecap="round" />
-                <line x1="5" y1="37" x2="8" y2="55" stroke="#1e293b" strokeWidth="5" strokeLinecap="round" />
-                {/* Arms raised in surprise */}
-                <line x1="-8" y1="18" x2="-18" y2="8" stroke="url(#sosShirtGrad)" strokeWidth="4" strokeLinecap="round" />
-                <line x1="8" y1="18" x2="18" y2="8" stroke="url(#sosShirtGrad)" strokeWidth="4" strokeLinecap="round" />
-              </g>
-
-              {/* Sound waves traveling with glow */}
-              <g filter="url(#sosSoundGlow)">
-                {[0, 1, 2].map(i => (
-                  <ellipse
-                    key={i}
-                    cx={180 + i * 45}
-                    cy="175"
-                    rx={12 + i * 18}
-                    ry={6 + i * 4}
-                    fill="none"
-                    stroke="url(#sosLightningGrad)"
-                    strokeWidth="2.5"
-                    opacity={0.8 - i * 0.2}
-                  >
-                    <animate attributeName="rx" values={`${12 + i * 18};${35 + i * 18};${12 + i * 18}`} dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values={`${0.8 - i * 0.2};${0.4 - i * 0.1};${0.8 - i * 0.2}`} dur="2s" repeatCount="indefinite" />
-                  </ellipse>
-                ))}
-              </g>
-            </svg>
-
-            {/* Text labels moved outside SVG for responsive typography */}
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <p style={{ color: '#22c55e', fontSize: typo.body, fontWeight: 600, marginBottom: '0.25rem' }}>
-                Sound takes time to travel...
-              </p>
-              <p style={{ color: '#f8fafc', fontSize: typo.bodyLarge, fontWeight: 700 }}>
-                But how much time? And how fast?
-              </p>
-            </div>
-
-            <button
-              onPointerDown={() => goToPhase('predict')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: typo.bodyLarge,
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
-              }}
-            >
-              Measure Sound Speed
-            </button>
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // PREDICT
-      // ───────────────────────────────────────────────────
-      case 'predict':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#f8fafc', fontWeight: 700 }}>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
               Make Your Prediction
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
-              You're standing 170 meters from a large wall. You clap your hands and
-              wait for the echo. Approximately how fast is sound traveling?
             </p>
+          </div>
 
-            <svg viewBox="0 0 400 100" style={{ width: '100%', maxWidth: 400, marginBottom: '0.5rem' }}>
-              <defs>
-                {/* Background gradient */}
-                <linearGradient id="sosPredictBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#0f172a" />
-                  <stop offset="50%" stopColor="#1e293b" />
-                  <stop offset="100%" stopColor="#0f172a" />
-                </linearGradient>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            You stand 170 meters from a wall and clap your hands. About how fast does the sound travel to the wall and back?
+          </h2>
 
-                {/* Wall gradient with depth */}
-                <linearGradient id="sosWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#475569" />
-                  <stop offset="30%" stopColor="#64748b" />
-                  <stop offset="70%" stopColor="#475569" />
-                  <stop offset="100%" stopColor="#334155" />
-                </linearGradient>
-
-                {/* Wall texture pattern */}
-                <pattern id="sosWallTexture" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <rect width="10" height="10" fill="none" />
-                  <line x1="0" y1="5" x2="10" y2="5" stroke="#334155" strokeWidth="0.5" />
-                </pattern>
-
-                {/* Person skin gradient */}
-                <radialGradient id="sosPredictSkin" cx="30%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#fef3c7" />
-                  <stop offset="50%" stopColor="#fed7aa" />
-                  <stop offset="100%" stopColor="#fdba74" />
-                </radialGradient>
-
-                {/* Person shirt gradient */}
-                <linearGradient id="sosPredictShirt" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#60a5fa" />
-                  <stop offset="50%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#2563eb" />
-                </linearGradient>
-
-                {/* Clap wave gradient */}
-                <radialGradient id="sosClapsWaveGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.9" />
-                  <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Distance arrow gradient */}
-                <linearGradient id="sosDistanceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#22c55e" />
-                  <stop offset="50%" stopColor="#4ade80" />
-                  <stop offset="100%" stopColor="#22c55e" />
-                </linearGradient>
-
-                {/* Clap glow filter */}
-                <filter id="sosClapsGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Background */}
-              <rect x="0" y="0" width="400" height="100" fill="url(#sosPredictBg)" rx="8" />
-
-              {/* Person with clapping animation */}
-              <g transform="translate(50, 45)">
-                {/* Head */}
-                <circle cx="0" cy="0" r="10" fill="url(#sosPredictSkin)" />
-                {/* Hair */}
-                <ellipse cx="0" cy="-7" rx="8" ry="4" fill="#44403c" />
-                {/* Body */}
-                <rect x="-6" y="10" width="12" height="20" fill="url(#sosPredictShirt)" rx="2" />
-                {/* Legs */}
-                <line x1="-4" y1="30" x2="-6" y2="45" stroke="#1e293b" strokeWidth="4" strokeLinecap="round" />
-                <line x1="4" y1="30" x2="6" y2="45" stroke="#1e293b" strokeWidth="4" strokeLinecap="round" />
-                {/* Hands clapping with glow */}
-                <g filter="url(#sosClapsGlow)">
-                  <ellipse cx="-12" cy="18" rx="7" ry="5" fill="url(#sosPredictSkin)">
-                    <animate attributeName="cx" values="-12;-5;-12" dur="0.5s" repeatCount="indefinite" />
-                  </ellipse>
-                  <ellipse cx="12" cy="18" rx="7" ry="5" fill="url(#sosPredictSkin)">
-                    <animate attributeName="cx" values="12;5;12" dur="0.5s" repeatCount="indefinite" />
-                  </ellipse>
-                </g>
-                {/* Clap waves */}
-                <circle cx="0" cy="18" r="8" fill="none" stroke="#fbbf24" strokeWidth="2" opacity="0.6">
-                  <animate attributeName="r" values="5;25;5" dur="1s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.8;0;0.8" dur="1s" repeatCount="indefinite" />
-                </circle>
-              </g>
-
-              {/* Wall with premium gradient and texture */}
-              <g>
-                <rect x="340" y="10" width="25" height="80" fill="url(#sosWallGrad)" rx="2" />
-                <rect x="340" y="10" width="25" height="80" fill="url(#sosWallTexture)" rx="2" />
-                {/* Wall shadow */}
-                <rect x="338" y="12" width="4" height="76" fill="#1e293b" opacity="0.5" />
-                {/* Wall highlight */}
-                <rect x="362" y="12" width="2" height="76" fill="#94a3b8" opacity="0.3" />
-              </g>
-
-              {/* Distance arrow with gradient */}
-              <path d="M 70,85 L 330,85" fill="none" stroke="url(#sosDistanceGrad)" strokeWidth="2" />
-              <polygon points="330,85 318,80 318,90" fill="#22c55e" />
-              <polygon points="70,85 82,80 82,90" fill="#22c55e" />
-            </svg>
-
-            {/* Text labels outside SVG */}
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-              <p style={{ color: '#22c55e', fontSize: typo.body, fontWeight: 700, marginBottom: '0.25rem' }}>
-                170 meters
-              </p>
-              <p style={{ color: '#64748b', fontSize: typo.small, fontStyle: 'italic' }}>
-                Sound goes there AND back...
-              </p>
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>You</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>CLAP!</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.warning }}>-&gt; 170m -&gt;</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>Wall</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Echo</p>
+              </div>
             </div>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px' }}>
+              Round trip = 340 meters total
+            </p>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
-              {[
-                { id: 'a', text: 'About 34 m/s (walking pace)' },
-                { id: 'b', text: 'About 343 m/s (faster than a jet plane!)' },
-                { id: 'c', text: 'About 3,400 m/s (like a bullet)' }
-              ].map(opt => (
-                <button
-                  key={opt.id}
-                  onPointerDown={() => handlePrediction(opt.id)}
-                  style={{
-                    padding: '1rem',
-                    background: prediction === opt.id
-                      ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.15))'
-                      : 'rgba(30, 41, 59, 0.8)',
-                    color: prediction === opt.id ? '#60a5fa' : '#e2e8f0',
-                    border: `1px solid ${prediction === opt.id ? 'rgba(59, 130, 246, 0.5)' : '#334155'}`,
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                    transition: 'all 0.2s',
-                    fontSize: typo.body
-                  }}
-                >
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-
-            {prediction && (
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                onPointerDown={() => goToPhase('play')}
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
                 style={{
-                  marginTop: '1.5rem',
-                  padding: '1rem 2.5rem',
-                  fontSize: typo.bodyLarge,
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
                   cursor: 'pointer',
-                  fontWeight: 600,
-                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)'
+                  transition: 'all 0.2s',
                 }}
               >
-                Measure It!
-              </button>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // PLAY
-      // ───────────────────────────────────────────────────
-      case 'play':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
-              Echo Measurement
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center', fontSize: typo.body }}>
-              Clap to send a sound wave and time the echo!
-            </p>
-
-            <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: 450, marginBottom: '0.5rem' }}>
-              <defs>
-                {/* Lab background gradient */}
-                <linearGradient id="sosLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#0f172a" />
-                  <stop offset="50%" stopColor="#1e293b" />
-                  <stop offset="100%" stopColor="#0f172a" />
-                </linearGradient>
-
-                {/* Air medium gradient - shows the medium sound travels through */}
-                <linearGradient id="sosMediumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.05" />
-                  <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.08" />
-                  <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.1" />
-                  <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.05" />
-                </linearGradient>
-
-                {/* Wall gradient with brick-like depth */}
-                <linearGradient id="sosPlayWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#374151" />
-                  <stop offset="20%" stopColor="#4b5563" />
-                  <stop offset="50%" stopColor="#6b7280" />
-                  <stop offset="80%" stopColor="#4b5563" />
-                  <stop offset="100%" stopColor="#374151" />
-                </linearGradient>
-
-                {/* Person skin */}
-                <radialGradient id="sosPlaySkin" cx="30%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#fef3c7" />
-                  <stop offset="50%" stopColor="#fed7aa" />
-                  <stop offset="100%" stopColor="#fdba74" />
-                </radialGradient>
-
-                {/* Person shirt */}
-                <linearGradient id="sosPlayShirt" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#60a5fa" />
-                  <stop offset="50%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#2563eb" />
-                </linearGradient>
-
-                {/* Sound wave outgoing gradient */}
-                <radialGradient id="sosWaveOutGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
-                  <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
-                  <stop offset="70%" stopColor="#d97706" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Echo wave gradient */}
-                <radialGradient id="sosWaveEchoGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0" />
-                  <stop offset="40%" stopColor="#4ade80" stopOpacity="0.8" />
-                  <stop offset="70%" stopColor="#22c55e" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Timer display gradient */}
-                <linearGradient id="sosTimerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#1e293b" />
-                  <stop offset="50%" stopColor="#0f172a" />
-                  <stop offset="100%" stopColor="#1e293b" />
-                </linearGradient>
-
-                {/* Sound wave glow filter */}
-                <filter id="sosPlayWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Timer glow filter */}
-                <filter id="sosTimerGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Lab background */}
-              <rect x="0" y="0" width="400" height="150" fill="url(#sosLabBg)" rx="8" />
-
-              {/* Air medium visualization */}
-              <rect x="55" y="25" width="290" height="80" fill="url(#sosMediumGrad)" rx="4" />
-              {/* Air particle hints */}
-              {[...Array(8)].map((_, i) => (
-                <circle key={i} cx={80 + i * 35} cy={65} r="1.5" fill="#06b6d4" opacity="0.3">
-                  <animate attributeName="opacity" values="0.2;0.5;0.2" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
-                </circle>
-              ))}
-
-              {/* Person with premium design */}
-              <g transform="translate(35, 50)">
-                {/* Head */}
-                <circle cx="0" cy="0" r="12" fill="url(#sosPlaySkin)" />
-                {/* Hair */}
-                <ellipse cx="0" cy="-8" rx="10" ry="5" fill="#44403c" />
-                {/* Body */}
-                <rect x="-8" y="12" width="16" height="25" fill="url(#sosPlayShirt)" rx="3" />
-                {/* Legs */}
-                <line x1="-5" y1="37" x2="-7" y2="52" stroke="#1e293b" strokeWidth="5" strokeLinecap="round" />
-                <line x1="5" y1="37" x2="7" y2="52" stroke="#1e293b" strokeWidth="5" strokeLinecap="round" />
-                {/* Hands */}
-                <ellipse cx="-14" cy="25" rx="8" ry="5" fill="url(#sosPlaySkin)" />
-                <ellipse cx="14" cy="25" rx="8" ry="5" fill="url(#sosPlaySkin)" />
-              </g>
-
-              {/* Wall with premium gradient */}
-              <g>
-                <rect x="350" y="20" width="35" height="90" fill="url(#sosPlayWallGrad)" rx="3" />
-                {/* Wall texture lines (bricks) */}
-                {[0, 1, 2, 3, 4].map(i => (
-                  <line key={i} x1="352" y1={30 + i * 18} x2="383" y2={30 + i * 18} stroke="#334155" strokeWidth="1" />
-                ))}
-                {/* Wall shadow */}
-                <rect x="348" y="22" width="4" height="86" fill="#1e293b" opacity="0.6" />
-              </g>
-
-              {/* Sound wave going out with glow */}
-              {soundWavePos >= 0 && (
-                <g filter="url(#sosPlayWaveGlow)">
-                  <circle
-                    cx={55 + soundWavePos * 2.9}
-                    cy="65"
-                    r="18"
-                    fill="none"
-                    stroke="#f59e0b"
-                    strokeWidth="4"
-                    opacity={Math.max(0.2, 1 - soundWavePos / 120)}
-                  />
-                  <circle
-                    cx={55 + soundWavePos * 2.9}
-                    cy="65"
-                    r="10"
-                    fill="none"
-                    stroke="#fbbf24"
-                    strokeWidth="2"
-                    opacity={Math.max(0.3, 1 - soundWavePos / 100)}
-                  />
-                </g>
-              )}
-
-              {/* Echo wave coming back with glow */}
-              {echoWavePos >= 0 && (
-                <g filter="url(#sosPlayWaveGlow)">
-                  <circle
-                    cx={55 + echoWavePos * 2.9}
-                    cy="65"
-                    r="18"
-                    fill="none"
-                    stroke="#22c55e"
-                    strokeWidth="4"
-                    opacity={Math.max(0.2, echoWavePos / 120)}
-                  />
-                  <circle
-                    cx={55 + echoWavePos * 2.9}
-                    cy="65"
-                    r="10"
-                    fill="none"
-                    stroke="#4ade80"
-                    strokeWidth="2"
-                    opacity={Math.max(0.3, echoWavePos / 100)}
-                  />
-                </g>
-              )}
-
-              {/* Timer display with glow */}
-              <g filter="url(#sosTimerGlow)">
-                <rect x="145" y="3" width="110" height="22" fill="url(#sosTimerGrad)" rx="6" stroke="#334155" strokeWidth="1" />
-                <text x="200" y="18" textAnchor="middle" fill="#22c55e" fontSize="13" fontFamily="monospace" fontWeight="bold">
-                  {elapsedTime.toFixed(3)} s
-                </text>
-              </g>
-
-              {/* Distance marker */}
-              <path d="M 55,125 L 345,125" fill="none" stroke="#64748b" strokeWidth="1" strokeDasharray="5,5" />
-            </svg>
-
-            {/* Labels outside SVG */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              {soundWavePos >= 0 && (
-                <span style={{ color: '#f59e0b', fontSize: typo.small, fontWeight: 600 }}>CLAP going out...</span>
-              )}
-              {echoWavePos >= 0 && (
-                <span style={{ color: '#22c55e', fontSize: typo.small, fontWeight: 600 }}>ECHO returning...</span>
-              )}
-              {soundWavePos < 0 && echoWavePos < 0 && (
-                <span style={{ color: '#64748b', fontSize: typo.small }}>
-                  {distance} m to wall (round trip: {distance * 2} m)
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
                 </span>
-              )}
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE - Interactive Echo Measurement
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Echo Experiment
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Clap to send a sound wave and time the echo!
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <EchoVisualization />
             </div>
 
-            {/* Results display */}
-            {calculatedSpeed > 0 && (
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(22, 101, 52, 0.3), rgba(34, 197, 94, 0.15))',
-                padding: '1rem',
-                borderRadius: 12,
-                marginBottom: '1rem',
-                textAlign: 'center',
-                width: '100%',
-                maxWidth: 350,
-                border: '1px solid rgba(34, 197, 94, 0.4)'
-              }}>
-                <p style={{ fontSize: typo.body, color: '#4ade80', marginBottom: '0.5rem' }}>
-                  Round trip distance: {distance * 2} m
-                </p>
-                <p style={{ fontSize: typo.body, color: '#4ade80', marginBottom: '0.5rem' }}>
-                  Time measured: {elapsedTime.toFixed(3)} seconds
-                </p>
-                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4ade80' }}>
-                  Speed = {distance * 2} m / {elapsedTime.toFixed(3)} s = {calculatedSpeed.toFixed(0)} m/s
-                </p>
-              </div>
-            )}
-
             {/* Distance slider */}
-            <div style={{ width: '100%', maxWidth: 350, marginBottom: '1rem' }}>
-              <label style={{ color: '#94a3b8', fontSize: typo.body }}>
-                Distance to wall: {distance} m
-              </label>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Distance to Wall</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{distance} meters</span>
+              </div>
               <input
                 type="range"
                 min="50"
                 max="500"
                 step="10"
                 value={distance}
-                onChange={(e) => {
-                  setDistance(parseInt(e.target.value));
-                  resetMeasurement();
-                }}
+                onChange={(e) => { setDistance(parseInt(e.target.value)); resetMeasurement(); }}
                 disabled={measuring}
-                style={{ width: '100%', accentColor: '#3b82f6' }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: measuring ? 'not-allowed' : 'pointer',
+                }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>50m</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>500m</span>
+              </div>
             </div>
 
             {/* Controls */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
               <button
-                onPointerDown={makeSound}
+                onClick={makeSound}
                 disabled={measuring}
                 style={{
-                  padding: '0.75rem 1.5rem',
-                  background: measuring
-                    ? '#475569'
-                    : 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  color: 'white',
+                  padding: '14px 32px',
+                  borderRadius: '10px',
                   border: 'none',
-                  borderRadius: 10,
+                  background: measuring ? colors.border : 'linear-gradient(135deg, #F59E0B, #D97706)',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '18px',
                   cursor: measuring ? 'not-allowed' : 'pointer',
-                  fontWeight: 600,
-                  fontSize: typo.body,
-                  boxShadow: measuring ? 'none' : '0 4px 14px rgba(245, 158, 11, 0.4)'
+                  boxShadow: measuring ? 'none' : '0 4px 15px rgba(245, 158, 11, 0.4)',
                 }}
               >
-                CLAP!
+                {measuring ? 'Measuring...' : 'CLAP!'}
               </button>
-
               {hasMeasured && !measuring && (
                 <button
-                  onPointerDown={resetMeasurement}
+                  onClick={resetMeasurement}
                   style={{
-                    padding: '0.75rem 1.5rem',
-                    background: 'linear-gradient(135deg, #64748b, #475569)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
+                    padding: '14px 24px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
                     fontWeight: 600,
-                    fontSize: typo.body
+                    cursor: 'pointer',
                   }}
                 >
                   Reset
@@ -1112,1203 +930,936 @@ export default function SpeedOfSoundRenderer({
               )}
             </div>
 
+            {/* Results */}
             {calculatedSpeed > 0 && (
-              <button
-                onPointerDown={() => {
-                  setShowResult(true);
-                  if (prediction === 'b') {
-                    onCorrectAnswer?.();
-                  } else {
-                    onIncorrectAnswer?.();
-                  }
-                }}
-                style={{
-                  padding: '1rem 2rem',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: typo.body,
-                  boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)'
-                }}
-              >
-                See Results
-              </button>
-            )}
-
-            {showResult && (
               <div style={{
-                marginTop: '1rem',
-                padding: '1rem',
-                background: prediction === 'b'
-                  ? 'linear-gradient(135deg, rgba(22, 101, 52, 0.3), rgba(34, 197, 94, 0.15))'
-                  : 'linear-gradient(135deg, rgba(146, 64, 14, 0.3), rgba(245, 158, 11, 0.15))',
-                borderRadius: 12,
-                textAlign: 'center',
-                maxWidth: 400,
-                border: `1px solid ${prediction === 'b' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(245, 158, 11, 0.4)'}`
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
               }}>
-                <p style={{ fontWeight: 600, color: prediction === 'b' ? '#4ade80' : '#fbbf24', fontSize: typo.bodyLarge }}>
-                  {prediction === 'b' ? 'Correct!' : 'Now you know!'}
-                </p>
-                <p style={{ color: '#e2e8f0', fontSize: typo.body, marginTop: '0.5rem' }}>
-                  Sound travels at about <strong style={{ color: '#60a5fa' }}>343 m/s</strong> in air at room temperature.
-                  That is faster than most jet airplanes but much slower than light!
-                </p>
-                <button
-                  onPointerDown={() => goToPhase('review')}
-                  style={{
-                    marginTop: '1rem',
-                    padding: '0.75rem 2rem',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: typo.body,
-                    boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
-                  }}
-                >
-                  Learn the Physics
-                </button>
-              </div>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // REVIEW
-      // ───────────────────────────────────────────────────
-      case 'review':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#f8fafc', fontWeight: 700 }}>
-              The Physics of Sound Speed
-            </h2>
-
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.2), rgba(59, 130, 246, 0.1))',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem',
-              border: '1px solid rgba(59, 130, 246, 0.3)'
-            }}>
-              <h3 style={{ color: '#60a5fa', marginBottom: '0.75rem', fontSize: typo.bodyLarge }}>The Formula</h3>
-
-              <div style={{
-                background: 'rgba(15, 23, 42, 0.8)',
-                padding: '1rem',
-                borderRadius: 10,
-                textAlign: 'center',
-                marginBottom: '1rem',
-                border: '1px solid #334155'
-              }}>
-                <p style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#f8fafc' }}>
-                  v = d / t
-                </p>
-                <p style={{ fontSize: typo.small, color: '#94a3b8', marginTop: '0.5rem' }}>
-                  Speed = Distance / Time
-                </p>
-              </div>
-
-              <div style={{ fontSize: typo.body, color: '#e2e8f0' }}>
-                <p style={{ marginBottom: '0.75rem' }}>
-                  For the echo method:
-                </p>
                 <div style={{
-                  background: 'rgba(15, 23, 42, 0.8)',
-                  padding: '0.75rem',
-                  borderRadius: 8,
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
                   textAlign: 'center',
-                  border: '1px solid #334155'
                 }}>
-                  <p style={{ fontWeight: 'bold', color: '#60a5fa' }}>
-                    v = 2 x distance / echo time
-                  </p>
-                  <p style={{ fontSize: typo.small, color: '#94a3b8' }}>
-                    (Factor of 2 because sound travels there AND back)
-                  </p>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{distance * 2} m</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Round Trip</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>{elapsedTime.toFixed(3)} s</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Time Elapsed</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{calculatedSpeed.toFixed(0)} m/s</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Sound Speed</div>
                 </div>
               </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(202, 138, 4, 0.2), rgba(234, 179, 8, 0.1))',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem',
-              border: '1px solid rgba(234, 179, 8, 0.3)'
-            }}>
-              <h3 style={{ color: '#fbbf24', marginBottom: '0.75rem', fontSize: typo.bodyLarge }}>Speed Comparison</h3>
-
-              <div style={{ fontSize: typo.body, color: '#e2e8f0' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <tbody>
-                    <tr style={{ background: 'rgba(234, 179, 8, 0.1)' }}>
-                      <td style={{ padding: '0.5rem', borderRadius: '4px 0 0 4px' }}>Walking</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right', borderRadius: '0 4px 4px 0' }}>~1.5 m/s</td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '0.5rem' }}>Car (highway)</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>~30 m/s</td>
-                    </tr>
-                    <tr style={{ background: 'rgba(34, 197, 94, 0.2)', borderRadius: 4 }}>
-                      <td style={{ padding: '0.5rem', fontWeight: 'bold', color: '#4ade80', borderRadius: '4px 0 0 4px' }}>Sound in air</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'bold', color: '#4ade80', borderRadius: '0 4px 4px 0' }}>~343 m/s</td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '0.5rem' }}>Commercial jet</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>~250 m/s</td>
-                    </tr>
-                    <tr style={{ background: 'rgba(234, 179, 8, 0.1)' }}>
-                      <td style={{ padding: '0.5rem', borderRadius: '4px 0 0 4px' }}>Sound in water</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right', borderRadius: '0 4px 4px 0' }}>~1,500 m/s</td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '0.5rem' }}>Sound in steel</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>~5,100 m/s</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <button
-              onPointerDown={() => goToPhase('twist_predict')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: typo.bodyLarge,
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)'
-              }}
-            >
-              Try a Twist!
-            </button>
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // TWIST PREDICT
-      // ───────────────────────────────────────────────────
-      case 'twist_predict':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#f8fafc', fontWeight: 700 }}>
-              Temperature Challenge
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
-              It's a hot summer day (35 deg C) vs a cold winter night (-10 deg C).
-              How does temperature affect sound speed?
-            </p>
-
-            <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: 400, marginBottom: '0.5rem' }}>
-              <defs>
-                {/* Hot/Summer gradient */}
-                <linearGradient id="sosSummerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#fef3c7" />
-                  <stop offset="30%" stopColor="#fde68a" />
-                  <stop offset="70%" stopColor="#fcd34d" />
-                  <stop offset="100%" stopColor="#fbbf24" />
-                </linearGradient>
-
-                {/* Cold/Winter gradient */}
-                <linearGradient id="sosWinterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#dbeafe" />
-                  <stop offset="30%" stopColor="#bfdbfe" />
-                  <stop offset="70%" stopColor="#93c5fd" />
-                  <stop offset="100%" stopColor="#60a5fa" />
-                </linearGradient>
-
-                {/* Sun gradient */}
-                <radialGradient id="sosSunGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#fef9c3" />
-                  <stop offset="40%" stopColor="#fde047" />
-                  <stop offset="70%" stopColor="#facc15" />
-                  <stop offset="100%" stopColor="#eab308" />
-                </radialGradient>
-
-                {/* Snowflake/cold gradient */}
-                <radialGradient id="sosSnowGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="40%" stopColor="#e0f2fe" />
-                  <stop offset="70%" stopColor="#bae6fd" />
-                  <stop offset="100%" stopColor="#7dd3fc" />
-                </radialGradient>
-
-                {/* VS badge gradient */}
-                <linearGradient id="sosVsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#475569" />
-                  <stop offset="50%" stopColor="#334155" />
-                  <stop offset="100%" stopColor="#475569" />
-                </linearGradient>
-
-                {/* Sun glow filter */}
-                <filter id="sosSunGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Snow glow filter */}
-                <filter id="sosSnowGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Summer side */}
-              <g transform="translate(25, 10)">
-                <rect x="0" y="0" width="150" height="100" fill="url(#sosSummerGrad)" rx="12" stroke="#f59e0b" strokeWidth="1.5" />
-                {/* Sun with glow */}
-                <g filter="url(#sosSunGlow)">
-                  <circle cx="75" cy="30" r="18" fill="url(#sosSunGrad)" />
-                </g>
-                {/* Sun rays */}
-                {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-                  <line
-                    key={i}
-                    x1={75 + Math.cos(angle * Math.PI / 180) * 22}
-                    y1={30 + Math.sin(angle * Math.PI / 180) * 22}
-                    x2={75 + Math.cos(angle * Math.PI / 180) * 28}
-                    y2={30 + Math.sin(angle * Math.PI / 180) * 28}
-                    stroke="#fbbf24"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                ))}
-                {/* Heat wave lines */}
-                <path d="M 40,70 Q 50,65 60,70 Q 70,75 80,70 Q 90,65 100,70 Q 110,75 120,70"
-                      fill="none" stroke="#f59e0b" strokeWidth="1.5" opacity="0.6">
-                  <animate attributeName="opacity" values="0.6;0.3;0.6" dur="2s" repeatCount="indefinite" />
-                </path>
-              </g>
-
-              {/* Winter side */}
-              <g transform="translate(225, 10)">
-                <rect x="0" y="0" width="150" height="100" fill="url(#sosWinterGrad)" rx="12" stroke="#3b82f6" strokeWidth="1.5" />
-                {/* Snowflake with glow */}
-                <g filter="url(#sosSnowGlow)" transform="translate(75, 30)">
-                  {/* Main snowflake shape */}
-                  {[0, 60, 120].map((angle, i) => (
-                    <g key={i} transform={`rotate(${angle})`}>
-                      <line x1="0" y1="-15" x2="0" y2="15" stroke="url(#sosSnowGrad)" strokeWidth="3" strokeLinecap="round" />
-                      <line x1="-4" y1="-10" x2="0" y2="-15" stroke="url(#sosSnowGrad)" strokeWidth="2" strokeLinecap="round" />
-                      <line x1="4" y1="-10" x2="0" y2="-15" stroke="url(#sosSnowGrad)" strokeWidth="2" strokeLinecap="round" />
-                      <line x1="-4" y1="10" x2="0" y2="15" stroke="url(#sosSnowGrad)" strokeWidth="2" strokeLinecap="round" />
-                      <line x1="4" y1="10" x2="0" y2="15" stroke="url(#sosSnowGrad)" strokeWidth="2" strokeLinecap="round" />
-                    </g>
-                  ))}
-                  <circle cx="0" cy="0" r="4" fill="url(#sosSnowGrad)" />
-                </g>
-                {/* Falling snow particles */}
-                {[20, 50, 80, 110, 130].map((x, i) => (
-                  <circle key={i} cx={x} cy={70 + i * 5} r="2" fill="white" opacity="0.7">
-                    <animate attributeName="cy" values={`${60 + i * 3};${85 + i * 3};${60 + i * 3}`} dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />
-                  </circle>
-                ))}
-              </g>
-
-              {/* VS badge */}
-              <g transform="translate(200, 60)">
-                <circle cx="0" cy="0" r="18" fill="url(#sosVsGrad)" stroke="#64748b" strokeWidth="2" />
-                <text x="0" y="5" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">vs</text>
-              </g>
-            </svg>
-
-            {/* Temperature labels outside SVG */}
-            <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ color: '#f59e0b', fontSize: typo.bodyLarge, fontWeight: 700 }}>35 deg C</p>
-                <p style={{ color: '#92400e', fontSize: typo.small }}>HOT</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ color: '#3b82f6', fontSize: typo.bodyLarge, fontWeight: 700 }}>-10 deg C</p>
-                <p style={{ color: '#1d4ed8', fontSize: typo.small }}>COLD</p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
-              {[
-                { id: 'a', text: 'Same speed - temperature does not matter' },
-                { id: 'b', text: 'Faster in hot air (molecules move faster)' },
-                { id: 'c', text: 'Faster in cold air (denser = better conductor)' }
-              ].map(opt => (
-                <button
-                  key={opt.id}
-                  onPointerDown={() => handleTwistPrediction(opt.id)}
-                  style={{
-                    padding: '1rem',
-                    background: twistPrediction === opt.id
-                      ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.15))'
-                      : 'rgba(30, 41, 59, 0.8)',
-                    color: twistPrediction === opt.id ? '#fbbf24' : '#e2e8f0',
-                    border: `1px solid ${twistPrediction === opt.id ? 'rgba(245, 158, 11, 0.5)' : '#334155'}`,
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                    fontSize: typo.body
-                  }}
-                >
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-
-            {twistPrediction && (
-              <button
-                onPointerDown={() => goToPhase('twist_play')}
-                style={{
-                  marginTop: '1.5rem',
-                  padding: '1rem 2.5rem',
-                  fontSize: typo.bodyLarge,
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)'
-                }}
-              >
-                Test It!
-              </button>
             )}
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // TWIST PLAY
-      // ───────────────────────────────────────────────────
-      case 'twist_play':
-        const expectedSpeed = speedAtTemp(temperature);
-
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
-              Temperature Effect on Sound Speed
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center', fontSize: typo.body }}>
-              Adjust temperature and measure sound speed
-            </p>
-
-            {/* Temperature display */}
+          {/* Discovery prompt */}
+          {calculatedSpeed > 0 && (
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '2rem',
-              marginBottom: '1.5rem'
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
             }}>
-              {/* Premium Thermometer SVG */}
-              <svg viewBox="0 0 70 160" style={{ width: 70, height: 160 }}>
-                <defs>
-                  {/* Thermometer glass gradient */}
-                  <linearGradient id="sosThermoGlass" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#475569" />
-                    <stop offset="20%" stopColor="#64748b" />
-                    <stop offset="50%" stopColor="#94a3b8" />
-                    <stop offset="80%" stopColor="#64748b" />
-                    <stop offset="100%" stopColor="#475569" />
-                  </linearGradient>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Sound travels at about 343 m/s - faster than most jet planes but much slower than light!
+              </p>
+            </div>
+          )}
 
-                  {/* Hot mercury gradient */}
-                  <linearGradient id="sosHotMercury" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#fca5a5" />
-                    <stop offset="30%" stopColor="#f87171" />
-                    <stop offset="70%" stopColor="#ef4444" />
-                    <stop offset="100%" stopColor="#dc2626" />
-                  </linearGradient>
+          {calculatedSpeed > 0 && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
+          )}
+        </div>
 
-                  {/* Cold mercury gradient */}
-                  <linearGradient id="sosColdMercury" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#93c5fd" />
-                    <stop offset="30%" stopColor="#60a5fa" />
-                    <stop offset="70%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#2563eb" />
-                  </linearGradient>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
-                  {/* Bulb glow filter */}
-                  <filter id="sosBulbGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="3" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-                {/* Thermometer outer tube */}
-                <rect x="22" y="8" width="20" height="115" fill="url(#sosThermoGlass)" rx="10" />
-                {/* Inner tube (white background for mercury) */}
-                <rect x="26" y="12" width="12" height="107" fill="#1e293b" rx="6" />
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Sound Speed
+          </h2>
 
-                {/* Mercury column */}
-                <rect
-                  x="28"
-                  y={115 - Math.max(5, (temperature + 25) * 1.5)}
-                  width="8"
-                  height={Math.max(5, (temperature + 25) * 1.5)}
-                  fill={temperature > 20 ? 'url(#sosHotMercury)' : 'url(#sosColdMercury)'}
-                  rx="4"
-                />
-
-                {/* Bulb with glow */}
-                <g filter="url(#sosBulbGlow)">
-                  <circle cx="32" cy="138" r="18" fill={temperature > 20 ? 'url(#sosHotMercury)' : 'url(#sosColdMercury)'} />
-                </g>
-                {/* Bulb highlight */}
-                <circle cx="26" cy="132" r="4" fill="white" opacity="0.3" />
-
-                {/* Scale marks and labels */}
-                {[-20, -10, 0, 10, 20, 30, 40].map(t => (
-                  <g key={t}>
-                    <line x1="44" y1={108 - (t + 20) * 1.5} x2="52" y2={108 - (t + 20) * 1.5} stroke="#64748b" strokeWidth="1.5" />
-                    <text x="56" y={112 - (t + 20) * 1.5} fill="#94a3b8" fontSize="9" fontWeight="500">{t}</text>
-                  </g>
-                ))}
-
-                {/* Current temperature indicator */}
-                <polygon
-                  points={`18,${108 - (temperature + 20) * 1.5} 10,${104 - (temperature + 20) * 1.5} 10,${112 - (temperature + 20) * 1.5}`}
-                  fill={temperature > 20 ? '#ef4444' : '#3b82f6'}
-                />
-              </svg>
-
-              {/* Premium Speed display */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>v = d / t (Speed = Distance / Time)</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                For echoes, sound travels there AND back, so the formula becomes:
+              </p>
               <div style={{
-                background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-                padding: '1.5rem',
-                borderRadius: 16,
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
                 textAlign: 'center',
-                border: '1px solid #334155',
-                minWidth: 160
+                marginBottom: '16px',
               }}>
-                <p style={{ color: '#94a3b8', fontSize: typo.small, marginBottom: '0.5rem' }}>
-                  At {temperature} deg C:
-                </p>
-                <p style={{
-                  fontSize: '1.8rem',
-                  fontWeight: 'bold',
-                  color: '#f8fafc',
-                  textShadow: temperature > 20 ? '0 0 10px rgba(239, 68, 68, 0.5)' : '0 0 10px rgba(59, 130, 246, 0.5)'
-                }}>
-                  {twistSpeed > 0 ? twistSpeed.toFixed(0) : expectedSpeed.toFixed(0)} m/s
-                </p>
-                <p style={{ color: '#64748b', fontSize: typo.label, marginTop: '0.5rem' }}>
-                  Formula: v = 331 + 0.6T
-                </p>
-                {/* Speed indicator bar */}
-                <div style={{
-                  marginTop: '0.75rem',
-                  height: 6,
-                  background: '#334155',
-                  borderRadius: 3,
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: `${((expectedSpeed - 300) / 70) * 100}%`,
-                    background: temperature > 20
-                      ? 'linear-gradient(90deg, #ef4444, #f87171)'
-                      : 'linear-gradient(90deg, #3b82f6, #60a5fa)',
-                    borderRadius: 3,
-                    transition: 'width 0.3s ease'
-                  }} />
-                </div>
+                <span style={{ fontSize: '24px', color: colors.accent, fontWeight: 700 }}>
+                  v = 2d / t
+                </span>
               </div>
+              <p>
+                At room temperature (20°C), sound in air travels at approximately <span style={{ color: colors.success }}>343 m/s</span>.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Speed Comparison
+            </h3>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span>Walking</span>
+                <span style={{ color: colors.textPrimary }}>~1.5 m/s</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span>Highway car</span>
+                <span style={{ color: colors.textPrimary }}>~30 m/s</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}`, background: `${colors.success}22` }}>
+                <span style={{ fontWeight: 700, color: colors.success }}>Sound in air</span>
+                <span style={{ fontWeight: 700, color: colors.success }}>~343 m/s</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span>Commercial jet</span>
+                <span style={{ color: colors.textPrimary }}>~250 m/s</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${colors.border}` }}>
+                <span>Sound in water</span>
+                <span style={{ color: colors.textPrimary }}>~1,500 m/s</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                <span>Sound in steel</span>
+                <span style={{ color: colors.textPrimary }}>~5,100 m/s</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
+              The Flash-to-Bang Rule
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Light travels almost instantly (300,000,000 m/s). Sound takes about <strong>5 seconds per mile</strong> (or 3 seconds per km).
+              Count the seconds between lightning and thunder, divide by 5, and you know how many miles away the storm is!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore Temperature Effects
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Same speed - temperature has no effect on sound' },
+      { id: 'b', text: 'Faster in hot air - molecules move faster', correct: true },
+      { id: 'c', text: 'Faster in cold air - denser means better conduction' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Temperature
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            On a hot summer day (35°C) versus a cold winter night (-10°C), does sound travel at the same speed?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>Sun</div>
+                <p style={{ color: '#EF4444', fontWeight: 700, fontSize: '20px' }}>35°C</p>
+                <p style={{ color: colors.textMuted, ...typo.small }}>Hot Summer Day</p>
+              </div>
+              <div style={{ fontSize: '32px', color: colors.textMuted, alignSelf: 'center' }}>vs</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>Snow</div>
+                <p style={{ color: '#3B82F6', fontWeight: 700, fontSize: '20px' }}>-10°C</p>
+                <p style={{ color: colors.textMuted, ...typo.small }}>Cold Winter Night</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test Temperature Effect
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const expectedSpeed = speedAtTemp(temperature);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Temperature and Sound Speed
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust the temperature and watch how sound speed changes
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <TemperatureVisualization />
             </div>
 
             {/* Temperature slider */}
-            <div style={{ width: '100%', maxWidth: 350, marginBottom: '1.5rem' }}>
-              <label style={{ color: '#94a3b8', fontSize: typo.body }}>
-                Temperature: {temperature} deg C
-              </label>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                <span style={{ ...typo.small, color: temperature > 20 ? '#EF4444' : '#3B82F6', fontWeight: 600 }}>{temperature}°C</span>
+              </div>
               <input
                 type="range"
-                min="-20"
-                max="45"
+                min="-30"
+                max="50"
                 value={temperature}
                 onChange={(e) => setTemperature(parseInt(e.target.value))}
-                style={{ width: '100%', accentColor: temperature > 20 ? '#ef4444' : '#3b82f6' }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.small, color: '#64748b' }}>
-                <span>-20 deg C (Cold)</span>
-                <span>45 deg C (Hot)</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: '#3B82F6' }}>-30°C (Arctic)</span>
+                <span style={{ ...typo.small, color: '#EF4444' }}>50°C (Desert)</span>
               </div>
             </div>
 
-            {/* Speed comparison chart */}
+            {/* Speed examples */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-              borderRadius: 12,
-              padding: '1rem',
-              width: '100%',
-              maxWidth: 350,
-              marginBottom: '1rem',
-              border: '1px solid #334155'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '8px',
             }}>
-              <p style={{ color: '#94a3b8', fontSize: typo.small, marginBottom: '0.5rem' }}>
-                Speed at different temperatures:
-              </p>
-              {[-10, 0, 20, 35].map(t => (
-                <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <span style={{ width: 55, fontSize: typo.small, color: '#e2e8f0' }}>{t} deg C:</span>
-                  <div style={{
-                    height: 16,
-                    width: `${(speedAtTemp(t) - 300) * 2}px`,
-                    background: t === temperature
-                      ? 'linear-gradient(90deg, #3b82f6, #60a5fa)'
-                      : '#334155',
-                    borderRadius: 3,
-                    transition: 'all 0.3s ease'
-                  }} />
-                  <span style={{ fontSize: typo.small, color: t === temperature ? '#60a5fa' : '#94a3b8' }}>{speedAtTemp(t).toFixed(0)} m/s</span>
+              {[-20, 0, 20, 40].map(t => (
+                <div key={t} style={{
+                  background: t === temperature ? `${colors.accent}33` : colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px 8px',
+                  textAlign: 'center',
+                  border: t === temperature ? `2px solid ${colors.accent}` : 'none',
+                }}>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{t}°C</div>
+                  <div style={{ ...typo.body, color: t === temperature ? colors.accent : colors.textPrimary, fontWeight: 600 }}>
+                    {speedAtTemp(t).toFixed(0)} m/s
+                  </div>
                 </div>
               ))}
             </div>
-
-            <button
-              onPointerDown={() => {
-                setShowTwistResult(true);
-                if (twistPrediction === 'b') {
-                  onCorrectAnswer?.();
-                } else {
-                  onIncorrectAnswer?.();
-                }
-              }}
-              style={{
-                padding: '1rem 2rem',
-                background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: typo.body,
-                boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)'
-              }}
-            >
-              See Results
-            </button>
-
-            {showTwistResult && (
-              <div style={{
-                marginTop: '1rem',
-                padding: '1rem',
-                background: twistPrediction === 'b'
-                  ? 'linear-gradient(135deg, rgba(22, 101, 52, 0.3), rgba(34, 197, 94, 0.15))'
-                  : 'linear-gradient(135deg, rgba(146, 64, 14, 0.3), rgba(245, 158, 11, 0.15))',
-                borderRadius: 12,
-                textAlign: 'center',
-                maxWidth: 400,
-                border: `1px solid ${twistPrediction === 'b' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(245, 158, 11, 0.4)'}`
-              }}>
-                <p style={{ fontWeight: 600, color: twistPrediction === 'b' ? '#4ade80' : '#fbbf24', fontSize: typo.bodyLarge }}>
-                  {twistPrediction === 'b' ? 'Correct!' : 'Temperature matters!'}
-                </p>
-                <p style={{ color: '#e2e8f0', fontSize: typo.body, marginTop: '0.5rem' }}>
-                  Sound travels <strong style={{ color: '#ef4444' }}>faster in hot air</strong>! At higher temperatures, air molecules
-                  move faster and can transmit vibrations more quickly. Each 1 deg C increase adds
-                  about 0.6 m/s to the speed of sound.
-                </p>
-                <button
-                  onPointerDown={() => goToPhase('twist_review')}
-                  style={{
-                    marginTop: '1rem',
-                    padding: '0.75rem 2rem',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    fontSize: typo.body,
-                    boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
-                  }}
-                >
-                  Understand Why
-                </button>
-              </div>
-            )}
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // TWIST REVIEW
-      // ───────────────────────────────────────────────────
-      case 'twist_review':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#f8fafc', fontWeight: 700 }}>
-              Temperature and Sound Speed
-            </h2>
+          <div style={{
+            background: `${colors.success}22`,
+            border: `1px solid ${colors.success}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+              At {temperature}°C, sound travels at {expectedSpeed.toFixed(0)} m/s -
+              that is {(expectedSpeed - 343).toFixed(0)} m/s {expectedSpeed > 343 ? 'faster' : 'slower'} than at 20°C!
+            </p>
+          </div>
 
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Why
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why Temperature Matters
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
             <div style={{
-              background: 'linear-gradient(135deg, rgba(202, 138, 4, 0.2), rgba(234, 179, 8, 0.1))',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem',
-              border: '1px solid rgba(234, 179, 8, 0.3)'
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
             }}>
-              <h3 style={{ color: '#fbbf24', marginBottom: '0.75rem', fontSize: typo.bodyLarge }}>The Temperature Formula</h3>
-
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Formula</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>The Temperature Formula</h3>
+              </div>
               <div style={{
-                background: 'rgba(15, 23, 42, 0.8)',
-                padding: '1rem',
-                borderRadius: 10,
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
                 textAlign: 'center',
-                marginBottom: '1rem',
-                border: '1px solid #334155'
+                marginBottom: '12px',
               }}>
-                <p style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#f8fafc' }}>
-                  v = 331 + 0.6T (m/s)
-                </p>
-                <p style={{ fontSize: typo.small, color: '#94a3b8', marginTop: '0.5rem' }}>
-                  T = temperature in Celsius
-                </p>
+                <span style={{ fontSize: '28px', color: colors.accent, fontWeight: 700, fontFamily: 'monospace' }}>
+                  v = 331 + 0.6T
+                </span>
               </div>
-
-              <div style={{ fontSize: typo.body, color: '#e2e8f0' }}>
-                <p style={{ marginBottom: '0.75rem' }}>
-                  <strong style={{ color: '#fbbf24' }}>Why hotter = faster?</strong>
-                </p>
-                <ul style={{ paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                  <li>Higher temperature = faster molecule motion</li>
-                  <li>Faster molecules collide more frequently</li>
-                  <li>Sound waves (pressure waves) propagate faster</li>
-                </ul>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(22, 101, 52, 0.2), rgba(34, 197, 94, 0.1))',
-              borderRadius: 12,
-              padding: '1rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem',
-              border: '1px solid rgba(34, 197, 94, 0.3)'
-            }}>
-              <h4 style={{ color: '#4ade80', marginBottom: '0.5rem', fontSize: typo.body }}>Practical Impact</h4>
-              <p style={{ color: '#e2e8f0', fontSize: typo.body }}>
-                This is why outdoor concerts sound different on hot vs cold days!
-                Musicians may need to retune instruments as temperature changes
-                because the pitch depends on sound speed.
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Where v is speed in m/s and T is temperature in Celsius. Each degree adds about 0.6 m/s to the speed of sound.
               </p>
             </div>
 
-            <button
-              onPointerDown={() => goToPhase('transfer')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: typo.bodyLarge,
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
-              }}
-            >
-              See Real Applications
-            </button>
-          </div>
-        );
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Molecules</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Molecular Motion</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                At higher temperatures, air molecules move faster and collide more frequently.
+                Sound is a pressure wave transmitted through these collisions, so faster-moving molecules = faster sound propagation.
+              </p>
+            </div>
 
-      // ───────────────────────────────────────────────────
-      // TRANSFER
-      // ───────────────────────────────────────────────────
-      case 'transfer':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#f8fafc', fontWeight: 700 }}>
-              Sound Speed in the Real World
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', fontSize: typo.body }}>
-              Explore each application to unlock the test
+            <div style={{
+              background: `${colors.warning}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.warning}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Music</span>
+                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Real-World Impact</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Musicians at outdoor concerts may need to retune as temperature changes!
+                Wind instruments change pitch because the sound wavelength depends on air temperature.
+                A 10°C change can cause noticeable pitch shifts.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ok
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
             </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Sound Speed Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-              gap: '1rem',
-              width: '100%',
-              maxWidth: 600,
-              marginBottom: '1.5rem'
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
             }}>
-              {applications.map((app, index) => (
-                <div
-                  key={index}
-                  onPointerDown={() => {
-                    setCompletedApps(prev => new Set([...prev, index]));
-                    playSound('click');
-                  }}
-                  style={{
-                    background: completedApps.has(index)
-                      ? 'linear-gradient(135deg, rgba(22, 101, 52, 0.3), rgba(34, 197, 94, 0.15))'
-                      : 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-                    borderRadius: 12,
-                    padding: '1rem',
-                    cursor: 'pointer',
-                    border: `1px solid ${completedApps.has(index) ? 'rgba(34, 197, 94, 0.5)' : '#334155'}`,
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{app.icon}</div>
-                  <h3 style={{ color: '#f8fafc', fontSize: typo.body, marginBottom: '0.25rem', fontWeight: 600 }}>
-                    {app.title}
-                    {completedApps.has(index) && <span style={{ color: '#4ade80', marginLeft: '0.5rem' }}>Done</span>}
-                  </h3>
-                  <p style={{ color: '#94a3b8', fontSize: typo.small, marginBottom: '0.5rem' }}>
-                    {app.description}
-                  </p>
-                  {completedApps.has(index) && (
-                    <p style={{ color: '#e2e8f0', fontSize: typo.small, fontStyle: 'italic' }}>
-                      {app.detail}
-                    </p>
-                  )}
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
             </div>
+          </div>
 
-            <p style={{ color: '#94a3b8', fontSize: typo.body, marginBottom: '1rem' }}>
-              {completedApps.size} / {applications.length} applications explored
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? 'Trophy' : 'Book'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand sound speed and its applications!'
+                : 'Review the concepts and try again.'}
             </p>
 
-            {completedApps.size >= applications.length && (
+            {passed ? (
               <button
-                onPointerDown={() => goToPhase('test')}
-                style={{
-                  padding: '1rem 2.5rem',
-                  fontSize: typo.bodyLarge,
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)'
-                }}
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                Take the Test
-              </button>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // TEST
-      // ───────────────────────────────────────────────────
-      case 'test':
-        const score = testQuestions.reduce((acc, q, i) => {
-          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
-            return acc + 1;
-          }
-          return acc;
-        }, 0);
-
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#f8fafc', fontWeight: 700 }}>
-              Speed of Sound Mastery Test
-            </h2>
-
-            <div style={{ width: '100%', maxWidth: 600 }}>
-              {testQuestions.map((tq, qi) => {
-                const isCorrect = tq.options[testAnswers[qi]]?.correct;
-                return (
-                <div
-                  key={qi}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))',
-                    borderRadius: 12,
-                    padding: '1rem',
-                    marginBottom: '1rem',
-                    border: `1px solid ${
-                      testSubmitted
-                        ? isCorrect
-                          ? 'rgba(34, 197, 94, 0.5)'
-                          : testAnswers[qi] !== undefined
-                          ? 'rgba(239, 68, 68, 0.5)'
-                          : '#334155'
-                        : '#334155'
-                    }`
-                  }}
-                >
-                  <p style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.75rem', fontSize: typo.body }}>
-                    {qi + 1}. {tq.question}
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {tq.options.map((opt, oi) => (
-                      <button
-                        key={oi}
-                        onPointerDown={() => handleTestAnswer(qi, oi)}
-                        disabled={testSubmitted}
-                        style={{
-                          padding: '0.6rem 1rem',
-                          textAlign: 'left',
-                          background: testSubmitted
-                            ? opt.correct
-                              ? 'rgba(34, 197, 94, 0.2)'
-                              : testAnswers[qi] === oi
-                              ? 'rgba(239, 68, 68, 0.2)'
-                              : 'rgba(15, 23, 42, 0.6)'
-                            : testAnswers[qi] === oi
-                            ? 'rgba(59, 130, 246, 0.2)'
-                            : 'rgba(15, 23, 42, 0.6)',
-                          color: testSubmitted
-                            ? opt.correct
-                              ? '#4ade80'
-                              : testAnswers[qi] === oi
-                              ? '#f87171'
-                              : '#e2e8f0'
-                            : testAnswers[qi] === oi
-                            ? '#60a5fa'
-                            : '#e2e8f0',
-                          border: `1px solid ${
-                            testSubmitted
-                              ? opt.correct
-                                ? 'rgba(34, 197, 94, 0.5)'
-                                : testAnswers[qi] === oi
-                                ? 'rgba(239, 68, 68, 0.5)'
-                                : '#334155'
-                              : testAnswers[qi] === oi
-                              ? 'rgba(59, 130, 246, 0.5)'
-                              : '#334155'
-                          }`,
-                          borderRadius: 8,
-                          cursor: testSubmitted ? 'default' : 'pointer',
-                          fontSize: typo.small
-                        }}
-                      >
-                        {opt.text}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )})}
-            </div>
-
-            {!testSubmitted ? (
-              <button
-                onPointerDown={submitTest}
-                disabled={Object.keys(testAnswers).length < testQuestions.length}
-                style={{
-                  padding: '1rem 2.5rem',
-                  fontSize: typo.bodyLarge,
-                  background: Object.keys(testAnswers).length < testQuestions.length
-                    ? '#475569'
-                    : 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: Object.keys(testAnswers).length < testQuestions.length ? 'not-allowed' : 'pointer',
-                  fontWeight: 600,
-                  boxShadow: Object.keys(testAnswers).length >= testQuestions.length ? '0 4px 14px rgba(139, 92, 246, 0.4)' : 'none'
-                }}
-              >
-                Submit Test ({Object.keys(testAnswers).length}/{testQuestions.length})
+                Complete Lesson
               </button>
             ) : (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: score >= 7 ? '#4ade80' : '#fbbf24',
-                  marginBottom: '1rem',
-                  textShadow: score >= 7 ? '0 0 10px rgba(74, 222, 128, 0.5)' : '0 0 10px rgba(251, 191, 36, 0.5)'
-                }}>
-                  Score: {score}/{testQuestions.length} ({Math.round(score / testQuestions.length * 100)}%)
-                </p>
-
-                <button
-                  onPointerDown={() => goToPhase('mastery')}
-                  style={{
-                    padding: '1rem 2.5rem',
-                    fontSize: typo.bodyLarge,
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 12,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)'
-                  }}
-                >
-                  Complete Journey
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
             )}
           </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // MASTERY
-      // ───────────────────────────────────────────────────
-      case 'mastery':
-        const finalScore = testQuestions.reduce((acc, q, i) => {
-          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
-            return acc + 1;
-          }
-          return acc;
-        }, 0);
-
-        // Generate stable confetti positions (seeded by index)
-        const confettiData = [...Array(25)].map((_, i) => ({
-          x: (i * 37 + 13) % 300,
-          y: (i * 23 + 7) % 80,
-          r: 3 + (i % 4),
-          color: ['#3b82f6', '#f59e0b', '#22c55e', '#ef4444', '#8b5cf6', '#06b6d4'][i % 6],
-          delay: (i * 0.15) % 2,
-          duration: 1.5 + (i % 3) * 0.5
-        }));
-
-        return (
-          <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
-            {/* Premium celebration SVG */}
-            <svg viewBox="0 0 120 60" style={{ width: 120, height: 60, marginBottom: '0.5rem' }}>
-              <defs>
-                {/* Sound wave icon gradient */}
-                <linearGradient id="sosSoundIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#06b6d4" />
-                  <stop offset="50%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#8b5cf6" />
-                </linearGradient>
-                {/* Timer icon gradient */}
-                <linearGradient id="sosTimerIconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#fbbf24" />
-                  <stop offset="50%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
-                {/* Trophy gradient */}
-                <linearGradient id="sosTrophyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#fef3c7" />
-                  <stop offset="30%" stopColor="#fbbf24" />
-                  <stop offset="70%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
-                {/* Icon glow */}
-                <filter id="sosIconGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Sound wave icon */}
-              <g transform="translate(20, 30)" filter="url(#sosIconGlow)">
-                <circle cx="0" cy="0" r="12" fill="url(#sosSoundIconGrad)" />
-                {[8, 14, 20].map((r, i) => (
-                  <path key={i} d={`M 5,-${r * 0.7} Q ${r},0 5,${r * 0.7}`} fill="none" stroke="url(#sosSoundIconGrad)" strokeWidth="2" opacity={0.8 - i * 0.2}>
-                    <animate attributeName="opacity" values={`${0.8 - i * 0.2};${0.3};${0.8 - i * 0.2}`} dur="1.5s" repeatCount="indefinite" />
-                  </path>
-                ))}
-              </g>
-
-              {/* Timer icon */}
-              <g transform="translate(60, 30)" filter="url(#sosIconGlow)">
-                <circle cx="0" cy="0" r="12" fill="none" stroke="url(#sosTimerIconGrad)" strokeWidth="3" />
-                <line x1="0" y1="0" x2="0" y2="-7" stroke="url(#sosTimerIconGrad)" strokeWidth="2" strokeLinecap="round">
-                  <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite" />
-                </line>
-                <line x1="0" y1="0" x2="5" y2="0" stroke="url(#sosTimerIconGrad)" strokeWidth="2" strokeLinecap="round">
-                  <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="60s" repeatCount="indefinite" />
-                </line>
-                <circle cx="0" cy="0" r="2" fill="url(#sosTimerIconGrad)" />
-              </g>
-
-              {/* Trophy icon */}
-              <g transform="translate(100, 30)" filter="url(#sosIconGlow)">
-                <path d="M -8,-10 L 8,-10 L 6,2 L 2,8 L -2,8 L -6,2 Z" fill="url(#sosTrophyGrad)" />
-                <rect x="-4" y="8" width="8" height="3" fill="url(#sosTrophyGrad)" />
-                <rect x="-6" y="11" width="12" height="2" fill="url(#sosTrophyGrad)" rx="1" />
-                <ellipse cx="-10" cy="-5" rx="3" ry="5" fill="none" stroke="url(#sosTrophyGrad)" strokeWidth="2" />
-                <ellipse cx="10" cy="-5" rx="3" ry="5" fill="none" stroke="url(#sosTrophyGrad)" strokeWidth="2" />
-              </g>
-            </svg>
-
-            <h2 style={{ fontSize: typo.title, marginBottom: '0.5rem', color: '#f8fafc', fontWeight: 700 }}>
-              Sound Speed Master!
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', maxWidth: 400, fontSize: typo.body }}>
-              You can now calculate storm distances and understand how
-              temperature affects the speed of sound!
-            </p>
-
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(30, 64, 175, 0.2), rgba(59, 130, 246, 0.1))',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 400,
-              marginBottom: '1.5rem',
-              border: '1px solid rgba(59, 130, 246, 0.3)'
-            }}>
-              <h3 style={{ color: '#60a5fa', marginBottom: '1rem', fontSize: typo.bodyLarge }}>Your Achievements</h3>
-
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1rem' }}>
-                <div>
-                  <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>
-                    {finalScore}/{testQuestions.length}
-                  </p>
-                  <p style={{ fontSize: typo.small, color: '#94a3b8' }}>Test Score</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>4</p>
-                  <p style={{ fontSize: typo.small, color: '#94a3b8' }}>Applications</p>
-                </div>
-              </div>
-
-              <div style={{
-                background: 'rgba(15, 23, 42, 0.8)',
-                borderRadius: 10,
-                padding: '1rem',
-                textAlign: 'left',
-                border: '1px solid #334155'
-              }}>
-                <p style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.5rem', fontSize: typo.body }}>
-                  Key Takeaways:
-                </p>
-                <ul style={{ color: '#94a3b8', fontSize: typo.small, paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                  <li>Sound speed = 343 m/s at 20 deg C</li>
-                  <li>v = 331 + 0.6T (temperature effect)</li>
-                  <li>Echo method: v = 2d / t</li>
-                  <li>5 seconds = 1 mile (storm distance)</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Premium Confetti SVG */}
-            <svg viewBox="0 0 300 100" style={{ width: '100%', maxWidth: 300 }}>
-              <defs>
-                {/* Confetti glow filter */}
-                <filter id="sosConfettiGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="1" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              {confettiData.map((c, i) => (
-                <g key={i} filter="url(#sosConfettiGlow)">
-                  {i % 3 === 0 ? (
-                    // Circle confetti
-                    <circle cx={c.x} cy={c.y} r={c.r} fill={c.color}>
-                      <animate attributeName="cy" values={`${c.y};${c.y + 60};${c.y}`} dur={`${c.duration}s`} begin={`${c.delay}s`} repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="1;0.3;1" dur={`${c.duration}s`} begin={`${c.delay}s`} repeatCount="indefinite" />
-                      <animateTransform attributeName="transform" type="rotate" from={`0 ${c.x} ${c.y}`} to={`360 ${c.x} ${c.y + 30}`} dur={`${c.duration}s`} begin={`${c.delay}s`} repeatCount="indefinite" />
-                    </circle>
-                  ) : i % 3 === 1 ? (
-                    // Square confetti
-                    <rect x={c.x - c.r} y={c.y - c.r} width={c.r * 2} height={c.r * 2} fill={c.color} rx="1">
-                      <animate attributeName="y" values={`${c.y - c.r};${c.y + 60 - c.r};${c.y - c.r}`} dur={`${c.duration}s`} begin={`${c.delay}s`} repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="1;0.3;1" dur={`${c.duration}s`} begin={`${c.delay}s`} repeatCount="indefinite" />
-                      <animateTransform attributeName="transform" type="rotate" from={`0 ${c.x} ${c.y}`} to={`360 ${c.x} ${c.y + 30}`} dur={`${c.duration * 0.8}s`} begin={`${c.delay}s`} repeatCount="indefinite" />
-                    </rect>
-                  ) : (
-                    // Star/diamond confetti
-                    <polygon points={`${c.x},${c.y - c.r} ${c.x + c.r * 0.6},${c.y} ${c.x},${c.y + c.r} ${c.x - c.r * 0.6},${c.y}`} fill={c.color}>
-                      <animate attributeName="transform" type="translate" values={`0,0;0,60;0,0`} dur={`${c.duration}s`} begin={`${c.delay}s`} repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="1;0.3;1" dur={`${c.duration}s`} begin={`${c.delay}s`} repeatCount="indefinite" />
-                    </polygon>
-                  )}
-                </g>
-              ))}
-            </svg>
-
-            <button
-              onPointerDown={() => {
-                onPhaseComplete?.();
-                playSound('complete');
-              }}
-              style={{
-                marginTop: '1rem',
-                padding: '1rem 2.5rem',
-                fontSize: typo.bodyLarge,
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)'
-              }}
-            >
-              Complete Lesson
-            </button>
-          </div>
-        );
-
-      default:
-        return null;
+          {renderNavDots()}
+        </div>
+      );
     }
-  };
 
-  const currentIndex = phaseOrder.indexOf(phase);
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review',
-    twist_predict: 'Twist Predict', twist_play: 'Twist Lab', twist_review: 'Twist Review',
-    transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
-  };
+    const question = testQuestions[currentQuestion];
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/3 rounded-full blur-3xl" />
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Speed of Sound</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p, i) => (
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                key={p}
-                onPointerDown={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
-                    : i < currentIndex
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700/50">
-            {renderPhase()}
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
           </div>
         </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
-}
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          Trophy
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Sound Speed Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how sound travels through air, how temperature affects it, and how this physics is used in real-world applications!
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Takeaways:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Sound travels at ~343 m/s at 20°C',
+              'Speed formula: v = 331 + 0.6T m/s',
+              'Echo method: v = 2d / t',
+              '5 seconds = 1 mile (flash-to-bang)',
+              'Sound is faster in solids and liquids',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>Check</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default SpeedOfSoundRenderer;

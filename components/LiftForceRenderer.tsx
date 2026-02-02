@@ -1,25 +1,186 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-interface LiftForceRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+// -----------------------------------------------------------------------------
+// Lift Force - Complete 10-Phase Game
+// Understanding how wings generate lift through pressure differences
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
+interface LiftForceRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A commercial aircraft is cruising at 35,000 feet. The pilot notices the indicated airspeed is 250 knots, but the true airspeed is 450 knots due to the thin air at altitude.",
+    question: "Why must the aircraft fly faster (true airspeed) at high altitude to maintain the same lift?",
+    options: [
+      { id: 'A', label: "The wings become less efficient at altitude" },
+      { id: 'B', label: "Lower air density requires higher velocity to generate the same lift", correct: true },
+      { id: 'C', label: "Gravity is stronger at high altitude" },
+      { id: 'D', label: "The engines produce more thrust at altitude" }
+    ],
+    explanation: "The lift equation L = 0.5 * rho * V^2 * S * Cl shows that lift depends on air density (rho). At high altitude, rho is much lower, so V must increase to maintain the same lift force."
+  },
+  {
+    scenario: "An aerodynamics engineer is testing two wing designs in a wind tunnel. Wing A has twice the surface area of Wing B, but both have the same airfoil shape. Both are tested at identical airspeeds.",
+    question: "How will the lift force of Wing A compare to Wing B?",
+    options: [
+      { id: 'A', label: "Wing A produces twice the lift of Wing B", correct: true },
+      { id: 'B', label: "Both wings produce the same lift" },
+      { id: 'C', label: "Wing A produces four times the lift" },
+      { id: 'D', label: "Wing B produces more lift due to lower drag" }
+    ],
+    explanation: "Lift is directly proportional to wing area (S) in the equation L = 0.5 * rho * V^2 * S * Cl. Doubling the area doubles the lift, assuming all other factors remain constant."
+  },
+  {
+    scenario: "A pilot is approaching a runway for landing. The aircraft's stall speed at cruise configuration is 120 knots, but with full flaps deployed, the stall speed drops to 85 knots.",
+    question: "How do flaps reduce the stall speed?",
+    options: [
+      { id: 'A', label: "Flaps make the aircraft lighter" },
+      { id: 'B', label: "Flaps increase the lift coefficient, allowing slower flight", correct: true },
+      { id: 'C', label: "Flaps reduce gravity's effect on the aircraft" },
+      { id: 'D', label: "Flaps increase engine efficiency" }
+    ],
+    explanation: "Flaps increase both the camber and effective area of the wing, dramatically increasing the lift coefficient (Cl). With higher Cl, the aircraft can fly slower while still generating enough lift to stay airborne."
+  },
+  {
+    scenario: "A flight instructor demonstrates a stall to a student. As the aircraft slows and the nose rises, suddenly the aircraft shudders and the nose drops sharply.",
+    question: "What happens aerodynamically during a stall?",
+    options: [
+      { id: 'A', label: "The engine loses power" },
+      { id: 'B', label: "Airflow separates from the upper wing surface, causing sudden lift loss", correct: true },
+      { id: 'C', label: "The wing physically breaks" },
+      { id: 'D', label: "Air becomes too thin to support the aircraft" }
+    ],
+    explanation: "At high angles of attack, the smooth airflow over the wing cannot follow the curved upper surface. The flow separates, creating turbulence and destroying the pressure differential that creates lift."
+  },
+  {
+    scenario: "A Formula 1 car's rear wing is essentially an upside-down aircraft wing. At 200 mph, it generates 1,000 lbs of downforce.",
+    question: "If the car increases speed to 280 mph (1.4x faster), approximately how much downforce will the wing generate?",
+    options: [
+      { id: 'A', label: "About 1,400 lbs (1.4x more)" },
+      { id: 'B', label: "About 2,000 lbs (2x more)", correct: true },
+      { id: 'C', label: "About 1,000 lbs (same)" },
+      { id: 'D', label: "About 2,800 lbs (2.8x more)" }
+    ],
+    explanation: "Lift (and downforce) scales with velocity squared. 1.4^2 = 1.96, approximately 2x. So the downforce nearly doubles from 1,000 to about 2,000 lbs."
+  },
+  {
+    scenario: "A glider pilot notices that on a hot summer day, takeoff requires a longer runway and climb performance is reduced compared to cooler days.",
+    question: "Why does hot weather degrade aircraft performance?",
+    options: [
+      { id: 'A', label: "Hot air is less dense, reducing lift at the same airspeed", correct: true },
+      { id: 'B', label: "The sun's radiation pushes the aircraft down" },
+      { id: 'C', label: "Pilots get tired in hot weather" },
+      { id: 'D', label: "The wings expand in heat and become less efficient" }
+    ],
+    explanation: "Hot air is less dense than cold air. Since lift depends on air density (rho), the same airspeed produces less lift on hot days. This is why 'density altitude' is crucial for pilots."
+  },
+  {
+    scenario: "An aerospace engineer is comparing a symmetric airfoil (same shape top and bottom) with a cambered airfoil (more curved on top) for a new aircraft design.",
+    question: "What is the key advantage of a cambered airfoil?",
+    options: [
+      { id: 'A', label: "It produces lift even at zero angle of attack", correct: true },
+      { id: 'B', label: "It is stronger structurally" },
+      { id: 'C', label: "It weighs less" },
+      { id: 'D', label: "It produces less drag at all speeds" }
+    ],
+    explanation: "A cambered airfoil's asymmetric shape accelerates air more over the top surface even when pointed directly into the wind, creating a pressure difference and positive lift at zero angle of attack."
+  },
+  {
+    scenario: "A seaplane is taking off from a lake at 6,000 feet elevation in the mountains compared to a sea-level lake.",
+    question: "What adjustment must the pilot make for the mountain takeoff?",
+    options: [
+      { id: 'A', label: "Use a shorter takeoff run" },
+      { id: 'B', label: "Accelerate to a higher takeoff speed or use more flaps", correct: true },
+      { id: 'C', label: "Take off at a lower speed" },
+      { id: 'D', label: "No adjustment needed" }
+    ],
+    explanation: "At 6,000 feet, air density is about 20% lower than sea level. The pilot must either increase speed (V) to compensate or deploy flaps to increase Cl, or accept a longer takeoff run."
+  },
+  {
+    scenario: "During landing, pilots are taught to 'flare' - raising the nose just before touchdown. An aircraft approaching at 130 knots flares to an angle of attack just below stall.",
+    question: "Why is the flare maneuver essential for a smooth landing?",
+    options: [
+      { id: 'A', label: "It makes the engines work harder" },
+      { id: 'B', label: "It increases Cl to slow descent while bleeding off airspeed", correct: true },
+      { id: 'C', label: "It reduces the aircraft's weight" },
+      { id: 'D', label: "It signals the tower that landing is imminent" }
+    ],
+    explanation: "By increasing angle of attack during flare, the pilot temporarily increases Cl, generating more lift. This cushions the descent while the aircraft naturally slows, allowing a gentle touchdown."
+  },
+  {
+    scenario: "An ekranoplan (ground-effect vehicle) can carry enormous loads by flying just a few meters above the water surface, using wings that would be too small for conventional flight.",
+    question: "Why does flying close to a surface (ground effect) increase lift?",
+    options: [
+      { id: 'A', label: "The ground reflects lift force upward" },
+      { id: 'B', label: "Wingtip vortices are reduced, decreasing induced drag and increasing effective lift", correct: true },
+      { id: 'C', label: "The engines become more efficient near the ground" },
+      { id: 'D', label: "Air molecules bounce between the wing and ground" }
+    ],
+    explanation: "Near the ground, wingtip vortices cannot fully develop because they're interrupted by the surface. This reduces induced drag and increases the effective lift-to-drag ratio, making flight more efficient."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
-    icon: '✈️',
+    icon: '747',
     title: 'Commercial Aviation',
     short: 'Moving billions of passengers',
     tagline: 'The physics of flight made routine',
     description: 'Commercial aircraft wings generate lift through precise airfoil design. Wing shape, angle of attack, and airspeed combine to create the pressure differential that lifts 500+ ton aircraft. Modern wings include variable geometry for optimal lift at all flight phases.',
-    connection: 'The lift equation L = ½ρv²SCL directly determines aircraft performance. Designers balance wing area, airfoil shape, and cruise speed to optimize fuel efficiency while ensuring adequate lift for takeoff and landing.',
+    connection: 'The lift equation L = 0.5*rho*V^2*S*Cl directly determines aircraft performance. Designers balance wing area, airfoil shape, and cruise speed to optimize fuel efficiency while ensuring adequate lift for takeoff and landing.',
     howItWorks: 'Wings curve more on top than bottom, accelerating air over the upper surface. Faster air has lower pressure (Bernoulli), creating net upward force. High-lift devices (flaps, slats) increase lift coefficient for slow-speed flight.',
     stats: [
-      { value: '500+ tons', label: 'Max takeoff weight', icon: '⚡' },
-      { value: '900 km/h', label: 'Cruise speed', icon: '📈' },
-      { value: '$838B', label: 'Aviation market', icon: '🚀' }
+      { value: '500+ tons', label: 'Max takeoff weight', icon: '1f6eb' },
+      { value: '900 km/h', label: 'Cruise speed', icon: '26a1' },
+      { value: '$838B', label: 'Aviation market', icon: '1f4b0' }
     ],
     examples: ['Boeing 787 Dreamliner', 'Airbus A350', 'Embraer E2 jets', 'Bombardier Global'],
     companies: ['Boeing', 'Airbus', 'Embraer', 'Bombardier'],
@@ -27,17 +188,17 @@ const realWorldApps = [
     color: '#3B82F6'
   },
   {
-    icon: '🏎️',
+    icon: 'F1',
     title: 'Race Car Aerodynamics',
     short: 'Negative lift for grip',
     tagline: 'Pushing down at 300 km/h',
-    description: 'Formula 1 cars use inverted airfoils to generate downforce—negative lift that pushes cars onto the track. At high speeds, downforce can exceed the car\'s weight, enabling cornering forces impossible with tire grip alone.',
-    connection: 'The same lift equation applies, but with inverted wings creating downward force. L = ½ρv²SCL becomes a pushing force, dramatically increasing tire normal force and therefore maximum friction.',
-    howItWorks: 'Front and rear wings act as upside-down aircraft wings. The floor uses ground effect—airflow acceleration under the car creates low pressure. Active elements adjust downforce for straight-line speed vs. cornering grip.',
+    description: 'Formula 1 cars use inverted airfoils to generate downforce - negative lift that pushes cars onto the track. At high speeds, downforce can exceed the car\'s weight, enabling cornering forces impossible with tire grip alone.',
+    connection: 'The same lift equation applies, but with inverted wings creating downward force. L = 0.5*rho*V^2*S*Cl becomes a pushing force, dramatically increasing tire normal force and therefore maximum friction.',
+    howItWorks: 'Front and rear wings act as upside-down aircraft wings. The floor uses ground effect - airflow acceleration under the car creates low pressure. Active elements adjust downforce for straight-line speed vs. cornering grip.',
     stats: [
-      { value: '5g', label: 'Cornering force', icon: '⚡' },
-      { value: '3x weight', label: 'Max downforce', icon: '📈' },
-      { value: '$1.8B', label: 'F1 team budgets', icon: '🚀' }
+      { value: '5g', label: 'Cornering force', icon: '1f3ce' },
+      { value: '3x weight', label: 'Max downforce', icon: '2b07' },
+      { value: '$1.8B', label: 'F1 team budgets', icon: '1f4b5' }
     ],
     examples: ['F1 front and rear wings', 'Le Mans prototype floors', 'NASCAR spoilers', 'Indy car underwings'],
     companies: ['Red Bull Racing', 'Ferrari', 'Mercedes-AMG', 'McLaren'],
@@ -45,7 +206,7 @@ const realWorldApps = [
     color: '#EF4444'
   },
   {
-    icon: '🚁',
+    icon: 'HELI',
     title: 'Helicopter Rotors',
     short: 'Spinning wings for vertical flight',
     tagline: 'Lift in every direction',
@@ -53,9 +214,9 @@ const realWorldApps = [
     connection: 'Each rotor blade section generates lift according to the lift equation. Collective pitch changes overall lift for altitude control; cyclic pitch varies lift around the rotation to tilt the thrust vector.',
     howItWorks: 'Rotor blades have airfoil cross-sections like wings. Collective control changes pitch of all blades equally for altitude. Cyclic control varies pitch through rotation, tilting the rotor disc to direct thrust. Anti-torque tail rotors prevent fuselage spin.',
     stats: [
-      { value: '15,000 kg', label: 'Max lift', icon: '⚡' },
-      { value: '300 rpm', label: 'Rotor speed', icon: '📈' },
-      { value: '$10B', label: 'Helicopter market', icon: '🚀' }
+      { value: '15,000 kg', label: 'Max lift', icon: '1f681' },
+      { value: '300 rpm', label: 'Rotor speed', icon: '1f504' },
+      { value: '$10B', label: 'Helicopter market', icon: '1f4b0' }
     ],
     examples: ['Medical evacuation', 'Search and rescue', 'Offshore transport', 'Military operations'],
     companies: ['Airbus Helicopters', 'Bell', 'Sikorsky', 'Leonardo'],
@@ -63,17 +224,17 @@ const realWorldApps = [
     color: '#10B981'
   },
   {
-    icon: '⛵',
+    icon: 'SAIL',
     title: 'Sailing Yacht Keels',
     short: 'Lift underwater',
     tagline: 'Using water like air',
-    description: 'Yacht keels and centerboards are underwater wings that generate lift perpendicular to water flow. This sideways lift counteracts the sideways force of wind on sails, allowing boats to sail at angles to the wind—even partially upwind.',
+    description: 'Yacht keels and centerboards are underwater wings that generate lift perpendicular to water flow. This sideways lift counteracts the sideways force of wind on sails, allowing boats to sail at angles to the wind - even partially upwind.',
     connection: 'The lift equation applies to water just as it does to air. Keels generate lift to counteract the lateral component of sail force, with water\'s higher density providing more force at lower speeds.',
     howItWorks: 'Keel foils have symmetric or asymmetric airfoil sections. When the boat moves forward with a side slip angle, the keel generates lift perpendicular to flow. This balances the sideways sail force, allowing upwind sailing.',
     stats: [
-      { value: '4000 kg', label: 'Keel lift', icon: '⚡' },
-      { value: '45°', label: 'Upwind angle', icon: '📈' },
-      { value: '$8.5B', label: 'Sailing market', icon: '🚀' }
+      { value: '4000 kg', label: 'Keel lift', icon: '26f5' },
+      { value: '45 deg', label: 'Upwind angle', icon: '1f9ed' },
+      { value: '$8.5B', label: 'Sailing market', icon: '1f4b0' }
     ],
     examples: ['America\'s Cup foiling yachts', 'Olympic sailing dinghies', 'Cruising sailboats', 'Racing multihulls'],
     companies: ['North Sails', 'Nautor\'s Swan', 'Beneteau', 'Bavaria'],
@@ -82,37 +243,52 @@ const realWorldApps = [
   }
 ];
 
-const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
-  const [isMobile, setIsMobile] = useState(false);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Lift force parameters
-  const [airspeed, setAirspeed] = useState(150); // km/h (0-300)
-  const [angleOfAttack, setAngleOfAttack] = useState(5); // degrees (-5 to 20)
-  const [wingArea, setWingArea] = useState(20); // m^2 (10-40)
-  const [airDensity, setAirDensity] = useState(1.225); // kg/m^3 (0.5-1.5)
+  // Lift simulation state
+  const [airspeed, setAirspeed] = useState(150); // km/h
+  const [angleOfAttack, setAngleOfAttack] = useState(5); // degrees
+  const [wingArea, setWingArea] = useState(20); // m^2
+  const [airDensity, setAirDensity] = useState(1.225); // kg/m^3 (sea level)
+  const [animationFrame, setAnimationFrame] = useState(0);
 
-  // Twist phase parameters
-  const [airfoilShape, setAirfoilShape] = useState<'flat' | 'cambered' | 'symmetric'>('cambered');
+  // Twist phase - high-lift devices
+  const [airfoilShape, setAirfoilShape] = useState<'flat' | 'symmetric' | 'cambered'>('cambered');
   const [flapsDeployed, setFlapsDeployed] = useState(false);
   const [slatsDeployed, setSlatsDeployed] = useState(false);
   const [groundEffect, setGroundEffect] = useState(false);
 
-  // Animation
-  const [animationFrame, setAnimationFrame] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(true);
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
-  const lastClickRef = useRef(0);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
-  // Mobile detection
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -120,108 +296,47 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Animation loop for streamlines
+  // Animation loop
   useEffect(() => {
-    if (!isAnimating) return;
     const interval = setInterval(() => {
       setAnimationFrame(prev => (prev + 1) % 100);
     }, 50);
     return () => clearInterval(interval);
-  }, [isAnimating]);
-
-  const playSound = useCallback((soundType: string) => {
-    try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      const sounds: Record<string, { freq: number; type: OscillatorType; duration: number }> = {
-        'correct': { freq: 880, type: 'sine', duration: 0.15 },
-        'incorrect': { freq: 220, type: 'square', duration: 0.3 },
-        'complete': { freq: 587, type: 'sine', duration: 0.2 },
-        'transition': { freq: 440, type: 'sine', duration: 0.1 }
-      };
-
-      const sound = sounds[soundType] || sounds['transition'];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + sound.duration);
-    } catch (e) {
-      console.log(`Sound: ${soundType}`);
-    }
   }, []);
 
-  // Calculate lift coefficient based on angle of attack
+  // Calculate lift coefficient
   const calculateCl = useCallback((aoa: number, shape: string, flaps: boolean, slats: boolean) => {
-    // Base Cl curve approximation
     let cl = 0;
     const stallAngle = slats ? 18 : 15;
 
     if (aoa < stallAngle) {
-      // Linear region: Cl ~ 0.1 * aoa for cambered airfoil
       const clSlope = shape === 'flat' ? 0.08 : shape === 'symmetric' ? 0.1 : 0.11;
       const clZero = shape === 'cambered' ? 0.3 : 0;
       cl = clSlope * aoa + clZero;
     } else {
-      // Post-stall: Cl drops
       cl = 1.5 - (aoa - stallAngle) * 0.1;
     }
 
-    // Flaps increase Cl
     if (flaps) cl += 0.5;
-
     return Math.max(0, Math.min(cl, 2.5));
   }, []);
 
-  // Calculate drag coefficient
-  const calculateCd = useCallback((aoa: number, cl: number) => {
-    // Parasitic + induced drag
-    const cd0 = 0.02; // Parasitic drag
-    const k = 0.04; // Induced drag factor
-    return cd0 + k * cl * cl + 0.001 * Math.abs(aoa);
-  }, []);
-
-  // Calculate lift force: L = 0.5 * rho * v^2 * A * Cl
+  // Calculate lift force: L = 0.5 * rho * v^2 * S * Cl
   const calculateLift = useCallback(() => {
     const v = airspeed / 3.6; // Convert km/h to m/s
     const cl = calculateCl(angleOfAttack, airfoilShape, flapsDeployed, slatsDeployed);
     let lift = 0.5 * airDensity * v * v * wingArea * cl;
-
-    // Ground effect increases lift by ~10-30%
     if (groundEffect) lift *= 1.2;
-
     return lift;
   }, [airspeed, angleOfAttack, wingArea, airDensity, airfoilShape, flapsDeployed, slatsDeployed, groundEffect, calculateCl]);
 
-  // Calculate drag force
+  // Calculate drag
   const calculateDrag = useCallback(() => {
     const v = airspeed / 3.6;
     const cl = calculateCl(angleOfAttack, airfoilShape, flapsDeployed, slatsDeployed);
-    const cd = calculateCd(angleOfAttack, cl);
+    const cd = 0.02 + 0.04 * cl * cl + 0.001 * Math.abs(angleOfAttack);
     return 0.5 * airDensity * v * v * wingArea * cd;
-  }, [airspeed, angleOfAttack, wingArea, airDensity, airfoilShape, flapsDeployed, slatsDeployed, calculateCl, calculateCd]);
+  }, [airspeed, angleOfAttack, wingArea, airDensity, airfoilShape, flapsDeployed, slatsDeployed, calculateCl]);
 
   // Check for stall
   const isStalling = useCallback(() => {
@@ -229,1427 +344,1521 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
     return angleOfAttack >= stallAngle;
   }, [angleOfAttack, slatsDeployed]);
 
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-    playSound(prediction === 'B' ? 'correct' : 'incorrect');
-  }, [playSound]);
-
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-    playSound(prediction === 'C' ? 'correct' : 'incorrect');
-  }, [playSound]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-  }, [playSound]);
-
-  const testQuestions = [
-    {
-      question: "What is the lift equation?",
-      options: [
-        { text: "L = m * g", correct: false },
-        { text: "L = 0.5 * rho * v^2 * A * Cl", correct: true },
-        { text: "L = F * d", correct: false },
-        { text: "L = P * A", correct: false }
-      ]
-    },
-    {
-      question: "If you double the airspeed, lift increases by:",
-      options: [
-        { text: "2 times", correct: false },
-        { text: "4 times", correct: true },
-        { text: "8 times", correct: false },
-        { text: "Stays the same", correct: false }
-      ]
-    },
-    {
-      question: "What happens at the stall angle?",
-      options: [
-        { text: "Lift suddenly increases", correct: false },
-        { text: "Flow separates and lift drops dramatically", correct: true },
-        { text: "The wing breaks", correct: false },
-        { text: "Drag becomes zero", correct: false }
-      ]
-    },
-    {
-      question: "Cambered airfoils compared to symmetric ones:",
-      options: [
-        { text: "Generate less lift", correct: false },
-        { text: "Generate lift even at zero angle of attack", correct: true },
-        { text: "Have no advantages", correct: false },
-        { text: "Are only used on rockets", correct: false }
-      ]
-    },
-    {
-      question: "What do flaps do?",
-      options: [
-        { text: "Reduce lift for faster landing", correct: false },
-        { text: "Increase lift coefficient for slower flight", correct: true },
-        { text: "Only reduce drag", correct: false },
-        { text: "Control yaw direction", correct: false }
-      ]
-    },
-    {
-      question: "Ground effect causes:",
-      options: [
-        { text: "Decreased lift near the ground", correct: false },
-        { text: "Increased lift near the ground", correct: true },
-        { text: "No change in lift", correct: false },
-        { text: "Instant stall", correct: false }
-      ]
-    },
-    {
-      question: "Leading edge slats help by:",
-      options: [
-        { text: "Reducing wing area", correct: false },
-        { text: "Delaying stall to higher angles of attack", correct: true },
-        { text: "Increasing speed", correct: false },
-        { text: "Reducing fuel consumption", correct: false }
-      ]
-    },
-    {
-      question: "Higher air density results in:",
-      options: [
-        { text: "More lift for the same speed", correct: true },
-        { text: "Less lift for the same speed", correct: false },
-        { text: "No change in lift", correct: false },
-        { text: "Automatic stall", correct: false }
-      ]
-    },
-    {
-      question: "Induced drag is caused by:",
-      options: [
-        { text: "Friction with the air", correct: false },
-        { text: "Wingtip vortices from lift generation", correct: true },
-        { text: "Engine exhaust", correct: false },
-        { text: "Gravity", correct: false }
-      ]
-    },
-    {
-      question: "At high altitude, to maintain the same lift you need to:",
-      options: [
-        { text: "Fly slower", correct: false },
-        { text: "Fly faster or increase angle of attack", correct: true },
-        { text: "Reduce wing area", correct: false },
-        { text: "Turn off the engines", correct: false }
-      ]
-    }
-  ];
-
-  const calculateScore = () => {
-    return testAnswers.reduce((score, answer, index) => {
-      return score + (answer !== -1 && testQuestions[index].options[answer].correct ? 1 : 0);
-    }, 0);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#06B6D4', // Cyan for aerodynamics
+    accentGlow: 'rgba(6, 182, 212, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    lift: '#22C55E',
+    drag: '#EF4444',
   };
 
-  // Render airfoil with streamlines - Premium SVG graphics
-  const renderAirfoilVisualization = (width: number = 500, height: number = 300, showControls: boolean = false) => {
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'High-Lift Devices',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'lift-force',
+        gameTitle: 'Lift Force',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Airfoil SVG Visualization
+  const AirfoilVisualization = ({ showLabels = true }: { showLabels?: boolean }) => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 340;
     const centerX = width / 2;
-    const centerY = height / 2;
-    const chordLength = 150;
+    const centerY = height / 2 - 20;
+    const chordLength = isMobile ? 120 : 160;
+
     const lift = calculateLift();
     const drag = calculateDrag();
     const cl = calculateCl(angleOfAttack, airfoilShape, flapsDeployed, slatsDeployed);
     const stalling = isStalling();
+    const speedFactor = airspeed / 150;
 
     // Scale forces for visualization
-    const liftScale = Math.min(lift / 50000, 1) * 80;
-    const dragScale = Math.min(drag / 10000, 1) * 50;
+    const liftScale = Math.min(lift / 50000, 1) * 70;
+    const dragScale = Math.min(drag / 10000, 1) * 40;
 
-    // Generate airfoil path based on shape
+    // Generate airfoil path
     const getAirfoilPath = () => {
       const startX = centerX - chordLength / 2;
       const endX = centerX + chordLength / 2;
 
       if (airfoilShape === 'flat') {
-        const thickness = 8;
-        return `M ${startX} ${centerY}
-                L ${endX} ${centerY - thickness/2}
-                L ${endX} ${centerY + thickness/2}
-                L ${startX} ${centerY} Z`;
+        return `M ${startX} ${centerY} L ${endX} ${centerY - 4} L ${endX} ${centerY + 4} Z`;
       } else if (airfoilShape === 'symmetric') {
-        const maxThickness = 15;
         return `M ${startX} ${centerY}
-                Q ${centerX - 20} ${centerY - maxThickness} ${centerX + 20} ${centerY - maxThickness * 0.8}
-                Q ${endX - 20} ${centerY - maxThickness * 0.3} ${endX} ${centerY}
-                Q ${endX - 20} ${centerY + maxThickness * 0.3} ${centerX + 20} ${centerY + maxThickness * 0.8}
-                Q ${centerX - 20} ${centerY + maxThickness} ${startX} ${centerY} Z`;
+                Q ${centerX - 20} ${centerY - 15} ${centerX + 20} ${centerY - 12}
+                Q ${endX - 20} ${centerY - 4} ${endX} ${centerY}
+                Q ${endX - 20} ${centerY + 4} ${centerX + 20} ${centerY + 12}
+                Q ${centerX - 20} ${centerY + 15} ${startX} ${centerY} Z`;
       } else {
-        // Cambered
-        const maxThickness = 18;
-        const camber = 8;
         return `M ${startX} ${centerY}
-                Q ${centerX - 30} ${centerY - maxThickness - camber} ${centerX + 10} ${centerY - maxThickness * 0.7 - camber}
-                Q ${endX - 30} ${centerY - maxThickness * 0.2} ${endX} ${centerY + 2}
-                Q ${endX - 20} ${centerY + maxThickness * 0.4} ${centerX + 10} ${centerY + maxThickness * 0.6}
-                Q ${centerX - 30} ${centerY + maxThickness * 0.8} ${startX} ${centerY} Z`;
+                Q ${centerX - 30} ${centerY - 22} ${centerX + 10} ${centerY - 18}
+                Q ${endX - 30} ${centerY - 6} ${endX} ${centerY + 2}
+                Q ${endX - 20} ${centerY + 8} ${centerX + 10} ${centerY + 12}
+                Q ${centerX - 30} ${centerY + 14} ${startX} ${centerY} Z`;
       }
-    };
-
-    // Generate streamlines with pressure-based coloring
-    const generateStreamlines = () => {
-      const lines = [];
-      const numLines = 10;
-      const speedFactor = airspeed / 150;
-
-      for (let i = 0; i < numLines; i++) {
-        const yOffset = (i - numLines / 2) * 22;
-        const isUpper = yOffset < 0;
-        const deflection = isUpper ? -angleOfAttack * 0.8 : angleOfAttack * 0.3;
-        const flowOffset = (animationFrame * speedFactor * 3) % 100;
-
-        // Disturbed flow during stall
-        const turbulence = stalling && isUpper ? Math.sin(animationFrame * 0.3 + i) * 15 : 0;
-
-        const pathD = `M ${centerX - 200 + flowOffset} ${centerY + yOffset}
-                       Q ${centerX - 50} ${centerY + yOffset + deflection + turbulence}
-                         ${centerX + 50} ${centerY + yOffset + deflection * 1.5 + turbulence}
-                       Q ${centerX + 100} ${centerY + yOffset + deflection + turbulence}
-                         ${centerX + 200 + flowOffset} ${centerY + yOffset + deflection * 0.5}`;
-
-        // Use pressure-based gradient for streamlines
-        const gradientId = isUpper ? 'liftStreamlineUpper' : 'liftStreamlineLower';
-
-        lines.push(
-          <path
-            key={`stream-${i}`}
-            d={pathD}
-            fill="none"
-            stroke={stalling && isUpper ? 'url(#liftStallGradient)' : `url(#${gradientId})`}
-            strokeWidth={2}
-            strokeOpacity={0.8}
-            strokeDasharray={stalling && isUpper ? "8,4" : "none"}
-            filter={stalling && isUpper ? undefined : "url(#liftStreamGlow)"}
-          />
-        );
-      }
-      return lines;
     };
 
     return (
-      <svg width={width} height={height} className="overflow-visible">
-        {/* Comprehensive defs section with premium gradients and filters */}
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          {/* Background gradient */}
-          <linearGradient id="liftBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#020617" />
-            <stop offset="25%" stopColor="#0a0f1a" />
-            <stop offset="50%" stopColor="#0f172a" />
-            <stop offset="75%" stopColor="#0a0f1a" />
-            <stop offset="100%" stopColor="#020617" />
-          </linearGradient>
-
-          {/* Premium airfoil body gradient - 3D metallic effect */}
-          <linearGradient id="liftAirfoilBody" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="airfoilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#94a3b8" />
-            <stop offset="15%" stopColor="#cbd5e1" />
-            <stop offset="35%" stopColor="#94a3b8" />
             <stop offset="50%" stopColor="#64748b" />
-            <stop offset="75%" stopColor="#475569" />
-            <stop offset="100%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#475569" />
           </linearGradient>
-
-          {/* Airfoil highlight gradient */}
-          <linearGradient id="liftAirfoilHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0" />
-            <stop offset="20%" stopColor="#f1f5f9" stopOpacity="0.4" />
-            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.6" />
-            <stop offset="80%" stopColor="#f1f5f9" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#e2e8f0" stopOpacity="0" />
-          </linearGradient>
-
-          {/* Upper surface low pressure gradient (blue tones) */}
-          <radialGradient id="liftLowPressure" cx="50%" cy="100%" r="100%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
-            <stop offset="30%" stopColor="#2563eb" stopOpacity="0.4" />
-            <stop offset="60%" stopColor="#1d4ed8" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Lower surface high pressure gradient (red/orange tones) */}
-          <radialGradient id="liftHighPressure" cx="50%" cy="0%" r="100%">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
-            <stop offset="30%" stopColor="#dc2626" stopOpacity="0.35" />
-            <stop offset="60%" stopColor="#b91c1c" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Streamline gradient for upper surface (faster flow = blue) */}
-          <linearGradient id="liftStreamlineUpper" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
-            <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.7" />
-            <stop offset="50%" stopColor="#2563eb" stopOpacity="0.9" />
-            <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
-          </linearGradient>
-
-          {/* Streamline gradient for lower surface (slower flow = cyan) */}
-          <linearGradient id="liftStreamlineLower" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
-            <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#0891b2" stopOpacity="0.8" />
-            <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
-          </linearGradient>
-
-          {/* Stall turbulence gradient */}
-          <linearGradient id="liftStallGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.4" />
-            <stop offset="25%" stopColor="#f87171" stopOpacity="0.7" />
-            <stop offset="50%" stopColor="#ef4444" stopOpacity="0.9" />
-            <stop offset="75%" stopColor="#dc2626" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.4" />
-          </linearGradient>
-
-          {/* Lift force arrow gradient (green) */}
-          <linearGradient id="liftForceGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+          <linearGradient id="liftGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#166534" />
-            <stop offset="30%" stopColor="#16a34a" />
-            <stop offset="50%" stopColor="#22c55e" />
-            <stop offset="70%" stopColor="#4ade80" />
-            <stop offset="100%" stopColor="#86efac" />
+            <stop offset="100%" stopColor="#4ade80" />
           </linearGradient>
-
-          {/* Drag force arrow gradient (red) */}
-          <linearGradient id="liftDragGradient" x1="100%" y1="0%" x2="0%" y2="0%">
+          <linearGradient id="dragGrad" x1="100%" y1="0%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#7f1d1d" />
-            <stop offset="30%" stopColor="#b91c1c" />
-            <stop offset="50%" stopColor="#ef4444" />
-            <stop offset="70%" stopColor="#f87171" />
             <stop offset="100%" stopColor="#fca5a5" />
           </linearGradient>
-
-          {/* Flaps/slats gradient */}
-          <linearGradient id="liftControlSurface" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#6b7280" />
-            <stop offset="30%" stopColor="#4b5563" />
-            <stop offset="70%" stopColor="#374151" />
-            <stop offset="100%" stopColor="#1f2937" />
+          <linearGradient id="lowPressure" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
           </linearGradient>
-
-          {/* Ground gradient */}
-          <linearGradient id="liftGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#374151" />
-            <stop offset="50%" stopColor="#1f2937" />
-            <stop offset="100%" stopColor="#111827" />
+          <linearGradient id="highPressure" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
           </linearGradient>
-
-          {/* Stall warning gradient */}
-          <linearGradient id="liftStallWarning" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#7f1d1d" />
-            <stop offset="20%" stopColor="#991b1b" />
-            <stop offset="50%" stopColor="#dc2626" />
-            <stop offset="80%" stopColor="#991b1b" />
-            <stop offset="100%" stopColor="#7f1d1d" />
-          </linearGradient>
-
-          {/* Glow filters */}
-          <filter id="liftStreamGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="liftForceGlow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="liftAirfoilGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <filter id="glow">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-
-          <filter id="liftPressureGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="8" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="liftStallPulse" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Arrow markers with gradients */}
-          <marker id="liftArrowLift" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
-            <path d="M0,0 L0,8 L12,4 z" fill="url(#liftForceGradient)" />
+          <marker id="arrowLift" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="url(#liftGrad)" />
           </marker>
-          <marker id="liftArrowDrag" markerWidth="12" markerHeight="12" refX="2" refY="4" orient="auto">
-            <path d="M12,0 L12,8 L0,4 z" fill="url(#liftDragGradient)" />
+          <marker id="arrowDrag" markerWidth="10" markerHeight="10" refX="1" refY="3" orient="auto">
+            <path d="M9,0 L9,6 L0,3 z" fill="url(#dragGrad)" />
           </marker>
         </defs>
 
-        {/* Premium background */}
-        <rect x="0" y="0" width={width} height={height} fill="url(#liftBgGradient)" rx="12" />
+        {/* Title */}
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+          Airfoil Aerodynamics
+        </text>
 
-        {/* Subtle grid pattern */}
-        <pattern id="liftGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-        </pattern>
-        <rect x="0" y="0" width={width} height={height} fill="url(#liftGrid)" rx="12" />
-
-        {/* Ground for ground effect */}
+        {/* Ground effect */}
         {groundEffect && (
           <g>
-            <rect x="0" y={height - 35} width={width} height="35" fill="url(#liftGroundGradient)" />
+            <rect x="0" y={height - 35} width={width} height="35" fill="#1f2937" />
             <line x1="0" y1={height - 35} x2={width} y2={height - 35} stroke="#4b5563" strokeWidth="2" />
-            {/* Ground effect vortex indicators */}
-            {[0.2, 0.4, 0.6, 0.8].map((pos, i) => (
-              <ellipse
-                key={`vortex-${i}`}
-                cx={width * pos}
-                cy={height - 20}
-                rx={15}
-                ry={8}
-                fill="none"
-                stroke="#06b6d4"
-                strokeWidth="1"
-                strokeOpacity={0.3}
-                strokeDasharray="4,4"
-              />
-            ))}
+            <text x={width/2} y={height - 12} textAnchor="middle" fill="#06b6d4" fontSize="10">Ground Effect Active</text>
           </g>
         )}
 
         {/* Streamlines */}
         <g transform={`rotate(${-angleOfAttack}, ${centerX}, ${centerY})`}>
-          {generateStreamlines()}
+          {Array.from({ length: 8 }).map((_, i) => {
+            const yOffset = (i - 4) * 25;
+            const isUpper = yOffset < 0;
+            const flowOffset = (animationFrame * speedFactor * 3) % 80;
+            const turbulence = stalling && isUpper ? Math.sin(animationFrame * 0.3 + i) * 12 : 0;
+
+            return (
+              <path
+                key={`stream-${i}`}
+                d={`M ${centerX - 180 + flowOffset} ${centerY + yOffset}
+                    Q ${centerX - 40} ${centerY + yOffset + (isUpper ? -8 : 4) + turbulence}
+                      ${centerX + 60} ${centerY + yOffset + (isUpper ? -10 : 6) + turbulence}
+                    L ${centerX + 180 + flowOffset} ${centerY + yOffset + (isUpper ? -5 : 3)}`}
+                fill="none"
+                stroke={stalling && isUpper ? '#ef4444' : isUpper ? '#3b82f6' : '#06b6d4'}
+                strokeWidth="2"
+                strokeOpacity={0.6}
+                strokeDasharray={stalling && isUpper ? "6,4" : "none"}
+              />
+            );
+          })}
         </g>
 
-        {/* Airfoil with rotation for angle of attack */}
+        {/* Pressure zones */}
         <g transform={`rotate(${-angleOfAttack}, ${centerX}, ${centerY})`}>
-          {/* Upper surface pressure zone with glow */}
-          <ellipse
-            cx={centerX}
-            cy={centerY - 30}
-            rx={chordLength * 0.45}
-            ry={25 + cl * 10}
-            fill="url(#liftLowPressure)"
-            filter="url(#liftPressureGlow)"
-          />
-          {/* Lower surface pressure zone with glow */}
-          <ellipse
-            cx={centerX}
-            cy={centerY + 25}
-            rx={chordLength * 0.4}
-            ry={18 + cl * 5}
-            fill="url(#liftHighPressure)"
-            filter="url(#liftPressureGlow)"
-          />
+          <ellipse cx={centerX} cy={centerY - 30} rx={chordLength * 0.4} ry={20 + cl * 8} fill="url(#lowPressure)" />
+          <ellipse cx={centerX} cy={centerY + 20} rx={chordLength * 0.35} ry={15 + cl * 4} fill="url(#highPressure)" />
+        </g>
 
-          {/* Airfoil body with 3D gradient */}
-          <path
-            d={getAirfoilPath()}
-            fill="url(#liftAirfoilBody)"
-            stroke="#94a3b8"
-            strokeWidth="1.5"
-            filter="url(#liftAirfoilGlow)"
-          />
-          {/* Airfoil highlight overlay */}
-          <path
-            d={getAirfoilPath()}
-            fill="url(#liftAirfoilHighlight)"
-            stroke="none"
-          />
+        {/* Airfoil */}
+        <g transform={`rotate(${-angleOfAttack}, ${centerX}, ${centerY})`}>
+          <path d={getAirfoilPath()} fill="url(#airfoilGrad)" stroke="#94a3b8" strokeWidth="1.5" />
 
-          {/* Flaps */}
+          {/* Flaps indicator */}
           {flapsDeployed && (
             <g transform={`translate(${centerX + chordLength * 0.3}, ${centerY})`}>
-              <rect
-                x="0"
-                y="-4"
-                width="32"
-                height="10"
-                fill="url(#liftControlSurface)"
-                stroke="#6b7280"
-                strokeWidth="1"
-                rx="2"
-                transform="rotate(25)"
-              />
-              {/* Flap hinge */}
-              <circle cx="0" cy="0" r="3" fill="#4b5563" stroke="#6b7280" />
+              <rect x="0" y="-3" width="28" height="8" fill="#4b5563" stroke="#6b7280" rx="2" transform="rotate(25)" />
             </g>
           )}
 
-          {/* Slats */}
+          {/* Slats indicator */}
           {slatsDeployed && (
-            <g transform={`translate(${centerX - chordLength * 0.45}, ${centerY - 5})`}>
-              <rect
-                x="-18"
-                y="-6"
-                width="22"
-                height="8"
-                fill="url(#liftControlSurface)"
-                stroke="#6b7280"
-                strokeWidth="1"
-                rx="2"
-                transform="rotate(-10)"
-              />
-              {/* Slat gap indicator */}
-              <line x1="-5" y1="-2" x2="-5" y2="4" stroke="#06b6d4" strokeWidth="2" strokeOpacity="0.5" />
+            <g transform={`translate(${centerX - chordLength * 0.45}, ${centerY - 4})`}>
+              <rect x="-16" y="-5" width="18" height="6" fill="#4b5563" stroke="#6b7280" rx="2" transform="rotate(-10)" />
             </g>
           )}
         </g>
 
-        {/* Force vectors with premium styling */}
+        {/* Force vectors */}
         <g transform={`translate(${centerX}, ${centerY})`}>
-          {/* Lift vector (upward) with glow */}
           {liftScale > 5 && (
-            <g filter="url(#liftForceGlow)">
-              <line
-                x1="0"
-                y1="0"
-                x2="0"
-                y2={-liftScale}
-                stroke="url(#liftForceGradient)"
-                strokeWidth="6"
-                strokeLinecap="round"
-                markerEnd="url(#liftArrowLift)"
-              />
-            </g>
+            <line x1="0" y1="0" x2="0" y2={-liftScale} stroke="url(#liftGrad)" strokeWidth="5" strokeLinecap="round" markerEnd="url(#arrowLift)" filter="url(#glow)" />
           )}
-
-          {/* Drag vector (backward) with glow */}
           {dragScale > 3 && (
-            <g filter="url(#liftForceGlow)">
-              <line
-                x1="0"
-                y1="0"
-                x2={-dragScale}
-                y2="0"
-                stroke="url(#liftDragGradient)"
-                strokeWidth="4"
-                strokeLinecap="round"
-                markerEnd="url(#liftArrowDrag)"
-              />
-            </g>
+            <line x1="0" y1="0" x2={-dragScale} y2="0" stroke="url(#dragGrad)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#arrowDrag)" />
           )}
-
-          {/* Center point indicator */}
           <circle cx="0" cy="0" r="4" fill="#f8fafc" stroke="#64748b" strokeWidth="1" />
         </g>
 
-        {/* Stall warning with pulsing effect */}
+        {/* Stall warning */}
         {stalling && (
-          <g filter="url(#liftStallPulse)">
-            <rect
-              x={width / 2 - 70}
-              y="12"
-              width="140"
-              height="32"
-              fill="url(#liftStallWarning)"
-              rx="6"
-              stroke="#fca5a5"
-              strokeWidth="2"
-            />
+          <g>
+            <rect x={width/2 - 60} y="40" width="120" height="26" rx="6" fill="#dc2626" stroke="#fca5a5" strokeWidth="2" />
+            <text x={width/2} y="58" textAnchor="middle" fill="white" fontSize="12" fontWeight="700">STALL WARNING</text>
           </g>
         )}
+
+        {/* Stats display */}
+        {showLabels && (
+          <g transform={`translate(${width - 110}, 45)`}>
+            <rect x="0" y="0" width="100" height="85" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+            <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="9">Lift Coefficient</text>
+            <text x="50" y="35" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">{cl.toFixed(2)}</text>
+            <text x="50" y="52" textAnchor="middle" fill={colors.textMuted} fontSize="9">Lift Force</text>
+            <text x="50" y="69" textAnchor="middle" fill={colors.lift} fontSize="14" fontWeight="600">{(lift/1000).toFixed(1)} kN</text>
+          </g>
+        )}
+
+        {/* Legend */}
+        <g transform={`translate(15, ${height - 45})`}>
+          <rect x="0" y="0" width={width - 30} height="35" rx="6" fill={colors.bgSecondary} fillOpacity="0.8" />
+          <circle cx="15" cy="17" r="5" fill="#3b82f6" />
+          <text x="28" y="21" fill={colors.textMuted} fontSize="9">Low pressure</text>
+          <circle cx="105" cy="17" r="5" fill="#ef4444" />
+          <text x="118" y="21" fill={colors.textMuted} fontSize="9">High pressure</text>
+          <line x1="190" y1="17" x2="210" y2="17" stroke={colors.lift} strokeWidth="3" />
+          <text x="218" y="21" fill={colors.textMuted} fontSize="9">Lift</text>
+          <line x1="255" y1="17" x2="275" y2="17" stroke={colors.drag} strokeWidth="3" />
+          <text x="283" y="21" fill={colors.textMuted} fontSize="9">Drag</text>
+        </g>
       </svg>
     );
   };
 
-  // Render labels outside SVG using typo system
-  const renderVisualizationLabels = (lift: number, drag: number, stalling: boolean) => (
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
     <div style={{
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: `${typo.elementGap} ${typo.cardPadding}`,
-      marginTop: typo.elementGap
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
     }}>
-      {/* Lift label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{
-          width: '12px',
-          height: '12px',
-          background: 'linear-gradient(135deg, #22c55e, #4ade80)',
-          borderRadius: '3px'
-        }} />
-        <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600 }}>
-          Lift: {(lift / 1000).toFixed(1)} kN
-        </span>
-      </div>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-      {/* Drag label */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{
-          width: '12px',
-          height: '12px',
-          background: 'linear-gradient(135deg, #ef4444, #f87171)',
-          borderRadius: '3px'
-        }} />
-        <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>
-          Drag: {(drag / 1000).toFixed(2)} kN
-        </span>
-      </div>
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-      {/* Stall indicator */}
-      {stalling && (
-        <div style={{
-          padding: '4px 12px',
-          background: 'linear-gradient(135deg, #dc2626, #991b1b)',
-          borderRadius: '6px',
-          animation: 'pulse 1s ease-in-out infinite'
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'float 3s ease-in-out infinite' }}>
+          <span role="img" aria-label="airplane">&#9992;</span>
+        </div>
+        <style>{`@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          The Physics of Flight
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
         }}>
-          <span style={{ fontSize: typo.small, color: '#fff', fontWeight: 700 }}>
-            STALL WARNING
-          </span>
-        </div>
-      )}
-    </div>
-  );
-
-  // Render legend outside SVG
-  const renderVisualizationLegend = () => (
-    <div style={{
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: typo.elementGap,
-      padding: typo.cardPadding,
-      background: 'rgba(30, 41, 59, 0.6)',
-      borderRadius: '8px',
-      marginTop: typo.elementGap
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <div style={{ width: '10px', height: '10px', background: '#3b82f6', borderRadius: '50%' }} />
-        <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Low Pressure</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <div style={{ width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%' }} />
-        <span style={{ fontSize: typo.label, color: '#94a3b8' }}>High Pressure</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <div style={{ width: '20px', height: '2px', background: 'linear-gradient(90deg, #3b82f6, #2563eb)' }} />
-        <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Upper Streamlines</span>
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <div style={{ width: '20px', height: '2px', background: 'linear-gradient(90deg, #06b6d4, #0891b2)' }} />
-        <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Lower Streamlines</span>
-      </div>
-    </div>
-  );
-
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6">
-      {/* Premium badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
-        <span className="text-cyan-400/80 text-sm font-medium tracking-wide uppercase">Aerodynamics</span>
-      </div>
-
-      {/* Gradient title */}
-      <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
-        The Physics of Flight
-      </h1>
-
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
-        How do wings generate lift to keep aircraft in the sky?
-      </p>
-
-      {/* Premium card */}
-      <div className="w-full max-w-2xl backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-        <div className="flex justify-center mb-2">
-          {renderAirfoilVisualization(450, 250)}
-        </div>
-        {renderVisualizationLegend()}
-        <p className="text-gray-300 text-center leading-relaxed mt-4">
-          Watch how air flows around an airfoil, creating pressure differences that generate lift!
+          How does a 500-ton aircraft <span style={{ color: colors.accent }}>stay in the sky</span>? The answer lies in how <span style={{ color: colors.lift }}>airflow creates pressure differences</span> around wings.
         </p>
-      </div>
 
-      {/* CTA Button */}
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="group px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 flex items-center gap-2"
-      >
-        Discover How Wings Work
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </button>
-
-      {/* Hint text */}
-      <p className="text-slate-500 text-sm mt-6">
-        Learn the lift equation: L = 0.5 * rho * v^2 * A * Cl
-      </p>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          An airplane wing is moving through the air. What primarily causes the upward lift force?
-        </p>
-        {renderAirfoilVisualization(400, 200)}
-        {renderVisualizationLegend()}
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Air pushing up from below the wing' },
-          { id: 'B', text: 'Lower pressure above the wing than below due to faster airflow' },
-          { id: 'C', text: 'The engine pushing the plane up' },
-          { id: 'D', text: 'Gravity pulling the air down' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            style={{ position: 'relative', zIndex: 10 }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! The curved shape of the wing makes air travel faster over the top, creating <span className="text-cyan-400">lower pressure</span> that generates lift!
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "For every action, there is an equal and opposite reaction. Wings push air down, and the air pushes back up - that's lift."
           </p>
-          <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
-          >
-            Explore the Physics
-          </button>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Newton's Third Law Applied to Aerodynamics
+          </p>
         </div>
-      )}
-    </div>
-  );
 
-  const renderPlay = () => {
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover Lift Force
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'A', text: 'Air molecules bouncing off the bottom of the wing' },
+      { id: 'B', text: 'Lower pressure above the wing than below, due to faster airflow on top', correct: true },
+      { id: 'C', text: 'The engine pushing the aircraft upward' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What primarily causes the upward lift force on an aircraft wing?
+          </h2>
+
+          {/* Diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <AirfoilVisualization showLabels={false} />
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
     const lift = calculateLift();
     const drag = calculateDrag();
     const cl = calculateCl(angleOfAttack, airfoilShape, flapsDeployed, slatsDeployed);
     const stalling = isStalling();
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Lift Force Laboratory</h2>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        {/* Main visualization */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-          {renderAirfoilVisualization(isMobile ? 350 : 500, isMobile ? 220 : 300)}
-          {renderVisualizationLabels(lift, drag, stalling)}
-          {renderVisualizationLegend()}
-        </div>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Lift Force Laboratory
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust parameters to see how they affect lift
+          </p>
 
-        {/* Real-time calculations display */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 w-full max-w-3xl">
-          <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/40 rounded-xl p-3 text-center border border-emerald-500/20">
-            <div className="text-2xl font-bold text-green-400">{(lift / 1000).toFixed(1)} kN</div>
-            <div className="text-xs text-slate-400">Lift Force</div>
-          </div>
-          <div className="bg-gradient-to-br from-red-900/40 to-rose-900/40 rounded-xl p-3 text-center border border-red-500/20">
-            <div className="text-2xl font-bold text-red-400">{(drag / 1000).toFixed(2)} kN</div>
-            <div className="text-xs text-slate-400">Drag Force</div>
-          </div>
-          <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 rounded-xl p-3 text-center border border-cyan-500/20">
-            <div className="text-2xl font-bold text-cyan-400">{cl.toFixed(2)}</div>
-            <div className="text-xs text-slate-400">Lift Coefficient (Cl)</div>
-          </div>
-          <div className={`rounded-xl p-3 text-center border ${stalling ? 'bg-gradient-to-br from-red-900/50 to-rose-900/50 border-red-500/40' : 'bg-gradient-to-br from-emerald-900/40 to-teal-900/40 border-emerald-500/20'}`}>
-            <div className={`text-2xl font-bold ${stalling ? 'text-red-500 animate-pulse' : 'text-emerald-400'}`}>
-              {stalling ? 'STALL!' : 'Normal'}
+          {/* Visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <AirfoilVisualization />
             </div>
-            <div className="text-xs text-slate-400">Flight Status</div>
-          </div>
-        </div>
 
-        {/* Interactive sliders */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl mb-6">
-          {/* Airspeed slider */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="flex justify-between text-sm text-slate-300 mb-2">
-              <span>Airspeed</span>
-              <span className="text-cyan-400 font-mono">{airspeed} km/h</span>
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="300"
-              value={airspeed}
-              onChange={(e) => setAirspeed(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              style={{ position: 'relative', zIndex: 10 }}
-            />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
-              <span>0</span>
-              <span>300 km/h</span>
+            {/* Airspeed slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Airspeed</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{airspeed} km/h</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="300"
+                step="10"
+                value={airspeed}
+                onChange={(e) => setAirspeed(parseInt(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Angle of attack slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Angle of Attack</span>
+                <span style={{ ...typo.small, color: stalling ? colors.error : colors.accent, fontWeight: 600 }}>
+                  {angleOfAttack}deg {stalling && '(STALL!)'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-5"
+                max="20"
+                value={angleOfAttack}
+                onChange={(e) => setAngleOfAttack(parseInt(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Wing area slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Wing Area</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{wingArea} m2</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="40"
+                value={wingArea}
+                onChange={(e) => setWingArea(parseInt(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Air density slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Air Density (Altitude)</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{airDensity.toFixed(3)} kg/m3</span>
+              </div>
+              <input
+                type="range"
+                min="0.5"
+                max="1.5"
+                step="0.01"
+                value={airDensity}
+                onChange={(e) => setAirDensity(parseFloat(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>High Alt (0.5)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Sea Level (1.225)</span>
+              </div>
+            </div>
+
+            {/* Results */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.lift }}>{(lift/1000).toFixed(1)} kN</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Lift Force</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.drag }}>{(drag/1000).toFixed(2)} kN</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Drag Force</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{cl.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Lift Coeff (Cl)</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: stalling ? colors.error : colors.success }}>
+                  {stalling ? 'STALL' : 'Normal'}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+              </div>
             </div>
           </div>
 
-          {/* Angle of attack slider */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="flex justify-between text-sm text-slate-300 mb-2">
-              <span>Angle of Attack</span>
-              <span className={`font-mono ${stalling ? 'text-red-400' : 'text-cyan-400'}`}>{angleOfAttack}deg</span>
-            </label>
-            <input
-              type="range"
-              min="-5"
-              max="20"
-              value={angleOfAttack}
-              onChange={(e) => setAngleOfAttack(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              style={{ position: 'relative', zIndex: 10 }}
-            />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
-              <span>-5deg</span>
-              <span className="text-red-400">Stall: 15deg+</span>
-              <span>20deg</span>
-            </div>
-          </div>
-
-          {/* Wing area slider */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="flex justify-between text-sm text-slate-300 mb-2">
-              <span>Wing Area</span>
-              <span className="text-cyan-400 font-mono">{wingArea} m2</span>
-            </label>
-            <input
-              type="range"
-              min="10"
-              max="40"
-              value={wingArea}
-              onChange={(e) => setWingArea(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              style={{ position: 'relative', zIndex: 10 }}
-            />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
-              <span>10 m2</span>
-              <span>40 m2</span>
-            </div>
-          </div>
-
-          {/* Air density slider */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <label className="flex justify-between text-sm text-slate-300 mb-2">
-              <span>Air Density (altitude)</span>
-              <span className="text-cyan-400 font-mono">{airDensity.toFixed(3)} kg/m3</span>
-            </label>
-            <input
-              type="range"
-              min="0.5"
-              max="1.5"
-              step="0.01"
-              value={airDensity}
-              onChange={(e) => setAirDensity(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-              style={{ position: 'relative', zIndex: 10 }}
-            />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
-              <span>High Alt (0.5)</span>
-              <span>Sea Level (1.225)</span>
-              <span>Dense (1.5)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Lift equation display */}
-        <div className="bg-gradient-to-r from-cyan-900/40 to-blue-900/40 rounded-xl p-4 max-w-3xl w-full mb-6">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-2">Lift Equation</h3>
-          <div className="text-center text-white font-mono text-lg mb-2">
-            L = 0.5 * rho * v2 * A * Cl
-          </div>
-          <div className="text-center text-slate-300 text-sm">
-            L = 0.5 * {airDensity.toFixed(3)} * ({(airspeed/3.6).toFixed(1)})2 * {wingArea} * {cl.toFixed(2)} = <span className="text-green-400 font-bold">{(lift/1000).toFixed(1)} kN</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => onPhaseComplete?.()}
-          style={{ position: 'relative', zIndex: 10 }}
-          className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
-        >
-          Review the Concepts
-        </button>
-      </div>
-    );
-  };
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Understanding Lift Force</h2>
-
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">The Lift Equation</h3>
-          <div className="bg-slate-900/50 rounded-lg p-3 mb-3 font-mono text-center text-cyan-300">
-            L = 0.5 * rho * V2 * A * Cl
-          </div>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li><strong>L</strong> = Lift force (Newtons)</li>
-            <li><strong>rho</strong> = Air density (kg/m3)</li>
-            <li><strong>V</strong> = Airspeed (m/s)</li>
-            <li><strong>A</strong> = Wing area (m2)</li>
-            <li><strong>Cl</strong> = Lift coefficient</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-900/50 to-indigo-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">Key Insights</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Lift increases with the <strong>square</strong> of velocity</li>
-            <li>Double the speed = 4x the lift!</li>
-            <li>Higher altitude = lower density = less lift</li>
-            <li>Angle of attack increases Cl until stall</li>
-            <li>Stall occurs when flow separates from the wing</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Bernoulli's Principle</h3>
-          <div className="text-slate-300 text-sm space-y-2">
-            <p>Air flows faster over the curved top of the wing, creating <strong>lower pressure</strong>.</p>
-            <p>The pressure difference between bottom (high) and top (low) creates an upward force.</p>
-            <p className="text-cyan-400 mt-3">
-              This is why cambered (curved) airfoils generate more lift than flat plates - they accelerate the air more efficiently!
+          {/* Lift equation display */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Lift Equation</p>
+            <p style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace' }}>
+              L = 0.5 * rho * V^2 * S * Cl
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+              L = 0.5 * {airDensity.toFixed(3)} * ({(airspeed/3.6).toFixed(1)})^2 * {wingArea} * {cl.toFixed(2)} = <span style={{ color: colors.lift, fontWeight: 600 }}>{(lift/1000).toFixed(1)} kN</span>
             </p>
           </div>
-        </div>
-      </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-      >
-        Discover Advanced Concepts
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          An airplane needs to land at a slow speed, but slower speed means less lift. How do pilots maintain enough lift during landing?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'They increase angle of attack dangerously close to stall' },
-          { id: 'B', text: 'They use larger engines to push harder' },
-          { id: 'C', text: 'They deploy flaps and slats to increase lift coefficient' },
-          { id: 'D', text: 'They make the wings bigger during landing' }
-        ].map(option => (
           <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            style={{ position: 'relative', zIndex: 10 }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'C'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'C'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
+            Understand the Physics
           </button>
-        ))}
-      </div>
+        </div>
 
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Flaps and slats change the wing shape to increase Cl, allowing slow-speed flight!
-          </p>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Understanding Lift Force
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>The Lift Equation</h3>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+              textAlign: 'center',
+              fontFamily: 'monospace',
+              fontSize: '18px',
+              color: colors.accent,
+            }}>
+              L = 0.5 * rho * V^2 * S * Cl
+            </div>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                <li><strong>L</strong> = Lift force (Newtons)</li>
+                <li><strong>rho</strong> = Air density (kg/m3)</li>
+                <li><strong>V</strong> = Airspeed (m/s)</li>
+                <li><strong>S</strong> = Wing area (m2)</li>
+                <li><strong>Cl</strong> = Lift coefficient (dimensionless)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: Velocity Squared
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Lift increases with the <strong>square</strong> of velocity. Double your speed = <span style={{ color: colors.lift }}>4x the lift!</span> This is why takeoff speed is so critical, and why small speed changes have big effects.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: '16px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
+              <h4 style={{ ...typo.h3, color: colors.lift, marginBottom: '8px' }}>Bernoulli's Principle</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                Faster airflow over the curved top creates lower pressure than the bottom. This pressure difference pushes the wing up.
+              </p>
+            </div>
+            <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
+              <h4 style={{ ...typo.h3, color: colors.error, marginBottom: '8px' }}>Stall</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                At too high an angle, airflow separates from the wing. Lift drops suddenly - dangerous if unexpected!
+              </p>
+            </div>
+          </div>
+
           <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
             Explore High-Lift Devices
           </button>
         </div>
-      )}
-    </div>
-  );
 
-  const renderTwistPlay = () => {
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'A', text: 'Fly dangerously close to stall angle' },
+      { id: 'B', text: 'Use larger engines to push harder' },
+      { id: 'C', text: 'Deploy flaps and slats to increase lift coefficient', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              The Twist: Landing at Low Speed
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Aircraft must land at slow speeds, but slower = less lift. How do pilots maintain enough lift for landing?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center' }}>
+              A 200-ton aircraft needs to touch down gently at just 140 knots. At cruise speed (500+ knots), it had plenty of lift. Now what?
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Explore High-Lift Devices
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
     const lift = calculateLift();
-    const drag = calculateDrag();
     const cl = calculateCl(angleOfAttack, airfoilShape, flapsDeployed, slatsDeployed);
     const stalling = isStalling();
     const stallAngle = slatsDeployed ? 18 : 15;
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-purple-400 mb-4">Advanced Aerodynamics Lab</h2>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        {/* Visualization */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-          {renderAirfoilVisualization(isMobile ? 350 : 500, isMobile ? 220 : 300)}
-          {renderVisualizationLabels(lift, drag, stalling)}
-          {renderVisualizationLegend()}
-        </div>
-
-        {/* Stats display */}
-        <div className="grid grid-cols-3 gap-4 mb-6 w-full max-w-2xl">
-          <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/40 rounded-xl p-3 text-center border border-emerald-500/20">
-            <div className="text-xl font-bold text-green-400">{(lift / 1000).toFixed(1)} kN</div>
-            <div className="text-xs text-slate-400">Lift</div>
-          </div>
-          <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 rounded-xl p-3 text-center border border-cyan-500/20">
-            <div className="text-xl font-bold text-cyan-400">{cl.toFixed(2)}</div>
-            <div className="text-xs text-slate-400">Cl</div>
-          </div>
-          <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-xl p-3 text-center border border-amber-500/20">
-            <div className="text-xl font-bold text-amber-400">{stallAngle}deg</div>
-            <div className="text-xs text-slate-400">Stall Angle</div>
-          </div>
-        </div>
-
-        {/* Airfoil shape selector */}
-        <div className="bg-slate-800/50 rounded-xl p-4 mb-4 w-full max-w-2xl">
-          <h3 className="text-sm font-semibold text-slate-300 mb-3">Airfoil Shape</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {(['flat', 'symmetric', 'cambered'] as const).map((shape) => (
-              <button
-                key={shape}
-                onClick={() => setAirfoilShape(shape)}
-                style={{ position: 'relative', zIndex: 10 }}
-                className={`p-3 rounded-lg font-medium transition-all ${
-                  airfoilShape === shape
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
-              >
-                {shape.charAt(0).toUpperCase() + shape.slice(1)}
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-slate-400 mt-2">
-            {airfoilShape === 'flat' && 'Flat plate - minimal lift at zero angle'}
-            {airfoilShape === 'symmetric' && 'Symmetric - good for aerobatics, zero lift at zero angle'}
-            {airfoilShape === 'cambered' && 'Cambered - generates lift even at zero angle of attack'}
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            High-Lift Devices Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Explore how flaps, slats, and airfoil shape affect low-speed performance
           </p>
-        </div>
 
-        {/* High-lift devices */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 w-full max-w-2xl">
-          <button
-            onClick={() => setFlapsDeployed(!flapsDeployed)}
-            style={{ position: 'relative', zIndex: 10 }}
-            className={`p-4 rounded-xl font-medium transition-all ${
-              flapsDeployed
-                ? 'bg-emerald-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            <div className="text-lg mb-1">Flaps</div>
-            <div className="text-xs opacity-80">{flapsDeployed ? 'Deployed (+0.5 Cl)' : 'Retracted'}</div>
-          </button>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <AirfoilVisualization />
+            </div>
 
-          <button
-            onClick={() => setSlatsDeployed(!slatsDeployed)}
-            style={{ position: 'relative', zIndex: 10 }}
-            className={`p-4 rounded-xl font-medium transition-all ${
-              slatsDeployed
-                ? 'bg-emerald-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            <div className="text-lg mb-1">Slats</div>
-            <div className="text-xs opacity-80">{slatsDeployed ? 'Deployed (+3deg stall)' : 'Retracted'}</div>
-          </button>
-
-          <button
-            onClick={() => setGroundEffect(!groundEffect)}
-            style={{ position: 'relative', zIndex: 10 }}
-            className={`p-4 rounded-xl font-medium transition-all ${
-              groundEffect
-                ? 'bg-amber-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            <div className="text-lg mb-1">Ground Effect</div>
-            <div className="text-xs opacity-80">{groundEffect ? 'Active (+20% lift)' : 'High Altitude'}</div>
-          </button>
-        </div>
-
-        {/* Angle of attack control */}
-        <div className="bg-slate-800/50 rounded-xl p-4 w-full max-w-2xl mb-6">
-          <label className="flex justify-between text-sm text-slate-300 mb-2">
-            <span>Angle of Attack</span>
-            <span className={`font-mono ${stalling ? 'text-red-400' : 'text-cyan-400'}`}>{angleOfAttack}deg</span>
-          </label>
-          <input
-            type="range"
-            min="-5"
-            max="20"
-            value={angleOfAttack}
-            onChange={(e) => setAngleOfAttack(Number(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-            style={{ position: 'relative', zIndex: 10 }}
-          />
-          <div className="flex justify-between text-xs mt-1">
-            <span className="text-slate-500">-5deg</span>
-            <span className={slatsDeployed ? 'text-amber-400' : 'text-red-400'}>Stall: {stallAngle}deg</span>
-            <span className="text-slate-500">20deg</span>
-          </div>
-        </div>
-
-        {/* Explanation */}
-        <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-xl p-4 max-w-2xl mb-6">
-          <h3 className="text-lg font-bold text-purple-400 mb-2">High-Lift Devices</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li><strong>Flaps:</strong> Increase camber and wing area, boosting Cl for slow flight</li>
-            <li><strong>Slats:</strong> Leading edge devices that delay flow separation, increasing stall angle</li>
-            <li><strong>Ground Effect:</strong> Near the ground, wingtip vortices are reduced, increasing efficiency</li>
-          </ul>
-        </div>
-
-        <button
-          onClick={() => onPhaseComplete?.()}
-          style={{ position: 'relative', zIndex: 10 }}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-        >
-          Review Advanced Concepts
-        </button>
-      </div>
-    );
-  };
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">Key Discoveries</h2>
-
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-purple-400 mb-4">Controlling Lift</h3>
-        <div className="space-y-4 text-slate-300">
-          <p>
-            Pilots and engineers have multiple ways to control lift beyond just speed:
-          </p>
-          <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li><strong>Flaps:</strong> Increase camber for more lift at low speeds</li>
-            <li><strong>Slats:</strong> Delay stall for higher angle of attack capability</li>
-            <li><strong>Airfoil Design:</strong> Cambered vs symmetric for different applications</li>
-            <li><strong>Ground Effect:</strong> Reduced induced drag near surfaces</li>
-          </ol>
-          <p className="text-emerald-400 font-medium mt-4">
-            Understanding these principles allows aircraft to fly safely across a wide range of speeds!
-          </p>
-        </div>
-      </div>
-
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
-      >
-        Explore Real-World Applications
-      </button>
-    </div>
-  );
-
-  const applications = [
-    {
-      title: "Commercial Aviation",
-      icon: "PLANE",
-      description: "Boeing 747 wings generate over 400,000 lbs of lift at cruise.",
-      details: "Commercial aircraft use complex flap systems with multiple segments. The 747 has leading edge flaps, triple-slotted trailing edge flaps, and spoilers for lift control.",
-    },
-    {
-      title: "Formula 1 Racing",
-      icon: "F1",
-      description: "F1 cars use inverted wings to push the car DOWN onto the track.",
-      details: "At 200 mph, an F1 car generates enough downforce to theoretically drive upside down on a ceiling. The wings are airfoils mounted upside down!",
-    },
-    {
-      title: "Birds & Nature",
-      icon: "BIRD",
-      description: "Birds adjust their wing shape constantly during flight.",
-      details: "Eagles can change their wing camber, area, and angle of attack in real-time. Owls have special feathers that reduce turbulence for silent flight.",
-    },
-    {
-      title: "Wind Turbines",
-      icon: "WIND",
-      description: "Turbine blades are airfoils that convert wind to rotation.",
-      details: "Modern wind turbine blades use the same lift principles - the pressure difference creates a force that spins the turbine to generate electricity.",
-    }
-  ];
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveAppTab(index)}
-            style={{ position: 'relative', zIndex: 10 }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index
-                ? 'bg-cyan-600 text-white'
-                : completedApps.has(index)
-                ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
-          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
-        </div>
-
-        <p className="text-lg text-slate-300 mt-4 mb-3">
-          {applications[activeAppTab].description}
-        </p>
-        <p className="text-sm text-slate-400">
-          {applications[activeAppTab].details}
-        </p>
-
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onClick={() => handleAppComplete(activeAppTab)}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
-          {applications.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`}
-            />
-          ))}
-        </div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-
-      {completedApps.size >= 4 && (
-        <button
-          onClick={() => onPhaseComplete?.()}
-          style={{ position: 'relative', zIndex: 10 }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
-        >
-          Take the Knowledge Test
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
+            {/* Airfoil shape selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Airfoil Shape</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                {(['flat', 'symmetric', 'cambered'] as const).map((shape) => (
                   <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ position: 'relative', zIndex: 10 }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-cyan-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
+                    key={shape}
+                    onClick={() => setAirfoilShape(shape)}
+                    style={{
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: airfoilShape === shape ? colors.accent : colors.bgSecondary,
+                      color: 'white',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textTransform: 'capitalize',
+                    }}
                   >
-                    {option.text}
+                    {shape}
                   </button>
                 ))}
               </div>
             </div>
-          ))}
+
+            {/* High-lift device toggles */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+              <button
+                onClick={() => setFlapsDeployed(!flapsDeployed)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: flapsDeployed ? colors.success : colors.bgSecondary,
+                  color: 'white',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ fontSize: '18px', fontWeight: 600 }}>Flaps</div>
+                <div style={{ fontSize: '11px', opacity: 0.8 }}>{flapsDeployed ? 'Deployed (+0.5 Cl)' : 'Retracted'}</div>
+              </button>
+              <button
+                onClick={() => setSlatsDeployed(!slatsDeployed)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: slatsDeployed ? colors.success : colors.bgSecondary,
+                  color: 'white',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ fontSize: '18px', fontWeight: 600 }}>Slats</div>
+                <div style={{ fontSize: '11px', opacity: 0.8 }}>{slatsDeployed ? 'Deployed (+3deg stall)' : 'Retracted'}</div>
+              </button>
+              <button
+                onClick={() => setGroundEffect(!groundEffect)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: groundEffect ? colors.warning : colors.bgSecondary,
+                  color: 'white',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ fontSize: '18px', fontWeight: 600 }}>Ground</div>
+                <div style={{ fontSize: '11px', opacity: 0.8 }}>{groundEffect ? 'Effect (+20% lift)' : 'High Alt'}</div>
+              </button>
+            </div>
+
+            {/* Angle of attack */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Angle of Attack</span>
+                <span style={{ ...typo.small, color: stalling ? colors.error : colors.accent, fontWeight: 600 }}>
+                  {angleOfAttack}deg (Stall: {stallAngle}deg)
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-5"
+                max="20"
+                value={angleOfAttack}
+                onChange={(e) => setAngleOfAttack(parseInt(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.lift }}>{(lift/1000).toFixed(1)} kN</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Lift</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{cl.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Cl</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>{stallAngle}deg</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Stall Angle</div>
+              </div>
+            </div>
+          </div>
 
           <button
-            onClick={() => setShowTestResults(true)}
-            style={{ position: 'relative', zIndex: 10 }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-500 hover:to-blue-500'
-            }`}
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Submit Answers
+            Review Key Insights
           </button>
         </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? 'Success!' : 'Keep Learning'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">
-            Score: {calculateScore()}/10
-          </h3>
-          <p className="text-slate-300 mb-6">
-            {calculateScore() >= 7
-              ? 'Excellent! You\'ve mastered the physics of lift!'
-              : 'Keep studying! Review the concepts and try again.'}
-          </p>
 
-          {calculateScore() >= 7 ? (
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Controlling Lift at Any Speed
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Flap</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Trailing Edge Flaps</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Increase both <strong>camber</strong> and effective <strong>wing area</strong>. Dramatically increases Cl, allowing slower flight. Essential for landing - but adds drag.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Slat</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Leading Edge Slats</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Create a <strong>gap</strong> that re-energizes airflow over the wing. Delays flow separation, allowing <strong>higher angles of attack</strong> before stall. Critical safety margin.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>GE</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Ground Effect</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Near the ground, wingtip vortices are <strong>disrupted</strong>, reducing induced drag and effectively increasing lift. Creates the "floating" sensation during landing flare.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>Real-World Impact</h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Without high-lift devices, a Boeing 747 would need a takeoff speed of 350+ knots and runway lengths of 5+ miles. Flaps and slats make commercial aviation practical.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    OK
+                  </div>
+                )}
+                <div style={{ fontSize: '16px', marginBottom: '4px', fontWeight: 700, color: colors.textPrimary }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '36px', fontWeight: 700, color: app.color }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Lift Force Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
             <button
-              onClick={() => { onCorrectAnswer?.(); onPhaseComplete?.(); }}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
-            >
-              Review & Try Again
+              Take the Knowledge Test
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-cyan-900/50 via-blue-900/50 to-indigo-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">MASTERY</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Aerodynamics Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">
-          You've mastered the physics of lift and aerodynamic forces!
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              {passed ? 'Trophy!' : 'Book'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand lift force and aerodynamics!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          <span role="img" aria-label="trophy">&#127942;</span>
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Aerodynamics Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how wings generate lift and how pilots control it throughout flight.
         </p>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">Lift</div>
-            <p className="text-sm text-slate-300">L = 0.5*rho*v2*A*Cl</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">Airfoils</div>
-            <p className="text-sm text-slate-300">Pressure Distribution</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">Stall</div>
-            <p className="text-sm text-slate-300">Flow Separation</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">Control</div>
-            <p className="text-sm text-slate-300">Flaps & Slats</p>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Takeaways:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'L = 0.5 * rho * V^2 * S * Cl',
+              'Lift scales with velocity squared',
+              'Flaps increase Cl for slow-speed flight',
+              'Slats delay stall to higher angles',
+              'Ground effect increases lift near surfaces',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>OK</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="flex gap-4 justify-center">
+        <div style={{ display: 'flex', gap: '16px' }}>
           <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
           >
-            Complete Game
+            Play Again
           </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
         </div>
-      </div>
-    </div>
-  );
 
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Ambient background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div className="pt-8 pb-8 relative z-10">
-        {renderPhase()}
-      </div>
-    </div>
-  );
+  return null;
 };
 
 export default LiftForceRenderer;

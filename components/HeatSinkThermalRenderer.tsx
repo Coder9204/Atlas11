@@ -2,72 +2,288 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// ─────────────────────────────────────────────────────────────────────────────
+// Heat Sink Thermal Resistance - Complete 10-Phase Game
+// Why managing heat flow through thermal resistance chains keeps CPUs alive
+// ─────────────────────────────────────────────────────────────────────────────
 
-interface HeatSinkThermalRendererProps {
-  gamePhase?: Phase; // Optional for resume functionality
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-// Phase order and labels for navigation
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Introduction',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Understanding',
-  twist_predict: 'New Variable',
-  twist_play: 'Explore Twist',
-  twist_review: 'Deep Insight',
-  transfer: 'Real World',
-  test: 'Knowledge Test',
-  mastery: 'Mastery'
+interface HeatSinkThermalRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({
-  gamePhase,
-  onCorrectAnswer,
-  onIncorrectAnswer
-}) => {
-  // Internal phase state management
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    scenario: "A gaming laptop is experiencing thermal throttling during intense gameplay. The user notices CPU temperatures hitting 100C despite having a clean cooling system with a copper heatsink.",
+    question: "What is the most likely cause of the thermal problem?",
+    options: [
+      { id: 'a', label: "The copper heatsink has oxidized and lost conductivity" },
+      { id: 'b', label: "Dried or poorly applied thermal paste creating high interface resistance", correct: true },
+      { id: 'c', label: "The CPU is generating too much heat for any cooling solution" },
+      { id: 'd', label: "Room temperature is affecting the cooling capacity" }
+    ],
+    explanation: "Thermal paste degrades over time and creates a high-resistance interface. Even with an excellent heatsink, a dried TIM layer (R_tim = 2+ K/W vs 0.2 K/W for fresh paste) can bottleneck the entire thermal chain, causing temperatures to spike."
+  },
+  {
+    scenario: "An engineer is designing a heatsink for a 200W power amplifier. The thermal chain includes: junction-to-case (0.2 K/W), thermal pad (0.5 K/W), heatsink base (0.1 K/W), and fins-to-air (0.4 K/W).",
+    question: "What is the expected temperature rise from junction to ambient?",
+    options: [
+      { id: 'a', label: "40 degrees Celsius (0.2 x 200)" },
+      { id: 'b', label: "80 degrees Celsius (0.4 x 200)" },
+      { id: 'c', label: "240 degrees Celsius (1.2 x 200)", correct: true },
+      { id: 'd', label: "24 degrees Celsius (0.12 x 200)" }
+    ],
+    explanation: "Thermal resistances in series add up: R_total = 0.2 + 0.5 + 0.1 + 0.4 = 1.2 K/W. Temperature rise = Power x R_total = 200W x 1.2 K/W = 240 degrees C. This is why thermal design is critical for high-power applications."
+  },
+  {
+    scenario: "A data center is comparing two heatsink designs for server CPUs. Design A has 40 thin fins packed tightly. Design B has 25 thicker fins with more spacing. Both have the same total surface area.",
+    question: "Which design will likely perform better with active cooling?",
+    options: [
+      { id: 'a', label: "Design A - more fins always means better cooling" },
+      { id: 'b', label: "Design B - better airflow between fins compensates for fewer fins", correct: true },
+      { id: 'c', label: "Both identical - surface area is all that matters" },
+      { id: 'd', label: "Neither - fin design doesn't affect thermal performance" }
+    ],
+    explanation: "Tightly packed fins restrict airflow and create boundary layer merging, reducing convective efficiency. With active cooling, adequate fin spacing allows air to flow freely and maintains thin boundary layers, resulting in better heat transfer despite fewer fins."
+  },
+  {
+    scenario: "A technician replaces thermal paste on a CPU using a pea-sized amount in the center. The new temperatures are 5C higher than before the repaste, even with premium thermal compound.",
+    question: "What most likely went wrong?",
+    options: [
+      { id: 'a', label: "Too much thermal paste was applied" },
+      { id: 'b', label: "Air pockets formed due to incomplete spreading", correct: true },
+      { id: 'c', label: "The thermal paste needs time to cure" },
+      { id: 'd', label: "Premium thermal paste requires special application techniques" }
+    ],
+    explanation: "The pea method can leave air pockets if the heatsink isn't seated perfectly. Air has extremely high thermal resistance (~40 K/(W*m) vs 1-12 W/(m*K) for thermal paste), so even small air gaps dramatically increase total thermal resistance."
+  },
+  {
+    scenario: "A GPU manufacturer is comparing a direct-die cooling solution (heatsink touching the GPU die) versus a traditional IHS (integrated heat spreader) design for their flagship card.",
+    question: "What is the primary thermal advantage of direct-die cooling?",
+    options: [
+      { id: 'a', label: "It allows for larger heatsinks to be used" },
+      { id: 'b', label: "Eliminates two thermal interfaces (die-to-IHS and IHS-to-TIM)", correct: true },
+      { id: 'c', label: "It reduces the power consumption of the GPU" },
+      { id: 'd', label: "Direct contact increases the thermal mass of the system" }
+    ],
+    explanation: "Each thermal interface adds resistance. The IHS adds: die-to-solder (0.1 K/W), IHS spreading (0.05 K/W), and IHS-to-TIM (0.2 K/W). Direct-die removes these layers, potentially saving 0.3+ K/W of thermal resistance for significant temperature improvements."
+  },
+  {
+    scenario: "An overclocker notices that their CPU temperatures spike by 15C during the first seconds of a stress test, then stabilize. The cooling system is a large tower cooler with heat pipes.",
+    question: "What thermal phenomenon causes this initial temperature spike?",
+    options: [
+      { id: 'a', label: "The heat pipes haven't started working yet", correct: true },
+      { id: 'b', label: "The thermal paste is still warming up" },
+      { id: 'c', label: "The fan speed controller is slow to respond" },
+      { id: 'd', label: "The CPU is throttling to protect itself" }
+    ],
+    explanation: "Heat pipes require the working fluid to evaporate before they conduct heat efficiently. At startup, the fluid is cool and in liquid phase. Once it reaches operating temperature and begins the evaporation-condensation cycle, thermal conductivity dramatically improves."
+  },
+  {
+    scenario: "A power electronics engineer must choose between thermal grease (1.5 mm thick, k=4 W/mK) and a thermal pad (2 mm thick, k=6 W/mK) for mounting IGBTs. Contact area is 10 cm^2.",
+    question: "Which option provides lower thermal interface resistance?",
+    options: [
+      { id: 'a', label: "Thermal grease - lower thickness wins", correct: true },
+      { id: 'b', label: "Thermal pad - higher conductivity wins" },
+      { id: 'c', label: "Both are identical in thermal performance" },
+      { id: 'd', label: "Cannot determine without knowing the power dissipation" }
+    ],
+    explanation: "R = thickness / (k x Area). Grease: 0.0015 / (4 x 0.001) = 0.375 K/W. Pad: 0.002 / (6 x 0.001) = 0.333 K/W. Actually the pad is slightly better! But the grease can fill surface irregularities better, often making it preferable in practice."
+  },
+  {
+    scenario: "A server experiences intermittent overheating only during specific workloads that create hot spots on the CPU die. The overall package power remains within specs.",
+    question: "What cooling enhancement would best address this issue?",
+    options: [
+      { id: 'a', label: "Increase fan speed for more airflow" },
+      { id: 'b', label: "Use a vapor chamber instead of heat pipes", correct: true },
+      { id: 'c', label: "Apply more thermal paste for better coverage" },
+      { id: 'd', label: "Switch to a larger heatsink with more fins" }
+    ],
+    explanation: "Vapor chambers spread heat in 2D, quickly distributing hot spots across the entire base. Heat pipes only conduct along their axis. For workloads with concentrated heat, vapor chambers' superior spreading capability prevents localized overheating."
+  },
+  {
+    scenario: "An LED luminaire designer is selecting between aluminum (k=205 W/mK) and copper (k=400 W/mK) for the heatsink. The heatsink weighs 200g in aluminum.",
+    question: "Why might the designer choose aluminum despite copper's better conductivity?",
+    options: [
+      { id: 'a', label: "Aluminum is always better for LED applications" },
+      { id: 'b', label: "Weight and cost benefits outweigh the conductivity difference for typical LED powers", correct: true },
+      { id: 'c', label: "Copper cannot be used with LEDs due to corrosion" },
+      { id: 'd', label: "Aluminum has better emissivity for radiation cooling" }
+    ],
+    explanation: "For most LED applications (5-50W), aluminum's conductivity is sufficient - the bottleneck is fin-to-air convection, not conduction. Copper would cost 3-4x more and weigh 3.3x more (copper density 8.96 vs aluminum 2.7 g/cm^3) with marginal temperature improvement."
+  },
+  {
+    scenario: "A thermal engineer calculates that a 150W processor needs a heatsink with R_total < 0.4 K/W to stay under 85C at 25C ambient. Available heatsinks offer R_total = 0.35 K/W.",
+    question: "What happens if the ambient temperature rises to 35C during summer?",
+    options: [
+      { id: 'a', label: "Nothing changes - heatsink performance is absolute" },
+      { id: 'b', label: "CPU will exceed 85C since T_junction = T_ambient + P x R", correct: true },
+      { id: 'c', label: "The heatsink becomes more efficient at higher ambient" },
+      { id: 'd', label: "Thermal throttling will reduce power to compensate automatically" }
+    ],
+    explanation: "At 25C: T_j = 25 + (150 x 0.35) = 77.5C (safe). At 35C: T_j = 35 + (150 x 0.35) = 87.5C (exceeds limit). Thermal design must account for maximum ambient temperature. The 10C ambient increase directly translates to 10C higher junction temperature."
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'CPU & GPU Cooling',
+    short: 'High-performance computing thermal management',
+    tagline: 'Keeping billions of transistors from melting',
+    description: 'Modern processors pack billions of transistors into a chip smaller than a postage stamp, generating 65-350W of heat. Heat sinks with optimized fin arrays and thermal interface materials create a low-resistance path from silicon to air, preventing thermal throttling and extending component lifespan.',
+    connection: 'The thermal resistance chain you explored - die to TIM to heatsink to fins to air - is exactly how every computer stays cool. Each layer adds resistance, and the total determines whether your CPU runs at full speed or throttles down to survive.',
+    howItWorks: 'Heat conducts from the CPU die through the IHS (integrated heat spreader), across thermal paste, into the heatsink base, then spreads through fins where forced airflow carries it away. Tower coolers use heat pipes to transport heat vertically, while AIO liquid coolers move heat to a remote radiator.',
+    stats: [
+      { value: '350W', label: 'Max CPU TDP', icon: '🔥' },
+      { value: '0.2 K/W', label: 'Premium TIM', icon: '💧' },
+      { value: '90C', label: 'Throttle Point', icon: '⚠️' }
+    ],
+    examples: ['Tower coolers with 6+ heat pipes', 'AIO liquid coolers with 360mm radiators', 'Vapor chamber laptop designs', 'Direct-die cooling for enthusiasts'],
+    companies: ['Noctua', 'Corsair', 'NZXT', 'be quiet!'],
+    futureImpact: 'As chiplet architectures and 3D stacking increase power density, advanced cooling like microfluidic cold plates and integrated thermoelectric coolers will become essential for next-generation processors.',
+    color: '#f97316'
+  },
+  {
+    icon: '💡',
+    title: 'LED Thermal Management',
+    short: 'Light output depends on junction temperature',
+    tagline: 'Cool LEDs shine brighter and live longer',
+    description: 'High-power LEDs convert only 30-50% of electrical energy to light - the rest becomes heat concentrated in a tiny junction. Without proper thermal management, junction temperatures soar, reducing light output by 10-20% and cutting lifespan from 50,000 hours to just a few thousand.',
+    connection: 'LED thermal design uses the same series resistance concept: junction to substrate, substrate to heatsink, heatsink to air. The thermal resistance chain directly determines junction temperature and LED performance over time.',
+    howItWorks: 'Heat flows from the LED die through a metal-core PCB or ceramic substrate, across thermal interface material, into an aluminum heatsink. Passive convection or active cooling dissipates heat to ambient. Lower total resistance means cooler junctions and brighter, longer-lasting LEDs.',
+    stats: [
+      { value: '50,000h', label: 'LED Lifespan', icon: '⏰' },
+      { value: '10C Rule', label: 'Halves Life', icon: '📉' },
+      { value: '150 lm/W', label: 'Cool LED Efficacy', icon: '💡' }
+    ],
+    examples: ['Stadium and arena lighting', 'Automotive headlights', 'Horticultural grow lights', 'Stage and entertainment'],
+    companies: ['Cree', 'Lumileds', 'OSRAM', 'Seoul Semiconductor'],
+    futureImpact: 'Micro-LED displays and laser-based lighting will push thermal management further, requiring graphene heat spreaders and phase-change materials integrated directly into LED packages.',
+    color: '#eab308'
+  },
+  {
+    icon: '⚡',
+    title: 'Power Electronics',
+    short: 'IGBTs and MOSFETs in industrial systems',
+    tagline: 'Managing megawatts without meltdown',
+    description: 'Power semiconductors in industrial drives, inverters, and power supplies switch thousands of amps at high frequencies. Switching and conduction losses generate intense heat that must be carefully managed to prevent thermal runaway and ensure decades of reliable operation.',
+    connection: 'Industrial power modules specify junction-to-case thermal resistance as a critical datasheet parameter. Your understanding of series resistance helps engineers calculate exactly what heatsink is needed to keep devices within safe operating area.',
+    howItWorks: 'Power modules mount to large extruded aluminum heatsinks using thermal grease or pads. High-power applications use liquid cold plates with circulating coolant. The thermal resistance from junction to ambient determines maximum continuous power - exceed it and the device fails.',
+    stats: [
+      { value: '175C', label: 'SiC Max Tj', icon: '🌡️' },
+      { value: '500 kW', label: 'Drive Power', icon: '⚡' },
+      { value: '0.05 K/W', label: 'Cold Plate R', icon: '❄️' }
+    ],
+    examples: ['Variable frequency drives', 'Welding inverters', 'UPS systems', 'Solar inverters'],
+    companies: ['Infineon', 'Semikron', 'Danfoss', 'ABB'],
+    futureImpact: 'Wide-bandgap semiconductors (SiC, GaN) operate at higher temperatures, enabling more compact designs but requiring advanced thermal solutions including double-sided cooling.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🚗',
+    title: 'EV Traction Inverters',
+    short: 'Power electronics for electric vehicles',
+    tagline: 'Thermal precision powers the EV revolution',
+    description: 'EV traction inverters convert battery DC to AC for drive motors, handling 100-300kW in compact spaces. The power modules experience extreme thermal cycling as drivers accelerate and brake, making thermal management critical for range, performance, and reliability.',
+    connection: 'EV inverters are the ultimate thermal design challenge. The resistance from power module through TIM and cold plate to coolant determines sustained power capability - directly affecting acceleration and hill climbing without derating.',
+    howItWorks: 'Power modules bond to liquid-cooled cold plates with optimized pin-fin or jet-impingement designs. Coolant circulates through the cold plate to a front radiator. Advanced designs use direct substrate cooling to minimize thermal resistance between silicon and coolant.',
+    stats: [
+      { value: '300 kW', label: 'Peak Power', icon: '🏎️' },
+      { value: '65C', label: 'Coolant Limit', icon: '💧' },
+      { value: '1M Cycles', label: 'Thermal Cycles', icon: '🔄' }
+    ],
+    examples: ['Tesla integrated drive unit', 'Porsche Taycan 800V SiC', 'Commercial EV buses', 'Formula E race cars'],
+    companies: ['Tesla', 'BorgWarner', 'Vitesco', 'Bosch'],
+    futureImpact: 'Next-gen EVs will use 800V+ architectures and SiC devices, enabling faster charging. Immersion cooling and integrated motor-inverter designs will push thermal boundaries for greater power density.',
+    color: '#10b981'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
   const getInitialPhase = (): Phase => {
-    if (gamePhase && phaseOrder.includes(gamePhase)) {
-      return gamePhase;
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
     }
     return 'hook';
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+  const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Game-specific state
+  // Simulation state
   const [cpuPower, setCpuPower] = useState(100); // Watts
-  const [finCount, setFinCount] = useState(20);
-  const [finHeight, setFinHeight] = useState(40); // mm
-  const [fanSpeed, setFanSpeed] = useState(50); // percent
+  const [finCount, setFinCount] = useState(25);
+  const [finHeight, setFinHeight] = useState(50); // mm
+  const [fanSpeed, setFanSpeed] = useState(60); // percent
   const [thermalPaste, setThermalPaste] = useState<'none' | 'cheap' | 'premium'>('cheap');
   const [animationFrame, setAnimationFrame] = useState(0);
 
-  const lastClickRef = useRef(0);
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
   const isNavigating = useRef(false);
 
-  // Sync phase with gamePhase prop changes (for resume functionality)
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
-      setPhase(gamePhase);
-    }
-  }, [gamePhase, phase]);
-
-  // Check for mobile
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -75,1191 +291,1507 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
+  // Animation loop
   useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimationFrame(f => (f + 1) % 360);
+    const timer = setInterval(() => {
+      setAnimationFrame(f => f + 1);
     }, 50);
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
 
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
-  // Thermal resistance calculations
+  // Calculate thermal resistance chain
   const calcThermalResistance = useCallback(() => {
-    // Junction to case resistance (fixed for CPU die)
-    const R_jc = 0.3; // K/W
-
-    // TIM resistance based on type
+    const R_jc = 0.3; // Junction to case (fixed for CPU)
     const R_tim = thermalPaste === 'none' ? 2.0 : thermalPaste === 'cheap' ? 0.5 : 0.2;
+    const R_base = 0.1; // Heatsink base spreading
 
-    // Heatsink base resistance
-    const R_base = 0.1; // K/W
+    // Fin resistance depends on fin count, height, and airflow
+    const finArea = finCount * finHeight * 0.05;
+    const airflowFactor = 0.3 + (fanSpeed / 100) * 1.7;
+    const finEfficiency = Math.min(1, 20 / finCount); // Diminishing returns
+    const R_fins = 1.0 / (finArea * airflowFactor * 0.1 * finEfficiency);
 
-    // Fin to air resistance (depends on fins and airflow)
-    const finArea = finCount * finHeight * 0.05; // simplified area calculation
-    const airflowFactor = 0.5 + (fanSpeed / 100) * 1.5;
-    const R_fins = 1.0 / (finArea * airflowFactor * 0.1);
-
-    // Diminishing returns on fins
-    const finEfficiency = Math.min(1, 15 / finCount); // efficiency drops with more fins
-    const R_fins_effective = R_fins / finEfficiency;
-
-    return { R_jc, R_tim, R_base, R_fins: R_fins_effective, total: R_jc + R_tim + R_base + R_fins_effective };
+    return {
+      R_jc,
+      R_tim,
+      R_base,
+      R_fins,
+      total: R_jc + R_tim + R_base + R_fins
+    };
   }, [finCount, finHeight, fanSpeed, thermalPaste]);
 
-  const thermalResistance = calcThermalResistance();
+  const thermalRes = calcThermalResistance();
   const ambientTemp = 25;
-  const cpuTemp = ambientTemp + cpuPower * thermalResistance.total;
+  const cpuTemp = ambientTemp + cpuPower * thermalRes.total;
 
-  // Navigation functions
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#f97316', // Orange
+    accentGlow: 'rgba(249, 115, 22, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Fin Design',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
   const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
     if (isNavigating.current) return;
-
-    lastClickRef.current = now;
     isNavigating.current = true;
-
-    setPhase(p);
     playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'heatsink-thermal',
+        gameTitle: 'Heat Sink Thermal Resistance',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-    setTimeout(() => { isNavigating.current = false; }, 400);
-  }, [playSound]);
-
-  const goToNextPhase = useCallback(() => {
+  const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase]);
+  }, [phase, goToPhase, phaseOrder]);
 
-  const goToPrevPhase = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phaseOrder[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
-
-  // Premium color palette
-  const colors = {
-    primary: '#f97316', // orange-500
-    primaryDark: '#ea580c', // orange-600
-    accent: '#ef4444', // red-500
-    success: '#10b981', // emerald-500
-    bgDark: '#020617', // slate-950
-    bgCard: '#0f172a', // slate-900
-    bgCardLight: '#1e293b', // slate-800
-    border: '#334155', // slate-700
-    textPrimary: '#f8fafc', // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b', // slate-500
+  // Temperature status
+  const getTempStatus = () => {
+    if (cpuTemp < 60) return { status: 'Cool', color: colors.success };
+    if (cpuTemp < 80) return { status: 'Warm', color: colors.warning };
+    return { status: 'Hot!', color: colors.error };
   };
 
-  // Progress bar renderer
-  const renderProgressBar = () => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isMobile ? '8px 12px' : '10px 16px',
-        backgroundColor: colors.bgCard,
-        borderBottom: `1px solid ${colors.border}`,
-        gap: '8px'
-      }}>
-        {/* Back button */}
-        <button
-          onClick={goToPrevPhase}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
-            border: currentIdx > 0 ? `1px solid ${colors.border}` : '1px solid transparent',
-            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
-            cursor: currentIdx > 0 ? 'pointer' : 'default',
-            opacity: currentIdx > 0 ? 1 : 0.4,
-          }}
-        >
-          <span style={{ fontSize: '14px' }}>&#8592;</span>
-        </button>
+  const tempStatus = getTempStatus();
 
-        {/* Progress dots */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
-          {phaseOrder.map((p, i) => (
-            <button
-              key={p}
-              onClick={() => i <= currentIdx && goToPhase(p)}
-              style={{
-                width: i === currentIdx ? '20px' : '10px',
-                height: '10px',
-                borderRadius: '5px',
-                border: 'none',
-                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-                opacity: i > currentIdx ? 0.5 : 1
-              }}
-              title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
-            />
-          ))}
-        </div>
-
-        {/* Phase counter */}
-        <span style={{
-          fontSize: '11px',
-          fontWeight: 700,
-          color: colors.primary,
-          padding: '4px 8px',
-          borderRadius: '6px',
-          backgroundColor: `${colors.primary}15`
-        }}>
-          {currentIdx + 1}/{phaseOrder.length}
-        </span>
-      </div>
-    );
-  };
-
-  // Bottom navigation bar renderer
-  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    const canGoBack = currentIdx > 0;
-
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: isMobile ? '12px' : '12px 16px',
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: '12px'
-      }}>
-        <button
-          onClick={goToPrevPhase}
-          style={{
-            padding: isMobile ? '10px 16px' : '10px 20px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontSize: isMobile ? '13px' : '14px',
-            backgroundColor: colors.bgCardLight,
-            color: colors.textSecondary,
-            border: `1px solid ${colors.border}`,
-            cursor: canGoBack ? 'pointer' : 'not-allowed',
-            opacity: canGoBack ? 1 : 0.3,
-            minHeight: '44px'
-          }}
-          disabled={!canGoBack}
-        >
-          &#8592; Back
-        </button>
-
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
-          {phaseLabels[phase]}
-        </span>
-
-        <button
-          onClick={goToNextPhase}
-          style={{
-            padding: isMobile ? '10px 20px' : '10px 24px',
-            borderRadius: '10px',
-            fontWeight: 700,
-            fontSize: isMobile ? '13px' : '14px',
-            background: canGoNext ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
-            border: 'none',
-            cursor: canGoNext ? 'pointer' : 'not-allowed',
-            opacity: canGoNext ? 1 : 0.4,
-            boxShadow: canGoNext ? `0 2px 12px ${colors.primary}30` : 'none',
-            minHeight: '44px'
-          }}
-          disabled={!canGoNext}
-        >
-          {nextLabel} &#8594;
-        </button>
-      </div>
-    );
-  };
-
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-    playSound(prediction === 'B' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-    playSound(prediction === 'C' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-  }, [playSound]);
-
-  const testQuestions = [
-    { question: "What is thermal resistance measured in?", options: [{ text: "Watts per meter", correct: false }, { text: "Kelvin per Watt (K/W)", correct: true }, { text: "Joules per second", correct: false }, { text: "Celsius per meter", correct: false }] },
-    { question: "In a thermal chain, total resistance is calculated by:", options: [{ text: "Taking the average of all resistances", correct: false }, { text: "Adding all resistances in series", correct: true }, { text: "Multiplying all resistances", correct: false }, { text: "Using only the largest resistance", correct: false }] },
-    { question: "Why do CPUs need heatsinks but LEDs often don't?", options: [{ text: "LEDs don't produce heat", correct: false }, { text: "CPUs produce much more power that must be dissipated", correct: true }, { text: "LEDs are always cooler than CPUs", correct: false }, { text: "Heatsinks only work on silicon", correct: false }] },
-    { question: "What is the purpose of thermal interface material (TIM)?", options: [{ text: "To electrically insulate the CPU", correct: false }, { text: "To fill air gaps and reduce contact resistance", correct: true }, { text: "To make the heatsink stick better", correct: false }, { text: "To increase thermal resistance", correct: false }] },
-    { question: "If R_total = 0.5 K/W and power = 100W, temperature rise is:", options: [{ text: "200 degrees C", correct: false }, { text: "50 degrees C", correct: true }, { text: "0.005 degrees C", correct: false }, { text: "5000 degrees C", correct: false }] },
-    { question: "Why does increasing fin count have diminishing returns?", options: [{ text: "More fins weigh more", correct: false }, { text: "Air can't flow well between tightly packed fins", correct: true }, { text: "Fins block the CPU", correct: false }, { text: "It doesn't - more fins always help", correct: false }] },
-    { question: "What primarily limits heat transfer to air from fins?", options: [{ text: "Fin material conductivity", correct: false }, { text: "Convective heat transfer coefficient at fin surface", correct: true }, { text: "Fin color", correct: false }, { text: "CPU voltage", correct: false }] },
-    { question: "A vapor chamber improves cooling by:", options: [{ text: "Using fans internally", correct: false }, { text: "Spreading heat quickly across a large area via phase change", correct: true }, { text: "Adding more thermal paste", correct: false }, { text: "Increasing thermal resistance", correct: false }] },
-    { question: "Which thermal paste property matters most?", options: [{ text: "Color", correct: false }, { text: "Thermal conductivity (W/mK)", correct: true }, { text: "Viscosity only", correct: false }, { text: "Brand name", correct: false }] },
-    { question: "The junction-to-ambient thermal resistance includes:", options: [{ text: "Only the heatsink", correct: false }, { text: "Die, TIM, heatsink base, fins, and convection to air", correct: true }, { text: "Only the thermal paste", correct: false }, { text: "Only the CPU die", correct: false }] }
-  ];
-
-  const applications = [
-    { title: "CPU Cooling", icon: "💻", description: "Modern CPUs dissipate 65-250W. Tower coolers and AIOs use the same thermal resistance chain principles to keep temps under 90C.", details: "The thermal chain: die -> IHS -> TIM -> heatsink base -> fins -> air" },
-    { title: "GPU Cooling", icon: "🎮", description: "High-end GPUs can exceed 400W! Triple-fan designs and vapor chambers spread heat across massive fin arrays.", details: "Vapor chambers act like heat pipes but spread heat in 2D instead of 1D." },
-    { title: "Server Cooling", icon: "🖥️", description: "Data centers must cool thousands of servers. Each CPU's thermal solution matters for overall PUE efficiency.", details: "Hot spots from bad TIM application can reduce server lifespan significantly." },
-    { title: "Power Electronics", icon: "⚡", description: "IGBTs and MOSFETs in inverters need careful thermal management. Poor cooling causes thermal runaway.", details: "Thermal resistance from junction to case is a key datasheet spec." }
-  ];
-
-  const realWorldApps = [
-    {
-      icon: "💻",
-      title: "CPU/GPU Cooling",
-      short: "Computing",
-      tagline: "Keeping silicon cool at 5 billion transistors",
-      description: "Modern processors pack billions of transistors into a chip smaller than your fingernail, generating 65-350W of heat. Heat sinks with optimized fin arrays and thermal interface materials create a low-resistance thermal path from the silicon die to ambient air, preventing thermal throttling and extending component lifespan.",
-      connection: "The thermal resistance chain you explored - from die through TIM to heatsink fins - is exactly how every computer keeps its processor from melting. Each layer's thermal resistance adds up, making every interface critical.",
-      howItWorks: "Heat conducts from the CPU die through the integrated heat spreader (IHS), across thermal paste, into the heatsink base, then spreads through fins where forced airflow carries it away. Tower coolers use heat pipes to move heat vertically, while AIO liquid coolers transport heat to a remote radiator.",
-      stats: [
-        { value: "350W", label: "Max TDP of high-end desktop CPUs" },
-        { value: "0.2 K/W", label: "Premium thermal paste resistance" },
-        { value: "90°C", label: "Typical CPU thermal throttle point" }
-      ],
-      examples: [
-        "Tower coolers with 6+ heat pipes for enthusiast builds",
-        "All-in-one liquid coolers with 360mm radiators",
-        "Vapor chamber designs in gaming laptops",
-        "Server-grade copper heatsinks for data centers"
-      ],
-      companies: ["Noctua", "Corsair", "NZXT", "be quiet!", "Cooler Master"],
-      futureImpact: "As chiplet architectures and 3D stacking increase power density, advanced cooling solutions like microfluidic cold plates and integrated thermoelectric coolers will become essential for next-generation processors.",
-      color: "#f97316"
-    },
-    {
-      icon: "💡",
-      title: "LED Lighting",
-      short: "Thermal Management",
-      tagline: "Extending LED life through smart heat dissipation",
-      description: "High-power LEDs convert only 30-50% of electrical energy to light - the rest becomes heat concentrated in a tiny junction. Without proper thermal management, junction temperatures soar, dramatically reducing light output and cutting LED lifespan from 50,000 hours to just a few thousand.",
-      connection: "LED thermal design uses the same series resistance concept: junction to substrate, substrate to heat sink, heat sink to air. The thermal resistance chain directly determines junction temperature and LED longevity.",
-      howItWorks: "Heat flows from the LED die through a thermally conductive substrate (often metal-core PCB), across thermal interface material, into an aluminum heat sink. Passive convection or active cooling dissipates heat to the environment. Lower thermal resistance means cooler junctions and brighter, longer-lasting LEDs.",
-      stats: [
-        { value: "50,000 hrs", label: "LED lifespan with proper cooling" },
-        { value: "10°C", label: "Every 10°C rise halves LED life" },
-        { value: "150 lm/W", label: "Efficacy of well-cooled LEDs" }
-      ],
-      examples: [
-        "Stadium and arena lighting with massive heat sinks",
-        "Automotive headlights with integrated cooling fins",
-        "Horticultural grow lights requiring sustained output",
-        "Stage and entertainment lighting at high power"
-      ],
-      companies: ["Cree", "Lumileds", "OSRAM", "Seoul Semiconductor", "Nichia"],
-      futureImpact: "Micro-LED displays and laser-based lighting will push thermal management further, requiring innovative solutions like graphene heat spreaders and phase-change materials integrated directly into LED packages.",
-      color: "#eab308"
-    },
-    {
-      icon: "⚡",
-      title: "Power Electronics",
-      short: "Industrial",
-      tagline: "Managing megawatts in industrial power systems",
-      description: "Power semiconductors like IGBTs and MOSFETs in industrial drives, welders, and power supplies switch thousands of amps at high frequencies. Switching and conduction losses generate intense heat that must be managed to prevent thermal runaway and ensure reliable operation.",
-      connection: "Industrial power modules specify junction-to-case thermal resistance as a critical parameter. Your understanding of series thermal resistance helps engineers calculate heat sink requirements to keep devices within safe operating temperatures.",
-      howItWorks: "Power modules mount to large extruded aluminum heat sinks using thermal grease or pads. For high-power applications, liquid cold plates circulate coolant directly under the modules. The total thermal resistance from junction to ambient determines maximum continuous power handling.",
-      stats: [
-        { value: "175°C", label: "Max junction temp for SiC devices" },
-        { value: "500 kW", label: "Power handled by industrial drives" },
-        { value: "0.05 K/W", label: "Liquid cold plate resistance" }
-      ],
-      examples: [
-        "Variable frequency drives for industrial motors",
-        "Welding inverters delivering hundreds of amps",
-        "Uninterruptible power supplies for data centers",
-        "Solar inverters converting DC to grid AC"
-      ],
-      companies: ["Infineon", "Semikron", "Danfoss", "ABB", "Mitsubishi Electric"],
-      futureImpact: "Wide-bandgap semiconductors like SiC and GaN operate at higher temperatures and frequencies, enabling more compact power electronics but requiring advanced thermal solutions including double-sided cooling and embedded heat pipes.",
-      color: "#8b5cf6"
-    },
-    {
-      icon: "🚗",
-      title: "Electric Vehicle Inverters",
-      short: "Automotive",
-      tagline: "Powering the electric revolution with thermal precision",
-      description: "EV traction inverters convert battery DC to AC for the drive motors, handling 100-300kW while fitting in compact spaces. The power modules inside experience extreme thermal cycling as drivers accelerate and brake, making thermal management critical for reliability and range.",
-      connection: "EV inverters are the ultimate test of thermal design. The thermal resistance from power module junction through TIM, cold plate, and coolant determines how much power the vehicle can sustain without derating - directly affecting acceleration and hill-climbing ability.",
-      howItWorks: "Power modules bond to liquid-cooled cold plates with optimized fin structures. Coolant (often water-glycol) circulates through the cold plate, absorbing heat and carrying it to a front radiator. Advanced designs use pin-fin cold plates and direct substrate cooling to minimize thermal resistance.",
-      stats: [
-        { value: "300 kW", label: "Peak power in performance EVs" },
-        { value: "65°C", label: "Typical coolant temperature limit" },
-        { value: "1M cycles", label: "Thermal cycling requirement" }
-      ],
-      examples: [
-        "Tesla's integrated drive unit with advanced cooling",
-        "Porsche Taycan's 800V silicon carbide inverter",
-        "Commercial EV bus inverters handling sustained loads",
-        "Formula E race car power electronics"
-      ],
-      companies: ["Tesla", "BorgWarner", "Vitesco", "Bosch", "ZF"],
-      futureImpact: "Next-generation EVs will use 800V+ architectures and silicon carbide devices, enabling faster charging and higher efficiency. Immersion cooling and integrated motor-inverter designs will push thermal management boundaries to achieve greater power density.",
-      color: "#10b981"
-    }
-  ];
-
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
-
-  const getTempColor = (temp: number) => {
-    if (temp < 50) return '#22c55e';
-    if (temp < 70) return '#eab308';
-    if (temp < 85) return '#f97316';
-    return '#ef4444';
-  };
-
-  const renderHeatSinkVisualization = () => {
-    const baseWidth = 200;
+  // Heat Sink Visualization
+  const HeatSinkVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 340;
+    const baseWidth = 180;
     const finWidth = Math.max(2, (baseWidth - 20) / finCount);
     const finSpacing = (baseWidth - finWidth * finCount) / (finCount + 1);
 
-    // Temperature-based color for heat flow visualization
-    const heatColor = cpuTemp < 50 ? '#22c55e' : cpuTemp < 70 ? '#eab308' : cpuTemp < 85 ? '#f97316' : '#ef4444';
-    const heatColorLight = cpuTemp < 50 ? '#4ade80' : cpuTemp < 70 ? '#facc15' : cpuTemp < 85 ? '#fb923c' : '#f87171';
+    const heatColor = cpuTemp < 60 ? '#22c55e' : cpuTemp < 80 ? '#f59e0b' : '#ef4444';
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap }}>
-        <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto">
-          <defs>
-            {/* Premium lab background gradient */}
-            <linearGradient id="hsinkLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="30%" stopColor="#0a0f1a" />
-              <stop offset="70%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="cpuHeatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor={heatColor} />
+            <stop offset="100%" stopColor={heatColor} stopOpacity="0.5" />
+          </linearGradient>
+          <linearGradient id="finMetalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="50%" stopColor="#9ca3af" />
+            <stop offset="100%" stopColor="#6b7280" />
+          </linearGradient>
+          <linearGradient id="baseMetalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#9ca3af" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </linearGradient>
+          <linearGradient id="airflowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0" />
+            <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
+          </linearGradient>
+          <filter id="heatGlow">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
 
-            {/* CPU die gradient with heat glow */}
-            <linearGradient id="hsinkCpuDie" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor={heatColor} />
-              <stop offset="25%" stopColor={heatColorLight} />
-              <stop offset="50%" stopColor={heatColor} />
-              <stop offset="75%" stopColor={heatColorLight} />
-              <stop offset="100%" stopColor={heatColor} stopOpacity="0.9" />
-            </linearGradient>
+        {/* Background grid */}
+        <g opacity="0.2">
+          {[0, 1, 2, 3, 4, 5].map(i => (
+            <line key={`vg-${i}`} x1={80 + i * 60} y1="20" x2={80 + i * 60} y2={height - 20} stroke={colors.border} strokeDasharray="2,4" />
+          ))}
+        </g>
 
-            {/* Aluminum heatsink base - brushed metal effect */}
-            <linearGradient id="hsinkAluminumBase" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6b7280" />
-              <stop offset="15%" stopColor="#9ca3af" />
-              <stop offset="30%" stopColor="#6b7280" />
-              <stop offset="50%" stopColor="#d1d5db" />
-              <stop offset="70%" stopColor="#6b7280" />
-              <stop offset="85%" stopColor="#9ca3af" />
-              <stop offset="100%" stopColor="#6b7280" />
-            </linearGradient>
+        {/* Heat waves rising from CPU */}
+        {Array.from({ length: 4 }).map((_, i) => {
+          const yOffset = (animationFrame * 0.8 + i * 30) % 120;
+          const opacity = Math.max(0, 1 - yOffset / 120) * (cpuPower / 200);
+          return (
+            <ellipse
+              key={`heat-${i}`}
+              cx={width / 2}
+              cy={height - 40 - yOffset}
+              rx={12 + i * 4}
+              ry={3}
+              fill={heatColor}
+              opacity={opacity * 0.4}
+              filter="url(#heatGlow)"
+            />
+          );
+        })}
 
-            {/* Premium aluminum fin gradient - metallic sheen */}
-            <linearGradient id="hsinkFinMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#9ca3af" />
-              <stop offset="20%" stopColor="#d1d5db" />
-              <stop offset="40%" stopColor="#9ca3af" />
-              <stop offset="60%" stopColor="#6b7280" />
-              <stop offset="80%" stopColor="#9ca3af" />
-              <stop offset="100%" stopColor="#4b5563" />
-            </linearGradient>
+        {/* CPU Die */}
+        <rect
+          x={width / 2 - 30}
+          y={height - 65}
+          width="60"
+          height="25"
+          fill="url(#cpuHeatGrad)"
+          stroke="#374151"
+          strokeWidth="2"
+          rx="3"
+          filter="url(#heatGlow)"
+        />
+        <text x={width / 2} y={height - 48} textAnchor="middle" fill="white" fontSize="10" fontWeight="600">CPU DIE</text>
 
-            {/* Thermal paste gradients */}
-            <linearGradient id="hsinkTIMNone" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="50%" stopColor="#4b5563" />
-              <stop offset="100%" stopColor="#374151" />
-            </linearGradient>
-            <linearGradient id="hsinkTIMCheap" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6b7280" />
-              <stop offset="30%" stopColor="#9ca3af" />
-              <stop offset="70%" stopColor="#9ca3af" />
-              <stop offset="100%" stopColor="#6b7280" />
-            </linearGradient>
-            <linearGradient id="hsinkTIMPremium" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#7c3aed" />
-              <stop offset="25%" stopColor="#a855f7" />
-              <stop offset="50%" stopColor="#c084fc" />
-              <stop offset="75%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#7c3aed" />
-            </linearGradient>
+        {/* Thermal Paste */}
+        <rect
+          x={width / 2 - 45}
+          y={height - 75}
+          width="90"
+          height="10"
+          fill={thermalPaste === 'none' ? '#374151' : thermalPaste === 'cheap' ? '#6b7280' : '#a855f7'}
+          rx="2"
+        />
+        <text x={width / 2} y={height - 68} textAnchor="middle" fill="white" fontSize="8">TIM</text>
 
-            {/* Airflow gradient */}
-            <linearGradient id="hsinkAirflow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0" />
-              <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#93c5fd" stopOpacity="1" />
-              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.4" />
-            </linearGradient>
+        {/* Heatsink Base */}
+        <rect
+          x={width / 2 - baseWidth / 2}
+          y={height - 95}
+          width={baseWidth}
+          height="20"
+          fill="url(#baseMetalGrad)"
+          stroke="#374151"
+          strokeWidth="1"
+        />
 
-            {/* Heat flow visualization gradient */}
-            <linearGradient id="hsinkHeatFlow" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor={heatColor} stopOpacity="0.9" />
-              <stop offset="30%" stopColor={heatColorLight} stopOpacity="0.6" />
-              <stop offset="60%" stopColor={heatColor} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={heatColorLight} stopOpacity="0.1" />
-            </linearGradient>
+        {/* Fins */}
+        {Array.from({ length: finCount }).map((_, i) => {
+          const x = width / 2 - baseWidth / 2 + finSpacing + i * (finWidth + finSpacing);
+          const displayHeight = finHeight * 1.5;
+          const heatIntensity = Math.max(0.3, 1 - Math.abs(i - finCount / 2) / (finCount / 2) * 0.5);
 
-            {/* Temperature display panel gradient */}
-            <linearGradient id="hsinkTempPanel" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* CPU glow filter */}
-            <filter id="hsinkCpuGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Heat wave glow */}
-            <filter id="hsinkHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Airflow blur */}
-            <filter id="hsinkAirBlur" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Metallic highlight filter */}
-            <filter id="hsinkMetalShine">
-              <feGaussianBlur stdDeviation="0.5" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-
-          {/* Premium dark background */}
-          <rect width="400" height="300" fill="url(#hsinkLabBg)" />
-
-          {/* Heat flow waves rising from CPU */}
-          {Array.from({ length: 5 }).map((_, i) => {
-            const yOffset = (animationFrame * 0.5 + i * 25) % 100;
-            const opacity = Math.max(0, 1 - yOffset / 100) * (cpuPower / 200);
-            return (
-              <ellipse
-                key={`heat-wave-${i}`}
-                cx="200"
-                cy={235 - yOffset}
-                rx={15 + i * 5}
-                ry={3 + i}
-                fill="url(#hsinkHeatFlow)"
-                opacity={opacity * 0.5}
-                filter="url(#hsinkHeatGlow)"
+          return (
+            <g key={`fin-${i}`}>
+              <rect
+                x={x}
+                y={height - 95 - displayHeight}
+                width={finWidth}
+                height={displayHeight}
+                fill="url(#finMetalGrad)"
+                stroke="#374151"
+                strokeWidth="0.5"
               />
-            );
-          })}
+              <rect
+                x={x}
+                y={height - 95 - displayHeight}
+                width={finWidth}
+                height={displayHeight}
+                fill={heatColor}
+                opacity={heatIntensity * 0.2}
+              />
+            </g>
+          );
+        })}
 
-          {/* CPU Die with glow effect */}
-          <rect
-            x="170"
-            y="240"
-            width="60"
-            height="20"
-            fill="url(#hsinkCpuDie)"
-            stroke="#1f2937"
-            strokeWidth="2"
-            rx="2"
-            filter="url(#hsinkCpuGlow)"
-          />
-          {/* CPU die inner glow */}
-          <rect
-            x="175"
-            y="245"
-            width="50"
-            height="10"
-            fill={heatColorLight}
-            opacity="0.4"
-            rx="1"
-          />
+        {/* Airflow arrows */}
+        {fanSpeed > 0 && Array.from({ length: 5 }).map((_, i) => {
+          const x = (width / 2 - baseWidth / 2 - 30) + ((animationFrame * (fanSpeed / 30) + i * 50) % (baseWidth + 60));
+          const y = height - 95 - finHeight * 0.75;
+          return (
+            <g key={`air-${i}`} transform={`translate(${x}, ${y})`}>
+              <path
+                d="M0,0 L15,0 L12,-4 M15,0 L12,4"
+                fill="none"
+                stroke="url(#airflowGrad)"
+                strokeWidth="2"
+                opacity={fanSpeed / 100}
+                strokeLinecap="round"
+              />
+            </g>
+          );
+        })}
 
-          {/* Thermal Paste Layer with appropriate gradient */}
-          <rect
-            x="160"
-            y="232"
-            width="80"
-            height="8"
-            fill={thermalPaste === 'none' ? 'url(#hsinkTIMNone)' : thermalPaste === 'cheap' ? 'url(#hsinkTIMCheap)' : 'url(#hsinkTIMPremium)'}
-            rx="1"
-          />
+        {/* Temperature Display */}
+        <rect x={width - 110} y="20" width="90" height="60" rx="8" fill={colors.bgSecondary} stroke={tempStatus.color} strokeWidth="2" />
+        <text x={width - 65} y="48" textAnchor="middle" fill={tempStatus.color} fontSize="22" fontWeight="bold">
+          {cpuTemp.toFixed(0)}C
+        </text>
+        <text x={width - 65} y="68" textAnchor="middle" fill={tempStatus.color} fontSize="12">
+          {tempStatus.status}
+        </text>
 
-          {/* Heatsink Base - brushed aluminum */}
-          <rect
-            x="100"
-            y="220"
-            width={baseWidth}
-            height="12"
-            fill="url(#hsinkAluminumBase)"
-            stroke="#374151"
-            strokeWidth="1"
-            filter="url(#hsinkMetalShine)"
-          />
-          {/* Base highlight */}
-          <rect
-            x="100"
-            y="220"
-            width={baseWidth}
-            height="3"
-            fill="rgba(255,255,255,0.15)"
-          />
+        {/* Thermal Resistance Chain */}
+        <g transform="translate(20, 20)">
+          <text x="0" y="0" fill={colors.textSecondary} fontSize="10" fontWeight="600">Thermal Chain (K/W):</text>
+          <text x="0" y="16" fill={colors.textMuted} fontSize="9">R_jc: {thermalRes.R_jc.toFixed(2)}</text>
+          <text x="0" y="30" fill={colors.textMuted} fontSize="9">R_tim: {thermalRes.R_tim.toFixed(2)}</text>
+          <text x="0" y="44" fill={colors.textMuted} fontSize="9">R_base: {thermalRes.R_base.toFixed(2)}</text>
+          <text x="0" y="58" fill={colors.textMuted} fontSize="9">R_fins: {thermalRes.R_fins.toFixed(2)}</text>
+          <text x="0" y="76" fill={colors.accent} fontSize="11" fontWeight="700">Total: {thermalRes.total.toFixed(2)} K/W</text>
+        </g>
 
-          {/* Fins with metallic gradient and heat coloring */}
-          {Array.from({ length: finCount }).map((_, i) => {
-            const x = 100 + finSpacing + i * (finWidth + finSpacing);
-            const heatIntensity = Math.max(0.2, 1 - (i / finCount) * 0.6);
-            const centerDistance = Math.abs(i - finCount / 2) / (finCount / 2);
+        {/* Power indicator */}
+        <g transform={`translate(20, ${height - 50})`}>
+          <text x="0" y="0" fill={colors.textSecondary} fontSize="10">Power: {cpuPower}W</text>
+          <text x="0" y="14" fill={colors.textMuted} fontSize="9">DeltaT = {(cpuPower * thermalRes.total).toFixed(1)}C</text>
+        </g>
+      </svg>
+    );
+  };
 
-            return (
-              <g key={i}>
-                {/* Fin body with metallic gradient */}
-                <rect
-                  x={x}
-                  y={220 - finHeight * 2}
-                  width={finWidth}
-                  height={finHeight * 2}
-                  fill="url(#hsinkFinMetal)"
-                  stroke="#374151"
-                  strokeWidth="0.5"
-                  opacity={0.7 + heatIntensity * 0.3}
-                />
-                {/* Heat overlay on fin */}
-                <rect
-                  x={x}
-                  y={220 - finHeight * 2}
-                  width={finWidth}
-                  height={finHeight * 2}
-                  fill={heatColor}
-                  opacity={heatIntensity * 0.25 * (1 - centerDistance * 0.5)}
-                />
-                {/* Fin highlight */}
-                <rect
-                  x={x}
-                  y={220 - finHeight * 2}
-                  width={finWidth * 0.3}
-                  height={finHeight * 2}
-                  fill="rgba(255,255,255,0.1)"
-                />
-              </g>
-            );
-          })}
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.error})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-          {/* Airflow arrows with gradient and animation */}
-          {fanSpeed > 0 && Array.from({ length: 6 }).map((_, i) => {
-            const x = 70 + ((animationFrame * (fanSpeed / 25) + i * 50) % 260);
-            const yBase = 180 - finHeight;
-            const yWave = Math.sin((animationFrame * 0.1 + i) * 0.5) * 3;
-            return (
-              <g key={`airflow-${i}`} transform={`translate(${x}, ${yBase + yWave})`} filter="url(#hsinkAirBlur)">
-                <path
-                  d="M0,0 L20,0 L16,-5 M20,0 L16,5"
-                  fill="none"
-                  stroke="url(#hsinkAirflow)"
-                  strokeWidth="2.5"
-                  opacity={(fanSpeed / 100) * 0.9}
-                  strokeLinecap="round"
-                />
-              </g>
-            );
-          })}
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-          {/* Temperature display panel */}
-          <rect x="310" y="175" width="80" height="95" fill="url(#hsinkTempPanel)" rx="8" stroke="#334155" strokeWidth="1" />
-          {/* Inner glow for panel */}
-          <rect x="315" y="180" width="70" height="85" fill="none" rx="6" stroke={heatColor} strokeWidth="1" opacity="0.3" />
-        </svg>
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, ${colors.error})`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-        {/* Labels moved outside SVG using typo system */}
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          padding: `0 ${typo.cardPadding}`,
-          gap: typo.elementGap
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
         }}>
-          {/* Thermal Chain Info */}
+          🔥💻❄️
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Heat Sink Thermal Resistance
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "A CPU generates 150 watts of heat in a chip smaller than your fingernail. Without cooling, it would hit <span style={{ color: colors.error }}>1000C in seconds</span>. How does heat escape through layers of metal and paste?"
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Every interface between your CPU and the air is a thermal resistance. Like resistors in a circuit, they add up - and the total determines whether your chip runs cool or catches fire."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Thermal Engineering Fundamentals
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Thermal Resistance
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Take the average of all thermal resistances' },
+      { id: 'b', text: 'Add all thermal resistances together (like series resistors)', correct: true },
+      { id: 'c', text: 'Use only the largest resistance - it dominates' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
-            backgroundColor: 'rgba(15, 23, 42, 0.8)',
-            borderRadius: '8px',
-            padding: typo.cardPadding,
-            border: '1px solid #334155',
-            flex: 1
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
           }}>
-            <div style={{ fontSize: typo.body, fontWeight: 700, color: '#e5e7eb', marginBottom: '8px' }}>
-              Thermal Chain (Series)
-            </div>
-            <div style={{ fontSize: typo.small, color: '#9ca3af', lineHeight: 1.6 }}>
-              <div>R_junction: {thermalResistance.R_jc.toFixed(2)} K/W</div>
-              <div>R_TIM: {thermalResistance.R_tim.toFixed(2)} K/W</div>
-              <div>R_base: {thermalResistance.R_base.toFixed(2)} K/W</div>
-              <div>R_fins: {thermalResistance.R_fins.toFixed(2)} K/W</div>
-              <div style={{ fontSize: typo.body, color: '#22d3ee', fontWeight: 700, marginTop: '4px' }}>
-                Total: {thermalResistance.total.toFixed(2)} K/W
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A CPU's heat must pass through: the die, thermal paste, heatsink base, and fins. How is total thermal resistance calculated?
+          </h2>
+
+          {/* Diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center', padding: '10px' }}>
+                <div style={{ fontSize: '32px' }}>🔲</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>CPU Die</p>
+                <p style={{ ...typo.small, color: colors.accent }}>0.3 K/W</p>
+              </div>
+              <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
+              <div style={{ textAlign: 'center', padding: '10px' }}>
+                <div style={{ fontSize: '32px' }}>💧</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>TIM</p>
+                <p style={{ ...typo.small, color: colors.accent }}>0.5 K/W</p>
+              </div>
+              <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
+              <div style={{ textAlign: 'center', padding: '10px' }}>
+                <div style={{ fontSize: '32px' }}>🧱</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Base</p>
+                <p style={{ ...typo.small, color: colors.accent }}>0.1 K/W</p>
+              </div>
+              <div style={{ fontSize: '20px', color: colors.textMuted }}>+</div>
+              <div style={{ textAlign: 'center', padding: '10px' }}>
+                <div style={{ fontSize: '32px' }}>🌡️</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Fins</p>
+                <p style={{ ...typo.small, color: colors.accent }}>0.6 K/W</p>
+              </div>
+              <div style={{ fontSize: '20px', color: colors.textMuted }}>=</div>
+              <div style={{ textAlign: 'center', padding: '10px', background: colors.accent + '22', borderRadius: '8px' }}>
+                <div style={{ fontSize: '32px' }}>?</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Total</p>
               </div>
             </div>
           </div>
 
-          {/* Temperature Display */}
-          <div style={{
-            backgroundColor: 'rgba(15, 23, 42, 0.8)',
-            borderRadius: '8px',
-            padding: typo.cardPadding,
-            border: `1px solid ${heatColor}40`,
-            textAlign: 'center',
-            minWidth: '100px'
-          }}>
-            <div style={{ fontSize: typo.small, color: '#9ca3af', marginBottom: '4px' }}>CPU Temp</div>
-            <div style={{ fontSize: typo.heading, fontWeight: 700, color: heatColor }}>
-              {cpuTemp.toFixed(0)}°C
-            </div>
-            <div style={{ fontSize: typo.label, color: '#6b7280', marginTop: '2px' }}>
-              {cpuTemp < 70 ? 'Safe' : cpuTemp < 85 ? 'Warm' : 'HOT!'}
-            </div>
-          </div>
-
-          {/* Power Info */}
-          <div style={{
-            backgroundColor: 'rgba(15, 23, 42, 0.8)',
-            borderRadius: '8px',
-            padding: typo.cardPadding,
-            border: '1px solid #334155',
-            flex: 1
-          }}>
-            <div style={{ fontSize: typo.body, color: '#f59e0b', fontWeight: 600 }}>
-              Power: {cpuPower}W
-            </div>
-            <div style={{ fontSize: typo.small, color: '#9ca3af', marginTop: '4px' }}>
-              deltaT = P x R
-            </div>
-            <div style={{ fontSize: typo.small, color: '#9ca3af' }}>
-              = {(cpuPower * thermalResistance.total).toFixed(1)}°C
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-6">
-        <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-orange-400 tracking-wide">DATA CENTER PHYSICS</span>
-      </div>
-
-      <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-red-200 bg-clip-text text-transparent">
-        Heat Sink Thermal Resistance
-      </h1>
-
-      <p className="text-base text-slate-400 max-w-md mb-6">
-        Why do CPUs need massive heat sinks but LEDs don't?
-      </p>
-
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-6 max-w-xl w-full border border-slate-700/50 shadow-xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5 rounded-2xl" />
-
-        <div className="relative">
-          <div className="text-5xl mb-4">🔥 💻 ❄️</div>
-
-          <div className="space-y-3">
-            <p className="text-lg text-white/90 font-medium leading-relaxed">
-              A CPU generates 150 watts of heat in a chip smaller than your fingernail!
-            </p>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Without proper cooling, it would reach 1000C in seconds. How does heat flow through the cooling system?
-            </p>
-            <p className="text-sm text-orange-400 font-semibold">
-              It's all about thermal resistance - every layer in the chain matters!
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-4 max-w-2xl mb-4">
-        <p className="text-base text-slate-300">
-          A CPU produces 100W of heat. Between the CPU die and room air, there's thermal paste, a heatsink base, and fins. How is the total thermal resistance calculated?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Take the average of all thermal resistances' },
-          { id: 'B', text: 'Add all thermal resistances together (series)' },
-          { id: 'C', text: 'Use only the largest resistance (bottleneck)' },
-          { id: 'D', text: 'Multiply all resistances together' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            disabled={showPredictionFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-4 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Like electrical resistors in series, thermal resistances add up: R_total = R1 + R2 + R3 + ...
-          </p>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Thermal Resistance Lab</h2>
-      <p className="text-slate-400 mb-4">Adjust parameters to see how each affects CPU temperature!</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
-        {renderHeatSinkVisualization()}
-      </div>
-
-      <div className="grid gap-4 w-full max-w-2xl mb-4">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">CPU Power: {cpuPower}W</label>
-          <input type="range" min="50" max="300" value={cpuPower} onChange={(e) => setCpuPower(parseInt(e.target.value))} className="w-full accent-orange-500" />
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Fin Count: {finCount}</label>
-          <input type="range" min="5" max="60" value={finCount} onChange={(e) => setFinCount(parseInt(e.target.value))} className="w-full accent-orange-500" />
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Fin Height: {finHeight}mm</label>
-          <input type="range" min="20" max="80" value={finHeight} onChange={(e) => setFinHeight(parseInt(e.target.value))} className="w-full accent-orange-500" />
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Fan Speed: {fanSpeed}%</label>
-          <input type="range" min="0" max="100" value={fanSpeed} onChange={(e) => setFanSpeed(parseInt(e.target.value))} className="w-full accent-blue-500" />
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Thermal Paste Quality</label>
-          <div className="flex gap-2">
-            {(['none', 'cheap', 'premium'] as const).map(type => (
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                key={type}
-                onClick={() => setThermalPaste(type)}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                  thermalPaste === type ? 'bg-orange-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
-                }`}
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
               >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
               </button>
             ))}
           </div>
-        </div>
-      </div>
 
-    </div>
-  );
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
 
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">The Science of Thermal Resistance</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">Thermal Ohm's Law</h3>
-          <div className="font-mono text-center text-lg text-white mb-2">deltaT = P x R_thermal</div>
-          <p className="text-slate-300 text-sm">Temperature rise equals power times thermal resistance. Just like V = IR in electronics!</p>
-        </div>
-        <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">Series Resistance Chain</h3>
-          <p className="text-slate-300 text-sm mb-2">Heat flows through each layer in sequence:</p>
-          <ul className="text-sm text-slate-400 space-y-1">
-            <li>- Die to IHS (integrated heat spreader)</li>
-            <li>- IHS to TIM (thermal paste)</li>
-            <li>- TIM to heatsink base</li>
-            <li>- Base through fins to air</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">Key Insight</h3>
-          <p className="text-slate-300">The TOTAL resistance determines CPU temp. A single bad layer (like dried thermal paste with R = 2 K/W) can bottleneck the entire cooling system, no matter how good your heatsink is!</p>
-        </div>
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Fin Count Paradox</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          You have a heatsink with 30 fins. An engineer suggests doubling it to 60 fins for better cooling.
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          What actually happens to cooling performance?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Cooling doubles - twice the fins, twice the cooling!' },
-          { id: 'B', text: 'Cooling improves by exactly 50%' },
-          { id: 'C', text: 'Diminishing returns - improvement is much less than double' },
-          { id: 'D', text: 'No change - fin count doesn\'t matter' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            disabled={showTwistFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showTwistFeedback && (
-        <div className="mt-4 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! More fins mean less space between them, restricting airflow and reducing each fin's efficiency. There's an optimal point!
+  // PLAY PHASE - Interactive Thermal Simulator
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Thermal Resistance Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust each parameter to see how it affects CPU temperature
           </p>
-        </div>
-      )}
-    </div>
-  );
 
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Diminishing Returns Demo</h2>
-      <p className="text-slate-400 mb-4">Watch how fin efficiency drops as you pack in more fins!</p>
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <HeatSinkVisualization />
+            </div>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
-        {renderHeatSinkVisualization()}
+            {/* Power slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>CPU Power (Watts)</span>
+                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{cpuPower}W</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="250"
+                value={cpuPower}
+                onChange={(e) => setCpuPower(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
 
-        <div className="mt-4 bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Fin Count: {finCount} (drag to see diminishing returns)</label>
-          <input type="range" min="5" max="80" value={finCount} onChange={(e) => setFinCount(parseInt(e.target.value))} className="w-full accent-amber-500" />
-          <div className="flex justify-between text-xs text-slate-400 mt-1">
-            <span>5 fins (high efficiency)</span>
-            <span>40 fins (optimal)</span>
-            <span>80 fins (overcrowded)</span>
-          </div>
-        </div>
-
-        <div className="mt-4 bg-amber-900/30 rounded-xl p-4">
-          <p className="text-amber-400 font-medium">Fin Efficiency: {(Math.min(1, 15 / finCount) * 100).toFixed(0)}%</p>
-          <p className="text-sm text-slate-300 mt-1">
-            {finCount <= 15 ? "Fins operating at full efficiency!" :
-             finCount <= 40 ? "Some airflow restriction between fins" :
-             "Severe crowding - air can't flow effectively!"}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Fin Design Trade-offs</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">The Boundary Layer Problem</h3>
-          <p className="text-slate-300 text-sm">
-            Air flowing past a fin develops a boundary layer - a thin zone of slow-moving air that insulates the fin. Fins too close together cause boundary layers to merge, blocking fresh air!
-          </p>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Optimal Design</h3>
-          <ul className="text-sm text-slate-300 space-y-1">
-            <li>- Fin spacing: 1-3mm for forced airflow</li>
-            <li>- Taller fins help more than adding fins</li>
-            <li>- Fan static pressure matters for dense fins</li>
-            <li>- Vapor chambers for high-power CPUs</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveAppTab(index)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index ? 'bg-orange-600 text-white'
-              : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
-          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
-        </div>
-        <p className="text-lg text-slate-300 mb-3">{applications[activeAppTab].description}</p>
-        <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onClick={() => handleAppComplete(activeAppTab)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">{applications.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
+            {/* Thermal paste selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <span style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                Thermal Interface Material
+              </span>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {[
+                  { id: 'none', label: 'None (Air)', r: '2.0 K/W' },
+                  { id: 'cheap', label: 'Basic', r: '0.5 K/W' },
+                  { id: 'premium', label: 'Premium', r: '0.2 K/W' }
+                ].map(tim => (
                   <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-orange-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
+                    key={tim.id}
+                    onClick={() => setThermalPaste(tim.id as typeof thermalPaste)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: `2px solid ${thermalPaste === tim.id ? colors.accent : colors.border}`,
+                      background: thermalPaste === tim.id ? colors.accent + '22' : 'transparent',
+                      cursor: 'pointer',
+                    }}
                   >
-                    {option.text}
+                    <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{tim.label}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{tim.r}</div>
                   </button>
                 ))}
               </div>
             </div>
-          ))}
+
+            {/* Fin count slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Fin Count</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{finCount} fins</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="50"
+                value={finCount}
+                onChange={(e) => setFinCount(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Fan speed slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Fan Speed</span>
+                <span style={{ ...typo.small, color: '#60a5fa', fontWeight: 600 }}>{fanSpeed}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={fanSpeed}
+                onChange={(e) => setFanSpeed(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+          </div>
+
+          {/* Discovery prompts */}
+          {thermalPaste === 'none' && (
+            <div style={{
+              background: `${colors.error}22`,
+              border: `1px solid ${colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                No thermal paste! Air gaps create massive resistance (2+ K/W). Notice the temperature spike!
+              </p>
+            </div>
+          )}
+
+          {cpuTemp < 70 && thermalPaste === 'premium' && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Excellent cooling! Premium TIM and good airflow keep things frosty.
+              </p>
+            </div>
+          )}
+
           <button
-            onClick={() => setShowTestResults(true)}
-            disabled={testAnswers.includes(-1)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-orange-600 to-red-600 text-white'}`}
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Submit Answers
+            Understand the Physics
           </button>
         </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
-          <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered thermal resistance!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() < 7 && (
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Thermal Ohm's Law
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '28px', fontFamily: 'monospace', color: colors.accent, marginBottom: '16px' }}>
+              Delta T = P x R_thermal
+            </div>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              Temperature rise = Power x Total thermal resistance
+            </div>
+            <div style={{ marginTop: '16px', ...typo.small, color: colors.textMuted }}>
+              Just like V = IR in electrical circuits!
+            </div>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              Series Resistance Chain
+            </h3>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '12px' }}>
+                Heat flows through each layer in sequence. Total resistance is the <span style={{ color: colors.accent }}>sum of all layers</span>:
+              </p>
+              <div style={{ fontFamily: 'monospace', color: colors.accent, margin: '16px 0', fontSize: '14px' }}>
+                R_total = R_junction + R_TIM + R_base + R_fins
+              </div>
+              <ul style={{ marginLeft: '20px', lineHeight: '2' }}>
+                <li><strong>R_junction:</strong> Die to package (fixed by CPU design)</li>
+                <li><strong>R_TIM:</strong> Thermal paste quality matters hugely!</li>
+                <li><strong>R_base:</strong> Heatsink base spreading (copper vs aluminum)</li>
+                <li><strong>R_fins:</strong> Surface area and airflow determine this</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.warning}11`,
+            border: `1px solid ${colors.warning}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
+              Key Insight: The Weakest Link
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              A single bad interface (like dried thermal paste at 2 K/W) can bottleneck your entire cooling system. No amount of fans or fins can compensate for a poor TIM layer!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore the Fin Paradox
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Cooling doubles - twice the fins, twice the surface area!' },
+      { id: 'b', text: 'Cooling improves by 50% - more fins help but not linearly' },
+      { id: 'c', text: 'Diminishing returns - much less than double improvement', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Fin Design Trade-offs
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            You double the fin count from 25 to 50. What happens to cooling performance?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px' }}>
+              <div>
+                <div style={{ fontSize: '40px' }}>📊</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>25 fins</p>
+                <p style={{ ...typo.small, color: colors.success }}>Good spacing</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+              <div>
+                <div style={{ fontSize: '40px' }}>📊📊</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>50 fins</p>
+                <p style={{ ...typo.small, color: colors.warning }}>Packed tight</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
             <button
-              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              className="px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Review & Try Again
+              See the Fin Paradox
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-orange-900/50 via-red-900/50 to-amber-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">🔥</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Thermal Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">You've mastered heat sink thermal resistance!</p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📊</div><p className="text-sm text-slate-300">Thermal Ohm's Law</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔗</div><p className="text-sm text-slate-300">Series Resistance</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📉</div><p className="text-sm text-slate-300">Diminishing Returns</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">💨</div><p className="text-sm text-slate-300">Airflow Optimization</p></div>
-        </div>
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPhaseContent = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const finEfficiency = Math.min(1, 20 / finCount);
 
-  // Determine if next button should be enabled for each phase
-  const canProceed = () => {
-    switch (phase) {
-      case 'hook': return true;
-      case 'predict': return showPredictionFeedback;
-      case 'play': return true;
-      case 'review': return true;
-      case 'twist_predict': return showTwistFeedback;
-      case 'twist_play': return true;
-      case 'twist_review': return true;
-      case 'transfer': return completedApps.size >= 4;
-      case 'test': return showTestResults && calculateScore() >= 7;
-      case 'mastery': return false;
-      default: return true;
-    }
-  };
-
-  // Get next button label for each phase
-  const getNextLabel = () => {
-    switch (phase) {
-      case 'hook': return 'Start';
-      case 'predict': return showPredictionFeedback ? 'Continue' : 'Select an answer';
-      case 'play': return 'Learn More';
-      case 'review': return 'Discover Twist';
-      case 'twist_predict': return showTwistFeedback ? 'Continue' : 'Select an answer';
-      case 'twist_play': return 'See Explanation';
-      case 'twist_review': return 'Applications';
-      case 'transfer': return completedApps.size >= 4 ? 'Take Test' : `Complete ${4 - completedApps.size} more`;
-      case 'test': return calculateScore() >= 7 ? 'Complete' : 'Score 7+ to pass';
-      case 'mastery': return 'Complete';
-      default: return 'Continue';
-    }
-  };
-
-  return (
-    <div className="absolute inset-0 flex flex-col bg-[#0a0f1a] text-white overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900 pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Progress bar header */}
-      <div className="relative z-10 flex-shrink-0">
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-      </div>
 
-      {/* Main content - scrollable */}
-      <div className="relative z-10 flex-1 overflow-y-auto">
-        {renderPhaseContent()}
-      </div>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            The Fin Count Paradox
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Watch how efficiency drops as fins get crowded
+          </p>
 
-      {/* Bottom navigation bar */}
-      <div className="relative z-10 flex-shrink-0">
-        {renderBottomBar(canProceed(), getNextLabel())}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <HeatSinkVisualization />
+            </div>
+
+            {/* Fin count slider with efficiency display */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Fin Count</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{finCount} fins</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="60"
+                value={finCount}
+                onChange={(e) => setFinCount(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10 (sparse)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>35 (optimal)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>60 (packed)</span>
+              </div>
+            </div>
+
+            {/* Efficiency indicator */}
+            <div style={{
+              background: finEfficiency > 0.7 ? `${colors.success}22` : finEfficiency > 0.4 ? `${colors.warning}22` : `${colors.error}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                ...typo.h2,
+                color: finEfficiency > 0.7 ? colors.success : finEfficiency > 0.4 ? colors.warning : colors.error,
+                marginBottom: '8px',
+              }}>
+                {(finEfficiency * 100).toFixed(0)}% Fin Efficiency
+              </div>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {finCount <= 20 ? 'Wide spacing - each fin works at full potential!' :
+                 finCount <= 35 ? 'Good balance - moderate airflow restriction' :
+                 'Too crowded! Air cannot flow between fins effectively.'}
+              </p>
+            </div>
+
+            {/* Airflow visualization description */}
+            <div style={{
+              marginTop: '16px',
+              padding: '12px',
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                <strong>Boundary Layer Effect:</strong> Air flowing past each fin develops a slow-moving boundary layer. When fins are too close, these layers merge and block fresh air from reaching fin surfaces.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Trade-offs
+          </button>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Heatsink Design Optimization
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🌬️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Boundary Layer Physics</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Air velocity drops to zero at the fin surface. This creates a <span style={{ color: colors.accent }}>thermal boundary layer</span> that insulates the fin. Fins too close together cause these layers to merge, blocking fresh air and killing convective heat transfer.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📐</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Optimal Fin Spacing</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                For forced convection (with fans): <span style={{ color: colors.success }}>1-3mm spacing</span>. For natural convection (passive): <span style={{ color: colors.warning }}>5-10mm spacing</span>. Taller fins often beat more fins!
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>💎</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Advanced Solutions</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>Vapor chambers</strong> spread heat in 2D before reaching fins. <strong>Heat pipes</strong> transport heat to remote fin arrays. <strong>Liquid cooling</strong> bypasses air convection entirely with much lower thermal resistance.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Connection to Thermal Resistance:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🔥' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Thermal Master!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand thermal resistance and heatsink design!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review & Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🔥
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.accent, marginBottom: '16px' }}>
+          Thermal Resistance Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how heat flows through thermal systems and how to design effective cooling solutions.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Thermal Ohm\'s Law: Delta T = P x R',
+              'Series resistance chains add up',
+              'TIM quality is often the bottleneck',
+              'Fin count diminishing returns',
+              'Boundary layer effects on cooling',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default HeatSinkThermalRenderer;

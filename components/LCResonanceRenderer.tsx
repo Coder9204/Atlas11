@@ -56,12 +56,12 @@ const realWorldApps = [
     short: 'Selecting your favorite station',
     tagline: 'The original wireless technology',
     description: 'Every AM/FM radio uses an LC resonant circuit to select one station from the electromagnetic spectrum. By adjusting capacitance, the resonant frequency changes, allowing only the desired station\'s frequency to pass while rejecting all others.',
-    connection: 'The resonant frequency f = 1/(2π√LC) determines which station you hear. Changing capacitance with the tuning dial shifts this frequency, exactly as we explored in the simulation.',
+    connection: 'The resonant frequency f = 1/(2pi*sqrt(LC)) determines which station you hear. Changing capacitance with the tuning dial shifts this frequency, exactly as we explored in the simulation.',
     howItWorks: 'A variable capacitor connected to a fixed inductor forms the tuning circuit. At resonance, the LC circuit has maximum impedance for parallel configurations or minimum for series. Only signals at the resonant frequency develop significant voltage.',
     stats: [
-      { value: '540-1700kHz', label: 'AM band', icon: '⚡' },
-      { value: '88-108MHz', label: 'FM band', icon: '📈' },
-      { value: 'Billions', label: 'Radios worldwide', icon: '🚀' }
+      { value: '540-1700kHz', label: 'AM band', icon: '📡' },
+      { value: '88-108MHz', label: 'FM band', icon: '📻' },
+      { value: 'Billions', label: 'Radios worldwide', icon: '🌍' }
     ],
     examples: ['Car AM/FM receivers', 'Portable shortwave radios', 'Crystal radio sets', 'Software-defined radios'],
     companies: ['Sony', 'Bose', 'Sangean', 'Tecsun'],
@@ -78,8 +78,8 @@ const realWorldApps = [
     howItWorks: 'L-networks, pi-networks, and T-networks use combinations of inductors and capacitors to transform impedance. The component values are chosen so the network resonates at the operating frequency while providing the needed impedance transformation.',
     stats: [
       { value: '>90%', label: 'Match efficiency', icon: '⚡' },
-      { value: '50Ω', label: 'Standard impedance', icon: '📈' },
-      { value: '$12B', label: 'RF market', icon: '🚀' }
+      { value: '50 ohms', label: 'Standard impedance', icon: '🔌' },
+      { value: '$12B', label: 'RF market', icon: '💰' }
     ],
     examples: ['Cell tower transmitters', 'WiFi access points', 'Ham radio tuners', 'Satellite uplinks'],
     companies: ['Qualcomm', 'Skyworks', 'Qorvo', 'Murata'],
@@ -93,11 +93,11 @@ const realWorldApps = [
     tagline: 'Physics behind high-fidelity sound',
     description: 'Speaker systems use LC filters to divide audio frequencies between drivers. Tweeters receive high frequencies, woofers receive low frequencies, and midranges handle the middle. LC resonance determines the crossover points.',
     connection: 'LC filters use resonance to pass or block frequency ranges. Below resonance, an LC low-pass filter passes signals; above resonance, a high-pass filter passes signals. This frequency-selective behavior separates audio into bands.',
-    howItWorks: 'Second-order crossovers use one inductor and one capacitor per filter section. The crossover frequency is set by f = 1/(2π√LC). Higher-order designs use multiple LC sections for steeper rolloff between frequency bands.',
+    howItWorks: 'Second-order crossovers use one inductor and one capacitor per filter section. The crossover frequency is set by f = 1/(2pi*sqrt(LC)). Higher-order designs use multiple LC sections for steeper rolloff between frequency bands.',
     stats: [
-      { value: '80Hz-5kHz', label: 'Crossover range', icon: '⚡' },
-      { value: '12dB/oct', label: 'Typical slope', icon: '📈' },
-      { value: '$8.5B', label: 'Speaker market', icon: '🚀' }
+      { value: '80Hz-5kHz', label: 'Crossover range', icon: '🎵' },
+      { value: '12dB/oct', label: 'Typical slope', icon: '📉' },
+      { value: '$8.5B', label: 'Speaker market', icon: '💰' }
     ],
     examples: ['Home theater systems', 'PA speaker cabinets', 'Studio monitors', 'Car audio systems'],
     companies: ['JBL', 'Bowers & Wilkins', 'KEF', 'Focal'],
@@ -114,8 +114,8 @@ const realWorldApps = [
     howItWorks: 'The transmitter coil and capacitor form an LC circuit driven at resonance. The receiver coil and capacitor are tuned to the same frequency. At resonance, current flows efficiently between coils through their shared magnetic field.',
     stats: [
       { value: '85-95%', label: 'Efficiency', icon: '⚡' },
-      { value: '15W-11kW', label: 'Power range', icon: '📈' },
-      { value: '$15B', label: 'WPT market', icon: '🚀' }
+      { value: '15W-11kW', label: 'Power range', icon: '🔋' },
+      { value: '$15B', label: 'WPT market', icon: '💰' }
     ],
     examples: ['Qi phone chargers', 'Electric vehicle charging', 'Medical implant power', 'Industrial robot charging'],
     companies: ['WiTricity', 'Energous', 'Powermat', 'Qualcomm Halo'],
@@ -125,23 +125,145 @@ const realWorldApps = [
 ];
 
 // ============================================================================
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ============================================================================
+const testQuestions = [
+  {
+    scenario: "You're building a simple AM radio receiver and need to understand what makes it tune to specific stations instead of picking up all broadcasts at once.",
+    question: "What is LC resonance and why is it essential for radio tuning?",
+    options: [
+      { id: 'a', label: "A phenomenon where inductors and capacitors amplify all frequencies equally" },
+      { id: 'b', label: "A condition where an LC circuit responds maximally to one specific frequency determined by L and C values", correct: true },
+      { id: 'c', label: "A type of interference that occurs when multiple radio stations broadcast simultaneously" },
+      { id: 'd', label: "The resistance that develops in a circuit at high frequencies" }
+    ],
+    explanation: "LC resonance occurs when the inductive reactance equals the capacitive reactance at a specific frequency (f = 1/2pi*sqrt(LC)). At this resonant frequency, energy oscillates efficiently between the inductor's magnetic field and the capacitor's electric field, causing the circuit to respond strongly to that frequency while attenuating others."
+  },
+  {
+    scenario: "An old car radio has a manual tuning dial that you rotate to find stations. Inside, this dial is connected to a variable capacitor that changes its capacitance as you turn it.",
+    question: "When you turn the dial to tune from a lower frequency station (600 kHz) to a higher frequency station (1400 kHz), what happens to the variable capacitor?",
+    options: [
+      { id: 'a', label: "The capacitance increases, raising the resonant frequency" },
+      { id: 'b', label: "The capacitance decreases, raising the resonant frequency", correct: true },
+      { id: 'c', label: "The capacitance stays the same while the inductance changes" },
+      { id: 'd', label: "The capacitor disconnects and a different circuit takes over" }
+    ],
+    explanation: "Since resonant frequency f = 1/(2pi*sqrt(LC)), decreasing capacitance (C) will increase the resonant frequency. In variable capacitors, rotating the dial moves the overlapping plate area, reducing capacitance. This is why turning the dial clockwise typically tunes to higher frequency stations."
+  },
+  {
+    scenario: "An engineer needs to design an LC circuit that resonates at exactly 1 MHz. She has a 100 microhenry inductor available.",
+    question: "Using the resonance formula f = 1/(2pi*sqrt(LC)), what capacitance value does she need?",
+    options: [
+      { id: 'a', label: "About 253 picofarads (pF)", correct: true },
+      { id: 'b', label: "About 1 microfarad (uF)" },
+      { id: 'c', label: "About 100 nanofarads (nF)" },
+      { id: 'd', label: "About 1 picofarad (pF)" }
+    ],
+    explanation: "Rearranging f = 1/(2pi*sqrt(LC)) gives C = 1/(4pi^2 * f^2 * L). Plugging in f = 1 MHz and L = 100 uH: C = 1/(4 * 9.87 * 10^12 * 10^-4) = 253 pF. This calculation is fundamental for designing tuned circuits."
+  },
+  {
+    scenario: "A radio receiver designer is comparing two LC circuits: one with Q factor of 20 and another with Q factor of 200. Both are tuned to the same frequency.",
+    question: "How does the higher Q factor circuit differ in its ability to select radio stations?",
+    options: [
+      { id: 'a', label: "It has a wider bandwidth, allowing multiple stations to be heard simultaneously" },
+      { id: 'b', label: "It has a narrower bandwidth, providing sharper selectivity to reject adjacent stations", correct: true },
+      { id: 'c', label: "It produces louder audio output from the selected station" },
+      { id: 'd', label: "It consumes less power but has identical selectivity" }
+    ],
+    explanation: "Q factor (Quality factor) determines the sharpness of the resonance peak. Bandwidth = f0/Q, so a higher Q means narrower bandwidth. The Q=200 circuit has a bandwidth 10 times narrower than the Q=20 circuit, making it better at rejecting adjacent channel stations."
+  },
+  {
+    scenario: "You're observing an LC tank circuit with an oscilloscope. The circuit was given an initial charge and is now oscillating freely with no external power source.",
+    question: "What is happening to the energy in this tank circuit during each oscillation cycle?",
+    options: [
+      { id: 'a', label: "Energy is being created and destroyed as current flows" },
+      { id: 'b', label: "Energy alternates between electric field energy in the capacitor and magnetic field energy in the inductor", correct: true },
+      { id: 'c', label: "Energy remains constant in the capacitor while the inductor provides amplification" },
+      { id: 'd', label: "Energy is continuously absorbed by the inductor's core material" }
+    ],
+    explanation: "In an ideal LC tank circuit, total energy is conserved but constantly transforms between two forms: when the capacitor is fully charged, all energy is stored in its electric field (E = 1/2 CV^2). As it discharges through the inductor, energy transfers to the magnetic field (E = 1/2 LI^2)."
+  },
+  {
+    scenario: "A digital watch keeps time using a tiny quartz crystal oscillator. The crystal is connected to a small integrated circuit that maintains oscillation at exactly 32.768 kHz.",
+    question: "Why do precision timekeeping devices use quartz crystals instead of simple LC circuits?",
+    options: [
+      { id: 'a', label: "Crystals are cheaper to manufacture than inductors and capacitors" },
+      { id: 'b', label: "Quartz crystals have extremely high Q factors (10,000-100,000+), providing exceptional frequency stability", correct: true },
+      { id: 'c', label: "Crystals can generate their own power through piezoelectric effects" },
+      { id: 'd', label: "LC circuits cannot oscillate at frequencies as low as 32.768 kHz" }
+    ],
+    explanation: "Quartz crystals act as electromechanical resonators with Q factors of 10,000 to over 100,000 - far exceeding typical LC circuits (Q ~ 50-500). This ultra-high Q means the crystal's resonant frequency is extremely stable and precise."
+  },
+  {
+    scenario: "Engineers are designing a wireless charging pad for smartphones. The charging coil in the pad must transfer power efficiently to the receiving coil inside the phone.",
+    question: "Why is resonant coupling used instead of simple transformer-style inductive coupling for wireless power transfer?",
+    options: [
+      { id: 'a', label: "Resonant coupling looks more impressive to consumers" },
+      { id: 'b', label: "At resonance, energy transfer efficiency is dramatically improved, especially over larger air gaps", correct: true },
+      { id: 'c', label: "Simple inductive coupling would damage the phone's battery" },
+      { id: 'd', label: "Resonant coupling eliminates the need for any coils in the system" }
+    ],
+    explanation: "Resonant wireless power transfer uses matched LC circuits in both transmitter and receiver tuned to the same frequency. At resonance, magnetic coupling is dramatically enhanced, allowing efficient power transfer even with significant air gaps and misalignment."
+  },
+  {
+    scenario: "A telecommunications engineer is designing a bandpass filter for a radio receiver's intermediate frequency (IF) stage. The filter must pass signals at 10.7 MHz while rejecting signals at 10.5 MHz and 10.9 MHz.",
+    question: "What filter topology would best achieve this narrow bandpass characteristic using LC resonance?",
+    options: [
+      { id: 'a', label: "A single parallel LC circuit with moderate Q factor" },
+      { id: 'b', label: "Multiple cascaded LC resonators with coupled resonances for steep rolloff", correct: true },
+      { id: 'c', label: "A series combination of capacitors only" },
+      { id: 'd', label: "A single high-value inductor with no capacitors" }
+    ],
+    explanation: "Professional IF filters use multiple coupled LC resonators (often ceramic or crystal filters with 2-8 poles) to achieve steep rolloff. A single LC circuit cannot provide the sharp response needed to reject adjacent channels just 200 kHz away."
+  },
+  {
+    scenario: "A power electronics engineer notices that a DC-DC converter is producing unexpected high-frequency noise. Investigation reveals oscillations occurring at 50 MHz, far above the 100 kHz switching frequency.",
+    question: "What is the most likely cause of this parasitic resonance problem?",
+    options: [
+      { id: 'a', label: "The switching frequency is set incorrectly" },
+      { id: 'b', label: "Unintended LC circuits formed by PCB trace inductance and component parasitic capacitances", correct: true },
+      { id: 'c', label: "The output capacitors are too large" },
+      { id: 'd', label: "The input voltage is fluctuating" }
+    ],
+    explanation: "Parasitic resonance is common in power electronics. Every PCB trace has inductance (~1 nH/mm) and every component has parasitic capacitance. These unintended L and C elements form resonant circuits. At 50 MHz, even small parasitic values create resonance."
+  },
+  {
+    scenario: "A ham radio operator is setting up a new antenna for the 20-meter band (14.0-14.35 MHz). The antenna feedpoint shows an impedance of 35 + j25 ohms, but the transmitter expects 50 ohms purely resistive.",
+    question: "How can LC resonance principles be applied to match this antenna to the transmitter?",
+    options: [
+      { id: 'a', label: "Use a longer coaxial cable to absorb the mismatch" },
+      { id: 'b', label: "Use an LC matching network (antenna tuner) to transform impedance and cancel the reactive component", correct: true },
+      { id: 'c', label: "Increase transmitter power to overcome the mismatch" },
+      { id: 'd', label: "The mismatch is acceptable and requires no correction" }
+    ],
+    explanation: "An LC matching network (antenna tuner) uses the resonance principle to transform impedances. The +j25 ohms indicates inductive reactance, which can be cancelled by adding appropriate capacitive reactance. The network resonates to cancel reactive components while transforming resistance."
+  }
+];
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
-const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }) => {
+const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent, gamePhase }) => {
   // Phase management
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-  const [phase, setPhase] = useState<Phase>('hook');
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [isMobile, setIsMobile] = useState(false);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [capacitance, setCapacitance] = useState(100); // pF (10-500)
-  const [inductance, setInductance] = useState(250); // µH (50-500)
-  const [inputFrequency, setInputFrequency] = useState(1000); // kHz (500-1700 AM band)
+  const [inductance, setInductance] = useState(250); // uH (50-500)
   const [showEnergyFlow, setShowEnergyFlow] = useState(true);
 
   // Radio stations (simulated AM band)
@@ -157,12 +279,13 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
 
   // Transfer state
   const [completedApps, setCompletedApps] = useState([false, false, false, false]);
-  const [activeApp, setActiveApp] = useState(0);
+  const [selectedApp, setSelectedApp] = useState(0);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testScore, setTestScore] = useState(0);
+  const [testSubmitted, setTestSubmitted] = useState(false);
 
   const isNavigating = useRef(false);
 
@@ -188,9 +311,9 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  // Calculate resonant frequency: f = 1 / (2π√(LC))
+  // Calculate resonant frequency: f = 1 / (2pi * sqrt(LC))
   const resonantFrequency = useMemo(() => {
-    const L = inductance * 1e-6; // Convert µH to H
+    const L = inductance * 1e-6; // Convert uH to H
     const C = capacitance * 1e-12; // Convert pF to F
     const f = 1 / (2 * Math.PI * Math.sqrt(L * C));
     return Math.round(f / 1000); // Return in kHz
@@ -201,14 +324,12 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
 
   // Response at current input frequency (resonance curve)
   const responseAtFrequency = useMemo(() => {
-    const f = inputFrequency;
+    const inputFrequency = resonantFrequency;
     const f0 = resonantFrequency;
     const bandwidth = f0 / qFactor;
-
-    // Lorentzian resonance curve
-    const response = 1 / (1 + Math.pow((f - f0) / (bandwidth / 2), 2));
+    const response = 1 / (1 + Math.pow((inputFrequency - f0) / (bandwidth / 2), 2));
     return Math.max(0, Math.min(100, response * 100));
-  }, [inputFrequency, resonantFrequency, qFactor]);
+  }, [resonantFrequency, qFactor]);
 
   // Find closest station to current tuning
   const closestStation = useMemo(() => {
@@ -284,6 +405,20 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
     const idx = phaseOrder.indexOf(phase);
     if (idx > 0) goToPhase(phaseOrder[idx - 1]);
   }, [phase, goToPhase]);
+
+  // Phase labels for navigation
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Twist Experiment',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
   // ============================================================================
   // REUSABLE COMPONENTS
@@ -412,7 +547,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
           borderRadius: '8px',
           borderLeft: `3px solid ${color}`
         }}>
-          💡 {hint}
+          {hint}
         </div>
       </div>
     );
@@ -510,14 +645,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         points.push(`${x},${y}`);
       }
       return points.join(' ');
-    }, [resonantFrequency, qFactor, centerX]);
-
-    // Resonance curve fill area
-    const resonanceCurveFillPoints = useMemo(() => {
-      const startX = centerX - 100;
-      const baseY = 360;
-      return `${startX},${baseY} ${resonanceCurvePoints} ${centerX + 100},${baseY}`;
-    }, [resonanceCurvePoints, centerX]);
+    }, [resonantFrequency, centerX]);
 
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: svgWidth, margin: '0 auto' }}>
@@ -527,183 +655,52 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           style={{ display: 'block' }}
         >
-          {/* === COMPREHENSIVE DEFINITIONS === */}
+          {/* Definitions */}
           <defs>
-            {/* Premium capacitor plate gradient - 3D metallic blue */}
             <linearGradient id="lcrCapacitorPlate" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#93c5fd" />
-              <stop offset="15%" stopColor="#60a5fa" />
-              <stop offset="40%" stopColor="#3b82f6" />
-              <stop offset="60%" stopColor="#2563eb" />
-              <stop offset="85%" stopColor="#1d4ed8" />
+              <stop offset="50%" stopColor="#3b82f6" />
               <stop offset="100%" stopColor="#1e40af" />
             </linearGradient>
 
-            {/* Capacitor plate side edge for 3D effect */}
-            <linearGradient id="lcrCapacitorEdge" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1e3a8a" />
-              <stop offset="30%" stopColor="#1e40af" />
-              <stop offset="70%" stopColor="#1e40af" />
-              <stop offset="100%" stopColor="#1e3a8a" />
-            </linearGradient>
-
-            {/* Premium inductor coil gradient - copper metallic */}
             <linearGradient id="lcrInductorCoil" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#fcd34d" />
-              <stop offset="20%" stopColor="#f59e0b" />
-              <stop offset="40%" stopColor="#d97706" />
-              <stop offset="60%" stopColor="#b45309" />
-              <stop offset="80%" stopColor="#92400e" />
+              <stop offset="50%" stopColor="#f97316" />
               <stop offset="100%" stopColor="#78350f" />
             </linearGradient>
 
-            {/* Inductor coil highlight for metallic shine */}
-            <linearGradient id="lcrInductorHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0" />
-              <stop offset="30%" stopColor="#fef3c7" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#fef3c7" stopOpacity="0.9" />
-              <stop offset="70%" stopColor="#fef3c7" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Energy glow radial - purple for energy flow */}
-            <radialGradient id="lcrEnergyGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#c084fc" stopOpacity="1" />
-              <stop offset="25%" stopColor="#a855f7" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#9333ea" stopOpacity="0.5" />
-              <stop offset="75%" stopColor="#7c3aed" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Electric field gradient between capacitor plates */}
-            <linearGradient id="lcrElectricField" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
-              <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.7" />
-              <stop offset="50%" stopColor="#2563eb" stopOpacity="0.5" />
-              <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.9" />
-            </linearGradient>
-
-            {/* Magnetic field gradient around inductor */}
-            <radialGradient id="lcrMagneticField" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fb923c" stopOpacity="0" />
-              <stop offset="40%" stopColor="#f97316" stopOpacity="0.4" />
-              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#c2410c" stopOpacity="0.3" />
-            </radialGradient>
-
-            {/* Resonance curve gradient fill */}
-            <linearGradient id="lcrResonanceFill" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#16a34a" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#15803d" stopOpacity="0.05" />
-            </linearGradient>
-
-            {/* Resonance peak glow */}
-            <radialGradient id="lcrResonancePeakGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
-              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.7" />
-              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Wire gradient - premium metallic silver */}
             <linearGradient id="lcrWire" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="30%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#475569" />
-              <stop offset="70%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#64748b" />
               <stop offset="100%" stopColor="#94a3b8" />
             </linearGradient>
 
-            {/* Background gradient */}
             <linearGradient id="lcrBackground" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
               <stop offset="50%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
 
-            {/* Current particle gradient */}
-            <radialGradient id="lcrCurrentParticle" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#e9d5ff" stopOpacity="1" />
-              <stop offset="30%" stopColor="#c084fc" stopOpacity="0.9" />
-              <stop offset="60%" stopColor="#a855f7" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
-            </radialGradient>
-
-            {/* === GLOW FILTERS === */}
-
-            {/* Main component glow filter */}
-            <filter id="lcrComponentGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Electric field glow */}
-            <filter id="lcrElectricGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Magnetic field glow */}
-            <filter id="lcrMagneticGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Energy particle glow */}
-            <filter id="lcrParticleGlow" x="-200%" y="-200%" width="500%" height="500%">
+            <filter id="lcrGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
 
-            {/* Resonance peak glow filter */}
-            <filter id="lcrResonanceGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Component shadow */}
-            <filter id="lcrShadow" x="-20%" y="-20%" width="140%" height="160%">
-              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
-            </filter>
-
-            {/* Inner glow for panels */}
-            <filter id="lcrInnerGlow" x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            {/* Grid pattern */}
             <pattern id="lcrGrid" width="20" height="20" patternUnits="userSpaceOnUse">
               <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#334155" strokeWidth="0.5" opacity="0.3" />
             </pattern>
           </defs>
 
-          {/* === BACKGROUND === */}
+          {/* Background */}
           <rect width={svgWidth} height={svgHeight} fill="url(#lcrBackground)" rx="12" />
           <rect width={svgWidth} height={svgHeight} fill="url(#lcrGrid)" rx="12" />
 
-          {/* === LC CIRCUIT SCHEMATIC === */}
+          {/* LC Circuit Schematic */}
           <g transform="translate(0, 20)">
-            {/* Circuit outline with gradient */}
+            {/* Circuit outline */}
             <rect
               x={centerX - 120}
               y={60}
@@ -713,55 +710,18 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
               fill="none"
               stroke="url(#lcrWire)"
               strokeWidth="4"
-              filter="url(#lcrShadow)"
             />
 
-            {/* === CAPACITOR (C) - Premium 3D Design === */}
-            <g filter="url(#lcrShadow)">
-              {/* Top plate with 3D effect */}
-              <rect
-                x={centerX - 100}
-                y={88}
-                width={60}
-                height={12}
-                rx="2"
-                fill="url(#lcrCapacitorPlate)"
-              />
-              {/* Top plate edge highlight */}
-              <rect
-                x={centerX - 100}
-                y={88}
-                width={60}
-                height={2}
-                rx="1"
-                fill="url(#lcrCapacitorEdge)"
-                opacity="0.6"
-              />
+            {/* Capacitor (C) */}
+            <g>
+              {/* Top plate */}
+              <rect x={centerX - 100} y={88} width={60} height={12} rx="2" fill="url(#lcrCapacitorPlate)" />
+              {/* Bottom plate */}
+              <rect x={centerX - 100} y={113} width={60} height={12} rx="2" fill="url(#lcrCapacitorPlate)" />
 
-              {/* Bottom plate with 3D effect */}
-              <rect
-                x={centerX - 100}
-                y={113}
-                width={60}
-                height={12}
-                rx="2"
-                fill="url(#lcrCapacitorPlate)"
-              />
-              {/* Bottom plate edge highlight */}
-              <rect
-                x={centerX - 100}
-                y={123}
-                width={60}
-                height={2}
-                rx="1"
-                fill="url(#lcrCapacitorEdge)"
-                opacity="0.6"
-              />
-
-              {/* Electric field between plates (when charged) */}
+              {/* Electric field when charged */}
               {showEnergyAnimation && capacitorEnergy > 0.1 && (
-                <g opacity={capacitorEnergy} filter="url(#lcrElectricGlow)">
-                  {/* Field lines */}
+                <g opacity={capacitorEnergy} filter="url(#lcrGlow)">
                   {[0, 1, 2, 3, 4].map(i => (
                     <line
                       key={i}
@@ -769,98 +729,34 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
                       y1={101}
                       x2={centerX - 92 + i * 12}
                       y2={112}
-                      stroke="url(#lcrElectricField)"
+                      stroke="#60a5fa"
                       strokeWidth="2"
                       strokeLinecap="round"
-                    >
-                      <animate
-                        attributeName="strokeDasharray"
-                        values="0,20;10,10;0,20"
-                        dur="0.8s"
-                        repeatCount="indefinite"
-                      />
-                    </line>
+                    />
                   ))}
-                  {/* Energy glow between plates */}
-                  <ellipse
-                    cx={centerX - 70}
-                    cy={106}
-                    rx={35}
-                    ry={12}
-                    fill="url(#lcrEnergyGlow)"
-                  />
                 </g>
               )}
             </g>
 
-            {/* === INDUCTOR (L) - Premium Copper Coil === */}
-            <g filter="url(#lcrShadow)">
-              {/* Coil turns with metallic copper effect */}
+            {/* Inductor (L) - Copper Coil */}
+            <g>
               {[0, 1, 2, 3].map(i => (
-                <g key={i}>
-                  {/* Back of coil (darker) */}
-                  <ellipse
-                    cx={centerX + 48 + i * 18}
-                    cy={106}
-                    rx={9}
-                    ry={18}
-                    fill="none"
-                    stroke="#78350f"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                  />
-                  {/* Front of coil (gradient) */}
-                  <ellipse
-                    cx={centerX + 48 + i * 18}
-                    cy={106}
-                    rx={9}
-                    ry={18}
-                    fill="none"
-                    stroke="url(#lcrInductorCoil)"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    strokeDasharray="28 28"
-                    strokeDashoffset="0"
-                  />
-                  {/* Metallic highlight on each turn */}
-                  <ellipse
-                    cx={centerX + 48 + i * 18}
-                    cy={106}
-                    rx={9}
-                    ry={18}
-                    fill="none"
-                    stroke="url(#lcrInductorHighlight)"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeDasharray="14 42"
-                    strokeDashoffset="7"
-                  />
-                </g>
+                <ellipse
+                  key={i}
+                  cx={centerX + 48 + i * 18}
+                  cy={106}
+                  rx={9}
+                  ry={18}
+                  fill="none"
+                  stroke="url(#lcrInductorCoil)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
               ))}
 
-              {/* Connecting ends */}
-              <line
-                x1={centerX + 38}
-                y1={94}
-                x2={centerX + 48}
-                y2={94}
-                stroke="url(#lcrInductorCoil)"
-                strokeWidth="5"
-                strokeLinecap="round"
-              />
-              <line
-                x1={centerX + 102}
-                y1={94}
-                x2={centerX + 112}
-                y2={94}
-                stroke="url(#lcrInductorCoil)"
-                strokeWidth="5"
-                strokeLinecap="round"
-              />
-
-              {/* Magnetic field (when current flows) */}
+              {/* Magnetic field when current flows */}
               {showEnergyAnimation && inductorEnergy > 0.1 && (
-                <g opacity={inductorEnergy} filter="url(#lcrMagneticGlow)">
+                <g opacity={inductorEnergy} filter="url(#lcrGlow)">
                   {[0, 1, 2].map(i => (
                     <ellipse
                       key={i}
@@ -869,450 +765,156 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
                       rx={30 + i * 12}
                       ry={35 + i * 10}
                       fill="none"
-                      stroke="url(#lcrMagneticField)"
+                      stroke="#f97316"
                       strokeWidth="2"
                       opacity={0.7 - i * 0.2}
-                    >
-                      <animate
-                        attributeName="strokeDasharray"
-                        values="10,5;5,10;10,5"
-                        dur="1s"
-                        repeatCount="indefinite"
-                      />
-                    </ellipse>
+                    />
                   ))}
                 </g>
               )}
             </g>
 
-            {/* === CONNECTING WIRES with premium gradient === */}
-            <g stroke="url(#lcrWire)" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              {/* Top wire */}
+            {/* Connecting wires */}
+            <g stroke="url(#lcrWire)" strokeWidth="4" fill="none" strokeLinecap="round">
               <path d={`M ${centerX - 120} 60 L ${centerX - 120} 94 L ${centerX - 100} 94`} />
               <path d={`M ${centerX - 40} 94 L ${centerX + 38} 94`} />
               <path d={`M ${centerX + 112} 94 L ${centerX + 120} 94 L ${centerX + 120} 60`} />
-
-              {/* Bottom wire */}
               <path d={`M ${centerX - 120} 240 L ${centerX - 120} 119 L ${centerX - 100} 119`} />
               <path d={`M ${centerX - 40} 119 L ${centerX + 38} 119`} />
               <path d={`M ${centerX + 112} 119 L ${centerX + 120} 119 L ${centerX + 120} 240`} />
             </g>
 
-            {/* === CURRENT FLOW ANIMATION === */}
-            {showEnergyAnimation && responseAtFrequency > 10 && (
-              <g filter="url(#lcrParticleGlow)">
-                {[0, 1, 2, 3, 4, 5].map(i => {
-                  const progress = ((animPhase * 2 + i * 0.6) % (Math.PI * 2)) / (Math.PI * 2);
-                  let x, y;
-                  if (progress < 0.25) {
-                    x = centerX - 120 + progress * 4 * 240;
-                    y = 60;
-                  } else if (progress < 0.5) {
-                    x = centerX + 120;
-                    y = 60 + (progress - 0.25) * 4 * 180;
-                  } else if (progress < 0.75) {
-                    x = centerX + 120 - (progress - 0.5) * 4 * 240;
-                    y = 240;
-                  } else {
-                    x = centerX - 120;
-                    y = 240 - (progress - 0.75) * 4 * 180;
-                  }
-                  return (
-                    <circle
-                      key={i}
-                      cx={x}
-                      cy={y}
-                      r="6"
-                      fill="url(#lcrCurrentParticle)"
-                      opacity={Math.min(1, responseAtFrequency / 80)}
-                    >
-                      <animate
-                        attributeName="r"
-                        values="4;7;4"
-                        dur="0.4s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                  );
-                })}
-              </g>
-            )}
-
-            {/* === ENERGY OSCILLATION VISUALIZATION === */}
+            {/* Energy indicators */}
             {showEnergyAnimation && (
               <>
-                {/* Capacitor energy indicator */}
+                {/* Capacitor energy bar */}
                 <g transform={`translate(${centerX - 135}, 175)`}>
-                  <rect x={0} y={0} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#3b82f6" strokeWidth="1" filter="url(#lcrInnerGlow)" />
+                  <rect x={0} y={0} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#3b82f6" strokeWidth="1" />
+                  <text x={35} y={18} textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="600">E (electric)</text>
                   <rect x={10} y={28} width={50} height={10} rx="3" fill="#1e293b" />
-                  <rect
-                    x={10}
-                    y={28}
-                    width={50 * capacitorEnergy}
-                    height={10}
-                    rx="3"
-                    fill="url(#lcrCapacitorPlate)"
-                  />
-                  {capacitorEnergy > 0.5 && (
-                    <rect
-                      x={10}
-                      y={28}
-                      width={50 * capacitorEnergy}
-                      height={10}
-                      rx="3"
-                      fill="#60a5fa"
-                      opacity={0.4}
-                      filter="url(#lcrComponentGlow)"
-                    />
-                  )}
+                  <rect x={10} y={28} width={50 * capacitorEnergy} height={10} rx="3" fill="#3b82f6" />
+                  <text x={35} y={52} textAnchor="middle" fill="#64748b" fontSize="10">{Math.round(capacitorEnergy * 100)}%</text>
                 </g>
 
-                {/* Inductor energy indicator */}
+                {/* Inductor energy bar */}
                 <g transform={`translate(${centerX + 65}, 175)`}>
-                  <rect x={0} y={0} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#f97316" strokeWidth="1" filter="url(#lcrInnerGlow)" />
+                  <rect x={0} y={0} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#f97316" strokeWidth="1" />
+                  <text x={35} y={18} textAnchor="middle" fill="#f97316" fontSize="10" fontWeight="600">E (magnetic)</text>
                   <rect x={10} y={28} width={50} height={10} rx="3" fill="#1e293b" />
-                  <rect
-                    x={10}
-                    y={28}
-                    width={50 * inductorEnergy}
-                    height={10}
-                    rx="3"
-                    fill="url(#lcrInductorCoil)"
-                  />
-                  {inductorEnergy > 0.5 && (
-                    <rect
-                      x={10}
-                      y={28}
-                      width={50 * inductorEnergy}
-                      height={10}
-                      rx="3"
-                      fill="#fb923c"
-                      opacity={0.4}
-                      filter="url(#lcrComponentGlow)"
-                    />
-                  )}
+                  <rect x={10} y={28} width={50 * inductorEnergy} height={10} rx="3" fill="#f97316" />
+                  <text x={35} y={52} textAnchor="middle" fill="#64748b" fontSize="10">{Math.round(inductorEnergy * 100)}%</text>
                 </g>
               </>
             )}
           </g>
 
-          {/* === RESONANCE CURVE with premium styling === */}
+          {/* Resonance Curve */}
           {showResonanceCurve && (
             <g transform="translate(0, 30)">
-              {/* Background panel */}
-              <rect
-                x={centerX - 115}
-                y={275}
-                width={230}
-                height={110}
-                rx="10"
-                fill="rgba(15,23,42,0.97)"
-                stroke="#334155"
-                strokeWidth="1"
-                filter="url(#lcrShadow)"
-              />
-
-              {/* Frequency axis */}
+              <rect x={centerX - 115} y={275} width={230} height={110} rx="10" fill="rgba(15,23,42,0.97)" stroke="#334155" strokeWidth="1" />
+              <text x={centerX} y={290} textAnchor="middle" fill="#cbd5e1" fontSize="11" fontWeight="600">RESONANCE CURVE</text>
               <line x1={centerX - 100} y1={365} x2={centerX + 100} y2={365} stroke="#475569" strokeWidth="1" />
-
-              {/* Response curve fill */}
-              <polygon
-                points={resonanceCurveFillPoints}
-                fill="url(#lcrResonanceFill)"
-              />
-
-              {/* Response curve line */}
-              <polyline
-                points={resonanceCurvePoints}
-                fill="none"
-                stroke="#22c55e"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#lcrResonanceGlow)"
-              />
-
-              {/* Resonant frequency marker */}
-              <line
-                x1={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
-                y1={295}
-                x2={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
-                y2={365}
-                stroke="#4ade80"
-                strokeWidth="2"
-                strokeDasharray="6,4"
-                filter="url(#lcrResonanceGlow)"
-              />
-
-              {/* Resonance peak indicator */}
-              <circle
-                cx={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
-                cy={295}
-                r="8"
-                fill="url(#lcrResonancePeakGlow)"
-                filter="url(#lcrResonanceGlow)"
-              >
-                <animate
-                  attributeName="r"
-                  values="6;9;6"
-                  dur="1.5s"
-                  repeatCount="indefinite"
-                />
-              </circle>
-              <circle
-                cx={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
-                cy={295}
-                r="4"
-                fill="#4ade80"
-              />
+              <polyline points={resonanceCurvePoints} fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" filter="url(#lcrGlow)" />
+              <circle cx={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200} cy={250 + 30} r="6" fill="#22c55e" filter="url(#lcrGlow)" />
+              <text x={centerX - 95} y={378} fill="#64748b" fontSize="9">500</text>
+              <text x={centerX} y={378} textAnchor="middle" fill="#64748b" fontSize="9">1100</text>
+              <text x={centerX + 90} y={378} textAnchor="end" fill="#64748b" fontSize="9">1700 kHz</text>
             </g>
           )}
 
-          {/* === RESONANCE FREQUENCY INDICATOR - Top Left === */}
+          {/* Labels */}
           {showLabels && (
-            <g transform="translate(10, 10)">
-              <rect x={0} y={0} width={105} height={60} rx="8" fill="rgba(15,23,42,0.97)" stroke="#22c55e" strokeWidth="1.5" filter="url(#lcrShadow)" />
-              <circle cx={90} cy={12} r="4" fill="#22c55e" opacity="0.8">
-                <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" />
-              </circle>
-            </g>
-          )}
+            <>
+              {/* Resonance frequency */}
+              <g transform="translate(10, 10)">
+                <rect x={0} y={0} width={105} height={60} rx="8" fill="rgba(15,23,42,0.97)" stroke="#22c55e" strokeWidth="1.5" />
+                <text x={52} y={20} textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">RESONANCE</text>
+                <text x={52} y={42} textAnchor="middle" fill="#22c55e" fontSize="22" fontWeight="700">{resonantFrequency}</text>
+                <text x={52} y={55} textAnchor="middle" fill="#64748b" fontSize="10">kHz</text>
+              </g>
 
-          {/* === Q FACTOR - Top Right === */}
-          {showLabels && (
-            <g transform={`translate(${svgWidth - 90}, 10)`}>
-              <rect x={0} y={0} width={80} height={60} rx="8" fill="rgba(15,23,42,0.97)" stroke="#a855f7" strokeWidth="1" filter="url(#lcrShadow)" />
-            </g>
-          )}
+              {/* Q Factor */}
+              <g transform={`translate(${svgWidth - 90}, 10)`}>
+                <rect x={0} y={0} width={80} height={60} rx="8" fill="rgba(15,23,42,0.97)" stroke="#a855f7" strokeWidth="1" />
+                <text x={40} y={20} textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">Q FACTOR</text>
+                <text x={40} y={42} textAnchor="middle" fill="#a855f7" fontSize="22" fontWeight="700">{qFactor}</text>
+                <text x={40} y={55} textAnchor="middle" fill="#64748b" fontSize="10">selectivity</text>
+              </g>
 
-          {/* === STATION TUNED - Bottom Center === */}
-          {showLabels && closestStation && signalQuality > 30 && (
-            <g transform={`translate(${centerX - 75}, ${svgHeight - 50})`}>
-              <rect x={0} y={0} width={150} height={40} rx="8" fill="rgba(34,197,94,0.2)" stroke="#22c55e" strokeWidth="1.5" filter="url(#lcrShadow)" />
-              {/* Signal strength bars */}
-              {[0, 1, 2, 3, 4].map(i => (
-                <rect
-                  key={i}
-                  x={125 + i * 5}
-                  y={28 - i * 4}
-                  width={3}
-                  height={8 + i * 4}
-                  rx="1"
-                  fill={signalQuality > (i + 1) * 20 ? '#22c55e' : '#334155'}
-                />
-              ))}
-            </g>
-          )}
+              {/* Component labels */}
+              <text x={centerX - 70} y={165} textAnchor="middle" fill="#3b82f6" fontSize="14" fontWeight="700">C</text>
+              <text x={centerX - 70} y={180} textAnchor="middle" fill="#64748b" fontSize="10">{capacitance} pF</text>
+              <text x={centerX + 75} y={165} textAnchor="middle" fill="#f97316" fontSize="14" fontWeight="700">L</text>
+              <text x={centerX + 75} y={180} textAnchor="middle" fill="#64748b" fontSize="10">{inductance} uH</text>
 
-          {/* === FORMULA - Bottom Left === */}
-          {showLabels && (
-            <g transform={`translate(10, ${svgHeight - 45})`}>
-              <rect x={0} y={0} width={115} height={35} rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" strokeWidth="1" filter="url(#lcrShadow)" />
-            </g>
+              {/* Station tuned */}
+              {closestStation && signalQuality > 30 && (
+                <g transform={`translate(${centerX - 75}, ${svgHeight - 50})`}>
+                  <rect x={0} y={0} width={150} height={40} rx="8" fill="rgba(34,197,94,0.2)" stroke="#22c55e" strokeWidth="1.5" />
+                  <text x={75} y={18} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="700">{closestStation.genre} {closestStation.name}</text>
+                  <text x={75} y={32} textAnchor="middle" fill="#64748b" fontSize="10">{closestStation.freq} kHz - Signal: {Math.round(signalQuality)}%</text>
+                </g>
+              )}
+
+              {/* Formula */}
+              <g transform={`translate(10, ${svgHeight - 45})`}>
+                <rect x={0} y={0} width={115} height={35} rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" strokeWidth="1" />
+                <text x={57} y={22} textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="600">f = 1/(2pi*sqrt(LC))</text>
+              </g>
+            </>
           )}
         </svg>
-
-        {/* === TEXT LABELS OUTSIDE SVG using typo system === */}
-        {showLabels && (
-          <>
-            {/* Resonance frequency label */}
-            <div style={{
-              position: 'absolute',
-              top: isMobile ? '18px' : '20px',
-              left: isMobile ? '18px' : '20px',
-              width: isMobile ? '90px' : '95px',
-              textAlign: 'center',
-              pointerEvents: 'none'
-            }}>
-              <div style={{ fontSize: typo.label, color: colors.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                RESONANCE
-              </div>
-              <div style={{ fontSize: isMobile ? '22px' : '26px', color: colors.resonance, fontWeight: 700, lineHeight: 1.2 }}>
-                {resonantFrequency}
-              </div>
-              <div style={{ fontSize: typo.label, color: colors.textMuted }}>
-                kHz
-              </div>
-            </div>
-
-            {/* Q Factor label */}
-            <div style={{
-              position: 'absolute',
-              top: isMobile ? '18px' : '20px',
-              right: isMobile ? '18px' : '20px',
-              width: isMobile ? '70px' : '70px',
-              textAlign: 'center',
-              pointerEvents: 'none'
-            }}>
-              <div style={{ fontSize: typo.label, color: colors.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Q FACTOR
-              </div>
-              <div style={{ fontSize: isMobile ? '22px' : '26px', color: colors.energy, fontWeight: 700, lineHeight: 1.2 }}>
-                {qFactor}
-              </div>
-              <div style={{ fontSize: typo.label, color: colors.textMuted }}>
-                selectivity
-              </div>
-            </div>
-
-            {/* Capacitor energy label */}
-            {showEnergyAnimation && (
-              <div style={{
-                position: 'absolute',
-                top: isMobile ? '198px' : '208px',
-                left: isMobile ? `${centerX - 127}px` : `${centerX - 127}px`,
-                width: '60px',
-                textAlign: 'center',
-                pointerEvents: 'none'
-              }}>
-                <div style={{ fontSize: typo.label, color: colors.capacitor, fontWeight: 600 }}>
-                  E (electric)
-                </div>
-                <div style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '22px' }}>
-                  {Math.round(capacitorEnergy * 100)}%
-                </div>
-              </div>
-            )}
-
-            {/* Inductor energy label */}
-            {showEnergyAnimation && (
-              <div style={{
-                position: 'absolute',
-                top: isMobile ? '198px' : '208px',
-                left: isMobile ? `${centerX + 73}px` : `${centerX + 73}px`,
-                width: '60px',
-                textAlign: 'center',
-                pointerEvents: 'none'
-              }}>
-                <div style={{ fontSize: typo.label, color: colors.inductor, fontWeight: 600 }}>
-                  E (magnetic)
-                </div>
-                <div style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '22px' }}>
-                  {Math.round(inductorEnergy * 100)}%
-                </div>
-              </div>
-            )}
-
-            {/* Component labels - C and L */}
-            <div style={{
-              position: 'absolute',
-              top: isMobile ? '155px' : '165px',
-              left: `${centerX - 80}px`,
-              textAlign: 'center',
-              pointerEvents: 'none'
-            }}>
-              <div style={{ fontSize: typo.body, color: colors.capacitor, fontWeight: 700 }}>C</div>
-              <div style={{ fontSize: typo.label, color: colors.textMuted }}>{capacitance} pF</div>
-            </div>
-
-            <div style={{
-              position: 'absolute',
-              top: isMobile ? '155px' : '165px',
-              left: `${centerX + 58}px`,
-              textAlign: 'center',
-              pointerEvents: 'none'
-            }}>
-              <div style={{ fontSize: typo.body, color: colors.inductor, fontWeight: 700 }}>L</div>
-              <div style={{ fontSize: typo.label, color: colors.textMuted }}>{inductance} µH</div>
-            </div>
-
-            {/* Resonance curve labels */}
-            {showResonanceCurve && (
-              <>
-                <div style={{
-                  position: 'absolute',
-                  top: isMobile ? '310px' : '320px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  textAlign: 'center',
-                  pointerEvents: 'none'
-                }}>
-                  <div style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    RESONANCE CURVE
-                  </div>
-                </div>
-
-                {/* Resonant frequency on curve */}
-                <div style={{
-                  position: 'absolute',
-                  top: isMobile ? '323px' : '333px',
-                  left: `${centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}px`,
-                  transform: 'translateX(-50%)',
-                  textAlign: 'center',
-                  pointerEvents: 'none'
-                }}>
-                  <div style={{ fontSize: typo.small, color: colors.resonance, fontWeight: 700 }}>
-                    f0 = {resonantFrequency} kHz
-                  </div>
-                </div>
-
-                {/* Frequency axis labels */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: isMobile ? '52px' : '50px',
-                  left: `${centerX - 95}px`,
-                  fontSize: typo.label,
-                  color: colors.textMuted,
-                  pointerEvents: 'none'
-                }}>500</div>
-                <div style={{
-                  position: 'absolute',
-                  bottom: isMobile ? '52px' : '50px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  fontSize: typo.label,
-                  color: colors.textMuted,
-                  pointerEvents: 'none'
-                }}>1100</div>
-                <div style={{
-                  position: 'absolute',
-                  bottom: isMobile ? '52px' : '50px',
-                  right: `${svgWidth - centerX - 95}px`,
-                  fontSize: typo.label,
-                  color: colors.textMuted,
-                  pointerEvents: 'none'
-                }}>1700 kHz</div>
-              </>
-            )}
-
-            {/* Station tuned label */}
-            {closestStation && signalQuality > 30 && (
-              <div style={{
-                position: 'absolute',
-                bottom: isMobile ? '18px' : '20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '140px',
-                textAlign: 'center',
-                pointerEvents: 'none'
-              }}>
-                <div style={{ fontSize: typo.small, color: colors.success, fontWeight: 700 }}>
-                  {closestStation.genre} {closestStation.name}
-                </div>
-                <div style={{ fontSize: typo.label, color: colors.textMuted }}>
-                  {closestStation.freq} kHz - Signal: {Math.round(signalQuality)}%
-                </div>
-              </div>
-            )}
-
-            {/* Formula label */}
-            <div style={{
-              position: 'absolute',
-              bottom: isMobile ? '22px' : '23px',
-              left: isMobile ? '18px' : '20px',
-              width: '105px',
-              textAlign: 'center',
-              pointerEvents: 'none'
-            }}>
-              <div style={{ fontSize: typo.small, color: colors.textPrimary, fontWeight: 600 }}>
-                f = 1/(2pi * sqrt(LC))
-              </div>
-            </div>
-          </>
-        )}
       </div>
     );
   };
+
+  // ============================================================================
+  // PROGRESS BAR AND NAV DOTS
+  // ============================================================================
+
+  const renderProgressBar = () => (
+    <div style={{
+      height: '4px',
+      backgroundColor: colors.bgElevated,
+      position: 'relative'
+    }}>
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        backgroundColor: colors.resonance,
+        transition: 'width 0.3s ease'
+      }} />
+    </div>
+  );
+
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.resonance : colors.bgElevated,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
   // ============================================================================
   // PHASE RENDERERS
@@ -1375,8 +977,10 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
       </div>
 
       <Button onClick={goNext}>
-        Discover Resonance →
+        Discover Resonance
       </Button>
+
+      {renderNavDots()}
     </div>
   );
 
@@ -1384,7 +988,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
     <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, textTransform: 'uppercase' }}>
-          Step 2 of 10 • Make a Prediction
+          Step 2 of 10 - Make a Prediction
         </span>
 
         <h2 style={{
@@ -1440,9 +1044,11 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         </div>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
-          <Button variant="ghost" onClick={goBack}>← Back</Button>
-          <Button onClick={goNext} disabled={!prediction}>Test It →</Button>
+          <Button variant="ghost" onClick={goBack}>Back</Button>
+          <Button onClick={goNext} disabled={!prediction}>Test It</Button>
         </div>
+
+        {renderNavDots()}
       </div>
     </div>
   );
@@ -1455,7 +1061,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         background: colors.bgSurface
       }}>
         <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600 }}>
-          Step 3 of 10 • Interactive Experiment
+          Step 3 of 10 - Interactive Experiment
         </span>
         <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: '4px 0' }}>
           LC RESONANCE TUNER
@@ -1485,7 +1091,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
             marginBottom: '16px'
           }}>
             <div style={{ fontSize: '11px', color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
-              AM RADIO BAND • Tune to a station:
+              AM RADIO BAND - Tune to a station:
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {radioStations.map(station => {
@@ -1533,7 +1139,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
               value={inductance}
               min={50}
               max={500}
-              unit="µH"
+              unit="uH"
               hint="Larger L = lower resonant frequency"
               onChange={setInductance}
               color={colors.inductor}
@@ -1548,8 +1154,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         display: 'flex',
         justifyContent: 'space-between'
       }}>
-        <Button variant="ghost" onClick={goBack}>← Back</Button>
-        <Button onClick={goNext}>See Why →</Button>
+        <Button variant="ghost" onClick={goBack}>Back</Button>
+        <Button onClick={goNext}>See Why</Button>
       </div>
     </div>
   );
@@ -1558,7 +1164,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
     <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
       <div style={{ maxWidth: '700px', margin: '0 auto' }}>
         <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600 }}>
-          Step 4 of 10 • Understanding
+          Step 4 of 10 - Understanding
         </span>
         <h2 style={{
           fontSize: isMobile ? '22px' : '28px',
@@ -1569,7 +1175,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         </h2>
 
         <ExplanationBox
-          whatHappens="At one specific frequency, the circuit gives a peak response. This resonant frequency depends on the values of L and C: f₀ = 1/(2π√LC). At resonance, the circuit amplifies that frequency while rejecting others."
+          whatHappens="At one specific frequency, the circuit gives a peak response. This resonant frequency depends on the values of L and C: f0 = 1/(2pi*sqrt(LC)). At resonance, the circuit amplifies that frequency while rejecting others."
           whyItHappens="Energy oscillates between two forms: electric field energy stored in the capacitor, and magnetic field energy stored in the inductor. Like a swing at its natural frequency, the energy transfer is most efficient at resonance. At other frequencies, the timing is wrong and energy cancels out."
           realWorldExample="Every AM/FM radio uses an LC circuit to tune stations. The old-style tuning dial physically adjusts a variable capacitor, changing the resonant frequency. Digital radios use electronic varactors (voltage-controlled capacitors) to tune instantly."
         />
@@ -1582,7 +1188,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
           border: `1px solid ${colors.warning}40`
         }}>
           <div style={{ fontSize: '13px', fontWeight: 600, color: colors.warning, marginBottom: '8px' }}>
-            ⚡ Safety Note
+            Safety Note
           </div>
           <div style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.5 }}>
             Keep voltages tiny when experimenting with LC circuits. At resonance, voltages can be amplified by the Q factor! Never connect to mains power.
@@ -1590,9 +1196,11 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         </div>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
-          <Button variant="ghost" onClick={goBack}>← Back</Button>
-          <Button onClick={goNext}>Try the Twist →</Button>
+          <Button variant="ghost" onClick={goBack}>Back</Button>
+          <Button onClick={goNext}>Try the Twist</Button>
         </div>
+
+        {renderNavDots()}
       </div>
     </div>
   );
@@ -1601,7 +1209,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
     <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         <span style={{ fontSize: '11px', color: colors.accent, fontWeight: 600, textTransform: 'uppercase' }}>
-          Step 5 of 10 • Twist Prediction
+          Step 5 of 10 - Twist Prediction
         </span>
 
         <h2 style={{
@@ -1650,9 +1258,11 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         </div>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
-          <Button variant="ghost" onClick={goBack}>← Back</Button>
-          <Button onClick={goNext} disabled={!twistPrediction}>Test It →</Button>
+          <Button variant="ghost" onClick={goBack}>Back</Button>
+          <Button onClick={goNext} disabled={!twistPrediction}>Test It</Button>
         </div>
+
+        {renderNavDots()}
       </div>
     </div>
   );
@@ -1665,7 +1275,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         background: `linear-gradient(135deg, ${colors.accent}20 0%, ${colors.bgSurface} 100%)`
       }}>
         <span style={{ fontSize: '11px', color: colors.accent, fontWeight: 600 }}>
-          Step 6 of 10 • Twist Experiment
+          Step 6 of 10 - Twist Experiment
         </span>
         <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: '4px 0' }}>
           FREQUENCY vs L and C
@@ -1701,7 +1311,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
               {resonantFrequency} kHz
             </div>
             <div style={{ fontSize: '14px', color: colors.textMuted, marginTop: '8px' }}>
-              f₀ = 1 / (2π × √({inductance}µH × {capacitance}pF))
+              f0 = 1 / (2pi x sqrt({inductance}uH x {capacitance}pF))
             </div>
           </div>
 
@@ -1725,7 +1335,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
               value={inductance}
               min={50}
               max={500}
-              unit="µH"
+              unit="uH"
               hint="Larger L also lowers the frequency."
               onChange={setInductance}
               color={colors.inductor}
@@ -1740,8 +1350,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         display: 'flex',
         justifyContent: 'space-between'
       }}>
-        <Button variant="ghost" onClick={goBack}>← Back</Button>
-        <Button onClick={goNext}>Continue →</Button>
+        <Button variant="ghost" onClick={goBack}>Back</Button>
+        <Button onClick={goNext}>Continue</Button>
       </div>
     </div>
   );
@@ -1750,7 +1360,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
     <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
       <div style={{ maxWidth: '700px', margin: '0 auto' }}>
         <span style={{ fontSize: '11px', color: colors.accent, fontWeight: 600 }}>
-          Step 7 of 10 • Twist Understanding
+          Step 7 of 10 - Twist Understanding
         </span>
 
         <h2 style={{
@@ -1762,375 +1372,358 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         </h2>
 
         <ExplanationBox
-          whatHappens="Doubling C doesn't halve the frequency - it only reduces it to about 71% (1/√2). The formula f = 1/(2π√LC) shows that frequency depends on the SQUARE ROOT of L×C."
+          whatHappens="Doubling C doesn't halve the frequency - it only reduces it to about 71% (1/sqrt(2)). The formula f = 1/(2pi*sqrt(LC)) shows that frequency depends on the SQUARE ROOT of L x C."
           whyItHappens="Think of it like a spring and mass: adding mass doesn't double the oscillation period. The relationship is non-linear because energy storage grows with the square of voltage (capacitor) and current (inductor)."
-          realWorldExample="Radio engineers use this relationship to design tuning ranges. A 10:1 variable capacitor only gives a √10 ≈ 3.2:1 frequency range. To cover the full AM band (530-1700 kHz), you need both variable C and switchable L values."
+          realWorldExample="Radio engineers use this relationship to design tuning ranges. A 10:1 variable capacitor only gives a sqrt(10) = 3.2:1 frequency range. To cover the full AM band (530-1700 kHz), you need both variable C and switchable L values."
         />
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
-          <Button variant="ghost" onClick={goBack}>← Back</Button>
-          <Button onClick={goNext}>Real World →</Button>
+          <Button variant="ghost" onClick={goBack}>Back</Button>
+          <Button onClick={goNext}>Real World</Button>
         </div>
+
+        {renderNavDots()}
       </div>
     </div>
   );
 
   const renderTransfer = () => {
-    const applications = [
-      {
-        title: 'Radio & TV Tuners',
-        icon: '📻',
-        description: 'Every radio receiver uses LC resonance to select one station from the electromagnetic soup. Digital tuners use varactor diodes instead of mechanical capacitors.',
-        insight: 'FM radios use the same principle at higher frequencies (88-108 MHz).'
-      },
-      {
-        title: 'Wireless Charging',
-        icon: '🔋',
-        description: 'The charger and phone coils form a resonant system. Operating at the resonant frequency maximizes energy transfer efficiency.',
-        insight: 'Qi chargers typically resonate around 100-200 kHz.'
-      },
-      {
-        title: 'MRI Machines',
-        icon: '🏥',
-        description: 'The RF coils that detect signals from your body are precisely tuned LC circuits, resonating at the Larmor frequency of hydrogen atoms.',
-        insight: 'At 3 Tesla, this is about 128 MHz - right in the FM radio band!'
-      },
-      {
-        title: 'Guitar Pickups & Tone',
-        icon: '🎸',
-        description: 'The pickup coil and cable capacitance form an LC circuit. The resonance peak affects which frequencies sound brightest.',
-        insight: 'This is why cable length and "tone" knobs change guitar sound.'
-      }
-    ];
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
 
     return (
       <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <span style={{ fontSize: '11px', color: colors.success, fontWeight: 600 }}>
-            Step 8 of 10 • Real-World Applications
+            Step 8 of 10 - Real-World Applications
           </span>
 
           <h2 style={{ fontSize: isMobile ? '22px' : '28px', color: colors.textPrimary, margin: '12px 0 24px' }}>
             LC Resonance is Everywhere
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {applications.map((app, i) => (
-              <div
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
                 key={i}
                 onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
                   const newCompleted = [...completedApps];
                   newCompleted[i] = true;
                   setCompletedApps(newCompleted);
-                  setActiveApp(i);
-                  playSound('click');
                 }}
                 style={{
-                  padding: '16px',
-                  backgroundColor: activeApp === i ? `${colors.success}15` : colors.bgSurface,
-                  border: `1px solid ${completedApps[i] ? colors.success : colors.bgElevated}`,
+                  background: selectedApp === i ? `${a.color}22` : colors.bgSurface,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.bgElevated}`,
                   borderRadius: '12px',
-                  cursor: 'pointer'
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '24px' }}>{app.icon}</span>
-                  <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{app.title}</span>
-                  {completedApps[i] && <span style={{ marginLeft: 'auto', color: colors.success }}>✓</span>}
-                </div>
-                {activeApp === i && (
-                  <>
-                    <p style={{ color: colors.textSecondary, fontSize: '14px', margin: '8px 0', lineHeight: 1.5 }}>
-                      {app.description}
-                    </p>
-                    <p style={{ color: colors.accent, fontSize: '13px', margin: 0, fontStyle: 'italic' }}>
-                      💡 {app.insight}
-                    </p>
-                  </>
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
                 )}
-              </div>
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ fontSize: '11px', color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
-            <Button variant="ghost" onClick={goBack}>← Back</Button>
-            <Button onClick={goNext} disabled={!completedApps.some(c => c)}>
-              Take the Test →
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgSurface,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ fontSize: '13px', color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '15px', color: colors.textSecondary, marginBottom: '16px', lineHeight: 1.6 }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgElevated,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ fontSize: '12px', color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How LC Resonance Connects:
+              </h4>
+              <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgElevated,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ fontSize: '18px', fontWeight: 700, color: app.color }}>{stat.value}</div>
+                  <div style={{ fontSize: '11px', color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
+            <Button variant="ghost" onClick={goBack}>Back</Button>
+            <Button onClick={goNext} disabled={!allAppsCompleted}>
+              {allAppsCompleted ? 'Take the Test' : `Explore ${4 - completedApps.filter(c => c).length} more`}
             </Button>
           </div>
+
+          {renderNavDots()}
         </div>
       </div>
     );
   };
 
-  // ============================================================================
-  // TEST QUESTIONS - Scenario-based multiple choice questions
-  // ============================================================================
-  const testQuestions = [
-    {
-      scenario: "You're building a simple AM radio receiver and need to understand what makes it tune to specific stations instead of picking up all broadcasts at once.",
-      question: "What is LC resonance and why is it essential for radio tuning?",
-      options: [
-        { id: 'a', label: "A phenomenon where inductors and capacitors amplify all frequencies equally" },
-        { id: 'b', label: "A condition where an LC circuit responds maximally to one specific frequency determined by L and C values", correct: true },
-        { id: 'c', label: "A type of interference that occurs when multiple radio stations broadcast simultaneously" },
-        { id: 'd', label: "The resistance that develops in a circuit at high frequencies" }
-      ],
-      explanation: "LC resonance occurs when the inductive reactance equals the capacitive reactance at a specific frequency (f = 1/2pi*sqrt(LC)). At this resonant frequency, energy oscillates efficiently between the inductor's magnetic field and the capacitor's electric field, causing the circuit to respond strongly to that frequency while attenuating others. This selectivity is what allows radios to 'pick' one station from many."
-    },
-    {
-      scenario: "An old car radio has a manual tuning dial that you rotate to find stations. Inside, this dial is connected to a variable capacitor that changes its capacitance as you turn it.",
-      question: "When you turn the dial to tune from a lower frequency station (600 kHz) to a higher frequency station (1400 kHz), what happens to the variable capacitor?",
-      options: [
-        { id: 'a', label: "The capacitance increases, raising the resonant frequency" },
-        { id: 'b', label: "The capacitance decreases, raising the resonant frequency", correct: true },
-        { id: 'c', label: "The capacitance stays the same while the inductance changes" },
-        { id: 'd', label: "The capacitor disconnects and a different circuit takes over" }
-      ],
-      explanation: "Since resonant frequency f = 1/(2pi*sqrt(LC)), decreasing capacitance (C) will increase the resonant frequency. In variable capacitors, rotating the dial moves the overlapping plate area, reducing capacitance. This is why turning the dial clockwise typically tunes to higher frequency stations - you're reducing C to increase f0."
-    },
-    {
-      scenario: "An engineer needs to design an LC circuit that resonates at exactly 1 MHz. She has a 100 microhenry inductor available.",
-      question: "Using the resonance formula f = 1/(2pi*sqrt(LC)), what capacitance value does she need?",
-      options: [
-        { id: 'a', label: "About 253 picofarads (pF)", correct: true },
-        { id: 'b', label: "About 1 microfarad (uF)" },
-        { id: 'c', label: "About 100 nanofarads (nF)" },
-        { id: 'd', label: "About 1 picofarad (pF)" }
-      ],
-      explanation: "Rearranging f = 1/(2pi*sqrt(LC)) gives C = 1/(4pi^2 * f^2 * L). Plugging in f = 1 MHz = 1x10^6 Hz and L = 100 uH = 100x10^-6 H: C = 1/(4 * 9.87 * 10^12 * 10^-4) = 1/(3.95 * 10^9) = 253 pF. This calculation is fundamental for designing tuned circuits in radio and communications equipment."
-    },
-    {
-      scenario: "A radio receiver designer is comparing two LC circuits: one with Q factor of 20 and another with Q factor of 200. Both are tuned to the same frequency.",
-      question: "How does the higher Q factor circuit differ in its ability to select radio stations?",
-      options: [
-        { id: 'a', label: "It has a wider bandwidth, allowing multiple stations to be heard simultaneously" },
-        { id: 'b', label: "It has a narrower bandwidth, providing sharper selectivity to reject adjacent stations", correct: true },
-        { id: 'c', label: "It produces louder audio output from the selected station" },
-        { id: 'd', label: "It consumes less power but has identical selectivity" }
-      ],
-      explanation: "Q factor (Quality factor) determines the sharpness of the resonance peak. Bandwidth = f0/Q, so a higher Q means narrower bandwidth. The Q=200 circuit has a bandwidth 10 times narrower than the Q=20 circuit, making it much better at rejecting signals from adjacent channel stations. However, very high Q can make tuning more difficult and sensitive to component drift."
-    },
-    {
-      scenario: "You're observing an LC tank circuit with an oscilloscope. The circuit was given an initial charge and is now oscillating freely with no external power source.",
-      question: "What is happening to the energy in this tank circuit during each oscillation cycle?",
-      options: [
-        { id: 'a', label: "Energy is being created and destroyed as current flows" },
-        { id: 'b', label: "Energy alternates between electric field energy in the capacitor and magnetic field energy in the inductor", correct: true },
-        { id: 'c', label: "Energy remains constant in the capacitor while the inductor provides amplification" },
-        { id: 'd', label: "Energy is continuously absorbed by the inductor's core material" }
-      ],
-      explanation: "In an ideal LC tank circuit, total energy is conserved but constantly transforms between two forms: when the capacitor is fully charged, all energy is stored in its electric field (E = 1/2 CV^2). As it discharges through the inductor, energy transfers to the magnetic field (E = 1/2 LI^2). This energy 'sloshing' back and forth at the resonant frequency is what creates sustained oscillation - the same principle that makes a pendulum swing."
-    },
-    {
-      scenario: "A digital watch keeps time using a tiny quartz crystal oscillator. The crystal is connected to a small integrated circuit that maintains oscillation at exactly 32.768 kHz.",
-      question: "Why do precision timekeeping devices use quartz crystals instead of simple LC circuits?",
-      options: [
-        { id: 'a', label: "Crystals are cheaper to manufacture than inductors and capacitors" },
-        { id: 'b', label: "Quartz crystals have extremely high Q factors (10,000-100,000+), providing exceptional frequency stability", correct: true },
-        { id: 'c', label: "Crystals can generate their own power through piezoelectric effects" },
-        { id: 'd', label: "LC circuits cannot oscillate at frequencies as low as 32.768 kHz" }
-      ],
-      explanation: "Quartz crystals act as electromechanical resonators with Q factors of 10,000 to over 100,000 - far exceeding typical LC circuits (Q ~ 50-500). This ultra-high Q means the crystal's resonant frequency is extremely stable and precise, drifting only a few parts per million. The piezoelectric effect converts electrical energy to mechanical vibration and back, creating a highly stable oscillator. The 32.768 kHz frequency is chosen because it's 2^15 Hz, easily divided down to 1 Hz for timekeeping."
-    },
-    {
-      scenario: "Engineers are designing a wireless charging pad for smartphones. The charging coil in the pad must transfer power efficiently to the receiving coil inside the phone.",
-      question: "Why is resonant coupling used instead of simple transformer-style inductive coupling for wireless power transfer?",
-      options: [
-        { id: 'a', label: "Resonant coupling looks more impressive to consumers" },
-        { id: 'b', label: "At resonance, energy transfer efficiency is dramatically improved, especially over larger air gaps", correct: true },
-        { id: 'c', label: "Simple inductive coupling would damage the phone's battery" },
-        { id: 'd', label: "Resonant coupling eliminates the need for any coils in the system" }
-      ],
-      explanation: "Resonant wireless power transfer uses matched LC circuits in both transmitter and receiver tuned to the same frequency (typically 100-200 kHz for Qi chargers). At resonance, the magnetic coupling between coils is dramatically enhanced, allowing efficient power transfer even with significant air gaps and misalignment. Non-resonant inductive coupling efficiency drops rapidly with distance, while resonant systems can maintain >80% efficiency across several centimeters."
-    },
-    {
-      scenario: "A telecommunications engineer is designing a bandpass filter for a radio receiver's intermediate frequency (IF) stage. The filter must pass signals at 10.7 MHz while rejecting signals at 10.5 MHz and 10.9 MHz.",
-      question: "What filter topology would best achieve this narrow bandpass characteristic using LC resonance?",
-      options: [
-        { id: 'a', label: "A single parallel LC circuit with moderate Q factor" },
-        { id: 'b', label: "Multiple cascaded LC resonators with coupled resonances for steep rolloff", correct: true },
-        { id: 'c', label: "A series combination of capacitors only" },
-        { id: 'd', label: "A single high-value inductor with no capacitors" }
-      ],
-      explanation: "Professional IF filters use multiple coupled LC resonators (often ceramic or crystal filters with 2-8 poles) to achieve steep rolloff characteristics. A single LC circuit, even with high Q, cannot provide the sharp 'brick wall' response needed to reject adjacent channels just 200 kHz away. Coupled resonators create multiple poles in the transfer function, resulting in much steeper attenuation slopes. This is why quality receivers use multi-pole crystal or ceramic filters in their IF stages."
-    },
-    {
-      scenario: "A power electronics engineer notices that a DC-DC converter is producing unexpected high-frequency noise. Investigation reveals oscillations occurring at 50 MHz, far above the 100 kHz switching frequency.",
-      question: "What is the most likely cause of this parasitic resonance problem?",
-      options: [
-        { id: 'a', label: "The switching frequency is set incorrectly" },
-        { id: 'b', label: "Unintended LC circuits formed by PCB trace inductance and component parasitic capacitances", correct: true },
-        { id: 'c', label: "The output capacitors are too large" },
-        { id: 'd', label: "The input voltage is fluctuating" }
-      ],
-      explanation: "Parasitic resonance is a common problem in power electronics and high-frequency circuits. Every PCB trace has inductance (~1 nH/mm) and every component has parasitic capacitance. These unintended L and C elements form resonant circuits. At 50 MHz, even a few nH of trace inductance combined with pF of parasitic capacitance creates resonance. Solutions include: adding damping resistors, using ferrite beads, optimizing PCB layout to minimize loop inductance, and selecting components with lower parasitic elements."
-    },
-    {
-      scenario: "A ham radio operator is setting up a new antenna for the 20-meter band (14.0-14.35 MHz). The antenna feedpoint shows an impedance of 35 + j25 ohms, but the transmitter expects 50 ohms purely resistive.",
-      question: "How can LC resonance principles be applied to match this antenna to the transmitter?",
-      options: [
-        { id: 'a', label: "Use a longer coaxial cable to absorb the mismatch" },
-        { id: 'b', label: "Use an LC matching network (antenna tuner) to transform impedance and cancel the reactive component", correct: true },
-        { id: 'c', label: "Increase transmitter power to overcome the mismatch" },
-        { id: 'd', label: "The mismatch is acceptable and requires no correction" }
-      ],
-      explanation: "An LC matching network (antenna tuner) uses the resonance principle to transform impedances. The +j25 ohms indicates inductive reactance, which can be cancelled by adding appropriate capacitive reactance. Common topologies include L-networks, Pi-networks, and T-networks using variable inductors and capacitors. At the matched condition, the network resonates to cancel reactive components while transforming the 35-ohm resistive part to 50 ohms, ensuring maximum power transfer to the antenna and protecting the transmitter from reflected power."
-    }
-  ];
-
   const renderTest = () => {
-    const questions = [
-      {
-        question: 'What determines the resonant frequency of an LC circuit?',
-        options: [
-          { text: 'Voltage applied', correct: false },
-          { text: 'Values of L and C', correct: true },
-          { text: 'Wire thickness', correct: false },
-          { text: 'Temperature', correct: false }
-        ]
-      },
-      {
-        question: 'At resonance, energy oscillates between:',
-        options: [
-          { text: 'Heat and light', correct: false },
-          { text: 'Electric field (C) and magnetic field (L)', correct: true },
-          { text: 'Voltage and current', correct: false },
-          { text: 'Input and output', correct: false }
-        ]
-      },
-      {
-        question: 'If you double the capacitance, the resonant frequency:',
-        options: [
-          { text: 'Doubles', correct: false },
-          { text: 'Halves', correct: false },
-          { text: 'Decreases by about 30%', correct: true },
-          { text: 'Stays the same', correct: false }
-        ]
-      },
-      {
-        question: 'Why can a radio "pick" one station from many?',
-        options: [
-          { text: 'Magic', correct: false },
-          { text: 'LC circuit resonates at one frequency', correct: true },
-          { text: 'Antenna size', correct: false },
-          { text: 'Speaker quality', correct: false }
-        ]
-      },
-      {
-        question: 'What is the Q factor of an LC circuit?',
-        options: [
-          { text: 'Quality of components', correct: false },
-          { text: 'How selective/sharp the resonance peak is', correct: true },
-          { text: 'Charge stored', correct: false },
-          { text: 'Frequency range', correct: false }
-        ]
-      },
-      {
-        question: 'The resonant frequency formula f = 1/(2pi*sqrt(LC)) shows that frequency depends on:',
-        options: [
-          { text: 'The sum of L and C', correct: false },
-          { text: 'The square root of the product L times C', correct: true },
-          { text: 'Only the inductance L', correct: false },
-          { text: 'The ratio of L to C', correct: false }
-        ]
-      },
-      {
-        question: 'A higher Q factor in an LC circuit means:',
-        options: [
-          { text: 'Wider bandwidth and less selective tuning', correct: false },
-          { text: 'Narrower bandwidth and more selective tuning', correct: true },
-          { text: 'Higher resonant frequency', correct: false },
-          { text: 'More energy loss per cycle', correct: false }
-        ]
-      },
-      {
-        question: 'In a series LC circuit at resonance, the impedance is:',
-        options: [
-          { text: 'Maximum (very high)', correct: false },
-          { text: 'Minimum (ideally zero)', correct: true },
-          { text: 'Equal to the inductance', correct: false },
-          { text: 'Equal to the capacitance', correct: false }
-        ]
-      },
-      {
-        question: 'What causes damping in a real LC circuit?',
-        options: [
-          { text: 'The magnetic field strength', correct: false },
-          { text: 'Resistance in the circuit dissipating energy', correct: true },
-          { text: 'The capacitor plate size', correct: false },
-          { text: 'The frequency of oscillation', correct: false }
-        ]
-      },
-      {
-        question: 'In a parallel LC circuit at resonance, the impedance is:',
-        options: [
-          { text: 'Maximum (very high)', correct: true },
-          { text: 'Minimum (ideally zero)', correct: false },
-          { text: 'Equal to the resistance', correct: false },
-          { text: 'Unpredictable', correct: false }
-        ]
-      }
-    ];
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '24px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+            {passed ? '🏆' : '📚'}
+          </div>
+          <h2 style={{ fontSize: isMobile ? '28px' : '36px', color: passed ? colors.success : colors.warning, marginBottom: '16px' }}>
+            {passed ? 'Excellent!' : 'Keep Learning!'}
+          </h2>
+          <p style={{ fontSize: '48px', fontWeight: 700, color: colors.textPrimary, margin: '16px 0' }}>
+            {testScore} / 10
+          </p>
+          <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '32px', maxWidth: '400px' }}>
+            {passed
+              ? 'You understand LC resonance and frequency selection!'
+              : 'Review the concepts and try again.'}
+          </p>
 
-    const currentQ = questions[currentQuestion];
+          {passed ? (
+            <Button onClick={() => { playSound('complete'); goNext(); }}>
+              Complete Lesson
+            </Button>
+          ) : (
+            <Button onClick={() => {
+              setTestSubmitted(false);
+              setTestAnswers(Array(10).fill(null));
+              setCurrentQuestion(0);
+              setTestScore(0);
+              goToPhase('hook');
+            }}>
+              Review and Try Again
+            </Button>
+          )}
+
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
 
     return (
       <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600 }}>
-            Question {currentQuestion + 1} of {questions.length}
-          </span>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ fontSize: '12px', color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.bgElevated,
+                }} />
+              ))}
+            </div>
+          </div>
 
-          <h2 style={{ fontSize: isMobile ? '20px' : '24px', color: colors.textPrimary, margin: '12px 0 24px' }}>
-            {currentQ.question}
-          </h2>
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgSurface,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+              {question.scenario}
+            </p>
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {currentQ.options.map((opt, i) => (
+          {/* Question */}
+          <h3 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, marginBottom: '20px', lineHeight: 1.4 }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                key={i}
+                key={opt.id}
                 onClick={() => {
+                  playSound('click');
                   const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = i;
+                  newAnswers[currentQuestion] = opt.id;
                   setTestAnswers(newAnswers);
-                  if (opt.correct) setTestScore(prev => prev + 1);
-                  playSound(opt.correct ? 'success' : 'failure');
-                  setTimeout(() => {
-                    if (currentQuestion < questions.length - 1) {
-                      setCurrentQuestion(prev => prev + 1);
-                    } else {
-                      goNext();
-                    }
-                  }, 1000);
                 }}
-                disabled={testAnswers[currentQuestion] !== null}
                 style={{
-                  padding: '16px',
-                  background: testAnswers[currentQuestion] === i
-                    ? opt.correct ? `${colors.success}20` : `${colors.error}20`
-                    : colors.bgSurface,
-                  border: testAnswers[currentQuestion] === i
-                    ? `2px solid ${opt.correct ? colors.success : colors.error}`
-                    : `1px solid ${colors.bgElevated}`,
-                  borderRadius: '12px',
-                  color: colors.textPrimary,
-                  fontSize: '15px',
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgSurface,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgElevated}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
                   textAlign: 'left',
-                  cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer',
-                  position: 'relative',
-                  zIndex: 10
+                  cursor: 'pointer',
                 }}
               >
-                {opt.text}
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgElevated,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                  {opt.label}
+                </span>
               </button>
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
-            <Button variant="ghost" onClick={goBack}>← Back</Button>
-            <span style={{ color: colors.textMuted }}>Score: {testScore}/{questions.length}</span>
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.bgElevated}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.bgElevated,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.bgElevated,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
           </div>
+
+          {renderNavDots()}
         </div>
       </div>
     );
@@ -2146,15 +1739,17 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
       padding: isMobile ? '20px' : '40px',
       textAlign: 'center'
     }}>
-      <div style={{ fontSize: '64px', marginBottom: '24px' }}>🎉📻</div>
+      <div style={{ fontSize: '100px', marginBottom: '24px' }}>
+        🏆📻
+      </div>
 
       <h1 style={{
         fontSize: isMobile ? '28px' : '36px',
         fontWeight: 700,
-        color: colors.textPrimary,
+        color: colors.success,
         marginBottom: '16px'
       }}>
-        Mastery Achieved!
+        LC Resonance Master!
       </h1>
 
       <p style={{
@@ -2168,6 +1763,32 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
       </p>
 
       <div style={{
+        background: colors.bgSurface,
+        borderRadius: '16px',
+        padding: '24px',
+        marginBottom: '32px',
+        maxWidth: '400px',
+      }}>
+        <h3 style={{ fontSize: '18px', color: colors.textPrimary, marginBottom: '16px' }}>
+          You Learned:
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+          {[
+            'LC circuits resonate at f = 1/(2pi*sqrt(LC))',
+            'Energy oscillates between electric and magnetic fields',
+            'Doubling C reduces frequency by sqrt(2), not half',
+            'Q factor determines selectivity sharpness',
+            'Resonance enables radio tuning and wireless power',
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ color: colors.success }}>✓</span>
+              <span style={{ fontSize: '13px', color: colors.textSecondary }}>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{
         padding: '20px',
         backgroundColor: colors.bgSurface,
         borderRadius: '12px',
@@ -2177,9 +1798,26 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         <div style={{ color: colors.success, fontSize: '36px', fontWeight: 700 }}>{testScore}/10</div>
       </div>
 
-      <Button onClick={() => goToPhase('hook')}>
-        Start Over
-      </Button>
+      <div style={{ display: 'flex', gap: '16px' }}>
+        <button
+          onClick={() => goToPhase('hook')}
+          style={{
+            padding: '14px 28px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.bgElevated}`,
+            background: 'transparent',
+            color: colors.textSecondary,
+            cursor: 'pointer',
+          }}
+        >
+          Play Again
+        </button>
+        <Button onClick={() => window.location.href = '/'}>
+          Return to Dashboard
+        </Button>
+      </div>
+
+      {renderNavDots()}
     </div>
   );
 
@@ -2210,17 +1848,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
       {/* Progress bar */}
-      <div style={{ height: '4px', backgroundColor: colors.bgElevated, position: 'relative' }}>
-        <div style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          height: '100%',
-          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-          backgroundColor: colors.resonance,
-          transition: 'width 0.3s ease'
-        }} />
-      </div>
+      {renderProgressBar()}
 
       {/* Main content */}
       <div style={{ flex: 1, overflow: 'hidden' }}>

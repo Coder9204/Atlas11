@@ -23,6 +23,9 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications with full stats
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '🔧',
@@ -98,6 +101,148 @@ const realWorldApps = [
   }
 ];
 
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A mechanic is trying to loosen a stubborn bolt. They're pushing on a wrench handle 30cm from the bolt with all their strength, but the bolt won't budge.",
+    question: "What could the mechanic do to increase the torque without pushing harder?",
+    options: [
+      { id: 'a', label: "Push closer to the bolt head" },
+      { id: 'b', label: "Use a longer wrench or add an extension pipe", correct: true },
+      { id: 'c', label: "Push at an angle instead of perpendicular" },
+      { id: 'd', label: "Use a thinner wrench for better grip" }
+    ],
+    explanation: "Torque = Force x Lever arm. A longer wrench increases the lever arm, producing more torque with the same force. This is why mechanics use 'breaker bars' for stuck bolts."
+  },
+  {
+    scenario: "At a playground, a 40kg child sits 2 meters from the pivot on a seesaw. A 80kg adult wants to balance the seesaw.",
+    question: "How far from the pivot should the adult sit?",
+    options: [
+      { id: 'a', label: "1 meter from the pivot", correct: true },
+      { id: 'b', label: "2 meters from the pivot" },
+      { id: 'c', label: "4 meters from the pivot" },
+      { id: 'd', label: "It's impossible to balance" }
+    ],
+    explanation: "For balance: m1 x r1 = m2 x r2. So 40kg x 2m = 80kg x r2. Solving: r2 = 80/80 = 1 meter. The heavier person needs half the distance."
+  },
+  {
+    scenario: "A door designer is deciding where to place the handle on a heavy fire door. The door weighs 50kg and swings on hinges at one edge.",
+    question: "Why do door handles go at the edge opposite to the hinges?",
+    options: [
+      { id: 'a', label: "It looks better aesthetically" },
+      { id: 'b', label: "Maximum lever arm minimizes the force needed to open", correct: true },
+      { id: 'c', label: "The door is stronger at that edge" },
+      { id: 'd', label: "Building codes require it for no physical reason" }
+    ],
+    explanation: "Placing the handle far from the hinge maximizes the lever arm, so users need minimal force to create enough torque to overcome the door's inertia and any friction."
+  },
+  {
+    scenario: "A cyclist is climbing a steep hill and shifts to a smaller front chainring (fewer teeth). The rear gear stays the same.",
+    question: "What happens to the torque at the rear wheel?",
+    options: [
+      { id: 'a', label: "Torque decreases, making climbing harder" },
+      { id: 'b', label: "Torque increases, making climbing easier", correct: true },
+      { id: 'c', label: "Torque stays the same, only speed changes" },
+      { id: 'd', label: "Torque becomes zero" }
+    ],
+    explanation: "A smaller front chainring creates a mechanical advantage that multiplies the leg torque at the wheel. You pedal faster but with less resistance, effectively trading speed for more pushing power."
+  },
+  {
+    scenario: "A crane operator is about to lift a 20-ton load. The boom is currently extended to 15 meters, and the load chart shows maximum capacity of 25 tons at this radius.",
+    question: "Why does the crane's capacity decrease as the boom extends further?",
+    options: [
+      { id: 'a', label: "The boom gets weaker when extended" },
+      { id: 'b', label: "The tipping moment (load x distance) increases, approaching the counterweight limit", correct: true },
+      { id: 'c', label: "The cables can't hold as much when angled" },
+      { id: 'd', label: "Wind resistance increases at longer extensions" }
+    ],
+    explanation: "Tipping moment = Load x Radius. As the boom extends, the same load creates a larger moment. The crane tips when the load moment exceeds the stabilizing moment from the counterweight."
+  },
+  {
+    scenario: "A car has a 2-liter gasoline engine producing 200 Nm of peak torque at 4000 RPM. It's being replaced with an electric motor.",
+    question: "At what RPM do electric motors produce their maximum torque?",
+    options: [
+      { id: 'a', label: "At peak RPM for maximum power" },
+      { id: 'b', label: "At 0 RPM - instant torque from standstill", correct: true },
+      { id: 'c', label: "At the same RPM as gasoline engines" },
+      { id: 'd', label: "Electric motors don't produce torque" }
+    ],
+    explanation: "Electric motors produce maximum torque at zero RPM because torque is proportional to current, and maximum current can flow when the motor is stalled. This is why EVs accelerate so quickly from a stop."
+  },
+  {
+    scenario: "A bolt specification calls for 100 Nm of torque. A technician applies 50 N of force to the wrench.",
+    question: "How long must the wrench handle be to achieve the correct torque?",
+    options: [
+      { id: 'a', label: "0.5 meters" },
+      { id: 'b', label: "1.0 meter" },
+      { id: 'c', label: "2.0 meters", correct: true },
+      { id: 'd', label: "5.0 meters" }
+    ],
+    explanation: "Torque = Force x Length. 100 Nm = 50 N x L. Solving: L = 100/50 = 2 meters. This is why torque wrenches have long handles - to reach high torques with reasonable human force."
+  },
+  {
+    scenario: "Two workers are carrying a 100kg beam. Worker A is 1 meter from the center, and Worker B is 3 meters from the center (opposite side).",
+    question: "How much weight does each worker support?",
+    options: [
+      { id: 'a', label: "Both support 50kg equally" },
+      { id: 'b', label: "A supports 75kg, B supports 25kg", correct: true },
+      { id: 'c', label: "A supports 25kg, B supports 75kg" },
+      { id: 'd', label: "Cannot be determined without the beam length" }
+    ],
+    explanation: "By torque balance around the center: The load distribution is inversely proportional to distance. Since B is 3x farther, A carries 3x more. Total ratio is 3:1, so A carries 75kg and B carries 25kg."
+  },
+  {
+    scenario: "An engineer is designing a bottle cap. The cap diameter is 30mm and requires 2 Nm of torque to open.",
+    question: "If the cap diameter were doubled to 60mm, how much torque would a user naturally apply with the same grip force?",
+    options: [
+      { id: 'a', label: "1 Nm (half)" },
+      { id: 'b', label: "2 Nm (same)" },
+      { id: 'c', label: "4 Nm (double)", correct: true },
+      { id: 'd', label: "8 Nm (quadruple)" }
+    ],
+    explanation: "Torque = Force x Radius. Doubling the diameter doubles the radius (lever arm). With the same grip force, the user applies double the torque. This is why jar lids have ridged edges to increase effective diameter."
+  },
+  {
+    scenario: "A see-saw has a 30kg child at one end. To balance, you can either place weights at the other end or move the pivot point.",
+    question: "If you move the pivot 25% closer to the child, how much weight is needed at the other end to balance?",
+    options: [
+      { id: 'a', label: "10kg" },
+      { id: 'b', label: "15kg" },
+      { id: 'c', label: "20kg" },
+      { id: 'd', label: "22.5kg", correct: true }
+    ],
+    explanation: "If pivot moves 25% toward the child, child's arm becomes 0.75L and other side becomes 1.25L. Balance: 30kg x 0.75L = W x 1.25L. Solving: W = 22.5kg. Moving the pivot changes the torque balance."
+  }
+];
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -150,18 +295,18 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   const [experimentCount, setExperimentCount] = useState(0);
   const [showForceVector, setShowForceVector] = useState(true);
 
-  // Transfer state with sequential navigation
-  const [activeApp, setActiveApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
   const animationRef = useRef<number>();
+  const isNavigating = useRef(false);
 
   // Physics calculations
   const requiredTorque = hasFriction ? 30 : 15;
@@ -176,71 +321,59 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
   // Cleanup animation
   useEffect(() => {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // Web Audio API sound with typed categories
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#A855F7', // Purple for torque
+    accentGlow: 'rgba(168, 85, 247, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
   // Emit game events
   const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Return to dashboard handler
-  const handleReturnToDashboard = useCallback(() => {
-    emitEvent('mastery_achieved', { action: 'return_to_dashboard' });
-    window.dispatchEvent(new CustomEvent('returnToDashboard'));
-  }, [emitEvent]);
-
   // Navigation
   const goToPhase = useCallback((newPhase: Phase) => {
+    if (isNavigating.current) return;
     if (!phaseOrder.includes(newPhase)) return;
-    setPhase(newPhase);
+    isNavigating.current = true;
     playSound('transition');
+    setPhase(newPhase);
     const phaseIndex = phaseOrder.indexOf(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(phaseIndex);
-  }, [phase, playSound, emitEvent, onPhaseComplete]);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [phase, emitEvent, onPhaseComplete]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Door physics
   const pushDoor = useCallback(() => {
@@ -270,7 +403,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     };
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [isPushing, pushPosition, requiredForce, hasFriction, emitEvent, playSound]);
+  }, [isPushing, pushPosition, requiredForce, hasFriction, emitEvent]);
 
   const resetDoor = useCallback(() => {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -279,116 +412,72 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     emitEvent('parameter_changed', { action: 'reset' });
   }, [emitEvent]);
 
-  const handleTestAnswer = useCallback((answerIndex: number) => {
-    if (answeredQuestions.has(currentQuestion)) return;
-    setSelectedAnswer(answerIndex);
-    setShowExplanation(true);
-    const isCorrect = testQuestions[currentQuestion].options[answerIndex]?.correct;
-    if (isCorrect) {
-      setCorrectAnswers(prev => prev + 1);
-      playSound('success');
-    } else {
-      playSound('failure');
-    }
-    setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    emitEvent('test_answered', { question: currentQuestion, answer: answerIndex, correct: isCorrect });
-  }, [currentQuestion, answeredQuestions, emitEvent, playSound]);
+  // Return to dashboard handler
+  const handleReturnToDashboard = useCallback(() => {
+    emitEvent('mastery_achieved', { action: 'return_to_dashboard' });
+    window.dispatchEvent(new CustomEvent('returnToDashboard'));
+  }, [emitEvent]);
 
-  // Test questions - 10 questions with correct: true markers
-  const testQuestions = [
-    { question: "Why is it easier to open a door by pushing at the handle (far from hinge)?", options: [
-      { text: "The handle is smoother", correct: false },
-      { text: "Larger lever arm = less force needed", correct: true },
-      { text: "The door is lighter there", correct: false },
-      { text: "It's not actually easier", correct: false }
-    ], explanation: "Torque = Force x Lever arm. With a larger lever arm (distance from hinge), you need less force to create the same torque." },
-    { question: "What is the correct formula for torque?", options: [
-      { text: "t = F + r", correct: false },
-      { text: "t = F x r", correct: true },
-      { text: "t = F / r", correct: false },
-      { text: "t = F - r", correct: false }
-    ], explanation: "Torque (t) equals force (F) times the perpendicular distance (r) from the pivot point: t = F x r" },
-    { question: "If you push a door at half the distance from the hinge, you need:", options: [
-      { text: "Half the force", correct: false },
-      { text: "The same force", correct: false },
-      { text: "Twice the force", correct: true },
-      { text: "Four times the force", correct: false }
-    ], explanation: "Since t = F x r, halving r means you need to double F to maintain the same torque." },
-    { question: "Door handles are placed far from hinges because:", options: [
-      { text: "It looks better aesthetically", correct: false },
-      { text: "Maximizes lever arm, minimizing force needed", correct: true },
-      { text: "It's where the door is strongest", correct: false },
-      { text: "There's no particular reason", correct: false }
-    ], explanation: "Engineers place handles far from hinges to maximize the lever arm, making doors easy to open with minimal force." },
-    { question: "A sticky hinge increases the force needed because:", options: [
-      { text: "It adds friction resistance to overcome", correct: true },
-      { text: "It makes the door heavier", correct: false },
-      { text: "It changes the lever arm length", correct: false },
-      { text: "It doesn't affect the force needed", correct: false }
-    ], explanation: "Friction at the hinge creates a resisting torque that must be overcome in addition to the torque needed to accelerate the door." },
-    { question: "A wrench with a longer handle:", options: [
-      { text: "Is always heavier to use", correct: false },
-      { text: "Provides more torque for the same force", correct: true },
-      { text: "Provides less torque overall", correct: false },
-      { text: "Doesn't affect the torque", correct: false }
-    ], explanation: "A longer wrench handle increases the lever arm, so the same force produces more torque." },
-    { question: "To balance a seesaw with unequal weights:", options: [
-      { text: "Put the heavier weight in the middle", correct: false },
-      { text: "Put the heavier weight closer to pivot", correct: true },
-      { text: "Put the lighter weight closer to pivot", correct: false },
-      { text: "It cannot be balanced", correct: false }
-    ], explanation: "For balance, torques must be equal: W1 x r1 = W2 x r2. The heavier weight needs a shorter lever arm." },
-    { question: "Why do doorstops work best when placed far from the hinge?", options: [
-      { text: "They're easier to see there", correct: false },
-      { text: "Maximum leverage prevents door motion", correct: true },
-      { text: "The door is thinner there", correct: false },
-      { text: "Position doesn't matter", correct: false }
-    ], explanation: "Placing a doorstop far from the hinge maximizes the resisting moment arm, making it harder to push the door open." },
-    { question: "A torque wrench is designed to measure:", options: [
-      { text: "The weight of the wrench", correct: false },
-      { text: "Rotational force being applied", correct: true },
-      { text: "The length of the wrench", correct: false },
-      { text: "The turning speed", correct: false }
-    ], explanation: "A torque wrench measures the rotational force (torque) being applied to a fastener, ensuring proper tightening." },
-    { question: "If torque = 20 N-m and lever arm = 0.5 m, what force is applied?", options: [
-      { text: "10 N", correct: false },
-      { text: "40 N", correct: true },
-      { text: "20 N", correct: false },
-      { text: "0.025 N", correct: false }
-    ], explanation: "Using t = F x r: 20 = F x 0.5, solving for F gives F = 40 N." }
-  ];
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-  // Real-world applications - 4 applications
-  const applications = [
-    {
-      id: 'wrench',
-      title: "Wrenches",
-      description: "Longer wrenches provide more torque with less effort. Mechanics use breaker bars for stubborn bolts - maximum leverage from extended handles!",
-      formula: "t = F x r",
-      insight: "2x handle length = 2x torque",
-    },
-    {
-      id: 'seesaw',
-      title: "Seesaws",
-      description: "Torque balance determines equilibrium. A heavier child sits closer to the pivot to balance a lighter child sitting farther away.",
-      formula: "m1r1 = m2r2",
-      insight: "Balance point shifts with mass",
-    },
-    {
-      id: 'steering',
-      title: "Steering Wheels",
-      description: "Large steering wheels require less force to turn. Power steering reduces the torque needed at your hands, making driving effortless.",
-      formula: "F = t / r",
-      insight: "Larger radius = less effort",
-    },
-    {
-      id: 'engine',
-      title: "Engines",
-      description: "Engine torque determines pulling power. Diesel engines produce high torque at low RPM, making them ideal for heavy vehicles and towing.",
-      formula: "Power = t x omega",
-      insight: "Torque = rotational strength",
-    }
-  ];
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
   // ============================================================================
   // VISUALIZATION - Premium Door Animation
@@ -403,20 +492,8 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
     return (
       <div>
-        <svg width="100%" height={240} viewBox={`0 0 ${svgWidth} 240`} className="block mx-auto">
+        <svg width="100%" height={240} viewBox={`0 0 ${svgWidth} 240`} style={{ display: 'block', margin: '0 auto' }}>
           <defs>
-            {/* === PREMIUM GRADIENTS === */}
-
-            {/* Metal beam/lever gradient - brushed steel look */}
-            <linearGradient id="torqMetalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#e2e8f0" />
-              <stop offset="25%" stopColor="#cbd5e1" />
-              <stop offset="50%" stopColor="#f8fafc" />
-              <stop offset="75%" stopColor="#94a3b8" />
-              <stop offset="100%" stopColor="#64748b" />
-            </linearGradient>
-
-            {/* Door wood grain - premium brown */}
             <linearGradient id="torqDoorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#d4a574" />
               <stop offset="30%" stopColor="#c4956a" />
@@ -424,61 +501,38 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               <stop offset="70%" stopColor="#b8845a" />
               <stop offset="100%" stopColor="#8b5a2b" />
             </linearGradient>
-
-            {/* 3D Pivot radial gradient */}
             <radialGradient id="torqPivotGrad" cx="35%" cy="35%">
               <stop offset="0%" stopColor="#a1a1aa" />
               <stop offset="40%" stopColor="#71717a" />
               <stop offset="70%" stopColor="#52525b" />
               <stop offset="100%" stopColor="#3f3f46" />
             </radialGradient>
-
-            {/* Friction pivot - rusty orange */}
             <radialGradient id="torqFrictionPivotGrad" cx="35%" cy="35%">
               <stop offset="0%" stopColor="#fb923c" />
               <stop offset="40%" stopColor="#ea580c" />
               <stop offset="70%" stopColor="#9a3412" />
               <stop offset="100%" stopColor="#7c2d12" />
             </radialGradient>
-
-            {/* Force arrow gradient - glowing green */}
             <linearGradient id="torqForceGrad" x1="0%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#16a34a" />
               <stop offset="50%" stopColor="#22c55e" />
               <stop offset="100%" stopColor="#86efac" />
             </linearGradient>
-
-            {/* Torque arc gradient - purple glow */}
-            <linearGradient id="torqTorqueArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="50%" stopColor="#c084fc" />
-              <stop offset="100%" stopColor="#a855f7" />
-            </linearGradient>
-
-            {/* Lever arm gradient - blue */}
             <linearGradient id="torqLeverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#3b82f6" />
               <stop offset="50%" stopColor="#60a5fa" />
               <stop offset="100%" stopColor="#3b82f6" />
             </linearGradient>
-
-            {/* Handle metallic gradient */}
             <radialGradient id="torqHandleGrad" cx="30%" cy="30%">
               <stop offset="0%" stopColor="#fcd34d" />
               <stop offset="50%" stopColor="#f59e0b" />
               <stop offset="100%" stopColor="#b45309" />
             </radialGradient>
-
-            {/* Wall gradient - 3D depth */}
             <linearGradient id="torqWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#27272a" />
               <stop offset="80%" stopColor="#3f3f46" />
               <stop offset="100%" stopColor="#52525b" />
             </linearGradient>
-
-            {/* === GLOW FILTERS === */}
-
-            {/* Force arrow glow */}
             <filter id="torqForceGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feFlood floodColor="#22c55e" floodOpacity="0.6" />
@@ -488,182 +542,90 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Pivot glow (for highlighting) */}
-            <filter id="torqPivotGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feFlood floodColor="#a855f7" floodOpacity="0.5" />
-              <feComposite in2="blur" operator="in" />
-              <feMerge>
-                <feMergeNode />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Torque arc glow */}
-            <filter id="torqArcGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feFlood floodColor="#a855f7" floodOpacity="0.4" />
-              <feComposite in2="blur" operator="in" />
-              <feMerge>
-                <feMergeNode />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Door shadow */}
             <filter id="torqDoorShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="3" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.5" />
             </filter>
-
-            {/* Pivot shadow */}
-            <filter id="torqPivotShadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="#000" floodOpacity="0.6" />
-            </filter>
-
-            {/* Background grid pattern */}
             <pattern id="torqGrid" width="30" height="30" patternUnits="userSpaceOnUse">
               <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#3a2850" strokeWidth="0.5" opacity="0.3" />
             </pattern>
           </defs>
 
-          {/* Background */}
           <rect width={svgWidth} height={240} fill="#08050c" />
           <rect width={svgWidth} height={240} fill="url(#torqGrid)" />
 
-          {/* Wall with 3D depth */}
+          {/* Wall */}
           <rect x={0} y={hingeY - 80} width={50} height={160} fill="url(#torqWallGrad)" />
           <rect x={48} y={hingeY - 80} width={4} height={160} fill="#52525b" />
-          <line x1={50} y1={hingeY - 80} x2={50} y2={hingeY + 80} stroke="#71717a" strokeWidth={1} />
-
-          {/* Pivot shadow on floor */}
-          <ellipse cx={hingeX + 5} cy={hingeY + 25} rx={18} ry={6} fill="#000" opacity={0.4} />
 
           {/* Door with rotation */}
           <g transform={`translate(${hingeX}, ${hingeY}) rotate(${doorAngle})`} filter="url(#torqDoorShadow)">
-            {/* Door body with premium gradient */}
             <rect x={0} y={-doorWidth / 2} width={doorLength} height={doorWidth} rx={3} fill="url(#torqDoorGrad)" />
 
-            {/* Wood grain lines for realism */}
-            {[0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((pos, i) => (
-              <line key={i} x1={doorLength * pos} y1={-doorWidth / 2 + 2} x2={doorLength * pos} y2={doorWidth / 2 - 2}
-                    stroke="#8b5a2b" strokeWidth={0.5} opacity={0.25} />
-            ))}
-
-            {/* Door edge highlight */}
-            <line x1={2} y1={-doorWidth / 2 + 2} x2={2} y2={doorWidth / 2 - 2} stroke="#e0b88a" strokeWidth={1} opacity={0.5} />
-            <line x1={doorLength - 2} y1={-doorWidth / 2 + 2} x2={doorLength - 2} y2={doorWidth / 2 - 2} stroke="#8b5a2b" strokeWidth={1} opacity={0.5} />
-
-            {/* Premium door handle with metallic gradient */}
+            {/* Door handle */}
             <circle cx={doorLength - 30} cy={0} r={10} fill="url(#torqHandleGrad)" stroke="#92400e" strokeWidth={2} />
             <circle cx={doorLength - 30} cy={0} r={4} fill="#78350f" />
-            <circle cx={doorLength - 33} cy={-3} r={2} fill="#fcd34d" opacity={0.6} />
 
             {/* Lever arm visualization */}
             {showForceVector && (
               <g>
-                <line x1={0} y1={32} x2={pushX} y2={32}
-                      stroke="url(#torqLeverGrad)" strokeWidth={3} strokeDasharray="6,3" />
+                <line x1={0} y1={32} x2={pushX} y2={32} stroke="url(#torqLeverGrad)" strokeWidth={3} strokeDasharray="6,3" />
                 <circle cx={0} cy={32} r={5} fill="#3b82f6" stroke="#60a5fa" strokeWidth={1} />
                 <circle cx={pushX} cy={32} r={5} fill="#3b82f6" stroke="#60a5fa" strokeWidth={1} />
               </g>
             )}
 
-            {/* Push point indicator with glow */}
+            {/* Push point indicator */}
             <circle cx={pushX} cy={0} r={12} fill="#22c55e" stroke="#86efac" strokeWidth={2} filter="url(#torqForceGlow)">
               <animate attributeName="r" values="10;13;10" dur="1.2s" repeatCount="indefinite" />
             </circle>
             <circle cx={pushX} cy={0} r={4} fill="#fff" opacity={0.8} />
 
-            {/* Force arrow with gradient and glow */}
+            {/* Force arrow */}
             {showForceVector && (
               <g transform={`translate(${pushX}, 0)`} filter="url(#torqForceGlow)">
-                <line x1={0} y1={-18} x2={0} y2={-18 - requiredForce * 1.2}
-                      stroke="url(#torqForceGrad)" strokeWidth={4} strokeLinecap="round" />
-                <polygon points={`0,${-18 - requiredForce * 1.2 - 10} -6,${-18 - requiredForce * 1.2} 6,${-18 - requiredForce * 1.2}`}
-                         fill="#86efac" />
-              </g>
-            )}
-
-            {/* Torque arc indicator (shows rotation direction) */}
-            {showForceVector && doorAngle > 5 && (
-              <g filter="url(#torqArcGlow)">
-                <path
-                  d={`M 30 0 A 30 30 0 0 0 ${30 * Math.cos(-Math.PI / 6)} ${30 * Math.sin(-Math.PI / 6)}`}
-                  stroke="url(#torqTorqueArcGrad)"
-                  strokeWidth={3}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-                <polygon
-                  points={`${30 * Math.cos(-Math.PI / 6) - 4},${30 * Math.sin(-Math.PI / 6)} ${30 * Math.cos(-Math.PI / 6) + 3},${30 * Math.sin(-Math.PI / 6) - 6} ${30 * Math.cos(-Math.PI / 6) + 6},${30 * Math.sin(-Math.PI / 6) + 4}`}
-                  fill="#c084fc"
-                />
+                <line x1={0} y1={-18} x2={0} y2={-18 - requiredForce * 1.2} stroke="url(#torqForceGrad)" strokeWidth={4} strokeLinecap="round" />
+                <polygon points={`0,${-18 - requiredForce * 1.2 - 10} -6,${-18 - requiredForce * 1.2} 6,${-18 - requiredForce * 1.2}`} fill="#86efac" />
               </g>
             )}
           </g>
 
-          {/* 3D Pivot/Hinge with shadow and gradient */}
-          <g transform={`translate(${hingeX}, ${hingeY})`} filter="url(#torqPivotShadow)">
-            {/* Outer ring */}
+          {/* Pivot/Hinge */}
+          <g transform={`translate(${hingeX}, ${hingeY})`}>
             <circle r={16} fill={hasFriction ? 'url(#torqFrictionPivotGrad)' : 'url(#torqPivotGrad)'} stroke="#52525b" strokeWidth={2} />
-            {/* Inner detail rings */}
-            <circle r={10} fill="none" stroke={hasFriction ? '#7c2d12' : '#3f3f46'} strokeWidth={1} opacity={0.5} />
-            {/* Center bolt */}
             <circle r={5} fill={hasFriction ? '#ea580c' : '#71717a'} />
-            {/* Highlight */}
-            <circle cx={-4} cy={-4} r={3} fill={hasFriction ? '#fdba74' : '#a1a1aa'} opacity={0.6} />
-          </g>
-
-          {/* Force meter panel */}
-          <g transform={`translate(${svgWidth - 95}, 165)`}>
-            <rect x={0} y={0} width={85} height={60} rx={10} fill="#181220"
-                  stroke="#3a2850" strokeWidth={1.5} />
-            <rect x={2} y={2} width={81} height={12} rx={6} fill="#1e1030" opacity={0.5} />
-          </g>
-
-          {/* Torque display panel */}
-          <g transform="translate(10, 165)">
-            <rect x={0} y={0} width={100} height={60} rx={10} fill="#181220"
-                  stroke="#3a2850" strokeWidth={1.5} />
-            <rect x={2} y={2} width={96} height={12} rx={6} fill="#1e1030" opacity={0.5} />
           </g>
         </svg>
 
-        {/* Text labels outside SVG using typo system */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: `${typo.elementGap} ${typo.cardPadding}`, marginTop: '-60px' }}>
+        {/* Stats display */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', marginTop: '8px' }}>
           <div style={{
-            background: '#181220',
+            background: colors.bgCard,
             borderRadius: '10px',
             padding: '8px 12px',
-            border: '1px solid #3a2850',
-            minWidth: '100px',
+            border: `1px solid ${colors.border}`,
             textAlign: 'center'
           }}>
-            <div style={{ fontSize: typo.label, color: '#7a6890', marginBottom: '4px' }}>Torque (t = F x r)</div>
-            <div style={{ fontSize: typo.heading, fontWeight: 700, color: '#a855f7' }}>{requiredTorque} N-m</div>
+            <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Torque</div>
+            <div style={{ ...typo.h3, color: colors.accent }}>{requiredTorque} N-m</div>
           </div>
-
           <div style={{
-            background: '#181220',
+            background: colors.bgCard,
             borderRadius: '10px',
             padding: '8px 12px',
-            border: '1px solid #3a2850',
-            minWidth: '85px',
+            border: `1px solid ${colors.border}`,
             textAlign: 'center'
           }}>
-            <div style={{ fontSize: typo.label, color: '#7a6890', marginBottom: '4px' }}>Required Force</div>
-            <div style={{ fontSize: typo.heading, fontWeight: 700, color: requiredForce > 100 ? '#ef4444' : '#22c55e' }}>
-              {requiredForce.toFixed(1)}N
+            <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Required Force</div>
+            <div style={{ ...typo.h3, color: requiredForce > 100 ? colors.error : colors.success }}>
+              {requiredForce.toFixed(1)} N
             </div>
           </div>
         </div>
 
-        {/* Lever arm label */}
         {showForceVector && (
-          <div style={{ textAlign: 'center', marginTop: typo.elementGap }}>
+          <div style={{ textAlign: 'center', marginTop: '8px' }}>
             <span style={{
-              fontSize: typo.small,
+              ...typo.small,
               color: '#3b82f6',
               fontWeight: 600,
               background: '#1e3a5f',
@@ -674,32 +636,6 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             </span>
           </div>
         )}
-
-        {/* Friction indicator */}
-        {hasFriction && (
-          <div style={{ textAlign: 'center', marginTop: typo.elementGap }}>
-            <span style={{
-              fontSize: typo.small,
-              color: '#f97316',
-              fontWeight: 600,
-              background: '#451a03',
-              padding: '4px 12px',
-              borderRadius: '12px'
-            }}>
-              Sticky hinge - extra torque needed!
-            </span>
-          </div>
-        )}
-
-        {/* Title moved outside SVG */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: typo.elementGap,
-          fontSize: typo.small,
-          color: '#a1a1aa'
-        }}>
-          Top-Down View (looking down at door)
-        </div>
       </div>
     );
   };
@@ -710,9 +646,8 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
     return (
       <div>
-        <svg width="100%" height={180} viewBox={`0 0 ${svgWidth} 180`} className="block mx-auto">
+        <svg width="100%" height={180} viewBox={`0 0 ${svgWidth} 180`} style={{ display: 'block', margin: '0 auto' }}>
           <defs>
-            {/* Premium board gradient - polished wood */}
             <linearGradient id="torqSeesawBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#a3765c" />
               <stop offset="25%" stopColor="#8b6348" />
@@ -720,117 +655,69 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               <stop offset="75%" stopColor="#8b6348" />
               <stop offset="100%" stopColor="#6b4d38" />
             </linearGradient>
-
-            {/* Fulcrum metal gradient */}
             <linearGradient id="torqFulcrumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#6b7280" />
               <stop offset="40%" stopColor="#4b5563" />
               <stop offset="100%" stopColor="#374151" />
             </linearGradient>
-
-            {/* Heavy weight gradient - red/orange */}
             <radialGradient id="torqHeavyWeightGrad" cx="30%" cy="30%">
               <stop offset="0%" stopColor="#fca5a5" />
               <stop offset="50%" stopColor="#ef4444" />
               <stop offset="100%" stopColor="#b91c1c" />
             </radialGradient>
-
-            {/* Light weight gradient - green */}
             <radialGradient id="torqLightWeightGrad" cx="30%" cy="30%">
               <stop offset="0%" stopColor="#86efac" />
               <stop offset="50%" stopColor="#22c55e" />
               <stop offset="100%" stopColor="#15803d" />
             </radialGradient>
-
-            {/* Ground gradient */}
             <linearGradient id="torqGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e1e2e" />
               <stop offset="100%" stopColor="#0f0f1a" />
             </linearGradient>
-
-            {/* Weight shadow filter */}
             <filter id="torqWeightShadow" x="-50%" y="-50%" width="200%" height="200%">
               <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
             </filter>
-
-            {/* Fulcrum shadow */}
-            <filter id="torqFulcrumShadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000" floodOpacity="0.4" />
-            </filter>
           </defs>
 
-          {/* Background */}
           <rect width={svgWidth} height={180} fill="#08050c" />
-
-          {/* Ground with gradient */}
           <rect x={0} y={145} width={svgWidth} height={35} fill="url(#torqGroundGrad)" />
-          <line x1={0} y1={145} x2={svgWidth} y2={145} stroke="#27272a" strokeWidth={1} />
 
-          {/* Fulcrum shadow on ground */}
-          <ellipse cx={svgWidth/2} cy={150} rx={35} ry={8} fill="#000" opacity={0.3} />
+          {/* Fulcrum */}
+          <polygon points={`${svgWidth/2},115 ${svgWidth/2 - 28},145 ${svgWidth/2 + 28},145`} fill="url(#torqFulcrumGrad)" stroke="#9ca3af" strokeWidth={1.5} />
 
-          {/* Fulcrum (triangle) with 3D effect */}
-          <g filter="url(#torqFulcrumShadow)">
-            <polygon points={`${svgWidth/2},115 ${svgWidth/2 - 28},145 ${svgWidth/2 + 28},145`} fill="url(#torqFulcrumGrad)" stroke="#9ca3af" strokeWidth={1.5} />
-            {/* Highlight edge */}
-            <line x1={svgWidth/2} y1={117} x2={svgWidth/2 - 24} y2={143} stroke="#9ca3af" strokeWidth={1} opacity={0.5} />
-          </g>
-
-          {/* Seesaw board with premium wood grain */}
+          {/* Seesaw board */}
           <g transform={`translate(${svgWidth/2}, 108)`}>
             <rect x={-(svgWidth - 90)/2} y={-6} width={svgWidth - 90} height={12} rx={4} fill="url(#torqSeesawBoardGrad)" />
-            {/* Wood grain lines */}
-            {[-0.35, -0.15, 0.05, 0.25, 0.45].map((pos, i) => (
-              <line key={i} x1={(svgWidth - 90) * pos} y1={-4} x2={(svgWidth - 90) * pos} y2={4}
-                    stroke="#6b4d38" strokeWidth={0.5} opacity={0.3} />
-            ))}
-            {/* Board highlight */}
-            <line x1={-(svgWidth - 90)/2 + 4} y1={-4} x2={(svgWidth - 90)/2 - 4} y2={-4} stroke="#c9a07a" strokeWidth={1} opacity={0.4} />
           </g>
 
-          {/* Left weight (heavier, closer to center) */}
-          <g transform={`translate(100, 78)`} filter="url(#torqWeightShadow)">
+          {/* Left weight (heavier, closer) */}
+          <g transform="translate(100, 78)" filter="url(#torqWeightShadow)">
             <circle r={28} fill="url(#torqHeavyWeightGrad)" stroke="#dc2626" strokeWidth={2}>
               <animate attributeName="cy" values="-2;2;-2" dur="3s" repeatCount="indefinite" />
             </circle>
-            {/* Weight highlight */}
-            <circle cx={-8} cy={-8} r={6} fill="#fca5a5" opacity={0.5} />
+            <text x={0} y={6} textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">5kg</text>
           </g>
 
-          {/* Right weight (lighter, farther from center) */}
+          {/* Right weight (lighter, farther) */}
           <g transform={`translate(${svgWidth - 80}, 78)`} filter="url(#torqWeightShadow)">
             <circle r={20} fill="url(#torqLightWeightGrad)" stroke="#16a34a" strokeWidth={2}>
               <animate attributeName="cy" values="2;-2;2" dur="3s" repeatCount="indefinite" />
             </circle>
-            {/* Weight highlight */}
-            <circle cx={-5} cy={-5} r={4} fill="#86efac" opacity={0.5} />
+            <text x={0} y={5} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">2kg</text>
           </g>
 
           {/* Lever arm indicators */}
           <line x1={svgWidth/2} y1={130} x2={100} y2={130} stroke="#3b82f6" strokeWidth={2} strokeDasharray="5,3" opacity={0.8} />
           <line x1={svgWidth/2} y1={130} x2={svgWidth - 80} y2={130} stroke="#f97316" strokeWidth={2} strokeDasharray="5,3" opacity={0.8} />
 
-          {/* Pivot point marker */}
+          {/* Pivot marker */}
           <circle cx={svgWidth/2} cy={115} r={4} fill="#a855f7" stroke="#c084fc" strokeWidth={1} />
         </svg>
 
-        {/* Labels outside SVG using typo system */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: `4px ${typo.cardPadding}`, marginTop: '-35px' }}>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 700 }}>5kg</span>
-            <div style={{ fontSize: typo.label, color: '#3b82f6', marginTop: '2px' }}>r1 (short)</div>
-          </div>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 700 }}>2kg</span>
-            <div style={{ fontSize: typo.label, color: '#f97316', marginTop: '2px' }}>r2 (long)</div>
-          </div>
-        </div>
-
-        {/* Balance equation */}
-        <div style={{ textAlign: 'center', marginTop: typo.elementGap }}>
+        <div style={{ textAlign: 'center', marginTop: '12px' }}>
           <span style={{
-            fontSize: typo.small,
-            color: '#a855f7',
+            ...typo.small,
+            color: colors.accent,
             fontWeight: 600,
             background: '#2d1f4e',
             padding: '6px 14px',
@@ -843,1095 +730,1297 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     );
   };
 
-  // Application graphics for transfer phase
-  const renderApplicationGraphic = (appId: string) => {
-    const svgWidth = isMobile ? 280 : 320;
-
-    return (
-      <svg width="100%" height={130} viewBox={`0 0 ${svgWidth} 130`} className="block mx-auto">
-        <defs>
-          {/* Wrench metal gradient */}
-          <linearGradient id="torqWrenchMetalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#d1d5db" />
-            <stop offset="30%" stopColor="#9ca3af" />
-            <stop offset="50%" stopColor="#e5e7eb" />
-            <stop offset="70%" stopColor="#6b7280" />
-            <stop offset="100%" stopColor="#4b5563" />
-          </linearGradient>
-
-          {/* Force arrow glow */}
-          <filter id="torqAppForceGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feFlood floodColor="#22c55e" floodOpacity="0.5" />
-            <feComposite in2="blur" operator="in" />
-            <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-
-          {/* Torque arc glow */}
-          <filter id="torqAppArcGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feFlood floodColor="#a855f7" floodOpacity="0.4" />
-            <feComposite in2="blur" operator="in" />
-            <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-
-          {/* Steering wheel gradient */}
-          <linearGradient id="torqSteeringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#52525b" />
-            <stop offset="50%" stopColor="#3f3f46" />
-            <stop offset="100%" stopColor="#27272a" />
-          </linearGradient>
-
-          {/* Engine block gradient */}
-          <linearGradient id="torqEngineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#4b5563" />
-            <stop offset="50%" stopColor="#374151" />
-            <stop offset="100%" stopColor="#1f2937" />
-          </linearGradient>
-
-          {/* Bolt metallic gradient */}
-          <radialGradient id="torqBoltGrad" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#a1a1aa" />
-            <stop offset="50%" stopColor="#71717a" />
-            <stop offset="100%" stopColor="#3f3f46" />
-          </radialGradient>
-
-          {/* Weight shadows */}
-          <filter id="torqAppShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="2" dy="3" stdDeviation="2" floodColor="#000" floodOpacity="0.4" />
-          </filter>
-
-          {/* Premium weight gradients */}
-          <radialGradient id="torqAppHeavyGrad" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#fca5a5" />
-            <stop offset="50%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#b91c1c" />
-          </radialGradient>
-          <radialGradient id="torqAppLightGrad" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#86efac" />
-            <stop offset="50%" stopColor="#22c55e" />
-            <stop offset="100%" stopColor="#15803d" />
-          </radialGradient>
-
-          {/* Hand/grip gradient */}
-          <radialGradient id="torqHandGripGrad" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#fdba74" />
-            <stop offset="50%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#c2410c" />
-          </radialGradient>
-        </defs>
-
-        <rect width={svgWidth} height={130} fill="#0f0a14" rx={12} />
-
-        {appId === 'wrench' && (
-          <g>
-            {/* Wrench body with premium metal gradient */}
-            <rect x={70} y={55} width={160} height={18} rx={4} fill="url(#torqWrenchMetalGrad)" filter="url(#torqAppShadow)" />
-            {/* Highlight stripe */}
-            <rect x={72} y={58} width={156} height={3} rx={1} fill="#e5e7eb" opacity={0.4} />
-            {/* Wrench head */}
-            <circle cx={70} cy={64} r={22} fill="url(#torqWrenchMetalGrad)" stroke="#9ca3af" strokeWidth={2} filter="url(#torqAppShadow)" />
-            <circle cx={70} cy={64} r={12} fill="#27272a" />
-            {/* Bolt with metallic gradient */}
-            <polygon points="70,64 78,59 78,54 70,49 62,54 62,59" fill="url(#torqBoltGrad)" stroke="#71717a" strokeWidth={1} />
-            {/* Force arrow with glow */}
-            <g filter="url(#torqAppForceGlow)">
-              <line x1={230} y1={64} x2={230} y2={22} stroke="#22c55e" strokeWidth={4} strokeLinecap="round" />
-              <polygon points="230,16 222,28 238,28" fill="#86efac" />
-            </g>
-            {/* Lever arm */}
-            <line x1={70} y1={94} x2={230} y2={94} stroke="#3b82f6" strokeWidth={2} strokeDasharray="5,3" opacity={0.8} />
-            {/* Rotation indicator with glow */}
-            <g filter="url(#torqAppArcGlow)">
-              <path d="M 48 42 A 32 32 0 0 0 48 86" stroke="#a855f7" strokeWidth={3} fill="none" strokeLinecap="round" />
-              <polygon points="48,38 42,48 54,48" fill="#c084fc" />
-            </g>
-          </g>
-        )}
-
-        {appId === 'seesaw' && (
-          <g>
-            {/* Fulcrum with gradient */}
-            <polygon points={`${svgWidth/2},88 ${svgWidth/2 - 24},115 ${svgWidth/2 + 24},115`} fill="url(#torqSteeringGrad)" stroke="#71717a" strokeWidth={1} />
-            {/* Board with wood grain effect */}
-            <g transform={`rotate(-5, ${svgWidth/2}, 83)`}>
-              <rect x={35} y={78} width={svgWidth - 70} height={10} rx={3} fill="#a3765c" />
-              <rect x={37} y={79} width={svgWidth - 74} height={2} rx={1} fill="#c9a07a" opacity={0.4} />
-            </g>
-            {/* Heavy weight (left, closer to center) */}
-            <g filter="url(#torqAppShadow)">
-              <circle cx={90} cy={65} r={22} fill="url(#torqAppHeavyGrad)">
-                <animate attributeName="cy" values="63;67;63" dur="2.5s" repeatCount="indefinite" />
-              </circle>
-              <circle cx={84} cy={59} r={5} fill="#fca5a5" opacity={0.5} />
-            </g>
-            {/* Light weight (right, farther from center) */}
-            <g filter="url(#torqAppShadow)">
-              <circle cx={svgWidth - 75} cy={98} r={16} fill="url(#torqAppLightGrad)">
-                <animate attributeName="cy" values="100;96;100" dur="2.5s" repeatCount="indefinite" />
-              </circle>
-              <circle cx={svgWidth - 79} cy={94} r={4} fill="#86efac" opacity={0.5} />
-            </g>
-          </g>
-        )}
-
-        {appId === 'steering' && (
-          <g>
-            {/* Steering wheel outer ring with premium gradient */}
-            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#27272a" strokeWidth={10} />
-            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="url(#torqSteeringGrad)" strokeWidth={6} />
-            {/* Center hub */}
-            <circle cx={svgWidth/2} cy={65} r={14} fill="#1f2937" stroke="#52525b" strokeWidth={2} />
-            <circle cx={svgWidth/2 - 3} cy={62} r={4} fill="#3f3f46" opacity={0.6} />
-            {/* Spokes */}
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2} y2={24} stroke="url(#torqSteeringGrad)" strokeWidth={6} strokeLinecap="round" />
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 - 36} y2={92} stroke="url(#torqSteeringGrad)" strokeWidth={6} strokeLinecap="round" />
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 + 36} y2={92} stroke="url(#torqSteeringGrad)" strokeWidth={6} strokeLinecap="round" />
-            {/* Hands with gradient */}
-            <circle cx={svgWidth/2 - 45} cy={65} r={8} fill="url(#torqHandGripGrad)" filter="url(#torqAppShadow)" />
-            <circle cx={svgWidth/2 + 45} cy={65} r={8} fill="url(#torqHandGripGrad)" filter="url(#torqAppShadow)" />
-            {/* Force arrows with glow */}
-            <g filter="url(#torqAppForceGlow)">
-              <line x1={svgWidth/2 - 45} y1={53} x2={svgWidth/2 - 45} y2={35} stroke="#22c55e" strokeWidth={3} strokeLinecap="round" />
-              <polygon points={`${svgWidth/2 - 45},30 ${svgWidth/2 - 50},40 ${svgWidth/2 - 40},40`} fill="#86efac" />
-              <line x1={svgWidth/2 + 45} y1={77} x2={svgWidth/2 + 45} y2={95} stroke="#22c55e" strokeWidth={3} strokeLinecap="round" />
-              <polygon points={`${svgWidth/2 + 45},100 ${svgWidth/2 + 40},90 ${svgWidth/2 + 50},90`} fill="#86efac" />
-            </g>
-            {/* Rotation arc with glow */}
-            <g filter="url(#torqAppArcGlow)">
-              <path d={`M ${svgWidth/2 + 55} 50 A 48 48 0 0 1 ${svgWidth/2 + 55} 80`} stroke="#a855f7" strokeWidth={3} fill="none" strokeLinecap="round" />
-            </g>
-          </g>
-        )}
-
-        {appId === 'engine' && (
-          <g>
-            {/* Engine block with gradient */}
-            <rect x={svgWidth/2 - 50} y={30} width={100} height={70} rx={8} fill="url(#torqEngineGrad)" stroke="#6b7280" strokeWidth={2} filter="url(#torqAppShadow)" />
-            {/* Engine detail lines */}
-            <line x1={svgWidth/2 - 45} y1={35} x2={svgWidth/2 + 45} y2={35} stroke="#4b5563" strokeWidth={1} />
-            <line x1={svgWidth/2 - 45} y1={45} x2={svgWidth/2 + 45} y2={45} stroke="#4b5563" strokeWidth={1} />
-            {/* Crankshaft circle */}
-            <circle cx={svgWidth/2} cy={65} r={25} fill="#1f2937" stroke="#71717a" strokeWidth={3} />
-            <circle cx={svgWidth/2 - 6} cy={60} r={6} fill="#27272a" opacity={0.5} />
-            {/* Piston with metallic look */}
-            <rect x={svgWidth/2 - 15} y={12} width={30} height={38} rx={4} fill="url(#torqWrenchMetalGrad)">
-              <animate attributeName="y" values="12;22;12" dur="0.5s" repeatCount="indefinite" />
-            </rect>
-            {/* Connecting rod */}
-            <line x1={svgWidth/2} y1={48} x2={svgWidth/2} y2={65} stroke="#9ca3af" strokeWidth={7} strokeLinecap="round">
-              <animate attributeName="y1" values="48;58;48" dur="0.5s" repeatCount="indefinite" />
-            </line>
-            {/* Rotation arrow with glow */}
-            <g filter="url(#torqAppForceGlow)">
-              <path d={`M ${svgWidth/2 + 35} 52 A 35 35 0 0 1 ${svgWidth/2 + 35} 78`} stroke="#22c55e" strokeWidth={3} fill="none" strokeLinecap="round" />
-              <polygon points={`${svgWidth/2 + 35},83 ${svgWidth/2 + 29},73 ${svgWidth/2 + 41},73`} fill="#86efac" />
-            </g>
-            {/* Output shaft */}
-            <rect x={svgWidth/2 + 50} y={58} width={40} height={14} rx={4} fill="url(#torqWrenchMetalGrad)" />
-            <line x1={svgWidth/2 + 52} y1={60} x2={svgWidth/2 + 88} y2={60} stroke="#e5e7eb" strokeWidth={1} opacity={0.3} />
-          </g>
-        )}
-      </svg>
-    );
-  };
-
   // ============================================================================
-  // PHASE RENDERERS
+  // PHASE RENDERS
   // ============================================================================
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-purple-400 tracking-wide">PHYSICS EXPLORATION</span>
-      </div>
-
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-orange-200 bg-clip-text text-transparent">
-        Torque: The Rotational Force
-      </h1>
-
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Have you ever tried to push a door near its hinges? It's surprisingly hard!
-      </p>
-
-      {/* Premium card */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-orange-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <div className="text-7xl mb-6">
-            <span className="drop-shadow-lg" style={{ filter: 'drop-shadow(0 8px 24px rgba(168, 85, 247, 0.4))' }}>
-              {'\uD83D\uDEAA'}
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Where should you push to need the <em className="text-purple-400">least</em> force?
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Torque is the rotational equivalent of force - it makes things spin!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Premium CTA button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        style={{ zIndex: 10 }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-orange-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Let's Investigate
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-purple-400">{'\u2726'}</span>
-          Interactive Lab
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-purple-400">{'\u2726'}</span>
-          Real-World Examples
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-purple-400">{'\u2726'}</span>
-          Knowledge Test
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center px-6 py-8">
-      <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Make Your Prediction</h2>
-      <p className="text-slate-400 mb-8">To open a door with the least effort, where should you push?</p>
-
-      <div className="flex flex-col gap-3 w-full max-w-md mb-8">
-        {[
-          { id: 'near_hinge', label: 'Near the hinge (close to pivot)', icon: '\uD83D\uDCCD' },
-          { id: 'middle', label: 'In the middle of the door', icon: '\uD83C\uDFAF' },
-          { id: 'far_edge', label: 'Far from hinge (at the handle)', icon: '\uD83D\uDEAA' }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => {
-              setPrediction(option.id);
-              playSound(option.id === 'far_edge' ? 'success' : 'click');
-              emitEvent('prediction_made', { prediction: option.id });
-            }}
-            style={{ zIndex: 10 }}
-            className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
-              prediction === option.id
-                ? 'border-purple-500 bg-purple-500/20'
-                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
-            }`}
-          >
-            <span className="text-2xl">{option.icon}</span>
-            <span className="text-white font-medium text-left">{option.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {prediction && (
-        <button
-          onClick={() => goToPhase('play')}
-          style={{ zIndex: 10 }}
-          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all"
-        >
-          Test It! {'\u2192'}
-        </button>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center px-6 py-8">
-      <h2 className="text-2xl font-bold text-white mb-4">Torque Laboratory</h2>
-
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
-        {renderVisualization()}
-      </div>
-
-      {/* Slider control */}
-      <div className="w-full max-w-md mb-6">
-        <label className="text-sm text-slate-300 mb-2 block">
-          Push position: <span className="text-purple-400 font-semibold">{(pushPosition * 100).toFixed(0)}%</span> from hinge
-        </label>
-        <input
-          type="range"
-          min="0.1"
-          max="1"
-          step="0.05"
-          value={pushPosition}
-          onChange={(e) => {
-            setPushPosition(parseFloat(e.target.value));
-            resetDoor();
-            emitEvent('parameter_changed', { position: e.target.value });
-          }}
-          disabled={isPushing}
-          className="w-full accent-purple-500 h-2"
-        />
-        <div className="flex justify-between text-xs text-slate-500 mt-1">
-          <span>Near hinge</span>
-          <span>At handle</span>
-        </div>
-      </div>
-
-      <div className="flex gap-3 mb-6">
-        {doorAngle === 0 ? (
-          <button
-            onClick={() => pushDoor()}
-            disabled={isPushing}
-            style={{ zIndex: 10 }}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl disabled:opacity-50"
-          >
-            {'\uD83D\uDC46'} Push Door!
-          </button>
-        ) : (
-          <button
-            onClick={() => resetDoor()}
-            style={{ zIndex: 10 }}
-            className="px-6 py-3 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600"
-          >
-            {'\u21BA'} Reset
-          </button>
-        )}
-        <button
-          onClick={() => setShowForceVector(!showForceVector)}
-          style={{ zIndex: 10 }}
-          className={`px-4 py-3 rounded-xl font-medium ${showForceVector ? 'bg-blue-600' : 'bg-slate-700'} text-white`}
-        >
-          {showForceVector ? '\uD83D\uDC41 Vectors ON' : '\uD83D\uDC41 Vectors OFF'}
-        </button>
-      </div>
-
-      <p className="text-slate-400 text-sm mb-6">
-        Experiments: {experimentCount} - Try different positions!
-      </p>
-
-      {experimentCount >= 3 && (
-        <button
-          onClick={() => goToPhase('review')}
-          style={{ zIndex: 10 }}
-          className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl"
-        >
-          I see the pattern! {'\u2192'}
-        </button>
-      )}
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center px-6 py-8">
-      <div className="text-5xl mb-4">{'\uD83D\uDCA1'}</div>
-      <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Torque = Force x Lever Arm</h2>
-
-      <div className="bg-gradient-to-br from-purple-900/40 to-slate-900/60 rounded-2xl p-6 max-w-lg w-full border border-purple-500/30 mb-6">
-        <p className="text-3xl text-purple-400 font-mono font-bold text-center mb-4">
-          {'\u03C4'} = r {'\u00D7'} F = rF sin({'\u03B8'})
-        </p>
-        <p className="text-slate-300 text-center leading-relaxed">
-          To rotate something, you need <em className="text-purple-400">torque</em>.
-          Same torque can come from big force + small distance, or small force + big distance!
-        </p>
-      </div>
-
-      <div className="grid gap-4 max-w-lg w-full mb-6">
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
-          <p className="font-semibold text-emerald-400 mb-1">Far from hinge (large r)</p>
-          <p className="text-slate-300 text-sm">Small force gives enough torque {'\u2192'} Easy!</p>
-        </div>
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-          <p className="font-semibold text-red-400 mb-1">Near hinge (small r)</p>
-          <p className="text-slate-300 text-sm">Need huge force for same torque {'\u2192'} Hard!</p>
-        </div>
-      </div>
-
-      <p className={`text-sm mb-6 ${prediction === 'far_edge' ? 'text-emerald-400' : 'text-slate-400'}`}>
-        Your prediction: {prediction === 'far_edge' ? '\u2713 Correct!' : 'Now you understand!'}
-      </p>
-
-      <button
-        onClick={() => goToPhase('twist_predict')}
-        style={{ zIndex: 10 }}
-        className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
-      >
-        Next Challenge: Balancing! {'\u2192'}
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center px-6 py-8">
-      <div className="text-5xl mb-4">{'\u2696\uFE0F'}</div>
-      <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-2">Plot Twist: The Seesaw!</h2>
-      <p className="text-slate-400 mb-8">How do you balance a seesaw with unequal weights?</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
-        {renderSeesawVisualization()}
-      </div>
-
-      <div className="flex flex-col gap-3 w-full max-w-md mb-8">
-        {[
-          { id: 'heavy_far', label: "Put the heavy weight farther from pivot" },
-          { id: 'heavy_close', label: "Put the heavy weight closer to pivot" },
-          { id: 'impossible', label: "It's impossible to balance unequal weights" }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => {
-              setTwistPrediction(option.id);
-              playSound(option.id === 'heavy_close' ? 'success' : 'click');
-              emitEvent('twist_prediction_made', { twistPrediction: option.id });
-            }}
-            style={{ zIndex: 10 }}
-            className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
-              twistPrediction === option.id
-                ? 'border-amber-500 bg-amber-500/20'
-                : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
-            }`}
-          >
-            <span className="text-white">{option.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {twistPrediction && (
-        <button
-          onClick={() => goToPhase('twist_play')}
-          style={{ zIndex: 10 }}
-          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
-        >
-          Try the Seesaw! {'\u2192'}
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => {
-    const [leftWeight, setLeftWeight] = useState(5);
-    const [leftPosition, setLeftPosition] = useState(0.4);
-    const [rightWeight, setRightWeight] = useState(2);
-    const [rightPosition, setRightPosition] = useState(0.8);
-
-    const leftTorque = leftWeight * leftPosition;
-    const rightTorque = rightWeight * rightPosition;
-    const isBalanced = Math.abs(leftTorque - rightTorque) < 0.5;
-
+  // HOOK PHASE
+  if (phase === 'hook') {
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <h2 className="text-2xl font-bold text-amber-400 mb-4">Seesaw Balance Lab</h2>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-        {/* Interactive seesaw visualization */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
-          <svg width="100%" height={160} viewBox="0 0 360 160" className="block mx-auto">
-            <defs>
-              {/* Premium board gradient - polished wood */}
-              <linearGradient id="torqLabBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#a3765c" />
-                <stop offset="25%" stopColor="#8b6348" />
-                <stop offset="50%" stopColor="#c9a07a" />
-                <stop offset="75%" stopColor="#8b6348" />
-                <stop offset="100%" stopColor="#6b4d38" />
-              </linearGradient>
-
-              {/* Fulcrum metal gradient */}
-              <linearGradient id="torqLabFulcrumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#71717a" />
-                <stop offset="50%" stopColor="#52525b" />
-                <stop offset="100%" stopColor="#3f3f46" />
-              </linearGradient>
-
-              {/* Left weight gradient - red */}
-              <radialGradient id="torqLabLeftGrad" cx="30%" cy="30%">
-                <stop offset="0%" stopColor="#fca5a5" />
-                <stop offset="50%" stopColor="#ef4444" />
-                <stop offset="100%" stopColor="#b91c1c" />
-              </radialGradient>
-
-              {/* Right weight gradient - green */}
-              <radialGradient id="torqLabRightGrad" cx="30%" cy="30%">
-                <stop offset="0%" stopColor="#86efac" />
-                <stop offset="50%" stopColor="#22c55e" />
-                <stop offset="100%" stopColor="#15803d" />
-              </radialGradient>
-
-              {/* Ground gradient */}
-              <linearGradient id="torqLabGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#1e1e2e" />
-                <stop offset="100%" stopColor="#0f0f1a" />
-              </linearGradient>
-
-              {/* Shadow filters */}
-              <filter id="torqLabWeightShadow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
-              </filter>
-
-              <filter id="torqLabFulcrumShadow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000" floodOpacity="0.4" />
-              </filter>
-
-              {/* Balance glow */}
-              <filter id="torqLabBalanceGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feFlood floodColor={isBalanced ? '#22c55e' : '#f97316'} floodOpacity="0.5" />
-                <feComposite in2="blur" operator="in" />
-                <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-              </filter>
-            </defs>
-
-            {/* Background */}
-            <rect width={360} height={160} fill="#08050c" />
-
-            {/* Ground with gradient */}
-            <rect x={0} y={130} width={360} height={30} fill="url(#torqLabGroundGrad)" />
-            <line x1={0} y1={130} x2={360} y2={130} stroke="#27272a" strokeWidth={1} />
-
-            {/* Fulcrum shadow on ground */}
-            <ellipse cx={180} cy={135} rx={35} ry={8} fill="#000" opacity={0.3} />
-
-            {/* Fulcrum (triangle) with 3D effect */}
-            <g filter="url(#torqLabFulcrumShadow)">
-              <polygon points="180,105 150,130 210,130" fill="url(#torqLabFulcrumGrad)" stroke="#9ca3af" strokeWidth={1.5} />
-              <line x1={180} y1={107} x2={154} y2={128} stroke="#9ca3af" strokeWidth={1} opacity={0.5} />
-            </g>
-
-            {/* Seesaw board - tilts based on balance */}
-            <g transform={`rotate(${(rightTorque - leftTorque) * 3}, 180, 98)`}>
-              {/* Board with premium wood grain */}
-              <rect x={30} y={92} width={300} height={12} rx={4} fill="url(#torqLabBoardGrad)" />
-              {/* Wood grain lines */}
-              {[-0.35, -0.15, 0.05, 0.25, 0.45].map((pos, i) => (
-                <line key={i} x1={180 + 150 * pos} y1={94} x2={180 + 150 * pos} y2={102}
-                      stroke="#6b4d38" strokeWidth={0.5} opacity={0.3} />
-              ))}
-              {/* Board highlight */}
-              <line x1={35} y1={94} x2={325} y2={94} stroke="#c9a07a" strokeWidth={1} opacity={0.4} />
-
-              {/* Left weight with premium gradient */}
-              <g transform={`translate(${30 + leftPosition * 150}, 68)`} filter="url(#torqLabWeightShadow)">
-                <circle r={18 + leftWeight * 2} fill="url(#torqLabLeftGrad)" stroke="#dc2626" strokeWidth={2} />
-                {/* Highlight */}
-                <circle cx={-(5 + leftWeight * 0.5)} cy={-(5 + leftWeight * 0.5)} r={4 + leftWeight * 0.5} fill="#fca5a5" opacity={0.5} />
-              </g>
-
-              {/* Right weight with premium gradient */}
-              <g transform={`translate(${180 + rightPosition * 150}, 68)`} filter="url(#torqLabWeightShadow)">
-                <circle r={18 + rightWeight * 2} fill="url(#torqLabRightGrad)" stroke="#16a34a" strokeWidth={2} />
-                {/* Highlight */}
-                <circle cx={-(4 + rightWeight * 0.4)} cy={-(4 + rightWeight * 0.4)} r={3 + rightWeight * 0.4} fill="#86efac" opacity={0.5} />
-              </g>
-            </g>
-
-            {/* Pivot point marker with glow */}
-            <circle cx={180} cy={105} r={5} fill="#a855f7" stroke="#c084fc" strokeWidth={1.5} filter="url(#torqLabBalanceGlow)" />
-          </svg>
-
-          {/* Balance indicator outside SVG */}
-          <div style={{ textAlign: 'center', marginTop: typo.elementGap }}>
-            <span style={{
-              fontSize: typo.body,
-              fontWeight: 700,
-              color: isBalanced ? '#22c55e' : '#f97316',
-              background: isBalanced ? '#052e16' : '#451a03',
-              padding: '6px 16px',
-              borderRadius: '12px',
-              border: `1px solid ${isBalanced ? '#22c55e40' : '#f9731640'}`
-            }}>
-              {isBalanced ? 'BALANCED!' : `Tilting ${leftTorque > rightTorque ? 'Left' : 'Right'}`}
-            </span>
-          </div>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🚪🔧
         </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        {/* Controls */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-6">
-          <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30">
-            <p className="text-red-400 font-semibold text-sm mb-2">Left Weight</p>
-            <input
-              type="range" min="1" max="10" value={leftWeight}
-              onChange={(e) => setLeftWeight(parseInt(e.target.value))}
-              className="w-full accent-red-500"
-            />
-            <p className="text-white text-center mt-1">{leftWeight} kg</p>
-            <p className="text-slate-400 text-xs mt-2">Position: {(leftPosition * 100).toFixed(0)}%</p>
-            <input
-              type="range" min="0.1" max="1" step="0.1" value={leftPosition}
-              onChange={(e) => setLeftPosition(parseFloat(e.target.value))}
-              className="w-full accent-red-500"
-            />
-          </div>
-          <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
-            <p className="text-green-400 font-semibold text-sm mb-2">Right Weight</p>
-            <input
-              type="range" min="1" max="10" value={rightWeight}
-              onChange={(e) => setRightWeight(parseInt(e.target.value))}
-              className="w-full accent-green-500"
-            />
-            <p className="text-white text-center mt-1">{rightWeight} kg</p>
-            <p className="text-slate-400 text-xs mt-2">Position: {(rightPosition * 100).toFixed(0)}%</p>
-            <input
-              type="range" min="0.1" max="1" step="0.1" value={rightPosition}
-              onChange={(e) => setRightPosition(parseFloat(e.target.value))}
-              className="w-full accent-green-500"
-            />
-          </div>
-        </div>
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Torque: The Rotational Force
+        </h1>
 
-        {/* Torque display - moved outside SVG with typo system */}
-        <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 max-w-md w-full mb-6">
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', fontSize: typo.body }}>
-            <span style={{ color: '#cbd5e1' }}>
-              Left: <span style={{ color: '#ef4444', fontWeight: 600 }}>{leftTorque.toFixed(1)}</span> N-m
-            </span>
-            <span style={{ color: '#6b7280' }}>|</span>
-            <span style={{ color: '#cbd5e1' }}>
-              Right: <span style={{ color: '#22c55e', fontWeight: 600 }}>{rightTorque.toFixed(1)}</span> N-m
-            </span>
-          </div>
-          <p style={{ textAlign: 'center', color: '#a855f7', fontSize: typo.small, marginTop: '8px', fontWeight: 600 }}>
-            {'\u03A3\u03C4'} = {(leftTorque - rightTorque).toFixed(1)} N-m
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Ever noticed how pushing a door near the hinges is <span style={{ color: colors.accent }}>surprisingly hard</span>? The secret lies in understanding <span style={{ color: colors.success }}>torque</span> - the rotational equivalent of force!"
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Give me a lever long enough and a fulcrum on which to place it, and I shall move the world."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Archimedes
           </p>
         </div>
 
-        {isBalanced && (
-          <button
-            onClick={() => goToPhase('twist_review')}
-            style={{ zIndex: 10 }}
-            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
-          >
-            I balanced it! {'\u2192'}
-          </button>
-        )}
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Torque
+        </button>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center px-6 py-8">
-      <div className="text-5xl mb-4">{'\u2696\uFE0F'}</div>
-      <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-6">Rotational Equilibrium</h2>
-
-      <div className="bg-gradient-to-br from-amber-900/40 to-slate-900/60 rounded-2xl p-6 max-w-lg w-full border border-amber-500/30 mb-6">
-        <p className="text-3xl text-amber-400 font-mono font-bold text-center mb-4">
-          {'\u03A3\u03C4'} = 0
-        </p>
-        <p className="text-slate-300 text-center leading-relaxed">
-          For an object to be in rotational equilibrium, the sum of all torques must equal zero.
-          Clockwise torques balance counterclockwise torques!
-        </p>
-      </div>
-
-      <div className="grid gap-4 max-w-lg w-full mb-6">
-        <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
-          <p className="font-semibold text-purple-400 mb-1">Balance Condition</p>
-          <p className="text-slate-300 text-sm">m1 x r1 = m2 x r2</p>
-          <p className="text-slate-400 text-xs mt-1">Heavier objects need shorter lever arms!</p>
-        </div>
-        <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4">
-          <p className="font-semibold text-cyan-400 mb-1">Real-World Applications</p>
-          <p className="text-slate-300 text-sm">Bridges, cranes, mobiles, and even your body use this principle!</p>
-        </div>
-      </div>
-
-      <p className={`text-sm mb-6 ${twistPrediction === 'heavy_close' ? 'text-emerald-400' : 'text-slate-400'}`}>
-        Your prediction: {twistPrediction === 'heavy_close' ? '\u2713 Correct!' : 'Now you understand!'}
-      </p>
-
-      <button
-        onClick={() => goToPhase('transfer')}
-        style={{ zIndex: 10 }}
-        className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-      >
-        See Real-World Examples {'\u2192'}
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const app = applications[activeApp];
-    const allAppsCompleted = completedApps.size >= applications.length;
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'near_hinge', text: 'Near the hinge (close to pivot)' },
+      { id: 'middle', text: 'In the middle of the door' },
+      { id: 'far_edge', text: 'Far from hinge (at the handle)', correct: true },
+    ];
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <h2 className="text-2xl font-bold text-white mb-2">Torque in the Real World</h2>
-        <p className="text-slate-400 text-sm mb-6">
-          Application {activeApp + 1} of {applications.length} - {completedApps.size} completed
-        </p>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        {/* Progress dots */}
-        <div className="flex gap-2 mb-6">
-          {applications.map((_, idx) => (
-            <div key={idx} className={`w-3 h-3 rounded-full transition-all ${
-              completedApps.has(idx) ? 'bg-emerald-500' : idx === activeApp ? 'bg-purple-500' : 'bg-slate-700'
-            }`} />
-          ))}
-        </div>
-
-        {/* Application card */}
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full border border-slate-700/50 mb-6">
-          {renderApplicationGraphic(app.id)}
-
-          <h3 className="text-xl font-bold text-purple-400 text-center mt-4 mb-2">{app.title}</h3>
-          <p className="text-slate-300 text-center text-sm mb-4">{app.description}</p>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-              <p className="text-xs text-slate-500 mb-1">Formula</p>
-              <p className="text-white font-mono text-sm">{app.formula}</p>
-            </div>
-            <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-              <p className="text-xs text-slate-500 mb-1">Key Insight</p>
-              <p className="text-white text-xs">{app.insight}</p>
-            </div>
-          </div>
-
-          {!completedApps.has(activeApp) && (
-            <button
-              onClick={() => {
-                const newCompleted = new Set(completedApps);
-                newCompleted.add(activeApp);
-                setCompletedApps(newCompleted);
-                playSound('complete');
-                emitEvent('app_explored', { app: app.id });
-                if (activeApp < applications.length - 1) {
-                  setTimeout(() => setActiveApp(activeApp + 1), 300);
-                }
-              }}
-              style={{ zIndex: 10 }}
-              className="w-full mt-4 py-3 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-semibold rounded-xl"
-            >
-              {'\u2713'} Mark "{app.title}" as Read
-            </button>
-          )}
-
-          {completedApps.has(activeApp) && (
-            <div className="mt-4 py-3 bg-emerald-500/10 rounded-xl text-center">
-              <span className="text-emerald-400 text-sm">{'\u2713'} Completed</span>
-            </div>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex gap-4">
-          <button
-            onClick={() => setActiveApp(Math.max(0, activeApp - 1))}
-            disabled={activeApp === 0}
-            style={{ zIndex: 10 }}
-            className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
-          >
-            {'\u2190'} Previous
-          </button>
-
-          {activeApp < applications.length - 1 ? (
-            <button
-              onClick={() => setActiveApp(activeApp + 1)}
-              disabled={!completedApps.has(activeApp)}
-              style={{ zIndex: 10 }}
-              className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
-            >
-              Next {'\u2192'}
-            </button>
-          ) : allAppsCompleted ? (
-            <button
-              onClick={() => goToPhase('test')}
-              style={{ zIndex: 10 }}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg"
-            >
-              Take the Quiz {'\u2192'}
-            </button>
-          ) : (
-            <span className="text-slate-500 text-sm self-center">Complete all to continue</span>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderTest = () => {
-    const q = testQuestions[currentQuestion];
-    const isAnswered = answeredQuestions.has(currentQuestion);
-
-    return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="flex justify-between items-center w-full max-w-lg mb-4">
-          <span className="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
-            Question {currentQuestion + 1} of {testQuestions.length}
-          </span>
-          <span className="text-sm font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
-            Score: {correctAnswers}/{answeredQuestions.size}
-          </span>
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-full max-w-lg h-1 bg-slate-700 rounded-full mb-6 overflow-hidden">
-          <div
-            className="h-full bg-purple-500 rounded-full transition-all duration-300"
-            style={{ width: `${((currentQuestion + 1) / testQuestions.length) * 100}%` }}
-          />
-        </div>
-
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
-          <h3 className="text-white font-semibold mb-4 leading-relaxed">{q.question}</h3>
-
-          <div className="flex flex-col gap-3">
-            {q.options.map((option, idx) => {
-              let bgClass = 'bg-slate-700/50 border-slate-600 hover:bg-slate-600/50';
-              let textClass = 'text-white';
-
-              if (isAnswered) {
-                if (option.correct) {
-                  bgClass = 'bg-emerald-500/20 border-emerald-500';
-                  textClass = 'text-emerald-400';
-                } else if (idx === selectedAnswer && !option.correct) {
-                  bgClass = 'bg-red-500/20 border-red-500';
-                  textClass = 'text-red-400';
-                }
-              }
-
-              return (
-                <button
-                  key={idx}
-                  onClick={() => handleTestAnswer(idx)}
-                  disabled={isAnswered}
-                  style={{ zIndex: 10 }}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${bgClass}`}
-                >
-                  <span className={`text-sm ${textClass}`}>{option.text}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {showExplanation && (
-          <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 max-w-lg w-full mb-6">
-            <p className="text-slate-300 text-sm">
-              {'\uD83D\uDCA1'} {q.explanation}
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
             </p>
           </div>
-        )}
 
-        <div className="flex gap-4">
-          <button
-            onClick={() => {
-              setCurrentQuestion(prev => Math.max(0, prev - 1));
-              setSelectedAnswer(null);
-              setShowExplanation(answeredQuestions.has(currentQuestion - 1));
-            }}
-            disabled={currentQuestion === 0}
-            style={{ zIndex: 10 }}
-            className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
-          >
-            {'\u2190'} Back
-          </button>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            To open a door with the LEAST effort, where should you push?
+          </h2>
 
-          {currentQuestion < testQuestions.length - 1 ? (
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '80px', marginBottom: '16px' }}>🚪</div>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Imagine a heavy door. The hinges are on one side. Where do you push?
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  setPrediction(opt.id);
+                  emitEvent('prediction_made', { prediction: opt.id });
+                }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id === 'near_hinge' ? 'A' : opt.id === 'middle' ? 'B' : 'C'}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
             <button
-              onClick={() => {
-                setCurrentQuestion(prev => prev + 1);
-                setSelectedAnswer(null);
-                setShowExplanation(answeredQuestions.has(currentQuestion + 1));
-              }}
-              style={{ zIndex: 10 }}
-              className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Next {'\u2192'}
+              Test My Prediction
             </button>
-          ) : answeredQuestions.size === testQuestions.length ? (
-            <button
-              onClick={() => goToPhase('mastery')}
-              style={{ zIndex: 10 }}
-              className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-lg"
-            >
-              Complete {'\u2192'}
-            </button>
-          ) : (
-            <span className="text-slate-500 text-sm self-center">Answer all to continue</span>
           )}
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => {
-    const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
-    const passed = correctAnswers >= 7;
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-    const resetGame = () => {
-      setPhase('hook');
-      setExperimentCount(0);
-      setCurrentQuestion(0);
-      setCorrectAnswers(0);
-      setAnsweredQuestions(new Set());
-      setCompletedApps(new Set());
-      setActiveApp(0);
-      setPrediction(null);
-      setTwistPrediction(null);
-      setPushPosition(0.8);
-      setHasFriction(false);
-      resetDoor();
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Torque Laboratory
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust where you push and see how much force is needed.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {renderVisualization()}
+
+            {/* Push position slider */}
+            <div style={{ marginTop: '24px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Push Position</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                  {(pushPosition * 100).toFixed(0)}% from hinge
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value={pushPosition}
+                onChange={(e) => {
+                  setPushPosition(parseFloat(e.target.value));
+                  resetDoor();
+                  emitEvent('parameter_changed', { position: e.target.value });
+                }}
+                disabled={isPushing}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: isPushing ? 'not-allowed' : 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Near hinge</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>At handle</span>
+              </div>
+            </div>
+
+            {/* Friction toggle */}
+            <div style={{ marginBottom: '20px' }}>
+              <button
+                onClick={() => {
+                  setHasFriction(!hasFriction);
+                  resetDoor();
+                  emitEvent('parameter_changed', { friction: !hasFriction });
+                }}
+                style={{
+                  background: hasFriction ? `${colors.warning}22` : colors.bgSecondary,
+                  border: `2px solid ${hasFriction ? colors.warning : colors.border}`,
+                  borderRadius: '8px',
+                  padding: '12px 20px',
+                  cursor: 'pointer',
+                  width: '100%',
+                  color: hasFriction ? colors.warning : colors.textSecondary,
+                  ...typo.small,
+                  fontWeight: 600,
+                }}
+              >
+                {hasFriction ? '🔶 Sticky Hinge (Extra Resistance)' : '⚪ Normal Hinge'}
+              </button>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              {doorAngle === 0 ? (
+                <button
+                  onClick={pushDoor}
+                  disabled={isPushing}
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                    color: 'white',
+                    border: 'none',
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: isPushing ? 'not-allowed' : 'pointer',
+                    opacity: isPushing ? 0.6 : 1,
+                  }}
+                >
+                  Push Door!
+                </button>
+              ) : (
+                <button
+                  onClick={resetDoor}
+                  style={{
+                    background: colors.bgSecondary,
+                    color: colors.textPrimary,
+                    border: `1px solid ${colors.border}`,
+                    padding: '14px 28px',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset Door
+                </button>
+              )}
+              <button
+                onClick={() => setShowForceVector(!showForceVector)}
+                style={{
+                  background: showForceVector ? `${colors.accent}22` : colors.bgSecondary,
+                  color: showForceVector ? colors.accent : colors.textSecondary,
+                  border: `1px solid ${showForceVector ? colors.accent : colors.border}`,
+                  padding: '14px 20px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {showForceVector ? 'Vectors ON' : 'Vectors OFF'}
+              </button>
+            </div>
+          </div>
+
+          {/* Discovery prompt */}
+          {experimentCount > 0 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Experiments completed: {experimentCount} - Notice how force changes with position!
+              </p>
+            </div>
+          )}
+
+          {experimentCount >= 2 && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              I See the Pattern - Reveal the Physics!
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Torque
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+              τ = r × F
+            </div>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Torque (τ) equals the lever arm (r) times the force (F)
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: The Lever Arm Matters!
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              To create the same torque, you can use:
+            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li>Large force + Short lever arm</li>
+              <li>Small force + Long lever arm</li>
+            </ul>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div style={{
+              background: `${colors.success}11`,
+              border: `1px solid ${colors.success}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
+              <p style={{ ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '4px' }}>
+                Push at the handle
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                Long lever arm = Less force needed
+              </p>
+            </div>
+            <div style={{
+              background: `${colors.error}11`,
+              border: `1px solid ${colors.error}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>❌</div>
+              <p style={{ ...typo.small, color: colors.error, fontWeight: 600, marginBottom: '4px' }}>
+                Push near the hinge
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                Short lever arm = Lots more force!
+              </p>
+            </div>
+          </div>
+
+          {prediction && (
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: prediction === 'far_edge' ? colors.success : colors.textSecondary }}>
+                Your prediction: {prediction === 'far_edge' ? 'Correct! You understood intuitively.' : 'Now you know the physics behind it!'}
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            New Challenge: Balancing!
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'heavy_far', text: 'Put the heavy weight farther from the pivot' },
+      { id: 'heavy_close', text: 'Put the heavy weight closer to the pivot', correct: true },
+      { id: 'impossible', text: "It's impossible to balance unequal weights" },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Seesaw Balance!
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            How do you balance a seesaw with unequal weights?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {renderSeesawVisualization()}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  setTwistPrediction(opt.id);
+                  emitEvent('twist_prediction_made', { twistPrediction: opt.id });
+                }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id === 'heavy_far' ? 'A' : opt.id === 'heavy_close' ? 'B' : 'C'}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Try the Seesaw!
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const SeesawLab = () => {
+      const [leftWeight, setLeftWeight] = useState(5);
+      const [leftPosition, setLeftPosition] = useState(0.4);
+      const [rightWeight, setRightWeight] = useState(2);
+      const [rightPosition, setRightPosition] = useState(0.8);
+
+      const leftTorque = leftWeight * leftPosition;
+      const rightTorque = rightWeight * rightPosition;
+      const isBalanced = Math.abs(leftTorque - rightTorque) < 0.5;
+      const tilt = Math.min(15, Math.max(-15, (rightTorque - leftTorque) * 3));
+
+      return (
+        <div>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Seesaw Balance Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust weights and positions to achieve balance!
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {/* Interactive seesaw SVG */}
+            <svg width="100%" height={180} viewBox="0 0 360 180" style={{ display: 'block', margin: '0 auto' }}>
+              <defs>
+                <linearGradient id="twistBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#a3765c" />
+                  <stop offset="50%" stopColor="#c9a07a" />
+                  <stop offset="100%" stopColor="#6b4d38" />
+                </linearGradient>
+                <linearGradient id="twistFulcrumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+                <radialGradient id="twistLeftGrad" cx="30%" cy="30%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="100%" stopColor="#b91c1c" />
+                </radialGradient>
+                <radialGradient id="twistRightGrad" cx="30%" cy="30%">
+                  <stop offset="0%" stopColor="#86efac" />
+                  <stop offset="100%" stopColor="#15803d" />
+                </radialGradient>
+              </defs>
+
+              <rect width="360" height="180" fill="#08050c" />
+              <rect x="0" y="145" width="360" height="35" fill="#1e1e2e" />
+
+              {/* Fulcrum */}
+              <polygon points="180,110 150,145 210,145" fill="url(#twistFulcrumGrad)" stroke="#9ca3af" strokeWidth={1.5} />
+
+              {/* Board with tilt */}
+              <g transform={`rotate(${tilt}, 180, 105)`}>
+                <rect x="30" y="99" width="300" height="12" rx="4" fill="url(#twistBoardGrad)" />
+
+                {/* Left weight */}
+                <g transform={`translate(${30 + leftPosition * 150}, 75)`}>
+                  <circle r={15 + leftWeight * 2} fill="url(#twistLeftGrad)" stroke="#dc2626" strokeWidth="2" />
+                  <text x="0" y="5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">{leftWeight}kg</text>
+                </g>
+
+                {/* Right weight */}
+                <g transform={`translate(${180 + rightPosition * 150}, 75)`}>
+                  <circle r={15 + rightWeight * 2} fill="url(#twistRightGrad)" stroke="#16a34a" strokeWidth="2" />
+                  <text x="0" y="5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">{rightWeight}kg</text>
+                </g>
+              </g>
+
+              {/* Pivot glow if balanced */}
+              <circle cx="180" cy="110" r="6" fill={isBalanced ? colors.success : colors.accent} stroke={isBalanced ? '#86efac' : '#c084fc'} strokeWidth="2" />
+            </svg>
+
+            {/* Balance indicator */}
+            <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '24px' }}>
+              <span style={{
+                ...typo.body,
+                fontWeight: 700,
+                color: isBalanced ? colors.success : colors.warning,
+                background: isBalanced ? `${colors.success}22` : `${colors.warning}22`,
+                padding: '8px 20px',
+                borderRadius: '20px',
+                border: `1px solid ${isBalanced ? colors.success : colors.warning}44`,
+              }}>
+                {isBalanced ? 'BALANCED!' : `Tilting ${leftTorque > rightTorque ? 'Left' : 'Right'}`}
+              </span>
+            </div>
+
+            {/* Controls */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div style={{
+                background: `${colors.error}11`,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `1px solid ${colors.error}33`,
+              }}>
+                <p style={{ ...typo.small, color: colors.error, fontWeight: 600, marginBottom: '12px' }}>Left Weight</p>
+                <div style={{ marginBottom: '12px' }}>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={leftWeight}
+                    onChange={(e) => setLeftWeight(parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                  <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '4px' }}>{leftWeight} kg</p>
+                </div>
+                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(leftPosition * 100).toFixed(0)}%</p>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.1"
+                  value={leftPosition}
+                  onChange={(e) => setLeftPosition(parseFloat(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <p style={{ ...typo.small, color: colors.success, fontWeight: 600, marginBottom: '12px' }}>Right Weight</p>
+                <div style={{ marginBottom: '12px' }}>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={rightWeight}
+                    onChange={(e) => setRightWeight(parseInt(e.target.value))}
+                    style={{ width: '100%' }}
+                  />
+                  <p style={{ ...typo.small, color: colors.textPrimary, textAlign: 'center', marginTop: '4px' }}>{rightWeight} kg</p>
+                </div>
+                <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>Position: {(rightPosition * 100).toFixed(0)}%</p>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.1"
+                  value={rightPosition}
+                  onChange={(e) => setRightPosition(parseFloat(e.target.value))}
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+
+            {/* Torque display */}
+            <div style={{
+              background: `${colors.accent}11`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginTop: '20px',
+              border: `1px solid ${colors.accent}33`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', ...typo.body }}>
+                <span style={{ color: colors.textSecondary }}>
+                  Left: <span style={{ color: colors.error, fontWeight: 600 }}>{leftTorque.toFixed(1)}</span> N-m
+                </span>
+                <span style={{ color: colors.textMuted }}>|</span>
+                <span style={{ color: colors.textSecondary }}>
+                  Right: <span style={{ color: colors.success, fontWeight: 600 }}>{rightTorque.toFixed(1)}</span> N-m
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {isBalanced && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              I Balanced It! Continue
+            </button>
+          )}
+        </div>
+      );
     };
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center relative overflow-hidden">
-        {/* Confetti effect */}
-        <style>{`
-          @keyframes confettiFall {
-            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
-          }
-        `}</style>
-        {passed && [...Array(20)].map((_, i) => (
-          <div key={i} style={{
-            position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px',
-            animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
-            pointerEvents: 'none', fontSize: 18,
-          }}>
-            {['\uD83D\uDEAA', '\uD83D\uDD27', '\u2B50', '\u2728', '\uD83C\uDF89'][Math.floor(Math.random() * 5)]}
-          </div>
-        ))}
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        <div className="text-7xl mb-6">{passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}</div>
-
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-          {passed ? 'Congratulations! Torque Master!' : 'Keep Practicing!'}
-        </h2>
-
-        <div className={`text-5xl font-bold mb-2 ${passed ? 'text-emerald-400' : 'text-amber-400'}`}>{percentage}%</div>
-        <p className="text-slate-400 mb-8">{correctAnswers}/{testQuestions.length} correct answers</p>
-
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md w-full border border-slate-700/50 mb-8">
-          <h3 className="text-purple-400 font-semibold mb-4">{passed ? 'Concepts Mastered' : 'Key Concepts'}</h3>
-          <ul className="text-left space-y-2">
-            {[
-              '{\\u03C4} = r x F = rF sin(theta)',
-              'Longer lever arm = less force needed',
-              'Rotational equilibrium: Sum of torques = 0',
-              'Real applications: Wrenches, Seesaws, Steering, Engines'
-            ].map((item, idx) => (
-              <li key={idx} className="text-slate-300 text-sm flex items-center gap-2">
-                <span className="text-emerald-400">{passed ? '\u2713' : '\u25CB'}</span> {item.replace('{\\u03C4}', '\u03C4')}
-              </li>
-            ))}
-          </ul>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <SeesawLab />
         </div>
 
-        <div className="flex flex-col gap-3 w-full max-w-md">
-          {passed ? (
-            <>
-              <button
-                onClick={() => handleReturnToDashboard()}
-                style={{ zIndex: 10 }}
-                className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl"
-              >
-                {'\uD83C\uDFE0'} Return to Dashboard
-              </button>
-              <button
-                onClick={() => resetGame()}
-                style={{ zIndex: 10 }}
-                className="w-full px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl border border-slate-600"
-              >
-                {'\uD83D\uDD2C'} Review Lesson
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => goToPhase('test')}
-                style={{ zIndex: 10 }}
-                className="w-full px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
-              >
-                {'\u21BA'} Retake Test
-              </button>
-              <button
-                onClick={() => resetGame()}
-                style={{ zIndex: 10 }}
-                className="w-full px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl border border-slate-600"
-              >
-                {'\uD83D\uDD2C'} Review Lesson
-              </button>
-              <button
-                onClick={() => handleReturnToDashboard()}
-                style={{ zIndex: 10 }}
-                className="text-slate-500 underline text-sm mt-2"
-              >
-                Return to Dashboard
-              </button>
-            </>
-          )}
-        </div>
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-  const currentPhaseIndex = phaseOrder.indexOf(phase);
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Rotational Equilibrium
+          </h2>
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px', color: colors.warning }}>
+              Sum of τ = 0
+            </div>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              For balance, clockwise torques must equal counterclockwise torques
+            </p>
+          </div>
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Torque</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p, idx) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Balance Equation</h3>
+              <p style={{ ...typo.body, color: colors.textSecondary }}>
+                <code style={{ color: colors.warning }}>m1 x r1 = m2 x r2</code><br />
+                The heavier object needs a shorter lever arm to balance!
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>Real-World Applications</h3>
+              <p style={{ ...typo.body, color: colors.textSecondary }}>
+                This principle is used in cranes (counterweights), bridges (load distribution), mobiles (art), and even your own body (muscle leverage)!
+              </p>
+            </div>
+          </div>
+
+          {twistPrediction && (
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: twistPrediction === 'heavy_close' ? colors.success : colors.textSecondary }}>
+                Your prediction: {twistPrediction === 'heavy_close' ? 'Correct! Great intuition!' : 'Now you understand the physics!'}
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
               <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-purple-400 w-6 shadow-lg shadow-purple-400/30'
-                    : currentPhaseIndex > idx
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-purple-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Torque Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand torque and rotational physics!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Torque Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand the physics of rotational force that shapes everything from door handles to crane operations.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Torque = Force x Lever arm (τ = r x F)',
+              'Longer lever arms require less force',
+              'Rotational equilibrium: Sum of torques = 0',
+              'Heavy objects need shorter lever arms to balance',
+              'Real applications: wrenches, bikes, cranes, motors',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => {
+              setPhase('hook');
+              setExperimentCount(0);
+              setCurrentQuestion(0);
+              setTestAnswers(Array(10).fill(null));
+              setTestSubmitted(false);
+              setTestScore(0);
+              setCompletedApps([false, false, false, false]);
+              setSelectedApp(0);
+              setPrediction(null);
+              setTwistPrediction(null);
+              setPushPosition(0.8);
+              setHasFriction(false);
+              resetDoor();
+            }}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <button
+            onClick={handleReturnToDashboard}
+            style={primaryButtonStyle}
+          >
+            Return to Dashboard
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default TorqueRenderer;

@@ -1,126 +1,375 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-const realWorldApps = [
-  {
-    icon: '💻',
-    title: 'High-Performance Processors',
-    short: 'CPUs need massive current with minimal voltage drop',
-    tagline: 'Feeding billions of transistors',
-    description: 'Modern processors draw 200+ amps at under 1 volt. The power delivery network must supply this current with less than 5% voltage variation, requiring careful impedance engineering.',
-    connection: 'PDN impedance must be below Vdd × tolerance / Imax. For 1V at 5% tolerance and 200A, this means under 0.25 milliohms across all frequencies.',
-    howItWorks: 'Voltage regulators, bulk capacitors, MLCCs, and on-die capacitors form a cascade of decreasing inductance. Each stage handles different frequency ranges of current demand.',
-    stats: [
-      { value: '250+', label: 'amps CPU current', icon: '⚡' },
-      { value: '<0.5', label: 'mΩ PDN impedance', icon: '📊' },
-      { value: '1000+', label: 'capacitors', icon: '🔧' }
-    ],
-    examples: ['Intel Core processors', 'AMD Ryzen chips', 'Server Xeon/EPYC', 'Apple M-series'],
-    companies: ['Intel', 'AMD', 'Apple', 'Renesas'],
-    futureImpact: 'Advanced packaging with integrated voltage regulators will reduce PDN impedance for next-generation chips.',
-    color: '#3B82F6'
-  },
-  {
-    icon: '🎮',
-    title: 'Graphics Card Power',
-    short: 'GPUs demand hundreds of watts with fast transients',
-    tagline: 'Powering pixels at teraflops',
-    description: 'Gaming GPUs can draw 450+ watts with transient spikes that stress power delivery. Multi-phase VRMs and extensive capacitor arrays maintain stable voltage during demanding workloads.',
-    connection: 'GPU power draw can spike 2x in microseconds when shader utilization changes. The PDN must handle V = L × di/dt without excessive voltage droop.',
-    howItWorks: 'High-phase-count VRMs distribute current across many phases. Close-coupled capacitors provide local charge storage. Thick PCB copper planes minimize resistance.',
-    stats: [
-      { value: '600+', label: 'watts (RTX 4090)', icon: '⚡' },
-      { value: '16+', label: 'VRM phases', icon: '🔧' },
-      { value: '12', label: 'PCB layers', icon: '📚' }
-    ],
-    examples: ['NVIDIA GeForce RTX', 'AMD Radeon RX', 'Workstation Quadro', 'Data center A100'],
-    companies: ['NVIDIA', 'AMD', 'ASUS', 'MSI'],
-    futureImpact: 'New power connector standards like 12VHPWR and advanced VRMs will handle 1000W+ GPU power requirements.',
-    color: '#22C55E'
-  },
-  {
-    icon: '📱',
-    title: 'Mobile Device Power',
-    short: 'Smartphones balance power delivery with battery life',
-    tagline: 'Efficiency in your pocket',
-    description: 'Mobile devices must minimize PDN losses while handling bursty workloads. Power management ICs integrate voltage regulation with sophisticated load prediction and DVFS.',
-    connection: 'Battery internal resistance adds to PDN impedance. Careful design minimizes I²R losses while maintaining voltage stability during peak performance.',
-    howItWorks: 'PMIC integrates multiple voltage rails with fast load-line response. Thin-film inductors and capacitors save space. Voltage scaling reduces power during idle.',
-    stats: [
-      { value: '15', label: 'voltage rails', icon: '🔌' },
-      { value: '5+', label: 'W peak power', icon: '⚡' },
-      { value: '95%', label: 'PMIC efficiency', icon: '📊' }
-    ],
-    examples: ['iPhone power management', 'Android flagship PMICs', 'Tablet power systems', 'Wearable power'],
-    companies: ['Qualcomm', 'Apple', 'Samsung', 'Dialog Semi'],
-    futureImpact: 'Integrated voltage regulators in SoC packaging will improve efficiency and enable higher performance in mobile devices.',
-    color: '#F59E0B'
-  },
-  {
-    icon: '🖥️',
-    title: 'Server Motherboards',
-    short: 'Data centers need efficient multi-CPU power',
-    tagline: 'Powering the cloud',
-    description: 'Server motherboards deliver hundreds of amps to multiple CPUs, memory, and accelerators. Power efficiency directly impacts operating costs and cooling requirements.',
-    connection: 'Enterprise PDN design targets 48V input for efficiency. High-current bus bars and massive copper pours minimize conduction losses.',
-    howItWorks: '48V-to-1V voltage regulators use high-efficiency topologies. Digital control enables load sharing and telemetry. Redundant power paths ensure reliability.',
-    stats: [
-      { value: '700+', label: 'watts per CPU', icon: '⚡' },
-      { value: '48V', label: 'distribution voltage', icon: '🔌' },
-      { value: '97%', label: 'VRM efficiency', icon: '📊' }
-    ],
-    examples: ['Intel Xeon servers', 'AMD EPYC platforms', 'Google TPU hosts', 'AWS Graviton systems'],
-    companies: ['Intel', 'AMD', 'Supermicro', 'Dell EMC'],
-    futureImpact: 'Direct liquid cooling and 48V power distribution will enable even higher density data centers.',
-    color: '#8B5CF6'
-  }
-];
+// -----------------------------------------------------------------------------
+// Power Delivery Network - Complete 10-Phase Game
+// Why chips need hundreds of power pins and careful impedance engineering
+// -----------------------------------------------------------------------------
 
-// Phase type for internal state management
-type PDNPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-interface PowerDeliveryNetworkRendererProps {
-  gamePhase?: string; // Optional for resume functionality
-  onGameEvent?: (event: GameEvent) => void;
-}
-
-interface GameEvent {
-  eventType: string;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
   gameType: string;
   gameTitle: string;
   details: Record<string, unknown>;
   timestamp: number;
 }
 
-const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  bgCardLight: '#1e293b',
-  border: '#334155',
-  accent: '#f59e0b',
-  accentGlow: 'rgba(245, 158, 11, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  power: '#ef4444',
-  ground: '#6366f1',
-  capacitor: '#22c55e',
-  voltage: '#f59e0b',
-  primary: '#06b6d4',
+interface PowerDeliveryNetworkRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> = ({
-  gamePhase,
-  onGameEvent,
-}) => {
-  // Phase order and labels for navigation
-  const phaseOrder: PDNPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const phaseLabels: Record<PDNPhase, string> = {
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A CPU suddenly increases its workload, demanding 100 additional amps in just 1 nanosecond. The motherboard designer notices a significant voltage drop during this transient.",
+    question: "What is the primary cause of this voltage drop during fast current transients?",
+    options: [
+      { id: 'a', label: "Resistance in the power path causing I*R voltage drop" },
+      { id: 'b', label: "Inductance in the power path causing V = L * di/dt voltage drop", correct: true },
+      { id: 'c', label: "Capacitance blocking the DC current flow" },
+      { id: 'd', label: "Temperature increase in the conductors" }
+    ],
+    explanation: "During fast transients, inductance dominates. V = L * di/dt means even tiny inductance (nanohenries) causes large voltage drops when current changes in nanoseconds. For 100A in 1ns through 100pH, the drop is 10mV - 1% of a 1V supply!"
+  },
+  {
+    scenario: "A hardware engineer is designing a new gaming motherboard. They place decoupling capacitors near the CPU socket in a specific pattern with different sizes.",
+    question: "Why are decoupling capacitors placed close to the CPU?",
+    options: [
+      { id: 'a', label: "To filter out radio frequency interference from external sources" },
+      { id: 'b', label: "To store local charge and supply current during fast transients", correct: true },
+      { id: 'c', label: "To prevent electrostatic discharge damage to the processor" },
+      { id: 'd', label: "To regulate the temperature of the power delivery system" }
+    ],
+    explanation: "Decoupling capacitors act as local charge reservoirs. When the CPU demands a sudden burst of current, nearby capacitors supply it immediately while the slower VRM catches up. This prevents voltage droop during transients."
+  },
+  {
+    scenario: "An Intel CPU engineer is reviewing the package design for a new processor. The package has over 500 pins dedicated to power and ground, with many more data pins.",
+    question: "Why do modern CPUs have hundreds of power and ground pins?",
+    options: [
+      { id: 'a', label: "To carry more total current through thicker conductors" },
+      { id: 'b', label: "To reduce inductance by providing many parallel paths", correct: true },
+      { id: 'c', label: "For mechanical strength and better socket retention" },
+      { id: 'd', label: "For redundancy in case some pins develop defects" }
+    ],
+    explanation: "Parallel inductors have lower total inductance: L_total = L/N. With 100 parallel power pins, the effective inductance is 1/100th of a single pin. This is essential for delivering fast current transients without excessive voltage droop."
+  },
+  {
+    scenario: "A power integrity engineer needs to design a PDN for a 1V, 100A processor with a maximum allowed voltage droop of 5% (50mV) during transients.",
+    question: "What is the target impedance for this power delivery network?",
+    options: [
+      { id: 'a', label: "1 Ohm" },
+      { id: 'b', label: "0.5 milliohms (500 microohms)", correct: true },
+      { id: 'c', label: "100 Ohms" },
+      { id: 'd', label: "5 Ohms" }
+    ],
+    explanation: "Target impedance Z = delta_V / delta_I = 50mV / 100A = 0.5 milliohms. This incredibly low impedance must be maintained across all frequencies of interest, which is why PDN design is so challenging."
+  },
+  {
+    scenario: "During a stress test, a CPU experiences a momentary voltage droop that drops the supply below its minimum operating threshold of 0.85V from a nominal 1.0V.",
+    question: "What happens when voltage droops below the CPU's minimum operating voltage?",
+    options: [
+      { id: 'a', label: "The CPU automatically runs at a slower clock speed" },
+      { id: 'b', label: "The CPU may produce incorrect results or crash", correct: true },
+      { id: 'c', label: "The CPU consumes less power temporarily" },
+      { id: 'd', label: "Nothing happens - the CPU has internal compensation" }
+    ],
+    explanation: "Below minimum voltage, transistors may not switch correctly, leading to computational errors, data corruption, or system crashes. This is why maintaining voltage within spec during transients is critical for reliability."
+  },
+  {
+    scenario: "A motherboard has three types of capacitors: large electrolytics near the VRM, medium MLCCs around the socket, and tiny on-die capacitors inside the CPU package.",
+    question: "Why are different types of capacitors used at different locations?",
+    options: [
+      { id: 'a', label: "Different voltage ratings are needed at each location" },
+      { id: 'b', label: "Each type targets different frequency ranges of current transients", correct: true },
+      { id: 'c', label: "Different temperature ranges require different capacitor types" },
+      { id: 'd', label: "Cost optimization - cheaper capacitors where possible" }
+    ],
+    explanation: "Bulk caps handle low-frequency transients (milliseconds), MLCCs handle mid-frequency (microseconds), and on-die caps handle the fastest transients (nanoseconds). Each has different ESL/ESR characteristics suited to its frequency range."
+  },
+  {
+    scenario: "A power integrity engineer plots the impedance of a PDN versus frequency. The goal is a flat impedance profile across all frequencies.",
+    question: "What characteristic should the PDN impedance have across all frequencies?",
+    options: [
+      { id: 'a', label: "As high as possible to limit maximum current draw" },
+      { id: 'b', label: "As low as possible across all frequencies of interest", correct: true },
+      { id: 'c', label: "Exactly 50 Ohms for impedance matching with transmission lines" },
+      { id: 'd', label: "Variable - higher at low frequencies, lower at high frequencies" }
+    ],
+    explanation: "The PDN must maintain low impedance across all frequencies where the load has significant current demand. Impedance peaks at any frequency can cause voltage droop at that frequency, so a flat, low profile is ideal."
+  },
+  {
+    scenario: "A new motherboard design places the voltage regulator module (VRM) much closer to the CPU socket than previous generations, reducing the distance from 40mm to 15mm.",
+    question: "What is the primary benefit of moving the VRM closer to the CPU?",
+    options: [
+      { id: 'a', label: "Better thermal management of the VRM components" },
+      { id: 'b', label: "Reduced inductance in the power delivery path", correct: true },
+      { id: 'c', label: "Improved aesthetics of the motherboard layout" },
+      { id: 'd', label: "Reduced electromagnetic interference emissions" }
+    ],
+    explanation: "PCB traces have inductance proportional to length (roughly 1nH per mm). Reducing VRM distance from 40mm to 15mm cuts trace inductance by 62.5%, directly reducing V = L * di/dt voltage droop during transients."
+  },
+  {
+    scenario: "A chip architect is designing the power distribution network inside a new CPU. They allocate significant die area for on-die decoupling capacitors, reducing space for logic.",
+    question: "What unique role do on-die capacitors serve in the power delivery hierarchy?",
+    options: [
+      { id: 'a', label: "Store data when power is removed from the chip" },
+      { id: 'b', label: "Provide the fastest response to highest frequency transients", correct: true },
+      { id: 'c', label: "Generate the clock signal for the processor" },
+      { id: 'd', label: "Measure and report the chip's supply voltage" }
+    ],
+    explanation: "On-die caps have the lowest inductance path to the transistors and respond in picoseconds. They handle the fastest transients that occur when billions of transistors switch simultaneously during high-activity cycles."
+  },
+  {
+    scenario: "As CPU technology advances, operating voltages have dropped from 5V (1990s) to 3.3V, then 1.8V, 1.2V, and now below 1V, while current demands have increased dramatically.",
+    question: "Why does PDN design become harder as supply voltages decrease?",
+    options: [
+      { id: 'a', label: "Lower voltages are harder to generate efficiently" },
+      { id: 'b', label: "Smaller voltage margin means tighter droop requirements", correct: true },
+      { id: 'c', label: "Current decreases at lower voltages, requiring thinner wires" },
+      { id: 'd', label: "Capacitors become less effective at lower voltages" }
+    ],
+    explanation: "A 5% droop on 5V is 250mV, but on 1V it's only 50mV. Meanwhile, power consumption stays constant or increases, meaning current rises as voltage drops (P = V*I). Lower voltage with higher current makes achieving target impedance much harder."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'High-Performance Processors',
+    short: 'CPUs need massive current with minimal voltage drop',
+    tagline: 'Feeding billions of transistors simultaneously',
+    description: 'Modern processors draw 200+ amps at under 1 volt. The power delivery network must supply this current with less than 5% voltage variation, requiring careful impedance engineering across all frequencies.',
+    connection: 'PDN impedance must be below Vdd * tolerance / Imax. For 1V at 5% tolerance and 200A, this means under 0.25 milliohms - an incredibly low impedance that must be maintained from DC to GHz frequencies.',
+    howItWorks: 'Voltage regulators, bulk capacitors, MLCCs, and on-die capacitors form a cascade of decreasing inductance. Each stage handles different frequency ranges of current demand, creating a flat impedance profile.',
+    stats: [
+      { value: '250+', label: 'Amps CPU current', icon: '⚡' },
+      { value: '<0.5', label: 'milliohms PDN Z', icon: '📊' },
+      { value: '1000+', label: 'Decoupling caps', icon: '🔧' }
+    ],
+    examples: ['Intel Core processors', 'AMD Ryzen chips', 'Server Xeon/EPYC', 'Apple M-series'],
+    companies: ['Intel', 'AMD', 'Apple', 'Qualcomm'],
+    futureImpact: 'Advanced packaging with integrated voltage regulators will reduce PDN inductance for next-generation chips exceeding 300W TDP.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎮',
+    title: 'Graphics Card Power Delivery',
+    short: 'GPUs demand hundreds of watts with fast transients',
+    tagline: 'Powering pixels at teraflops speeds',
+    description: 'Gaming GPUs can draw 600+ watts with transient spikes that stress power delivery. Multi-phase VRMs and extensive capacitor arrays maintain stable voltage during shader workload changes.',
+    connection: 'GPU power draw can spike 2x in microseconds when shader utilization changes. The PDN must handle V = L * di/dt without excessive voltage droop, requiring massive parallel power delivery.',
+    howItWorks: 'High-phase-count VRMs (16+ phases) distribute current load. Close-coupled capacitors provide local charge storage. Thick PCB copper planes (2+ oz) minimize resistance and inductance.',
+    stats: [
+      { value: '600+', label: 'Watts peak power', icon: '⚡' },
+      { value: '16+', label: 'VRM phases', icon: '🔧' },
+      { value: '12', label: 'PCB layers', icon: '📚' }
+    ],
+    examples: ['NVIDIA GeForce RTX', 'AMD Radeon RX', 'Workstation Quadro', 'Data center H100'],
+    companies: ['NVIDIA', 'AMD', 'ASUS', 'MSI'],
+    futureImpact: 'New 12VHPWR connectors and advanced VRMs will handle 1000W+ GPU power requirements for next-gen AI accelerators.',
+    color: '#22C55E'
+  },
+  {
+    icon: '📱',
+    title: 'Mobile Device Power Management',
+    short: 'Smartphones balance power delivery with battery life',
+    tagline: 'Maximum efficiency in your pocket',
+    description: 'Mobile devices must minimize PDN losses while handling bursty workloads from apps and games. Power management ICs integrate voltage regulation with sophisticated load prediction.',
+    connection: 'Battery internal resistance adds to PDN impedance, causing additional voltage droop under load. Careful design minimizes I^2*R losses while maintaining stability during peak performance bursts.',
+    howItWorks: 'PMICs integrate 15+ voltage rails with fast load-line response. Thin-film inductors and capacitors save precious space. DVFS (dynamic voltage/frequency scaling) reduces power during idle.',
+    stats: [
+      { value: '15+', label: 'Voltage rails', icon: '🔌' },
+      { value: '10+', label: 'Watts peak power', icon: '⚡' },
+      { value: '95%', label: 'PMIC efficiency', icon: '📊' }
+    ],
+    examples: ['iPhone power system', 'Android flagship PMICs', 'Tablet power design', 'Smartwatch power'],
+    companies: ['Qualcomm', 'Apple', 'Samsung', 'MediaTek'],
+    futureImpact: 'Integrated voltage regulators inside SoC packages will enable higher performance with smaller battery impact.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🖥️',
+    title: 'Server and Data Center Power',
+    short: 'Enterprise systems need efficient multi-CPU power',
+    tagline: 'Powering the cloud reliably 24/7',
+    description: 'Server motherboards deliver hundreds of amps to multiple CPUs, memory, and accelerators. Power efficiency directly impacts operating costs and cooling requirements in hyperscale data centers.',
+    connection: 'Enterprise PDN design increasingly uses 48V distribution for efficiency. Higher voltage means lower current for same power, reducing I^2*R loss and L*di/dt droop in distribution.',
+    howItWorks: '48V-to-1V voltage regulators use high-efficiency topologies like LLC resonant converters. Digital control enables load sharing, telemetry, and predictive maintenance. Redundant power paths ensure reliability.',
+    stats: [
+      { value: '700+', label: 'Watts per CPU', icon: '⚡' },
+      { value: '48V', label: 'Distribution bus', icon: '🔌' },
+      { value: '97%', label: 'VRM efficiency', icon: '📊' }
+    ],
+    examples: ['Intel Xeon servers', 'AMD EPYC platforms', 'Google TPU hosts', 'AWS Graviton systems'],
+    companies: ['Intel', 'AMD', 'Supermicro', 'Dell EMC'],
+    futureImpact: 'Direct liquid cooling combined with 48V distribution will enable even higher density computation in future data centers.',
+    color: '#8B5CF6'
+  }
+];
+
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Simulation state
+  const [currentDemand, setCurrentDemand] = useState(100); // Amps
+  const [decouplingCapacitance, setDecouplingCapacitance] = useState(100); // uF total
+  const [pathInductance, setPathInductance] = useState(100); // pH
+  const [vrDistance, setVrDistance] = useState(25); // mm from VRM to chip
+  const [animationTime, setAnimationTime] = useState(0);
+
+  // Twist phase - parallel pins scenario
+  const [numPowerPins, setNumPowerPins] = useState(10);
+  const [pinInductance, setPinInductance] = useState(200); // pH per pin
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Animation loop
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimationTime(t => (t + 1) % 360);
+    }, 30);
+    return () => clearInterval(timer);
+  }, []);
+
+  // PDN calculations
+  const calculatePDN = useCallback(() => {
+    const vTarget = 1.0; // V (typical modern CPU core voltage)
+    const totalInductance = pathInductance * 1e-12 + vrDistance * 1e-9; // Henries
+    const diDt = currentDemand / 1e-9; // A/s (1ns rise time)
+    const inductiveDroop = totalInductance * diDt;
+    const targetImpedance = (0.05 * vTarget) / currentDemand; // 5% droop tolerance
+    const pdnImpedance = Math.sqrt(totalInductance / (decouplingCapacitance * 1e-6));
+    const droopPercentage = (inductiveDroop / vTarget) * 100;
+    const effectiveVoltage = Math.max(0.5, vTarget - inductiveDroop);
+
+    return {
+      vTarget,
+      totalInductance: totalInductance * 1e12,
+      inductiveDroop: Math.min(inductiveDroop * 1000, 500),
+      droopPercentage: Math.min(droopPercentage, 50),
+      targetImpedance: targetImpedance * 1000,
+      pdnImpedance: pdnImpedance * 1000,
+      effectiveVoltage,
+    };
+  }, [currentDemand, decouplingCapacitance, pathInductance, vrDistance]);
+
+  // Twist phase calculations - parallel pins
+  const calculateParallelPins = useCallback(() => {
+    const effectiveInductance = pinInductance / numPowerPins; // pH
+    const currentPerPin = currentDemand / numPowerPins; // A
+    const diDt = currentDemand / 1e-9; // Total di/dt
+    const droopVoltage = (effectiveInductance * 1e-12) * diDt * 1000; // mV
+    const droopPercent = droopVoltage / 10; // % of 1V
+
+    return {
+      effectiveInductance,
+      currentPerPin,
+      droopVoltage: Math.min(droopVoltage, 500),
+      droopPercent: Math.min(droopPercent, 50),
+    };
+  }, [numPowerPins, pinInductance, currentDemand]);
+
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#F59E0B',
+    accentGlow: 'rgba(245, 158, 11, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    power: '#EF4444',
+    ground: '#6366F1',
+    capacitor: '#22C55E',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
     hook: 'Introduction',
     predict: 'Predict',
     play: 'Experiment',
@@ -133,1411 +382,1466 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     mastery: 'Mastery'
   };
 
-  // Internal phase state management
-  const getInitialPhase = (): PDNPhase => {
-    if (gamePhase && phaseOrder.includes(gamePhase as PDNPhase)) {
-      return gamePhase as PDNPhase;
-    }
-    return 'hook';
-  };
-
-  const [phase, setPhase] = useState<PDNPhase>(getInitialPhase);
-
-  // Sync phase with gamePhase prop changes (for resume functionality)
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase as PDNPhase) && gamePhase !== phase) {
-      setPhase(gamePhase as PDNPhase);
-    }
-  }, [gamePhase]);
-
-  // Navigation debouncing
-  const isNavigating = useRef(false);
-  const lastClickRef = useRef(0);
-
-  // Simulation state
-  const [currentDemand, setCurrentDemand] = useState(50); // Amps
-  const [decouplingCapacitance, setDecouplingCapacitance] = useState(100); // uF total
-  const [pathInductance, setPathInductance] = useState(100); // pH
-  const [vrDistance, setVrDistance] = useState(20); // mm from VRM to chip
-  const [animationTime, setAnimationTime] = useState(0);
-
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [testScore, setTestScore] = useState(0);
-
-  // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Emit game events
-  const emitGameEvent = useCallback((eventType: string, details: Record<string, unknown>) => {
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
     if (onGameEvent) {
       onGameEvent({
-        eventType,
-        gameType: 'power_delivery_network',
+        eventType: 'phase_changed',
+        gameType: 'power-delivery-network',
         gameTitle: 'Power Delivery Network',
-        details,
+        details: { phase: p },
         timestamp: Date.now()
       });
     }
+    setTimeout(() => { isNavigating.current = false; }, 300);
   }, [onGameEvent]);
 
-  // Navigation function
-  const goToPhase = useCallback((p: PDNPhase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (isNavigating.current) return;
-
-    lastClickRef.current = now;
-    isNavigating.current = true;
-
-    setPhase(p);
-
-    const idx = phaseOrder.indexOf(p);
-    emitGameEvent('phase_changed', {
-      phase: p,
-      phaseLabel: phaseLabels[p],
-      currentScreen: idx + 1,
-      totalScreens: phaseOrder.length,
-      message: `Navigated to ${phaseLabels[p]}`
-    });
-
-    setTimeout(() => { isNavigating.current = false; }, 400);
-  }, [emitGameEvent, phaseLabels, phaseOrder]);
-
-  const goNext = useCallback(() => {
-    const idx = phaseOrder.indexOf(phase);
-    if (idx < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[idx + 1]);
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     }
   }, [phase, goToPhase, phaseOrder]);
 
-  const goBack = useCallback(() => {
-    const idx = phaseOrder.indexOf(phase);
-    if (idx > 0) {
-      goToPhase(phaseOrder[idx - 1]);
-    }
-  }, [phase, goToPhase, phaseOrder]);
-
-  // Animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimationTime(t => (t + 1) % 360);
-    }, 30);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Physics calculations
-  const calculatePDN = useCallback(() => {
-    // Target voltage
-    const vTarget = 1.0; // V (typical modern CPU core voltage)
-
-    // Supply inductance from VRM distance (approximately 1nH/mm for PCB trace)
-    const totalInductance = pathInductance * 1e-12 + vrDistance * 1e-9; // Henries
-
-    // Maximum di/dt for current step (assume 1ns rise time)
-    const diDt = currentDemand / 1e-9; // A/s
-
-    // Voltage droop from inductance: V = L * di/dt
-    const inductiveDroop = totalInductance * diDt;
-
-    // Impedance target to limit droop to 5% of Vdd
-    const targetImpedance = (0.05 * vTarget) / currentDemand; // Ohms
-
-    // Actual PDN impedance (simplified model)
-    // Z = sqrt(L/C) at resonance
-    const pdnImpedance = Math.sqrt(totalInductance / (decouplingCapacitance * 1e-6));
-
-    // Voltage droop percentage
-    const droopPercentage = (inductiveDroop / vTarget) * 100;
-
-    // Resonant frequency
-    const resonantFreq = 1 / (2 * Math.PI * Math.sqrt(totalInductance * decouplingCapacitance * 1e-6));
-
-    // Effective voltage with droop
-    const effectiveVoltage = Math.max(0.7, vTarget - inductiveDroop);
-
-    return {
-      vTarget,
-      totalInductance: totalInductance * 1e12, // pH
-      inductiveDroop: Math.min(inductiveDroop * 1000, 500), // mV, capped
-      droopPercentage: Math.min(droopPercentage, 50), // %, capped
-      targetImpedance: targetImpedance * 1000, // mOhm
-      pdnImpedance: pdnImpedance * 1000, // mOhm
-      resonantFreq: resonantFreq / 1e6, // MHz
-      effectiveVoltage: Math.max(effectiveVoltage, 0.5),
-    };
-  }, [currentDemand, decouplingCapacitance, pathInductance, vrDistance]);
-
-  const predictions = [
-    { id: 'unlimited', label: 'A single wire can deliver unlimited current if thick enough' },
-    { id: 'resistance', label: 'The main problem is resistance causing voltage drop (I x R)' },
-    { id: 'inductance', label: 'Inductance causes voltage droops during fast current changes (L x di/dt)' },
-    { id: 'capacitance', label: 'Capacitance in the wires blocks DC current flow' },
-  ];
-
-  const twistPredictions = [
-    { id: 'one', label: 'One big power pin would work if it is large enough' },
-    { id: 'distributed', label: 'Many pins distributed across the package are needed to reduce inductance' },
-    { id: 'wireless', label: 'Wireless power would solve the problem' },
-    { id: 'optical', label: 'Optical power delivery is the solution' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'CPU Voltage Regulator Modules (VRMs)',
-      description: 'Gaming motherboards have massive VRM sections near the CPU socket. High-end boards have 16+ power phases.',
-      question: 'Why do high-performance motherboards have so many VRM phases?',
-      answer: 'More phases mean lower inductance per path, faster transient response, and better current sharing. A 200A CPU with 1ns transients needs parallel paths to limit voltage droop to acceptable levels.',
-    },
-    {
-      title: 'Smartphone Power Management',
-      description: 'Modern phones run chips at less than 1V but need to deliver 10+ amps during heavy workloads.',
-      question: 'How do phones handle the PDN challenge with such thin PCBs?',
-      answer: 'Package-on-package (PoP) stacking puts memory directly on the processor, shortening power paths. Integrated voltage regulators inside the chip package minimize inductance. Many tiny capacitors are distributed across the package.',
-    },
-    {
-      title: 'GPU Power Delivery',
-      description: 'High-end GPUs can consume 400+ watts with current spikes exceeding 100A at under 1V.',
-      question: 'Why do GPU PCBs have such thick copper layers and many capacitors?',
-      answer: 'Thick copper reduces resistance and inductance. Hundreds of capacitors provide local charge storage for transients. Without this, voltage would droop below the minimum operating threshold during heavy compute loads.',
-    },
-    {
-      title: 'Data Center Server Design',
-      description: 'Servers run 24/7 and must maintain stable operation under wildly varying loads.',
-      question: 'Why do servers use 48V distribution instead of 12V?',
-      answer: 'Higher voltage means lower current for the same power (P = V x I). Lower current means less I^2R loss and less L x di/dt droop. 48V distribution lets the final voltage conversion happen very close to the processor.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'What causes voltage droop during fast current transients?',
-      options: [
-        { text: 'Resistance in the power path', correct: false },
-        { text: 'Inductance in the power path (V = L x di/dt)', correct: true },
-        { text: 'Capacitance in the power path', correct: false },
-        { text: 'Temperature of the conductors', correct: false },
-      ],
-    },
-    {
-      question: 'Decoupling capacitors are placed near the CPU to:',
-      options: [
-        { text: 'Filter out radio frequency interference', correct: false },
-        { text: 'Store local charge to supply current during fast transients', correct: true },
-        { text: 'Prevent static electricity damage', correct: false },
-        { text: 'Cool down the processor', correct: false },
-      ],
-    },
-    {
-      question: 'Why do modern CPUs have hundreds of power pins?',
-      options: [
-        { text: 'To carry more total current through thicker wires', correct: false },
-        { text: 'To reduce inductance by providing many parallel paths', correct: true },
-        { text: 'For mechanical strength of the package', correct: false },
-        { text: 'For redundancy in case some pins fail', correct: false },
-      ],
-    },
-    {
-      question: 'Target impedance for a 1V, 100A processor with 5% droop tolerance is:',
-      options: [
-        { text: '1 Ohm', correct: false },
-        { text: '0.5 mOhm (500 microOhms)', correct: true },
-        { text: '100 Ohms', correct: false },
-        { text: '5 Ohms', correct: false },
-      ],
-    },
-    {
-      question: 'What happens if voltage droops below the CPU minimum operating voltage?',
-      options: [
-        { text: 'The CPU runs slower', correct: false },
-        { text: 'The CPU may produce incorrect results or crash', correct: true },
-        { text: 'The CPU uses less power', correct: false },
-        { text: 'Nothing, the CPU compensates automatically', correct: false },
-      ],
-    },
-    {
-      question: 'Different types of capacitors (bulk, ceramic, on-die) target different:',
-      options: [
-        { text: 'Voltage levels', correct: false },
-        { text: 'Frequency ranges of current transients', correct: true },
-        { text: 'Temperature ranges', correct: false },
-        { text: 'Manufacturing costs', correct: false },
-      ],
-    },
-    {
-      question: 'The power delivery network impedance should be:',
-      options: [
-        { text: 'As high as possible to limit current', correct: false },
-        { text: 'As low as possible across all frequencies of interest', correct: true },
-        { text: 'Exactly 50 Ohms for impedance matching', correct: false },
-        { text: 'Variable depending on load', correct: false },
-      ],
-    },
-    {
-      question: 'Moving the voltage regulator closer to the CPU helps because:',
-      options: [
-        { text: 'It is easier to cool', correct: false },
-        { text: 'It reduces the inductance of the power delivery path', correct: true },
-        { text: 'It looks better on the motherboard', correct: false },
-        { text: 'It reduces electromagnetic interference', correct: false },
-      ],
-    },
-    {
-      question: 'On-die capacitors in modern CPUs serve what purpose?',
-      options: [
-        { text: 'Store data when power is off', correct: false },
-        { text: 'Provide the fastest response to the highest frequency transients', correct: true },
-        { text: 'Generate the clock signal', correct: false },
-        { text: 'Measure chip temperature', correct: false },
-      ],
-    },
-    {
-      question: 'As CPU voltages decrease (from 5V to under 1V), PDN design becomes harder because:',
-      options: [
-        { text: 'Lower voltage is harder to generate', correct: false },
-        { text: 'Smaller voltage margin means tighter droop requirements', correct: true },
-        { text: 'Current decreases, requiring smaller wires', correct: false },
-        { text: 'Capacitors do not work at low voltages', correct: false },
-      ],
-    },
-  ];
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
-  };
-
-  const submitTest = () => {
-    let score = 0;
-    testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-  };
-
-  // Progress bar renderer
-  const renderProgressBar = () => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    return (
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isMobile ? '10px 12px' : '12px 16px',
-        borderBottom: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: isMobile ? '8px' : '16px'
-      }}>
-        {/* Back button */}
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
         <button
-          onClick={goBack}
-          disabled={currentIdx === 0}
+          key={p}
+          onClick={() => goToPhase(p)}
           style={{
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.border}`,
-            backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
-            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
-            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
-            opacity: currentIdx > 0 ? 1 : 0.4,
-            fontSize: '14px',
-            fontWeight: 600
-          }}
-        >
-          Back
-        </button>
-
-        {/* Progress dots */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
-          {phaseOrder.map((p, i) => (
-            <div
-              key={p}
-              onClick={() => i <= currentIdx && goToPhase(p)}
-              style={{
-                width: i === currentIdx ? '20px' : '10px',
-                height: '10px',
-                borderRadius: '5px',
-                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s'
-              }}
-              title={phaseLabels[p]}
-            />
-          ))}
-        </div>
-
-        {/* Phase indicator */}
-        <div style={{
-          padding: '4px 12px',
-          borderRadius: '12px',
-          background: `${colors.primary}20`,
-          color: colors.primary,
-          fontSize: '11px',
-          fontWeight: 700
-        }}>
-          {currentIdx + 1}/{phaseOrder.length}
-        </div>
-      </div>
-    );
-  };
-
-  // Bottom bar renderer
-  const renderBottomBar = (canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
-    const currentIdx = phaseOrder.indexOf(phase);
-
-    const handleNext = () => {
-      if (!canGoNext) return;
-      if (onNext) {
-        onNext();
-      } else if (currentIdx < phaseOrder.length - 1) {
-        goToPhase(phaseOrder[currentIdx + 1]);
-      }
-    };
-
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: isMobile ? '12px' : '12px 16px',
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: '12px'
-      }}>
-        <button
-          onClick={goBack}
-          disabled={currentIdx === 0}
-          style={{
-            padding: isMobile ? '10px 16px' : '10px 20px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontSize: isMobile ? '13px' : '14px',
-            backgroundColor: colors.bgCardLight,
-            color: colors.textSecondary,
-            border: `1px solid ${colors.border}`,
-            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
-            opacity: currentIdx > 0 ? 1 : 0.3,
-            minHeight: '44px'
-          }}
-        >
-          Back
-        </button>
-
-        <span style={{
-          fontSize: '12px',
-          color: colors.textMuted,
-          fontWeight: 600
-        }}>
-          {phaseLabels[phase]}
-        </span>
-
-        <button
-          onClick={handleNext}
-          disabled={!canGoNext}
-          style={{
-            padding: isMobile ? '10px 20px' : '10px 24px',
-            borderRadius: '10px',
-            fontWeight: 700,
-            fontSize: isMobile ? '13px' : '14px',
-            background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)` : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
             border: 'none',
-            cursor: canGoNext ? 'pointer' : 'not-allowed',
-            opacity: canGoNext ? 1 : 0.4,
-            boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
-            minHeight: '44px'
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
           }}
-        >
-          {nextLabel}
-        </button>
-      </div>
-    );
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  const renderVisualization = () => {
+  // PDN Visualization Component
+  const PDNVisualization = () => {
     const pdn = calculatePDN();
-    const width = 400;
-    const height = 420;
-
-    // Current surge animation
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 320 : 380;
     const surgePhase = (animationTime / 360) * 2 * Math.PI;
     const isSurging = Math.sin(surgePhase * 2) > 0.7;
 
-    // Voltage droop animation during surge
-    const droopActive = isSurging && pdn.droopPercentage > 5;
-
-    // Ripple animation for voltage indicator
-    const rippleOffset = Math.sin(surgePhase * 3) * 2;
-
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        {/* Title moved outside SVG using typo system */}
-        <div style={{
-          fontSize: typo.heading,
-          fontWeight: 700,
-          color: colors.textPrimary,
-          textAlign: 'center',
-          marginBottom: '4px'
-        }}>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="pdnPowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.power} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.power} stopOpacity="0.4" />
+          </linearGradient>
+          <linearGradient id="pdnCapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#16a34a" />
+          </linearGradient>
+          <filter id="pdnGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
           Power Delivery Network (PDN)
-        </div>
+        </text>
 
-        <svg
-          width="100%"
-          height={height - 30}
-          viewBox={`0 0 ${width} ${height - 30}`}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
-          <defs>
-            {/* Premium VRM metallic gradient with 6 color stops */}
-            <linearGradient id="pdnVrmMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#7f1d1d" />
-              <stop offset="20%" stopColor="#b91c1c" />
-              <stop offset="40%" stopColor="#ef4444" />
-              <stop offset="60%" stopColor="#dc2626" />
-              <stop offset="80%" stopColor="#991b1b" />
-              <stop offset="100%" stopColor="#7f1d1d" />
-            </linearGradient>
+        {/* VRM */}
+        <g transform="translate(30, 50)">
+          <rect x="0" y="20" width="50" height="60" fill={colors.bgSecondary} stroke={colors.power} strokeWidth="2" rx="6" />
+          <text x="25" y="45" textAnchor="middle" fill={colors.power} fontSize="10">VRM</text>
+          <text x="25" y="60" textAnchor="middle" fill={colors.textSecondary} fontSize="9">1.0V</text>
+          <circle cx="42" cy="72" r="4" fill={isSurging ? colors.error : colors.success}>
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+          </circle>
+        </g>
 
-            {/* VRM brushed metal effect */}
-            <linearGradient id="pdnVrmBrushed" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="15%" stopColor="#4b5563" />
-              <stop offset="30%" stopColor="#374151" />
-              <stop offset="45%" stopColor="#6b7280" />
-              <stop offset="60%" stopColor="#374151" />
-              <stop offset="75%" stopColor="#4b5563" />
-              <stop offset="100%" stopColor="#374151" />
-            </linearGradient>
+        {/* Power path with inductance */}
+        <g transform="translate(90, 60)">
+          {/* Inductance coils */}
+          <path
+            d={`M 0 25 C 15 10, 25 10, 40 25 C 55 40, 65 40, 80 25 C 95 10, 105 10, 120 25`}
+            stroke={colors.accent} strokeWidth="3" fill="none" strokeLinecap="round"
+          />
+          <text x="60" y="55" textAnchor="middle" fill={colors.accent} fontSize="10">
+            L = {pdn.totalInductance.toFixed(0)} pH
+          </text>
 
-            {/* Capacitor premium gradient with 5 color stops */}
-            <linearGradient id="pdnCapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#4ade80" />
-              <stop offset="25%" stopColor="#22c55e" />
-              <stop offset="50%" stopColor="#16a34a" />
-              <stop offset="75%" stopColor="#15803d" />
-              <stop offset="100%" stopColor="#166534" />
-            </linearGradient>
+          {/* Current flow animation */}
+          {isSurging && (
+            <circle
+              cx={40 + Math.sin(surgePhase * 4) * 40}
+              cy={25 + Math.cos(surgePhase * 4) * 10}
+              r="5"
+              fill={colors.accent}
+              filter="url(#pdnGlow)"
+            />
+          )}
+        </g>
 
-            {/* Ceramic capacitor gradient */}
-            <linearGradient id="pdnCeramicGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#86efac" />
-              <stop offset="30%" stopColor="#4ade80" />
-              <stop offset="70%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#16a34a" />
-            </linearGradient>
+        {/* Decoupling capacitors */}
+        <g transform="translate(220, 45)">
+          {/* Bulk cap */}
+          <rect x="0" y="0" width="25" height="40" fill="url(#pdnCapGrad)" rx="3" />
+          <text x="12" y="50" textAnchor="middle" fill={colors.capacitor} fontSize="8">Bulk</text>
 
-            {/* Power plane gradient with 4 color stops */}
-            <linearGradient id="pdnPowerPlane" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#312e81" />
-              <stop offset="33%" stopColor="#4338ca" />
-              <stop offset="66%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#4338ca" />
-            </linearGradient>
+          {/* Ceramic caps */}
+          <rect x="35" y="5" width="15" height="30" fill="url(#pdnCapGrad)" rx="2" />
+          <rect x="55" y="5" width="15" height="30" fill="url(#pdnCapGrad)" rx="2" />
+          <text x="52" y="50" textAnchor="middle" fill={colors.capacitor} fontSize="8">MLCCs</text>
 
-            {/* Ground plane premium gradient */}
-            <linearGradient id="pdnGroundPlane" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1e1b4b" />
-              <stop offset="25%" stopColor="#312e81" />
-              <stop offset="50%" stopColor="#4338ca" />
-              <stop offset="75%" stopColor="#312e81" />
-              <stop offset="100%" stopColor="#1e1b4b" />
-            </linearGradient>
+          <text x="35" y="65" textAnchor="middle" fill={colors.textSecondary} fontSize="9">
+            {decouplingCapacitance} uF
+          </text>
+        </g>
 
-            {/* CPU die gradient */}
-            <linearGradient id="pdnCpuDie" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e1b4b" />
-              <stop offset="25%" stopColor="#312e81" />
-              <stop offset="50%" stopColor="#3730a3" />
-              <stop offset="75%" stopColor="#312e81" />
-              <stop offset="100%" stopColor="#1e1b4b" />
-            </linearGradient>
+        {/* CPU */}
+        <g transform={`translate(${width - 90}, 45)`}>
+          <rect x="0" y="0" width="60" height="55" fill={colors.bgSecondary} stroke={colors.ground} strokeWidth="2" rx="6" />
+          <text x="30" y="25" textAnchor="middle" fill={colors.ground} fontSize="10">CPU</text>
+          <text x="30" y="42" textAnchor="middle" fill={colors.textSecondary} fontSize="9">{currentDemand}A</text>
+        </g>
 
-            {/* Voltage ripple indicator gradient */}
-            <linearGradient id="pdnVoltageRipple" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0" />
-              <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#f59e0b" stopOpacity="1" />
-              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#fcd34d" stopOpacity="0" />
-            </linearGradient>
+        {/* Ground plane */}
+        <rect x="30" y="130" width={width - 60} height="6" fill={colors.ground} rx="3" opacity="0.6" />
+        <text x={width/2} y="150" textAnchor="middle" fill={colors.textMuted} fontSize="9">Ground Plane</text>
 
-            {/* Inductance coil gradient */}
-            <linearGradient id="pdnInductorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fcd34d" />
-              <stop offset="25%" stopColor="#fbbf24" />
-              <stop offset="50%" stopColor="#f59e0b" />
-              <stop offset="75%" stopColor="#d97706" />
-              <stop offset="100%" stopColor="#b45309" />
-            </linearGradient>
+        {/* Voltage waveform */}
+        <g transform="translate(30, 170)">
+          <rect x="0" y="0" width={width - 60} height="70" fill={colors.bgSecondary} rx="6" />
 
-            {/* Current flow glow */}
-            <radialGradient id="pdnCurrentGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-            </radialGradient>
+          {/* Target voltage line */}
+          <line x1="10" y1="15" x2={width - 70} y2="15" stroke={colors.success} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+          <text x="15" y="12" fill={colors.success} fontSize="8">1.0V</text>
 
-            {/* Waveform background gradient */}
-            <linearGradient id="pdnWaveformBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0f172a" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#020617" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.8" />
-            </linearGradient>
+          {/* Minimum voltage line */}
+          <line x1="10" y1="55" x2={width - 70} y2="55" stroke={colors.error} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+          <text x="15" y="63" fill={colors.error} fontSize="8">0.95V</text>
 
-            {/* Metrics panel gradient */}
-            <linearGradient id="pdnMetricsBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.6" />
-            </linearGradient>
+          {/* Voltage droop waveform */}
+          <path
+            d={`M 40 15 L 80 15 L 85 ${15 + pdn.droopPercentage * 0.8} L 130 ${15 + pdn.droopPercentage * 0.5} L 180 ${15 + pdn.droopPercentage * 0.2} L 230 16 L ${width - 80} 15`}
+            stroke={pdn.droopPercentage > 5 ? colors.error : colors.accent}
+            strokeWidth="2"
+            fill="none"
+          />
 
-            {/* VRM glow filter */}
-            <filter id="pdnVrmGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Capacitor glow filter */}
-            <filter id="pdnCapGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Current flow blur */}
-            <filter id="pdnCurrentBlur" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" />
-            </filter>
-
-            {/* Voltage droop glow */}
-            <filter id="pdnDroopGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Pin glow effect */}
-            <filter id="pdnPinGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* System diagram */}
-          <g transform="translate(30, 20)">
-            {/* VRM (Voltage Regulator Module) with premium metallic look */}
-            <g filter="url(#pdnVrmGlow)">
-              {/* VRM base with brushed metal */}
-              <rect x={0} y={40} width={60} height={80} fill="url(#pdnVrmBrushed)" rx={8} />
-              {/* VRM heatsink fins */}
-              {[0, 1, 2, 3, 4].map(i => (
-                <rect key={i} x={5 + i * 11} y={42} width={8} height={20} fill="url(#pdnVrmMetal)" rx={1} opacity={0.9} />
-              ))}
-              {/* VRM core */}
-              <rect x={8} y={65} width={44} height={50} fill="url(#pdnVrmMetal)" rx={4} />
-              {/* VRM indicator LED */}
-              <circle cx={52} cy={110} r={3} fill={isSurging ? '#ef4444' : '#22c55e'}>
-                <animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite" />
-              </circle>
-            </g>
-
-            {/* Power path (with inductance representation) */}
-            <g transform="translate(70, 70)">
-              {/* Inductance coils with premium gradient */}
-              <path d="M 0 10 C 10 0, 20 0, 30 10 C 40 20, 50 20, 60 10 C 70 0, 80 0, 90 10"
-                stroke="url(#pdnInductorGrad)" strokeWidth={4} fill="none" strokeLinecap="round" />
-              {/* Inductance glow */}
-              <path d="M 0 10 C 10 0, 20 0, 30 10 C 40 20, 50 20, 60 10 C 70 0, 80 0, 90 10"
-                stroke="url(#pdnInductorGrad)" strokeWidth={8} fill="none" opacity={0.3} filter="url(#pdnCurrentBlur)" />
-
-              {/* Current flow indicators - multiple animated particles */}
-              {isSurging && (
-                <>
-                  <circle cx={15 + Math.sin(surgePhase * 5) * 15 + 30} cy={10 + Math.cos(surgePhase * 5) * 5} r={6} fill="url(#pdnCurrentGlow)" filter="url(#pdnCurrentBlur)" />
-                  <circle cx={15 + Math.sin(surgePhase * 5) * 15 + 30} cy={10 + Math.cos(surgePhase * 5) * 5} r={3} fill="#fbbf24" />
-                  <circle cx={45 + Math.sin(surgePhase * 5 + 1) * 15} cy={10 + Math.cos(surgePhase * 5 + 1) * 5} r={5} fill="url(#pdnCurrentGlow)" filter="url(#pdnCurrentBlur)" />
-                  <circle cx={45 + Math.sin(surgePhase * 5 + 1) * 15} cy={10 + Math.cos(surgePhase * 5 + 1) * 5} r={2} fill="#fbbf24" />
-                </>
-              )}
-            </g>
-
-            {/* Decoupling capacitors with premium visualization */}
-            <g transform="translate(180, 40)">
-              {/* Bulk capacitors with glow */}
-              <g filter="url(#pdnCapGlow)">
-                <rect x={0} y={0} width={30} height={50} fill="url(#pdnCapGrad)" rx={4} />
-                {/* Capacitor terminals */}
-                <rect x={12} y={-5} width={6} height={8} fill="#9ca3af" rx={1} />
-                <rect x={12} y={47} width={6} height={8} fill="#9ca3af" rx={1} />
-                {/* Capacitor marking */}
-                <rect x={5} y={20} width={20} height={10} fill="rgba(0,0,0,0.3)" rx={2} />
-              </g>
-
-              {/* Ceramic capacitors */}
-              <g filter="url(#pdnCapGlow)">
-                <rect x={40} y={10} width={20} height={30} fill="url(#pdnCeramicGrad)" rx={3} />
-                {/* Ceramic capacitor terminals */}
-                <rect x={42} y={8} width={4} height={4} fill="#d4d4d4" rx={1} />
-                <rect x={54} y={8} width={4} height={4} fill="#d4d4d4" rx={1} />
-                <rect x={42} y={38} width={4} height={4} fill="#d4d4d4" rx={1} />
-                <rect x={54} y={38} width={4} height={4} fill="#d4d4d4" rx={1} />
-              </g>
-
-              {/* On-package capacitors */}
-              <rect x={70} y={15} width={15} height={20} fill="url(#pdnCeramicGrad)" rx={2} opacity={0.8} />
-            </g>
-
-            {/* CPU/Chip with premium die appearance */}
+          {/* Droop indicator */}
+          {pdn.droopPercentage > 2 && (
             <g>
-              {/* CPU package substrate */}
-              <rect x={268} y={28} width={74} height={104} fill="#1e293b" rx={10} stroke="#475569" strokeWidth={1} />
-              {/* CPU die with gradient */}
-              <rect x={275} y={35} width={60} height={55} fill="url(#pdnCpuDie)" rx={4} stroke={colors.ground} strokeWidth={2} />
-              {/* Die hotspot glow */}
-              <ellipse cx={305} cy={55} rx={15} ry={10} fill="rgba(99, 102, 241, 0.3)" filter="url(#pdnCurrentBlur)" />
-
-              {/* On-die capacitors with premium look */}
-              <rect x={280} y={70} width={50} height={12} fill="url(#pdnCeramicGrad)" opacity={0.5} rx={2} />
-              {/* On-die cap pattern */}
-              {[0, 1, 2, 3, 4].map(i => (
-                <rect key={i} x={282 + i * 10} y={72} width={6} height={8} fill="url(#pdnCapGrad)" opacity={0.7} rx={1} />
-              ))}
+              <line x1="100" y1="15" x2="100" y2={15 + pdn.droopPercentage * 0.6} stroke={colors.warning} strokeWidth="2" />
+              <text x="105" y={20 + pdn.droopPercentage * 0.3} fill={colors.warning} fontSize="9">
+                -{pdn.inductiveDroop.toFixed(0)}mV
+              </text>
             </g>
+          )}
+        </g>
 
-            {/* Power pins visualization with glow */}
-            <g filter="url(#pdnPinGlow)">
-              {[0, 1, 2, 3, 4, 5].map(i => (
-                <rect
-                  key={i}
-                  x={275 + i * 10}
-                  y={95}
-                  width={6}
-                  height={30}
-                  fill={isSurging ? 'url(#pdnVrmMetal)' : 'url(#pdnInductorGrad)'}
-                  opacity={0.8 + Math.sin(surgePhase + i) * 0.2}
-                  rx={1}
-                />
-              ))}
-            </g>
+        {/* Stats */}
+        <g transform={`translate(30, ${height - 60})`}>
+          <rect x="0" y="0" width={width - 60} height="50" fill={colors.bgSecondary} rx="6" />
 
-            {/* Ground return with premium gradient */}
-            <rect x={0} y={155} width={340} height={8} fill="url(#pdnGroundPlane)" rx={2} />
-            {/* Ground plane pattern lines */}
-            {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
-              <line key={i} x1={20 + i * 40} y1={157} x2={20 + i * 40} y2={161} stroke="#6366f1" strokeWidth={1} opacity={0.5} />
-            ))}
+          <text x="20" y="18" fill={colors.textMuted} fontSize="9">Droop</text>
+          <text x="20" y="35" fill={pdn.droopPercentage > 5 ? colors.error : colors.success} fontSize="14" fontWeight="600">
+            {pdn.droopPercentage.toFixed(1)}%
+          </text>
 
-            {/* VRM distance indicator with premium style */}
-            <line x1={60} y1={140} x2={270} y2={140} stroke="url(#pdnVoltageRipple)" strokeWidth={2} strokeDasharray="6,3" />
-            {/* Distance markers */}
-            <line x1={60} y1={135} x2={60} y2={145} stroke={colors.accent} strokeWidth={2} />
-            <line x1={270} y1={135} x2={270} y2={145} stroke={colors.accent} strokeWidth={2} />
-          </g>
+          <text x={(width - 60) / 3 + 10} y="18" fill={colors.textMuted} fontSize="9">PDN Z</text>
+          <text x={(width - 60) / 3 + 10} y="35" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+            {pdn.pdnImpedance.toFixed(2)}m
+          </text>
 
-          {/* Voltage waveform section */}
-          <g transform="translate(30, 210)">
-            <rect x={0} y={0} width={340} height={60} fill="url(#pdnWaveformBg)" rx={6} stroke="#334155" strokeWidth={1} />
+          <text x={(width - 60) * 2 / 3 + 10} y="18" fill={colors.textMuted} fontSize="9">Target Z</text>
+          <text x={(width - 60) * 2 / 3 + 10} y="35" fill={colors.accent} fontSize="14" fontWeight="600">
+            {pdn.targetImpedance.toFixed(2)}m
+          </text>
 
-            {/* Target voltage line */}
-            <line x1={10} y1={15} x2={320} y2={15} stroke={colors.success} strokeWidth={1.5} strokeDasharray="4,4" opacity={0.8} />
-
-            {/* Minimum voltage line */}
-            <line x1={10} y1={45} x2={320} y2={45} stroke={colors.error} strokeWidth={1.5} strokeDasharray="4,4" opacity={0.8} />
-
-            {/* Voltage ripple indicator - animated wave */}
-            <path
-              d={`M 10 ${15 + rippleOffset} Q 40 ${12 + rippleOffset}, 70 ${15 + rippleOffset} T 130 ${15 + rippleOffset} T 190 ${15 + rippleOffset} T 250 ${15 + rippleOffset} T 310 ${15 + rippleOffset}`}
-              stroke="url(#pdnVoltageRipple)" strokeWidth={2} fill="none" opacity={0.6}
-            />
-
-            {/* Actual voltage with droop - premium animated path */}
-            <path
-              d={`M 10 15 L 80 15 L 85 ${15 + pdn.droopPercentage * 0.6} L 120 ${15 + pdn.droopPercentage * 0.4} L 160 ${15 + pdn.droopPercentage * 0.2} L 200 17 L 240 15 L 320 15`}
-              stroke={droopActive ? colors.error : colors.voltage}
-              strokeWidth={2.5}
-              fill="none"
-              filter={droopActive ? 'url(#pdnDroopGlow)' : undefined}
-            />
-
-            {/* Droop indicator with glow */}
-            {pdn.droopPercentage > 3 && (
-              <g filter="url(#pdnDroopGlow)">
-                <line x1={100} y1={15} x2={100} y2={15 + pdn.droopPercentage * 0.5} stroke={colors.accent} strokeWidth={2} />
-                <circle cx={100} cy={15 + pdn.droopPercentage * 0.5} r={3} fill={colors.accent} />
-              </g>
-            )}
-          </g>
-
-          {/* Metrics panel with premium background */}
-          <g transform="translate(30, 280)">
-            <rect x={0} y={0} width={340} height={90} fill="url(#pdnMetricsBg)" rx={8} stroke="#334155" strokeWidth={1} />
-
-            {/* Droop status indicator bar */}
-            <rect x={10} y={10} width={100} height={4} fill="#1e293b" rx={2} />
-            <rect x={10} y={10} width={Math.min(pdn.droopPercentage * 5, 100)} height={4}
-              fill={pdn.droopPercentage > 10 ? colors.error : pdn.droopPercentage > 5 ? colors.warning : colors.success} rx={2} />
-
-            {/* Impedance match indicator */}
-            <rect x={120} y={10} width={100} height={4} fill="#1e293b" rx={2} />
-            <rect x={120} y={10} width={Math.min((pdn.targetImpedance / pdn.pdnImpedance) * 100, 100)} height={4}
-              fill={pdn.pdnImpedance < pdn.targetImpedance ? colors.success : colors.error} rx={2} />
-
-            {/* Status LED */}
-            <circle cx={320} cy={12} r={6} fill={pdn.pdnImpedance < pdn.targetImpedance ? colors.success : colors.error}>
-              <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-          </g>
-        </svg>
-
-        {/* Metrics labels moved outside SVG using typo system */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: typo.elementGap,
-          width: '100%',
-          maxWidth: '500px',
-          padding: `0 ${typo.cardPadding}`,
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: typo.small, color: colors.textMuted }}>Droop</div>
-            <div style={{
-              fontSize: typo.bodyLarge,
-              fontWeight: 700,
-              color: pdn.droopPercentage > 10 ? colors.error : colors.success
-            }}>
-              {pdn.droopPercentage.toFixed(1)}% ({pdn.inductiveDroop.toFixed(0)}mV)
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: typo.small, color: colors.textMuted }}>PDN Z</div>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>
-              {pdn.pdnImpedance.toFixed(2)} mohm
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: typo.small, color: colors.textMuted }}>Target Z</div>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>
-              {pdn.targetImpedance.toFixed(2)} mohm
-            </div>
-          </div>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          width: '100%',
-          maxWidth: '500px',
-          padding: `0 ${typo.cardPadding}`,
-          marginTop: '4px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Inductance:</span>
-            <span style={{ fontSize: typo.body, color: colors.voltage }}>{pdn.totalInductance.toFixed(0)} pH</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: typo.small, color: colors.textMuted }}>VRM Distance:</span>
-            <span style={{ fontSize: typo.body, color: colors.accent }}>{vrDistance}mm</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Status:</span>
-            <span style={{
-              fontSize: typo.body,
-              fontWeight: 700,
-              color: pdn.pdnImpedance < pdn.targetImpedance ? colors.success : colors.error
-            }}>
-              {pdn.pdnImpedance < pdn.targetImpedance ? 'GOOD' : 'NEEDS CAPS'}
-            </span>
-          </div>
-        </div>
-      </div>
+          {/* Status indicator */}
+          <circle
+            cx={width - 90}
+            cy="25"
+            r="8"
+            fill={pdn.pdnImpedance < pdn.targetImpedance * 2 ? colors.success : colors.error}
+          >
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+        </g>
+      </svg>
     );
   };
 
-  const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Current Demand: {currentDemand} A
-        </label>
-        <input
-          type="range"
-          min="10"
-          max="200"
-          step="5"
-          value={currentDemand}
-          onChange={(e) => setCurrentDemand(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
-        />
-      </div>
+  // Parallel Pins Visualization for twist phase
+  const ParallelPinsVisualization = () => {
+    const pins = calculateParallelPins();
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 240 : 280;
 
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Decoupling Capacitance: {decouplingCapacitance} uF
-        </label>
-        <input
-          type="range"
-          min="10"
-          max="500"
-          step="10"
-          value={decouplingCapacitance}
-          onChange={(e) => setDecouplingCapacitance(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
-        />
-      </div>
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          {numPowerPins} Parallel Power Pins
+        </text>
 
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Path Inductance: {pathInductance} pH
-        </label>
-        <input
-          type="range"
-          min="10"
-          max="500"
-          step="10"
-          value={pathInductance}
-          onChange={(e) => setPathInductance(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
-        />
-      </div>
+        {/* Package outline */}
+        <g transform="translate(30, 50)">
+          <rect x="0" y="0" width={width - 60} height="80" fill={colors.bgSecondary} stroke={colors.ground} strokeWidth="2" rx="8" />
+          <text x={(width - 60) / 2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="12">CPU Package</text>
 
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          VRM Distance: {vrDistance} mm
-        </label>
-        <input
-          type="range"
-          min="5"
-          max="50"
-          step="5"
-          value={vrDistance}
-          onChange={(e) => setVrDistance(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent }}
-        />
-      </div>
+          {/* Power pins */}
+          {Array.from({ length: Math.min(numPowerPins, 20) }).map((_, i) => {
+            const spacing = (width - 100) / Math.min(numPowerPins, 20);
+            const x = 20 + i * spacing;
+            const surgePhase = (animationTime / 360) * 2 * Math.PI;
+            const isActive = Math.sin(surgePhase + i * 0.5) > 0.3;
+            return (
+              <g key={i}>
+                <rect
+                  x={x}
+                  y="40"
+                  width="8"
+                  height="35"
+                  fill={isActive ? colors.power : colors.accent}
+                  rx="2"
+                  opacity={isActive ? 1 : 0.6}
+                />
+              </g>
+            );
+          })}
+          {numPowerPins > 20 && (
+            <text x={(width - 60) / 2} y="70" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+              + {numPowerPins - 20} more pins
+            </text>
+          )}
+        </g>
 
+        {/* Stats display */}
+        <g transform={`translate(30, 150)`}>
+          <rect x="0" y="0" width={(width - 60) / 2 - 10} height="60" fill={colors.bgSecondary} rx="8" />
+          <text x={(width - 60) / 4 - 5} y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Effective Inductance</text>
+          <text x={(width - 60) / 4 - 5} y="42" textAnchor="middle" fill={colors.accent} fontSize="20" fontWeight="700">
+            {pins.effectiveInductance.toFixed(1)} pH
+          </text>
+
+          <rect x={(width - 60) / 2 + 10} y="0" width={(width - 60) / 2 - 10} height="60" fill={colors.bgSecondary} rx="8" />
+          <text x={(width - 60) * 3 / 4 + 5} y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Voltage Droop</text>
+          <text x={(width - 60) * 3 / 4 + 5} y="42" textAnchor="middle" fill={pins.droopPercent > 5 ? colors.error : colors.success} fontSize="20" fontWeight="700">
+            {pins.droopPercent.toFixed(1)}%
+          </text>
+        </g>
+
+        {/* Formula */}
+        <text x={width/2} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          L_effective = L_pin / N = {pinInductance}pH / {numPowerPins} = {pins.effectiveInductance.toFixed(1)}pH
+        </text>
+      </svg>
+    );
+  };
+
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
       <div style={{
-        background: 'rgba(245, 158, 11, 0.2)',
-        padding: '12px',
-        borderRadius: '8px',
-        borderLeft: `3px solid ${colors.accent}`,
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
       }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          V_droop = L x di/dt | Target Z = 5% x Vdd / I_max
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          ⚡🔌
         </div>
-        <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
-          Lower impedance = better transient response
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Power Delivery Network
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "A modern CPU demands <span style={{ color: colors.power }}>200+ amps</span> at under 1 volt. When it suddenly needs more current, the voltage can crash if power cannot arrive fast enough."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Power delivery is one of the hardest challenges in modern chip design. The network must supply massive current with sub-milliohm impedance across frequencies from DC to GHz."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Power Integrity Engineering
+          </p>
         </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Power Delivery
+        </button>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  // Render content based on phase
-  const renderContent = () => {
-    switch (phase) {
-      case 'hook':
-        return (
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Power Delivery Network (PDN)
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Why do chips have hundreds of power pins?
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'A single wire can deliver unlimited current if made thick enough' },
+      { id: 'b', text: 'The main problem is resistance causing steady voltage drop (I x R)' },
+      { id: 'c', text: 'Inductance causes voltage droops during fast current changes (L x di/dt)', correct: true },
+      { id: 'd', text: 'Capacitance in the power path blocks DC current flow' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
             </p>
-            {renderVisualization()}
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginTop: '16px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                A modern CPU can demand 200+ amps at under 1 volt. When it suddenly needs more current
-                (like when starting a heavy computation), the voltage can crash if power cannot be
-                delivered fast enough.
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                The power delivery network is one of the hardest challenges in chip design!
-              </p>
-            </div>
           </div>
-        );
 
-      case 'predict':
-        return (
-          <div style={{ padding: '20px' }}>
-            {renderVisualization()}
-            <div style={{
-              background: colors.bgCard,
-              margin: '16px 0',
-              padding: '16px',
-              borderRadius: '12px',
-            }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Question:</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-                A CPU suddenly demands 100 amps more current in 1 nanosecond (a "current transient").
-                What is the main challenge in delivering this power?
-              </p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A CPU suddenly demands 100 amps more current in 1 nanosecond. What is the main challenge in delivering this power?
+          </h2>
+
+          {/* Visualization */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '24px',
+          }}>
+            <PDNVisualization />
           </div>
-        );
 
-      case 'play':
-        return (
-          <div style={{ padding: '16px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the PDN</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                Adjust parameters to see how voltage droop changes
-              </p>
-            </div>
-            {renderVisualization()}
-            {renderControls()}
-            <div style={{
-              background: colors.bgCard,
-              padding: '16px',
-              borderRadius: '12px',
-            }}>
-              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-                <li>Increase current demand - watch voltage droop grow</li>
-                <li>Add more decoupling capacitance - see droop decrease</li>
-                <li>Move VRM closer - notice reduced inductance helps</li>
-                <li>Try to get droop below 5% at 100A</li>
-              </ul>
-            </div>
-          </div>
-        );
-
-      case 'review':
-        const wasCorrect = prediction === 'inductance';
-        return (
-          <div style={{ padding: '20px' }}>
-            <div style={{
-              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              padding: '20px',
-              borderRadius: '12px',
-              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-                {wasCorrect ? 'Correct!' : 'Not Quite!'}
-              </h3>
-              <p style={{ color: colors.textPrimary }}>
-                Inductance is the enemy of fast current delivery! V = L x di/dt means that
-                even tiny inductance (nanohenries) creates huge voltage drops when current
-                changes in nanoseconds.
-              </p>
-            </div>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-            }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Power Delivery Fundamentals</h3>
-              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Voltage Droop:</strong> V = L x di/dt.
-                  100A in 1ns through 100pH = 10mV drop. At 1V supply, that is 1%!
-                </p>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Decoupling Capacitors:</strong> Store
-                  charge locally to supply current faster than the remote VRM can respond.
-                </p>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Target Impedance:</strong> Z = deltaV / deltaI.
-                  For 5% droop at 100A on 1V: Z = 0.05V / 100A = 0.5 milliohms!
-                </p>
-                <p>
-                  <strong style={{ color: colors.textPrimary }}>Capacitor Hierarchy:</strong> Bulk caps for
-                  low frequency, ceramics for mid, on-die caps for highest frequency transients.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'twist_predict':
-        return (
-          <div style={{ padding: '20px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-              <p style={{ color: colors.textSecondary }}>
-                Why do modern CPUs have hundreds of power and ground pins?
-              </p>
-            </div>
-            {renderVisualization()}
-            <div style={{
-              background: colors.bgCard,
-              margin: '16px 0',
-              padding: '16px',
-              borderRadius: '12px',
-            }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Pin Count Mystery:</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-                An Intel Core processor has over 1,000 pins in its package.
-                About half are power and ground - not for data!
-                Why so many just for power delivery?
-              </p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 'twist_play':
-        return (
-          <div style={{ padding: '16px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Parallel Paths = Lower Inductance</h2>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                Explore how path inductance affects droop
-              </p>
-            </div>
-            {renderVisualization()}
-            {renderControls()}
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '12px',
-              borderLeft: `3px solid ${colors.warning}`,
-            }}>
-              <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Insight:</h4>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                Parallel inductors: L_total = L / N. Ten parallel power pins have 1/10 the inductance
-                of a single pin. This is why CPUs have hundreds of power pins - each one reduces
-                the total path inductance!
-              </p>
-            </div>
-          </div>
-        );
-
-      case 'twist_review':
-        const twistCorrect = twistPrediction === 'distributed';
-        return (
-          <div style={{ padding: '20px' }}>
-            <div style={{
-              background: twistCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              padding: '20px',
-              borderRadius: '12px',
-              borderLeft: `4px solid ${twistCorrect ? colors.success : colors.error}`,
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ color: twistCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-                {twistCorrect ? 'Correct!' : 'Not Quite!'}
-              </h3>
-              <p style={{ color: colors.textPrimary }}>
-                Many parallel pins drastically reduce inductance. 100 pins in parallel have
-                1/100th the inductance of a single pin. This is essential for delivering
-                fast current transients without excessive voltage droop.
-              </p>
-            </div>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-            }}>
-              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Parallel Path Strategy</h3>
-              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Package Design:</strong> Power and ground
-                  pins are spread across the entire package, not clustered in one corner.
-                </p>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: colors.textPrimary }}>PCB Design:</strong> Multiple layers
-                  dedicated to power and ground planes, with many vias connecting them.
-                </p>
-                <p>
-                  <strong style={{ color: colors.textPrimary }}>Integrated VR:</strong> Some designs
-                  integrate voltage regulators into the CPU package itself, minimizing the
-                  distance (and thus inductance) between VRM and chip.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'transfer':
-        return (
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Power delivery challenges are everywhere in high-performance electronics
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
-            {transferApplications.map((app, index) => (
-              <div
-                key={index}
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
                 style={{
-                  background: colors.bgCard,
-                  margin: '0 0 16px 0',
-                  padding: '16px',
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
                   borderRadius: '12px',
-                  border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                  {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE - Interactive PDN Simulator
+  if (phase === 'play') {
+    const pdn = calculatePDN();
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            PDN Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust parameters to see how they affect voltage droop
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <PDNVisualization />
+            </div>
+
+            {/* Current demand slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Current Demand</span>
+                <span style={{ ...typo.small, color: colors.power, fontWeight: 600 }}>{currentDemand} A</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="200"
+                step="10"
+                value={currentDemand}
+                onChange={(e) => setCurrentDemand(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: colors.accent }}
+              />
+            </div>
+
+            {/* Capacitance slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Decoupling Capacitance</span>
+                <span style={{ ...typo.small, color: colors.capacitor, fontWeight: 600 }}>{decouplingCapacitance} uF</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="500"
+                step="20"
+                value={decouplingCapacitance}
+                onChange={(e) => setDecouplingCapacitance(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: colors.accent }}
+              />
+            </div>
+
+            {/* Inductance slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Path Inductance</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pathInductance} pH</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="500"
+                step="20"
+                value={pathInductance}
+                onChange={(e) => setPathInductance(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: colors.accent }}
+              />
+            </div>
+
+            {/* VRM distance slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>VRM Distance</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{vrDistance} mm</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="50"
+                step="5"
+                value={vrDistance}
+                onChange={(e) => setVrDistance(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: colors.accent }}
+              />
+            </div>
+
+            {/* Status feedback */}
+            {pdn.droopPercentage > 5 && (
+              <div style={{
+                background: `${colors.error}22`,
+                border: `1px solid ${colors.error}`,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ ...typo.small, color: colors.error, margin: 0 }}>
+                  Warning: Voltage droop exceeds 5%! Add more capacitance or reduce inductance.
+                </p>
+              </div>
+            )}
+
+            {pdn.droopPercentage <= 5 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ ...typo.small, color: colors.success, margin: 0 }}>
+                  Voltage droop within spec! The PDN can handle this load.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    const wasCorrect = prediction === 'c';
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+          }}>
+            <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+            </h3>
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+              Inductance is the enemy of fast current delivery! V = L x di/dt means even tiny inductance (nanohenries) creates huge voltage drops when current changes in nanoseconds.
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
+              Power Delivery Fundamentals
+            </h3>
+
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Voltage Droop:</strong> V = L x di/dt. For 100A in 1ns through 100pH, the drop is 10mV - that is 1% of a 1V supply!
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Target Impedance:</strong> Z = delta_V / delta_I. For 5% droop at 100A on 1V: Z = 0.05V / 100A = 0.5 milliohms!
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Decoupling Capacitors:</strong> Store local charge to supply current faster than the remote VRM can respond.
+              </p>
+              <p style={{ margin: 0 }}>
+                <strong style={{ color: colors.textPrimary }}>Capacitor Hierarchy:</strong> Bulk caps for low frequency, ceramics for mid, on-die caps for highest frequency transients.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Formula
+            </h4>
+            <p style={{ ...typo.body, color: colors.textSecondary, fontFamily: 'monospace' }}>
+              V_droop = L x (di/dt) | Target Z = (Tolerance x Vdd) / I_max
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover the Solution
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'One large power pin would work if it is big enough to carry all the current' },
+      { id: 'b', text: 'Many pins distributed across the package reduce effective inductance', correct: true },
+      { id: 'c', text: 'Wireless power transfer would solve the inductance problem' },
+      { id: 'd', text: 'Optical power delivery is the solution for high-speed chips' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Parallel Power Pins
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Why do modern CPUs have hundreds of power and ground pins instead of just a few large ones?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              An Intel Core processor has over 1,000 pins. About half are for power and ground - not data!
+            </p>
+            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
+              [VRM]---Pin1---Pin2---Pin3---...---PinN---[CPU Die]
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See Parallel Pin Effect
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const pins = calculateParallelPins();
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Parallel Power Pins
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            See how more pins reduce effective inductance
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <ParallelPinsVisualization />
+            </div>
+
+            {/* Number of pins slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Power Pins</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{numPowerPins}</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="100"
+                value={numPowerPins}
+                onChange={(e) => setNumPowerPins(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: colors.accent }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>1 pin</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>100 pins</span>
+              </div>
+            </div>
+
+            {/* Pin inductance slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Inductance per Pin</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pinInductance} pH</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="500"
+                step="50"
+                value={pinInductance}
+                onChange={(e) => setPinInductance(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: colors.accent }}
+              />
+            </div>
+
+            {/* Comparison display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.error }}>
+                  {pinInductance} pH
                 </div>
-                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                  <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Single Pin Inductance</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>
+                  {pins.effectiveInductance.toFixed(1)} pH
                 </div>
-                {!transferCompleted.has(index) ? (
-                  <button
-                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                    style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                  >
-                    Reveal Answer
-                  </button>
-                ) : (
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Effective with {numPowerPins} Pins</div>
+              </div>
+            </div>
+          </div>
+
+          {numPowerPins > 10 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                {numPowerPins} parallel pins reduce inductance by {((1 - 1/numPowerPins) * 100).toFixed(0)}%!
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Solution
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    const twistCorrect = twistPrediction === 'b';
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: twistCorrect ? `${colors.success}22` : `${colors.error}22`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${twistCorrect ? colors.success : colors.error}`,
+          }}>
+            <h3 style={{ ...typo.h3, color: twistCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+              {twistCorrect ? 'Correct!' : 'Not Quite!'}
+            </h3>
+            <p style={{ ...typo.body, color: colors.textPrimary, margin: 0 }}>
+              Many parallel pins drastically reduce inductance. 100 pins in parallel have 1/100th the inductance of a single pin - essential for delivering fast current transients without excessive droop!
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>L/N</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Parallel Inductance Rule</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Parallel inductors combine as L_total = L/N. This is why CPUs have hundreds of power pins spread across the entire package - each additional pin reduces the total path inductance.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>PCB</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Power Plane Design</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Multiple PCB layers dedicated to power and ground planes provide low-inductance current return paths. High-performance boards use 12+ layers with thick copper pours.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>IVR</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Integrated Voltage Regulators</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Some designs integrate voltage regulators into the CPU package itself, minimizing the distance (and thus inductance) between VRM and chip. This is the ultimate solution for lowest PDN impedance.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    check
                   </div>
                 )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                PDN Connection:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              {passed ? 'trophy' : 'book'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand Power Delivery Networks!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          trophy
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          PDN Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand power delivery networks - one of the hardest challenges in modern chip design.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Concepts Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Voltage droop = L x di/dt during transients',
+              'Decoupling capacitors supply local charge',
+              'Many parallel power pins reduce inductance',
+              'Target impedance = delta_V / delta_I',
+              'Capacitor hierarchy covers all frequencies',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>check</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
           </div>
-        );
+        </div>
 
-      case 'test':
-        if (testSubmitted) {
-          return (
-            <div style={{ padding: '20px' }}>
-              <div style={{
-                background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                marginBottom: '16px'
-              }}>
-                <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, marginBottom: '8px' }}>
-                  {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
-                </h2>
-                <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-                <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                  {testScore >= 7 ? 'You understand Power Delivery Networks!' : 'Review the material and try again.'}
-                </p>
-              </div>
-              {testQuestions.map((q, qIndex) => {
-                const userAnswer = testAnswers[qIndex];
-                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-                return (
-                  <div key={qIndex} style={{ background: colors.bgCard, marginBottom: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                    {q.options.map((opt, oIndex) => (
-                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        }
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
 
-        const currentQ = testQuestions[currentTestQuestion];
-        return (
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
-              <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
-              {currentTestQuestion < testQuestions.length - 1 ? (
-                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
-              ) : (
-                <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
-              )}
-            </div>
-          </div>
-        );
-
-      case 'mastery':
-        return (
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand Power Delivery Networks!</p>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', textAlign: 'left', marginBottom: '16px' }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-              <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-                <li>Voltage droop = L x di/dt during current transients</li>
-                <li>Decoupling capacitors supply local charge</li>
-                <li>Many parallel power pins reduce inductance</li>
-                <li>Target impedance = deltaV_allowed / I_max</li>
-                <li>Capacitor hierarchy covers different frequencies</li>
-              </ul>
-            </div>
-            <div style={{ background: 'rgba(245, 158, 11, 0.2)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-                As CPUs push beyond 300W TDP and voltages drop below 1V, power delivery becomes
-                the limiting factor in performance. Advanced packaging with integrated voltage
-                regulators, 3D stacking with through-silicon vias, and even on-chip inductors
-                are being explored to push the boundaries of power delivery!
-              </p>
-            </div>
-            {renderVisualization()}
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  // Determine navigation state for bottom bar
-  const getNavigationState = () => {
-    switch (phase) {
-      case 'hook':
-        return { canGoNext: true, nextLabel: 'Make a Prediction' };
-      case 'predict':
-        return { canGoNext: !!prediction, nextLabel: 'Test My Prediction' };
-      case 'play':
-        return { canGoNext: true, nextLabel: 'Continue to Review' };
-      case 'review':
-        return { canGoNext: true, nextLabel: 'Next: A Twist!' };
-      case 'twist_predict':
-        return { canGoNext: !!twistPrediction, nextLabel: 'Test My Prediction' };
-      case 'twist_play':
-        return { canGoNext: true, nextLabel: 'See the Explanation' };
-      case 'twist_review':
-        return { canGoNext: true, nextLabel: 'Apply This Knowledge' };
-      case 'transfer':
-        return { canGoNext: transferCompleted.size >= 4, nextLabel: transferCompleted.size >= 4 ? 'Take the Test' : `Explore ${4 - transferCompleted.size} more` };
-      case 'test':
-        if (testSubmitted) {
-          return { canGoNext: testScore >= 7, nextLabel: testScore >= 7 ? 'Complete Mastery' : 'Review & Retry' };
-        }
-        return { canGoNext: false, nextLabel: 'Answer All Questions' };
-      case 'mastery':
-        return { canGoNext: true, nextLabel: 'Complete Game' };
-      default:
-        return { canGoNext: true, nextLabel: 'Continue' };
-    }
-  };
-
-  const navState = getNavigationState();
-
-  return (
-    <div style={{
-      height: '100dvh',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-      background: colors.bgPrimary,
-      color: colors.textPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-        {renderContent()}
+        {renderNavDots()}
       </div>
-      {renderBottomBar(navState.canGoNext, navState.nextLabel)}
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
 export default PowerDeliveryNetworkRenderer;

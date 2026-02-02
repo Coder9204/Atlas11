@@ -1,96 +1,291 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+'use client';
 
-interface TestFirstPromptingRendererProps {
-  gamePhase?: string;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// -----------------------------------------------------------------------------
+// Test-First Prompting - Complete 10-Phase Game
+// Writing tests before code makes LLM output converge faster to correct behavior
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+interface TestFirstPromptingRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
 
-const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#f59e0b',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  testPass: '#10b981',
-  testFail: '#ef4444',
-  testPending: '#6b7280',
-  code: '#3b82f6',
-  coverage: '#8b5cf6',
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
-  gamePhase,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
-  // Phase management
-  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Prediction',
-    play: 'Experiment',
-    review: 'Review',
-    twist_predict: 'Twist Prediction',
-    twist_play: 'Twist Experiment',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
-    mastery: 'Mastery',
-  };
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A developer prompts an LLM to write a function that calculates compound interest. Without any tests, the LLM produces code that looks reasonable but has a subtle bug in the exponentiation logic.",
+    question: "How would test-first prompting have prevented this issue?",
+    options: [
+      { id: 'a', label: "Tests would document the requirements better" },
+      { id: 'b', label: "Writing tests first creates concrete pass/fail criteria that immediately expose incorrect implementations", correct: true },
+      { id: 'c', label: "The LLM would write better code if asked nicely" },
+      { id: 'd', label: "Tests are unnecessary for simple mathematical functions" }
+    ],
+    explanation: "Test-first prompting creates an objective target: the tests must pass. When the LLM writes code, any bug immediately causes a test failure, making the error visible instantly rather than hiding in production."
+  },
+  {
+    scenario: "A team uses an LLM to generate a REST API endpoint. In code-first mode, the LLM invents its own response format. When integration begins, nothing works with the frontend.",
+    question: "What test-first strategy would have prevented this integration failure?",
+    options: [
+      { id: 'a', label: "Writing unit tests for individual functions" },
+      { id: 'b', label: "Writing contract tests that specify exact request/response shapes before implementation", correct: true },
+      { id: 'c', label: "Asking the LLM to be more careful about formats" },
+      { id: 'd', label: "Using TypeScript types instead of tests" }
+    ],
+    explanation: "Contract tests define the API specification as executable code. The LLM must produce an implementation that satisfies these contracts, ensuring compatibility with existing systems."
+  },
+  {
+    scenario: "An engineer prompts an LLM to refactor a complex data transformation pipeline. After refactoring, the code looks cleaner but silently drops edge cases that the original handled.",
+    question: "How do tests protect against refactoring regressions?",
+    options: [
+      { id: 'a', label: "Tests make refactoring impossible" },
+      { id: 'b', label: "Tests written before refactoring capture existing behavior, failing if the refactored code changes outcomes", correct: true },
+      { id: 'c', label: "Tests only check new features, not existing behavior" },
+      { id: 'd', label: "The LLM should remember all edge cases automatically" }
+    ],
+    explanation: "A comprehensive test suite written before refactoring acts as a safety net. Any change in behavior, including dropped edge cases, causes test failures that prevent regression."
+  },
+  {
+    scenario: "A data scientist asks an LLM to implement a sorting algorithm. The LLM produces code that works for small arrays but fails catastrophically on arrays with duplicate values.",
+    question: "What testing approach would have caught this edge case?",
+    options: [
+      { id: 'a', label: "Only testing with small arrays" },
+      { id: 'b', label: "Property-based testing that generates many random inputs including duplicates", correct: true },
+      { id: 'c', label: "Manual code review" },
+      { id: 'd', label: "Running the code once to see if it works" }
+    ],
+    explanation: "Property-based tests automatically generate many test cases including edge cases like duplicate values, empty arrays, and boundary conditions that developers might not think to test explicitly."
+  },
+  {
+    scenario: "Two developers prompt the same LLM with identical requirements for a user authentication function. They get different implementations with different security vulnerabilities.",
+    question: "How does test-first prompting reduce implementation variance?",
+    options: [
+      { id: 'a', label: "It forces the LLM to copy code from tests" },
+      { id: 'b', label: "Tests create a fixed specification that any correct implementation must satisfy", correct: true },
+      { id: 'c', label: "Tests eliminate all randomness in LLM outputs" },
+      { id: 'd', label: "The LLM produces identical code when given tests" }
+    ],
+    explanation: "While implementations may still vary, all correct implementations must pass the same tests. Security tests specifically check for vulnerabilities, ensuring any implementation meets security requirements."
+  },
+  {
+    scenario: "A developer iterates 5 times with an LLM to fix a bug in code-first mode. Each fix introduces a new bug. With test-first, they converge on a correct solution in 2 iterations.",
+    question: "Why does test-first converge faster?",
+    options: [
+      { id: 'a', label: "Tests make the LLM smarter" },
+      { id: 'b', label: "Tests provide immediate, unambiguous feedback on what is broken after each change", correct: true },
+      { id: 'c', label: "The developer gets lucky with test-first" },
+      { id: 'd', label: "Code-first always takes more iterations" }
+    ],
+    explanation: "With test-first, each iteration produces clear pass/fail results. The developer knows exactly which tests fail and why, enabling targeted fixes instead of blind trial and error."
+  },
+  {
+    scenario: "An LLM is asked to generate a configuration parser. In code-first mode, it assumes a specific format. With test-first, test cases define various valid and invalid inputs.",
+    question: "What advantage do test cases provide for input handling?",
+    options: [
+      { id: 'a', label: "They limit what inputs the parser can handle" },
+      { id: 'b', label: "They explicitly define the contract for valid/invalid inputs the implementation must support", correct: true },
+      { id: 'c', label: "They replace documentation" },
+      { id: 'd', label: "They make the parser run faster" }
+    ],
+    explanation: "Test cases serve as executable documentation of the input contract. The parser must handle all test inputs correctly, preventing the LLM from making arbitrary assumptions about input format."
+  },
+  {
+    scenario: "A machine learning engineer uses an LLM to write a feature preprocessing pipeline. The code works in development but produces NaN values in production due to division by zero.",
+    question: "What type of test would have caught this before deployment?",
+    options: [
+      { id: 'a', label: "Unit tests with only valid data" },
+      { id: 'b', label: "Edge case tests with zero values, nulls, and boundary conditions", correct: true },
+      { id: 'c', label: "Performance benchmarks" },
+      { id: 'd', label: "Type checking alone" }
+    ],
+    explanation: "Edge case tests deliberately include problematic inputs like zeros, nulls, infinities, and boundaries. These tests expose division-by-zero and similar bugs before they reach production."
+  },
+  {
+    scenario: "A developer uses test-first prompting but writes only happy-path tests. The LLM produces code that passes all tests but crashes on error conditions.",
+    question: "What testing principle was violated?",
+    options: [
+      { id: 'a', label: "Tests should only cover normal operation" },
+      { id: 'b', label: "Tests must include error cases, boundaries, and exceptional conditions to be comprehensive", correct: true },
+      { id: 'c', label: "More tests always means better code" },
+      { id: 'd', label: "Happy-path tests are sufficient for most applications" }
+    ],
+    explanation: "Comprehensive testing requires testing failure modes, not just success cases. Error handling tests verify the code behaves correctly when things go wrong, which is often where bugs hide."
+  },
+  {
+    scenario: "A team implements continuous integration that runs tests on every LLM-generated code change. Code that fails tests is automatically rejected before merge.",
+    question: "How does this CI setup improve code quality from LLM assistance?",
+    options: [
+      { id: 'a', label: "It replaces the need for code review" },
+      { id: 'b', label: "It creates an automated quality gate that prevents buggy LLM output from entering the codebase", correct: true },
+      { id: 'c', label: "It makes the LLM produce better code directly" },
+      { id: 'd', label: "It eliminates all bugs automatically" }
+    ],
+    explanation: "CI with tests acts as an automated gatekeeper. LLM-generated code that doesn't meet quality standards (defined by tests) is rejected, ensuring only correct implementations are merged."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
+const realWorldApps = [
+  {
+    icon: '🔧',
+    title: 'API Development',
+    short: 'Contract-first API design with executable specifications',
+    tagline: 'Tests define the API contract before any code exists',
+    description: 'When building APIs with LLM assistance, writing contract tests first ensures the generated endpoints match expected request/response formats exactly, preventing integration failures.',
+    connection: 'Test-first prompting treats tests as the API specification. The LLM must generate code that satisfies these contracts, eliminating format mismatches and missing endpoints.',
+    howItWorks: 'Write tests that call each endpoint with sample requests and verify responses. Include tests for error cases, authentication, and edge conditions. Then prompt the LLM to implement endpoints that pass all tests.',
+    stats: [
+      { value: '80%', label: 'Less integration bugs', icon: '🐛' },
+      { value: '3x', label: 'Faster debugging', icon: '⚡' },
+      { value: '100%', label: 'Contract coverage', icon: '📋' }
+    ],
+    examples: ['REST API endpoints', 'GraphQL resolvers', 'gRPC services', 'WebSocket handlers'],
+    companies: ['Stripe', 'Twilio', 'GitHub', 'Postman'],
+    futureImpact: 'OpenAPI specs combined with test generation create a feedback loop where APIs are provably correct before deployment.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔄',
+    title: 'Data Transformations',
+    short: 'ETL and data pipelines with verified correctness',
+    tagline: 'Input/output pairs make transformation logic testable',
+    description: 'Data transformation code is ideal for test-first because transformations have clear input/output relationships. Test cases with sample data create unambiguous success criteria.',
+    connection: 'Writing test cases with sample input data and expected outputs before prompting the LLM eliminates hallucinated transformation logic that produces wrong results.',
+    howItWorks: 'Create test fixtures with representative input data and manually verified expected outputs. Write tests that feed inputs through the transformation and compare results. The LLM must match these exact outputs.',
+    stats: [
+      { value: '99.9%', label: 'Data accuracy', icon: '🎯' },
+      { value: '50%', label: 'Less debugging time', icon: '⏱️' },
+      { value: '0', label: 'Silent failures', icon: '🔇' }
+    ],
+    examples: ['ETL pipelines', 'Data normalization', 'Format conversion', 'Schema migration'],
+    companies: ['Databricks', 'Snowflake', 'dbt Labs', 'Fivetran'],
+    futureImpact: 'Property-based testing will automatically generate edge case data, catching transformation bugs before they corrupt production databases.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔒',
+    title: 'Security Functions',
+    short: 'Security-critical code with vulnerability tests',
+    tagline: 'Security tests prevent LLM-generated vulnerabilities',
+    description: 'LLMs can generate code with subtle security flaws. Writing security tests first - including tests for common vulnerabilities - ensures generated code is secure by design.',
+    connection: 'Security tests are non-negotiable requirements. Test-first prompting forces the LLM to generate implementations that pass injection tests, authentication checks, and authorization rules.',
+    howItWorks: 'Write tests that attempt SQL injection, XSS, authentication bypass, and other attacks. Include tests for proper input sanitization and output encoding. The LLM-generated code must resist all attacks.',
+    stats: [
+      { value: '95%', label: 'Vuln detection', icon: '🛡️' },
+      { value: '10x', label: 'Faster security review', icon: '🔍' },
+      { value: '24/7', label: 'Automated scanning', icon: '🤖' }
+    ],
+    examples: ['Authentication flows', 'Input validation', 'Access control', 'Cryptographic operations'],
+    companies: ['Snyk', 'Veracode', 'SonarQube', 'Checkmarx'],
+    futureImpact: 'AI-powered fuzzing combined with test-first prompting will automatically discover and prevent entire classes of vulnerabilities.',
+    color: '#EF4444'
+  },
+  {
+    icon: '📊',
+    title: 'Business Logic',
+    short: 'Complex rules encoded as executable tests',
+    tagline: 'Business requirements become runnable specifications',
+    description: 'Business logic often involves complex rules that are easy to get wrong. Writing test cases from business requirements creates a specification that LLM-generated code must satisfy.',
+    connection: 'Test-first turns ambiguous business requirements into precise, testable specifications. The LLM cannot misinterpret requirements when tests explicitly define correct behavior.',
+    howItWorks: 'Translate each business rule into one or more test cases. Include edge cases where rules interact. Create tests for all documented scenarios. The LLM generates implementation that satisfies all business rules.',
+    stats: [
+      { value: '100%', label: 'Rule coverage', icon: '📋' },
+      { value: '5x', label: 'Fewer requirement bugs', icon: '📉' },
+      { value: '2 hrs', label: 'Avg review time', icon: '⏰' }
+    ],
+    examples: ['Pricing calculations', 'Discount rules', 'Eligibility checks', 'Workflow automation'],
+    companies: ['Salesforce', 'SAP', 'Oracle', 'Microsoft'],
+    futureImpact: 'Natural language test generation will let business analysts write requirements that automatically become executable tests.',
+    color: '#F59E0B'
+  }
+];
+
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
   const getInitialPhase = (): Phase => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
       return gamePhase as Phase;
     }
     return 'hook';
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
-      setPhase(gamePhase as Phase);
-    }
-  }, [gamePhase]);
-
-  const isNavigating = useRef(false);
-  const lastClickRef = useRef(0);
-
-  const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (isNavigating.current) return;
-    lastClickRef.current = now;
-    isNavigating.current = true;
-    setPhase(p);
-    setTimeout(() => { isNavigating.current = false; }, 400);
-  }, []);
-
-  const goNext = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[currentIndex + 1]);
-    }
-  }, [phase, goToPhase]);
-
-  const goBack = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phaseOrder[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
-
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Responsive detection
+  // Simulation state
+  const [testMode, setTestMode] = useState<'test_first' | 'code_first'>('test_first');
+  const [iteration, setIteration] = useState(1);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [testResults, setTestResults] = useState<('pass' | 'fail' | 'pending')[]>(Array(8).fill('pending'));
+
+  // Twist phase - property-based testing
+  const [propertyTestEnabled, setPropertyTestEnabled] = useState(false);
+  const [testCoverage, setTestCoverage] = useState(40);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -98,977 +293,925 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#10B981', // Green for testing/success
+    accentGlow: 'rgba(16, 185, 129, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    testPass: '#10B981',
+    testFail: '#EF4444',
+    testPending: '#6B7280',
+    code: '#3B82F6',
+    coverage: '#8B5CF6',
   };
 
-  // Simulation state
-  const [testMode, setTestMode] = useState<'code_first' | 'test_first'>('code_first');
-  const [iteration, setIteration] = useState(1);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [testResults, setTestResults] = useState<('pass' | 'fail' | 'pending')[]>(['pending', 'pending', 'pending', 'pending', 'pending', 'pending', 'pending', 'pending']);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [testScore, setTestScore] = useState(0);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Property Tests',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'test-first-prompting',
+        gameTitle: 'Test-First Prompting',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
   // Calculate metrics based on approach
   const calculateMetrics = useCallback(() => {
     const passCount = testResults.filter(r => r === 'pass').length;
     const failCount = testResults.filter(r => r === 'fail').length;
-    const coverage = passCount * 12.5;
+    const coverage = propertyTestEnabled ? Math.min(95, testCoverage + passCount * 8) : passCount * 12;
 
     // Test-first converges faster
-    const iterationsToPass = testMode === 'test_first' ? Math.max(1, 4 - iteration) : Math.max(1, 7 - iteration);
-    const bugsFound = testMode === 'test_first' ? failCount * 2 : failCount;
-    const regressionRisk = testMode === 'test_first' ? Math.max(5, 30 - passCount * 5) : Math.max(20, 60 - passCount * 5);
+    const iterationsToConverge = testMode === 'test_first' ? Math.max(1, 4 - iteration) : Math.max(2, 8 - iteration);
+    const bugsFound = testMode === 'test_first' ? passCount + failCount : failCount;
+    const regressionRisk = testMode === 'test_first' ? Math.max(5, 35 - coverage * 0.3) : Math.max(25, 70 - coverage * 0.5);
 
     return {
       passCount,
       failCount,
       coverage,
-      iterationsToPass,
+      iterationsToConverge,
       bugsFound,
       regressionRisk,
     };
-  }, [testResults, testMode, iteration]);
+  }, [testResults, testMode, iteration, propertyTestEnabled, testCoverage]);
 
   // Animate test runs
-  useEffect(() => {
-    if (!isAnimating) return;
+  const runIteration = useCallback(() => {
+    if (isAnimating || iteration >= 5) return;
+    setIsAnimating(true);
 
-    const runTests = async () => {
-      const newResults: ('pass' | 'fail' | 'pending')[] = [...testResults];
+    let currentIndex = 0;
+    const newResults: ('pass' | 'fail' | 'pending')[] = [...testResults];
 
-      for (let i = 0; i < 8; i++) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-
-        // Test-first: tests fail initially, then pass as implementation catches up
-        // Code-first: more random, some pass some fail
-        if (testMode === 'test_first') {
-          const passChance = iteration * 15 + i * 5;
-          newResults[i] = Math.random() * 100 < passChance ? 'pass' : 'fail';
-        } else {
-          // Code-first: more chaotic, hallucinated logic
-          const passChance = 30 + iteration * 10;
-          newResults[i] = Math.random() * 100 < passChance ? 'pass' : 'fail';
-        }
-        setTestResults([...newResults]);
+    const animateTest = () => {
+      if (currentIndex >= 8) {
+        setIsAnimating(false);
+        setIteration(prev => Math.min(prev + 1, 5));
+        return;
       }
 
-      setIsAnimating(false);
+      // Test-first: tests fail initially, then pass as implementation catches up
+      // Code-first: more random, some pass some fail
+      if (testMode === 'test_first') {
+        const passChance = iteration * 20 + currentIndex * 8;
+        newResults[currentIndex] = Math.random() * 100 < passChance ? 'pass' : 'fail';
+      } else {
+        // Code-first: more chaotic, hallucinated logic
+        const passChance = 25 + iteration * 8;
+        newResults[currentIndex] = Math.random() * 100 < passChance ? 'pass' : 'fail';
+      }
+
+      setTestResults([...newResults]);
+      currentIndex++;
+      setTimeout(animateTest, 150);
     };
 
-    runTests();
+    animateTest();
   }, [isAnimating, iteration, testMode, testResults]);
 
-  const unitTests = [
-    { name: 'test_add_positive_numbers', desc: 'adds two positive integers correctly' },
-    { name: 'test_add_negative_numbers', desc: 'handles negative numbers' },
-    { name: 'test_add_zero', desc: 'adding zero returns same number' },
-    { name: 'test_add_floats', desc: 'handles floating point precision' },
-    { name: 'test_add_large_numbers', desc: 'handles integer overflow' },
-    { name: 'test_add_type_error', desc: 'raises error for non-numeric input' },
-    { name: 'test_add_empty_input', desc: 'handles empty/null input' },
-    { name: 'test_add_string_numbers', desc: 'handles string number conversion' },
-  ];
-
-  const predictions = [
-    { id: 'same', label: 'Writing tests first or after makes no difference in final code quality' },
-    { id: 'code_first', label: 'Writing code first is faster and tests can verify it after' },
-    { id: 'test_first', label: 'Writing tests first makes failures visible immediately and code converges faster' },
-    { id: 'no_tests', label: 'Tests are not needed if the prompt is detailed enough' },
-  ];
-
-  const twistPredictions = [
-    { id: 'unit_only', label: 'Unit tests alone are sufficient for all edge cases' },
-    { id: 'property_helps', label: 'Property-based tests catch edge cases that unit tests miss' },
-    { id: 'manual_better', label: 'Manual testing is more reliable than automated tests' },
-    { id: 'no_difference', label: 'Property-based tests add complexity without benefit' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'API Contract Testing',
-      description: 'When prompting for API endpoints, test-first ensures the contract is met before implementation details.',
-      question: 'How does test-first help with API development?',
-      answer: 'Writing API tests first defines the contract: expected inputs, outputs, status codes, and error formats. The LLM then implements to satisfy these concrete requirements rather than inventing its own API shape.',
-    },
-    {
-      title: 'Data Transformation Pipelines',
-      description: 'ETL and data processing code benefits from test-first because transformations have clear input/output relationships.',
-      question: 'Why is test-first particularly effective for data pipelines?',
-      answer: 'Data transforms have concrete input/output pairs. Defining test cases with sample data first creates an objective target. The LLM cannot hallucinate logic that produces wrong output when tests immediately catch it.',
-    },
-    {
-      title: 'Refactoring Existing Code',
-      description: 'When asking LLMs to refactor code, tests ensure the refactored version maintains behavior.',
-      question: 'How do tests protect against refactoring regressions?',
-      answer: 'Tests written before refactoring capture the existing behavior. When the LLM refactors, any change in behavior immediately fails a test. This is especially valuable since LLMs may simplify away important edge case handling.',
-    },
-    {
-      title: 'Mathematical Functions',
-      description: 'Numerical algorithms are prone to subtle bugs that tests can catch systematically.',
-      question: 'What testing approach works best for math functions?',
-      answer: 'Combine unit tests with specific values (test_sqrt(4) = 2) with property-based tests (sqrt(x)^2 = x for all positive x). This catches both specific bugs and general logical errors in the implementation.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'Why does test-first prompting help LLM code converge faster?',
-      options: [
-        { text: 'It makes the LLM work harder', correct: false },
-        { text: 'Failures become visible immediately, creating a clear objective target', correct: true },
-        { text: 'Tests are simpler than code', correct: false },
-        { text: 'The LLM prefers writing tests', correct: false },
-      ],
-    },
-    {
-      question: 'In test-first prompting, when should you write the implementation?',
-      options: [
-        { text: 'Before any tests', correct: false },
-        { text: 'After writing tests that define expected behavior', correct: true },
-        { text: 'Tests and implementation should be written together', correct: false },
-        { text: 'Implementation is not needed if tests pass', correct: false },
-      ],
-    },
-    {
-      question: 'What is the main advantage of having tests fail initially?',
-      options: [
-        { text: 'It proves the tests are working correctly', correct: true },
-        { text: 'Failing tests are easier to write', correct: false },
-        { text: 'The LLM learns from failures', correct: false },
-        { text: 'Failures are ignored anyway', correct: false },
-      ],
-    },
-    {
-      question: 'How do tests turn language into an objective target?',
-      options: [
-        { text: 'Tests use special programming languages', correct: false },
-        { text: 'Tests provide concrete pass/fail criteria the implementation must satisfy', correct: true },
-        { text: 'Tests are written in natural language', correct: false },
-        { text: 'Tests remove the need for specifications', correct: false },
-      ],
-    },
-    {
-      question: 'What does the red/green test timeline visualize?',
-      options: [
-        { text: 'Code compilation status', correct: false },
-        { text: 'Test results over iterations: failures (red) converting to passes (green)', correct: true },
-        { text: 'Memory usage over time', correct: false },
-        { text: 'Network traffic patterns', correct: false },
-      ],
-    },
-    {
-      question: 'Property-based tests are valuable because they:',
-      options: [
-        { text: 'Run faster than unit tests', correct: false },
-        { text: 'Generate many test cases from properties, catching edge cases you did not explicitly write', correct: true },
-        { text: 'Require less code to write', correct: false },
-        { text: 'Only test happy paths', correct: false },
-      ],
-    },
-    {
-      question: 'Why might code-first prompting produce more hallucinated logic?',
-      options: [
-        { text: 'The LLM writes more code', correct: false },
-        { text: 'Without tests, there is no immediate feedback on correctness, so errors persist', correct: true },
-        { text: 'Code-first uses different syntax', correct: false },
-        { text: 'Hallucinations are random and unrelated to approach', correct: false },
-      ],
-    },
-    {
-      question: 'What is the relationship between test coverage and regression risk?',
-      options: [
-        { text: 'No relationship exists', correct: false },
-        { text: 'Higher coverage means more code paths are verified, reducing regression risk', correct: true },
-        { text: 'Coverage increases regression risk', correct: false },
-        { text: 'Coverage only matters for production code', correct: false },
-      ],
-    },
-    {
-      question: 'A coverage map shows:',
-      options: [
-        { text: 'Which tests are running', correct: false },
-        { text: 'Which parts of the code are exercised by tests', correct: true },
-        { text: 'How fast tests execute', correct: false },
-        { text: 'Memory allocation patterns', correct: false },
-      ],
-    },
-    {
-      question: 'The test-first approach treats tests as:',
-      options: [
-        { text: 'Optional documentation', correct: false },
-        { text: 'Executable specifications that define correct behavior', correct: true },
-        { text: 'Performance benchmarks', correct: false },
-        { text: 'Security audits', correct: false },
-      ],
-    },
-  ];
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
-  };
-
-  const submitTest = () => {
-    let score = 0;
-    testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
-    if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
-  };
-
-  const runIteration = () => {
-    setIteration(prev => Math.min(prev + 1, 5));
-    setIsAnimating(true);
-  };
-
-  const resetSimulation = () => {
+  const resetSimulation = useCallback(() => {
     setIteration(1);
-    setTestResults(['pending', 'pending', 'pending', 'pending', 'pending', 'pending', 'pending', 'pending']);
-  };
+    setTestResults(Array(8).fill('pending'));
+    setIsAnimating(false);
+  }, []);
 
-  const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 520;
+  // Unit test definitions for visualization
+  const unitTests = [
+    { name: 'test_valid_input', desc: 'handles valid input correctly' },
+    { name: 'test_edge_case_empty', desc: 'handles empty input' },
+    { name: 'test_edge_case_null', desc: 'handles null values' },
+    { name: 'test_boundary_max', desc: 'handles maximum values' },
+    { name: 'test_error_invalid', desc: 'rejects invalid input' },
+    { name: 'test_type_conversion', desc: 'converts types correctly' },
+    { name: 'test_concurrent_access', desc: 'handles concurrent calls' },
+    { name: 'test_performance', desc: 'meets performance requirements' },
+  ];
+
+  // TDD Visualization SVG Component
+  const TDDVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 420 : 480;
     const metrics = calculateMetrics();
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ borderRadius: '12px', maxWidth: '500px' }}
-        >
-          {/* === COMPREHENSIVE DEFS SECTION === */}
-          <defs>
-            {/* Premium dark lab background gradient */}
-            <linearGradient id="tfpLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a0f1a" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a0f1a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="passGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.testPass} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.testPass} stopOpacity="0.4" />
+          </linearGradient>
+          <linearGradient id="failGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.testFail} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.testFail} stopOpacity="0.4" />
+          </linearGradient>
+          <linearGradient id="coverageGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.coverage} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.coverage} stopOpacity="0.4" />
+          </linearGradient>
+          <filter id="glowFilter">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Test panel card gradient with depth */}
-            <linearGradient id="tfpCardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="30%" stopColor="#1a2332" />
-              <stop offset="70%" stopColor="#151d2b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          TDD Workflow - Iteration {iteration}
+        </text>
+        <text x={width/2} y="45" textAnchor="middle" fill={testMode === 'test_first' ? colors.success : colors.warning} fontSize="12" fontWeight="500">
+          {testMode === 'test_first' ? 'Test-First Approach' : 'Code-First Approach'}
+        </text>
 
-            {/* TDD workflow cycle gradient - test first (green to blue) */}
-            <linearGradient id="tfpTestFirstFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#10b981" />
-              <stop offset="25%" stopColor="#14b8a6" />
-              <stop offset="50%" stopColor="#06b6d4" />
-              <stop offset="75%" stopColor="#0ea5e9" />
-              <stop offset="100%" stopColor="#3b82f6" />
-            </linearGradient>
-
-            {/* Code first workflow gradient (amber to red warning) */}
-            <linearGradient id="tfpCodeFirstFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f59e0b" />
-              <stop offset="25%" stopColor="#f97316" />
-              <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="75%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#b91c1c" />
-            </linearGradient>
-
-            {/* Coverage bar gradient (purple spectrum) */}
-            <linearGradient id="tfpCoverageGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="25%" stopColor="#8b5cf6" />
-              <stop offset="50%" stopColor="#a855f7" />
-              <stop offset="75%" stopColor="#c084fc" />
-              <stop offset="100%" stopColor="#d8b4fe" />
-            </linearGradient>
-
-            {/* Pass status radial glow */}
-            <radialGradient id="tfpPassGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
-              <stop offset="40%" stopColor="#10b981" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#059669" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#047857" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Fail status radial glow */}
-            <radialGradient id="tfpFailGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
-              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Pending status radial glow */}
-            <radialGradient id="tfpPendingGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#9ca3af" stopOpacity="1" />
-              <stop offset="40%" stopColor="#6b7280" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#4b5563" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#374151" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Running/animating test glow */}
-            <radialGradient id="tfpRunningGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#d97706" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Iteration progress gradient */}
-            <linearGradient id="tfpIterationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#22d3ee" />
-              <stop offset="30%" stopColor="#14b8a6" />
-              <stop offset="60%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#059669" />
-            </linearGradient>
-
-            {/* Metrics panel brushed metal effect */}
-            <linearGradient id="tfpBrushedMetal" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="20%" stopColor="#4b5563" />
-              <stop offset="40%" stopColor="#374151" />
-              <stop offset="60%" stopColor="#4b5563" />
-              <stop offset="80%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#4b5563" />
-            </linearGradient>
-
-            {/* Header title gradient */}
-            <linearGradient id="tfpTitleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#f8fafc" />
-              <stop offset="50%" stopColor="#e2e8f0" />
-              <stop offset="100%" stopColor="#cbd5e1" />
-            </linearGradient>
-
-            {/* Pass status glow filter */}
-            <filter id="tfpPassGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Fail status glow filter */}
-            <filter id="tfpFailGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Soft inner glow for panels */}
-            <filter id="tfpPanelGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            {/* Running test pulse filter */}
-            <filter id="tfpPulseFilter" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Subtle grid pattern for lab background */}
-            <pattern id="tfpLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-            </pattern>
-
-            {/* Test case row highlight gradient */}
-            <linearGradient id="tfpRowHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="transparent" />
-              <stop offset="10%" stopColor="#1e293b" stopOpacity="0.5" />
-              <stop offset="90%" stopColor="#1e293b" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="transparent" />
-            </linearGradient>
-          </defs>
-
-          {/* Premium dark lab background */}
-          <rect width={width} height={height} fill="url(#tfpLabBg)" />
-          <rect width={width} height={height} fill="url(#tfpLabGrid)" />
-
-          {/* Title Section with gradient text effect */}
-          <rect x={10} y={10} width={width - 20} height={50} rx={8} fill="url(#tfpCardGradient)" opacity="0.8" />
-          <text x={width/2} y={32} fill="url(#tfpTitleGradient)" fontSize={15} textAnchor="middle" fontWeight="bold">
-            TDD Workflow - Iteration {iteration}
-          </text>
-          <text x={width/2} y={50} fill={testMode === 'test_first' ? '#10b981' : '#f59e0b'} fontSize={12} textAnchor="middle" fontWeight="600">
-            {testMode === 'test_first' ? 'Test-First Approach' : 'Code-First Approach'}
-          </text>
-          {/* Approach indicator bar */}
-          <rect x={120} y={54} width={width - 240} height={3} rx={1.5} fill={testMode === 'test_first' ? 'url(#tfpTestFirstFlow)' : 'url(#tfpCodeFirstFlow)'} />
-
-          {/* Test Results Panel */}
-          <rect x={15} y={70} width={width - 30} height={210} rx={10} fill="url(#tfpCardGradient)" filter="url(#tfpPanelGlow)" />
-          <rect x={15} y={70} width={width - 30} height={3} rx={1.5} fill="url(#tfpBrushedMetal)" opacity="0.5" />
-          <text x={25} y={92} fill={colors.textSecondary} fontSize={11} fontWeight="bold" letterSpacing="0.5">UNIT TESTS</text>
+        {/* Test Results Panel */}
+        <g transform="translate(15, 60)">
+          <rect width={width - 30} height={200} rx="8" fill={colors.bgSecondary} />
+          <text x="10" y="20" fill={colors.textSecondary} fontSize="10" fontWeight="600">UNIT TESTS</text>
 
           {unitTests.map((test, i) => {
-            const y = 110 + i * 21;
+            const y = 35 + i * 20;
             const result = testResults[i];
             const isRunning = isAnimating && result === 'pending';
             return (
               <g key={i}>
-                {/* Row highlight on hover area */}
-                <rect x={20} y={y - 10} width={width - 40} height={20} rx={4} fill="url(#tfpRowHighlight)" opacity="0.3" />
-
-                {/* Status indicator with premium glow */}
+                {/* Status indicator */}
                 <circle
-                  cx={35}
+                  cx="20"
                   cy={y}
-                  r={8}
+                  r="6"
                   fill={
-                    result === 'pass' ? 'url(#tfpPassGlow)' :
-                    result === 'fail' ? 'url(#tfpFailGlow)' :
-                    isRunning ? 'url(#tfpRunningGlow)' :
-                    'url(#tfpPendingGlow)'
+                    result === 'pass' ? colors.testPass :
+                    result === 'fail' ? colors.testFail :
+                    colors.testPending
                   }
-                  filter={
-                    result === 'pass' ? 'url(#tfpPassGlowFilter)' :
-                    result === 'fail' ? 'url(#tfpFailGlowFilter)' :
-                    isRunning ? 'url(#tfpPulseFilter)' :
-                    undefined
-                  }
+                  filter={result !== 'pending' ? 'url(#glowFilter)' : undefined}
+                  style={{ opacity: isRunning ? 0.5 : 1 }}
                 />
-                {/* Inner circle for depth */}
-                <circle
-                  cx={35}
-                  cy={y}
-                  r={4}
-                  fill={
-                    result === 'pass' ? '#10b981' :
-                    result === 'fail' ? '#ef4444' :
-                    isRunning ? '#f59e0b' :
-                    '#6b7280'
-                  }
-                />
-                {/* Check/X icon */}
                 {result === 'pass' && (
-                  <path d="M32 0 L34 2 L38 -2" transform={`translate(0, ${y})`} stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                  <path d="M17 0 L19 2 L23 -2" transform={`translate(0, ${y})`} stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
                 )}
                 {result === 'fail' && (
-                  <g transform={`translate(35, ${y})`}>
-                    <line x1="-2" y1="-2" x2="2" y2="2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-                    <line x1="2" y1="-2" x2="-2" y2="2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+                  <g transform={`translate(20, ${y})`}>
+                    <line x1="-2.5" y1="-2.5" x2="2.5" y2="2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="2.5" y1="-2.5" x2="-2.5" y2="2.5" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
                   </g>
                 )}
 
-                <text x={52} y={y + 4} fill={colors.textPrimary} fontSize={10} fontFamily="monospace">
+                <text x="35" y={y + 4} fill={colors.textPrimary} fontSize="10" fontFamily="monospace">
                   {test.name}
                 </text>
-                <rect x={width - 75} y={y - 8} width={55} height={16} rx={4}
+                <rect x={width - 85} y={y - 8} width="50" height="16" rx="3"
                   fill={result === 'pass' ? 'rgba(16, 185, 129, 0.2)' : result === 'fail' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(107, 114, 128, 0.2)'}
                 />
-                <text x={width - 48} y={y + 4} fill={result === 'pass' ? '#10b981' : result === 'fail' ? '#ef4444' : colors.textMuted} fontSize={9} textAnchor="middle" fontWeight="600">
+                <text x={width - 60} y={y + 4} fill={result === 'pass' ? colors.testPass : result === 'fail' ? colors.testFail : colors.textMuted} fontSize="9" textAnchor="middle" fontWeight="600">
                   {result.toUpperCase()}
                 </text>
               </g>
             );
           })}
+        </g>
 
-          {/* Coverage Section */}
-          <rect x={15} y={290} width={width - 30} height={45} rx={8} fill="url(#tfpCardGradient)" />
-          <text x={25} y={310} fill={colors.textSecondary} fontSize={11} fontWeight="bold" letterSpacing="0.5">COVERAGE</text>
-          <rect x={25} y={318} width={width - 100} height={12} rx={6} fill="#1f2937" />
-          <rect x={25} y={318} width={(width - 100) * (metrics.coverage / 100)} height={12} rx={6} fill="url(#tfpCoverageGradient)" />
-          <text x={width - 40} y={328} fill={colors.textPrimary} fontSize={13} textAnchor="middle" fontWeight="bold">{metrics.coverage.toFixed(0)}%</text>
+        {/* Coverage Bar */}
+        <g transform={`translate(15, 270)`}>
+          <rect width={width - 30} height="40" rx="8" fill={colors.bgSecondary} />
+          <text x="10" y="15" fill={colors.textSecondary} fontSize="10" fontWeight="600">TEST COVERAGE</text>
+          <rect x="10" y="22" width={width - 80} height="10" rx="5" fill={colors.border} />
+          <rect x="10" y="22" width={(width - 80) * (metrics.coverage / 100)} height="10" rx="5" fill="url(#coverageGrad)" />
+          <text x={width - 50} y="30" fill={colors.coverage} fontSize="12" textAnchor="middle" fontWeight="700">
+            {metrics.coverage}%
+          </text>
+        </g>
 
-          {/* Convergence Timeline */}
-          <rect x={15} y={345} width={width - 30} height={55} rx={8} fill="url(#tfpCardGradient)" />
-          <text x={25} y={362} fill={colors.textSecondary} fontSize={10} fontWeight="bold" letterSpacing="0.5">CONVERGENCE TIMELINE</text>
+        {/* Convergence Timeline */}
+        <g transform={`translate(15, 320)`}>
+          <rect width={width - 30} height="50" rx="8" fill={colors.bgSecondary} />
+          <text x="10" y="15" fill={colors.textSecondary} fontSize="10" fontWeight="600">CONVERGENCE</text>
 
           {[1, 2, 3, 4, 5].map((iter, i) => {
-            const x = 35 + i * 72;
+            const x = 20 + i * ((width - 70) / 5);
             const isComplete = iter <= iteration;
-            const passRatio = testMode === 'test_first' ? Math.min(1, iter * 0.25) : Math.min(1, iter * 0.15);
+            const passRatio = testMode === 'test_first' ? Math.min(1, iter * 0.25) : Math.min(1, iter * 0.12);
             return (
               <g key={i}>
                 <rect
                   x={x}
-                  y={372}
-                  width={60}
-                  height={22}
-                  rx={6}
-                  fill={isComplete ? (passRatio > 0.7 ? 'url(#tfpTestFirstFlow)' : 'url(#tfpCodeFirstFlow)') : '#1f2937'}
-                  opacity={isComplete ? 1 : 0.4}
-                  filter={isComplete && passRatio > 0.7 ? 'url(#tfpPassGlowFilter)' : undefined}
+                  y="25"
+                  width={(width - 70) / 5 - 10}
+                  height="18"
+                  rx="4"
+                  fill={isComplete ? (passRatio > 0.5 ? colors.success : colors.warning) : colors.border}
+                  opacity={isComplete ? 1 : 0.3}
                 />
-                <text x={x + 30} y={387} fill={isComplete ? '#fff' : colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="bold">
+                <text x={x + ((width - 70) / 5 - 10) / 2} y="38" fill="#fff" fontSize="10" textAnchor="middle" fontWeight="600">
                   {isComplete ? `${(passRatio * 100).toFixed(0)}%` : '-'}
                 </text>
               </g>
             );
           })}
+        </g>
 
-          {/* Metrics Panel */}
-          <rect x={15} y={410} width={width - 30} height={100} rx={10} fill="url(#tfpCardGradient)" filter="url(#tfpPanelGlow)" />
-          <rect x={15} y={410} width={width - 30} height={3} rx={1.5} fill="url(#tfpBrushedMetal)" opacity="0.5" />
-          <text x={25} y={430} fill={colors.textSecondary} fontSize={10} fontWeight="bold" letterSpacing="0.5">METRICS</text>
+        {/* Metrics Panel */}
+        <g transform={`translate(15, 380)`}>
+          <rect width={width - 30} height="85" rx="8" fill={colors.bgSecondary} />
+          <text x="10" y="18" fill={colors.textSecondary} fontSize="10" fontWeight="600">METRICS</text>
 
           {/* Pass/Fail counts */}
-          <circle cx={35} cy={448} r={6} fill="url(#tfpPassGlow)" />
-          <text x={48} y={452} fill={colors.testPass} fontSize={11} fontWeight="600">{metrics.passCount} passed</text>
-          <circle cx={130} cy={448} r={6} fill="url(#tfpFailGlow)" />
-          <text x={143} y={452} fill={colors.testFail} fontSize={11} fontWeight="600">{metrics.failCount} failed</text>
+          <circle cx="25" cy="40" r="8" fill={colors.testPass} filter="url(#glowFilter)" />
+          <text x="40" y="44" fill={colors.testPass} fontSize="11" fontWeight="600">{metrics.passCount} passed</text>
+
+          <circle cx="120" cy="40" r="8" fill={colors.testFail} filter="url(#glowFilter)" />
+          <text x="135" y="44" fill={colors.testFail} fontSize="11" fontWeight="600">{metrics.failCount} failed</text>
 
           {/* Est. iterations */}
-          <text x={25} y={472} fill={colors.textSecondary} fontSize={10}>Est. iterations to 100%:</text>
-          <rect x={150} y={462} width={30} height={16} rx={4} fill={metrics.iterationsToPass <= 2 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'} />
-          <text x={165} y={474} fill={metrics.iterationsToPass <= 2 ? colors.success : colors.warning} fontSize={12} textAnchor="middle" fontWeight="bold">{metrics.iterationsToPass}</text>
+          <text x="10" y="62" fill={colors.textSecondary} fontSize="10">Est. iterations to 100%:</text>
+          <rect x="145" y="52" width="25" height="16" rx="3" fill={metrics.iterationsToConverge <= 2 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'} />
+          <text x="157" y="64" fill={metrics.iterationsToConverge <= 2 ? colors.success : colors.warning} fontSize="11" textAnchor="middle" fontWeight="700">{metrics.iterationsToConverge}</text>
 
-          {/* Regression Risk bar */}
-          <text x={25} y={495} fill={colors.textSecondary} fontSize={10}>Regression Risk:</text>
-          <rect x={115} y={485} width={120} height={14} rx={4} fill="#1f2937" />
-          <rect x={115} y={485} width={metrics.regressionRisk * 1.2} height={14} rx={4} fill={metrics.regressionRisk < 30 ? 'url(#tfpTestFirstFlow)' : 'url(#tfpCodeFirstFlow)'} />
-          <text x={245} y={496} fill={colors.textPrimary} fontSize={11} fontWeight="600">{metrics.regressionRisk}%</text>
+          {/* Regression Risk */}
+          <text x="10" y="78" fill={colors.textSecondary} fontSize="10">Regression Risk:</text>
+          <rect x="100" y="68" width="80" height="12" rx="3" fill={colors.border} />
+          <rect x="100" y="68" width={metrics.regressionRisk * 0.8} height="12" rx="3" fill={metrics.regressionRisk < 30 ? colors.success : colors.error} />
+          <text x="190" y="78" fill={colors.textPrimary} fontSize="10" fontWeight="600">{metrics.regressionRisk.toFixed(0)}%</text>
 
           {/* Bugs Found */}
-          <text x={280} y={472} fill={colors.textSecondary} fontSize={10}>Bugs Found:</text>
-          <circle cx={360} cy={468} r={12} fill="url(#tfpPassGlow)" filter="url(#tfpPassGlowFilter)" />
-          <text x={360} y={472} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">{metrics.bugsFound}</text>
-        </svg>
-
-        {interactive && (
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
-            <button
-              onClick={() => { setTestMode('test_first'); resetSimulation(); }}
-              style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: testMode === 'test_first' ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                background: testMode === 'test_first' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                color: colors.success,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Test-First
-            </button>
-            <button
-              onClick={() => { setTestMode('code_first'); resetSimulation(); }}
-              style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: testMode === 'code_first' ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                background: testMode === 'code_first' ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                color: colors.warning,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Code-First
-            </button>
-          </div>
-        )}
-      </div>
+          <text x={width - 130} y="44" fill={colors.textSecondary} fontSize="10">Bugs Found:</text>
+          <circle cx={width - 55} cy="40" r="12" fill={colors.code} filter="url(#glowFilter)" />
+          <text x={width - 55} y="44" fill="#fff" fontSize="11" textAnchor="middle" fontWeight="700">{metrics.bugsFound}</text>
+        </g>
+      </svg>
     );
   };
 
-  const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-        <button
-          onClick={runIteration}
-          disabled={isAnimating || iteration >= 5}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: 'none',
-            background: isAnimating || iteration >= 5 ? colors.textMuted : colors.accent,
-            color: 'white',
-            fontWeight: 'bold',
-            cursor: isAnimating || iteration >= 5 ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          {isAnimating ? 'Running...' : 'Run Iteration'}
-        </button>
-        <button
-          onClick={resetSimulation}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.textMuted}`,
-            background: 'transparent',
-            color: colors.textPrimary,
-            cursor: 'pointer',
-            fontSize: '14px',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          Reset
-        </button>
-      </div>
+  // Property Testing Visualization
+  const PropertyTestVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 320;
+    const metrics = calculateMetrics();
 
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Property-Based Testing
+        </text>
+
+        {/* Property definitions */}
+        <g transform="translate(15, 45)">
+          <rect width={width - 30} height="120" rx="8" fill={colors.bgSecondary} />
+          <text x="10" y="20" fill={colors.textSecondary} fontSize="10" fontWeight="600">PROPERTIES</text>
+
+          {[
+            { name: 'Commutativity', formula: 'f(a, b) = f(b, a)', enabled: propertyTestEnabled },
+            { name: 'Identity', formula: 'f(a, 0) = a', enabled: propertyTestEnabled },
+            { name: 'Associativity', formula: 'f(f(a, b), c) = f(a, f(b, c))', enabled: propertyTestEnabled },
+            { name: 'Idempotency', formula: 'f(f(a)) = f(a)', enabled: propertyTestEnabled },
+          ].map((prop, i) => {
+            const y = 40 + i * 22;
+            return (
+              <g key={i}>
+                <circle cx="20" cy={y} r="6" fill={prop.enabled ? colors.success : colors.testPending} />
+                <text x="35" y={y + 4} fill={colors.textPrimary} fontSize="10">{prop.name}</text>
+                <text x={width - 50} y={y + 4} fill={colors.code} fontSize="9" textAnchor="end" fontFamily="monospace">
+                  {prop.formula}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+
+        {/* Generated test cases */}
+        <g transform={`translate(15, 175)`}>
+          <rect width={width - 30} height="50" rx="8" fill={colors.bgSecondary} />
+          <text x="10" y="18" fill={colors.textSecondary} fontSize="10" fontWeight="600">AUTO-GENERATED TEST CASES</text>
+          <text x={width/2 - 15} y="38" fill={colors.coverage} fontSize="20" fontWeight="700" textAnchor="middle">
+            {propertyTestEnabled ? '1,000+' : '8'}
+          </text>
+          <text x={width/2 - 15} y="48" fill={colors.textMuted} fontSize="9" textAnchor="middle">
+            {propertyTestEnabled ? 'random inputs tested' : 'manual test cases'}
+          </text>
+        </g>
+
+        {/* Coverage comparison */}
+        <g transform={`translate(15, 235)`}>
+          <rect width={width - 30} height="70" rx="8" fill={colors.bgSecondary} />
+          <text x="10" y="18" fill={colors.textSecondary} fontSize="10" fontWeight="600">EDGE CASE COVERAGE</text>
+
+          <text x="10" y="38" fill={colors.textMuted} fontSize="10">Unit Tests Only:</text>
+          <rect x="110" y="28" width={width - 160} height="12" rx="3" fill={colors.border} />
+          <rect x="110" y="28" width={(width - 160) * 0.4} height="12" rx="3" fill={colors.warning} />
+          <text x={width - 40} y="38" fill={colors.warning} fontSize="10">40%</text>
+
+          <text x="10" y="58" fill={colors.textMuted} fontSize="10">+ Property Tests:</text>
+          <rect x="110" y="48" width={width - 160} height="12" rx="3" fill={colors.border} />
+          <rect x="110" y="48" width={(width - 160) * (metrics.coverage / 100)} height="12" rx="3" fill={colors.success} />
+          <text x={width - 40} y="58" fill={colors.success} fontSize="10">{metrics.coverage}%</text>
+        </g>
+      </svg>
+    );
+  };
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
       <div style={{
-        background: 'rgba(245, 158, 11, 0.2)',
-        padding: '12px',
-        borderRadius: '8px',
-        borderLeft: `3px solid ${colors.accent}`,
-      }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          {testMode === 'test_first'
-            ? 'Tests define the target. Implementation converges to satisfy them.'
-            : 'Code written first. Tests verify after - but hallucinated logic may persist.'}
-        </div>
-      </div>
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.code})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderProgressBar = () => (
+  // Navigation dots
+  const renderNavDots = () => (
     <div style={{
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
-      padding: '16px',
-      flexWrap: 'wrap',
+      padding: '16px 0',
     }}>
-      {phaseOrder.map((p, index) => (
-        <div
+      {phaseOrder.map((p, i) => (
+        <button
           key={p}
           onClick={() => goToPhase(p)}
           style={{
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            background: phase === p ? colors.accent : phaseOrder.indexOf(phase) > index ? colors.success : 'rgba(255,255,255,0.2)',
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-            color: phase === p || phaseOrder.indexOf(phase) > index ? 'white' : colors.textMuted,
-            fontWeight: 'bold',
-            transition: 'all 0.2s ease',
+            transition: 'all 0.3s ease',
           }}
-          title={phaseLabels[p]}
-        >
-          {index + 1}
-        </div>
+          aria-label={phaseLabels[p]}
+        />
       ))}
     </div>
   );
 
-  const renderBottomBar = () => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    const isFirst = currentIndex === 0;
-    const isLast = currentIndex === phaseOrder.length - 1;
-
-    return (
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: '16px 24px',
-        background: colors.bgDark,
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1000,
-      }}>
-        <button
-          onClick={goBack}
-          disabled={isFirst}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.textMuted}`,
-            background: 'transparent',
-            color: isFirst ? colors.textMuted : colors.textPrimary,
-            cursor: isFirst ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          Back
-        </button>
-        <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
-          {phaseLabels[phase]}
-        </span>
-        <button
-          onClick={goNext}
-          disabled={isLast}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: 'none',
-            background: isLast ? 'rgba(255,255,255,0.1)' : colors.accent,
-            color: isLast ? colors.textMuted : 'white',
-            cursor: isLast ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          Next
-        </button>
-      </div>
-    );
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #059669)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
+
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Test-First Prompting
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Can you prevent hallucinated logic by demanding tests first?
-            </p>
-          </div>
 
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                When you prompt an LLM to write tests first, then implement to satisfy them,
-                you create an objective target. Failures become visible immediately, and the
-                code converges faster toward correct behavior.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Compare test-first vs code-first approaches and watch how tests converge!
-              </p>
-            </div>
-          </div>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          <span role="img" aria-label="test">Test First</span>
         </div>
-        {renderBottomBar()}
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Test-First Prompting
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Why does my LLM-generated code have <span style={{ color: colors.error }}>subtle bugs</span> that only appear in production? What if the tests existed <span style={{ color: colors.success }}>before</span> the code?"
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Red-Green-Refactor: Write a failing test first, then write code to make it pass, then clean up. When prompting LLMs, this approach creates an objective target that eliminates hallucinated logic."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Test-Driven Development Principles
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Test-First Prompting
+        </button>
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+    const options = [
+      { id: 'a', text: 'Writing tests first slows down development without improving quality' },
+      { id: 'b', text: 'Tests turn requirements into pass/fail criteria, making LLM output converge faster', correct: true },
+      { id: 'c', text: 'LLMs produce the same quality code regardless of whether tests exist' },
+    ];
 
-          <div style={{ padding: '16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              Which approach produces more reliable code faster?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            When prompting an LLM to write code, what happens if you write tests BEFORE the implementation?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '36px', marginBottom: '8px' }}>Tests</div>
+                <p style={{ ...typo.small, color: colors.testPass }}>Pass/Fail Criteria</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
+              <div style={{
+                background: colors.code + '33',
+                padding: '20px 30px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.code}`,
+              }}>
+                <div style={{ fontSize: '24px', color: colors.code }}>LLM</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Code Generator</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '36px', marginBottom: '8px' }}>???</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Quality Outcome</p>
+              </div>
             </div>
           </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
-  // PLAY PHASE
+  // PLAY PHASE - Interactive TDD Simulator
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Compare Approaches</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Run iterations and watch test convergence
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            TDD Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare test-first vs code-first approaches over multiple iterations.
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <TDDVisualization />
+            </div>
+
+            {/* Mode toggle */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
+              <button
+                onClick={() => { setTestMode('test_first'); resetSimulation(); playSound('click'); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: testMode === 'test_first' ? `2px solid ${colors.success}` : `1px solid ${colors.border}`,
+                  background: testMode === 'test_first' ? `${colors.success}22` : 'transparent',
+                  color: testMode === 'test_first' ? colors.success : colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Test-First
+              </button>
+              <button
+                onClick={() => { setTestMode('code_first'); resetSimulation(); playSound('click'); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: testMode === 'code_first' ? `2px solid ${colors.warning}` : `1px solid ${colors.border}`,
+                  background: testMode === 'code_first' ? `${colors.warning}22` : 'transparent',
+                  color: testMode === 'code_first' ? colors.warning : colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Code-First
+              </button>
+            </div>
+
+            {/* Controls */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              <button
+                onClick={() => { runIteration(); playSound('click'); }}
+                disabled={isAnimating || iteration >= 5}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: isAnimating || iteration >= 5 ? colors.border : colors.code,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: isAnimating || iteration >= 5 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isAnimating ? 'Running...' : 'Run Iteration'}
+              </button>
+              <button
+                onClick={() => { resetSimulation(); playSound('click'); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          {/* Insight box */}
+          <div style={{
+            background: testMode === 'test_first' ? `${colors.success}11` : `${colors.warning}11`,
+            border: `1px solid ${testMode === 'test_first' ? colors.success : colors.warning}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              {testMode === 'test_first'
+                ? 'Test-first: Tests define the target. Each iteration moves closer to 100% pass rate because failures are immediately visible.'
+                : 'Code-first: Implementation may work initially but hidden bugs emerge later. More iterations needed to reach stability.'}
             </p>
           </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Run 5 iterations in test-first mode, note how quickly tests pass</li>
-              <li>Reset and run 5 iterations in code-first mode</li>
-              <li>Compare iterations needed to reach 100% passing</li>
-              <li>Notice regression risk differences between approaches</li>
-            </ul>
-          </div>
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Principle
+          </button>
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
-    const wasCorrect = prediction === 'test_first';
-
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why Test-First Works
+          </h2>
+
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Tests = Executable Specifications</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                When you write tests first, you transform vague requirements into <span style={{ color: colors.success }}>concrete pass/fail criteria</span>. The LLM now has an objective target: make all tests pass.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Immediate Feedback Loop</strong>
+              </p>
+              <p>
+                Each test failure tells you exactly what is wrong. Instead of reviewing hundreds of lines of code, you fix specific failing tests. This is why test-first <span style={{ color: colors.accent }}>converges faster</span>.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: Language to Logic
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Test-first prompting makes failures visible immediately. The LLM has a concrete
-              target to satisfy, and incorrect implementations are caught right away instead
-              of persisting through multiple iterations.
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              Natural language requirements are ambiguous. Tests remove ambiguity:
             </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li>"Handle edge cases" vs <code style={{ color: colors.code }}>test_empty_input_returns_default()</code></li>
+              <li>"Be performant" vs <code style={{ color: colors.code }}>test_completes_under_100ms()</code></li>
+              <li>"Validate input" vs <code style={{ color: colors.code }}>test_rejects_negative_values()</code></li>
+            </ul>
           </div>
 
           <div style={{
             background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
             borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Why Tests Turn Language into Targets</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Executable Specifications:</strong> Tests
-                are not just documentation - they are runnable code that objectively verifies behavior.
-                Pass or fail, no ambiguity.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Immediate Feedback:</strong> A failing test
-                immediately signals a problem. In code-first, hallucinated logic can hide until manual
-                review or production bugs.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Convergent Development:</strong> With tests
-                as targets, each iteration moves closer to correct behavior. Without tests, iterations
-                may wander in wrong directions.
-              </p>
-            </div>
+            <h3 style={{ ...typo.h3, color: colors.error, marginBottom: '12px' }}>
+              The Code-First Problem
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Without tests, the LLM guesses at edge cases and may "hallucinate" logic that seems reasonable but is wrong. These bugs hide until production because there is no automated way to detect them.
+            </p>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover Property Testing
+          </button>
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Unit tests alone are sufficient for all edge cases' },
+      { id: 'b', text: 'Property-based tests generate many inputs automatically, catching edge cases unit tests miss', correct: true },
+      { id: 'c', text: 'More tests always means more development time with no benefit' },
+    ];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What about property-based tests for edge cases?
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Property-Based Testing
             </p>
           </div>
 
-          {renderVisualization(false)}
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What if you could test thousands of inputs without writing thousands of tests?
+          </h2>
 
-          <div style={{ padding: '16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              Can property-based tests catch edge cases that unit tests miss?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              Property-based testing defines <strong style={{ color: colors.coverage }}>properties</strong> that should always hold:
+            </p>
+            <div style={{ fontFamily: 'monospace', fontSize: '13px', color: colors.code, background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ marginBottom: '8px' }}>
+                <span style={{ color: colors.textMuted }}># Instead of testing specific values...</span>
+              </div>
+              <div style={{ color: colors.testPass }}>assert add(2, 3) == 5</div>
+              <div style={{ marginTop: '12px', marginBottom: '8px' }}>
+                <span style={{ color: colors.textMuted }}># ...define properties that always hold:</span>
+              </div>
+              <div style={{ color: colors.coverage }}>for_all(a, b): add(a, b) == add(b, a)  # commutativity</div>
+              <div style={{ color: colors.coverage }}>for_all(a): add(a, 0) == a  # identity</div>
             </div>
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See Property Testing in Action
+            </button>
+          )}
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1076,176 +1219,338 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Property-Based Testing</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Properties generate many test cases automatically
-            </p>
-          </div>
 
-          {renderVisualization(true)}
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Property-Based Testing
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            See how properties generate thousands of test cases automatically
+          </p>
 
           <div style={{
             background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '12px' }}>Example Property Tests:</h4>
-            <div style={{ fontFamily: 'monospace', fontSize: '12px', color: colors.code, background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px' }}>
-              <div style={{ marginBottom: '8px' }}>
-                <span style={{ color: colors.textMuted }}># Property: add is commutative</span>
-              </div>
-              <div>for_all(a, b): add(a, b) == add(b, a)</div>
-              <div style={{ marginTop: '12px', marginBottom: '8px' }}>
-                <span style={{ color: colors.textMuted }}># Property: add has identity</span>
-              </div>
-              <div>for_all(a): add(a, 0) == a</div>
-              <div style={{ marginTop: '12px', marginBottom: '8px' }}>
-                <span style={{ color: colors.textMuted }}># Property: add is associative</span>
-              </div>
-              <div>for_all(a, b, c): add(add(a, b), c) == add(a, add(b, c))</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <PropertyTestVisualization />
             </div>
+
+            {/* Toggle property tests */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ ...typo.body, color: colors.textSecondary }}>Property Tests Enabled</span>
+                <button
+                  onClick={() => { setPropertyTestEnabled(!propertyTestEnabled); playSound('click'); }}
+                  style={{
+                    width: '60px',
+                    height: '30px',
+                    borderRadius: '15px',
+                    border: 'none',
+                    background: propertyTestEnabled ? colors.success : colors.border,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: 'white',
+                    position: 'absolute',
+                    top: '3px',
+                    left: propertyTestEnabled ? '33px' : '3px',
+                    transition: 'left 0.2s',
+                  }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Coverage slider (when property tests enabled) */}
+            {propertyTestEnabled && (
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Base Coverage</span>
+                  <span style={{ ...typo.small, color: colors.coverage, fontWeight: 600 }}>{testCoverage}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="80"
+                  value={testCoverage}
+                  onChange={(e) => setTestCoverage(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+            )}
           </div>
 
+          {/* Insight box */}
           <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
+            background: propertyTestEnabled ? `${colors.success}11` : `${colors.warning}11`,
+            border: `1px solid ${propertyTestEnabled ? colors.success : colors.warning}33`,
             borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
+            padding: '16px',
+            marginBottom: '24px',
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Insight:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Property tests generate 100s of random inputs per property. They often find edge
-              cases (like integer overflow, floating point precision, empty inputs) that you
-              would not think to write unit tests for.
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              {propertyTestEnabled
+                ? 'Property tests automatically generate 1000+ random inputs, including edge cases you might not think of: empty inputs, maximum values, special characters, and more.'
+                : 'With only unit tests, you rely on manually choosing test inputs. Edge cases like integer overflow or empty strings are easy to miss.'}
             </p>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Power
+          </button>
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'property_helps';
-
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Property-based tests are powerful because they explore the input space automatically.
-              They frequently discover edge cases that explicit unit tests miss, like boundary
-              values and unusual combinations.
-            </p>
-          </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Property Testing Power</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generative Testing:</strong> Instead of
-                writing specific test cases, you define properties that should always hold. The
-                framework generates random inputs to verify them.
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Complete Test-First Strategy
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>1.</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Unit Tests First</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Write specific test cases for known requirements. Each test is an <span style={{ color: colors.success }}>executable specification</span> that the LLM-generated code must satisfy.
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Shrinking:</strong> When a property fails,
-                property testing frameworks automatically find the minimal failing example, making
-                debugging easier.
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>2.</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Property Tests for Edge Cases</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Define properties that should always hold. The testing framework generates <span style={{ color: colors.coverage }}>thousands of random inputs</span> including edge cases you did not anticipate.
               </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Complementary to Unit Tests:</strong> Use
-                unit tests for specific known cases and property tests to explore unknown territory.
-                Together they provide comprehensive coverage.
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>3.</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Prompt with Tests Included</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Include your tests in the LLM prompt. The model now has an <span style={{ color: colors.code }}>objective target</span>: generate code that passes all tests. No more hallucinated logic.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>4.</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Iterate Until Green</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                If tests fail, the failure message tells you exactly what to fix. Feed failures back to the LLM for targeted corrections. Convergence is <span style={{ color: colors.success }}>fast and predictable</span>.
               </p>
             </div>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ok
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
             </div>
-          ))}
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Test-First Applies:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1253,125 +1558,214 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
+      const passed = testScore >= 7;
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
+              fontSize: '80px',
+              marginBottom: '24px',
             }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+              {passed ? 'Trophy' : 'Book'}
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand test-first prompting for reliable LLM code generation!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
           </div>
-          {renderBottomBar()}
+          {renderNavDots()}
         </div>
       );
     }
 
-    const currentQ = testQuestions[currentTestQuestion];
+    const question = testQuestions[currentQuestion];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button
-                  key={oIndex}
-                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {opt.text}
-                </button>
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Previous
-            </button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: colors.accent,
-                  color: 'white',
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
                   cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
                 }}
               >
                 Next
               </button>
             ) : (
               <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
                   color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
                 }}
               >
                 Submit Test
@@ -1379,6 +1773,8 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
             )}
           </div>
         </div>
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1386,29 +1782,88 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Achievement</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              You understand test-first prompting for reliable LLM code generation
-            </p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Tests provide objective, executable specifications</li>
-              <li>Test-first makes failures visible immediately</li>
-              <li>Code converges faster toward correct behavior with tests</li>
-              <li>Property-based tests catch edge cases automatically</li>
-              <li>Coverage maps show which code paths are verified</li>
-            </ul>
-          </div>
-          {renderVisualization(true)}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          Trophy
         </div>
-        {renderBottomBar()}
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Test-First Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how to use test-first prompting to get reliable, high-quality code from LLMs.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Tests turn requirements into pass/fail criteria',
+              'Test-first prompting converges faster than code-first',
+              'Property-based tests catch edge cases automatically',
+              'Immediate feedback enables targeted fixes',
+              'Tests create an objective target for LLM output',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>ok</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
     );
   }

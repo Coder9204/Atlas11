@@ -1,12 +1,173 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
 
-// ─────────────────────────────────────────────────────────────
-// WaterHammerRenderer – Teach pressure surge when flow suddenly stops
-// ─────────────────────────────────────────────────────────────
-// Physics: ΔP = ρ × c × Δv (Joukowsky equation)
-// Water hammer occurs when fluid momentum is suddenly arrested
-// Pressure wave travels at speed of sound in fluid (~1400 m/s for water)
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+// -----------------------------------------------------------------------------
+// Water Hammer Renderer - Complete 10-Phase Game
+// Why pipes bang when valves close suddenly
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface WaterHammerRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "You're in your house and hear a loud BANG from the pipes every time someone quickly turns off the kitchen faucet. The plumber says it's 'water hammer'.",
+    question: "What is actually causing this loud banging noise?",
+    options: [
+      { id: 'a', label: "Air bubbles collapsing in the pipes" },
+      { id: 'b', label: "The pipe expanding from heat" },
+      { id: 'c', label: "Kinetic energy of flowing water converting to a pressure wave", correct: true },
+      { id: 'd', label: "Water freezing and thawing rapidly" }
+    ],
+    explanation: "When flowing water is suddenly stopped, its kinetic energy converts to a pressure wave (the Joukowsky equation: ΔP = ρcΔv). This pressure spike travels through the pipes at the speed of sound in water (~1400 m/s), causing the banging noise."
+  },
+  {
+    scenario: "A hydroelectric power plant needs to perform an emergency turbine shutdown. Engineers are concerned about water hammer in the 500-meter penstock (pipe) that feeds water to the turbine.",
+    question: "According to the Joukowsky equation (ΔP = ρcΔv), if the water velocity is 5 m/s, what pressure rise would occur with instant valve closure?",
+    options: [
+      { id: 'a', label: "About 7 bar (700 kPa)" },
+      { id: 'b', label: "About 70 bar (7 MPa)", correct: true },
+      { id: 'c', label: "About 700 bar (70 MPa)" },
+      { id: 'd', label: "About 0.7 bar (70 kPa)" }
+    ],
+    explanation: "Using ΔP = ρcΔv = 1000 kg/m³ × 1400 m/s × 5 m/s = 7,000,000 Pa = 70 bar. This enormous pressure spike is why hydroelectric plants use surge tanks and slow-closing valves."
+  },
+  {
+    scenario: "A naval engineer is designing a ballast system for a large cargo ship. The system involves pumping seawater through long pipes to different tanks to maintain stability.",
+    question: "At what speed does a water hammer pressure wave travel through the ship's pipes?",
+    options: [
+      { id: 'a', label: "At the speed of the water flow (typically 2-5 m/s)" },
+      { id: 'b', label: "At the speed of sound in water (~1400 m/s)", correct: true },
+      { id: 'c', label: "At the speed of light" },
+      { id: 'd', label: "It doesn't travel - pressure stays at the valve" }
+    ],
+    explanation: "The pressure wave travels at the speed of sound in water, approximately 1400 m/s (about 5000 km/h). This is why water hammer effects are felt almost instantly throughout even long pipe systems."
+  },
+  {
+    scenario: "An engineer is analyzing water hammer in a 200-meter pipe. They need to calculate the 'critical time' - the time it takes for a pressure wave to travel to the end of the pipe and reflect back.",
+    question: "What is the critical time (Tc = 2L/c) for this 200-meter pipe?",
+    options: [
+      { id: 'a', label: "About 0.14 seconds (140 milliseconds)" },
+      { id: 'b', label: "About 0.29 seconds (290 milliseconds)", correct: true },
+      { id: 'c', label: "About 1.4 seconds" },
+      { id: 'd', label: "About 2.9 seconds" }
+    ],
+    explanation: "Tc = 2L/c = 2 × 200m / 1400 m/s = 0.286 seconds ≈ 290 milliseconds. If the valve closes faster than this, full water hammer pressure develops. Closing slower reduces the peak pressure."
+  },
+  {
+    scenario: "A hospital's dialysis unit experienced equipment damage due to water hammer. The facilities manager is investigating solutions to protect the sensitive medical equipment.",
+    question: "Which device specifically absorbs water hammer shock by providing a compressible cushion?",
+    options: [
+      { id: 'a', label: "A check valve" },
+      { id: 'b', label: "A pressure regulator" },
+      { id: 'c', label: "A water hammer arrestor (with sealed air chamber)", correct: true },
+      { id: 'd', label: "A water softener" }
+    ],
+    explanation: "A water hammer arrestor contains a sealed air or gas chamber that compresses when the pressure wave hits, absorbing the shock. Unlike air chambers that can become waterlogged, sealed arrestors maintain their cushioning ability indefinitely."
+  },
+  {
+    scenario: "A process engineer notices that water hammer is more severe in one section of their plant than another, even though both have similar valve closure speeds.",
+    question: "If the problematic section has pipes that are twice as long with the same flow velocity, how does this affect water hammer pressure?",
+    options: [
+      { id: 'a', label: "Pressure doubles because of longer pipes" },
+      { id: 'b', label: "Pressure stays the same - it depends on velocity change, not length", correct: true },
+      { id: 'c', label: "Pressure halves because energy is spread over more distance" },
+      { id: 'd', label: "Pressure quadruples due to resonance effects" }
+    ],
+    explanation: "The Joukowsky equation (ΔP = ρcΔv) shows pressure rise depends only on density, sound speed, and velocity change - not pipe length. However, longer pipes have larger critical times, so slower valve closure is needed to avoid full hammer."
+  },
+  {
+    scenario: "A fire protection engineer is designing a sprinkler system. When a sprinkler head opens, water rushes through empty (dry) pipes. When the flow suddenly starts, hammer can occur.",
+    question: "What type of water hammer occurs when a dry pipe system suddenly fills with water?",
+    options: [
+      { id: 'a', label: "Positive hammer from valve closure" },
+      { id: 'b', label: "Negative hammer from valve opening", correct: true },
+      { id: 'c', label: "Thermal hammer from temperature change" },
+      { id: 'd', label: "Cavitation hammer from air pockets" }
+    ],
+    explanation: "When valves open and flow starts suddenly, 'negative' or 'opening' water hammer can occur. As water accelerates into empty pipes and then suddenly stops when hitting closed valves or pipe ends, significant pressure spikes result."
+  },
+  {
+    scenario: "An oil pipeline operator is planning maintenance that requires shutting down flow. The 50-kilometer pipeline normally operates at 2 m/s flow velocity.",
+    question: "To minimize water hammer, how should the operator close the main valve?",
+    options: [
+      { id: 'a', label: "As quickly as possible to reduce the duration of transient pressure" },
+      { id: 'b', label: "Slowly over a time longer than the critical time (Tc = 2L/c)", correct: true },
+      { id: 'c', label: "In rapid short bursts to break up the pressure wave" },
+      { id: 'd', label: "At exactly the speed of sound in the fluid" }
+    ],
+    explanation: "For this 50km pipe, Tc = 2 × 50,000m / 1400 m/s ≈ 71 seconds. Closing slower than 71 seconds allows reflected pressure waves to return and partially cancel incoming waves, dramatically reducing peak pressure."
+  },
+  {
+    scenario: "A cardiologist explains to a patient that the human cardiovascular system experiences a form of water hammer with every heartbeat.",
+    question: "What causes the 'dicrotic notch' in an arterial pulse waveform?",
+    options: [
+      { id: 'a', label: "Electrical signal reaching the ventricle" },
+      { id: 'b', label: "Opening of the aortic valve" },
+      { id: 'c', label: "Closure of the aortic valve creating a small pressure wave", correct: true },
+      { id: 'd', label: "Blood entering the coronary arteries" }
+    ],
+    explanation: "The dicrotic notch is a small water hammer effect. When the aortic valve closes, the backflow of blood against the closed valve creates a brief pressure increase - essentially a mini water hammer in your cardiovascular system."
+  },
+  {
+    scenario: "A submarine engineer is analyzing the risk of water hammer in the ballast system during emergency surfacing, when large valves must operate quickly.",
+    question: "Which combination of factors would create the MOST severe water hammer?",
+    options: [
+      { id: 'a', label: "High flow velocity + instant valve closure + rigid pipes", correct: true },
+      { id: 'b', label: "Low flow velocity + slow valve closure + flexible pipes" },
+      { id: 'c', label: "High flow velocity + slow valve closure + rigid pipes" },
+      { id: 'd', label: "Low flow velocity + instant valve closure + flexible pipes" }
+    ],
+    explanation: "Water hammer severity increases with: higher velocity (more kinetic energy), faster valve closure (less time for pressure dissipation), and rigid pipes (no flexibility to absorb shock). Flexible pipes, slow closure, and lower velocities all reduce hammer."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '🏠',
@@ -40,7 +201,7 @@ const realWorldApps = [
       { value: '$50M+', label: 'Penstock replacement', icon: '💰' }
     ],
     examples: ['Hoover Dam operations', 'Three Gorges powerhouse', 'Run-of-river plants', 'Pumped storage facilities'],
-    companies: ['Voith Hydro', 'GE Renewable Energy', 'Andritz', 'ANDRITZ'],
+    companies: ['Voith Hydro', 'GE Renewable Energy', 'Andritz', 'Siemens Energy'],
     futureImpact: 'AI-controlled valve systems optimize closure profiles in real-time based on flow conditions, reducing stress while maintaining grid stability.',
     color: '#059669'
   },
@@ -82,77 +243,24 @@ const realWorldApps = [
   }
 ];
 
-interface WaterHammerRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
-}
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const WaterHammerRenderer: React.FC<WaterHammerRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
 
-const phaseOrder: Phase[] = [
-  'hook',
-  'predict',
-  'play',
-  'review',
-  'twist_predict',
-  'twist_play',
-  'twist_review',
-  'transfer',
-  'test',
-  'mastery',
-];
-
-function isValidPhase(p: string): p is Phase {
-  return phaseOrder.includes(p as Phase);
-}
-
-const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine', volume = 0.3) => {
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
-  } catch {}
-};
-
-// ─────────────────────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────────────────────
-export default function WaterHammerRenderer({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer
-}: WaterHammerRendererProps) {
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistResult, setShowTwistResult] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<Record<number, number>>({});
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
 
   // Simulation state
   const [valveOpen, setValveOpen] = useState(true);
@@ -163,62 +271,38 @@ export default function WaterHammerRenderer({
   const [maxPressure, setMaxPressure] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [hasClosedValve, setHasClosedValve] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
-  // Twist: compare fast vs slow valve closure
+  // Twist phase - compare fast vs slow valve closure
   const [closureTime, setClosureTime] = useState(0.01); // seconds
   const [twistAnimating, setTwistAnimating] = useState(false);
   const [twistPressureHistory, setTwistPressureHistory] = useState<number[]>([]);
+  const [showTwistResult, setShowTwistResult] = useState(false);
 
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Constants for water
+  const waterDensity = 1000; // kg/m³
+  const soundSpeed = 1400; // m/s in water
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  const goToPhase = (newPhase: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (navigationLockRef.current) return;
-
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-
-    onPhaseComplete?.();
-    playSound(440, 0.15, 'sine', 0.2);
-  };
-
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Hook',
-    predict: 'Predict',
-    play: 'Lab',
-    review: 'Review',
-    twist_predict: 'Twist Predict',
-    twist_play: 'Twist Lab',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
-    mastery: 'Mastery'
-  };
-
-  // Constants for water
-  const waterDensity = 1000; // kg/m³
-  const soundSpeed = 1400; // m/s in water
 
   // Joukowsky equation: ΔP = ρ × c × Δv
   const calculatePressureRise = (velocity: number) => {
@@ -227,6 +311,69 @@ export default function WaterHammerRenderer({
 
   // Convert to bars (1 bar = 100,000 Pa)
   const pressureInBars = (pa: number) => pa / 100000;
+
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#0EA5E9', // Blue for water
+    accentGlow: 'rgba(14, 165, 233, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Slow Closure',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'water-hammer',
+        gameTitle: 'Water Hammer',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
   // Simulate valve closure
   const closeValve = () => {
@@ -251,6 +398,7 @@ export default function WaterHammerRenderer({
     }
 
     setPressureWave(wave);
+    playSound('click');
 
     // Animate wave position
     let pos = 0;
@@ -263,10 +411,6 @@ export default function WaterHammerRenderer({
         setAnimating(false);
       }
     }, 50);
-
-    // Sound effect - loud bang!
-    playSound('click');
-    setTimeout(() => playSound('click'), 100);
   };
 
   const resetSimulation = () => {
@@ -276,6 +420,7 @@ export default function WaterHammerRenderer({
     setMaxPressure(0);
     setAnimating(false);
     setHasClosedValve(false);
+    setShowResult(false);
   };
 
   // Twist simulation - slow closure
@@ -321,1036 +466,376 @@ export default function WaterHammerRenderer({
     }, 30);
   };
 
-  const handlePrediction = (choice: string) => {
-    setPrediction(choice);
-    playSound(330, 0.1, 'sine', 0.2);
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0284C7)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  const handleTwistPrediction = (choice: string) => {
-    setTwistPrediction(choice);
-    playSound(330, 0.1, 'sine', 0.2);
-  };
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
-  const handleTestAnswer = (q: number, a: number) => {
-    if (!testSubmitted) {
-      setTestAnswers(prev => ({ ...prev, [q]: a }));
-      playSound('click');
-    }
-  };
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-  const submitTest = () => {
-    setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, q, i) => {
-      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
-        return acc + 1;
-      }
-      return acc;
-    }, 0);
-    if (score >= 7) {
-      onCorrectAnswer?.();
-      playSound(523, 0.3, 'sine', 0.3);
-    } else {
-      onIncorrectAnswer?.();
-      playSound(330, 0.3, 'sine', 0.3);
-    }
-  };
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          💧🔧
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-  const testQuestions = [
-    {
-      question: "What is water hammer?",
-      options: [
-        { text: "A tool for plumbing", correct: false },
-        { text: "A pressure surge when flow suddenly stops", correct: true },
-        { text: "Water freezing in pipes", correct: false },
-        { text: "A type of water pump", correct: false }
-      ],
-    },
-    {
-      question: "What causes the loud bang in pipes when you quickly close a faucet?",
-      options: [
-        { text: "Air bubbles collapsing", correct: false },
-        { text: "Pipe expansion", correct: false },
-        { text: "Kinetic energy converting to pressure energy", correct: true },
-        { text: "Vibrating water molecules", correct: false }
-      ],
-    },
-    {
-      question: "According to the Joukowsky equation, what happens if you double the water velocity?",
-      options: [
-        { text: "Pressure rise halves", correct: false },
-        { text: "Pressure rise doubles", correct: true },
-        { text: "Pressure rise quadruples", correct: false },
-        { text: "No change in pressure", correct: false }
-      ],
-    },
-    {
-      question: "At what speed does the pressure wave travel in water pipes?",
-      options: [
-        { text: "Speed of the water flow", correct: false },
-        { text: "Speed of sound in water (~1400 m/s)", correct: true },
-        { text: "Speed of light", correct: false },
-        { text: "Much slower than water flow", correct: false }
-      ],
-    },
-    {
-      question: "What is the critical time (Tc) in water hammer analysis?",
-      options: [
-        { text: "Time before pipe bursts", correct: false },
-        { text: "Time for wave to travel pipe length and back", correct: true },
-        { text: "Time to close the valve", correct: false },
-        { text: "Time for water to stop flowing", correct: false }
-      ],
-    },
-    {
-      question: "How can water hammer damage be reduced?",
-      options: [
-        { text: "Using smaller pipes", correct: false },
-        { text: "Increasing water pressure", correct: false },
-        { text: "Closing valves slowly", correct: true },
-        { text: "Using hotter water", correct: false }
-      ],
-    },
-    {
-      question: "What is a water hammer arrestor?",
-      options: [
-        { text: "A device that stops water flow", correct: false },
-        { text: "A cushioning device with air or gas", correct: true },
-        { text: "A type of water filter", correct: false },
-        { text: "A pipe insulation", correct: false }
-      ],
-    },
-    {
-      question: "Why is water hammer worse in long pipes?",
-      options: [
-        { text: "More water means more momentum", correct: true },
-        { text: "Pipes are weaker when longer", correct: false },
-        { text: "Sound travels slower in long pipes", correct: false },
-        { text: "Long pipes have more friction", correct: false }
-      ],
-    },
-    {
-      question: "In the Joukowsky equation ΔP = ρcΔv, what does 'c' represent?",
-      options: [
-        { text: "Water temperature", correct: false },
-        { text: "Pipe circumference", correct: false },
-        { text: "Speed of sound in fluid", correct: true },
-        { text: "Closure time", correct: false }
-      ],
-    },
-    {
-      question: "What pressure rise occurs when water flowing at 3 m/s suddenly stops? (ρ=1000 kg/m³, c=1400 m/s)",
-      options: [
-        { text: "4,200 Pa", correct: false },
-        { text: "42,000 Pa", correct: false },
-        { text: "420,000 Pa", correct: false },
-        { text: "4,200,000 Pa", correct: true }
-      ],
-    }
-  ];
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Water Hammer
+        </h1>
 
-  const applications = [
-    {
-      title: "Household Plumbing",
-      description: "Banging pipes when faucets close quickly",
-      detail: "The annoying banging in home pipes is water hammer. Hammer arrestors are installed near washing machines and dishwashers to absorb shocks.",
-      icon: "🚰"
-    },
-    {
-      title: "Hydroelectric Dams",
-      description: "Emergency valve closure protection",
-      detail: "Surge tanks and slow-closing valves protect turbines. The Hoover Dam uses massive surge chambers to handle 500+ m³/s flow changes.",
-      icon: "🏭"
-    },
-    {
-      title: "Heart & Blood Vessels",
-      description: "Aortic valve closure creates pulse",
-      detail: "The 'lub-dub' heartbeat partially comes from valve closure. The dicrotic notch in pulse waves is a mini water hammer from aortic valve closing.",
-      icon: "❤️"
-    },
-    {
-      title: "Oil & Gas Pipelines",
-      description: "Pump shutdown protection",
-      detail: "Thousand-kilometer pipelines need careful transient analysis. The Alaska Pipeline uses multiple surge control systems to prevent catastrophic pressure waves.",
-      icon: "⛽"
-    }
-  ];
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          Have you ever heard pipes <span style={{ color: colors.error }}>BANG</span> when someone quickly turns off a faucet? That's <span style={{ color: colors.accent }}>water hammer</span> - and it can generate pressures exceeding <span style={{ color: colors.warning }}>40 bar</span>!
+        </p>
 
-  const renderPhase = () => {
-    switch (phase) {
-      // ───────────────────────────────────────────────────
-      // HOOK - Premium Design
-      // ───────────────────────────────────────────────────
-      case 'hook':
-        return (
-          <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-            {/* Premium badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full mb-8">
-              <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-blue-400 tracking-wide">PHYSICS EXPLORATION</span>
-            </div>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "When flowing water is suddenly stopped, all that momentum has to go somewhere. The kinetic energy transforms into a pressure wave that can burst pipes, damage equipment, and even cause catastrophic failures in industrial systems."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Fluid Dynamics Engineering
+          </p>
+        </div>
 
-            {/* Main title with gradient */}
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent">
-              The Pipe Destroyer
-            </h1>
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Investigate the Pressure Wave
+        </button>
 
-            <p className="text-lg text-slate-400 max-w-md mb-10">
-              Have you heard pipes BANG when someone quickly shuts off a faucet?
-            </p>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
-            {/* Premium card with graphic */}
-            <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-              {/* Subtle glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Pressure drops as water slows down' },
+      { id: 'b', text: 'Pressure stays the same' },
+      { id: 'c', text: 'Pressure rises dramatically (water hammer)', correct: true },
+    ];
 
-              <div className="relative">
-                <svg viewBox="0 0 420 220" style={{ width: '100%', maxWidth: 420, margin: '0 auto', display: 'block' }}>
-                  {/* Premium defs for hook visualization */}
-                  <defs>
-                    {/* Metallic pipe gradient */}
-                    <linearGradient id="whamHookPipe" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#64748b" />
-                      <stop offset="20%" stopColor="#94a3b8" />
-                      <stop offset="40%" stopColor="#475569" />
-                      <stop offset="60%" stopColor="#334155" />
-                      <stop offset="80%" stopColor="#475569" />
-                      <stop offset="100%" stopColor="#1e293b" />
-                    </linearGradient>
-                    {/* Pipe inner darkness */}
-                    <linearGradient id="whamHookPipeInner" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#1e293b" />
-                      <stop offset="50%" stopColor="#0f172a" />
-                      <stop offset="100%" stopColor="#1e293b" />
-                    </linearGradient>
-                    {/* Water gradient */}
-                    <linearGradient id="whamHookWater" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#60a5fa" />
-                      <stop offset="50%" stopColor="#3b82f6" />
-                      <stop offset="100%" stopColor="#60a5fa" />
-                    </linearGradient>
-                    {/* Valve closed gradient */}
-                    <linearGradient id="whamHookValve" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#fca5a5" />
-                      <stop offset="50%" stopColor="#ef4444" />
-                      <stop offset="100%" stopColor="#b91c1c" />
-                    </linearGradient>
-                    {/* Shock wave radial */}
-                    <radialGradient id="whamHookShock" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
-                      <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.8" />
-                      <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.5" />
-                      <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-                    </radialGradient>
-                    {/* Water particle glow */}
-                    <radialGradient id="whamHookParticle" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
-                      <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.8" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                    </radialGradient>
-                    {/* Glow filter */}
-                    <filter id="whamHookGlow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-                      <feFlood floodColor="#ef4444" floodOpacity="0.6" result="color" />
-                      <feComposite in="color" in2="blur" operator="in" result="glow" />
-                      <feMerge>
-                        <feMergeNode in="glow" />
-                        <feMergeNode in="glow" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                    {/* Particle glow filter */}
-                    <filter id="whamHookParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
-                      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-                      <feFlood floodColor="#60a5fa" floodOpacity="0.5" result="color" />
-                      <feComposite in="color" in2="blur" operator="in" result="glow" />
-                      <feMerge>
-                        <feMergeNode in="glow" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-                  {/* Background */}
-                  <rect width="420" height="220" fill="#0a1628" rx="8" />
-
-                  {/* Pipe outer shell */}
-                  <rect x="40" y="70" width="300" height="70" rx="6" fill="url(#whamHookPipe)" stroke="#475569" strokeWidth="2" />
-                  {/* Pipe inner */}
-                  <rect x="48" y="78" width="284" height="54" rx="3" fill="url(#whamHookPipeInner)" />
-                  {/* Water */}
-                  <rect x="52" y="82" width="276" height="46" rx="2" fill="url(#whamHookWater)" opacity="0.8" />
-
-                  {/* Animated water particles */}
-                  <g>
-                    {[0, 1, 2, 3, 4, 5].map(i => (
-                      <circle key={i} cx={70 + i * 45} cy="105" r="9" fill="url(#whamHookParticle)" filter="url(#whamHookParticleGlow)">
-                        <animate attributeName="cx" values={`${70 + i * 45};${115 + i * 45}`} dur="0.5s" repeatCount="indefinite" />
-                      </circle>
-                    ))}
-                  </g>
-
-                  {/* Valve body */}
-                  <rect x="340" y="55" width="30" height="100" rx="4" fill="url(#whamHookValve)" stroke="#b91c1c" strokeWidth="2" />
-                  {/* Valve handle */}
-                  <rect x="335" y="42" width="40" height="18" rx="3" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
-                  <rect x="350" y="28" width="10" height="16" rx="2" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
-                  <ellipse cx="355" cy="22" rx="12" ry="5" fill="#9ca3af" />
-
-                  {/* Shock wave effect at valve */}
-                  <ellipse cx="340" cy="105" rx="15" ry="25" fill="url(#whamHookShock)" filter="url(#whamHookGlow)">
-                    <animate attributeName="rx" values="10;20;10" dur="0.4s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.8;0.4;0.8" dur="0.4s" repeatCount="indefinite" />
-                  </ellipse>
-
-                  {/* BANG text with glow */}
-                  <text x="210" y="185" textAnchor="middle" fill="#fbbf24" fontSize="16" fontWeight="bold" filter="url(#whamHookGlow)">
-                    BANG!
-                  </text>
-                  <text x="210" y="205" textAnchor="middle" fill="#94a3b8" fontSize="11">
-                    Pressure wave traveling at 1400 m/s
-                  </text>
-                </svg>
-
-                <div className="mt-6 space-y-4">
-                  <p className="text-xl text-white/90 font-medium leading-relaxed">
-                    This &quot;water hammer&quot; can generate pressures over 40 bar!
-                  </p>
-                  <div className="pt-2">
-                    <p className="text-base text-blue-400 font-semibold">
-                      Enough to burst pipes and damage equipment.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Premium CTA button */}
-            <button
-              onPointerDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
-              className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <span className="relative z-10 flex items-center gap-3">
-                Investigate the Pressure Wave
-                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </button>
-
-            {/* Feature hints */}
-            <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-              <div className="flex items-center gap-2">
-                <span className="text-blue-400">✦</span>
-                Interactive Lab
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-blue-400">✦</span>
-                Real-World Examples
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-blue-400">✦</span>
-                Knowledge Test
-              </div>
-            </div>
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // PREDICT
-      // ───────────────────────────────────────────────────
-      case 'predict':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#f8fafc' }}>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
               Make Your Prediction
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
-              Water is flowing through a pipe at 3 m/s. If you instantly close a valve,
-              what happens to the pressure at the valve?
             </p>
+          </div>
 
-            <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: 420, marginBottom: '1.5rem' }}>
-              {/* Premium defs */}
-              <defs>
-                {/* Pipe gradient */}
-                <linearGradient id="whamPredictPipe" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#64748b" />
-                  <stop offset="20%" stopColor="#94a3b8" />
-                  <stop offset="40%" stopColor="#475569" />
-                  <stop offset="60%" stopColor="#334155" />
-                  <stop offset="80%" stopColor="#475569" />
-                  <stop offset="100%" stopColor="#1e293b" />
-                </linearGradient>
-                <linearGradient id="whamPredictPipeInner" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#1e293b" />
-                  <stop offset="50%" stopColor="#0f172a" />
-                  <stop offset="100%" stopColor="#1e293b" />
-                </linearGradient>
-                <linearGradient id="whamPredictWater" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#60a5fa" />
-                  <stop offset="50%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#60a5fa" />
-                </linearGradient>
-                <linearGradient id="whamPredictValve" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#fca5a5" />
-                  <stop offset="50%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#b91c1c" />
-                </linearGradient>
-                <radialGradient id="whamPredictParticle" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
-                  <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                </radialGradient>
-                <filter id="whamPredictGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-                  <feFlood floodColor="#60a5fa" floodOpacity="0.5" result="color" />
-                  <feComposite in="color" in2="blur" operator="in" result="glow" />
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <filter id="whamPredictValveGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-                  <feFlood floodColor="#ef4444" floodOpacity="0.4" result="color" />
-                  <feComposite in="color" in2="blur" operator="in" result="glow" />
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Water is flowing through a pipe at 3 m/s. If you INSTANTLY close a valve, what happens to the pressure at the valve?
+          </h2>
 
-              {/* Background */}
-              <rect width="420" height="180" fill="#0a1628" rx="8" />
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: '400px' }}>
+              {/* Pipe */}
+              <rect x="40" y="40" width="260" height="40" rx="4" fill="#475569" />
+              <rect x="45" y="45" width="250" height="30" fill="#3b82f6" opacity="0.6" />
 
-              {/* Labels */}
-              <text x="210" y="25" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="600">
-                Water flowing at 3 m/s
-              </text>
-
-              {/* Pipe outer shell */}
-              <rect x="30" y="55" width="300" height="65" rx="6" fill="url(#whamPredictPipe)" stroke="#475569" strokeWidth="2" />
-              {/* Pipe inner */}
-              <rect x="38" y="63" width="284" height="49" rx="3" fill="url(#whamPredictPipeInner)" />
-              {/* Water */}
-              <rect x="42" y="67" width="276" height="41" rx="2" fill="url(#whamPredictWater)" opacity="0.8" />
-
-              {/* Flow arrows with animation */}
+              {/* Flow arrows */}
               {[0, 1, 2, 3].map(i => (
                 <g key={i}>
-                  <path
-                    d={`M${70 + i * 60},87 L${100 + i * 60},87`}
-                    fill="none"
-                    stroke="#bfdbfe"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" begin={`${i * 0.2}s`} repeatCount="indefinite" />
-                  </path>
-                  <path
-                    d={`M${95 + i * 60},82 L${100 + i * 60},87 L${95 + i * 60},92`}
-                    fill="none"
-                    stroke="#bfdbfe"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" begin={`${i * 0.2}s`} repeatCount="indefinite" />
-                  </path>
+                  <path d={`M${70 + i * 60},60 L${100 + i * 60},60`} stroke="#bfdbfe" strokeWidth="2" />
+                  <path d={`M${95 + i * 60},55 L${100 + i * 60},60 L${95 + i * 60},65`} fill="none" stroke="#bfdbfe" strokeWidth="2" />
                 </g>
               ))}
 
-              {/* Animated particles */}
-              {[0, 1, 2, 3, 4].map(i => (
-                <circle key={i} cx={60 + i * 50} cy="87" r="6" fill="url(#whamPredictParticle)" filter="url(#whamPredictGlow)">
-                  <animate attributeName="cx" values={`${60 + i * 50};${110 + i * 50}`} dur="0.6s" repeatCount="indefinite" />
-                </circle>
-              ))}
+              {/* Valve */}
+              <rect x="300" y="30" width="30" height="60" rx="3" fill="#ef4444" />
+              <text x="315" y="65" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">?</text>
 
-              {/* Valve with glow */}
-              <g filter="url(#whamPredictValveGlow)">
-                <rect x="330" y="45" width="35" height="85" rx="4" fill="url(#whamPredictValve)" stroke="#b91c1c" strokeWidth="2" />
-                {/* Valve handle */}
-                <rect x="325" y="32" width="45" height="18" rx="3" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
-                <rect x="342" y="18" width="11" height="16" rx="2" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
-                <ellipse cx="347.5" cy="12" rx="12" ry="5" fill="#9ca3af" />
-              </g>
-
-              {/* Question mark */}
-              <text x="347" y="95" textAnchor="middle" fill="#fef2f2" fontSize="24" fontWeight="bold">?</text>
-
-              {/* Warning label */}
-              <text x="210" y="155" textAnchor="middle" fill="#f87171" fontSize="12" fontWeight="600">
-                Valve closes instantly!
-              </text>
-              <text x="210" y="172" textAnchor="middle" fill="#64748b" fontSize="10">
-                What happens to the pressure?
-              </text>
+              {/* Labels */}
+              <text x="150" y="100" textAnchor="middle" fill="#94a3b8" fontSize="12">Water flowing at 3 m/s</text>
+              <text x="315" y="105" textAnchor="middle" fill="#f87171" fontSize="10">Valve closes instantly!</text>
             </svg>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
-              {[
-                { id: 'a', text: 'Pressure drops as water slows down' },
-                { id: 'b', text: 'Pressure stays the same' },
-                { id: 'c', text: 'Pressure rises dramatically' }
-              ].map(opt => (
-                <button
-                  key={opt.id}
-                  onPointerDown={() => handlePrediction(opt.id)}
-                  style={{
-                    padding: '1rem',
-                    background: prediction === opt.id ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : '#1e293b',
-                    color: prediction === opt.id ? 'white' : '#f8fafc',
-                    border: `2px solid ${prediction === opt.id ? '#3b82f6' : '#334155'}`,
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                    transition: 'all 0.2s',
-                    boxShadow: prediction === opt.id ? '0 4px 15px rgba(59, 130, 246, 0.3)' : 'none'
-                  }}
-                >
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-
-            {prediction && (
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                onPointerDown={() => goToPhase('play')}
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
                 style={{
-                  marginTop: '1.5rem',
-                  padding: '1rem 2.5rem',
-                  fontSize: '1.1rem',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
                   cursor: 'pointer',
-                  fontWeight: 600
+                  transition: 'all 0.2s',
                 }}
               >
-                Test It!
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
               </button>
-            )}
+            ))}
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // PLAY
-      // ───────────────────────────────────────────────────
-      case 'play':
-        const currentPressure = pressureWave.length > 0
-          ? pressureWave[Math.min(Math.floor(wavePosition / 100 * pressureWave.length), pressureWave.length - 1)]
-          : 0;
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
 
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc' }}>
-              Water Hammer Simulator
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center' }}>
-              Close the valve to see what happens!
-            </p>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
-            <svg viewBox="0 0 500 380" style={{ width: '100%', maxWidth: 550, marginBottom: '1rem' }}>
-              {/* ========== COMPREHENSIVE DEFS SECTION ========== */}
-              <defs>
-                {/* Premium pipe outer gradient - metallic steel with depth */}
-                <linearGradient id="whamPipeOuter" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#64748b" />
-                  <stop offset="15%" stopColor="#94a3b8" />
-                  <stop offset="35%" stopColor="#475569" />
-                  <stop offset="65%" stopColor="#334155" />
-                  <stop offset="85%" stopColor="#475569" />
-                  <stop offset="100%" stopColor="#1e293b" />
-                </linearGradient>
+  // PLAY PHASE - Interactive Water Hammer Simulator
+  if (phase === 'play') {
+    const currentPressure = pressureWave.length > 0
+      ? pressureWave[Math.min(Math.floor(wavePosition / 100 * pressureWave.length), pressureWave.length - 1)]
+      : 0;
 
-                {/* Pipe inner wall gradient - darker interior */}
-                <linearGradient id="whamPipeInner" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#1e293b" />
-                  <stop offset="20%" stopColor="#0f172a" />
-                  <stop offset="50%" stopColor="#020617" />
-                  <stop offset="80%" stopColor="#0f172a" />
-                  <stop offset="100%" stopColor="#1e293b" />
-                </linearGradient>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-                {/* Water gradient - flowing blue with depth */}
-                <linearGradient id="whamWater" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#60a5fa" />
-                  <stop offset="25%" stopColor="#3b82f6" />
-                  <stop offset="50%" stopColor="#2563eb" />
-                  <stop offset="75%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#60a5fa" />
-                </linearGradient>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Water Hammer Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Close the valve to see what happens to the pressure!
+          </p>
 
-                {/* High pressure water gradient - red danger */}
-                <linearGradient id="whamHighPressure" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#fca5a5" />
-                  <stop offset="25%" stopColor="#ef4444" />
-                  <stop offset="50%" stopColor="#dc2626" />
-                  <stop offset="75%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#fca5a5" />
-                </linearGradient>
-
-                {/* Pressure wave radial gradient - shock wave effect */}
-                <radialGradient id="whamShockWave" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
-                  <stop offset="25%" stopColor="#fbbf24" stopOpacity="0.9" />
-                  <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.7" />
-                  <stop offset="75%" stopColor="#ef4444" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Pressure propagation gradient - traveling wave */}
-                <radialGradient id="whamPressureRing" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
-                  <stop offset="40%" stopColor="#ef4444" stopOpacity="0.2" />
-                  <stop offset="60%" stopColor="#f87171" stopOpacity="0.8" />
-                  <stop offset="80%" stopColor="#fca5a5" stopOpacity="0.9" />
-                  <stop offset="100%" stopColor="#fef2f2" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Valve gradient - open state (green) */}
-                <linearGradient id="whamValveOpen" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#86efac" />
-                  <stop offset="25%" stopColor="#4ade80" />
-                  <stop offset="50%" stopColor="#22c55e" />
-                  <stop offset="75%" stopColor="#16a34a" />
-                  <stop offset="100%" stopColor="#15803d" />
-                </linearGradient>
-
-                {/* Valve gradient - closed state (red) */}
-                <linearGradient id="whamValveClosed" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#fca5a5" />
-                  <stop offset="25%" stopColor="#f87171" />
-                  <stop offset="50%" stopColor="#ef4444" />
-                  <stop offset="75%" stopColor="#dc2626" />
-                  <stop offset="100%" stopColor="#b91c1c" />
-                </linearGradient>
-
-                {/* Valve handle metallic gradient */}
-                <linearGradient id="whamValveHandle" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#9ca3af" />
-                  <stop offset="30%" stopColor="#6b7280" />
-                  <stop offset="70%" stopColor="#4b5563" />
-                  <stop offset="100%" stopColor="#374151" />
-                </linearGradient>
-
-                {/* Gauge face gradient - dark instrument look */}
-                <radialGradient id="whamGaugeFace" cx="50%" cy="50%" r="60%">
-                  <stop offset="0%" stopColor="#1e293b" />
-                  <stop offset="60%" stopColor="#0f172a" />
-                  <stop offset="100%" stopColor="#020617" />
-                </radialGradient>
-
-                {/* Gauge bezel gradient - chrome ring */}
-                <linearGradient id="whamGaugeBezel" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#94a3b8" />
-                  <stop offset="25%" stopColor="#64748b" />
-                  <stop offset="50%" stopColor="#475569" />
-                  <stop offset="75%" stopColor="#64748b" />
-                  <stop offset="100%" stopColor="#94a3b8" />
-                </linearGradient>
-
-                {/* Needle gradient */}
-                <linearGradient id="whamNeedle" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#fef2f2" />
-                  <stop offset="50%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#b91c1c" />
-                </linearGradient>
-
-                {/* Lab background gradient */}
-                <linearGradient id="whamLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#030712" />
-                  <stop offset="50%" stopColor="#0a1628" />
-                  <stop offset="100%" stopColor="#030712" />
-                </linearGradient>
-
-                {/* Water particle radial glow */}
-                <radialGradient id="whamWaterParticle" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
-                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.9" />
-                  <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Glow filter for pressure wave */}
-                <filter id="whamPressureGlow" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
-                  <feFlood floodColor="#ef4444" floodOpacity="0.8" result="color" />
-                  <feComposite in="color" in2="blur" operator="in" result="glow" />
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Glow filter for water particles */}
-                <filter id="whamParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-                  <feFlood floodColor="#60a5fa" floodOpacity="0.6" result="color" />
-                  <feComposite in="color" in2="blur" operator="in" result="glow" />
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Glow filter for valve */}
-                <filter id="whamValveGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-                  <feFlood floodColor={valveOpen ? "#22c55e" : "#ef4444"} floodOpacity="0.5" result="color" />
-                  <feComposite in="color" in2="blur" operator="in" result="glow" />
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Gauge needle glow */}
-                <filter id="whamNeedleGlow" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-                  <feFlood floodColor="#ef4444" floodOpacity="0.7" result="color" />
-                  <feComposite in="color" in2="blur" operator="in" result="glow" />
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Inner shadow for pipe */}
-                <filter id="whamInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feOffset dx="0" dy="2" />
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-
-                {/* Subtle grid pattern */}
-                <pattern id="whamGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
-                </pattern>
-              </defs>
-
-              {/* ========== BACKGROUND ========== */}
-              <rect width="500" height="380" fill="url(#whamLabBg)" />
-              <rect width="500" height="380" fill="url(#whamGrid)" />
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <svg viewBox="0 0 500 280" style={{ width: '100%', marginBottom: '20px' }}>
+              {/* Background */}
+              <rect width="500" height="280" fill="#0a1628" rx="8" />
 
               {/* Title and readings */}
-              <text x="250" y="28" textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="600">
+              <text x="250" y="25" textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="600">
                 Flow velocity: {flowVelocity} m/s | Pipe length: {pipeLength}m
               </text>
               {maxPressure > 0 && (
-                <text x="250" y="48" textAnchor="middle" fill="#f87171" fontSize="12" fontWeight="bold" filter="url(#whamPressureGlow)">
+                <text x="250" y="45" textAnchor="middle" fill="#f87171" fontSize="12" fontWeight="bold">
                   Peak pressure: {pressureInBars(maxPressure).toFixed(1)} bar!
                 </text>
               )}
 
-              {/* ========== PREMIUM PIPE SYSTEM ========== */}
-              {/* Pipe outer shell with metallic gradient */}
-              <rect x="30" y="90" width="350" height="70" rx="6" fill="url(#whamPipeOuter)" stroke="#475569" strokeWidth="2" />
+              {/* Pipe */}
+              <rect x="30" y="80" width="350" height="60" rx="6" fill="#64748b" />
+              <rect x="38" y="88" width="334" height="44" fill="#1e293b" />
+              <rect x="42" y="92" width="326" height="36" fill={!valveOpen && wavePosition > 0 ? "#ef4444" : "#3b82f6"} opacity="0.7" />
 
-              {/* Pipe inner wall shadow */}
-              <rect x="38" y="98" width="334" height="54" rx="3" fill="url(#whamPipeInner)" />
+              {/* Pressure wave visualization */}
+              {!valveOpen && wavePosition > 0 && (
+                <ellipse
+                  cx={365 - wavePosition * 3}
+                  cy="110"
+                  rx="15"
+                  ry="25"
+                  fill="#fbbf24"
+                  opacity={0.8 - wavePosition / 150}
+                />
+              )}
 
-              {/* Water inside pipe */}
-              <rect x="42" y="102" width="326" height="46" rx="2" fill={!valveOpen && wavePosition > 0 ? "url(#whamHighPressure)" : "url(#whamWater)"} opacity="0.85" />
-
-              {/* Pipe flanges for realism */}
-              <rect x="22" y="85" width="16" height="80" rx="2" fill="url(#whamPipeOuter)" stroke="#64748b" strokeWidth="1" />
-              <rect x="372" y="85" width="16" height="80" rx="2" fill="url(#whamPipeOuter)" stroke="#64748b" strokeWidth="1" />
-
-              {/* Pipe bolts */}
-              {[92, 110, 130, 148].map(y => (
-                <g key={y}>
-                  <circle cx="30" cy={y} r="3" fill="#374151" stroke="#1e293b" strokeWidth="1" />
-                  <circle cx="380" cy={y} r="3" fill="#374151" stroke="#1e293b" strokeWidth="1" />
-                </g>
+              {/* Water particles when valve is open */}
+              {valveOpen && [0, 1, 2, 3, 4].map(i => (
+                <circle key={i} cx={60 + i * 60} cy="110" r="8" fill="#60a5fa" opacity="0.8">
+                  <animate attributeName="cx" values={`${60 + i * 60};${120 + i * 60}`} dur="0.5s" repeatCount="indefinite" />
+                </circle>
               ))}
 
-              {/* ========== PRESSURE WAVE VISUALIZATION ========== */}
-              {!valveOpen && wavePosition > 0 && (
-                <g>
-                  {/* Animated shock wave rings */}
-                  {[0, 1, 2].map(i => {
-                    const ringX = 360 - wavePosition * 3.2 + i * 15;
-                    return ringX > 40 && ringX < 370 ? (
-                      <ellipse
-                        key={i}
-                        cx={ringX}
-                        cy="125"
-                        rx="8"
-                        ry="20"
-                        fill="url(#whamPressureRing)"
-                        opacity={0.9 - wavePosition / 150 - i * 0.2}
-                        filter="url(#whamPressureGlow)"
-                      >
-                        <animate attributeName="rx" values="6;12;6" dur="0.3s" repeatCount="indefinite" />
-                      </ellipse>
-                    ) : null;
-                  })}
-
-                  {/* Central shock wave */}
-                  <ellipse
-                    cx={365 - wavePosition * 3.2}
-                    cy="125"
-                    rx="12"
-                    ry="22"
-                    fill="url(#whamShockWave)"
-                    opacity={0.95 - wavePosition / 120}
-                    filter="url(#whamPressureGlow)"
-                  />
-                </g>
-              )}
-
-              {/* ========== ANIMATED WATER PARTICLES ========== */}
-              {valveOpen && (
-                <g>
-                  {[0, 1, 2, 3, 4, 5].map(i => (
-                    <circle
-                      key={i}
-                      cx={60 + i * 50}
-                      cy="125"
-                      r="7"
-                      fill="url(#whamWaterParticle)"
-                      filter="url(#whamParticleGlow)"
-                    >
-                      <animate
-                        attributeName="cx"
-                        values={`${60 + i * 50};${110 + i * 50}`}
-                        dur="0.5s"
-                        repeatCount="indefinite"
-                      />
-                      <animate
-                        attributeName="opacity"
-                        values="1;0.6;1"
-                        dur="0.5s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                  ))}
-                  {/* Flow direction arrows */}
-                  {[80, 180, 280].map(x => (
-                    <path
-                      key={x}
-                      d={`M${x},125 L${x + 20},125 L${x + 15},120 M${x + 20},125 L${x + 15},130`}
-                      fill="none"
-                      stroke="#bfdbfe"
-                      strokeWidth="2"
-                      opacity="0.6"
-                    >
-                      <animate
-                        attributeName="opacity"
-                        values="0.3;0.8;0.3"
-                        dur="0.8s"
-                        repeatCount="indefinite"
-                      />
-                    </path>
-                  ))}
-                </g>
-              )}
-
-              {/* ========== PREMIUM VALVE ========== */}
-              <g transform="translate(388, 75)" filter="url(#whamValveGlow)">
-                {/* Valve body */}
-                <rect
-                  x="0"
-                  y={valveOpen ? -5 : 20}
-                  width="35"
-                  height={valveOpen ? 110 : 60}
-                  rx="4"
-                  fill={valveOpen ? "url(#whamValveOpen)" : "url(#whamValveClosed)"}
-                  stroke={valveOpen ? "#16a34a" : "#b91c1c"}
-                  strokeWidth="2"
-                  style={{ transition: 'all 0.15s ease-out' }}
-                />
-
-                {/* Valve gate lines */}
-                {valveOpen && [15, 35, 55, 75].map(y => (
-                  <line key={y} x1="5" y1={y} x2="30" y2={y} stroke={valveOpen ? "#15803d" : "#991b1b"} strokeWidth="1" opacity="0.5" />
-                ))}
-
-                {/* Valve handle */}
-                <rect x="-5" y="-20" width="45" height="20" rx="3" fill="url(#whamValveHandle)" stroke="#4b5563" strokeWidth="1" />
-                <rect x="12" y="-35" width="11" height="18" rx="2" fill="url(#whamValveHandle)" stroke="#4b5563" strokeWidth="1" />
-
-                {/* Handle grip */}
-                <ellipse cx="17.5" cy="-42" rx="14" ry="6" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
-                <ellipse cx="17.5" cy="-42" rx="10" ry="4" fill="#9ca3af" />
-              </g>
-
-              {/* Valve status label */}
-              <text x="405" y="200" textAnchor="middle" fill={valveOpen ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="bold">
+              {/* Valve */}
+              <rect
+                x="380"
+                y={valveOpen ? 60 : 85}
+                width="35"
+                height={valveOpen ? 100 : 50}
+                rx="4"
+                fill={valveOpen ? "#22c55e" : "#ef4444"}
+                style={{ transition: 'all 0.15s' }}
+              />
+              <text x="397" y="195" textAnchor="middle" fill={valveOpen ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="bold">
                 {valveOpen ? 'OPEN' : 'CLOSED'}
               </text>
 
-              {/* ========== PREMIUM PRESSURE GAUGE ========== */}
-              <g transform="translate(120, 285)">
-                {/* Gauge outer bezel */}
-                <circle cx="0" cy="0" r="60" fill="url(#whamGaugeBezel)" />
-                <circle cx="0" cy="0" r="55" fill="url(#whamGaugeFace)" />
-
-                {/* Gauge markings and numbers */}
-                {[0, 1, 2, 3, 4, 5].map(i => {
-                  const angle = -135 + i * 54;
+              {/* Pressure gauge */}
+              <g transform="translate(100, 210)">
+                <circle cx="0" cy="0" r="45" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+                {/* Gauge markings */}
+                {[0, 1, 2, 3, 4].map(i => {
+                  const angle = -135 + i * 67.5;
                   const rad = angle * Math.PI / 180;
                   return (
                     <g key={i}>
-                      {/* Major tick marks */}
-                      <line
-                        x1={Math.cos(rad) * 40}
-                        y1={Math.sin(rad) * 40}
-                        x2={Math.cos(rad) * 48}
-                        y2={Math.sin(rad) * 48}
-                        stroke="#f8fafc"
-                        strokeWidth="2"
-                      />
-                      {/* Numbers */}
-                      <text
-                        x={Math.cos(rad) * 30}
-                        y={Math.sin(rad) * 30 + 4}
-                        fill="#f8fafc"
-                        fontSize="10"
-                        fontWeight="600"
-                        textAnchor="middle"
-                      >
-                        {i * 10}
-                      </text>
-                      {/* Minor tick marks */}
-                      {i < 5 && [1, 2, 3, 4].map(j => {
-                        const minorAngle = angle + j * 10.8;
-                        const minorRad = minorAngle * Math.PI / 180;
-                        return (
-                          <line
-                            key={j}
-                            x1={Math.cos(minorRad) * 44}
-                            y1={Math.sin(minorRad) * 44}
-                            x2={Math.cos(minorRad) * 48}
-                            y2={Math.sin(minorRad) * 48}
-                            stroke="#94a3b8"
-                            strokeWidth="1"
-                          />
-                        );
-                      })}
+                      <line x1={Math.cos(rad) * 32} y1={Math.sin(rad) * 32} x2={Math.cos(rad) * 40} y2={Math.sin(rad) * 40} stroke="#f8fafc" strokeWidth="2" />
+                      <text x={Math.cos(rad) * 24} y={Math.sin(rad) * 24 + 4} fill="#f8fafc" fontSize="9" textAnchor="middle">{i * 12}</text>
                     </g>
                   );
                 })}
-
-                {/* Danger zone arc */}
-                <path
-                  d="M 28.28 28.28 A 40 40 0 0 1 40 0"
-                  fill="none"
-                  stroke="#ef4444"
-                  strokeWidth="4"
-                  opacity="0.5"
-                />
-
-                {/* Animated needle */}
+                {/* Needle */}
                 {(() => {
                   const pressureBars = Math.abs(pressureInBars(currentPressure));
-                  const needleAngle = -135 + Math.min(pressureBars, 50) * 5.4;
+                  const needleAngle = -135 + Math.min(pressureBars, 48) * 5.625;
                   const needleRad = needleAngle * Math.PI / 180;
                   return (
-                    <g filter="url(#whamNeedleGlow)">
-                      <line
-                        x1={-Math.cos(needleRad) * 8}
-                        y1={-Math.sin(needleRad) * 8}
-                        x2={Math.cos(needleRad) * 38}
-                        y2={Math.sin(needleRad) * 38}
-                        stroke="url(#whamNeedle)"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        style={{ transition: 'all 0.1s ease-out' }}
-                      />
-                    </g>
+                    <line x1={-Math.cos(needleRad) * 8} y1={-Math.sin(needleRad) * 8} x2={Math.cos(needleRad) * 30} y2={Math.sin(needleRad) * 30} stroke="#ef4444" strokeWidth="3" strokeLinecap="round" style={{ transition: 'all 0.1s' }} />
                   );
                 })()}
-
-                {/* Center cap */}
-                <circle cx="0" cy="0" r="8" fill="#ef4444" stroke="#b91c1c" strokeWidth="1" />
-                <circle cx="0" cy="0" r="4" fill="#fca5a5" />
-
-                {/* Label */}
-                <text x="0" y="72" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">
-                  PRESSURE (bar)
-                </text>
+                <circle cx="0" cy="0" r="6" fill="#ef4444" />
+                <text x="0" y="55" textAnchor="middle" fill="#94a3b8" fontSize="9">PRESSURE (bar)</text>
               </g>
 
-              {/* ========== PRESSURE INDICATOR BAR ========== */}
+              {/* Pressure bar */}
               <g transform="translate(250, 230)">
-                <text x="0" y="0" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">
-                  Current Pressure
-                </text>
-                {/* Background bar */}
-                <rect x="-100" y="8" width="200" height="16" rx="8" fill="#1e293b" stroke="#334155" strokeWidth="1" />
-                {/* Pressure fill */}
-                <rect
-                  x="-98"
-                  y="10"
-                  width={Math.min(Math.abs(pressureInBars(currentPressure)) * 3.9, 196)}
-                  height="12"
-                  rx="6"
-                  fill={Math.abs(pressureInBars(currentPressure)) > 30 ? "#ef4444" : Math.abs(pressureInBars(currentPressure)) > 15 ? "#f59e0b" : "#22c55e"}
-                  style={{ transition: 'all 0.1s' }}
-                />
-                {/* Pressure value */}
-                <text x="0" y="38" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">
+                <rect x="-100" y="0" width="200" height="16" rx="8" fill="#1e293b" stroke="#334155" />
+                <rect x="-98" y="2" width={Math.min(Math.abs(pressureInBars(currentPressure)) * 4, 196)} height="12" rx="6" fill={Math.abs(pressureInBars(currentPressure)) > 30 ? "#ef4444" : Math.abs(pressureInBars(currentPressure)) > 15 ? "#f59e0b" : "#22c55e"} style={{ transition: 'all 0.1s' }} />
+                <text x="0" y="32" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">
                   {Math.abs(pressureInBars(currentPressure)).toFixed(1)} bar
                 </text>
               </g>
-
-              {/* Warning indicators */}
-              {!valveOpen && wavePosition > 0 && wavePosition < 50 && (
-                <g>
-                  <text x="250" y="70" textAnchor="middle" fill="#fbbf24" fontSize="14" fontWeight="bold" opacity={1 - wavePosition / 60}>
-                    PRESSURE SURGE DETECTED
-                  </text>
-                </g>
-              )}
             </svg>
 
-            {/* Controls */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-              {valveOpen ? (
-                <button
-                  onPointerDown={closeValve}
-                  disabled={animating}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: animating ? '#94a3b8' : 'linear-gradient(135deg, #ef4444, #b91c1c)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: animating ? 'not-allowed' : 'pointer',
-                    fontWeight: 600
-                  }}
-                >
-                  ⚡ CLOSE VALVE INSTANTLY
-                </button>
-              ) : (
-                <button
-                  onPointerDown={resetSimulation}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600
-                  }}
-                >
-                  🔄 Reset & Try Again
-                </button>
-              )}
-            </div>
-
             {/* Velocity slider */}
-            <div style={{ width: '100%', maxWidth: 350, marginBottom: '1rem' }}>
-              <label style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                Flow Velocity: {flowVelocity} m/s
-              </label>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Velocity</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowVelocity} m/s</span>
+              </div>
               <input
                 type="range"
                 min="1"
@@ -1361,352 +846,458 @@ export default function WaterHammerRenderer({
                   setFlowVelocity(parseFloat(e.target.value));
                   if (!valveOpen) resetSimulation();
                 }}
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
               />
             </div>
 
-            {hasClosedValve && !animating && (
-              <button
-                onPointerDown={() => {
-                  setShowResult(true);
-                  if (prediction === 'c') {
-                    onCorrectAnswer?.();
-                  } else {
-                    onIncorrectAnswer?.();
-                  }
-                }}
-                style={{
-                  padding: '1rem 2rem',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                See Results
-              </button>
-            )}
-
-            {showResult && (
-              <div style={{
-                marginTop: '1rem',
-                padding: '1rem',
-                background: prediction === 'c' ? '#dcfce7' : '#fef3c7',
-                borderRadius: 12,
-                textAlign: 'center',
-                maxWidth: 400
-              }}>
-                <p style={{ fontWeight: 600, color: prediction === 'c' ? '#166534' : '#92400e' }}>
-                  {prediction === 'c' ? '✓ Correct!' : 'Not quite!'}
-                </p>
-                <p style={{ color: '#1e293b', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  Pressure rises <strong>dramatically</strong>! At {flowVelocity} m/s, the pressure spike is{' '}
-                  <strong>{pressureInBars(calculatePressureRise(flowVelocity)).toFixed(1)} bar</strong>.
-                  The water's momentum converts instantly to pressure!
-                </p>
+            {/* Action buttons */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+              {valveOpen ? (
                 <button
-                  onPointerDown={() => goToPhase('review')}
+                  onClick={closeValve}
+                  disabled={animating}
                   style={{
-                    marginTop: '1rem',
-                    padding: '0.75rem 2rem',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    color: 'white',
+                    padding: '14px 28px',
+                    borderRadius: '10px',
                     border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600
+                    background: animating ? colors.border : `linear-gradient(135deg, ${colors.error}, #b91c1c)`,
+                    color: 'white',
+                    fontWeight: 700,
+                    cursor: animating ? 'not-allowed' : 'pointer',
+                    fontSize: '16px',
                   }}
                 >
-                  Learn the Physics
+                  CLOSE VALVE INSTANTLY
                 </button>
-              </div>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // REVIEW
-      // ───────────────────────────────────────────────────
-      case 'review':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
-              The Physics of Water Hammer
-            </h2>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#1d4ed8', marginBottom: '0.75rem' }}>Joukowsky Equation</h3>
-
-              <div style={{
-                background: 'white',
-                padding: '1rem',
-                borderRadius: 10,
-                textAlign: 'center',
-                marginBottom: '1rem'
-              }}>
-                <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#1e293b' }}>
-                  ΔP = ρ × c × Δv
-                </p>
-                <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem' }}>
-                  Pressure rise = Density × Sound speed × Velocity change
-                </p>
-              </div>
-
-              <div style={{ fontSize: '0.9rem', color: '#1e293b' }}>
-                <p style={{ marginBottom: '0.75rem' }}>
-                  <strong>For water:</strong>
-                </p>
-                <ul style={{ paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                  <li>ρ (density) = 1000 kg/m³</li>
-                  <li>c (sound speed) ≈ 1400 m/s</li>
-                  <li>So: ΔP = 1,400,000 × Δv (Pa)</li>
-                </ul>
-
-                <p style={{ marginTop: '1rem', padding: '0.75rem', background: '#fee2e2', borderRadius: 8 }}>
-                  <strong>Example:</strong> Water at 3 m/s suddenly stopped:<br/>
-                  ΔP = 1000 × 1400 × 3 = <strong>4,200,000 Pa = 42 bar!</strong>
-                </p>
-              </div>
+              ) : (
+                <button
+                  onClick={resetSimulation}
+                  style={{
+                    padding: '14px 28px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: colors.accent,
+                    color: 'white',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                  }}
+                >
+                  Reset & Try Again
+                </button>
+              )}
             </div>
 
+            {/* Stats display */}
             <div style={{
-              background: '#f0fdf4',
-              borderRadius: 12,
-              padding: '1rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
             }}>
-              <h4 style={{ color: '#166534', marginBottom: '0.5rem' }}>Key Insight</h4>
-              <p style={{ color: '#1e293b', fontSize: '0.9rem' }}>
-                The pressure wave travels at the <strong>speed of sound in water</strong> (≈1400 m/s),
-                not the flow speed. This is why the pressure spike happens almost instantly throughout
-                the pipe system!
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{flowVelocity} m/s</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Flow Velocity</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>{pressureInBars(calculatePressureRise(flowVelocity)).toFixed(1)} bar</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Expected Peak</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.error }}>{pressureInBars(maxPressure).toFixed(1)} bar</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Measured Peak</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Result reveal */}
+          {hasClosedValve && !animating && !showResult && (
+            <button
+              onClick={() => setShowResult(true)}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Results
+            </button>
+          )}
+
+          {showResult && (
+            <div style={{
+              background: prediction === 'c' ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${prediction === 'c' ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.h3, color: prediction === 'c' ? colors.success : colors.warning, marginBottom: '12px' }}>
+                {prediction === 'c' ? 'Correct!' : 'Not quite!'}
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                Pressure rises <strong style={{ color: colors.error }}>dramatically</strong>! At {flowVelocity} m/s, the pressure spike is{' '}
+                <strong>{pressureInBars(calculatePressureRise(flowVelocity)).toFixed(1)} bar</strong>.
+                The water's momentum converts instantly to pressure!
+              </p>
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Learn the Physics
+              </button>
+            </div>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Water Hammer
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
+              The Joukowsky Equation
+            </h3>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '20px',
+              textAlign: 'center',
+              marginBottom: '16px',
+            }}>
+              <p style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 800, color: colors.textPrimary }}>
+                ΔP = ρ × c × Δv
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                Pressure rise = Density × Sound speed × Velocity change
               </p>
             </div>
-
-            <button
-              onPointerDown={() => goToPhase('twist_predict')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-            >
-              Try a Twist! 🔧
-            </button>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>For water:</strong>
+              </p>
+              <ul style={{ paddingLeft: '20px', lineHeight: 2 }}>
+                <li><span style={{ color: colors.accent }}>ρ</span> (density) = 1000 kg/m³</li>
+                <li><span style={{ color: colors.accent }}>c</span> (sound speed) ≈ 1400 m/s</li>
+                <li>So: ΔP = <span style={{ color: colors.warning }}>1,400,000 × Δv</span> (Pascals)</li>
+              </ul>
+            </div>
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // TWIST PREDICT
-      // ───────────────────────────────────────────────────
-      case 'twist_predict':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
-              The Critical Time Challenge
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
-              What if instead of closing the valve instantly, you close it <strong>slowly</strong>?
+          <div style={{
+            background: `${colors.error}22`,
+            border: `1px solid ${colors.error}44`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.error, marginBottom: '12px' }}>
+              Example Calculation
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Water at <strong>3 m/s</strong> suddenly stopped:<br/>
+              ΔP = 1000 × 1400 × 3 = <strong style={{ color: colors.error }}>4,200,000 Pa = 42 bar!</strong>
             </p>
+          </div>
 
-            <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              Key Insight
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              The pressure wave travels at the <strong>speed of sound in water</strong> (~1400 m/s),
+              not the flow speed. This is why the pressure spike happens almost instantly throughout
+              the entire pipe system!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover the Solution
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Same pressure regardless of closure speed' },
+      { id: 'b', text: 'Slow closure causes HIGHER pressure (more time to build)' },
+      { id: 'c', text: 'Slow closure REDUCES peak pressure', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Valve Closure Speed
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What if instead of closing instantly, you close the valve SLOWLY?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: '400px', margin: '0 auto', display: 'block' }}>
               {/* Fast closure */}
               <g transform="translate(0, 0)">
-                <rect x="20" y="30" width="160" height="40" fill="#475569" rx="3" />
-                <rect x="25" y="35" width="130" height="30" fill="#3b82f6" opacity="0.5" />
-                <rect x="155" y="25" width="20" height="50" fill="#ef4444" />
-                <text x="100" y="95" textAnchor="middle" fill="#1e293b" fontSize="11" fontWeight="bold">
-                  Instant Close
-                </text>
-                <text x="100" y="110" textAnchor="middle" fill="#dc2626" fontSize="10">
-                  t = 0.01 seconds
-                </text>
+                <rect x="20" y="25" width="150" height="35" fill="#475569" rx="3" />
+                <rect x="25" y="30" width="120" height="25" fill="#3b82f6" opacity="0.5" />
+                <rect x="145" y="20" width="20" height="45" fill="#ef4444" rx="2" />
+                <text x="95" y="80" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Instant Close</text>
+                <text x="95" y="95" textAnchor="middle" fill="#f87171" fontSize="10">t = 10 ms</text>
               </g>
 
               {/* Slow closure */}
               <g transform="translate(200, 0)">
-                <rect x="20" y="30" width="160" height="40" fill="#475569" rx="3" />
-                <rect x="25" y="35" width="130" height="30" fill="#3b82f6" opacity="0.5" />
-                <rect x="155" y="35" width="20" height="30" fill="#22c55e" />
-                <text x="100" y="95" textAnchor="middle" fill="#1e293b" fontSize="11" fontWeight="bold">
-                  Slow Close
-                </text>
-                <text x="100" y="110" textAnchor="middle" fill="#22c55e" fontSize="10">
-                  t = 1.0 seconds
-                </text>
+                <rect x="20" y="25" width="150" height="35" fill="#475569" rx="3" />
+                <rect x="25" y="30" width="120" height="25" fill="#3b82f6" opacity="0.5" />
+                <rect x="145" y="30" width="20" height="25" fill="#22c55e" rx="2" />
+                <text x="95" y="80" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Slow Close</text>
+                <text x="95" y="95" textAnchor="middle" fill="#4ade80" fontSize="10">t = 500 ms</text>
               </g>
             </svg>
-
-            <p style={{ color: '#64748b', marginBottom: '1rem', textAlign: 'center', maxWidth: 450 }}>
-              <strong>Critical time</strong> = 2L/c (time for wave to travel pipe and back)
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginTop: '16px' }}>
+              <strong>Critical time</strong> = 2L/c (time for wave to travel pipe length and back)
             </p>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
-              {[
-                { id: 'a', text: 'Same pressure regardless of closure speed' },
-                { id: 'b', text: 'Slow closure causes HIGHER pressure' },
-                { id: 'c', text: 'Slow closure REDUCES peak pressure' }
-              ].map(opt => (
-                <button
-                  key={opt.id}
-                  onPointerDown={() => handleTwistPrediction(opt.id)}
-                  style={{
-                    padding: '1rem',
-                    background: twistPrediction === opt.id ? '#f59e0b' : 'white',
-                    color: twistPrediction === opt.id ? 'white' : '#1e293b',
-                    border: `2px solid ${twistPrediction === opt.id ? '#f59e0b' : '#e2e8f0'}`,
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 500
-                  }}
-                >
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-
-            {twistPrediction && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                onPointerDown={() => goToPhase('twist_play')}
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
                 style={{
-                  marginTop: '1.5rem',
-                  padding: '1rem 2.5rem',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
                   cursor: 'pointer',
-                  fontWeight: 600
                 }}
               >
-                Compare Them!
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
               </button>
-            )}
+            ))}
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // TWIST PLAY
-      // ───────────────────────────────────────────────────
-      case 'twist_play':
-        const criticalTime = (2 * pipeLength) / soundSpeed;
-        const effectiveVelocity = closureTime < criticalTime
-          ? flowVelocity
-          : flowVelocity * (criticalTime / closureTime);
-        const peakPressure = pressureInBars(calculatePressureRise(effectiveVelocity));
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Compare Them
+            </button>
+          )}
+        </div>
 
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#1e293b' }}>
-              Closure Speed Comparison
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '1rem', textAlign: 'center' }}>
-              Adjust closure time and see how it affects peak pressure
-            </p>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const criticalTime = (2 * pipeLength) / soundSpeed;
+    const effectiveVelocity = closureTime < criticalTime
+      ? flowVelocity
+      : flowVelocity * (criticalTime / closureTime);
+    const peakPressure = pressureInBars(calculatePressureRise(effectiveVelocity));
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Closure Speed Comparison
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust closure time and see how it affects peak pressure
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
             {/* Pressure graph */}
-            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
-              {/* Graph background */}
-              <rect x="50" y="20" width="330" height="150" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1" />
+            <svg viewBox="0 0 400 180" style={{ width: '100%', marginBottom: '20px' }}>
+              <rect x="50" y="20" width="330" height="130" fill="#1e293b" stroke="#334155" />
 
               {/* Grid lines */}
               {[0, 1, 2, 3, 4, 5].map(i => (
                 <g key={i}>
-                  <line x1="50" y1={20 + i * 30} x2="380" y2={20 + i * 30} stroke="#e2e8f0" />
-                  <text x="45" y={25 + i * 30} textAnchor="end" fill="#64748b" fontSize="9">
-                    {50 - i * 10}
-                  </text>
+                  <line x1="50" y1={20 + i * 26} x2="380" y2={20 + i * 26} stroke="#334155" />
+                  <text x="45" y={25 + i * 26} textAnchor="end" fill="#64748b" fontSize="9">{50 - i * 10}</text>
                 </g>
               ))}
 
-              {/* Pressure curve */}
-              {twistPressureHistory.length > 0 && (
-                <path
-                  d={`M 50,170 ${twistPressureHistory.map((p, i) =>
-                    `L ${50 + i * 3.3},${170 - (pressureInBars(Math.abs(p)) / 50) * 150}`
-                  ).join(' ')}`}
-                  fill="none"
-                  stroke="#ef4444"
-                  strokeWidth="3"
-                />
-              )}
-
               {/* Critical time marker */}
               <line
-                x1={50 + (criticalTime / 0.3) * 330}
+                x1={50 + Math.min((criticalTime / 0.3) * 330, 330)}
                 y1="20"
-                x2={50 + (criticalTime / 0.3) * 330}
-                y2="170"
-                stroke="#3b82f6"
+                x2={50 + Math.min((criticalTime / 0.3) * 330, 330)}
+                y2="150"
+                stroke={colors.accent}
                 strokeWidth="2"
                 strokeDasharray="5,5"
               />
               <text
-                x={50 + (criticalTime / 0.3) * 330}
-                y="185"
+                x={50 + Math.min((criticalTime / 0.3) * 330, 330)}
+                y="165"
                 textAnchor="middle"
-                fill="#3b82f6"
+                fill={colors.accent}
                 fontSize="9"
               >
                 Tc = {(criticalTime * 1000).toFixed(0)}ms
               </text>
 
-              {/* Axes labels */}
-              <text x="215" y="198" textAnchor="middle" fill="#1e293b" fontSize="10">Time</text>
-              <text x="15" y="95" textAnchor="middle" fill="#1e293b" fontSize="10" transform="rotate(-90, 15, 95)">
-                Pressure (bar)
-              </text>
+              {/* Pressure curve */}
+              {twistPressureHistory.length > 0 && (
+                <path
+                  d={`M 50,150 ${twistPressureHistory.map((p, i) =>
+                    `L ${50 + i * 3.3},${150 - (pressureInBars(Math.abs(p)) / 50) * 130}`
+                  ).join(' ')}`}
+                  fill="none"
+                  stroke={colors.error}
+                  strokeWidth="3"
+                />
+              )}
+
+              <text x="215" y="175" textAnchor="middle" fill="#64748b" fontSize="10">Time</text>
             </svg>
 
-            {/* Info display */}
+            {/* Stats grid */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '0.75rem',
-              width: '100%',
-              maxWidth: 450,
-              marginBottom: '1rem'
+              gap: '12px',
+              marginBottom: '20px',
             }}>
-              <div style={{ background: '#f0f9ff', padding: '0.75rem', borderRadius: 8, textAlign: 'center' }}>
-                <p style={{ fontSize: '0.75rem', color: '#64748b' }}>Critical Time</p>
-                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1d4ed8' }}>
-                  {(criticalTime * 1000).toFixed(0)} ms
-                </p>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Critical Time</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{(criticalTime * 1000).toFixed(0)} ms</div>
               </div>
-              <div style={{ background: '#fef3c7', padding: '0.75rem', borderRadius: 8, textAlign: 'center' }}>
-                <p style={{ fontSize: '0.75rem', color: '#64748b' }}>Closure Time</p>
-                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#d97706' }}>
-                  {(closureTime * 1000).toFixed(0)} ms
-                </p>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Closure Time</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{(closureTime * 1000).toFixed(0)} ms</div>
               </div>
-              <div style={{ background: closureTime > criticalTime ? '#dcfce7' : '#fee2e2', padding: '0.75rem', borderRadius: 8, textAlign: 'center' }}>
-                <p style={{ fontSize: '0.75rem', color: '#64748b' }}>Peak Pressure</p>
-                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: closureTime > criticalTime ? '#166534' : '#dc2626' }}>
+              <div style={{
+                background: closureTime > criticalTime ? `${colors.success}22` : `${colors.error}22`,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Peak Pressure</div>
+                <div style={{ ...typo.h3, color: closureTime > criticalTime ? colors.success : colors.error }}>
                   {peakPressure.toFixed(1)} bar
-                </p>
+                </div>
               </div>
             </div>
 
             {/* Closure time slider */}
-            <div style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
-              <label style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                Valve Closure Time: {(closureTime * 1000).toFixed(0)} ms
-                {closureTime < criticalTime ? ' (FAST - danger!)' : ' (SLOW - safe)'}
-              </label>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Valve Closure Time</span>
+                <span style={{ ...typo.small, color: closureTime < criticalTime ? colors.error : colors.success, fontWeight: 600 }}>
+                  {(closureTime * 1000).toFixed(0)} ms {closureTime < criticalTime ? '(FAST - danger!)' : '(SLOW - safe)'}
+                </span>
+              </div>
               <input
                 type="range"
                 min="0.01"
@@ -1714,541 +1305,641 @@ export default function WaterHammerRenderer({
                 step="0.01"
                 value={closureTime}
                 onChange={(e) => setClosureTime(parseFloat(e.target.value))}
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
               />
             </div>
 
-            <button
-              onPointerDown={simulateSlowClosure}
-              disabled={twistAnimating}
-              style={{
-                padding: '0.75rem 2rem',
-                background: twistAnimating ? '#94a3b8' : 'linear-gradient(135deg, #f59e0b, #d97706)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 10,
-                cursor: twistAnimating ? 'not-allowed' : 'pointer',
-                fontWeight: 600,
-                marginBottom: '1rem'
-              }}
-            >
-              {twistAnimating ? 'Simulating...' : 'Run Simulation'}
-            </button>
-
-            {twistPressureHistory.length > 0 && !twistAnimating && (
+            {/* Simulate button */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
               <button
-                onPointerDown={() => {
-                  setShowTwistResult(true);
-                  if (twistPrediction === 'c') {
-                    onCorrectAnswer?.();
-                  } else {
-                    onIncorrectAnswer?.();
-                  }
-                }}
+                onClick={simulateSlowClosure}
+                disabled={twistAnimating}
                 style={{
-                  padding: '1rem 2rem',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
+                  padding: '14px 28px',
+                  borderRadius: '10px',
                   border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600
+                  background: twistAnimating ? colors.border : `linear-gradient(135deg, ${colors.warning}, #d97706)`,
+                  color: 'white',
+                  fontWeight: 700,
+                  cursor: twistAnimating ? 'not-allowed' : 'pointer',
                 }}
               >
-                See Results
+                {twistAnimating ? 'Simulating...' : 'Run Simulation'}
               </button>
-            )}
-
-            {showTwistResult && (
-              <div style={{
-                marginTop: '1rem',
-                padding: '1rem',
-                background: twistPrediction === 'c' ? '#dcfce7' : '#fef3c7',
-                borderRadius: 12,
-                textAlign: 'center',
-                maxWidth: 400
-              }}>
-                <p style={{ fontWeight: 600, color: twistPrediction === 'c' ? '#166534' : '#92400e' }}>
-                  {twistPrediction === 'c' ? '✓ Correct!' : 'Not quite!'}
-                </p>
-                <p style={{ color: '#1e293b', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  Slow closure <strong>reduces</strong> peak pressure! When closure time exceeds the
-                  critical time (2L/c), the reflected pressure wave has time to dissipate before
-                  more pressure builds up.
-                </p>
-                <button
-                  onPointerDown={() => goToPhase('twist_review')}
-                  style={{
-                    marginTop: '1rem',
-                    padding: '0.75rem 2rem',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600
-                  }}
-                >
-                  Understand Why
-                </button>
-              </div>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // TWIST REVIEW
-      // ───────────────────────────────────────────────────
-      case 'twist_review':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
-              Critical Time: The Key to Safety
-            </h2>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #fefce8, #fef9c3)',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#ca8a04', marginBottom: '0.75rem' }}>The Critical Time</h3>
-
-              <div style={{
-                background: 'white',
-                padding: '1rem',
-                borderRadius: 10,
-                textAlign: 'center',
-                marginBottom: '1rem'
-              }}>
-                <p style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#1e293b' }}>
-                  Tc = 2L / c
-                </p>
-                <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem' }}>
-                  Critical time = 2 × Pipe length / Sound speed
-                </p>
-              </div>
-
-              <div style={{ fontSize: '0.9rem', color: '#1e293b' }}>
-                <p style={{ marginBottom: '0.75rem' }}>
-                  <strong>What happens:</strong>
-                </p>
-                <ul style={{ paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                  <li><strong>Fast closure (t &lt; Tc):</strong> Full pressure spike</li>
-                  <li><strong>Slow closure (t &gt; Tc):</strong> Reduced pressure</li>
-                  <li>Pressure ∝ Tc / t (when t &gt; Tc)</li>
-                </ul>
-
-                <p style={{ marginTop: '1rem', padding: '0.75rem', background: '#dcfce7', borderRadius: 8 }}>
-                  <strong>Example:</strong> 100m pipe, c = 1400 m/s<br/>
-                  Tc = 2 × 100 / 1400 = <strong>143 ms</strong><br/>
-                  Close over 286 ms → pressure halved!
-                </p>
-              </div>
             </div>
+          </div>
 
+          {/* Result reveal */}
+          {twistPressureHistory.length > 0 && !twistAnimating && !showTwistResult && (
+            <button
+              onClick={() => setShowTwistResult(true)}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Results
+            </button>
+          )}
+
+          {showTwistResult && (
             <div style={{
-              background: '#f0fdf4',
-              borderRadius: 12,
-              padding: '1rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem'
+              background: twistPrediction === 'c' ? `${colors.success}22` : `${colors.warning}22`,
+              border: `1px solid ${twistPrediction === 'c' ? colors.success : colors.warning}`,
+              borderRadius: '12px',
+              padding: '20px',
+              textAlign: 'center',
             }}>
-              <h4 style={{ color: '#166534', marginBottom: '0.5rem' }}>Engineering Solutions</h4>
-              <ul style={{ color: '#1e293b', fontSize: '0.9rem', paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                <li><strong>Slow-closing valves</strong> - Motorized, timed closure</li>
-                <li><strong>Surge tanks</strong> - Air cushion absorbs shock</li>
-                <li><strong>Hammer arrestors</strong> - Sealed air chambers</li>
-                <li><strong>Check valves</strong> - Prevent backflow surges</li>
+              <p style={{ ...typo.h3, color: twistPrediction === 'c' ? colors.success : colors.warning, marginBottom: '12px' }}>
+                {twistPrediction === 'c' ? 'Correct!' : 'Not quite!'}
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                Slow closure <strong style={{ color: colors.success }}>reduces</strong> peak pressure! When closure time exceeds the
+                critical time (2L/c), the reflected pressure wave has time to dissipate before
+                more pressure builds up.
+              </p>
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Understand Why
+              </button>
+            </div>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Critical Time: The Key to Safety
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '16px' }}>
+              The Critical Time Formula
+            </h3>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '20px',
+              textAlign: 'center',
+              marginBottom: '16px',
+            }}>
+              <p style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: 800, color: colors.textPrimary }}>
+                Tc = 2L / c
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+                Critical time = 2 × Pipe length / Sound speed
+              </p>
+            </div>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '12px' }}>
+                <strong style={{ color: colors.textPrimary }}>What happens:</strong>
+              </p>
+              <ul style={{ paddingLeft: '20px', lineHeight: 2 }}>
+                <li><span style={{ color: colors.error }}>Fast closure (t &lt; Tc):</span> Full pressure spike</li>
+                <li><span style={{ color: colors.success }}>Slow closure (t &gt; Tc):</span> Reduced pressure</li>
+                <li>Pressure ∝ Tc / t (when t &gt; Tc)</li>
               </ul>
             </div>
-
-            <button
-              onPointerDown={() => goToPhase('transfer')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-            >
-              See Real Applications
-            </button>
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // TRANSFER
-      // ───────────────────────────────────────────────────
-      case 'transfer':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
-              Water Hammer in the Real World
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center' }}>
-              Explore each application to unlock the test
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              Example
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              100m pipe, c = 1400 m/s<br/>
+              Tc = 2 × 100 / 1400 = <strong>143 ms</strong><br/>
+              Close over 286 ms → pressure <strong style={{ color: colors.success }}>halved</strong>!
             </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            {[
+              { icon: '🔧', title: 'Slow-closing valves', desc: 'Motorized, timed closure' },
+              { icon: '🏗️', title: 'Surge tanks', desc: 'Air cushion absorbs shock' },
+              { icon: '💨', title: 'Hammer arrestors', desc: 'Sealed air chambers' },
+              { icon: '🔒', title: 'Check valves', desc: 'Prevent backflow surges' },
+            ].map((item, i) => (
+              <div key={i} style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+              }}>
+                <span style={{ fontSize: '32px' }}>{item.icon}</span>
+                <div>
+                  <div style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600 }}>{item.title}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Water Hammer Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-              gap: '1rem',
-              width: '100%',
-              maxWidth: 600,
-              marginBottom: '1.5rem'
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
             }}>
-              {applications.map((app, index) => (
-                <div
-                  key={index}
-                  onPointerDown={() => {
-                    setCompletedApps(prev => new Set([...prev, index]));
-                    playSound('click');
-                  }}
-                  style={{
-                    background: completedApps.has(index)
-                      ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)'
-                      : 'white',
-                    borderRadius: 12,
-                    padding: '1rem',
-                    cursor: 'pointer',
-                    border: `2px solid ${completedApps.has(index) ? '#22c55e' : '#e2e8f0'}`,
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{app.icon}</div>
-                  <h3 style={{ color: '#1e293b', fontSize: '1rem', marginBottom: '0.25rem' }}>
-                    {app.title}
-                    {completedApps.has(index) && ' ✓'}
-                  </h3>
-                  <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                    {app.description}
-                  </p>
-                  {completedApps.has(index) && (
-                    <p style={{ color: '#1e293b', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                      {app.detail}
-                    </p>
-                  )}
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
             </div>
+          </div>
 
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              {completedApps.size} / {applications.length} applications explored
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand water hammer and pressure wave physics!'
+                : 'Review the concepts and try again.'}
             </p>
 
-            {completedApps.size >= applications.length && (
+            {passed ? (
               <button
-                onPointerDown={() => goToPhase('test')}
-                style={{
-                  padding: '1rem 2.5rem',
-                  fontSize: '1.1rem',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                Take the Test
-              </button>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // TEST
-      // ───────────────────────────────────────────────────
-      case 'test':
-        const score = testQuestions.reduce((acc, tq, i) => {
-          if (testAnswers[i] !== undefined && tq.options[testAnswers[i]]?.correct) {
-            return acc + 1;
-          }
-          return acc;
-        }, 0);
-
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
-              Water Hammer Mastery Test
-            </h2>
-
-            <div style={{ width: '100%', maxWidth: 600 }}>
-              {testQuestions.map((tq, qi) => (
-                <div
-                  key={qi}
-                  style={{
-                    background: 'white',
-                    borderRadius: 12,
-                    padding: '1rem',
-                    marginBottom: '1rem',
-                    border: `2px solid ${
-                      testSubmitted
-                        ? testAnswers[qi] === tq.correct
-                          ? '#22c55e'
-                          : testAnswers[qi] !== undefined
-                          ? '#ef4444'
-                          : '#e2e8f0'
-                        : '#e2e8f0'
-                    }`
-                  }}
-                >
-                  <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.75rem' }}>
-                    {qi + 1}. {tq.question}
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {tq.options.map((opt, oi) => (
-                      <button
-                        key={oi}
-                        onPointerDown={() => handleTestAnswer(qi, oi)}
-                        disabled={testSubmitted}
-                        style={{
-                          padding: '0.6rem 1rem',
-                          textAlign: 'left',
-                          background: testSubmitted
-                            ? opt.correct
-                              ? '#dcfce7'
-                              : testAnswers[qi] === oi
-                              ? '#fee2e2'
-                              : '#f8fafc'
-                            : testAnswers[qi] === oi
-                            ? '#dbeafe'
-                            : '#f8fafc',
-                          color: '#1e293b',
-                          border: `1px solid ${
-                            testSubmitted
-                              ? opt.correct
-                                ? '#22c55e'
-                                : testAnswers[qi] === oi
-                                ? '#ef4444'
-                                : '#e2e8f0'
-                              : testAnswers[qi] === oi
-                              ? '#3b82f6'
-                              : '#e2e8f0'
-                          }`,
-                          borderRadius: 8,
-                          cursor: testSubmitted ? 'default' : 'pointer',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        {opt.text}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {!testSubmitted ? (
-              <button
-                onPointerDown={submitTest}
-                disabled={Object.keys(testAnswers).length < testQuestions.length}
-                style={{
-                  padding: '1rem 2.5rem',
-                  fontSize: '1.1rem',
-                  background: Object.keys(testAnswers).length < testQuestions.length
-                    ? '#94a3b8'
-                    : 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: Object.keys(testAnswers).length < testQuestions.length ? 'not-allowed' : 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                Submit Test ({Object.keys(testAnswers).length}/{testQuestions.length})
+                Complete Lesson
               </button>
             ) : (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: score >= 7 ? '#22c55e' : '#f59e0b',
-                  marginBottom: '1rem'
-                }}>
-                  Score: {score}/{testQuestions.length} ({Math.round(score / testQuestions.length * 100)}%)
-                </p>
-
-                <button
-                  onPointerDown={() => goToPhase('mastery')}
-                  style={{
-                    padding: '1rem 2.5rem',
-                    fontSize: '1.1rem',
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 12,
-                    cursor: 'pointer',
-                    fontWeight: 600
-                  }}
-                >
-                  Complete Journey
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
             )}
           </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // MASTERY
-      // ───────────────────────────────────────────────────
-      case 'mastery':
-        const finalScore = testQuestions.reduce((acc, tq, i) => {
-          if (testAnswers[i] !== undefined && tq.options[testAnswers[i]]?.correct) {
-            return acc + 1;
-          }
-          return acc;
-        }, 0);
-
-        return (
-          <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔧💧🎉</div>
-            <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#1e293b' }}>
-              Water Hammer Master!
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', maxWidth: 400 }}>
-              You now understand why pipes bang and how engineers prevent catastrophic failures!
-            </p>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 400,
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#1d4ed8', marginBottom: '1rem' }}>Your Achievements</h3>
-
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1rem' }}>
-                <div>
-                  <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1e293b' }}>
-                    {finalScore}/{testQuestions.length}
-                  </p>
-                  <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Test Score</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1e293b' }}>4</p>
-                  <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Applications</p>
-                </div>
-              </div>
-
-              <div style={{
-                background: 'white',
-                borderRadius: 10,
-                padding: '1rem',
-                textAlign: 'left'
-              }}>
-                <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.5rem' }}>
-                  Key Takeaways:
-                </p>
-                <ul style={{ color: '#64748b', fontSize: '0.85rem', paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                  <li>ΔP = ρcΔv (Joukowsky equation)</li>
-                  <li>Pressure wave travels at sound speed</li>
-                  <li>Critical time Tc = 2L/c</li>
-                  <li>Slow valve closure saves pipes!</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Confetti animation */}
-            <svg viewBox="0 0 300 100" style={{ width: '100%', maxWidth: 300 }}>
-              {[...Array(20)].map((_, i) => (
-                <circle
-                  key={i}
-                  cx={Math.random() * 300}
-                  cy={Math.random() * 100}
-                  r={3 + Math.random() * 4}
-                  fill={['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6'][i % 5]}
-                >
-                  <animate
-                    attributeName="cy"
-                    values={`${Math.random() * 30};${70 + Math.random() * 30}`}
-                    dur={`${1 + Math.random()}s`}
-                    repeatCount="indefinite"
-                  />
-                  <animate
-                    attributeName="opacity"
-                    values="1;0"
-                    dur={`${1 + Math.random()}s`}
-                    repeatCount="indefinite"
-                  />
-                </circle>
-              ))}
-            </svg>
-
-            <button
-              onPointerDown={() => {
-                onPhaseComplete?.();
-                setTestAnswers({});
-                setTestSubmitted(false);
-                setCompletedApps(new Set());
-                resetSimulation();
-                setTwistPressureHistory([]);
-              }}
-              style={{
-                marginTop: '1rem',
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600
-              }}
-            >
-              Play Again
-            </button>
-          </div>
-        );
-
-      default:
-        return null;
+          {renderNavDots()}
+        </div>
+      );
     }
-  };
 
-  const currentIndex = phaseOrder.indexOf(phase);
+    const question = testQuestions[currentQuestion];
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Water Hammer</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p, i) => (
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                key={p}
-                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
-                    : currentIndex > i
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto">{renderPhase()}</div>
-    </div>
-  );
-}
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Water Hammer Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand why pipes bang and how engineers prevent catastrophic pressure failures in fluid systems.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Takeaways:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'ΔP = ρcΔv (Joukowsky equation)',
+              'Pressure wave travels at sound speed (~1400 m/s)',
+              'Critical time Tc = 2L/c determines safe closure',
+              'Slow valve closure reduces peak pressure',
+              'Hammer arrestors absorb pressure spikes',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => {
+              // Reset all state
+              setPrediction(null);
+              setTwistPrediction(null);
+              setShowResult(false);
+              setShowTwistResult(false);
+              setTestAnswers(Array(10).fill(null));
+              setTestSubmitted(false);
+              setTestScore(0);
+              setCurrentQuestion(0);
+              setCompletedApps([false, false, false, false]);
+              resetSimulation();
+              setTwistPressureHistory([]);
+              goToPhase('hook');
+            }}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default WaterHammerRenderer;

@@ -1,27 +1,173 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TYPES & INTERFACES
-// ─────────────────────────────────────────────────────────────────────────────
-// String phases for game progression
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// -----------------------------------------------------------------------------
+// Induction Heating - Complete 10-Phase Game
+// How invisible magnetic fields generate heat without contact
+// -----------------------------------------------------------------------------
 
-const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review', twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab', twist_review: 'Twist Review', transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
-};
-
-interface InductionHeatingRendererProps {
-  currentPhase?: Phase;
-  onPhaseComplete?: (phase: Phase) => void;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// REAL WORLD APPLICATIONS
-// ─────────────────────────────────────────────────────────────────────────────
+interface InductionHeatingRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "You place a steel pot on an induction cooktop and turn it on. Within seconds, the pot becomes hot enough to boil water, yet the glass surface of the cooktop remains cool to the touch.",
+    question: "What fundamental principle explains how the pot heats up without direct heat transfer from the cooktop surface?",
+    options: [
+      { id: 'a', label: "Infrared radiation from hidden heating elements beneath the glass" },
+      { id: 'b', label: "A rapidly changing magnetic field induces eddy currents in the metal, generating heat through I squared R losses", correct: true },
+      { id: 'c', label: "Microwave energy penetrates the pot and excites water molecules inside" },
+      { id: 'd', label: "Static electricity builds up between the cooktop and pot, creating sparks that heat the metal" }
+    ],
+    explanation: "Induction heating works through electromagnetic induction. A coil beneath the cooktop surface carries alternating current, creating a rapidly oscillating magnetic field. When this field passes through a conductive material like steel, it induces circulating electric currents called eddy currents. These currents flow through the metal's electrical resistance, converting electrical energy into heat (P = I squared R)."
+  },
+  {
+    scenario: "A home chef purchases an expensive set of pure aluminum cookware for their new induction cooktop. When they try to use the pans, the cooktop doesn't heat them properly and displays an error message.",
+    question: "Why do standard aluminum pans fail to work effectively on induction cooktops?",
+    options: [
+      { id: 'a', label: "Aluminum is too lightweight for the sensors to detect" },
+      { id: 'b', label: "Aluminum is non-magnetic (non-ferromagnetic), resulting in weak magnetic coupling and insufficient eddy current generation", correct: true },
+      { id: 'c', label: "Aluminum reflects magnetic fields back to the coil, causing interference" },
+      { id: 'd', label: "Aluminum's melting point is too low for induction cooking" }
+    ],
+    explanation: "Induction cooktops require ferromagnetic materials (like iron or steel) for efficient operation. Ferromagnetic materials concentrate magnetic field lines and couple strongly with the oscillating field, producing large eddy currents. Aluminum is non-magnetic, so magnetic field lines pass through it without concentration, resulting in weak eddy currents and minimal heating."
+  },
+  {
+    scenario: "A restaurant is evaluating whether to replace their gas stoves with induction cooktops. The energy consultant reports that gas burners transfer only about 40% of their energy to food, while much escapes as waste heat into the kitchen.",
+    question: "What efficiency rating would you expect from induction cooktops, and why?",
+    options: [
+      { id: 'a', label: "About 40-50% efficiency, similar to gas since both ultimately heat the pan" },
+      { id: 'b', label: "About 25-30% efficiency because electromagnetic energy conversion has inherent losses" },
+      { id: 'c', label: "About 80-90% efficiency because heat is generated directly inside the cookware rather than being transferred from an external source", correct: true },
+      { id: 'd', label: "100% efficiency since magnetic fields don't produce waste heat" }
+    ],
+    explanation: "Induction cooktops achieve 80-90% energy efficiency because they heat the cookware directly through induced currents. With gas, heat must travel from the flame through air to the pan, and much energy escapes sideways. Induction skips these intermediate steps - the pan IS the heating element."
+  },
+  {
+    scenario: "An engineer is designing an induction heating system for surface hardening of steel gears. She notices that when using high-frequency alternating current (400 kHz), only the outer 0.1mm of the gear teeth heat up, while the core stays cool.",
+    question: "What electromagnetic phenomenon explains why high-frequency induction heating affects only the surface of a conductor?",
+    options: [
+      { id: 'a', label: "The thermal conductivity effect, where heat naturally stays at the surface" },
+      { id: 'b', label: "The skin effect, where alternating currents concentrate near the conductor's surface at high frequencies", correct: true },
+      { id: 'c', label: "The Meissner effect, which expels magnetic fields from the interior" },
+      { id: 'd', label: "The photoelectric effect, where high-frequency waves only penetrate shallow depths" }
+    ],
+    explanation: "The skin effect causes alternating currents to flow primarily near the surface of a conductor. As frequency increases, the skin depth decreases. At 400 kHz in steel, the skin depth is approximately 0.1mm. This phenomenon is deliberately exploited for surface hardening applications."
+  },
+  {
+    scenario: "A manufacturing plant uses induction hardening to treat the teeth of heavy-duty gearboxes. The process heats the gear teeth to 900 degrees C in seconds, then rapidly quenches them, creating a hard wear-resistant surface while the core remains tough.",
+    question: "Why is induction heating particularly well-suited for surface hardening compared to furnace heating?",
+    options: [
+      { id: 'a', label: "Induction furnaces are cheaper to operate than conventional furnaces" },
+      { id: 'b', label: "Induction heating can selectively heat only the surface layer using high frequencies, allowing the core to remain cool and ductile", correct: true },
+      { id: 'c', label: "Induction heating produces higher temperatures than any furnace can achieve" },
+      { id: 'd', label: "Induction heating automatically adds carbon to the surface for hardening" }
+    ],
+    explanation: "Induction surface hardening leverages the skin effect to heat only the outer layer of the workpiece. By using high frequencies, engineers can control the heating depth to millimeter precision. The surface forms hard martensite while the core retains its original tough, ductile microstructure."
+  },
+  {
+    scenario: "A metallurgical engineer must design induction heating systems for two applications: (1) surface hardening of small parts requiring 0.5mm heat penetration, and (2) through-heating of 50mm diameter steel billets for forging.",
+    question: "How should the engineer select the operating frequencies for these two applications?",
+    options: [
+      { id: 'a', label: "Use the same frequency for both; heating depth is controlled by power level, not frequency" },
+      { id: 'b', label: "Use low frequency (1-10 kHz) for surface hardening and high frequency (100+ kHz) for through-heating" },
+      { id: 'c', label: "Use high frequency (100-400 kHz) for shallow surface heating and low frequency (1-10 kHz) for deep through-heating", correct: true },
+      { id: 'd', label: "Use microwave frequencies for small parts and radio frequencies for large parts" }
+    ],
+    explanation: "Frequency selection is critical in induction heating design. The skin depth formula shows that penetration depth decreases with increasing frequency. For shallow surface hardening, high frequencies concentrate heating at the surface. For through-heating large billets, low frequencies allow currents to penetrate deeper."
+  },
+  {
+    scenario: "A steel foundry uses a coreless induction furnace to melt 500 kg batches of stainless steel for precision castings. The furnace consists of a water-cooled copper coil surrounding a refractory-lined crucible.",
+    question: "What is the primary advantage of using induction furnaces over fuel-fired furnaces for melting high-purity alloys?",
+    options: [
+      { id: 'a', label: "Induction furnaces reach melting temperature faster than any other method" },
+      { id: 'b', label: "Induction furnaces can melt larger quantities of metal per batch" },
+      { id: 'c', label: "No combustion gases contact the melt, preventing contamination, while electromagnetic stirring ensures homogeneous composition", correct: true },
+      { id: 'd', label: "Induction furnaces use less electricity than resistance heating furnaces" }
+    ],
+    explanation: "Induction furnaces are preferred for high-purity alloys because no fuel combustion products contact the melt. Additionally, the electromagnetic field creates a stirring action that homogenizes temperature and composition throughout the melt."
+  },
+  {
+    scenario: "A smartphone placed on a wireless charging pad begins charging. Inside the pad, a coil creates an oscillating magnetic field, and inside the phone, a receiver coil converts this field back into electrical current.",
+    question: "What is the fundamental relationship between wireless charging technology and induction heating?",
+    options: [
+      { id: 'a', label: "They are completely different technologies using different physics principles" },
+      { id: 'b', label: "Both use electromagnetic induction to transfer energy - wireless charging captures induced current while induction heating converts it to heat", correct: true },
+      { id: 'c', label: "Wireless charging is microwave energy transfer, unrelated to induction" },
+      { id: 'd', label: "Induction heating uses DC current while wireless charging uses AC current" }
+    ],
+    explanation: "Wireless charging and induction heating both operate on electromagnetic induction principles. The key difference is intent: wireless chargers maximize efficient power transfer, while induction heaters maximize resistive losses (I squared R) to generate heat. Both are governed by the same physics."
+  },
+  {
+    scenario: "A pharmaceutical company uses induction sealing to hermetically seal foil liners onto plastic medicine bottles. The process takes less than one second: bottles pass under an induction head, and the foil liner heats up, melting a polymer coating.",
+    question: "Why is induction sealing preferred over direct heat sealing for tamper-evident pharmaceutical packaging?",
+    options: [
+      { id: 'a', label: "Induction sealing is cheaper because aluminum foil is less expensive" },
+      { id: 'b', label: "Only the conductive foil layer heats via eddy currents, allowing precise heating without damaging the plastic bottle or contents", correct: true },
+      { id: 'c', label: "Induction sealing creates a stronger chemical bond than thermal sealing" },
+      { id: 'd', label: "Induction sealing sterilizes the seal area with electromagnetic radiation" }
+    ],
+    explanation: "Induction sealing provides selective, contactless heating. The oscillating magnetic field induces eddy currents only in the conductive aluminum layer, which heats rapidly. The plastic bottle and heat-sensitive contents remain cool because they don't support eddy currents."
+  },
+  {
+    scenario: "A patient with an older metal hip implant (made of cobalt-chromium alloy) is scheduled for an MRI scan. The radiologist expresses concern about the powerful oscillating magnetic fields used in MRI.",
+    question: "What is the primary safety concern regarding metal implants during MRI scans, and how does it relate to induction heating principles?",
+    options: [
+      { id: 'a', label: "The implant will become permanently magnetized, interfering with the MRI images" },
+      { id: 'b', label: "The oscillating magnetic fields can induce eddy currents in conductive implants, potentially causing localized heating of surrounding tissue", correct: true },
+      { id: 'c', label: "The implant will be pulled out of the body by the strong static magnetic field" },
+      { id: 'd', label: "Metal implants block MRI radio waves, creating blind spots in the image" }
+    ],
+    explanation: "MRI-induced heating of metal implants follows the same principles as induction heating. The rapidly switching gradient fields and RF pulses can induce eddy currents in conductive implants, generating heat (I squared R losses) that could damage surrounding tissue."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '🍳',
@@ -29,7 +175,7 @@ const realWorldApps = [
     short: 'The stove that only heats the pan, not your kitchen',
     tagline: '90% efficiency versus 40% for gas',
     description: 'Induction cooktops use rapidly alternating magnetic fields to induce eddy currents directly in ferromagnetic cookware. The pan itself becomes the heating element, with virtually no wasted heat.',
-    connection: 'The eddy current heating you explored - I²R losses from induced currents - happens directly in the pan bottom. The cooktop stays cool because ceramic doesn\'t conduct electricity.',
+    connection: 'The eddy current heating you explored - I squared R losses from induced currents - happens directly in the pan bottom. The cooktop stays cool because ceramic doesn\'t conduct electricity.',
     howItWorks: 'A copper coil under the ceramic surface carries 20-100 kHz AC current, creating a rapidly changing magnetic field. This field induces eddy currents in the pan\'s ferromagnetic base. Resistance converts these currents to heat.',
     stats: [
       { value: '90%', label: 'Energy efficiency', icon: '⚡' },
@@ -61,10 +207,10 @@ const realWorldApps = [
   },
   {
     icon: '🏭',
-    title: 'Metal Melting & Foundries',
+    title: 'Metal Melting Foundries',
     short: 'Clean, efficient melting without combustion',
     tagline: 'Stir while you melt with electromagnetic force',
-    description: 'Induction furnaces melt metal using large-scale eddy current heating. The electromagnetic field also stirs the melt, ensuring uniform temperature and alloy composition. No combustion means cleaner metal and workplace.',
+    description: 'Induction furnaces melt metal using large-scale eddy current heating. The electromagnetic field also stirs the melt, ensuring uniform temperature and alloy composition. No combustion means cleaner metal.',
     connection: 'The same eddy current principle scales up: massive induction coils around a crucible induce currents throughout the metal charge, heating it from within rather than from outside.',
     howItWorks: 'A water-cooled copper coil surrounds a refractory crucible. AC current (50 Hz to 10 kHz) induces eddy currents throughout the metal charge. The electromagnetic field also creates stirring forces, mixing the melt.',
     stats: [
@@ -97,156 +243,49 @@ const realWorldApps = [
   }
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
-const TEST_QUESTIONS = [
-  {
-    question: 'What causes metal to heat up in an induction cooktop?',
-    options: [
-      { text: 'Direct heat from burning gas', correct: false },
-      { text: 'Radiation from a hot coil', correct: false },
-      { text: 'Eddy currents induced in the metal pan', correct: true },
-      { text: 'Microwaves penetrating the food', correct: false }
-    ]
-  },
-  {
-    question: 'Why doesn\'t a glass pan heat up on an induction stove?',
-    options: [
-      { text: 'Glass is already too hot', correct: false },
-      { text: 'Glass is an insulator - no eddy currents form', correct: true },
-      { text: 'The magnetic field passes through glass too fast', correct: false },
-      { text: 'Glass reflects the magnetic field', correct: false }
-    ]
-  },
-  {
-    question: 'How do eddy currents cause heating?',
-    options: [
-      { text: 'They create friction with air molecules', correct: false },
-      { text: 'They flow through resistance, converting electrical energy to heat (I²R)', correct: true },
-      { text: 'They vibrate at ultrasonic frequencies', correct: false },
-      { text: 'They create sparks inside the metal', correct: false }
-    ]
-  },
-  {
-    question: 'Why is induction cooking more efficient than gas?',
-    options: [
-      { text: 'It uses more electricity', correct: false },
-      { text: 'Heat is generated directly in the pan, not wasted on air', correct: true },
-      { text: 'Gas burners are turned down', correct: false },
-      { text: 'Induction uses nuclear energy', correct: false }
-    ]
-  },
-  {
-    question: 'What property must a pan have to work on an induction cooktop?',
-    options: [
-      { text: 'It must be heavy', correct: false },
-      { text: 'It must be magnetic (ferromagnetic)', correct: true },
-      { text: 'It must be polished', correct: false },
-      { text: 'It must be black in color', correct: false }
-    ]
-  },
-  {
-    question: 'Why do eddy currents flow in circular paths?',
-    options: [
-      { text: 'Because electrons prefer circles', correct: false },
-      { text: 'Because the changing magnetic field induces circular EMF', correct: true },
-      { text: 'Because metal is always round', correct: false },
-      { text: 'Because of gravity', correct: false }
-    ]
-  },
-  {
-    question: 'What happens when you increase the frequency of the magnetic field?',
-    options: [
-      { text: 'Heating decreases', correct: false },
-      { text: 'Heating increases (more rapid field changes = stronger currents)', correct: true },
-      { text: 'Nothing changes', correct: false },
-      { text: 'The pan flies off the stove', correct: false }
-    ]
-  },
-  {
-    question: 'Why is the cooktop surface cool while the pan is hot?',
-    options: [
-      { text: 'The cooktop is made of special ice', correct: false },
-      { text: 'Heat only transfers up, not down', correct: false },
-      { text: 'The ceramic doesn\'t conduct electricity - no eddy currents form in it', correct: true },
-      { text: 'The cooktop has a cooling system', correct: false }
-    ]
-  },
-  {
-    question: 'What is the relationship described by P = I²R?',
-    options: [
-      { text: 'Power loss increases with the square of the current', correct: true },
-      { text: 'Pressure equals current times resistance', correct: false },
-      { text: 'Temperature is proportional to resistance', correct: false },
-      { text: 'Voltage equals current squared', correct: false }
-    ]
-  },
-  {
-    question: 'Why are induction furnaces used for melting high-purity metals?',
-    options: [
-      { text: 'They are cheaper', correct: false },
-      { text: 'No combustion gases contaminate the melt', correct: true },
-      { text: 'They melt faster than any other method', correct: false },
-      { text: 'They use less electricity', correct: false }
-    ]
-  }
-];
-
-const TRANSFER_APPS = [
-  {
-    title: 'Induction Cooktops',
-    description: 'Oscillating field creates eddy currents in steel/iron pans. 80-90% efficient vs 40% for gas!',
-    icon: '🍳'
-  },
-  {
-    title: 'Metal Hardening',
-    description: 'Rapid surface heating hardens tool steel without affecting the core. Used for gears and shafts.',
-    icon: '⚙️'
-  },
-  {
-    title: 'Induction Furnaces',
-    description: 'Melt metals without contamination from fuel combustion. Essential for high-purity alloys.',
-    icon: '🔥'
-  },
-  {
-    title: 'Wireless Charging',
-    description: 'Similar principle! Oscillating field induces current in your phone\'s receiver coil.',
-    icon: '🔋'
-  }
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ currentPhase, onPhaseComplete }) => {
-  // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
+// -----------------------------------------------------------------------------
+const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(4).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [isHeating, setIsHeating] = useState(false);
   const [panMaterial, setPanMaterial] = useState<'steel' | 'aluminum' | 'glass' | 'copper'>('steel');
   const [temperature, setTemperature] = useState(25);
   const [frequency, setFrequency] = useState(25); // kHz
   const [fieldPhase, setFieldPhase] = useState(0);
+  const [isHeating, setIsHeating] = useState(false);
 
-  // Twist state
+  // Twist phase - material comparison
   const [twistMaterial, setTwistMaterial] = useState<'steel' | 'aluminum' | 'glass'>('steel');
 
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
-  const [isMobile, setIsMobile] = useState(false);
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
-  // Responsive detection
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -254,51 +293,37 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Phase sync
+  // Animation loop for field visualization
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase, phase]);
+    const interval = setInterval(() => {
+      setFieldPhase(p => (p + frequency / 10) % (Math.PI * 2));
+    }, 50);
+    return () => clearInterval(interval);
+  }, [frequency]);
 
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
+  // Heating simulation
+  useEffect(() => {
+    if (!isHeating) return;
+    const props = getMaterialProperties(panMaterial);
+    const interval = setInterval(() => {
+      setTemperature(t => {
+        const maxTemp = props.heatingRate > 0 ? 400 : 25;
+        const rate = props.heatingRate * (frequency / 25);
+        if (t >= maxTemp) return maxTemp;
+        return t + rate;
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isHeating, panMaterial, frequency]);
+
+  // Cooling when not heating
+  useEffect(() => {
+    if (isHeating || temperature <= 25) return;
+    const interval = setInterval(() => {
+      setTemperature(t => Math.max(25, t - 0.5));
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isHeating, temperature]);
 
   // Material properties
   const getMaterialProperties = (mat: string) => {
@@ -311,357 +336,138 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
     return props[mat] || props.steel;
   };
 
-  // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const goToPhase = useCallback((newPhase: Phase) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#F97316', // Orange for induction heating
+    accentGlow: 'rgba(249, 115, 22, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Material Lab',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
     playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete]);
-
-  const goToNextPhase = useCallback(() => {
-    const currentIndex = PHASE_ORDER.indexOf(phase);
-    if (currentIndex < PHASE_ORDER.length - 1) {
-      goToPhase(PHASE_ORDER[currentIndex + 1]);
-    }
-  }, [phase, goToPhase]);
-
-  const handlePrediction = useCallback((pred: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setPrediction(pred);
-    setShowPredictionFeedback(true);
-    playSound(pred === 'B' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTwistPrediction = useCallback((pred: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(pred);
-    setShowTwistFeedback(true);
-    playSound(pred === 'B' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-  }, [playSound]);
-
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === TEST_QUESTIONS[index].correct ? 1 : 0), 0);
-
-  // ─── Animation Effect ────────────────────────────────────────────────────────
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFieldPhase(p => (p + frequency / 10) % (Math.PI * 2));
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [frequency]);
-
-  // Heating simulation
-  useEffect(() => {
-    if (!isHeating) return;
-
-    const props = getMaterialProperties(panMaterial);
-    const interval = setInterval(() => {
-      setTemperature(t => {
-        const maxTemp = props.heatingRate > 0 ? 400 : 25;
-        const rate = props.heatingRate * (frequency / 25);
-        if (t >= maxTemp) return maxTemp;
-        return t + rate;
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'induction-heating',
+        gameTitle: 'Induction Heating',
+        details: { phase: p },
+        timestamp: Date.now()
       });
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [isHeating, panMaterial, frequency]);
-
-  // Cooling when not heating
-  useEffect(() => {
-    if (isHeating || temperature <= 25) return;
-
-    const interval = setInterval(() => {
-      setTemperature(t => Math.max(25, t - 0.5));
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [isHeating, temperature]);
-
-  // Reset when returning to play phase
-  useEffect(() => {
-    if (phase === 'play') {
-      setIsHeating(false);
-      setPanMaterial('steel');
-      setTemperature(25);
-      setFrequency(25);
     }
-    if (phase === 'twist_play') {
-      setTwistMaterial('steel');
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase]);
+  }, [phase, goToPhase, phaseOrder]);
 
-  // ─── Render Helpers ──────────────────────────────────────────────────────────
-
+  // Induction cooktop visualization
   const renderInductionCooktop = (material: string, temp: number, heating: boolean, animPhase: number) => {
     const props = getMaterialProperties(material);
     const hasEddyCurrents = heating && props.conductivity > 0;
-
-    // Calculate temperature-based colors for the heated object
-    const getTempGradientId = () => {
-      if (temp > 300) return 'indhTempHot';
-      if (temp > 150) return 'indhTempMedium';
-      if (temp > 50) return 'indhTempWarm';
-      return 'indhTempCool';
-    };
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 340;
 
     return (
-      <svg viewBox="0 0 500 340" className="w-full h-64">
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          {/* === PREMIUM GRADIENT DEFINITIONS === */}
-
-          {/* Lab background gradient */}
-          <linearGradient id="indhLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#030712" />
-            <stop offset="25%" stopColor="#0a0f1a" />
-            <stop offset="50%" stopColor="#0f172a" />
-            <stop offset="75%" stopColor="#0a0f1a" />
-            <stop offset="100%" stopColor="#030712" />
-          </linearGradient>
-
-          {/* Ceramic cooktop surface gradient */}
-          <linearGradient id="indhCeramicSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="cooktopSurface" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#1e293b" />
-            <stop offset="20%" stopColor="#0f172a" />
-            <stop offset="50%" stopColor="#1e293b" />
-            <stop offset="80%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#0f172a" />
             <stop offset="100%" stopColor="#1e293b" />
           </linearGradient>
-
-          {/* Copper coil metallic gradient */}
-          <linearGradient id="indhCopperCoil" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#dc8a5f" />
-            <stop offset="20%" stopColor="#c2410c" />
-            <stop offset="40%" stopColor="#ea580c" />
-            <stop offset="60%" stopColor="#c2410c" />
-            <stop offset="80%" stopColor="#ea580c" />
-            <stop offset="100%" stopColor="#9a3412" />
-          </linearGradient>
-
-          {/* Steel pan metallic gradient */}
-          <linearGradient id="indhSteelPan" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="steelPan" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#9ca3af" />
-            <stop offset="20%" stopColor="#6b7280" />
-            <stop offset="40%" stopColor="#9ca3af" />
-            <stop offset="60%" stopColor="#4b5563" />
-            <stop offset="80%" stopColor="#6b7280" />
-            <stop offset="100%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#4b5563" />
           </linearGradient>
-
-          {/* Aluminum pan gradient */}
-          <linearGradient id="indhAluminumPan" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="aluminumPan" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#e5e7eb" />
-            <stop offset="25%" stopColor="#d1d5db" />
-            <stop offset="50%" stopColor="#e5e7eb" />
-            <stop offset="75%" stopColor="#d1d5db" />
+            <stop offset="50%" stopColor="#d1d5db" />
             <stop offset="100%" stopColor="#9ca3af" />
           </linearGradient>
-
-          {/* Glass pan gradient with transparency */}
-          <linearGradient id="indhGlassPan" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="glassPan" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.6" />
-            <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.4" />
-            <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.5" />
-            <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.5" />
+            <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />
           </linearGradient>
-
-          {/* Copper cookware gradient */}
-          <linearGradient id="indhCopperPan" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="copperPan" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#fb923c" />
-            <stop offset="25%" stopColor="#f97316" />
-            <stop offset="50%" stopColor="#ea580c" />
-            <stop offset="75%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#c2410c" />
+            <stop offset="50%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#ea580c" />
           </linearGradient>
-
-          {/* === TEMPERATURE GRADIENTS FOR HEATED OBJECT === */}
-
-          {/* Cool temperature (room temp) */}
-          <linearGradient id="indhTempCool" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#374151" />
-            <stop offset="50%" stopColor="#4b5563" />
-            <stop offset="100%" stopColor="#6b7280" />
-          </linearGradient>
-
-          {/* Warm temperature (50-150C) */}
-          <linearGradient id="indhTempWarm" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#92400e" />
-            <stop offset="40%" stopColor="#b45309" />
-            <stop offset="70%" stopColor="#d97706" />
-            <stop offset="100%" stopColor="#fbbf24" />
-          </linearGradient>
-
-          {/* Medium temperature (150-300C) */}
-          <linearGradient id="indhTempMedium" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#9a3412" />
-            <stop offset="30%" stopColor="#c2410c" />
-            <stop offset="60%" stopColor="#ea580c" />
-            <stop offset="85%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#fb923c" />
-          </linearGradient>
-
-          {/* Hot temperature (300C+) */}
-          <linearGradient id="indhTempHot" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#7f1d1d" />
-            <stop offset="25%" stopColor="#991b1b" />
-            <stop offset="50%" stopColor="#dc2626" />
-            <stop offset="75%" stopColor="#ef4444" />
-            <stop offset="90%" stopColor="#f87171" />
-            <stop offset="100%" stopColor="#fca5a5" />
-          </linearGradient>
-
-          {/* === RADIAL GRADIENTS FOR GLOW EFFECTS === */}
-
-          {/* Coil heat glow */}
-          <radialGradient id="indhCoilGlow" cx="50%" cy="50%" r="60%">
+          <radialGradient id="coilGlow" cx="50%" cy="50%" r="60%">
             <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
-            <stop offset="40%" stopColor="#ea580c" stopOpacity="0.4" />
-            <stop offset="70%" stopColor="#c2410c" stopOpacity="0.2" />
+            <stop offset="70%" stopColor="#ea580c" stopOpacity="0.2" />
             <stop offset="100%" stopColor="#9a3412" stopOpacity="0" />
           </radialGradient>
-
-          {/* Magnetic field glow */}
-          <radialGradient id="indhFieldGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#2563eb" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Eddy current glow */}
-          <radialGradient id="indhEddyGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#f97316" stopOpacity="0.9" />
-            <stop offset="30%" stopColor="#ea580c" stopOpacity="0.6" />
-            <stop offset="60%" stopColor="#dc2626" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Pan interior shadow */}
-          <radialGradient id="indhPanInterior" cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stopColor="#0f172a" stopOpacity="0.9" />
-            <stop offset="60%" stopColor="#1e293b" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#020617" stopOpacity="1" />
-          </radialGradient>
-
-          {/* Handle wood grain gradient */}
-          <linearGradient id="indhHandleWood" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#292524" />
-            <stop offset="25%" stopColor="#44403c" />
-            <stop offset="50%" stopColor="#292524" />
-            <stop offset="75%" stopColor="#44403c" />
-            <stop offset="100%" stopColor="#1c1917" />
-          </linearGradient>
-
-          {/* === GLOW FILTERS === */}
-
-          {/* Coil glow filter */}
-          <filter id="indhCoilBlur" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Eddy current glow filter */}
-          <filter id="indhEddyBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id="glowFilter">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-
-          {/* Magnetic field glow filter */}
-          <filter id="indhFieldBlur" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Temperature glow filter */}
-          <filter id="indhTempGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Control panel LED glow */}
-          <filter id="indhLedGlow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="2" />
-          </filter>
-
-          {/* Arrow marker for field lines */}
-          <marker id="indhArrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-            <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#3b82f6" />
-          </marker>
-
-          {/* Grid pattern for lab background */}
-          <pattern id="indhLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
-          </pattern>
         </defs>
 
-        {/* === BACKGROUND === */}
-        <rect width="500" height="340" fill="url(#indhLabBg)" />
-        <rect width="500" height="340" fill="url(#indhLabGrid)" />
+        {/* Background */}
+        <rect width={width} height={height} fill={colors.bgPrimary} rx="12" />
 
-        {/* === COOKTOP UNIT === */}
-        <g transform="translate(50, 180)">
-          {/* Main cooktop body */}
-          <rect x="0" y="0" width="400" height="60" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
-
-          {/* Ceramic surface */}
-          <rect x="5" y="5" width="390" height="25" rx="4" fill="url(#indhCeramicSurface)" />
-
-          {/* Cooking zone ring (visual indicator) */}
-          <ellipse cx="200" cy="17" rx="85" ry="12" fill="none" stroke={heating ? '#f97316' : '#374151'} strokeWidth="2" strokeDasharray="4,2" opacity={heating ? 0.8 : 0.3} />
+        {/* Cooktop unit */}
+        <g transform={`translate(${width / 2 - 150}, ${height - 100})`}>
+          <rect x="0" y="0" width="300" height="50" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
+          <rect x="5" y="5" width="290" height="20" rx="4" fill="url(#cooktopSurface)" />
+          <ellipse cx="150" cy="15" rx="70" ry="10" fill="none" stroke={heating ? '#f97316' : '#374151'} strokeWidth="2" strokeDasharray="4,2" opacity={heating ? 0.8 : 0.3} />
         </g>
 
-        {/* === INDUCTION COIL (under ceramic surface) === */}
-        <g transform="translate(250, 195)">
-          {/* Coil glow background when heating */}
+        {/* Induction coil (under surface) */}
+        <g transform={`translate(${width / 2}, ${height - 85})`}>
           {heating && (
-            <ellipse cx="0" cy="0" rx="90" ry="18" fill="url(#indhCoilGlow)" opacity={0.6 + Math.sin(animPhase) * 0.2} />
+            <ellipse cx="0" cy="0" rx="75" ry="15" fill="url(#coilGlow)" opacity={0.6 + Math.sin(animPhase) * 0.2} />
           )}
-
-          {/* Copper coil windings */}
-          {[...Array(6)].map((_, i) => {
-            const radius = 20 + i * 14;
-            const yRadius = 4 + i * 2.5;
+          {[...Array(5)].map((_, i) => {
+            const radius = 15 + i * 12;
+            const yRadius = 3 + i * 2;
             const isActive = heating;
             const pulseOpacity = isActive ? 0.7 + Math.sin(animPhase + i * 0.5) * 0.3 : 0.4;
-
             return (
               <ellipse
                 key={i}
@@ -670,1016 +476,1397 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
                 rx={radius}
                 ry={yRadius}
                 fill="none"
-                stroke={isActive ? 'url(#indhCopperCoil)' : '#78350f'}
-                strokeWidth={isActive ? 4 : 3}
+                stroke={isActive ? '#ea580c' : '#78350f'}
+                strokeWidth={isActive ? 3 : 2}
                 opacity={pulseOpacity}
-                filter={isActive ? 'url(#indhCoilBlur)' : undefined}
+                filter={isActive ? 'url(#glowFilter)' : undefined}
               />
             );
           })}
-
-          {/* Center connection point */}
-          <circle cx="0" cy="0" r="8" fill="#292524" stroke="#c2410c" strokeWidth="2" />
         </g>
 
-        {/* === OSCILLATING MAGNETIC FIELD VISUALIZATION === */}
+        {/* Magnetic field lines */}
         {heating && (
-          <g transform="translate(250, 140)">
-            {/* Field lines going up */}
-            {[-60, -30, 0, 30, 60].map((xOffset, i) => {
+          <g transform={`translate(${width / 2}, ${height - 140})`}>
+            {[-50, -25, 0, 25, 50].map((xOffset, i) => {
               const phaseOffset = i * 0.4;
-              const amplitude = 25 + Math.sin(animPhase + phaseOffset) * 15;
+              const amplitude = 20 + Math.sin(animPhase + phaseOffset) * 10;
               const opacity = 0.4 + Math.sin(animPhase + phaseOffset) * 0.3;
-
               return (
-                <g key={i} filter="url(#indhFieldBlur)">
+                <g key={i}>
                   <path
-                    d={`M ${xOffset} 50 Q ${xOffset + Math.sin(animPhase + phaseOffset) * 8} ${50 - amplitude / 2} ${xOffset} ${50 - amplitude}`}
+                    d={`M ${xOffset} 40 Q ${xOffset + Math.sin(animPhase + phaseOffset) * 5} ${40 - amplitude / 2} ${xOffset} ${40 - amplitude}`}
                     fill="none"
                     stroke="#3b82f6"
                     strokeWidth="2"
                     opacity={opacity}
-                    markerEnd="url(#indhArrow)"
                   />
+                  <circle cx={xOffset} cy={40 - amplitude} r="3" fill="#3b82f6" opacity={opacity} />
                 </g>
               );
             })}
-
-            {/* "B" field label */}
-            <text x="90" y="25" className="text-xs fill-blue-400 font-bold" style={{ fontSize: '11px' }}>
-              B(t)
-            </text>
-            <text x="90" y="38" className="text-[9px] fill-blue-300" style={{ fontSize: '9px' }}>
-              oscillating
-            </text>
+            <text x="70" y="20" fill="#60a5fa" fontSize="10" fontWeight="bold">B(t)</text>
           </g>
         )}
 
-        {/* === PAN WITH TEMPERATURE GRADIENT === */}
-        <g transform="translate(250, 130)">
+        {/* Pan */}
+        <g transform={`translate(${width / 2}, ${height - 160})`}>
           {/* Pan shadow */}
-          <ellipse cx="3" cy="48" rx="85" ry="18" fill="#000000" opacity="0.3" />
+          <ellipse cx="3" cy="65" rx="70" ry="14" fill="#000000" opacity="0.3" />
 
-          {/* Pan bottom (shows temperature) */}
+          {/* Pan bottom with temperature color */}
           <ellipse
             cx="0"
-            cy="45"
-            rx="82"
-            ry="16"
-            fill={`url(#${getTempGradientId()})`}
-            filter={temp > 100 ? 'url(#indhTempGlow)' : undefined}
+            cy="62"
+            rx="68"
+            ry="12"
+            fill={temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : temp > 50 ? '#fbbf24' : '#4b5563'}
+            filter={temp > 100 ? 'url(#glowFilter)' : undefined}
           />
 
           {/* Pan body */}
-          <ellipse cx="0" cy="-30" rx="82" ry="22" fill={
-            material === 'steel' ? 'url(#indhSteelPan)' :
-            material === 'aluminum' ? 'url(#indhAluminumPan)' :
-            material === 'glass' ? 'url(#indhGlassPan)' :
-            'url(#indhCopperPan)'
+          <ellipse cx="0" cy="-10" rx="68" ry="18" fill={
+            material === 'steel' ? 'url(#steelPan)' :
+            material === 'aluminum' ? 'url(#aluminumPan)' :
+            material === 'glass' ? 'url(#glassPan)' :
+            'url(#copperPan)'
           } />
 
           {/* Pan sides */}
           <path
-            d={`M -82 -30 L -82 45 A 82 16 0 0 0 82 45 L 82 -30`}
+            d={`M -68 -10 L -68 62 A 68 12 0 0 0 68 62 L 68 -10`}
             fill={
-              material === 'steel' ? 'url(#indhSteelPan)' :
-              material === 'aluminum' ? 'url(#indhAluminumPan)' :
-              material === 'glass' ? 'url(#indhGlassPan)' :
-              'url(#indhCopperPan)'
+              material === 'steel' ? 'url(#steelPan)' :
+              material === 'aluminum' ? 'url(#aluminumPan)' :
+              material === 'glass' ? 'url(#glassPan)' :
+              'url(#copperPan)'
             }
             stroke={material === 'glass' ? '#60a5fa' : '#374151'}
             strokeWidth="1"
           />
 
           {/* Pan interior */}
-          <ellipse cx="0" cy="-30" rx="72" ry="17" fill="url(#indhPanInterior)" />
-
-          {/* Pan rim highlight */}
-          <ellipse cx="0" cy="-30" rx="82" ry="22" fill="none" stroke={material === 'glass' ? '#93c5fd' : '#9ca3af'} strokeWidth="1" opacity="0.5" />
+          <ellipse cx="0" cy="-10" rx="58" ry="13" fill="#0f172a" opacity="0.8" />
 
           {/* Handle */}
-          <g transform="translate(82, 0)">
-            <rect x="0" y="-10" width="65" height="20" rx="4" fill="url(#indhHandleWood)" stroke="#44403c" strokeWidth="1" />
-            {/* Handle rivets */}
-            <circle cx="15" cy="0" r="3" fill="#374151" stroke="#4b5563" strokeWidth="1" />
-            <circle cx="50" cy="0" r="3" fill="#374151" stroke="#4b5563" strokeWidth="1" />
-          </g>
+          <rect x="68" y="-8" width="50" height="16" rx="3" fill="#292524" stroke="#44403c" strokeWidth="1" />
 
-          {/* === EDDY CURRENT VISUALIZATION === */}
+          {/* Eddy current visualization */}
           {hasEddyCurrents && (
-            <g filter="url(#indhEddyBlur)">
-              {/* Multiple swirling eddy current loops */}
-              {[0, 1, 2, 3].map((ring) => {
-                const baseRadius = 55 - ring * 12;
-                const yRadius = 12 - ring * 2.5;
-                const rotationOffset = (animPhase * (ring % 2 === 0 ? 1 : -1) * 2) % 360;
+            <g>
+              {[0, 1, 2].map((ring) => {
+                const baseRadius = 45 - ring * 12;
+                const yRadius = 9 - ring * 2;
                 const dashOffset = animPhase * 30 * (ring % 2 === 0 ? 1 : -1);
-                const opacity = 0.8 - ring * 0.15;
+                const opacity = 0.8 - ring * 0.2;
                 const strokeColor = temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : '#fbbf24';
-
                 return (
-                  <g key={ring} style={{ transform: `rotate(${rotationOffset}deg)`, transformOrigin: '0px 5px' }}>
-                    <ellipse
-                      cx="0"
-                      cy={5 + ring * 8}
-                      rx={baseRadius}
-                      ry={yRadius}
-                      fill="none"
-                      stroke={strokeColor}
-                      strokeWidth={3 - ring * 0.4}
-                      strokeDasharray="12,6,4,6"
-                      strokeDashoffset={dashOffset}
-                      opacity={opacity}
-                    />
-                    {/* Arrow indicators showing current direction */}
-                    {ring === 0 && (
-                      <>
-                        <circle cx={baseRadius - 5} cy={5} r="3" fill={strokeColor} opacity={0.9}>
-                          <animate attributeName="opacity" values="0.5;1;0.5" dur="0.3s" repeatCount="indefinite" />
-                        </circle>
-                        <circle cx={-baseRadius + 5} cy={5} r="3" fill={strokeColor} opacity={0.9}>
-                          <animate attributeName="opacity" values="1;0.5;1" dur="0.3s" repeatCount="indefinite" />
-                        </circle>
-                      </>
-                    )}
-                  </g>
+                  <ellipse
+                    key={ring}
+                    cx="0"
+                    cy={20 + ring * 10}
+                    rx={baseRadius}
+                    ry={yRadius}
+                    fill="none"
+                    stroke={strokeColor}
+                    strokeWidth={2.5 - ring * 0.3}
+                    strokeDasharray="10,5"
+                    strokeDashoffset={dashOffset}
+                    opacity={opacity}
+                    filter="url(#glowFilter)"
+                  />
                 );
               })}
-
-              {/* I²R heating indicator */}
-              <text x="0" y="-5" textAnchor="middle" className="fill-orange-300 font-bold" style={{ fontSize: '10px' }}>
-                I²R
-              </text>
+              <text x="0" y="30" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="bold">I²R</text>
             </g>
           )}
 
           {/* No heating indicator for glass */}
           {material === 'glass' && heating && (
             <g>
-              <rect x="-50" y="-10" width="100" height="24" rx="4" fill="#1e3a5f" opacity="0.9" />
-              <text x="0" y="5" textAnchor="middle" className="fill-blue-300 font-bold" style={{ fontSize: '11px' }}>
-                No eddy currents!
-              </text>
-              <text x="0" y="18" textAnchor="middle" className="fill-blue-400" style={{ fontSize: '8px' }}>
-                (insulator)
-              </text>
+              <rect x="-40" y="10" width="80" height="24" rx="4" fill="#1e3a5f" opacity="0.9" />
+              <text x="0" y="26" textAnchor="middle" fill="#93c5fd" fontSize="10" fontWeight="bold">No eddy currents!</text>
             </g>
           )}
         </g>
 
-        {/* === TEMPERATURE DISPLAY === */}
-        <g transform="translate(30, 25)">
-          <rect x="0" y="0" width="90" height="55" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
-          <rect x="4" y="4" width="82" height="47" rx="6" fill="#0f172a" />
-          <text x="45" y="18" textAnchor="middle" className="fill-slate-400" style={{ fontSize: '10px' }}>PAN TEMP</text>
+        {/* Temperature display */}
+        <g transform="translate(20, 20)">
+          <rect x="0" y="0" width="80" height="50" rx="8" fill="#111827" stroke="#374151" strokeWidth="1" />
+          <text x="40" y="18" textAnchor="middle" fill="#9ca3af" fontSize="10">TEMP</text>
           <text
-            x="45"
-            y="42"
+            x="40"
+            y="40"
             textAnchor="middle"
-            className={`font-bold ${temp > 200 ? 'fill-red-400' : temp > 100 ? 'fill-orange-400' : temp > 50 ? 'fill-amber-400' : 'fill-slate-300'}`}
-            style={{ fontSize: '18px' }}
+            fill={temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : temp > 50 ? '#fbbf24' : '#9ca3af'}
+            fontSize="16"
+            fontWeight="bold"
           >
             {temp.toFixed(0)}°C
           </text>
         </g>
 
-        {/* === MATERIAL DISPLAY === */}
-        <g transform="translate(380, 25)">
-          <rect x="0" y="0" width="90" height="55" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
-          <rect x="4" y="4" width="82" height="47" rx="6" fill="#0f172a" />
-          <text x="45" y="18" textAnchor="middle" className="fill-slate-400" style={{ fontSize: '10px' }}>MATERIAL</text>
-          <text x="45" y="42" textAnchor="middle" className="fill-white font-bold" style={{ fontSize: '14px', textTransform: 'capitalize' }}>
+        {/* Material display */}
+        <g transform={`translate(${width - 100}, 20)`}>
+          <rect x="0" y="0" width="80" height="50" rx="8" fill="#111827" stroke="#374151" strokeWidth="1" />
+          <text x="40" y="18" textAnchor="middle" fill="#9ca3af" fontSize="10">MATERIAL</text>
+          <text x="40" y="40" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold" textTransform="capitalize">
             {material}
           </text>
         </g>
 
-        {/* === POWER STATUS === */}
-        <g transform="translate(175, 265)">
-          <rect x="0" y="0" width="150" height="50" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
-          <rect x="4" y="4" width="142" height="42" rx="6" fill="#0f172a" />
-
-          {/* LED indicator */}
-          <circle cx="25" cy="25" r="8" fill={heating ? '#22c55e' : '#374151'} filter={heating ? 'url(#indhLedGlow)' : undefined}>
+        {/* Power status */}
+        <g transform={`translate(${width / 2 - 60}, ${height - 35})`}>
+          <rect x="0" y="0" width="120" height="30" rx="6" fill="#111827" stroke="#374151" strokeWidth="1" />
+          <circle cx="20" cy="15" r="6" fill={heating ? '#22c55e' : '#374151'}>
             {heating && <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />}
           </circle>
-          <circle cx="25" cy="25" r="5" fill={heating ? '#4ade80' : '#4b5563'} />
-
-          <text x="85" y="20" textAnchor="middle" className="fill-slate-400" style={{ fontSize: '10px' }}>INDUCTION</text>
-          <text
-            x="85"
-            y="36"
-            textAnchor="middle"
-            className={`font-bold ${heating ? 'fill-orange-400' : 'fill-slate-500'}`}
-            style={{ fontSize: '14px' }}
-          >
+          <text x="70" y="20" textAnchor="middle" fill={heating ? '#f97316' : '#6b7280'} fontSize="11" fontWeight="bold">
             {heating ? 'ACTIVE' : 'STANDBY'}
           </text>
         </g>
-
-        {/* === LABELS === */}
-        <text x="250" y="310" textAnchor="middle" className="fill-slate-500" style={{ fontSize: '10px' }}>
-          INDUCTION COOKTOP SIMULATION
-        </text>
       </svg>
     );
   };
 
-  const renderEddyCurrentDiagram = () => (
-    <svg viewBox="0 0 400 180" className="w-full h-40">
-      <defs>
-        {/* Background gradient */}
-        <linearGradient id="indhDiagBg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#030712" />
-          <stop offset="50%" stopColor="#0f172a" />
-          <stop offset="100%" stopColor="#030712" />
-        </linearGradient>
-
-        {/* Metal conductor gradient */}
-        <linearGradient id="indhDiagMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#9ca3af" />
-          <stop offset="25%" stopColor="#6b7280" />
-          <stop offset="50%" stopColor="#9ca3af" />
-          <stop offset="75%" stopColor="#4b5563" />
-          <stop offset="100%" stopColor="#6b7280" />
-        </linearGradient>
-
-        {/* Magnetic field glow */}
-        <radialGradient id="indhDiagFieldGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
-        </radialGradient>
-
-        {/* Eddy current glow */}
-        <radialGradient id="indhDiagEddyGlow" cx="50%" cy="50%" r="60%">
-          <stop offset="0%" stopColor="#f97316" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
-        </radialGradient>
-
-        {/* Glow filters */}
-        <filter id="indhDiagBlur" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-
-        {/* Arrow marker */}
-        <marker id="indhDiagArrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
-          <path d="M0,0 L10,5 L0,10 L3,5 Z" fill="#fbbf24" />
-        </marker>
-
-        <marker id="indhDiagArrowBlue" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-          <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#3b82f6" />
-        </marker>
-      </defs>
-
-      <rect width="400" height="180" fill="url(#indhDiagBg)" />
-
-      {/* Changing B field */}
-      <g transform="translate(80, 90)">
-        <text x="0" y="-60" textAnchor="middle" className="fill-slate-300 font-semibold" style={{ fontSize: '11px' }}>Changing B Field</text>
-
-        {/* Field glow */}
-        <circle r="45" fill="url(#indhDiagFieldGlow)" />
-
-        {/* Field lines circle */}
-        <circle r="38" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="6,4" filter="url(#indhDiagBlur)">
-          <animate attributeName="stroke-dashoffset" values="0;20" dur="1s" repeatCount="indefinite" />
-        </circle>
-
-        {/* Oscillating arrow */}
-        <path d="M 0 -25 L 0 25" stroke="#60a5fa" strokeWidth="4" markerEnd="url(#indhDiagArrowBlue)" filter="url(#indhDiagBlur)">
-          <animate attributeName="d" values="M 0 -25 L 0 25;M 0 25 L 0 -25;M 0 -25 L 0 25" dur="0.8s" repeatCount="indefinite" />
-        </path>
-
-        <text x="0" y="58" textAnchor="middle" className="fill-blue-400 font-bold" style={{ fontSize: '12px' }}>B(t)</text>
-      </g>
-
-      {/* Induces arrow */}
-      <g transform="translate(145, 90)">
-        <path d="M 0 0 L 50 0" stroke="#fbbf24" strokeWidth="3" markerEnd="url(#indhDiagArrow)" />
-        <text x="25" y="20" textAnchor="middle" className="fill-amber-400 font-semibold" style={{ fontSize: '10px' }}>induces</text>
-      </g>
-
-      {/* Eddy currents in conductor */}
-      <g transform="translate(280, 90)">
-        <text x="0" y="-60" textAnchor="middle" className="fill-slate-300 font-semibold" style={{ fontSize: '11px' }}>Metal Conductor</text>
-
-        {/* Metal block */}
-        <rect x="-55" y="-40" width="110" height="80" rx="6" fill="url(#indhDiagMetal)" stroke="#4b5563" strokeWidth="1" />
-
-        {/* Eddy glow */}
-        <ellipse cx="0" cy="0" rx="40" ry="25" fill="url(#indhDiagEddyGlow)" />
-
-        {/* Swirling currents - animated */}
-        <ellipse cx="0" cy="0" rx="35" ry="20" fill="none" stroke="#f97316" strokeWidth="2.5" strokeDasharray="8,4" filter="url(#indhDiagBlur)">
-          <animate attributeName="stroke-dashoffset" values="0;24" dur="0.5s" repeatCount="indefinite" />
-        </ellipse>
-        <ellipse cx="0" cy="0" rx="22" ry="12" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="6,3" filter="url(#indhDiagBlur)">
-          <animate attributeName="stroke-dashoffset" values="18;0" dur="0.5s" repeatCount="indefinite" />
-        </ellipse>
-        <ellipse cx="0" cy="0" rx="10" ry="5" fill="none" stroke="#fbbf24" strokeWidth="1.5">
-          <animate attributeName="stroke-dashoffset" values="0;12" dur="0.4s" repeatCount="indefinite" />
-        </ellipse>
-
-        {/* I²R label */}
-        <text x="0" y="3" textAnchor="middle" className="fill-white font-bold" style={{ fontSize: '10px' }}>I²R</text>
-
-        <text x="0" y="58" textAnchor="middle" className="fill-orange-400 font-bold" style={{ fontSize: '11px' }}>Eddy Currents</text>
-        <text x="0" y="72" textAnchor="middle" className="fill-orange-300" style={{ fontSize: '9px' }}>generate heat</text>
-      </g>
-    </svg>
-  );
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // TEST QUESTIONS - Scenario-based multiple choice questions
-  // ─────────────────────────────────────────────────────────────────────────────
-  const testQuestions = [
-    {
-      scenario: "You place a steel pot on an induction cooktop and turn it on. Within seconds, the pot becomes hot enough to boil water, yet the glass surface of the cooktop remains cool to the touch.",
-      question: "What fundamental principle explains how the pot heats up without direct heat transfer from the cooktop surface?",
-      options: [
-        { id: 'a', label: "Infrared radiation from hidden heating elements beneath the glass" },
-        { id: 'b', label: "A rapidly changing magnetic field induces electric currents (eddy currents) in the metal, which generate heat through electrical resistance (I²R losses)" },
-        { id: 'c', label: "Microwave energy penetrates the pot and excites water molecules inside" },
-        { id: 'd', label: "Static electricity builds up between the cooktop and pot, creating sparks that heat the metal" }
-      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
-      explanation: "Induction heating works through electromagnetic induction. A coil beneath the cooktop surface carries alternating current, creating a rapidly oscillating magnetic field. When this field passes through a conductive material like steel, it induces circulating electric currents called eddy currents. These currents flow through the metal's electrical resistance, converting electrical energy into heat (P = I²R). The glass cooktop surface stays cool because it's an insulator—no eddy currents form in it."
-    },
-    {
-      scenario: "A home chef purchases an expensive set of pure aluminum cookware for their new induction cooktop. When they try to use the pans, the cooktop doesn't heat them properly and displays an error message.",
-      question: "Why do standard aluminum pans fail to work effectively on induction cooktops?",
-      options: [
-        { id: 'a', label: "Aluminum is too lightweight for the sensors to detect" },
-        { id: 'b', label: "Aluminum is non-magnetic (non-ferromagnetic), resulting in weak magnetic coupling and insufficient eddy current generation for effective heating" },
-        { id: 'c', label: "Aluminum reflects magnetic fields back to the coil, causing interference" },
-        { id: 'd', label: "Aluminum's melting point is too low for induction cooking" }
-      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
-      explanation: "Induction cooktops require ferromagnetic materials (like iron or steel) for efficient operation. Ferromagnetic materials concentrate magnetic field lines and couple strongly with the oscillating field, producing large eddy currents. Aluminum is non-magnetic—magnetic field lines pass through it without concentration, resulting in weak eddy currents and minimal heating. That's why 'induction-ready' aluminum pans have a ferromagnetic steel or iron plate bonded to the bottom."
-    },
-    {
-      scenario: "A restaurant is evaluating whether to replace their gas stoves with induction cooktops. The energy consultant reports that gas burners transfer only about 40% of their energy to food, while much escapes as waste heat into the kitchen.",
-      question: "What efficiency rating would you expect from induction cooktops, and why?",
-      options: [
-        { id: 'a', label: "About 40-50% efficiency, similar to gas since both ultimately heat the pan" },
-        { id: 'b', label: "About 25-30% efficiency because electromagnetic energy conversion has inherent losses" },
-        { id: 'c', label: "About 80-90% efficiency because heat is generated directly inside the cookware rather than being transferred from an external heat source" },
-        { id: 'd', label: "100% efficiency since magnetic fields don't produce waste heat" }
-      ].map(opt => opt.id === 'c' ? { ...opt, correct: true } : opt),
-      explanation: "Induction cooktops achieve 80-90% energy efficiency because they heat the cookware directly through induced currents. With gas, heat must travel from the flame through air to the pan, and much energy escapes sideways. With electric coils, the element heats up and transfers energy to the pan by conduction. Induction skips these intermediate steps—the pan IS the heating element. The only losses are from imperfect magnetic coupling and resistance in the coil itself."
-    },
-    {
-      scenario: "An engineer is designing an induction heating system for surface hardening of steel gears. She notices that when using high-frequency alternating current (400 kHz), only the outer 0.1mm of the gear teeth heat up, while the core stays cool.",
-      question: "What electromagnetic phenomenon explains why high-frequency induction heating affects only the surface of a conductor?",
-      options: [
-        { id: 'a', label: "The thermal conductivity effect, where heat naturally stays at the surface" },
-        { id: 'b', label: "The skin effect, where alternating currents concentrate near the conductor's surface at high frequencies due to self-inductance" },
-        { id: 'c', label: "The Meissner effect, which expels magnetic fields from the interior" },
-        { id: 'd', label: "The photoelectric effect, where high-frequency waves only penetrate shallow depths" }
-      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
-      explanation: "The skin effect causes alternating currents to flow primarily near the surface of a conductor. As frequency increases, the skin depth (the depth at which current density falls to 37% of surface value) decreases. At 400 kHz in steel, the skin depth is approximately 0.1mm. This occurs because the magnetic field created by the current induces opposing currents deeper in the conductor, effectively 'pushing' the current to the surface. This phenomenon is deliberately exploited for surface hardening applications."
-    },
-    {
-      scenario: "A manufacturing plant uses induction hardening to treat the teeth of heavy-duty gearboxes. The process heats the gear teeth to 900°C in seconds, then rapidly quenches them, creating a hard wear-resistant surface while the core remains tough and ductile.",
-      question: "Why is induction heating particularly well-suited for surface hardening compared to furnace heating?",
-      options: [
-        { id: 'a', label: "Induction furnaces are cheaper to operate than conventional furnaces" },
-        { id: 'b', label: "Induction heating can selectively heat only the surface layer using high frequencies (skin effect), allowing the core to remain cool and ductile" },
-        { id: 'c', label: "Induction heating produces higher temperatures than any furnace can achieve" },
-        { id: 'd', label: "Induction heating automatically adds carbon to the surface for hardening" }
-      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
-      explanation: "Induction surface hardening leverages the skin effect to heat only the outer layer of the workpiece. By using high frequencies, engineers can control the heating depth to millimeter precision. The surface reaches austenitizing temperature and is then quenched to form hard martensite, while the core—never heated above its transformation temperature—retains its original tough, ductile microstructure. This creates ideal properties for gears: hard surface for wear resistance, tough core for impact resistance."
-    },
-    {
-      scenario: "A metallurgical engineer must design induction heating systems for two different applications: (1) surface hardening of small precision parts requiring 0.5mm heat penetration, and (2) through-heating of 50mm diameter steel billets for forging.",
-      question: "How should the engineer select the operating frequencies for these two applications?",
-      options: [
-        { id: 'a', label: "Use the same frequency for both; heating depth is controlled by power level, not frequency" },
-        { id: 'b', label: "Use low frequency (1-10 kHz) for surface hardening and high frequency (100+ kHz) for through-heating to maximize efficiency" },
-        { id: 'c', label: "Use high frequency (100-400 kHz) for shallow surface heating and low frequency (1-10 kHz) for deep through-heating of large billets" },
-        { id: 'd', label: "Use microwave frequencies for small parts and radio frequencies for large parts" }
-      ].map(opt => opt.id === 'c' ? { ...opt, correct: true } : opt),
-      explanation: "Frequency selection is critical in induction heating design. The skin depth formula (δ ∝ 1/√f) shows that penetration depth decreases with increasing frequency. For shallow surface hardening (0.5mm), high frequencies (100-400 kHz) concentrate heating at the surface. For through-heating large billets, low frequencies (1-10 kHz) allow currents to penetrate deeper, heating the entire cross-section more uniformly. This is why industrial induction systems offer variable frequency ranges for different applications."
-    },
-    {
-      scenario: "A steel foundry uses a coreless induction furnace to melt 500 kg batches of stainless steel for precision castings. The furnace consists of a water-cooled copper coil surrounding a refractory-lined crucible, with no iron core in the magnetic circuit.",
-      question: "What is the primary advantage of using induction furnaces over fuel-fired furnaces for melting high-purity and specialty alloys?",
-      options: [
-        { id: 'a', label: "Induction furnaces reach melting temperature faster than any other method" },
-        { id: 'b', label: "Induction furnaces can melt larger quantities of metal per batch" },
-        { id: 'c', label: "No combustion gases contact the melt, preventing contamination and oxidation, while electromagnetic stirring ensures homogeneous composition" },
-        { id: 'd', label: "Induction furnaces use less electricity than resistance heating furnaces" }
-      ].map(opt => opt.id === 'c' ? { ...opt, correct: true } : opt),
-      explanation: "Induction furnaces are preferred for high-purity alloys because no fuel combustion products contact the melt. In gas-fired furnaces, combustion gases can introduce hydrogen, oxygen, sulfur, and carbon into the metal. Additionally, the electromagnetic field in induction furnaces creates a stirring action (electromagnetic stirring) that homogenizes temperature and composition throughout the melt. This combination of purity and homogeneity makes induction melting essential for aerospace alloys, medical implants, and other critical applications."
-    },
-    {
-      scenario: "A smartphone placed on a wireless charging pad begins charging. Inside the pad, a coil creates an oscillating magnetic field, and inside the phone, a receiver coil converts this field back into electrical current to charge the battery.",
-      question: "What is the fundamental relationship between wireless charging technology and induction heating?",
-      options: [
-        { id: 'a', label: "They are completely different technologies; wireless charging uses radio waves while induction heating uses magnetic fields" },
-        { id: 'b', label: "Both use electromagnetic induction to transfer energy—wireless charging captures the induced current for useful work while induction heating intentionally converts it to heat" },
-        { id: 'c', label: "Wireless charging is a form of microwave energy transfer, unrelated to induction" },
-        { id: 'd', label: "Induction heating uses DC current while wireless charging uses AC current" }
-      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
-      explanation: "Wireless charging and induction heating both operate on electromagnetic induction principles—Faraday's law states that a changing magnetic field induces an electromotive force (EMF) in a conductor. The key difference is intent: wireless chargers are designed to maximize efficient power transfer by using resonant frequencies and precise coil alignment, minimizing resistive losses. Induction heaters maximize those same resistive losses (I²R) to generate heat. Both are governed by the same physics, just optimized for opposite outcomes."
-    },
-    {
-      scenario: "A pharmaceutical company uses induction sealing to hermetically seal foil liners onto plastic medicine bottles. The process takes less than one second: bottles pass under an induction head, and the foil liner's aluminum backing heats up, melting a polymer coating that bonds to the bottle rim.",
-      question: "Why is induction sealing preferred over direct heat sealing for tamper-evident pharmaceutical packaging?",
-      options: [
-        { id: 'a', label: "Induction sealing is cheaper because aluminum foil is less expensive than heat-resistant materials" },
-        { id: 'b', label: "Only the conductive foil layer heats (via eddy currents), allowing precise heating without damaging the plastic bottle or its contents" },
-        { id: 'c', label: "Induction sealing creates a stronger chemical bond than thermal sealing" },
-        { id: 'd', label: "Induction sealing sterilizes the seal area with electromagnetic radiation" }
-      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
-      explanation: "Induction sealing is ideal for packaging because it provides selective, contactless heating. The oscillating magnetic field induces eddy currents only in the conductive aluminum layer of the seal liner, which heats rapidly and melts the polymer adhesive. The plastic bottle and heat-sensitive contents remain cool because they don't support eddy currents. This allows high-speed sealing (thousands of bottles per hour) without heat damage, while creating a tamper-evident hermetic seal that protects product integrity."
-    },
-    {
-      scenario: "A patient with an older metal hip implant (made of cobalt-chromium alloy) is scheduled for an MRI scan. The radiologist expresses concern about the powerful oscillating magnetic fields used in MRI (up to 3 Tesla, switching at audio frequencies during imaging sequences).",
-      question: "What is the primary safety concern regarding metal implants during MRI scans, and how does it relate to induction heating principles?",
-      options: [
-        { id: 'a', label: "The implant will become permanently magnetized, interfering with the MRI images" },
-        { id: 'b', label: "The oscillating magnetic fields can induce eddy currents in conductive implants, potentially causing localized heating of surrounding tissue" },
-        { id: 'c', label: "The implant will be pulled out of the body by the strong static magnetic field" },
-        { id: 'd', label: "Metal implants block MRI radio waves, creating blind spots in the image" }
-      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
-      explanation: "MRI-induced heating of metal implants follows the same principles as induction heating. The rapidly switching gradient fields and radiofrequency pulses in MRI can induce eddy currents in conductive implants. These currents generate heat (I²R losses) that could potentially damage surrounding tissue. The severity depends on implant geometry, material conductivity, and MRI parameters. Modern MRI-conditional implants are designed with materials and geometries that minimize eddy current formation. This is why patients must disclose all implants before MRI procedures."
-    }
-  ];
-
-  // ─── Phase Renderers ─────────────────────────────────────────────────────────
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-orange-400 tracking-wide">PHYSICS EXPLORATION</span>
-      </div>
-
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-red-200 bg-clip-text text-transparent">
-        Heat Without Contact
-      </h1>
-
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover how invisible magnetic fields can cook your dinner
-      </p>
-
-      {/* Premium card with graphic */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-red-500/5 rounded-3xl" />
-
-        <div className="relative">
-          {renderInductionCooktop('steel', 25, false, 0)}
-
-          <div className="mt-8 space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Induction cooktops boil water in seconds, yet stay cool to touch!
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              The heat is generated inside the pan itself, not transferred from the stove.
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-orange-400 font-semibold">
-                How does invisible energy create visible heat?
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Premium CTA button */}
-      <button
-        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover the Secret
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-orange-400">&#10022;</span>
-          Interactive Lab
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-orange-400">&#10022;</span>
-          Real-World Examples
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-orange-400">&#10022;</span>
-          Knowledge Test
-        </div>
-      </div>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          An oscillating magnetic field passes through a metal pan. What happens inside the metal?
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #EA580C)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🍳⚡
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Induction Heating
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "An induction cooktop boils water in seconds, yet stays <span style={{ color: colors.accent }}>cool to touch</span>. How can invisible magnetic fields create visible heat?"
         </p>
-        {renderInductionCooktop('steel', 25, false, 0)}
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'The metal vibrates like a speaker' },
-          { id: 'B', text: 'Circular currents form and heat the metal (I²R)' },
-          { id: 'C', text: 'The metal becomes a permanent magnet' },
-          { id: 'D', text: 'Nothing - magnetism doesn\'t affect metal' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && prediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Eddy currents induced by the changing field flow through resistance and generate heat!
-          </p>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
-          >
-            Explore the Physics
-          </button>
-        </div>
-      )}
-    </div>
-  );
 
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Induction Heating Lab</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderInductionCooktop(panMaterial, temperature, isHeating, fieldPhase)}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          {renderInductionCooktop('steel', 25, false, 0)}
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic', marginTop: '16px' }}>
+            "The heat is generated inside the pan itself, not transferred from the stove. The cooktop surface stays cool because it can't conduct eddy currents."
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover the Secret
+        </button>
+
+        {renderNavDots()}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Pan Material</label>
-          <div className="grid grid-cols-2 gap-2">
-            {(['steel', 'aluminum', 'glass', 'copper'] as const).map(mat => (
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'The metal vibrates like a speaker, creating friction heat' },
+      { id: 'b', text: 'Circular currents (eddy currents) form and heat the metal through I²R losses', correct: true },
+      { id: 'c', text: 'The metal becomes a permanent magnet and releases stored energy' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            An oscillating magnetic field passes through a metal pan. What happens inside the metal?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            {renderInductionCooktop('steel', 25, false, 0)}
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                key={mat}
-                onPointerDown={(e) => { e.preventDefault(); playSound('click'); setPanMaterial(mat); setTemperature(25); }}
-                className={`px-3 py-2 rounded-lg font-bold text-sm capitalize ${panMaterial === mat ? 'bg-orange-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
               >
-                {mat}
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
               </button>
             ))}
           </div>
-        </div>
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Frequency: {frequency} kHz</label>
-          <input type="range" min="10" max="50" value={frequency} onChange={(e) => setFrequency(Number(e.target.value))} className="w-full accent-orange-500" />
-          <p className="text-xs text-slate-400 mt-1">Higher frequency = faster heating</p>
-        </div>
-      </div>
-      <div className="bg-gradient-to-r from-orange-900/40 to-red-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className={`text-2xl font-bold ${temperature > 100 ? 'text-red-400' : 'text-orange-400'}`}>{temperature.toFixed(0)}°C</div>
-            <div className="text-sm text-slate-300">Temperature</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-amber-400">{getMaterialProperties(panMaterial).magnetic ? 'Yes' : 'No'}</div>
-            <div className="text-sm text-slate-300">Magnetic</div>
-          </div>
-          <div>
-            <div className={`text-2xl font-bold ${getMaterialProperties(panMaterial).heatingRate > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {getMaterialProperties(panMaterial).heatingRate > 0.5 ? 'HEATING' : getMaterialProperties(panMaterial).heatingRate > 0 ? 'SLOW' : 'NONE'}
-            </div>
-            <div className="text-sm text-slate-300">Status</div>
-          </div>
-        </div>
-      </div>
-      <div className="flex gap-4 mb-6">
-        <button onPointerDown={(e) => { e.preventDefault(); playSound('click'); setIsHeating(!isHeating); }} className={`px-4 py-2 rounded-lg font-medium ${isHeating ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white`}>
-          {isHeating ? 'Turn Off' : 'Turn On'}
-        </button>
-      </div>
-      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
-        <h3 className="text-lg font-semibold text-orange-400 mb-2">Key Formula: P = I²R</h3>
-        <p className="text-slate-300 text-sm">
-          {panMaterial === 'glass' ? 'Glass is an insulator - no eddy currents, no heating!' :
-           panMaterial === 'aluminum' || panMaterial === 'copper' ? 'Non-magnetic metal heats slowly (fewer eddy currents)' :
-           'Steel heats efficiently - magnetic + conductive!'}
-        </p>
-      </div>
-      <button onPointerDown={(e) => { e.preventDefault(); setIsHeating(false); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
-        Review the Concepts
-      </button>
-    </div>
-  );
 
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Understanding Induction Heating</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">How It Works</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>A coil creates an oscillating magnetic field</li>
-            <li>Changing field induces circular currents (eddy currents)</li>
-            <li>Currents flow through resistance and generate heat (P = I²R)</li>
-            <li>Heat is generated directly in the pan!</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Best Materials</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Iron/Steel: Magnetic + resistive = fast heating</li>
-            <li>Cast iron: Excellent for induction cooking</li>
-            <li>Higher resistance = more I²R heating</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-3">Poor Materials</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Glass: No free electrons, no currents</li>
-            <li>Aluminum: Low resistance, weak heating</li>
-            <li>Copper: Too conductive, currents flow too easily</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-amber-900/50 to-yellow-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-amber-400 mb-3">Efficiency</h3>
-          <p className="text-slate-300 text-sm">
-            Induction: 80-90% efficient (heat generated directly in pan)<br/>
-            Gas: Only 40% efficient (heat escapes into air)
-          </p>
-        </div>
-      </div>
-      <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        Discover the Material Twist
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Material Challenge</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Why do induction cooktops require special pans? What happens if you use aluminum or glass?
-        </p>
-        <p className="text-lg text-orange-400 font-medium">
-          What determines if a material heats up on an induction stove?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'All pans work equally well' },
-          { id: 'B', text: 'Non-magnetic/non-conducting pans don\'t heat (or heat poorly)' },
-          { id: 'C', text: 'The cooktop will break if wrong pan is used' },
-          { id: 'D', text: 'All metal pans work, only glass fails' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Only magnetic, conductive materials heat effectively on induction!
-          </p>
-          <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-            Compare Materials
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => {
-    const materialProps: Record<string, { heats: boolean; rate: string; reason: string; color: string }> = {
-      steel: { heats: true, rate: 'Fast', reason: 'Magnetic + moderate resistance = strong eddy currents + I²R heating', color: 'orange' },
-      aluminum: { heats: true, rate: 'Slow', reason: 'Conductive but non-magnetic - weak eddy currents', color: 'amber' },
-      glass: { heats: false, rate: 'None', reason: 'No free electrons - no currents can form!', color: 'blue' }
-    };
-    const props = materialProps[twistMaterial];
-
-    return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Material Comparison Lab</h2>
-        <div className="flex gap-3 mb-6">
-          {(['steel', 'aluminum', 'glass'] as const).map(mat => (
+          {prediction && (
             <button
-              key={mat}
-              onPointerDown={(e) => { e.preventDefault(); playSound('click'); setTwistMaterial(mat); }}
-              className={`px-5 py-2 rounded-lg font-bold capitalize transition-all ${twistMaterial === mat ? 'bg-orange-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              {mat}
+              Test My Prediction
             </button>
-          ))}
+          )}
         </div>
-        <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-          {renderInductionCooktop(twistMaterial === 'aluminum' ? 'aluminum' : twistMaterial === 'glass' ? 'glass' : 'steel', 25, true, fieldPhase)}
-        </div>
-        <div className={`p-6 rounded-2xl border-2 max-w-md ${props.heats ? 'bg-orange-900/30 border-orange-600' : 'bg-blue-900/30 border-blue-600'}`}>
-          <div className="text-center mb-4">
-            <span className={`text-3xl font-bold ${props.heats ? 'text-orange-400' : 'text-blue-400'}`}>
-              Heating: {props.rate}
-            </span>
-          </div>
-          <p className={`text-center text-lg ${props.heats ? 'text-orange-300' : 'text-blue-300'}`}>
-            <span className="font-bold">{twistMaterial.charAt(0).toUpperCase() + twistMaterial.slice(1)}:</span> {props.reason}
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-3 mt-6 max-w-md">
-          {Object.entries(materialProps).map(([mat, p]) => (
-            <div key={mat} className={`p-3 rounded-lg ${mat === twistMaterial ? 'bg-slate-600' : 'bg-slate-700'}`}>
-              <p className="text-white text-xs font-bold capitalize text-center">{mat}</p>
-              <p className={`text-xs text-center ${p.heats ? 'text-orange-400' : 'text-blue-400'}`}>{p.rate}</p>
-            </div>
-          ))}
-        </div>
-        <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-          Understand Why
-        </button>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Why Material Matters</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-cyan-400 mb-3">Two Key Properties for Induction</h3>
-        <ul className="space-y-2 text-slate-300">
-          <li>1. Electrical conductivity - for currents to flow</li>
-          <li>2. Magnetic permeability - for stronger field coupling</li>
-        </ul>
-      </div>
-      <div className="grid grid-cols-3 gap-4 max-w-xl">
-        <div className="p-4 bg-emerald-900/40 rounded-xl border border-emerald-600 text-center">
-          <p className="text-emerald-400 font-bold">Steel/Cast Iron</p>
-          <p className="text-slate-400 text-xs mt-1">Conductive + Magnetic</p>
-          <p className="text-emerald-300 text-sm font-bold mt-2">BEST</p>
-        </div>
-        <div className="p-4 bg-amber-900/40 rounded-xl border border-amber-600 text-center">
-          <p className="text-amber-400 font-bold">Aluminum</p>
-          <p className="text-slate-400 text-xs mt-1">Conductive, Not magnetic</p>
-          <p className="text-amber-300 text-sm font-bold mt-2">POOR</p>
-        </div>
-        <div className="p-4 bg-red-900/40 rounded-xl border border-red-600 text-center">
-          <p className="text-red-400 font-bold">Glass</p>
-          <p className="text-slate-400 text-xs mt-1">Insulator, Not magnetic</p>
-          <p className="text-red-300 text-sm font-bold mt-2">NONE</p>
-        </div>
-      </div>
-      <div className="mt-6 p-4 bg-amber-900/30 rounded-xl border border-amber-600 max-w-xl">
-        <p className="text-amber-300 text-sm">
-          <strong>Pro Tip:</strong> Induction-ready aluminum pans have a steel plate bonded to the bottom!
-        </p>
-      </div>
-      <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        See Real Applications
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-2">Real-World Applications</h2>
-      <p className="text-slate-400 mb-6">Explore how induction heating powers modern industry</p>
-      <div className="flex border-b border-slate-700 mb-6 max-w-xl w-full">
-        {TRANSFER_APPS.map((app, i) => (
-          <button
-            key={i}
-            onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(i); handleAppComplete(i); }}
-            className={`flex-1 py-3 text-center transition-all ${activeAppTab === i ? 'text-orange-400 border-b-2 border-orange-400' : 'text-slate-400 hover:text-slate-200'}`}
-          >
-            <span className="text-xl">{app.icon}</span>
-          </button>
-        ))}
-      </div>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-xl w-full">
-        <h3 className="text-xl font-bold text-orange-400 mb-3">{TRANSFER_APPS[activeAppTab].title}</h3>
-        <p className="text-slate-300">{TRANSFER_APPS[activeAppTab].description}</p>
-        {completedApps.has(activeAppTab) && (
-          <div className="mt-4 text-emerald-400 text-sm flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-            Explored
-          </div>
-        )}
-      </div>
-      <div className="flex gap-2 mt-6">
-        {TRANSFER_APPS.map((_, i) => (
-          <div key={i} className={`w-2 h-2 rounded-full ${completedApps.has(i) ? 'bg-emerald-400' : 'bg-slate-600'}`} />
-        ))}
-      </div>
-      {completedApps.size >= 4 ? (
-        <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-          Take the Test
-        </button>
-      ) : (
-        <p className="mt-6 text-slate-500 text-sm">Explore all applications to continue ({completedApps.size}/4)</p>
-      )}
-    </div>
-  );
-
-  const renderTest = () => {
-    const score = calculateScore();
-    const allAnswered = testAnswers.every(a => a !== -1);
-
-    if (showTestResults) {
-      const passed = score >= 3;
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-          <div className={`text-6xl font-bold mb-4 ${passed ? 'text-emerald-400' : 'text-red-400'}`}>
-            {score}/{TEST_QUESTIONS.length}
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-4">{passed ? 'Excellent!' : 'Keep Learning!'}</h2>
-          <p className="text-slate-300 mb-6 max-w-md">
-            {passed ? 'You have a solid understanding of induction heating!' : 'Review the concepts and try again.'}
-          </p>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); if (passed) { goToNextPhase(); } else { setTestAnswers(Array(4).fill(-1)); setShowTestResults(false); } }}
-            className={`px-6 py-3 font-semibold rounded-xl ${passed ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white' : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'}`}
-          >
-            {passed ? 'Complete Mastery' : 'Try Again'}
-          </button>
-        </div>
-      );
-    }
-
+  // PLAY PHASE - Interactive Induction Simulator
+  if (phase === 'play') {
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Knowledge Check</h2>
-        <div className="flex gap-2 mb-6">
-          {TEST_QUESTIONS.map((_, i) => (
-            <div key={i} className={`w-3 h-3 rounded-full ${testAnswers[i] !== -1 ? (testAnswers[i] === TEST_QUESTIONS[i].correct ? 'bg-emerald-400' : 'bg-red-400') : 'bg-slate-600'}`} />
-          ))}
-        </div>
-        <div className="space-y-6 max-w-xl w-full">
-          {TEST_QUESTIONS.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((opt, oIndex) => (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Induction Heating Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Turn on the cooktop and observe how different materials respond.
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              {renderInductionCooktop(panMaterial, temperature, isHeating, fieldPhase)}
+            </div>
+
+            {/* Material selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Pan Material</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                {(['steel', 'aluminum', 'glass', 'copper'] as const).map(mat => (
                   <button
-                    key={oIndex}
-                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    disabled={testAnswers[qIndex] !== -1}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? oIndex === q.correct ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                        : testAnswers[qIndex] !== -1 && oIndex === q.correct ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                        : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-                    }`}
+                    key={mat}
+                    onClick={() => { playSound('click'); setPanMaterial(mat); setTemperature(25); }}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: `2px solid ${panMaterial === mat ? colors.accent : colors.border}`,
+                      background: panMaterial === mat ? `${colors.accent}22` : colors.bgSecondary,
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      textTransform: 'capitalize',
+                    }}
                   >
-                    {opt}
+                    {mat}
                   </button>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
-        {allAnswered && (
+
+            {/* Frequency slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Frequency</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{frequency} kHz</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="50"
+                value={frequency}
+                onChange={(e) => setFrequency(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Lower frequency</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Higher frequency</span>
+              </div>
+            </div>
+
+            {/* Power button */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button
+                onClick={() => {
+                  setIsHeating(!isHeating);
+                  playSound('click');
+                }}
+                style={{
+                  padding: '14px 32px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: isHeating ? colors.error : colors.success,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                }}
+              >
+                {isHeating ? 'Turn Off' : 'Turn On'}
+              </button>
+            </div>
+
+            {/* Stats display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: temperature > 100 ? colors.error : colors.accent }}>{temperature.toFixed(0)}°C</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Temperature</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: getMaterialProperties(panMaterial).magnetic ? colors.success : colors.error }}>
+                  {getMaterialProperties(panMaterial).magnetic ? 'Yes' : 'No'}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Magnetic</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: getMaterialProperties(panMaterial).heatingRate > 0.5 ? colors.success : getMaterialProperties(panMaterial).heatingRate > 0 ? colors.warning : colors.error }}>
+                  {getMaterialProperties(panMaterial).heatingRate > 0.5 ? 'Fast' : getMaterialProperties(panMaterial).heatingRate > 0 ? 'Slow' : 'None'}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Heating Rate</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Discovery prompt */}
+          {panMaterial === 'glass' && isHeating && (
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                Glass is an insulator - no eddy currents can form, so no heating occurs!
+              </p>
+            </div>
+          )}
+
+          {panMaterial === 'steel' && temperature > 100 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Steel heats efficiently! Magnetic + conductive = strong eddy currents = I²R heating
+              </p>
+            </div>
+          )}
+
           <button
-            onPointerDown={(e) => { e.preventDefault(); setShowTestResults(true); playSound(score >= 3 ? 'complete' : 'failure'); }}
-            className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+            onClick={() => { playSound('success'); setIsHeating(false); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            See Results
+            Understand the Physics
           </button>
-        )}
+        </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mb-8 shadow-lg shadow-amber-500/30">
-        <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Induction Heating
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Faraday's Law of Induction</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                A changing magnetic field induces an electromotive force (EMF) in any conductor within that field. When AC current flows through the induction coil, it creates a <span style={{ color: colors.accent }}>rapidly oscillating magnetic field</span>.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Eddy Currents</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                This changing field induces circular electric currents (eddy currents) within the metal pan. These currents swirl in closed loops, opposing the change in magnetic flux.
+              </p>
+              <p>
+                <strong style={{ color: colors.textPrimary }}>P = I²R (Joule Heating)</strong>
+              </p>
+              <p>
+                The eddy currents flow through the metal's electrical resistance, converting electrical energy into heat. The power dissipated equals current squared times resistance.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: Heat Without Contact
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              Unlike gas or electric coils, induction generates heat directly inside the cookware:
+            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li>The pan is the heating element, not the cooktop</li>
+              <li>90% efficiency vs 40% for gas (no wasted heat)</li>
+              <li>Cooktop stays cool because ceramic can't conduct eddy currents</li>
+            </ul>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover the Material Effect
+          </button>
+        </div>
+
+        {renderNavDots()}
       </div>
-      <h1 className="text-4xl font-bold text-white mb-4">Induction Heating Master!</h1>
-      <p className="text-lg text-slate-400 max-w-md mb-8">
-        You have mastered the physics of contactless heating through electromagnetic induction
-      </p>
-      <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-6 max-w-md border border-slate-700/50 mb-8">
-        <h3 className="text-lg font-semibold text-orange-400 mb-4">Key Concepts Mastered</h3>
-        <ul className="space-y-3 text-left">
-          <li className="flex items-center gap-3 text-slate-300">
-            <span className="text-emerald-400">&#10003;</span> Eddy currents from changing magnetic fields
-          </li>
-          <li className="flex items-center gap-3 text-slate-300">
-            <span className="text-emerald-400">&#10003;</span> I²R heating in resistive materials
-          </li>
-          <li className="flex items-center gap-3 text-slate-300">
-            <span className="text-emerald-400">&#10003;</span> Material selection for optimal heating
-          </li>
-          <li className="flex items-center gap-3 text-slate-300">
-            <span className="text-emerald-400">&#10003;</span> Industrial applications of induction
-          </li>
-        </ul>
-      </div>
-      <div className="bg-orange-900/30 border border-orange-500/30 rounded-xl p-4 max-w-md mb-8">
-        <p className="text-orange-300 text-sm">
-          Key Insight: Heat without direct contact - oscillating fields make currents, currents make heat!
-        </p>
-      </div>
-      <button
-        onPointerDown={(e) => { e.preventDefault(); playSound('complete'); }}
-        className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Claim Your Badge
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </span>
-      </button>
-    </div>
-  );
+    );
+  }
 
-  // ─── Main Render ─────────────────────────────────────────────────────────────
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'All metal pans heat equally well regardless of type' },
+      { id: 'b', text: 'Only magnetic/ferromagnetic metals heat efficiently - non-magnetic metals heat poorly or not at all', correct: true },
+      { id: 'c', text: 'The color of the pan determines heating efficiency' },
+    ];
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Induction Heating</span>
-          <div className="flex items-center gap-1.5">
-            {PHASE_ORDER.map((p, index) => (
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Material Properties
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Why do induction cooktops require special pans? What determines if a material heats up?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              You have three pans: Steel, Aluminum, and Glass. Which will heat on an induction cooktop?
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                key={p}
-                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
-                    : PHASE_ORDER.indexOf(phase) > index
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-orange-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test Materials
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const materialProps: Record<string, { heats: boolean; rate: string; reason: string; color: string }> = {
+      steel: { heats: true, rate: 'Fast', reason: 'Magnetic + moderate resistance = strong eddy currents with I²R heating', color: '#f97316' },
+      aluminum: { heats: true, rate: 'Slow', reason: 'Conductive but non-magnetic - weak eddy currents form', color: '#fbbf24' },
+      glass: { heats: false, rate: 'None', reason: 'Insulator - no free electrons, no currents can form', color: '#3b82f6' }
+    };
+    const props = materialProps[twistMaterial];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Material Comparison Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare how different materials respond to induction heating
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {/* Material selector */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+              {(['steel', 'aluminum', 'glass'] as const).map(mat => (
+                <button
+                  key={mat}
+                  onClick={() => { playSound('click'); setTwistMaterial(mat); }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: `2px solid ${twistMaterial === mat ? materialProps[mat].color : colors.border}`,
+                    background: twistMaterial === mat ? `${materialProps[mat].color}22` : colors.bgSecondary,
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {mat}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              {renderInductionCooktop(twistMaterial, 25, true, fieldPhase)}
+            </div>
+
+            {/* Result display */}
+            <div style={{
+              background: props.heats ? `${props.color}22` : '#1e3a5f',
+              border: `2px solid ${props.color}`,
+              borderRadius: '12px',
+              padding: '20px',
+              textAlign: 'center',
+            }}>
+              <div style={{ ...typo.h2, color: props.color, marginBottom: '8px' }}>
+                Heating: {props.rate}
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ textTransform: 'capitalize' }}>{twistMaterial}:</strong> {props.reason}
+              </p>
+            </div>
+          </div>
+
+          {/* Material comparison */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {Object.entries(materialProps).map(([mat, p]) => (
+              <div key={mat} style={{
+                background: mat === twistMaterial ? colors.bgCard : colors.bgSecondary,
+                border: `1px solid ${mat === twistMaterial ? p.color : colors.border}`,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600, textTransform: 'capitalize' }}>{mat}</div>
+                <div style={{ ...typo.small, color: p.color, marginTop: '4px' }}>{p.rate}</div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Why
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why Material Matters
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🧲</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Magnetic Permeability</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Ferromagnetic materials (iron, steel, nickel) concentrate magnetic field lines, creating stronger induced currents. Non-magnetic metals like aluminum and copper couple weakly with the field.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚡</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Electrical Conductivity</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The material must conduct electricity for eddy currents to flow. Insulators like glass and ceramic have no free electrons, so no currents can form regardless of magnetic field strength.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Ω</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Electrical Resistance</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                P = I²R means higher resistance creates more heat per amp of current. Steel has moderate resistance (good for heating). Copper and aluminum have low resistance, so currents flow easily but generate less heat.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>The Perfect Induction Material</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Steel and cast iron are ideal: magnetic (strong field coupling) + moderate resistance (good I²R heating). "Induction-ready" aluminum pans have a steel plate bonded to the bottom to work with induction cooktops.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Induction Heating Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+
+          {!allAppsCompleted && (
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+              Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4)
+            </p>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand induction heating and electromagnetic principles!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Induction Heating Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how invisible magnetic fields can generate heat through electromagnetic induction.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Eddy currents form from changing magnetic fields',
+              'P = I²R converts current to heat in conductors',
+              'Ferromagnetic materials heat most efficiently',
+              'Skin effect controls heating depth via frequency',
+              'Induction enables 90% energy efficiency',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default InductionHeatingRenderer;

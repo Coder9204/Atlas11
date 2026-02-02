@@ -1,6 +1,173 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// Real-world applications for Magnus effect
+// -----------------------------------------------------------------------------
+// Magnus Effect - Complete 10-Phase Game
+// How spinning balls curve through the air
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface MagnusEffectRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A soccer player is taking a free kick. The defensive wall is blocking the direct path to the goal, so the player decides to curve the ball around the wall.",
+    question: "What must the player do to make the ball curve to the right (from the kicker's perspective)?",
+    options: [
+      { id: 'a', label: "Kick the ball with their toe to add extra force" },
+      { id: 'b', label: "Strike the ball on the left side to impart clockwise spin (viewed from above)", correct: true },
+      { id: 'c', label: "Kick the ball as hard as possible in a straight line" },
+      { id: 'd', label: "Wait for a strong crosswind to push the ball" }
+    ],
+    explanation: "To curve a ball to the right, the player strikes the left side of the ball, imparting clockwise spin (viewed from above). The Magnus effect creates a pressure difference that pushes the ball in the direction of the spin."
+  },
+  {
+    scenario: "A baseball pitcher is throwing a curveball. The batter expects the ball to arrive at chest height, but it drops dramatically as it reaches home plate.",
+    question: "What type of spin did the pitcher put on the ball?",
+    options: [
+      { id: 'a', label: "Backspin, causing the ball to rise" },
+      { id: 'b', label: "Topspin, causing the ball to drop faster than gravity alone", correct: true },
+      { id: 'c', label: "No spin - the ball naturally curves due to air resistance" },
+      { id: 'd', label: "Sidespin, causing horizontal movement" }
+    ],
+    explanation: "Topspin creates lower pressure above the ball and higher pressure below, resulting in a downward Magnus force that adds to gravity. This makes the ball drop faster than the batter expects."
+  },
+  {
+    scenario: "A golfer hits a drive and notices the ball climbs higher than expected and travels much farther than a non-spinning ball would. The ball appears to 'float' through the air.",
+    question: "What causes this extended flight?",
+    options: [
+      { id: 'a', label: "The golf ball is lighter than it appears" },
+      { id: 'b', label: "Wind currents are lifting the ball" },
+      { id: 'c', label: "Backspin creates lift via the Magnus effect, counteracting some gravity", correct: true },
+      { id: 'd', label: "The dimples trap air that propels the ball forward" }
+    ],
+    explanation: "Backspin creates higher air speed above the ball (where the spin adds to airflow) and lower speed below. This pressure difference creates lift that partially counteracts gravity, allowing the ball to stay airborne longer."
+  },
+  {
+    scenario: "Two identical balls are thrown at the same speed. Ball A has heavy topspin while Ball B has no spin. Both balls start at the same height.",
+    question: "What will happen to these balls' trajectories?",
+    options: [
+      { id: 'a', label: "Both balls will land at the same spot since they have the same speed" },
+      { id: 'b', label: "Ball A will land shorter and lower because topspin adds to gravity's effect", correct: true },
+      { id: 'c', label: "Ball B will land first because spin slows Ball A down" },
+      { id: 'd', label: "Ball A will travel farther because spin reduces air resistance" }
+    ],
+    explanation: "Topspin creates a downward Magnus force that adds to gravity, causing Ball A to curve downward more sharply than Ball B. Ball A will hit the ground sooner and travel a shorter horizontal distance."
+  },
+  {
+    scenario: "A table tennis player notices their opponent is using a very smooth paddle, yet their shots still curve dramatically. The player examines the ball and notices it has a rough surface texture.",
+    question: "How does the ball's surface roughness affect the Magnus force?",
+    options: [
+      { id: 'a', label: "Roughness has no effect - only spin rate matters" },
+      { id: 'b', label: "Rough surfaces increase the boundary layer interaction, enhancing the Magnus effect", correct: true },
+      { id: 'c', label: "Smooth balls always curve more than rough balls" },
+      { id: 'd', label: "Roughness only affects the ball's speed, not its curve" }
+    ],
+    explanation: "Surface roughness (like golf ball dimples or baseball seams) increases the interaction between the ball and the boundary layer of air. This enhanced grip on the air amplifies the Magnus effect, creating stronger curves."
+  },
+  {
+    scenario: "An engineer is designing a Flettner rotor ship that uses spinning vertical cylinders to generate thrust from crosswinds. The rotors spin clockwise when viewed from above.",
+    question: "When wind blows from the right (starboard), which direction will the Magnus force push the ship?",
+    options: [
+      { id: 'a', label: "Backwards, slowing the ship down" },
+      { id: 'b', label: "To the right, into the wind" },
+      { id: 'c', label: "Forward, propelling the ship", correct: true },
+      { id: 'd', label: "The ship will spin in circles" }
+    ],
+    explanation: "The Magnus force acts perpendicular to both the wind direction and the spin axis. With clockwise rotation and wind from the right, the force points forward. On the right side of the rotor, spin opposes wind (high pressure); on the left, spin aids wind (low pressure). This pressure difference pushes forward."
+  },
+  {
+    scenario: "A physicist calculates that increasing the spin rate of a ball from 1000 RPM to 2000 RPM while keeping velocity constant should double the Magnus force.",
+    question: "What is the relationship between spin rate and Magnus force magnitude?",
+    options: [
+      { id: 'a', label: "Magnus force is independent of spin rate" },
+      { id: 'b', label: "Magnus force is proportional to spin rate - double spin means double force", correct: true },
+      { id: 'c', label: "Magnus force increases with the square of spin rate" },
+      { id: 'd', label: "Magnus force decreases as spin rate increases due to turbulence" }
+    ],
+    explanation: "The Magnus force is proportional to both the spin rate and the velocity of the object. The lift coefficient CL increases linearly with the spin parameter (surface velocity / flow velocity), so doubling spin approximately doubles the force."
+  },
+  {
+    scenario: "A volleyball player serves a 'float serve' with minimal spin. The ball wobbles unpredictably and is extremely difficult to return. Surprisingly, sometimes the ball curves opposite to the expected direction.",
+    question: "What phenomenon explains this unexpected behavior?",
+    options: [
+      { id: 'a', label: "The player is secretly adding hidden spin" },
+      { id: 'b', label: "Air currents in the gym are unpredictable" },
+      { id: 'c', label: "At certain speeds and low spin, the 'reverse Magnus effect' can occur", correct: true },
+      { id: 'd', label: "Volleyballs have special aerodynamic properties" }
+    ],
+    explanation: "The reverse Magnus effect occurs when a smooth ball with low spin moves at speeds where the boundary layer transitions from laminar to turbulent asymmetrically. This can cause the ball to curve opposite to the normal Magnus direction, making float serves highly unpredictable."
+  },
+  {
+    scenario: "A tennis player hits a heavy topspin forehand. The ball clears the net with plenty of room but then dips sharply and lands inside the baseline.",
+    question: "Why can players hit the ball harder with topspin without it going out?",
+    options: [
+      { id: 'a', label: "Topspin slows the ball down through increased air resistance" },
+      { id: 'b', label: "The downward Magnus force curves the ball back into the court", correct: true },
+      { id: 'c', label: "Topspin makes the ball heavier so it falls faster" },
+      { id: 'd', label: "The opponent's court has a slight incline" }
+    ],
+    explanation: "Topspin creates a downward Magnus force that adds to gravity, causing the ball to dip sharply. This allows players to hit with more pace while still keeping the ball in the court - the topspin 'pulls' the ball down into the playing area."
+  },
+  {
+    scenario: "An aerospace engineer is studying why artillery shells are rifled (given spin by spiral grooves in the gun barrel). The shells spin around their long axis as they fly.",
+    question: "Besides stability, how does spin affect a projectile's trajectory through crosswinds?",
+    options: [
+      { id: 'a', label: "Spin has no effect on crosswind drift" },
+      { id: 'b', label: "Spinning projectiles drift perpendicular to the crosswind direction due to Magnus force", correct: true },
+      { id: 'c', label: "Spin cancels out all crosswind effects completely" },
+      { id: 'd', label: "Spinning shells fly faster through crosswinds" }
+    ],
+    explanation: "When a crosswind hits a spinning projectile, the Magnus effect creates a force perpendicular to both the wind direction and the spin axis. This causes the shell to drift in a predictable direction (called 'spin drift'), which must be compensated for in aiming."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '⚽',
@@ -11,7 +178,7 @@ const realWorldApps = [
     connection: 'The simulation showed how topspin, backspin, and sidespin create pressure differentials. In sports, players intuitively control spin rate and axis to achieve specific trajectories - making physics their secret weapon.',
     howItWorks: 'Spinning ball drags air in rotation direction, creating asymmetric flow. Bernoulli principle causes pressure difference. Net force perpendicular to velocity curves trajectory. Spin axis determines curve direction.',
     stats: [
-      { value: '3000rpm', label: 'Baseball pitcher spin rate', icon: '⚾' },
+      { value: '3000 rpm', label: 'Pitcher spin rate', icon: '⚾' },
       { value: '8m', label: 'Maximum ball curve', icon: '📐' },
       { value: '$50B', label: 'Global sports equipment', icon: '📈' }
     ],
@@ -49,7 +216,7 @@ const realWorldApps = [
     stats: [
       { value: '30%', label: 'Lift increase possible', icon: '📈' },
       { value: '25%', label: 'Shorter runway needed', icon: '🛬' },
-      { value: '15°', label: 'Higher stall angle', icon: '📐' }
+      { value: '15 deg', label: 'Higher stall angle', icon: '📐' }
     ],
     examples: ['STOL aircraft', 'Bush planes', 'UAV designs', 'Wind tunnel research'],
     companies: ['NASA', 'DARPA', 'Airbus', 'Joby Aviation'],
@@ -67,7 +234,7 @@ const realWorldApps = [
     stats: [
       { value: '30km', label: 'Guided artillery range', icon: '🎯' },
       { value: '1m', label: 'CEP accuracy achieved', icon: '📍' },
-      { value: '150rpm', label: 'Typical spin rate', icon: '🔄' }
+      { value: '150 rpm', label: 'Typical spin rate', icon: '🔄' }
     ],
     examples: ['Excalibur shells', 'PGK fuzes', 'Guided mortars', 'Extended range munitions'],
     companies: ['Raytheon', 'BAE Systems', 'Northrop Grumman', 'General Dynamics'],
@@ -76,75 +243,53 @@ const realWorldApps = [
   }
 ];
 
-// Phase type for 10-phase learning structure
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const MagnusEffectRenderer: React.FC<MagnusEffectRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
 
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Lab',
-  review: 'Review',
-  twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
-  twist_review: 'Twist Review',
-  transfer: 'Transfer',
-  test: 'Test',
-  mastery: 'Mastery'
-};
-
-// Gold standard types
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'spin_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
-  setTestScore?: (score: number) => void;
-}
-
-const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete, setTestScore }) => {
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Animation states for Magnus effect
-  const [ballX, setBallX] = useState(50);
-  const [ballY, setBallY] = useState(150);
+  // Simulation state
   const [spinRate, setSpinRate] = useState(50);
   const [ballSpeed, setBallSpeed] = useState(50);
   const [spinDirection, setSpinDirection] = useState<'topspin' | 'backspin' | 'sidespin'>('topspin');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [ballX, setBallX] = useState(50);
+  const [ballY, setBallY] = useState(150);
   const [ballRotation, setBallRotation] = useState(0);
   const [trajectory, setTrajectory] = useState<{x: number, y: number}[]>([]);
 
-  const lastClickRef = useRef(0);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // Twist phase - different ball surfaces
+  const [ballSurface, setBallSurface] = useState<'smooth' | 'rough' | 'dimpled'>('rough');
+  const [twistSpinRate, setTwistSpinRate] = useState(50);
 
-  // Responsive check
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -152,101 +297,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Sync with external phase control
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
-      setPhase(gamePhase as Phase);
-    }
-  }, [gamePhase, phase]);
-
-  // Web Audio API sound system
-  const playSound = useCallback((soundType: 'click' | 'correct' | 'incorrect' | 'complete' | 'transition' | 'whoosh') => {
-    try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
-      if (ctx.state === 'suspended') ctx.resume();
-
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      switch (soundType) {
-        case 'click':
-        case 'transition':
-          oscillator.frequency.setValueAtTime(440, ctx.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.15);
-          break;
-        case 'correct':
-          oscillator.frequency.setValueAtTime(523, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
-          oscillator.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
-          gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.3);
-          break;
-        case 'incorrect':
-          oscillator.frequency.setValueAtTime(200, ctx.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.2);
-          gainNode.gain.setValueAtTime(0.12, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.25);
-          break;
-        case 'complete':
-          oscillator.frequency.setValueAtTime(523, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(659, ctx.currentTime + 0.15);
-          oscillator.frequency.setValueAtTime(784, ctx.currentTime + 0.3);
-          oscillator.frequency.setValueAtTime(1047, ctx.currentTime + 0.45);
-          gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.6);
-          break;
-        case 'whoosh':
-          oscillator.type = 'sawtooth';
-          oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3);
-          gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.3);
-          break;
-      }
-    } catch {
-      // Audio not available
-    }
-  }, []);
-
-  const goToPhase = useCallback((newPhase: Phase) => {
-    playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-  }, [playSound, onPhaseComplete, onGameEvent]);
-
-  // Ball flight animation with Magnus effect
+  // Ball flight animation
   useEffect(() => {
     if (!isAnimating) return;
 
@@ -261,7 +312,6 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
       });
 
       setBallY(prev => {
-        // Magnus force creates curve
         const magnusForce = (spinRate / 100) * (spinDirection === 'topspin' ? 0.8 : spinDirection === 'backspin' ? -0.8 : 0);
         const gravity = 0.15;
         const newY = prev + magnusForce + gravity;
@@ -280,1427 +330,1564 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
     return () => clearInterval(interval);
   }, [isAnimating, ballSpeed, spinRate, spinDirection, ballX, ballY]);
 
-  useEffect(() => {
+  // Calculate Magnus force for display
+  const magnusForce = ((spinRate / 100) * (ballSpeed / 100) * 10).toFixed(1);
+
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#EF4444', // Red for sports/Magnus
+    accentGlow: 'rgba(239, 68, 68, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Ball Surfaces',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
     if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', data: { phase } });
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'magnus-effect',
+        gameTitle: 'Magnus Effect',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
     }
-  }, [phase, onGameEvent]);
-
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-    playSound(prediction === 'B' ? 'correct' : 'incorrect');
-    onGameEvent?.({ type: 'prediction_made', data: { prediction, correct: prediction === 'B' } });
-  }, [playSound, onGameEvent]);
-
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-    playSound(prediction === 'C' ? 'correct' : 'incorrect');
-    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction, correct: prediction === 'C' } });
-  }, [playSound, onGameEvent]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-    onGameEvent?.({ type: 'test_answered', data: { questionIndex, answerIndex } });
+    setTimeout(() => { isNavigating.current = false; }, 300);
   }, [onGameEvent]);
 
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-    onGameEvent?.({ type: 'app_explored', data: { appIndex } });
-  }, [playSound, onGameEvent]);
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
   const startAnimation = useCallback(() => {
     setBallX(50);
     setBallY(150);
     setTrajectory([]);
     setIsAnimating(true);
-    onGameEvent?.({ type: 'simulation_started', data: { spinRate, ballSpeed, spinDirection } });
-  }, [onGameEvent, spinRate, ballSpeed, spinDirection]);
+  }, []);
 
-  const testQuestions = [
-    {
-      question: "What causes the Magnus effect?",
-      options: [
-        { text: "Gravity acting on spin", correct: false },
-        { text: "Pressure difference from air speed variation", correct: true },
-        { text: "Magnetic forces", correct: false },
-        { text: "Wind resistance only", correct: false }
-      ]
-    },
-    {
-      question: "A ball with topspin will curve:",
-      options: [
-        { text: "Upward", correct: false },
-        { text: "Downward", correct: true },
-        { text: "Left only", correct: false },
-        { text: "It won't curve", correct: false }
-      ]
-    },
-    {
-      question: "On which side of a spinning ball is air pressure lower?",
-      options: [
-        { text: "The side spinning into the airflow", correct: false },
-        { text: "The side spinning with the airflow", correct: true },
-        { text: "Both sides equal", correct: false },
-        { text: "Pressure doesn't change", correct: false }
-      ]
-    },
-    {
-      question: "The Magnus force is perpendicular to:",
-      options: [
-        { text: "Gravity only", correct: false },
-        { text: "Both velocity and spin axis", correct: true },
-        { text: "The ground", correct: false },
-        { text: "Nothing - it acts in all directions", correct: false }
-      ]
-    },
-    {
-      question: "Why do golf balls have dimples?",
-      options: [
-        { text: "Decoration only", correct: false },
-        { text: "To increase drag", correct: false },
-        { text: "To enhance the Magnus effect and reduce drag", correct: true },
-        { text: "To make them heavier", correct: false }
-      ]
-    },
-    {
-      question: "A curveball in baseball uses:",
-      options: [
-        { text: "Only gravity", correct: false },
-        { text: "The Magnus effect from spin", correct: true },
-        { text: "Air temperature changes", correct: false },
-        { text: "The weight of the ball", correct: false }
-      ]
-    },
-    {
-      question: "Increasing spin rate will:",
-      options: [
-        { text: "Decrease the curve", correct: false },
-        { text: "Have no effect", correct: false },
-        { text: "Increase the curve", correct: true },
-        { text: "Make the ball go straight", correct: false }
-      ]
-    },
-    {
-      question: "The Magnus force equation F = CL x (1/2)pv^2A shows force depends on:",
-      options: [
-        { text: "Only ball size", correct: false },
-        { text: "Velocity squared", correct: true },
-        { text: "Temperature only", correct: false },
-        { text: "Color of ball", correct: false }
-      ]
-    },
-    {
-      question: "Backspin on a tennis ball causes it to:",
-      options: [
-        { text: "Drop faster", correct: false },
-        { text: "Stay in the air longer", correct: true },
-        { text: "Curve left", correct: false },
-        { text: "Stop spinning", correct: false }
-      ]
-    },
-    {
-      question: "The Magnus effect also works:",
-      options: [
-        { text: "Only in air", correct: false },
-        { text: "Only in water", correct: false },
-        { text: "In any fluid (air, water, etc.)", correct: true },
-        { text: "Only in a vacuum", correct: false }
-      ]
-    }
-  ];
+  // Ball Visualization SVG Component
+  const BallVisualization = ({ showAirflow = false }: { showAirflow?: boolean }) => {
+    const width = isMobile ? 340 : 400;
+    const height = isMobile ? 280 : 320;
 
-  const calculateScore = useCallback(() => {
-    return testAnswers.reduce((score, answer, index) => {
-      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
-    }, 0);
-  }, [testAnswers]);
-
-  const renderSpinningBall = (size: number = 60, showAirflow: boolean = false) => {
     return (
-      <svg width="400" height="320" className="mx-auto">
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          {/* === PREMIUM BACKGROUND GRADIENTS === */}
-          {/* Sky gradient with atmospheric depth */}
-          <linearGradient id="magnSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0c1929" />
-            <stop offset="25%" stopColor="#1e3a5f" />
             <stop offset="50%" stopColor="#1a4a6e" />
-            <stop offset="75%" stopColor="#0f2a4a" />
             <stop offset="100%" stopColor="#030712" />
           </linearGradient>
-
-          {/* Lab environment gradient */}
-          <linearGradient id="magnLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#030712" />
-            <stop offset="30%" stopColor="#0a1628" />
-            <stop offset="70%" stopColor="#0f1d32" />
-            <stop offset="100%" stopColor="#030712" />
-          </linearGradient>
-
-          {/* === 3D SPINNING BALL GRADIENTS === */}
-          {/* Baseball/ball primary radial gradient for 3D effect */}
-          <radialGradient id="magnBall3D" cx="35%" cy="25%" r="65%" fx="30%" fy="20%">
+          <radialGradient id="ballGradient" cx="35%" cy="25%" r="65%">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="15%" stopColor="#fef2f2" />
             <stop offset="35%" stopColor="#fca5a5" />
-            <stop offset="60%" stopColor="#ef4444" />
-            <stop offset="85%" stopColor="#dc2626" />
+            <stop offset="70%" stopColor="#ef4444" />
             <stop offset="100%" stopColor="#991b1b" />
           </radialGradient>
-
-          {/* Ball shadow gradient for depth */}
-          <radialGradient id="magnBallShadow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#000000" stopOpacity="0" />
-            <stop offset="70%" stopColor="#000000" stopOpacity="0.1" />
-            <stop offset="100%" stopColor="#000000" stopOpacity="0.4" />
-          </radialGradient>
-
-          {/* Ball specular highlight */}
-          <radialGradient id="magnBallHighlight" cx="30%" cy="25%" r="40%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-            <stop offset="40%" stopColor="#ffffff" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-          </radialGradient>
-
-          {/* === AIRFLOW GRADIENTS === */}
-          {/* Fast airflow (low pressure - blue) */}
-          <linearGradient id="magnFastAirflow" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
-            <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.9" />
-            <stop offset="80%" stopColor="#60a5fa" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1" />
-          </linearGradient>
-
-          {/* Slow airflow (high pressure - red/orange) */}
-          <linearGradient id="magnSlowAirflow" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
-            <stop offset="20%" stopColor="#f87171" stopOpacity="0.5" />
-            <stop offset="50%" stopColor="#fca5a5" stopOpacity="0.8" />
-            <stop offset="80%" stopColor="#f87171" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
-          </linearGradient>
-
-          {/* === FORCE ARROW GRADIENTS === */}
-          {/* Magnus force arrow gradient (green) */}
-          <linearGradient id="magnForceArrow" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#166534" />
-            <stop offset="30%" stopColor="#22c55e" />
-            <stop offset="70%" stopColor="#4ade80" />
-            <stop offset="100%" stopColor="#86efac" />
-          </linearGradient>
-
-          {/* Spin indicator gradient (gold) */}
-          <linearGradient id="magnSpinIndicator" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
-            <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
-            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.3" />
-          </linearGradient>
-
-          {/* === PRESSURE ZONE GRADIENTS === */}
-          {/* Low pressure zone (blue glow) */}
-          <radialGradient id="magnLowPressure" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
-            <stop offset="50%" stopColor="#1d4ed8" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
-          </radialGradient>
-
-          {/* High pressure zone (red glow) */}
-          <radialGradient id="magnHighPressure" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
-            <stop offset="50%" stopColor="#dc2626" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Target zone gradient */}
-          <linearGradient id="magnTargetZone" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.1" />
-            <stop offset="50%" stopColor="#4ade80" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.1" />
-          </linearGradient>
-
-          {/* Trajectory trail gradient */}
-          <linearGradient id="magnTrajectory" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.2" />
-            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.2" />
-          </linearGradient>
-
-          {/* === GLOW FILTERS === */}
-          {/* Ball glow filter */}
-          <filter id="magnBallGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Force arrow glow filter */}
-          <filter id="magnForceGlow" x="-100%" y="-100%" width="300%" height="300%">
+          <filter id="glowFilter">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-
-          {/* Soft airflow glow */}
-          <filter id="magnAirflowGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Spin indicator glow */}
-          <filter id="magnSpinGlow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Text shadow filter */}
-          <filter id="magnTextShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="1" dy="1" stdDeviation="1" floodColor="#000000" floodOpacity="0.5" />
-          </filter>
-
-          {/* === ARROW MARKERS === */}
-          {/* Magnus force arrow marker (large, green) */}
-          <marker id="magnArrowForce" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
-            <path d="M0,0 L0,8 L12,4 z" fill="url(#magnForceArrow)" />
-          </marker>
-
-          {/* Spin direction arrow marker (gold) */}
-          <marker id="magnArrowSpin" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill="#fbbf24" />
-          </marker>
-
-          {/* Airflow arrow marker (blue) */}
-          <marker id="magnArrowAirFast" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill="#60a5fa" />
-          </marker>
-
-          {/* Airflow arrow marker (red) */}
-          <marker id="magnArrowAirSlow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill="#f87171" />
-          </marker>
-
-          {/* === PATTERNS === */}
-          {/* Subtle grid pattern for lab environment */}
-          <pattern id="magnLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.3" />
-          </pattern>
         </defs>
 
-        {/* === BACKGROUND LAYERS === */}
-        <rect width="400" height="320" fill="url(#magnLabBg)" rx="12" />
-        <rect width="400" height="320" fill="url(#magnSkyGradient)" opacity="0.6" rx="12" />
-        <rect width="400" height="320" fill="url(#magnLabGrid)" rx="12" />
+        {/* Background */}
+        <rect width={width} height={height} fill="url(#skyGradient)" rx="12" />
 
-        {/* === TRAJECTORY TRAIL === */}
+        {/* Grid pattern */}
+        <g opacity="0.1">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <line key={`vg-${i}`} x1={i * 20} y1="0" x2={i * 20} y2={height} stroke="#3b82f6" strokeWidth="1" />
+          ))}
+          {Array.from({ length: 16 }).map((_, i) => (
+            <line key={`hg-${i}`} x1="0" y1={i * 20} x2={width} y2={i * 20} stroke="#3b82f6" strokeWidth="1" />
+          ))}
+        </g>
+
+        {/* Trajectory trail */}
         {trajectory.length > 1 && (
-          <g>
-            <path
-              d={`M ${trajectory.map((p) => `${p.x} ${p.y}`).join(' L ')}`}
-              fill="none"
-              stroke="url(#magnTrajectory)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.8"
-            />
-            {/* Trajectory glow */}
-            <path
-              d={`M ${trajectory.map((p) => `${p.x} ${p.y}`).join(' L ')}`}
-              fill="none"
-              stroke="#fbbf24"
-              strokeWidth="6"
-              strokeLinecap="round"
-              opacity="0.2"
-            />
-          </g>
+          <path
+            d={`M ${trajectory.map((p) => `${p.x} ${p.y}`).join(' L ')}`}
+            fill="none"
+            stroke="#fbbf24"
+            strokeWidth="3"
+            strokeLinecap="round"
+            opacity="0.7"
+          />
         )}
 
-        {/* === AIRFLOW VISUALIZATION === */}
+        {/* Airflow visualization */}
         {showAirflow && (
           <g>
-            {/* Pressure zones */}
-            <ellipse cx="200" cy="100" rx="80" ry="40" fill="url(#magnLowPressure)" />
-            <ellipse cx="200" cy="200" rx="80" ry="40" fill="url(#magnHighPressure)" />
-
-            {/* Fast airflow streamlines (top - low pressure) */}
-            <g filter="url(#magnAirflowGlow)">
+            {/* Fast airflow (top - low pressure) */}
+            <g opacity="0.6">
               {[0, 1, 2].map((i) => (
                 <path
                   key={`fast-${i}`}
-                  d={`M${60 + i * 20},${110 + i * 8} Q200,${85 + i * 5} ${340 - i * 20},${110 + i * 8}`}
+                  d={`M${60 + i * 20},${ballY - 40 + i * 8} Q${ballX},${ballY - 60 + i * 5} ${ballX + 100 - i * 20},${ballY - 40 + i * 8}`}
                   fill="none"
-                  stroke="url(#magnFastAirflow)"
+                  stroke="#60a5fa"
                   strokeWidth={3 - i * 0.5}
                   strokeLinecap="round"
-                  markerEnd="url(#magnArrowAirFast)"
-                >
-                  <animate attributeName="stroke-dashoffset" from="40" to="0" dur={`${0.4 + i * 0.1}s`} repeatCount="indefinite" />
-                </path>
+                />
               ))}
+              <text x={ballX} y={ballY - 70} textAnchor="middle" fill="#60a5fa" fontSize="10" fontWeight="bold">
+                FAST = LOW P
+              </text>
             </g>
 
-            {/* Slow airflow streamlines (bottom - high pressure) */}
-            <g filter="url(#magnAirflowGlow)">
+            {/* Slow airflow (bottom - high pressure) */}
+            <g opacity="0.6">
               {[0, 1, 2].map((i) => (
                 <path
                   key={`slow-${i}`}
-                  d={`M${60 + i * 20},${190 - i * 8} Q200,${215 - i * 5} ${340 - i * 20},${190 - i * 8}`}
+                  d={`M${60 + i * 20},${ballY + 40 - i * 8} Q${ballX},${ballY + 60 - i * 5} ${ballX + 100 - i * 20},${ballY + 40 - i * 8}`}
                   fill="none"
-                  stroke="url(#magnSlowAirflow)"
+                  stroke="#f87171"
                   strokeWidth={3 - i * 0.5}
                   strokeLinecap="round"
                   strokeDasharray="8,4"
-                  markerEnd="url(#magnArrowAirSlow)"
-                >
-                  <animate attributeName="stroke-dashoffset" from="0" to="24" dur={`${0.8 + i * 0.2}s`} repeatCount="indefinite" />
-                </path>
+                />
               ))}
-            </g>
-
-            {/* Pressure labels with premium styling */}
-            <g filter="url(#magnTextShadow)">
-              <rect x="140" y="70" width="120" height="22" rx="4" fill="#1e40af" fillOpacity="0.8" />
-              <text x="200" y="85" textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold">
-                FAST AIR = LOW P
-              </text>
-            </g>
-            <g filter="url(#magnTextShadow)">
-              <rect x="135" y="225" width="130" height="22" rx="4" fill="#991b1b" fillOpacity="0.8" />
-              <text x="200" y="240" textAnchor="middle" fill="#fca5a5" fontSize="11" fontWeight="bold">
-                SLOW AIR = HIGH P
+              <text x={ballX} y={ballY + 85} textAnchor="middle" fill="#f87171" fontSize="10" fontWeight="bold">
+                SLOW = HIGH P
               </text>
             </g>
 
-            {/* === MAGNUS FORCE ARROW === */}
-            <g filter="url(#magnForceGlow)">
-              {/* Force arrow background glow */}
-              <line x1="200" y1="195" x2="200" y2="115" stroke="#22c55e" strokeWidth="8" opacity="0.3" strokeLinecap="round" />
-              {/* Main force arrow */}
-              <line x1="200" y1="190" x2="200" y2="120" stroke="url(#magnForceArrow)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#magnArrowForce)" />
+            {/* Magnus force arrow */}
+            <g filter="url(#glowFilter)">
+              <line
+                x1={ballX}
+                y1={ballY + 30}
+                x2={ballX}
+                y2={ballY - 40}
+                stroke="#22c55e"
+                strokeWidth="4"
+                markerEnd="url(#forceArrow)"
+              />
             </g>
-
-            {/* Force label with premium box */}
-            <g filter="url(#magnTextShadow)">
-              <rect x="215" y="140" width="95" height="26" rx="5" fill="#166534" fillOpacity="0.9" stroke="#4ade80" strokeWidth="1" />
-              <text x="262" y="158" textAnchor="middle" fill="#86efac" fontSize="12" fontWeight="bold">
-                Magnus Force
-              </text>
-            </g>
+            <defs>
+              <marker id="forceArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
+              </marker>
+            </defs>
+            <text x={ballX + 20} y={ballY - 10} fill="#22c55e" fontSize="10" fontWeight="bold">
+              Magnus Force
+            </text>
           </g>
         )}
 
-        {/* === 3D SPINNING BALL === */}
-        <g transform={`translate(${ballX}, ${ballY})`} filter="url(#magnBallGlow)">
-          {/* Ball drop shadow */}
-          <ellipse cx="3" cy={size/2 + 5} rx={size/2.5} ry={size/8} fill="#000000" opacity="0.3" />
-
-          {/* Main ball with 3D gradient */}
-          <circle r={size/2} fill="url(#magnBall3D)" />
-
-          {/* Ball shadow overlay for depth */}
-          <circle r={size/2} fill="url(#magnBallShadow)" />
-
-          {/* Ball specular highlight */}
-          <circle r={size/2} fill="url(#magnBallHighlight)" />
-
-          {/* Seam lines with rotation animation */}
+        {/* Ball */}
+        <g transform={`translate(${ballX}, ${ballY})`} filter="url(#glowFilter)">
+          <circle r="25" fill="url(#ballGradient)" />
+          {/* Seam lines with rotation */}
           <g transform={`rotate(${ballRotation})`}>
-            {/* Primary seam */}
-            <path
-              d={`M-${size/3},0 Q0,-${size/3} ${size/3},0 Q0,${size/3} -${size/3},0`}
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="2.5"
-              opacity="0.9"
-              strokeLinecap="round"
-            />
-            {/* Secondary seam details */}
-            <path
-              d={`M-${size/4},${size/6} Q0,${size/4} ${size/4},${size/6}`}
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="1.5"
-              opacity="0.6"
-              strokeLinecap="round"
-            />
-            <path
-              d={`M-${size/4},-${size/6} Q0,-${size/4} ${size/4},-${size/6}`}
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="1.5"
-              opacity="0.6"
-              strokeLinecap="round"
-            />
+            <path d="M-15,0 Q0,-15 15,0 Q0,15 -15,0" fill="none" stroke="#fff" strokeWidth="2" opacity="0.8" />
           </g>
-
-          {/* Rotation speed indicator ring */}
-          <circle
-            r={size/2 + 3}
-            fill="none"
-            stroke="#fbbf24"
-            strokeWidth="1.5"
-            strokeDasharray={`${spinRate / 10} ${10 - spinRate / 10}`}
-            opacity="0.6"
-          >
-            <animateTransform
-              attributeName="transform"
-              type="rotate"
-              from="0"
-              to={spinDirection === 'backspin' ? '-360' : '360'}
-              dur={`${2 - spinRate / 100}s`}
-              repeatCount="indefinite"
-            />
-          </circle>
-
-          {/* === SPIN DIRECTION INDICATORS === */}
-          <g filter="url(#magnSpinGlow)">
-            {spinDirection === 'topspin' && (
-              <g>
-                {/* Topspin arc with glow */}
-                <path
-                  d={`M-18,-${size/2 + 12} A24,24 0 0 1 18,-${size/2 + 12}`}
-                  fill="none"
-                  stroke="url(#magnSpinIndicator)"
-                  strokeWidth="3"
-                  markerEnd="url(#magnArrowSpin)"
-                />
-                <text x="0" y={-size/2 - 22} textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="bold" filter="url(#magnTextShadow)">
-                  TOPSPIN
-                </text>
-              </g>
-            )}
-            {spinDirection === 'backspin' && (
-              <g>
-                {/* Backspin arc with glow */}
-                <path
-                  d={`M18,-${size/2 + 12} A24,24 0 0 0 -18,-${size/2 + 12}`}
-                  fill="none"
-                  stroke="url(#magnSpinIndicator)"
-                  strokeWidth="3"
-                  markerEnd="url(#magnArrowSpin)"
-                />
-                <text x="0" y={-size/2 - 22} textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="bold" filter="url(#magnTextShadow)">
-                  BACKSPIN
-                </text>
-              </g>
-            )}
-            {spinDirection === 'sidespin' && (
-              <g>
-                {/* Sidespin indicator */}
-                <path
-                  d={`M${size/2 + 12},-18 A24,24 0 0 1 ${size/2 + 12},18`}
-                  fill="none"
-                  stroke="url(#magnSpinIndicator)"
-                  strokeWidth="3"
-                  markerEnd="url(#magnArrowSpin)"
-                />
-                <text x={size/2 + 25} y="0" textAnchor="start" fill="#fbbf24" fontSize="10" fontWeight="bold" filter="url(#magnTextShadow)">
-                  SIDESPIN
-                </text>
-              </g>
-            )}
-          </g>
-        </g>
-
-        {/* === TARGET ZONE === */}
-        <g>
-          <rect x="360" y="100" width="32" height="180" fill="url(#magnTargetZone)" rx="6" />
-          <rect x="360" y="100" width="32" height="180" fill="none" stroke="#4ade80" strokeWidth="1.5" strokeDasharray="4,4" rx="6" opacity="0.6" />
-          {/* Target rings */}
-          {[0, 1, 2].map((i) => (
-            <circle
-              key={`target-${i}`}
-              cx="376"
-              cy="190"
-              r={15 + i * 15}
-              fill="none"
-              stroke="#4ade80"
-              strokeWidth="1"
-              opacity={0.5 - i * 0.15}
-            />
-          ))}
-          <text x="376" y="290" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="bold" filter="url(#magnTextShadow)">
-            TARGET
+          {/* Spin direction indicator */}
+          {spinDirection === 'topspin' && (
+            <path d="M-15,-35 A20,20 0 0 1 15,-35" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#spinArrow)" />
+          )}
+          {spinDirection === 'backspin' && (
+            <path d="M15,-35 A20,20 0 0 0 -15,-35" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#spinArrow)" />
+          )}
+          {spinDirection === 'sidespin' && (
+            <path d="M35,-15 A20,20 0 0 1 35,15" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#spinArrow)" />
+          )}
+          <defs>
+            <marker id="spinArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="#fbbf24" />
+            </marker>
+          </defs>
+          <text x="0" y="-45" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="bold">
+            {spinDirection.toUpperCase()}
           </text>
         </g>
 
-        {/* === MEASUREMENT SCALE === */}
-        <g opacity="0.5">
-          <line x1="50" y1="300" x2="350" y2="300" stroke="#64748b" strokeWidth="1" />
-          {[50, 100, 150, 200, 250, 300, 350].map((x) => (
-            <g key={`scale-${x}`}>
-              <line x1={x} y1="295" x2={x} y2="300" stroke="#64748b" strokeWidth="1" />
-              <text x={x} y="310" textAnchor="middle" fill="#64748b" fontSize="8">
-                {x - 50}
-              </text>
-            </g>
-          ))}
+        {/* Target zone */}
+        <rect x={width - 45} y="80" width="30" height="160" fill="rgba(34, 197, 94, 0.1)" stroke="#22c55e" strokeWidth="1" strokeDasharray="4,4" rx="4" />
+        <text x={width - 30} y={height - 20} textAnchor="middle" fill="#22c55e" fontSize="9">TARGET</text>
+
+        {/* Stats display */}
+        <g>
+          <rect x="10" y="10" width="100" height="60" rx="6" fill="rgba(0,0,0,0.5)" />
+          <text x="20" y="30" fill={colors.textMuted} fontSize="10">Spin: {spinRate}%</text>
+          <text x="20" y="45" fill={colors.textMuted} fontSize="10">Speed: {ballSpeed}%</text>
+          <text x="20" y="60" fill={colors.accent} fontSize="10">Force: {magnusForce}N</text>
         </g>
       </svg>
     );
   };
 
-  // PHASE 1: HOOK - Welcome page explaining the Magnus effect
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6">
-      {/* Premium badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-        <span className="text-red-400/80 text-sm font-medium tracking-wide uppercase">Sports Physics</span>
-      </div>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.warning})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-      {/* Gradient title */}
-      <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
-        The Magnus Effect
-      </h1>
-
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
-        How does spinning make a ball curve through the air?
-      </p>
-
-      {/* Premium card */}
-      <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-        {renderSpinningBall(50, false)}
-        <p className="text-gray-300 text-center leading-relaxed mt-4 mb-4">
-          A pitcher throws a baseball with heavy spin. Instead of going straight, it curves dramatically - baffling the batter!
-        </p>
-        <p className="text-slate-400 text-sm text-center mb-4">
-          The Magnus effect explains how spinning objects curve through fluids like air and water. It is the secret behind curveballs, banana kicks, and sliced golf shots.
-        </p>
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
         <button
-          onClick={() => startAnimation()}
-          style={{ zIndex: 10 }}
-          className="relative w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 text-white font-medium rounded-xl transition-colors border border-white/10"
-        >
-          Watch a Curveball
-        </button>
-      </div>
-
-      {/* CTA Button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        style={{ zIndex: 10 }}
-        className="relative group px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 flex items-center gap-2"
-      >
-        Discover the Secret
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </button>
-
-      {/* Hint text */}
-      <p className="text-slate-500 text-sm mt-6">
-        Learn the physics behind curveballs and banana kicks
-      </p>
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
     </div>
   );
 
-  // PHASE 2: PREDICT - Prediction question about spinning ball trajectory
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          A ball is thrown with topspin (rotating forward). Why does it curve downward?
-        </p>
-        <svg width="300" height="150" className="mx-auto">
-          <rect width="300" height="150" fill="#1e3a5f" rx="8" />
-          <circle cx="80" cy="75" r="25" fill="#dc2626" />
-          <path d="M55,60 A30,30 0 0 1 105,60" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#arrowPred)" />
-          <text x="80" y="45" textAnchor="middle" fill="#fbbf24" fontSize="10">Topspin</text>
-          <line x1="110" y1="75" x2="250" y2="75" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,5" />
-          <text x="180" y="70" fill="#94a3b8" fontSize="10">Which way?</text>
-          <line x1="250" y1="75" x2="250" y2="120" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowDown)" />
-          <line x1="250" y1="75" x2="250" y2="30" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowUp)" />
-          <defs>
-            <marker id="arrowPred" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L7,3 z" fill="#fbbf24" />
-            </marker>
-            <marker id="arrowDown" markerWidth="8" markerHeight="8" refX="3" refY="0" orient="auto">
-              <path d="M0,0 L6,0 L3,7 z" fill="#22c55e" />
-            </marker>
-            <marker id="arrowUp" markerWidth="8" markerHeight="8" refX="3" refY="7" orient="auto">
-              <path d="M0,7 L6,7 L3,0 z" fill="#ef4444" />
-            </marker>
-          </defs>
-        </svg>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'The spin adds weight to the ball' },
-          { id: 'B', text: 'Spin creates different air pressures on opposite sides' },
-          { id: 'C', text: 'The air "grabs" the ball and pulls it down' },
-          { id: 'D', text: 'Spinning balls always fall faster due to gyroscopic effects' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            style={{ zIndex: 10 }}
-            disabled={showPredictionFeedback}
-            className={`relative p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            {selectedPrediction === 'B' ? 'Correct!' : 'Not quite!'} The spinning ball creates <span className="text-cyan-400">pressure differences</span> in the surrounding air!
-          </p>
-          <button
-            onClick={() => goToPhase('play')}
-            style={{ zIndex: 10 }}
-            className="relative mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-          >
-            Explore the Physics
-          </button>
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'spin 3s linear infinite',
+        }}>
+          ⚽🏀
         </div>
-      )}
-    </div>
-  );
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
 
-  // PHASE 3: PLAY - Interactive simulation with adjustable spin rate and direction
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Magnus Effect Lab</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderSpinningBall(50, true)}
-        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-red-400">{spinRate}%</div>
-            <div className="text-sm text-slate-400">Spin Rate</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-blue-400">{ballSpeed}%</div>
-            <div className="text-sm text-slate-400">Ball Speed</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-green-400">{spinDirection}</div>
-            <div className="text-sm text-slate-400">Spin Type</div>
-          </div>
-        </div>
-      </div>
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          The Magnus Effect
+        </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-sm text-slate-300 mb-2 block">Spin Rate: {spinRate}%</label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={spinRate}
-            onChange={(e) => {
-              setSpinRate(Number(e.target.value));
-              onGameEvent?.({ type: 'spin_changed', data: { spinRate: Number(e.target.value) } });
-            }}
-            className="w-full"
-          />
-        </div>
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-sm text-slate-300 mb-2 block">Ball Speed: {ballSpeed}%</label>
-          <input
-            type="range"
-            min="20"
-            max="100"
-            value={ballSpeed}
-            onChange={(e) => {
-              setBallSpeed(Number(e.target.value));
-              onGameEvent?.({ type: 'parameter_changed', data: { ballSpeed: Number(e.target.value) } });
-            }}
-            className="w-full"
-          />
-        </div>
-        <div className="md:col-span-2 flex gap-2 justify-center">
-          {(['topspin', 'backspin', 'sidespin'] as const).map(type => (
-            <button
-              key={type}
-              onClick={() => {
-                setSpinDirection(type);
-                onGameEvent?.({ type: 'spin_changed', data: { spinDirection: type } });
-              }}
-              style={{ zIndex: 10 }}
-              className={`relative px-4 py-2 rounded-lg font-medium transition-all ${
-                spinDirection === type ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
-              }`}
-            >
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </button>
-          ))}
-        </div>
-        <div className="md:col-span-2">
-          <button
-            onClick={() => startAnimation()}
-            style={{ zIndex: 10 }}
-            className="relative w-full p-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold transition-colors"
-          >
-            Throw Ball
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
-        <h3 className="text-lg font-semibold text-cyan-400 mb-3">How the Magnus Effect Works:</h3>
-        <div className="space-y-3 text-sm text-slate-300">
-          <div className="flex items-start gap-3">
-            <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">1</div>
-            <p>Spinning ball drags air around with it (boundary layer)</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">2</div>
-            <p>On one side, spin adds to airflow speed. On the other, it subtracts.</p>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">3</div>
-            <p>Faster air = lower pressure (Bernoulli's principle). Ball curves toward low pressure!</p>
-          </div>
-        </div>
-      </div>
-
-      <button
-        onClick={() => goToPhase('review')}
-        style={{ zIndex: 10 }}
-        className="relative mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-      >
-        Review the Concepts
-      </button>
-    </div>
-  );
-
-  // PHASE 4: REVIEW - Explain pressure differential from air velocity differences
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Understanding the Magnus Effect</h2>
-
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-3">The Physics of Pressure Differential</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>- Spinning ball creates asymmetric airflow around it</li>
-            <li>- One side: ball surface moves WITH airflow (adds speed)</li>
-            <li>- Other side: ball surface moves AGAINST airflow (subtracts speed)</li>
-            <li>- Fast air = low pressure, slow air = high pressure</li>
-            <li>- Ball pushed from high to low pressure side!</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">The Math</h3>
-          <div className="space-y-2 text-slate-300 text-sm">
-            <p className="font-mono bg-slate-800/50 p-2 rounded">F = CL x (1/2)pv^2A</p>
-            <ul className="mt-2 space-y-1">
-              <li>- F = Magnus force</li>
-              <li>- CL = Lift coefficient (depends on spin)</li>
-              <li>- p = Air density</li>
-              <li>- v = Ball velocity</li>
-              <li>- A = Cross-sectional area</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Spin Direction Effects</h3>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div className="text-center">
-              <div className="text-2xl mb-2">Topspin</div>
-              <p className="text-slate-300">Ball curves DOWN</p>
-              <p className="text-slate-400 text-xs">Tennis groundstrokes, soccer shots</p>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-2">Backspin</div>
-              <p className="text-slate-300">Ball curves UP (floats)</p>
-              <p className="text-slate-400 text-xs">Golf drives, basketball shots</p>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl mb-2">Sidespin</div>
-              <p className="text-slate-300">Ball curves LEFT or RIGHT</p>
-              <p className="text-slate-400 text-xs">Curveballs, sliders, hooks</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button
-        onClick={() => goToPhase('twist_predict')}
-        style={{ zIndex: 10 }}
-        className="relative mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-      >
-        Discover a Surprising Twist
-      </button>
-    </div>
-  );
-
-  // PHASE 5: TWIST_PREDICT - Different ball size/sport scenario
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Different sports use different ball sizes and surfaces. A ping pong ball is tiny and smooth, while a volleyball is large and textured.
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          What happens when a smooth ball spins VERY fast at VERY high speeds?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'The curve gets even stronger' },
-          { id: 'B', text: 'The ball goes perfectly straight' },
-          { id: 'C', text: 'The curve can actually REVERSE direction!' },
-          { id: 'D', text: 'The ball slows down due to friction' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            style={{ zIndex: 10 }}
-            disabled={showTwistFeedback}
-            className={`relative p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'C'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'C'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Incredible! The "Reverse Magnus Effect" is real!
-          </p>
-          <p className="text-slate-400 text-sm mt-2">
-            At extreme spin rates and speeds, the boundary layer behavior changes completely!
-          </p>
-          <button
-            onClick={() => goToPhase('twist_play')}
-            style={{ zIndex: 10 }}
-            className="relative mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-          >
-            See How It Works
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  // PHASE 6: TWIST_PLAY - Interactive comparison of different sports balls
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-4">Comparing Different Sports Balls</h2>
-
-      <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
-        <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Normal Magnus (Baseball)</h3>
-          <svg width="180" height="120" className="mx-auto">
-            <rect width="180" height="120" fill="#1e3a5f" rx="8" />
-            <circle cx="50" cy="60" r="20" fill="#dc2626" />
-            <path d="M30,45 A25,25 0 0 1 70,45" fill="none" stroke="#fbbf24" strokeWidth="2" />
-            <path d="M70,60 Q120,40 160,60" fill="none" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrNorm)" />
-            <text x="115" y="35" fill="#22c55e" fontSize="10">Curves up</text>
-            <text x="90" y="100" fill="#94a3b8" fontSize="9">Stitched ball, normal speed</text>
-            <defs>
-              <marker id="arrNorm" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L7,3 z" fill="#22c55e" />
-              </marker>
-            </defs>
-          </svg>
-        </div>
-
-        <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-purple-400 mb-2 text-center">Reverse Magnus (Volleyball)</h3>
-          <svg width="180" height="120" className="mx-auto">
-            <rect width="180" height="120" fill="#1e3a5f" rx="8" />
-            <circle cx="50" cy="60" r="20" fill="#fbbf24" />
-            {/* Very fast spin indicator */}
-            <path d="M30,45 A25,25 0 0 1 70,45" fill="none" stroke="#fbbf24" strokeWidth="3" />
-            <path d="M35,50 A20,20 0 0 1 65,50" fill="none" stroke="#fbbf24" strokeWidth="2" />
-            <path d="M70,60 Q120,80 160,60" fill="none" stroke="#a855f7" strokeWidth="3" markerEnd="url(#arrRev)" />
-            <text x="115" y="90" fill="#a855f7" fontSize="10">Curves DOWN!</text>
-            <text x="90" y="110" fill="#94a3b8" fontSize="9">Smooth ball, extreme spin</text>
-            <defs>
-              <marker id="arrRev" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L7,3 z" fill="#a855f7" />
-              </marker>
-            </defs>
-          </svg>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-purple-400 mb-3">Why Ball Surface Matters</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm text-slate-300 mb-4">
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <h4 className="text-cyan-400 font-semibold mb-2">Smooth Balls</h4>
-            <p>Ping pong, volleyball - can experience reverse Magnus at high speeds</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <h4 className="text-orange-400 font-semibold mb-2">Textured Balls</h4>
-            <p>Golf (dimples), baseball (seams) - enhanced normal Magnus effect</p>
-          </div>
-        </div>
-        <p className="text-cyan-400 mt-4 text-sm">
-          This is why float serves in volleyball are so unpredictable - the smooth ball can curve unexpectedly!
-        </p>
-      </div>
-
-      <button
-        onClick={() => goToPhase('twist_review')}
-        style={{ zIndex: 10 }}
-        className="relative mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-      >
-        Review the Discovery
-      </button>
-    </div>
-  );
-
-  // PHASE 7: TWIST_REVIEW - Explain factors affecting Magnus force magnitude
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">Factors Affecting Magnus Force</h2>
-
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-purple-400 mb-4">The Magnus Effect Has Hidden Complexity!</h3>
-        <div className="space-y-4 text-slate-300">
-          <p>
-            The Magnus effect is not a simple linear relationship. The force magnitude depends on:
-          </p>
-          <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li><span className="text-cyan-400 font-semibold">Ball surface texture</span> - smooth vs dimpled vs rough (seams)</li>
-            <li><span className="text-cyan-400 font-semibold">Spin rate</span> - more spin = more curve (usually)</li>
-            <li><span className="text-cyan-400 font-semibold">Forward velocity</span> - faster balls experience more force</li>
-            <li><span className="text-cyan-400 font-semibold">Reynolds number</span> - fluid dynamics parameter combining size, speed, and viscosity</li>
-            <li><span className="text-cyan-400 font-semibold">Air density</span> - altitude and temperature affect air behavior</li>
-          </ol>
-          <p className="text-emerald-400 font-medium mt-4">
-            The curve can be normal, enhanced, reduced, or even reversed depending on these factors!
-          </p>
-          <p className="text-slate-400 text-sm mt-2">
-            This is why golf balls have dimples - they create a controlled turbulent boundary layer that ENHANCES the Magnus effect while reducing overall drag!
-          </p>
-        </div>
-      </div>
-
-      <button
-        onClick={() => goToPhase('transfer')}
-        style={{ zIndex: 10 }}
-        className="relative mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-      >
-        Explore Real-World Applications
-      </button>
-    </div>
-  );
-
-  // PHASE 8: TRANSFER - 4 real-world applications
-  const applications = [
-    {
-      title: "Soccer Free Kicks",
-      icon: "S",
-      description: "The 'banana kick' curves around defensive walls using sidespin.",
-      details: "Players like Roberto Carlos and David Beckham mastered kicks that curve dramatically. The ball can bend over 10 feet from a straight line, going around walls and into the goal. The famous Roberto Carlos free kick in 1997 curved so much that a ball boy ducked thinking it would miss!",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          <rect width="200" height="150" fill="#2d5a27" rx="8" />
-          {/* Goal */}
-          <rect x="160" y="40" width="30" height="70" fill="none" stroke="#ffffff" strokeWidth="2" />
-          {/* Wall of defenders */}
-          <rect x="100" y="50" width="20" height="50" fill="#3b82f6" rx="3" />
-          {/* Ball path - banana curve */}
-          <path d="M30,100 Q80,30 180,75" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="5,5" />
-          <circle cx="30" cy="100" r="6" fill="#ffffff" stroke="#000000" strokeWidth="1" />
-          <circle cx="180" cy="75" r="6" fill="#ffffff" stroke="#000000" strokeWidth="1" />
-          <text x="70" y="20" fill="#fbbf24" fontSize="10">Banana curve!</text>
-          <text x="100" y="140" fill="#94a3b8" fontSize="9">Ball bends around wall</text>
-        </svg>
-      )
-    },
-    {
-      title: "Baseball Curveballs",
-      icon: "B",
-      description: "Curveballs, sliders, and cutters all use the Magnus effect to fool batters.",
-      details: "A curveball can drop up to 17 inches from its expected path. Pitchers grip the ball to maximize spin using the seams, creating dramatic movement. The 12-6 curveball drops straight down, while sliders curve sideways.",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          <rect width="200" height="150" fill="#2d5a27" rx="8" />
-          {/* Pitcher's mound */}
-          <ellipse cx="40" cy="100" rx="25" ry="10" fill="#8b6914" />
-          {/* Ball trajectory */}
-          <path d="M50,80 Q100,40 180,100" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="5,5" />
-          <circle cx="180" cy="100" r="8" fill="#ffffff" />
-          {/* Home plate */}
-          <polygon points="170,130 180,120 190,130 185,140 175,140" fill="#ffffff" />
-          <text x="100" y="30" textAnchor="middle" fill="#ffffff" fontSize="11">Curveball path</text>
-          {/* Straight line for comparison */}
-          <path d="M50,80 L180,80" fill="none" stroke="#ef4444" strokeWidth="1" strokeDasharray="3,3" opacity="0.5" />
-          <text x="115" y="75" fill="#ef4444" fontSize="8">Expected straight path</text>
-        </svg>
-      )
-    },
-    {
-      title: "Golf Backspin",
-      icon: "G",
-      description: "Backspin keeps the ball airborne longer, dramatically increasing distance.",
-      details: "A well-struck drive has 2,500-3,000 RPM of backspin. The Magnus effect creates lift that keeps the ball in the air 2-3 times longer than a non-spinning ball would fly. Dimples enhance this effect while reducing drag!",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          <rect width="200" height="150" fill="#87ceeb" rx="8" />
-          {/* Ground */}
-          <rect x="0" y="120" width="200" height="30" fill="#2d5a27" />
-          {/* Tee */}
-          <rect x="25" y="110" width="4" height="15" fill="#8b6914" />
-          <circle cx="27" cy="108" r="5" fill="#ffffff" />
-          {/* Backspin ball path - stays up longer */}
-          <path d="M30,105 Q100,20 190,100" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="5,5" />
-          {/* No-spin comparison */}
-          <path d="M30,105 Q80,60 120,120" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="3,3" opacity="0.6" />
-          <text x="130" y="40" fill="#ffffff" fontSize="10">With backspin</text>
-          <text x="85" y="90" fill="#ef4444" fontSize="8">No spin</text>
-          {/* Flag */}
-          <rect x="185" y="90" width="2" height="30" fill="#8b6914" />
-          <polygon points="187,90 187,100 195,95" fill="#ef4444" />
-        </svg>
-      )
-    },
-    {
-      title: "Tennis Topspin",
-      icon: "T",
-      description: "Heavy topspin makes the ball dip sharply, keeping aggressive shots on the table.",
-      details: "Professional players generate over 3,000 RPM of topspin! The Magnus effect makes the ball curve downward so sharply that seemingly impossible high shots clear the net and still land in the court. Rafael Nadal's forehand is famous for extreme topspin.",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          <rect width="200" height="150" fill="#1e5631" rx="8" />
-          {/* Court lines */}
-          <line x1="0" y1="110" x2="200" y2="110" stroke="#ffffff" strokeWidth="2" />
-          {/* Net */}
-          <rect x="98" y="80" width="4" height="30" fill="#ffffff" />
-          {/* Ball with heavy topspin - dips sharply */}
-          <path d="M30,70 Q100,30 170,100" fill="none" stroke="#ccff00" strokeWidth="3" />
-          <circle cx="30" cy="70" r="6" fill="#ccff00" />
-          <circle cx="170" cy="100" r="6" fill="#ccff00" />
-          {/* Spin arrow */}
-          <path d="M25,60 A10,10 0 0 1 35,60" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#spinArrTennis)" />
-          <text x="100" y="130" textAnchor="middle" fill="#94a3b8" fontSize="10">Topspin makes ball dip</text>
-          <text x="60" y="50" fill="#fbbf24" fontSize="9">Topspin</text>
-          <defs>
-            <marker id="spinArrTennis" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L6,3 z" fill="#fbbf24" />
-            </marker>
-          </defs>
-        </svg>
-      )
-    }
-  ];
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveAppTab(index)}
-            style={{ zIndex: 10 }}
-            className={`relative px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index
-                ? 'bg-red-600 text-white'
-                : completedApps.has(index)
-                ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            [{app.icon}] {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl font-bold text-red-400">[{applications[activeAppTab].icon}]</span>
-          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
-        </div>
-
-        {applications[activeAppTab].animation}
-
-        <p className="text-lg text-slate-300 mt-4 mb-3">
-          {applications[activeAppTab].description}
-        </p>
-        <p className="text-sm text-slate-400">
-          {applications[activeAppTab].details}
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "A pitcher throws a perfect curveball. The batter swings at chest height... but the ball drops into the dirt. How does a spinning ball <span style={{ color: colors.accent }}>defy expectations</span>?"
         </p>
 
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onClick={() => handleAppComplete(activeAppTab)}
-            style={{ zIndex: 10 }}
-            className="relative mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
-          {applications.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`}
-            />
-          ))}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "The Magnus effect is behind every banana kick, every knuckleball, every golf drive that seems to float on air. It's the secret physics that makes sports beautiful."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Sports Aerodynamics
+          </p>
         </div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
 
-      {completedApps.size >= 4 && (
         <button
-          onClick={() => goToPhase('test')}
-          style={{ zIndex: 10 }}
-          className="relative mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
         >
-          Take the Knowledge Test
+          Discover the Secret
         </button>
-      )}
-    </div>
-  );
 
-  // PHASE 9: TEST - 10 multiple choice questions
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ zIndex: 10 }}
-                    className={`relative p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-red-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'The spin adds extra weight to the ball, pulling it down' },
+      { id: 'b', text: 'Spin creates different air pressures on opposite sides of the ball', correct: true },
+      { id: 'c', text: 'The air "grabs" the ball and pulls it in the spin direction' },
+    ];
 
-          <button
-            onClick={() => {
-              const score = calculateScore();
-              setTestScore?.(score);
-              setShowTestResults(true);
-              onGameEvent?.({ type: 'test_completed', data: { score, total: 10 } });
-            }}
-            style={{ zIndex: 10 }}
-            disabled={testAnswers.includes(-1)}
-            className={`relative w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-500 hover:to-orange-500'
-            }`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '[*]' : '[?]'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">
-            Score: {calculateScore()}/10
-          </h3>
-          <p className="text-slate-300 mb-6">
-            {calculateScore() >= 7
-              ? 'Excellent! You have mastered the Magnus effect!'
-              : 'Keep studying! Review the concepts and try again.'}
-          </p>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-          {calculateScore() >= 7 ? (
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              🤔 Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A ball is thrown with topspin (rotating forward). Why does it curve downward?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg width="300" height="150" style={{ maxWidth: '100%' }}>
+              <rect width="300" height="150" fill="#1e3a5f" rx="8" />
+              <circle cx="80" cy="75" r="25" fill="#dc2626" />
+              <path d="M55,55 A30,30 0 0 1 105,55" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#predArrow)" />
+              <text x="80" y="40" textAnchor="middle" fill="#fbbf24" fontSize="10">Topspin</text>
+              <line x1="110" y1="75" x2="250" y2="75" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,5" />
+              <text x="180" y="65" fill="#94a3b8" fontSize="10">Which way?</text>
+              <path d="M250,75 L250,120" stroke="#22c55e" strokeWidth="3" markerEnd="url(#downArrow)" />
+              <path d="M250,75 L250,30" stroke="#ef4444" strokeWidth="3" markerEnd="url(#upArrow)" />
+              <defs>
+                <marker id="predArrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L7,3 z" fill="#fbbf24" />
+                </marker>
+                <marker id="downArrow" markerWidth="8" markerHeight="8" refX="3" refY="0" orient="auto">
+                  <path d="M0,0 L6,0 L3,8 z" fill="#22c55e" />
+                </marker>
+                <marker id="upArrow" markerWidth="8" markerHeight="8" refX="3" refY="8" orient="auto">
+                  <path d="M0,8 L6,8 L3,0 z" fill="#ef4444" />
+                </marker>
+              </defs>
+            </svg>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
             <button
-              onClick={() => {
-                goToPhase('mastery');
-                onGameEvent?.({ type: 'mastery_achieved', data: { score: calculateScore() } });
-              }}
-              style={{ zIndex: 10 }}
-              className="relative px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
-              style={{ zIndex: 10 }}
-              className="relative px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-            >
-              Review and Try Again
+              Test My Prediction
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  // PHASE 10: MASTERY - Congratulations page
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-red-900/50 via-orange-900/50 to-yellow-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">[M]</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Magnus Effect Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">
-          Congratulations! You have mastered the physics of spinning balls and curved trajectories!
-        </p>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">[~]</div>
-            <p className="text-sm text-slate-300">Spin Physics</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">[^]</div>
-            <p className="text-sm text-slate-300">Pressure Dynamics</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">[o]</div>
-            <p className="text-sm text-slate-300">Sports Applications</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">[{'<>'}]</div>
-            <p className="text-sm text-slate-300">Reverse Magnus</p>
-          </div>
-        </div>
+  // PLAY PHASE - Interactive Ball Spin Simulator
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        <p className="text-slate-400 mb-6">
-          You now understand why curveballs curve, how banana kicks bend around walls, and why golf balls fly so far. This knowledge applies to any spinning object moving through a fluid!
-        </p>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Magnus Effect Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust spin and speed to see how balls curve through the air.
+          </p>
 
-        <div className="flex gap-4 justify-center">
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <BallVisualization showAirflow={true} />
+            </div>
+
+            {/* Spin rate slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Rate</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{spinRate}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={spinRate}
+                onChange={(e) => setSpinRate(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.accent} ${spinRate}%, ${colors.border} ${spinRate}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Ball speed slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Ball Speed</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{ballSpeed}%</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="100"
+                value={ballSpeed}
+                onChange={(e) => setBallSpeed(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.warning} ${ballSpeed}%, ${colors.border} ${ballSpeed}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Spin direction buttons */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', justifyContent: 'center' }}>
+              {(['topspin', 'backspin', 'sidespin'] as const).map(dir => (
+                <button
+                  key={dir}
+                  onClick={() => setSpinDirection(dir)}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: spinDirection === dir ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                    background: spinDirection === dir ? `${colors.accent}22` : 'transparent',
+                    color: spinDirection === dir ? colors.accent : colors.textSecondary,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {dir}
+                </button>
+              ))}
+            </div>
+
+            {/* Throw button */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+              <button
+                onClick={() => {
+                  startAnimation();
+                  playSound('click');
+                }}
+                disabled={isAnimating}
+                style={{
+                  padding: '14px 32px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: isAnimating ? colors.border : colors.accent,
+                  color: 'white',
+                  fontWeight: 700,
+                  cursor: isAnimating ? 'not-allowed' : 'pointer',
+                  fontSize: '16px',
+                }}
+              >
+                {isAnimating ? 'Flying...' : 'Throw Ball'}
+              </button>
+            </div>
+          </div>
+
+          {/* Explanation box */}
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              How the Magnus Effect Works
+            </h3>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p><strong>1.</strong> The spinning ball drags air around with it (boundary layer)</p>
+              <p><strong>2.</strong> On one side, spin adds to airflow speed. On the other, it subtracts.</p>
+              <p><strong>3.</strong> Faster air = lower pressure (Bernoulli's principle)</p>
+              <p><strong>4.</strong> The ball curves toward the low-pressure side!</p>
+            </div>
+          </div>
+
           <button
-            onClick={() => goToPhase('hook')}
-            style={{ zIndex: 10 }}
-            className="relative px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore Again
+            Understand the Physics
           </button>
         </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-  const currentPhaseIndex = phaseOrder.indexOf(phase);
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of the Magnus Effect
+          </h2>
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Ambient background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Premium progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-400">Magnus Effect</span>
-            <span className="text-sm text-slate-500">{phaseLabels[phase]}</span>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>F = CL x (1/2)pv^2 x A</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                The Magnus force depends on:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                <li><span style={{ color: colors.accent }}>CL</span> - Lift coefficient (depends on spin rate)</li>
+                <li><span style={{ color: colors.accent }}>p</span> - Air density</li>
+                <li><span style={{ color: colors.accent }}>v</span> - Ball velocity (squared!)</li>
+                <li><span style={{ color: colors.accent }}>A</span> - Cross-sectional area</li>
+              </ul>
+            </div>
           </div>
-          {/* Phase dots */}
-          <div className="flex justify-between px-1">
-            {phaseOrder.map((p, index) => (
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: '16px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              background: `${colors.accent}11`,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>⬇️</div>
+              <h4 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Topspin</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>Ball curves DOWN. Used in tennis groundstrokes, soccer shots.</p>
+            </div>
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>⬆️</div>
+              <h4 style={{ ...typo.h3, color: colors.success, marginBottom: '8px' }}>Backspin</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>Ball floats UP. Used in golf drives, basketball shots.</p>
+            </div>
+            <div style={{
+              background: `${colors.warning}11`,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>↔️</div>
+              <h4 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>Sidespin</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>Ball curves LEFT/RIGHT. Used in curveballs, banana kicks.</p>
+            </div>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
+              Key Insight: Pressure Differential
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              The spinning ball creates an asymmetric airflow. Where the ball surface moves WITH the air, speed increases and pressure drops. Where it moves AGAINST the air, speed decreases and pressure rises. The ball is pushed from high to low pressure!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover a Surprising Twist
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'The curve gets even stronger with extreme spin' },
+      { id: 'b', text: 'The ball goes perfectly straight at very high speeds' },
+      { id: 'c', text: 'The curve can actually REVERSE direction!', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              🔄 New Variable: Ball Surface & Extreme Conditions
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What happens when a smooth ball spins VERY fast at VERY high speeds?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Different sports use different ball surfaces - some are smooth (volleyball), some have seams (baseball), some have dimples (golf).
+            </p>
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '40px' }}>🏐</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Smooth</p>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '40px' }}>⚾</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Seamed</p>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '40px' }}>⛳</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Dimpled</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`relative h-2 rounded-full transition-all duration-300 ${
-                  index <= currentPhaseIndex
-                    ? 'bg-red-500'
-                    : 'bg-slate-700'
-                } ${p === phase ? 'w-6' : 'w-2'}`}
-                title={phaseLabels[p]}
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See the Reverse Magnus Effect
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    // Calculate curve direction based on surface
+    const getCurveDirection = () => {
+      if (ballSurface === 'smooth' && twistSpinRate > 70) {
+        return 'REVERSED!';
+      }
+      return 'Normal';
+    };
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Ball Surface Comparison
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare how different ball surfaces affect the Magnus effect
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {/* Surface selector */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', justifyContent: 'center' }}>
+              {([
+                { id: 'smooth', label: 'Smooth', icon: '🏐', desc: 'Volleyball' },
+                { id: 'rough', label: 'Seamed', icon: '⚾', desc: 'Baseball' },
+                { id: 'dimpled', label: 'Dimpled', icon: '⛳', desc: 'Golf Ball' }
+              ] as const).map(surface => (
+                <button
+                  key={surface.id}
+                  onClick={() => setBallSurface(surface.id)}
+                  style={{
+                    padding: '16px 20px',
+                    borderRadius: '12px',
+                    border: ballSurface === surface.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                    background: ballSurface === surface.id ? `${colors.accent}22` : 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '32px' }}>{surface.icon}</div>
+                  <div style={{ color: colors.textPrimary, fontWeight: 600, marginTop: '4px' }}>{surface.label}</div>
+                  <div style={{ color: colors.textMuted, fontSize: '12px' }}>{surface.desc}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Spin rate for twist */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Spin Rate</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{twistSpinRate}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={twistSpinRate}
+                onChange={(e) => setTwistSpinRate(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
               />
+            </div>
+
+            {/* Curve direction display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: ballSurface === 'smooth' && twistSpinRate > 70 ? colors.warning : colors.success }}>
+                  {getCurveDirection()}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Curve Direction</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>
+                  {ballSurface === 'dimpled' ? 'Enhanced' : ballSurface === 'smooth' ? 'Variable' : 'Normal'}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Magnus Strength</div>
+              </div>
+            </div>
+
+            {/* Visualization diagrams */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px' }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                <h4 style={{ ...typo.small, color: colors.success, marginBottom: '12px' }}>Normal Magnus (Baseball)</h4>
+                <svg width="180" height="100" style={{ maxWidth: '100%' }}>
+                  <rect width="180" height="100" fill="#1e3a5f" rx="6" />
+                  <circle cx="40" cy="50" r="18" fill="#dc2626" />
+                  <path d="M58,50 Q100,30 160,50" fill="none" stroke="#22c55e" strokeWidth="3" />
+                  <text x="100" y="25" fill="#22c55e" fontSize="9">Curves as expected</text>
+                </svg>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '12px' }}>Reverse Magnus (Volleyball)</h4>
+                <svg width="180" height="100" style={{ maxWidth: '100%' }}>
+                  <rect width="180" height="100" fill="#1e3a5f" rx="6" />
+                  <circle cx="40" cy="50" r="18" fill="#fbbf24" />
+                  <path d="M58,50 Q100,70 160,50" fill="none" stroke="#f59e0b" strokeWidth="3" />
+                  <text x="100" y="85" fill="#f59e0b" fontSize="9">Curves OPPOSITE!</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {ballSurface === 'smooth' && twistSpinRate > 70 && (
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                The Reverse Magnus Effect is active! Smooth balls at high speeds can curve opposite to expectations!
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Why This Happens
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Hidden Complexity of Magnus Effect
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🏐</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Reverse Magnus Effect</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                At certain speeds and low spin, the boundary layer on a smooth ball can transition from laminar to turbulent asymmetrically. This creates the opposite pressure distribution, causing the ball to curve in the unexpected direction - making float serves so unpredictable!
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⛳</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Why Golf Balls Have Dimples</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Dimples create a turbulent boundary layer that stays attached to the ball longer, reducing drag by up to 50%. They also enhance the Magnus effect - a dimpled ball can fly twice as far as a smooth one with the same initial conditions!
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚾</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Baseball Seams</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The raised seams on a baseball trip the boundary layer, creating controlled turbulence. Different grip orientations (4-seam vs 2-seam fastball) change how air interacts with the seams, producing different movement patterns even at the same spin rate.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔬</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>The Reynolds Number</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Whether Magnus effect is normal or reversed depends on the Reynolds number - a ratio combining ball size, speed, and air viscosity. Different sports operate in different Reynolds number regimes, which is why each sport has evolved balls optimized for their specific conditions.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Magnus Effect Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>Key Companies:</h4>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {app.companies.map((company, i) => (
+                  <span key={i} style={{
+                    background: colors.bgSecondary,
+                    padding: '4px 12px',
+                    borderRadius: '16px',
+                    ...typo.small,
+                    color: colors.textSecondary,
+                  }}>
+                    {company}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand the Magnus effect and how it shapes sports and engineering!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Magnus Effect Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand the physics behind every curveball, banana kick, and golf drive that seems to defy gravity.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Spin creates pressure differentials via airflow asymmetry',
+              'Topspin curves down, backspin floats up, sidespin curves sideways',
+              'Ball surface affects Magnus effect strength',
+              'Reverse Magnus can occur with smooth balls at high speeds',
+              'Engineers use Magnus effect in ships and aircraft',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
             ))}
           </div>
         </div>
-      </div>
 
-      <div className="pt-20 pb-8 relative z-10">
-        {renderPhase()}
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
 export default MagnusEffectRenderer;

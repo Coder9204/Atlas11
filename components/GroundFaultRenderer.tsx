@@ -1,53 +1,29 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ────────────────────────────────────────────────────────────────────────────
-// TYPE DEFINITIONS
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Ground Fault Detection - Complete 10-Phase Game
+// How GFCIs detect current imbalance and protect against electrocution
+// ─────────────────────────────────────────────────────────────────────────────
 
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
 
-const phaseOrder: Phase[] = [
-  'hook',
-  'predict',
-  'play',
-  'review',
-  'twist_predict',
-  'twist_play',
-  'twist_review',
-  'transfer',
-  'test',
-  'mastery',
-];
+interface GroundFaultRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
 
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Introduction',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Understanding',
-  twist_predict: 'New Variable',
-  twist_play: 'High-Impedance Faults',
-  twist_review: 'Deep Insight',
-  transfer: 'Real World',
-  test: 'Knowledge Test',
-  mastery: 'Mastery',
-};
-
-// ────────────────────────────────────────────────────────────────────────────
-// SOUND UTILITY
-// ────────────────────────────────────────────────────────────────────────────
-
+// Sound utility
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   if (typeof window === 'undefined') return;
   try {
@@ -61,7 +37,7 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
       success: { freq: 800, duration: 0.2, type: 'sine' },
       failure: { freq: 300, duration: 0.3, type: 'sine' },
       transition: { freq: 500, duration: 0.15, type: 'sine' },
-      complete: { freq: 900, duration: 0.4, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
     };
     const sound = sounds[type];
     oscillator.frequency.value = sound.freq;
@@ -73,44 +49,159 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
   } catch { /* Audio not available */ }
 };
 
-// ────────────────────────────────────────────────────────────────────────────
-// REAL WORLD APPLICATIONS
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    scenario: "A homeowner is using a hair dryer in their bathroom when the cord gets wet from splashed water. Suddenly, the GFCI outlet trips and cuts power before anyone feels a shock.",
+    question: "What did the GFCI detect that caused it to trip?",
+    options: [
+      { id: 'a', label: "The hair dryer drew too much current, exceeding the outlet's capacity" },
+      { id: 'b', label: "An imbalance between hot and neutral current, indicating leakage to ground", correct: true },
+      { id: 'c', label: "High voltage on the line due to the wet cord" },
+      { id: 'd', label: "Excessive heat from the hair dryer motor" }
+    ],
+    explanation: "GFCIs continuously compare the current flowing through the hot wire to the current returning through the neutral wire. When water created a leakage path, some current escaped to ground instead of returning through neutral. This imbalance (as little as 5 milliamps) triggers the GFCI to trip within 25 milliseconds, preventing electrocution."
+  },
+  {
+    scenario: "An electrician is explaining GFCI protection to an apprentice. They describe how in a normal, healthy circuit, all current that flows out through the hot wire must return through the neutral wire.",
+    question: "In a properly functioning 120V circuit with no faults, if 10 amps flows through the hot wire, how much current returns through the neutral wire?",
+    options: [
+      { id: 'a', label: "Less than 10 amps, because some is lost to heat" },
+      { id: 'b', label: "Exactly 10 amps - all current must return through neutral", correct: true },
+      { id: 'c', label: "More than 10 amps due to back-EMF from the load" },
+      { id: 'd', label: "It varies depending on the type of load" }
+    ],
+    explanation: "Conservation of charge requires that all current leaving the source must return to the source. In a healthy circuit with no ground faults, every electron that flows out through the hot wire must return through the neutral wire. A GFCI uses this principle - any difference between hot and neutral current means current is escaping through an unintended path."
+  },
+  {
+    scenario: "A new pool pump is being installed. The electrician connects it to a GFCI-protected circuit. During testing, the GFCI keeps tripping even though the pump appears to work fine.",
+    question: "What is the most likely cause of the nuisance tripping?",
+    options: [
+      { id: 'a', label: "The pump motor has a small insulation leak allowing a few milliamps to ground", correct: true },
+      { id: 'b', label: "The GFCI is defective and needs replacement" },
+      { id: 'c', label: "Pool pumps are incompatible with GFCI protection" },
+      { id: 'd', label: "The pump is drawing more power than the GFCI can handle" }
+    ],
+    explanation: "Many motors, especially when new, have minor insulation imperfections that allow small leakage currents (1-3 mA) to flow to the equipment ground. While not dangerous by themselves, these currents accumulate. A motor with 3 mA leakage on a circuit with other equipment leaking 2 mA totals 5 mA - the GFCI trip threshold. This is why some equipment requires special GFCI-compatible designs."
+  },
+  {
+    scenario: "During a safety inspection, an inspector tests GFCI outlets by pressing the TEST button. One outlet's TEST button trips it, but the RESET button won't stay engaged when pressed.",
+    question: "What does this indicate about the GFCI's condition?",
+    options: [
+      { id: 'a', label: "The outlet is functioning perfectly and is extra safe" },
+      { id: 'b', label: "There is an actual ground fault on the circuit that must be cleared first", correct: true },
+      { id: 'c', label: "The RESET button spring is broken" },
+      { id: 'd', label: "The outlet needs more voltage to reset" }
+    ],
+    explanation: "Modern GFCIs include a lock-out feature: if they detect an actual ground fault condition when you try to reset, they refuse to reset. This prevents users from restoring power to a genuinely faulted circuit. The cause could be damaged wiring, a faulty appliance, or moisture in a junction box. The fault must be identified and cleared before the GFCI will reset."
+  },
+  {
+    scenario: "A laboratory uses sensitive electronic equipment that occasionally causes GFCI outlets to trip unexpectedly. The lab manager asks about alternatives that provide ground fault protection without false trips.",
+    question: "What characteristic of some electronic equipment causes nuisance GFCI trips?",
+    options: [
+      { id: 'a', label: "High-frequency components in their power draw can appear as ground faults to standard GFCIs", correct: true },
+      { id: 'b', label: "Electronic equipment uses DC power which GFCIs cannot measure" },
+      { id: 'c', label: "Computers emit radio waves that interfere with GFCI sensors" },
+      { id: 'd', label: "Electronic equipment grounds are different from standard grounds" }
+    ],
+    explanation: "Switching power supplies in computers and lab equipment create high-frequency electrical noise. Some of this noise couples to ground through parasitic capacitance in power supplies and cables. While not a true ground fault, standard GFCIs may interpret this high-frequency current as leakage. Special GFCI designs with high-frequency filtering or equipment isolation transformers can solve this problem."
+  },
+  {
+    scenario: "A utility worker finds a downed power line lying on wet grass. The line is still energized at 7,200 volts, but the protection system hasn't tripped because only 50 amps is flowing through the fault.",
+    question: "Why hasn't the substation breaker tripped even though the line is on the ground?",
+    options: [
+      { id: 'a', label: "50 amps is below the overcurrent pickup setting for the feeder; high-impedance ground faults are difficult to detect", correct: true },
+      { id: 'b', label: "The breaker is faulty and needs maintenance" },
+      { id: 'c', label: "Ground faults don't affect utility-scale equipment" },
+      { id: 'd', label: "The grass is providing sufficient insulation" }
+    ],
+    explanation: "High-impedance ground faults are extremely dangerous. Wet grass, soil, or pavement provides enough resistance to limit fault current below the overcurrent relay pickup (often 400-600 amps). Yet 50 amps at 7,200V is still 360 kW - enough to electrocute people and start fires. Detecting these faults requires specialized ground fault relays or waveform analysis, not simple overcurrent protection."
+  },
+  {
+    scenario: "A building's electrical system uses 480V three-phase power with a high-resistance grounded neutral. A ground fault occurs on one phase, but the system continues operating normally with just an alarm.",
+    question: "What is the advantage of high-resistance grounding that allows continued operation during a ground fault?",
+    options: [
+      { id: 'a', label: "It prevents any current from flowing during a ground fault" },
+      { id: 'b', label: "It limits ground fault current to safe levels while maintaining production; the first fault becomes a monitored condition", correct: true },
+      { id: 'c', label: "It eliminates the need for ground fault protection entirely" },
+      { id: 'd', label: "It automatically fixes ground faults through self-healing" }
+    ],
+    explanation: "High-resistance grounding (HRG) intentionally limits ground fault current to typically 5-10 amps by inserting a resistor between the neutral and ground. This prevents arc flash and equipment damage while allowing the system to continue operating. However, a second ground fault on a different phase would create a phase-to-phase fault through ground, so the first fault must be located and repaired promptly."
+  },
+  {
+    scenario: "An arc-fault circuit interrupter (AFCI) breaker trips in a bedroom circuit. Investigation reveals a damaged lamp cord where insulation has worn through and conductors are nearly touching but not quite making contact.",
+    question: "How does an AFCI detect this hazard differently from how a GFCI would?",
+    options: [
+      { id: 'a', label: "AFCIs measure temperature while GFCIs measure current" },
+      { id: 'b', label: "AFCIs detect the unique electrical signature of arcing (high-frequency chaos) while GFCIs detect current imbalance to ground", correct: true },
+      { id: 'c', label: "AFCIs are more sensitive versions of GFCIs" },
+      { id: 'd', label: "AFCIs only work on bedroom circuits" }
+    ],
+    explanation: "Arc faults produce a distinctive electrical signature: random, chaotic current spikes at 10-100 kHz as electricity jumps across the air gap. AFCIs use microprocessors to analyze current waveforms and distinguish dangerous arcing from normal arcing (like switch contacts). A GFCI wouldn't detect this hazard because no current is flowing to ground - it's arcing between hot and neutral or hot and hot."
+  },
+  {
+    scenario: "A solar panel installation on a residential roof includes ground fault detection in the inverter. A fault develops in the wiring between panels, but it goes undetected for weeks until a fire starts.",
+    question: "Why are ground faults in DC photovoltaic systems particularly dangerous and difficult to detect?",
+    options: [
+      { id: 'a', label: "DC systems don't have ground faults" },
+      { id: 'b', label: "DC arcs can sustain at lower currents than AC arcs, and distributed PV systems have many potential fault points across large areas", correct: true },
+      { id: 'c', label: "Solar panels automatically prevent ground faults" },
+      { id: 'd', label: "Inverters convert DC ground faults into AC before detection" }
+    ],
+    explanation: "AC arcs naturally extinguish 120 times per second as voltage crosses zero. DC arcs have no zero crossings and can sustain at much lower currents. A DC arc at just 1-2 amps can generate enough heat to ignite roofing materials. Additionally, PV systems spread across rooftops with many connection points and long wire runs, creating numerous potential fault locations that are difficult to pinpoint."
+  },
+  {
+    scenario: "A hospital's operating room has an isolated power system with a line isolation monitor (LIM) that shows 2.5 milliamps of hazard current. The anesthesiologist asks if this is dangerous.",
+    question: "What does the line isolation monitor's hazard current reading indicate?",
+    options: [
+      { id: 'a', label: "2.5 mA is currently flowing through a patient" },
+      { id: 'b', label: "If a ground fault occurred, up to 2.5 mA would flow - this is the system's total leakage capacity and should be monitored", correct: true },
+      { id: 'c', label: "The power system has 2.5 mA of excess capacity" },
+      { id: 'd', label: "An alarm will sound if current drops below 2.5 mA" }
+    ],
+    explanation: "Isolated power systems in operating rooms separate the power supply from ground using an isolation transformer. The LIM continuously measures how much current WOULD flow if a ground fault occurred (hazard current), based on the system's total capacitive leakage to ground. At 2.5 mA, there's headroom before reaching the 5 mA alarm threshold. This gives early warning of degrading insulation before a dangerous first fault occurs."
+  }
+];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
     icon: '🏠',
     title: 'GFCI Outlets in Homes',
-    short: 'The outlets that save lives in wet locations',
+    short: 'The outlets that save lives near water',
     tagline: 'Trip in 25 milliseconds to prevent electrocution',
     description: 'GFCI outlets continuously compare hot and neutral current. If as little as 5 mA difference is detected (indicating current flowing through a person to ground), the outlet trips in under 25 milliseconds - fast enough to prevent fatal electrocution.',
-    connection: 'The current imbalance detection you explored is exactly what GFCIs do: a toroidal transformer senses the difference between outgoing and returning current, triggering a trip when they don\'t match.',
+    connection: 'The current imbalance detection you explored is exactly what GFCIs do: a toroidal transformer senses the difference between outgoing and returning current, triggering a trip when they do not match.',
     howItWorks: 'Both hot and neutral wires pass through a toroidal current transformer. If currents are equal, net flux is zero. Any imbalance induces a voltage in the sensing coil, which triggers a solenoid to open the circuit instantly.',
     stats: [
       { value: '5 mA', label: 'Trip threshold', icon: '⚡' },
-      { value: '<25 ms', label: 'Maximum trip time', icon: '⏱️' },
-      { value: '300+ lives', label: 'Saved annually in US', icon: '❤️' }
+      { value: '<25 ms', label: 'Response time', icon: '⏱️' },
+      { value: '300+', label: 'Lives saved/year', icon: '❤️' }
     ],
-    examples: ['Bathroom outlets', 'Kitchen countertop outlets', 'Outdoor receptacles', 'Pool and spa equipment'],
+    examples: ['Bathroom outlets', 'Kitchen countertops', 'Outdoor receptacles', 'Pool equipment'],
     companies: ['Leviton', 'Eaton', 'Hubbell', 'Legrand'],
     futureImpact: 'Smart GFCIs will report fault patterns and predict equipment degradation before dangerous faults occur.',
     color: '#EF4444'
   },
   {
     icon: '⚡',
-    title: 'Arc Fault Detection (AFCI)',
+    title: 'Arc Fault Circuit Interrupters',
     short: 'Preventing electrical fires from damaged wiring',
     tagline: 'Hearing the dangerous crackle in the current',
-    description: 'Arc faults from damaged wiring cause 30,000+ home fires annually. AFCIs analyze current waveforms to detect the characteristic "signature" of dangerous arcing, tripping before wires ignite insulation.',
-    connection: 'While GFCIs detect current imbalance, AFCIs detect the high-frequency noise and irregular current patterns of arcing - a complementary protection that you\'ve now learned the principles behind.',
+    description: 'Arc faults from damaged wiring cause 30,000+ home fires annually. AFCIs analyze current waveforms to detect the characteristic signature of dangerous arcing, tripping before wires ignite insulation.',
+    connection: 'While GFCIs detect current imbalance to ground, AFCIs detect high-frequency noise and irregular current patterns of arcing - complementary protection technologies that together address most electrical hazards.',
     howItWorks: 'Microprocessors analyze current waveforms thousands of times per second. Algorithms distinguish dangerous arcing (damaged wires) from normal arcing (switch contacts, motor brushes). When dangerous patterns persist, the breaker trips.',
     stats: [
-      { value: '30,000+', label: 'Arc-fault fires annually', icon: '🔥' },
-      { value: '$1B', label: 'Annual fire damage from arcing', icon: '💰' },
-      { value: '50%', label: 'Fire reduction in protected homes', icon: '📉' }
+      { value: '30,000+', label: 'Fires prevented/yr', icon: '🔥' },
+      { value: '8-15 kHz', label: 'Arc signature', icon: '📊' },
+      { value: '50%', label: 'Fire reduction', icon: '📉' }
     ],
-    examples: ['Bedroom circuit protection', 'Living room outlets', 'Home theater wiring', 'Older home renovations'],
-    companies: ['Siemens', 'Square D (Schneider)', 'Eaton', 'GE'],
+    examples: ['Bedroom circuits', 'Living room outlets', 'Home theater wiring', 'Older home renovations'],
+    companies: ['Siemens', 'Square D', 'Eaton', 'GE'],
     futureImpact: 'AI-enhanced AFCIs will learn each home\'s normal patterns, reducing nuisance trips while catching more dangerous faults.',
     color: '#F59E0B'
   },
@@ -120,16 +211,16 @@ const realWorldApps = [
     short: 'Protecting motors and equipment from insulation breakdown',
     tagline: 'Catching faults before they become explosions',
     description: 'Industrial motors and equipment use ground fault relays to detect insulation degradation. Continuous monitoring catches small leakage currents before they escalate to arc flashes, equipment damage, or explosions.',
-    connection: 'Industrial ground fault protection extends the current-balance principle to higher currents and faster response times, often with adjustable thresholds for different equipment needs.',
-    howItWorks: 'Zero-sequence current transformers measure the sum of all phase currents. In a balanced system, this sum is zero. Any ground fault creates an imbalance. Relays can be set for different trip thresholds and time delays.',
+    connection: 'Industrial ground fault protection extends the current-balance principle to higher currents and adjustable thresholds, often using zero-sequence current transformers that measure the sum of all three phase currents.',
+    howItWorks: 'Zero-sequence CTs encircle all three phase conductors. In a balanced system, the magnetic fields cancel. Any ground fault creates an imbalance detected by the relay. Settings allow different trip thresholds and time delays for coordination.',
     stats: [
-      { value: '2,000+', label: 'Arc flash incidents annually', icon: '⚡' },
-      { value: '$15B', label: 'Industrial electrical fire losses', icon: '💰' },
-      { value: '100 mA - 1200 A', label: 'Industrial trip range', icon: '📊' }
+      { value: '2,000+', label: 'Arc flash incidents/yr', icon: '⚡' },
+      { value: '5-1200 A', label: 'Adjustable range', icon: '🎛️' },
+      { value: '$15B', label: 'Annual fire losses', icon: '💰' }
     ],
-    examples: ['Motor protection relays', 'Transformer ground fault detection', 'Mining equipment protection', 'Petrochemical plant safety'],
+    examples: ['Motor protection', 'Transformer monitoring', 'Mining equipment', 'Petrochemical plants'],
     companies: ['Schweitzer Engineering', 'ABB', 'Siemens', 'GE Grid'],
-    futureImpact: 'Predictive ground fault monitoring will use insulation resistance trending to schedule maintenance before faults occur.',
+    futureImpact: 'Predictive monitoring will use insulation resistance trending to schedule maintenance before faults occur.',
     color: '#3B82F6'
   },
   {
@@ -137,355 +228,64 @@ const realWorldApps = [
     title: 'EV Charging Safety Systems',
     short: 'Protecting against faults in high-power charging',
     tagline: 'Safe charging from 240V to 800V',
-    description: 'Electric vehicle chargers handle high currents (up to 350 kW) in outdoor, wet environments. Multiple layers of ground fault protection ensure that charging is safe even if cables are damaged or connections are wet.',
-    connection: 'EV charging combines DC ground fault monitoring (for the high-voltage battery side) with AC ground fault protection (for the grid connection), using principles you\'ve now mastered.',
+    description: 'Electric vehicle chargers handle high currents (up to 350 kW) in outdoor, wet environments. Multiple layers of ground fault protection ensure charging is safe even if cables are damaged or connections get wet.',
+    connection: 'EV charging combines DC ground fault monitoring for the high-voltage battery side with AC ground fault protection for the grid connection, using the same current-balance principles you have learned.',
     howItWorks: 'Chargers monitor ground fault current on both AC and DC sides. Pilot signals verify ground connection before energizing. Continuous insulation monitoring detects degradation. Any fault triggers immediate shutdown.',
     stats: [
-      { value: '350 kW', label: 'DC fast charger power', icon: '⚡' },
-      { value: '800V', label: 'Next-gen EV voltage', icon: '🔋' },
-      { value: '<100 ms', label: 'Fault response time', icon: '⏱️' }
+      { value: '350 kW', label: 'DC fast charge power', icon: '⚡' },
+      { value: '800V', label: 'Next-gen voltage', icon: '🔋' },
+      { value: '<100 ms', label: 'Fault response', icon: '⏱️' }
     ],
-    examples: ['Tesla Superchargers', 'Electrify America stations', 'Home Level 2 chargers', 'Workplace charging'],
+    examples: ['Tesla Superchargers', 'Electrify America', 'Home Level 2 chargers', 'Fleet charging'],
     companies: ['Tesla', 'ChargePoint', 'ABB', 'Tritium'],
     futureImpact: 'Vehicle-to-grid systems will require bidirectional ground fault protection as EVs become mobile power sources.',
     color: '#8B5CF6'
   }
 ];
 
-// ────────────────────────────────────────────────────────────────────────────
-// COLOR PALETTE
-// ────────────────────────────────────────────────────────────────────────────
-
-const colors = {
-  primary: '#ef4444',
-  primaryDark: '#dc2626',
-  accent: '#f59e0b',
-  accentDark: '#d97706',
-  warning: '#f59e0b',
-  success: '#22c55e',
-  danger: '#ef4444',
-  bgDark: '#0f172a',
-  bgCard: '#1e293b',
-  bgCardLight: '#334155',
-  border: '#475569',
-  textPrimary: '#f8fafc',
-  textSecondary: '#94a3b8',
-  textMuted: '#64748b',
-};
-
-interface GroundFaultRendererProps {
-  gamePhase?: Phase;  // Optional - for resume functionality
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// 10-QUESTION TEST DATA
-// ────────────────────────────────────────────────────────────────────────────
-
-const TEST_QUESTIONS = [
-  {
-    question: 'What does a GFCI (Ground Fault Circuit Interrupter) detect?',
-    options: [
-      { text: 'High voltage on the line', correct: false },
-      { text: 'Imbalance between hot and neutral current', correct: true },
-      { text: 'Temperature of the wire', correct: false },
-      { text: 'Frequency of the AC power', correct: false },
-    ],
-  },
-  {
-    question: 'In a normal circuit, the current in hot and neutral wires should be:',
-    options: [
-      { text: 'Hot current should be higher', correct: false },
-      { text: 'Neutral current should be higher', correct: false },
-      { text: 'Equal (all current returns through neutral)', correct: true },
-      { text: 'They have no relationship', correct: false },
-    ],
-  },
-  {
-    question: 'At what current imbalance does a typical GFCI trip?',
-    options: [
-      { text: '1 amp', correct: false },
-      { text: '5 milliamps (0.005A)', correct: true },
-      { text: '15 amps', correct: false },
-      { text: '100 milliamps', correct: false },
-    ],
-  },
-  {
-    question: 'What is a "ground fault"?',
-    options: [
-      { text: 'When the ground wire breaks', correct: false },
-      { text: 'Current flowing through an unintended path to ground', correct: true },
-      { text: 'When voltage is too low', correct: false },
-      { text: 'A type of lightning strike', correct: false },
-    ],
-  },
-  {
-    question: 'Why are GFCIs required in bathrooms and kitchens?',
-    options: [
-      { text: 'Higher voltage is used there', correct: false },
-      { text: 'Water increases the risk of ground faults through people', correct: true },
-      { text: 'Appliances use more power', correct: false },
-      { text: 'Building codes are stricter there', correct: false },
-    ],
-  },
-  {
-    question: 'What is a high-impedance ground fault?',
-    options: [
-      { text: 'A fault with very high current flow', correct: false },
-      { text: 'A fault where resistance limits current to low levels', correct: true },
-      { text: 'A fault on high voltage lines only', correct: false },
-      { text: 'A fault that causes fires immediately', correct: false },
-    ],
-  },
-  {
-    question: 'How does a GFCI detect current imbalance?',
-    options: [
-      { text: 'Using a temperature sensor', correct: false },
-      { text: 'Measuring voltage drop', correct: false },
-      { text: 'Using a current transformer that senses the difference', correct: true },
-      { text: 'Counting electrons', correct: false },
-    ],
-  },
-  {
-    question: 'What is residual current?',
-    options: [
-      { text: 'Current left over after a device turns off', correct: false },
-      { text: 'The difference between line and return current (leakage)', correct: true },
-      { text: 'Current that flows through the ground wire', correct: false },
-      { text: 'Current measured after the circuit breaker', correct: false },
-    ],
-  },
-  {
-    question: 'In solar PV systems, what monitors for ground faults?',
-    options: [
-      { text: 'The solar panels themselves', correct: false },
-      { text: 'Ground fault detection in the inverter', correct: true },
-      { text: 'The utility meter', correct: false },
-      { text: 'Lightning arresters', correct: false },
-    ],
-  },
-  {
-    question: 'Why are high-impedance faults dangerous even with low current?',
-    options: [
-      { text: 'They make loud noises', correct: false },
-      { text: 'They can cause arcing and fires without tripping breakers', correct: true },
-      { text: 'They damage the neutral wire', correct: false },
-      { text: 'They are not actually dangerous', correct: false },
-    ],
-  },
-];
-
-// ────────────────────────────────────────────────────────────────────────────
-// TRANSFER APPLICATIONS
-// ────────────────────────────────────────────────────────────────────────────
-
-const TRANSFER_APPS = [
-  {
-    title: 'Bathroom & Kitchen GFCI',
-    description: 'Required by code near water. Detects current leakage through a person to ground in milliseconds, preventing electrocution.',
-    icon: '🚿',
-  },
-  {
-    title: 'Solar PV Ground Fault Detection',
-    description: 'Inverters monitor DC string current balance. Faults in rooftop wiring are detected before causing fires.',
-    icon: '☀️',
-  },
-  {
-    title: 'Industrial Isolation Monitoring',
-    description: 'Ungrounded (IT) systems use insulation monitoring to detect first faults before they become dangerous.',
-    icon: '🏭',
-  },
-  {
-    title: 'Arc Fault Circuit Interrupters',
-    description: 'AFCIs detect dangerous arcing signatures from damaged wires, preventing electrical fires in homes.',
-    icon: '🔥',
-  },
-];
-
-// ────────────────────────────────────────────────────────────────────────────
-// SCENARIO-BASED TEST QUESTIONS
-// ────────────────────────────────────────────────────────────────────────────
-
-const testQuestions = [
-  {
-    // Question 1: Core concept - what is a ground fault (Easy)
-    scenario: "A homeowner is using a power drill in their garage when the drill's cord gets pinched under a heavy toolbox, damaging the insulation. Suddenly, the metal drill casing becomes energized.",
-    question: "What is a ground fault and what happened in this situation?",
-    options: [
-      { id: 'a', label: "A ground fault is when the circuit breaker trips due to overload; the drill drew too much current", correct: false },
-      { id: 'b', label: "A ground fault is current flowing through an unintended path to ground; damaged insulation allowed current to reach the metal casing", correct: true },
-      { id: 'c', label: "A ground fault is when the neutral wire disconnects; the cord damage broke the neutral connection", correct: false },
-      { id: 'd', label: "A ground fault is excessive voltage in the circuit; the damaged cord increased resistance and voltage", correct: false }
-    ],
-    explanation: "A ground fault occurs when electrical current finds an unintended path to ground instead of returning through the neutral conductor. In this case, the damaged insulation created a path for current to flow from the hot wire to the metal drill casing. If a person touches this energized casing while grounded, current could flow through their body to ground, causing electric shock. This is fundamentally different from an overload, which involves excessive current through the intended path."
-  },
-  {
-    // Question 2: GFCI operation principle (Easy-Medium)
-    scenario: "An electrician explains to an apprentice that a GFCI outlet continuously monitors the current flowing through the hot and neutral wires. In normal operation, these currents should be equal.",
-    question: "How does a GFCI detect a ground fault and protect people from electrocution?",
-    options: [
-      { id: 'a', label: "It measures the voltage between hot and ground; if voltage drops below 120V, it trips", correct: false },
-      { id: 'b', label: "It detects when current in the hot wire doesn't equal current in the neutral wire, indicating leakage to ground", correct: true },
-      { id: 'c', label: "It monitors the temperature of the wires; overheating indicates a fault condition", correct: false },
-      { id: 'd', label: "It checks the resistance of the ground wire; high resistance means poor grounding", correct: false }
-    ],
-    explanation: "A GFCI uses a current transformer with both the hot and neutral wires passing through its core. In normal operation, current flowing out through the hot wire equals current returning through the neutral wire, creating equal and opposite magnetic fields that cancel out. If even a small amount of current (as little as 4-6 milliamps) leaks to ground through another path (like a person), the imbalance creates a net magnetic field in the transformer, which triggers the GFCI to trip within about 25 milliseconds - fast enough to prevent lethal shock."
-  },
-  {
-    // Question 3: Why bathrooms need GFCIs (Medium)
-    scenario: "During a home inspection, the inspector notes that the bathroom outlet near the sink is a standard duplex outlet, not a GFCI. They mark this as a safety hazard requiring immediate correction.",
-    question: "Why does the National Electrical Code require GFCI protection in bathrooms and what specific risk does water create?",
-    options: [
-      { id: 'a', label: "Water conducts electricity very well; wet skin has much lower resistance, allowing dangerous current to flow through the body at household voltages", correct: true },
-      { id: 'b', label: "Bathroom appliances like hair dryers use more power than GFCIs in other rooms can handle", correct: false },
-      { id: 'c', label: "Water vapor in bathrooms corrodes standard outlets faster than GFCI outlets", correct: false },
-      { id: 'd', label: "GFCIs prevent water from entering the electrical system and causing short circuits", correct: false }
-    ],
-    explanation: "Dry human skin has relatively high resistance (1,000-100,000 ohms), which limits current flow. However, wet skin can have resistance as low as 1,000 ohms, and water provides an excellent path to grounded plumbing. At 120V with wet skin, Ohm's law shows potentially lethal current can flow: I = 120V / 1000 ohms = 120mA. GFCIs trip at 4-6mA - well below the 30mA threshold where ventricular fibrillation becomes likely - providing critical protection in wet environments where the body's natural resistance is compromised."
-  },
-  {
-    // Question 4: Arc fault vs ground fault (Medium)
-    scenario: "A fire investigator examines an electrical fire that started behind a bedroom wall. They find a damaged wire where the insulation had deteriorated over years, causing intermittent sparking between the hot wire and a nearby metal stud.",
-    question: "Why wouldn't a GFCI have prevented this fire, and what type of protection is designed for this hazard?",
-    options: [
-      { id: 'a', label: "A GFCI would have prevented it; the investigator must have missed signs of GFCI failure", correct: false },
-      { id: 'b', label: "GFCIs detect current imbalance to ground, but arcing between hot and grounded metal creates a parallel fault that may not create enough imbalance; AFCIs detect the unique electrical signature of arcs", correct: true },
-      { id: 'c', label: "GFCIs only work in wet locations; bedroom circuits are not required to have any special protection", correct: false },
-      { id: 'd', label: "GFCIs only protect against high-current faults; low-power arcs require thermal protection from circuit breakers", correct: false }
-    ],
-    explanation: "Arc faults and ground faults are different hazards requiring different protection. A ground fault occurs when current leaks to ground through an unintended path. An arc fault occurs when damaged or deteriorated insulation allows electrical arcing - essentially controlled lightning - which generates intense heat capable of igniting nearby combustibles. Because the arcing current may return through the neutral or equipment ground (not representing an imbalance), GFCIs won't detect it. Arc Fault Circuit Interrupters (AFCIs) use electronic circuits to analyze current waveforms and detect the characteristic signatures of dangerous arcing, typically 8-15 kHz chaotic patterns."
-  },
-  {
-    // Question 5: Ground fault in 3-phase systems (Medium-Hard)
-    scenario: "A maintenance technician at a manufacturing plant notices that a ground fault indicator light has illuminated on a 480V 3-phase motor control center. The equipment is still running normally.",
-    question: "In an industrial 3-phase system with resistance grounding, why might ground fault current be limited and why would the system continue operating despite the fault?",
-    options: [
-      { id: 'a', label: "Three-phase systems are immune to ground faults due to balanced loading between phases", correct: false },
-      { id: 'b', label: "A neutral grounding resistor intentionally limits ground fault current to allow continued operation and time to locate the fault before it causes damage", correct: true },
-      { id: 'c', label: "The fault must be on a non-critical circuit that has been automatically isolated", correct: false },
-      { id: 'd', label: "Ground faults in 3-phase systems only affect lighting circuits, not motor loads", correct: false }
-    ],
-    explanation: "Industrial systems often use resistance grounding or high-resistance grounding (HRG) to limit ground fault current. A typical HRG system might limit fault current to only 5 amps on a 480V system. This prevents the immediate equipment damage and arc flash hazards associated with thousands of amps of bolted fault current, while still providing enough current to be detected by sensitive ground fault relays. The tradeoff is that the system can continue operating with a single ground fault, giving maintenance personnel time to locate and repair the fault during a scheduled shutdown rather than facing an emergency outage."
-  },
-  {
-    // Question 6: High-resistance ground faults (Hard)
-    scenario: "A utility engineer reviews records showing that a distribution feeder experienced a 75% increase in fires over several years. Investigation reveals most fires occurred at locations where tree branches periodically contacted power lines, creating intermittent high-impedance faults.",
-    question: "Why are high-impedance ground faults particularly dangerous, and why don't standard overcurrent protective devices detect them?",
-    options: [
-      { id: 'a', label: "High-impedance faults create excessive voltage that damages equipment before protection can respond", correct: false },
-      { id: 'b', label: "The fault impedance (from poor contact, arcing through air/vegetation, or resistive paths) limits current below the pickup threshold of standard overcurrent relays, while still delivering enough energy to ignite fires", correct: true },
-      { id: 'c', label: "High-impedance faults only occur at extremely high voltages where standard protection doesn't apply", correct: false },
-      { id: 'd', label: "Protective devices are designed for equipment protection only and intentionally ignore ground faults", correct: false }
-    ],
-    explanation: "High-impedance faults (HIFs) occur when a conductor contacts a high-resistance surface like asphalt, concrete, dry sand, or vegetation. The fault impedance might be hundreds or thousands of ohms, limiting current to perhaps 10-50 amps - well below the 400-600 amp pickup of typical feeder overcurrent protection. However, even 10 amps at several thousand volts represents significant power (10A x 7200V = 72kW) concentrated at the fault point. This creates intense local heating capable of igniting vegetation and structures. Detecting HIFs requires specialized relays that analyze current waveform characteristics rather than just magnitude."
-  },
-  {
-    // Question 7: Ground fault relay coordination (Hard)
-    scenario: "An electrical engineer is designing the protection scheme for a hospital's electrical system. They must ensure that a ground fault on a specific branch circuit trips only the local protection, not the main breaker serving the entire emergency power system.",
-    question: "What is ground fault relay coordination, and why is proper time-current coordination critical in this application?",
-    options: [
-      { id: 'a', label: "All ground fault relays should trip simultaneously to ensure the fastest possible fault clearing", correct: false },
-      { id: 'b', label: "Coordination involves setting upstream relays to trip faster than downstream relays to protect main equipment", correct: false },
-      { id: 'c', label: "Downstream relays are set to trip faster and at lower current thresholds than upstream relays, isolating faults at the lowest level while maintaining power to unaffected circuits", correct: true },
-      { id: 'd', label: "Ground fault coordination is only required for residential systems; hospitals use ungrounded systems instead", correct: false }
-    ],
-    explanation: "Ground fault coordination follows the selectivity principle: the protective device closest to the fault should clear it before upstream devices operate. For a hospital emergency system, this might mean: branch circuit GFCI trips at 6mA/25ms, feeder ground fault relay at 100mA/100ms, and main ground fault relay at 1200A/500ms. If a fault occurs in a patient room, only that circuit opens - the operating rooms, ICU, and life support on other feeders continue uninterrupted. Poor coordination could cause a single ground fault to black out the entire emergency system. NEC Article 517 has specific requirements for healthcare facility ground fault protection coordination."
-  },
-  {
-    // Question 8: Isolated ground systems (Hard)
-    scenario: "A data center manager notices that sensitive computer equipment experiences intermittent errors and data corruption. An electrical consultant recommends installing isolated ground receptacles (orange outlets) and a dedicated insulated ground conductor run back to the service entrance.",
-    question: "How do isolated ground systems differ from standard grounding, and what problem do they solve?",
-    options: [
-      { id: 'a', label: "Isolated grounds use a higher-resistance path to limit fault current and prevent equipment damage", correct: false },
-      { id: 'b', label: "The insulated ground conductor provides a dedicated low-noise reference for sensitive electronics, separated from the equipment grounding conductor that may carry noise currents from other loads", correct: true },
-      { id: 'c', label: "Isolated ground systems eliminate the need for GFCIs by providing better shock protection", correct: false },
-      { id: 'd', label: "The orange color indicates the receptacle can handle higher fault currents than standard outlets", correct: false }
-    ],
-    explanation: "In standard wiring, the equipment grounding conductor (EGC) connects all metal enclosures together and back to the panel. This shared conductor can carry electrical noise from motors, variable frequency drives, and switching equipment. This noise appears as voltage differences between the ground reference points of different devices, potentially corrupting digital signals. Isolated ground systems use an additional insulated conductor (the IG) that connects sensitive equipment directly to the grounding point at the service entrance or separately derived system, bypassing the potentially noisy EGC. The receptacle is still bonded to the EGC for safety, but the equipment's electronic ground uses the cleaner IG path."
-  },
-  {
-    // Question 9: Ground fault detection in solar systems (Hard)
-    scenario: "A fire department responds to a roof fire at a commercial building with rooftop solar panels. Investigation reveals that a ground fault in the DC wiring between panels went undetected for months, eventually causing an arc that ignited roofing materials.",
-    question: "What unique challenges do photovoltaic systems present for ground fault detection, and how do modern inverters address this?",
-    options: [
-      { id: 'a', label: "Solar panels only produce DC current which cannot cause ground faults; the fire must have had another cause", correct: false },
-      { id: 'b', label: "PV systems can have distributed ground faults across long string wiring with high impedance, and modern inverters use multiple detection methods including fuse-based, current differential, and insulation monitoring approaches", correct: true },
-      { id: 'c', label: "Ground faults in solar systems are immediately obvious because the panels stop producing power", correct: false },
-      { id: 'd', label: "Solar inverters rely solely on the utility's ground fault protection since PV systems connect to the grid", correct: false }
-    ],
-    explanation: "PV ground fault detection is challenging because: 1) DC arc faults can sustain at lower currents than AC, 2) PV strings may span hundreds of feet across rooftops with many potential fault points, 3) System voltage can exceed 600V DC creating significant arc energy, and 4) A single ground fault on one string may not significantly affect total system output. Modern solutions include: ground fault detection interrupters (GFDIs) using a fuse that opens if ground current exceeds ~5A, differential current sensing comparing string positive and negative currents, insulation resistance monitoring that detects degradation before faults occur, and rapid shutdown systems (required by NEC 2017+) that de-energize conductors within seconds when the inverter detects a problem."
-  },
-  {
-    // Question 10: Safety grounding vs system grounding (Hard)
-    scenario: "An apprentice electrician is confused about why a transformer secondary is bonded to ground at the main panel (system grounding) while also connecting metal enclosures to the same ground (equipment grounding). They ask why both are necessary.",
-    question: "What are the distinct purposes of system grounding and equipment grounding, and why is each essential for electrical safety?",
-    options: [
-      { id: 'a', label: "They serve the same purpose and are redundant; only one type is actually needed but codes require both for liability reasons", correct: false },
-      { id: 'b', label: "System grounding stabilizes voltage relative to earth and provides a fault return path, while equipment grounding ensures metal parts stay at safe potential and provides a low-impedance path to trip protective devices", correct: true },
-      { id: 'c', label: "System grounding is only required for high-voltage systems while equipment grounding is only for low-voltage applications", correct: false },
-      { id: 'd', label: "Equipment grounding handles normal load currents while system grounding only activates during fault conditions", correct: false }
-    ],
-    explanation: "System grounding and equipment grounding serve complementary but distinct safety functions. System grounding (bonding the neutral to ground at the service entrance) establishes the voltage reference between the electrical system and earth, limits voltage during lightning strikes or utility faults, and provides a return path for ground fault current. Equipment grounding (the green or bare conductor connecting metal enclosures) ensures that if a fault energizes an enclosure, there's a low-impedance path back to the source to enable overcurrent devices to trip quickly. Without system grounding, voltage could float unpredictably; without equipment grounding, a faulted enclosure might remain energized indefinitely at lethal potential. Together, they create a coordinated safety system."
-  }
-];
-
-// ────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
-// ────────────────────────────────────────────────────────────────────────────
-
-export default function GroundFaultRenderer({
-  gamePhase,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}: GroundFaultRendererProps) {
-  // ──────────────────────────────────────────────────────────────────────────
-  // INTERNAL PHASE STATE MANAGEMENT
-  // ──────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+const GroundFaultRenderer: React.FC<GroundFaultRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
   const getInitialPhase = (): Phase => {
-    if (gamePhase && phaseOrder.includes(gamePhase)) {
-      return gamePhase;
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
     }
     return 'hook';
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-
-  // Sync phase with gamePhase prop changes (for resume functionality)
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
-      setPhase(gamePhase);
-    }
-  }, [gamePhase, phase]);
-
-  // State
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Play phase state
-  const [hotCurrent, setHotCurrent] = useState(10); // Amps
-  const [leakageCurrent, setLeakageCurrent] = useState(0); // mA through ground fault
+  // Simulation state
+  const [hotCurrent, setHotCurrent] = useState(10); // Amps flowing through load
+  const [leakageCurrent, setLeakageCurrent] = useState(0); // mA escaping to ground
   const [gfciTripped, setGfciTripped] = useState(false);
-  const [hasExperimented, setHasExperimented] = useState(false);
-  const [experimentCount, setExperimentCount] = useState(0);
-  const [animationTime, setAnimationTime] = useState(0);
+  const [animationFrame, setAnimationFrame] = useState(0);
 
-  // Twist phase state - high impedance faults
+  // Twist phase - high impedance faults
   const [faultImpedance, setFaultImpedance] = useState(1000); // Ohms
-  const [hasExploredTwist, setHasExploredTwist] = useState(false);
+  const [showArcingSparks, setShowArcingSparks] = useState(false);
 
-  // Transfer and test state
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
   // Responsive design
-  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -493,1745 +293,1559 @@ export default function GroundFaultRenderer({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-  const animationRef = useRef<number>();
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // NAVIGATION FUNCTIONS
-  // ──────────────────────────────────────────────────────────────────────────
-
-  const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (navigationLockRef.current) return;
-
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
-
-    setPhase(p);
-    playSound('transition');
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 300);
-  }, []);
-
-  const goNext = useCallback(() => {
-    const idx = phaseOrder.indexOf(phase);
-    if (idx < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[idx + 1]);
-    }
-  }, [phase, goToPhase]);
-
-  const goBack = useCallback(() => {
-    const idx = phaseOrder.indexOf(phase);
-    if (idx > 0) {
-      goToPhase(phaseOrder[idx - 1]);
-    }
-  }, [phase, goToPhase]);
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // PROGRESS BAR COMPONENT
-  // ──────────────────────────────────────────────────────────────────────────
-
-  const renderProgressBar = () => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isMobile ? '10px 12px' : '12px 16px',
-        borderBottom: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-      }}>
-        {/* Back button */}
-        <button
-          onClick={goBack}
-          disabled={currentIdx === 0}
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.border}`,
-            background: currentIdx > 0 ? colors.bgCardLight : 'transparent',
-            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
-            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
-            opacity: currentIdx > 0 ? 1 : 0.4,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '16px',
-          }}
-        >
-          ←
-        </button>
-
-        {/* Progress dots */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {phaseOrder.map((p, i) => (
-            <button
-              key={p}
-              onClick={() => i <= currentIdx && goToPhase(p)}
-              style={{
-                width: i === currentIdx ? '20px' : '10px',
-                height: '10px',
-                borderRadius: '5px',
-                border: 'none',
-                backgroundColor: i < currentIdx
-                  ? colors.success
-                  : i === currentIdx
-                    ? colors.primary
-                    : colors.border,
-                cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-                opacity: i > currentIdx ? 0.5 : 1,
-              }}
-              title={phaseLabels[p]}
-            />
-          ))}
-        </div>
-
-        {/* Phase label and count */}
-        <div style={{
-          fontSize: '11px',
-          fontWeight: 700,
-          color: colors.primary,
-          padding: '4px 8px',
-          borderRadius: '6px',
-          backgroundColor: `${colors.primary}15`,
-        }}>
-          {currentIdx + 1}/{phaseOrder.length}
-        </div>
-      </div>
-    );
-  };
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // BOTTOM NAVIGATION BAR
-  // ──────────────────────────────────────────────────────────────────────────
-
-  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    const canBack = canGoBack && currentIdx > 0;
-
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: isMobile ? '12px' : '12px 16px',
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: '12px',
-      }}>
-        <button
-          onClick={goBack}
-          disabled={!canBack}
-          style={{
-            padding: isMobile ? '10px 16px' : '10px 20px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontSize: isMobile ? '13px' : '14px',
-            backgroundColor: colors.bgCardLight,
-            color: colors.textSecondary,
-            border: `1px solid ${colors.border}`,
-            cursor: canBack ? 'pointer' : 'not-allowed',
-            opacity: canBack ? 1 : 0.3,
-            minHeight: '44px',
-          }}
-        >
-          ← Back
-        </button>
-
-        <span style={{
-          fontSize: '12px',
-          color: colors.textMuted,
-          fontWeight: 600,
-        }}>
-          {phaseLabels[phase]}
-        </span>
-
-        <button
-          onClick={() => {
-            if (!canGoNext) return;
-            if (onNext) {
-              onNext();
-            } else {
-              goNext();
-            }
-          }}
-          disabled={!canGoNext}
-          style={{
-            padding: isMobile ? '10px 20px' : '10px 24px',
-            borderRadius: '10px',
-            fontWeight: 700,
-            fontSize: isMobile ? '13px' : '14px',
-            background: canGoNext
-              ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
-              : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
-            border: 'none',
-            cursor: canGoNext ? 'pointer' : 'not-allowed',
-            opacity: canGoNext ? 1 : 0.4,
-            minHeight: '44px',
-          }}
-        >
-          {nextLabel} →
-        </button>
-      </div>
-    );
-  };
-
-  // Animation
+  // Animation loop
   useEffect(() => {
-    const animate = () => {
-      setAnimationTime(prev => prev + 0.05);
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    animationRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
+    const timer = setInterval(() => {
+      setAnimationFrame(f => f + 1);
+    }, 50);
+    return () => clearInterval(timer);
   }, []);
-
-  // Calculate values
-  const neutralCurrent = hotCurrent - (leakageCurrent / 1000);
-  const imbalance = leakageCurrent;
-  const tripThreshold = 5; // mA
 
   // GFCI trip logic
   useEffect(() => {
-    if (leakageCurrent >= tripThreshold && !gfciTripped) {
+    if (leakageCurrent >= 5 && !gfciTripped) {
       setGfciTripped(true);
+      playSound('failure');
     }
   }, [leakageCurrent, gfciTripped]);
 
-  // High impedance fault calculations
+  // Calculate derived values
+  const neutralCurrent = hotCurrent - (leakageCurrent / 1000); // Neutral returns less when there's leakage
+  const currentImbalance = leakageCurrent; // In mA
   const lineVoltage = 120; // V
   const highImpedanceFaultCurrent = (lineVoltage / faultImpedance) * 1000; // mA
   const canTripGFCI = highImpedanceFaultCurrent >= 5;
   const canTripBreaker = highImpedanceFaultCurrent >= 15000; // 15A breaker
 
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#EF4444', // Red for electrical danger theme
+    accentGlow: 'rgba(239, 68, 68, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    hot: '#EF4444',
+    neutral: '#3B82F6',
+    ground: '#10B981',
+  };
 
-  // Handlers
-  const handlePrediction = useCallback((choice: string) => {
-    setPrediction(choice);
-    setShowPredictionFeedback(true);
-  }, []);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  const handleTwistPrediction = useCallback((choice: string) => {
-    setTwistPrediction(choice);
-    setShowTwistFeedback(true);
-  }, []);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'High-Impedance Faults',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  const handleLeakageChange = useCallback((value: number) => {
-    if (!gfciTripped) {
-      setLeakageCurrent(value);
-      setExperimentCount(prev => {
-        const newCount = prev + 1;
-        if (newCount >= 3) setHasExperimented(true);
-        return newCount;
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'ground-fault',
+        gameTitle: 'Ground Fault Detection',
+        details: { phase: p },
+        timestamp: Date.now()
       });
     }
-  }, [gfciTripped]);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-  const handleResetGFCI = useCallback(() => {
-    setGfciTripped(false);
-    setLeakageCurrent(0);
-  }, []);
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
-  const handleImpedanceChange = useCallback((value: number) => {
-    setFaultImpedance(value);
-    setHasExploredTwist(true);
-  }, []);
+  // Get GFCI status
+  const getGFCIStatus = () => {
+    if (gfciTripped) return { status: 'TRIPPED', color: colors.error };
+    if (currentImbalance >= 4) return { status: 'WARNING', color: colors.warning };
+    if (currentImbalance > 0) return { status: 'MONITORING', color: colors.warning };
+    return { status: 'NORMAL', color: colors.success };
+  };
 
-  const handleCompleteApp = useCallback((index: number) => {
-    setCompletedApps(prev => new Set([...prev, index]));
-  }, []);
+  const gfciStatus = getGFCIStatus();
 
-  const handleTestAnswer = useCallback((qIndex: number, aIndex: number) => {
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[qIndex] = aIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleSubmitTest = useCallback(() => {
-    let score = 0;
-    testAnswers.forEach((answer, index) => {
-      if (answer !== null && TEST_QUESTIONS[index].options[answer].correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
-    else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
-  }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // RENDER PHASES
-  // ────────────────────────────────────────────────────────────────────────────
-
-  const renderHook = () => (
-    <div style={{ padding: '24px', textAlign: 'center' }}>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
       <div style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '8px',
-        padding: '8px 16px',
-        background: 'rgba(239, 68, 68, 0.1)',
-        border: '1px solid rgba(239, 68, 68, 0.2)',
-        borderRadius: '20px',
-        marginBottom: '24px',
-      }}>
-        <span style={{ width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%' }} />
-        <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600 }}>ELECTRICAL SAFETY</span>
-      </div>
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.warning})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-      <h1 style={{ fontSize: '26px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '16px' }}>
-        How Does the System Know If You Touch a Live Wire?
-      </h1>
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-      <p style={{ fontSize: '16px', color: '#94a3b8', marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px' }}>
-        Electricity flows in a circuit - out through hot, back through neutral. But if current escapes through YOU, how does the system detect it?
-      </p>
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-      <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '32px' }}>
+  // Circuit Visualization Component
+  const CircuitVisualization = ({ showLeakage = true }: { showLeakage?: boolean }) => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 340;
+
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          {/* Background gradient */}
-          <linearGradient id="gfaultBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1e293b" />
-            <stop offset="30%" stopColor="#0f172a" />
-            <stop offset="70%" stopColor="#1e293b" />
-            <stop offset="100%" stopColor="#0f172a" />
+          <linearGradient id="hotWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.hot} stopOpacity="0.8" />
+            <stop offset="50%" stopColor={colors.hot} />
+            <stop offset="100%" stopColor={colors.hot} stopOpacity="0.8" />
           </linearGradient>
-
-          {/* Hot wire gradient */}
-          <linearGradient id="gfaultHotWire" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#dc2626" />
-            <stop offset="25%" stopColor="#ef4444" />
-            <stop offset="50%" stopColor="#f87171" />
-            <stop offset="75%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#dc2626" />
+          <linearGradient id="neutralWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.neutral} stopOpacity="0.8" />
+            <stop offset="50%" stopColor={colors.neutral} />
+            <stop offset="100%" stopColor={colors.neutral} stopOpacity="0.8" />
           </linearGradient>
-
-          {/* Neutral wire gradient */}
-          <linearGradient id="gfaultNeutralWire" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#2563eb" />
-            <stop offset="25%" stopColor="#3b82f6" />
-            <stop offset="50%" stopColor="#60a5fa" />
-            <stop offset="75%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#2563eb" />
-          </linearGradient>
-
-          {/* Power source gradient */}
-          <linearGradient id="gfaultPowerSource" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1f2937" />
-            <stop offset="30%" stopColor="#111827" />
-            <stop offset="70%" stopColor="#1f2937" />
-            <stop offset="100%" stopColor="#0f172a" />
-          </linearGradient>
-
-          {/* GFCI box gradient */}
-          <linearGradient id="gfaultGFCIBox" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1e3a5f" />
-            <stop offset="25%" stopColor="#1e40af" />
-            <stop offset="50%" stopColor="#1e3a5f" />
-            <stop offset="75%" stopColor="#172554" />
-            <stop offset="100%" stopColor="#1e3a5f" />
-          </linearGradient>
-
-          {/* Load box gradient */}
-          <linearGradient id="gfaultLoadBox" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#451a03" />
-            <stop offset="30%" stopColor="#78350f" />
-            <stop offset="70%" stopColor="#451a03" />
-            <stop offset="100%" stopColor="#1c1917" />
-          </linearGradient>
-
-          {/* Fault spark gradient */}
-          <radialGradient id="gfaultSparkGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fcd34d" stopOpacity="1" />
-            <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
-            <stop offset="60%" stopColor="#d97706" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+          <radialGradient id="sparkGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FDE047" />
+            <stop offset="50%" stopColor="#F59E0B" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
           </radialGradient>
-
-          {/* Ground symbol gradient */}
-          <linearGradient id="gfaultGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="50%" stopColor="#16a34a" />
-            <stop offset="100%" stopColor="#166534" />
-          </linearGradient>
-
-          {/* Person glow */}
-          <radialGradient id="gfaultPersonGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#bbf7d0" stopOpacity="0.3" />
-            <stop offset="50%" stopColor="#22c55e" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#166534" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Wire glow filter */}
-          <filter id="gfaultWireGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Spark glow filter */}
-          <filter id="gfaultSparkFilter" x="-100%" y="-100%" width="300%" height="300%">
+          <filter id="glow">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-
-          {/* GFCI box glow */}
-          <filter id="gfaultGFCIGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
         </defs>
-
-        <rect width="400" height="220" fill="url(#gfaultBgGrad)" rx="12" />
 
         {/* Power source */}
-        <rect x="20" y="80" width="50" height="60" fill="url(#gfaultPowerSource)" stroke="url(#gfaultHotWire)" strokeWidth="2" rx="4" />
-        <text x="45" y="115" textAnchor="middle" fill="#fca5a5" fontSize="12" fontWeight="bold">120V</text>
+        <rect x="20" y={height/2 - 50} width="50" height="100" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
+        <text x="45" y={height/2 - 15} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">120V</text>
+        <text x="45" y={height/2 + 5} textAnchor="middle" fill={colors.textMuted} fontSize="10">AC</text>
+        <text x="45" y={height/2 + 25} textAnchor="middle" fill={colors.textMuted} fontSize="10">Source</text>
 
-        {/* Hot wire with glow */}
-        <line x1="70" y1="95" x2="150" y2="95" stroke="url(#gfaultHotWire)" strokeWidth="4" filter="url(#gfaultWireGlow)" />
+        {/* Hot wire (top) */}
+        <line
+          x1="70" y1={height/2 - 30} x2={width - 100} y2={height/2 - 30}
+          stroke={gfciTripped ? colors.textMuted : "url(#hotWireGrad)"}
+          strokeWidth="4"
+          filter={gfciTripped ? undefined : "url(#glow)"}
+        />
 
-        {/* GFCI box with glow */}
-        <rect x="150" y="70" width="80" height="80" fill="url(#gfaultGFCIBox)" stroke="#3b82f6" strokeWidth="2" rx="8" filter="url(#gfaultGFCIGlow)" />
-        {/* GFCI internal detail - current transformer ring */}
-        <ellipse cx="190" cy="110" rx="25" ry="8" fill="none" stroke="#475569" strokeWidth="2" />
-        <ellipse cx="190" cy="110" rx="18" ry="5" fill="none" stroke="#64748b" strokeWidth="1" />
-
-        {/* Load box */}
-        <rect x="280" y="80" width="60" height="60" fill="url(#gfaultLoadBox)" stroke="#f59e0b" strokeWidth="2" rx="4" />
-        {/* Load internal - resistor symbol */}
-        <path d="M295 110 L300 110 L302 105 L306 115 L310 105 L314 115 L318 105 L322 115 L324 110 L330 110"
-              fill="none" stroke="#fbbf24" strokeWidth="1.5" />
-
-        {/* Hot continuation */}
-        <line x1="230" y1="95" x2="280" y2="95" stroke="url(#gfaultHotWire)" strokeWidth="4" filter="url(#gfaultWireGlow)" />
-
-        {/* Neutral wire with glow */}
-        <line x1="280" y1="125" x2="230" y2="125" stroke="url(#gfaultNeutralWire)" strokeWidth="4" filter="url(#gfaultWireGlow)" />
-        <line x1="150" y1="125" x2="70" y2="125" stroke="url(#gfaultNeutralWire)" strokeWidth="4" filter="url(#gfaultWireGlow)" />
-
-        {/* Person touching wire - danger scenario */}
-        <circle cx="260" cy="170" r="18" fill="url(#gfaultPersonGlow)" />
-        <circle cx="260" cy="170" r="15" fill="none" stroke="url(#gfaultGroundGrad)" strokeWidth="2" />
-        {/* Person head */}
-        <circle cx="260" cy="162" r="5" fill="none" stroke="#22c55e" strokeWidth="1.5" />
-
-        {/* Leakage path with spark effect */}
-        <line x1="260" y1="155" x2="260" y2="140" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4" />
-        {/* Spark at contact point */}
-        <circle cx="260" cy="140" r="6" fill="url(#gfaultSparkGlow)" filter="url(#gfaultSparkFilter)" />
-
-        {/* Ground symbol with gradient */}
-        <g transform="translate(260, 185)">
-          <line x1="0" y1="0" x2="0" y2="10" stroke="url(#gfaultGroundGrad)" strokeWidth="2" />
-          <line x1="-10" y1="10" x2="10" y2="10" stroke="url(#gfaultGroundGrad)" strokeWidth="3" />
-          <line x1="-6" y1="15" x2="6" y2="15" stroke="url(#gfaultGroundGrad)" strokeWidth="2" />
-          <line x1="-3" y1="20" x2="3" y2="20" stroke="url(#gfaultGroundGrad)" strokeWidth="1.5" />
-        </g>
-      </svg>
-
-      {/* Labels moved outside SVG */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-around',
-        maxWidth: '500px',
-        margin: '0 auto 16px',
-        fontSize: typo.small,
-        color: colors.textSecondary
-      }}>
-        <span style={{ color: '#ef4444' }}>HOT (10A)</span>
-        <span style={{ color: '#3b82f6' }}>GFCI Detects Imbalance</span>
-        <span style={{ color: '#f59e0b' }}>LOAD</span>
-      </div>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        maxWidth: '500px',
-        margin: '0 auto 24px',
-        gap: '32px',
-        fontSize: typo.small
-      }}>
-        <span style={{ color: '#60a5fa' }}>NEUTRAL (10A)</span>
-        <span style={{ color: '#f59e0b' }}>Leakage path?</span>
-      </div>
-
-      <p style={{ fontSize: typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '32px' }}>
-        If current leaks through the person, what changes?
-      </p>
-
-      <div style={{
-        background: 'rgba(30, 41, 59, 0.8)',
-        padding: '20px',
-        borderRadius: '16px',
-        marginBottom: '32px',
-        textAlign: 'left',
-      }}>
-        <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.7 }}>
-          The key insight: In a healthy circuit, <strong style={{ color: '#ef4444' }}>hot current</strong> equals
-          <strong style={{ color: '#60a5fa' }}> neutral current</strong>. If current escapes through another path
-          (like a person), there's an <strong style={{ color: '#f59e0b' }}>imbalance</strong> - and that's detectable!
-        </p>
-      </div>
-
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '16px' }}>
-        Make Your Prediction
-      </h2>
-
-      <div style={{
-        background: 'rgba(239, 68, 68, 0.1)',
-        border: '1px solid rgba(239, 68, 68, 0.3)',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '24px',
-      }}>
-        <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: 1.6 }}>
-          A circuit is drawing 10 amps. If someone touches a live wire and 5 milliamps (0.005A)
-          flows through them to ground, what will the hot and neutral currents be?
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        {[
-          { id: 'both10', label: 'Both stay at 10A (unchanged)', icon: '=' },
-          { id: 'hot10neutral9995', label: 'Hot: 10A, Neutral: 9.995A (5mA difference)', icon: '📊' },
-          { id: 'bothIncrease', label: 'Both increase to handle the extra load', icon: '📈' },
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            disabled={showPredictionFeedback}
-            style={{
-              padding: '16px',
-              borderRadius: '12px',
-              border: prediction === option.id
-                ? '2px solid #ef4444'
-                : '2px solid rgba(100, 116, 139, 0.3)',
-              background: prediction === option.id
-                ? 'rgba(239, 68, 68, 0.2)'
-                : 'rgba(30, 41, 59, 0.5)',
-              color: '#f8fafc',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: showPredictionFeedback ? 'default' : 'pointer',
-              textAlign: 'left',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>{option.icon}</span>
-            {option.label}
-          </button>
+        {/* Animated current flow on hot wire */}
+        {!gfciTripped && Array.from({ length: 6 }).map((_, i) => (
+          <circle
+            key={`hot-${i}`}
+            cx={70 + ((animationFrame * 3 + i * 60) % (width - 170))}
+            cy={height/2 - 30}
+            r="5"
+            fill={colors.hot}
+            opacity="0.8"
+          />
         ))}
-      </div>
 
-      {showPredictionFeedback && (
-        <div style={{
-          background: prediction === 'hot10neutral9995' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(251, 191, 36, 0.2)',
-          border: `1px solid ${prediction === 'hot10neutral9995' ? '#22c55e' : '#f59e0b'}`,
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '24px',
-        }}>
-          <p style={{ color: prediction === 'hot10neutral9995' ? '#86efac' : '#fcd34d', fontSize: '14px', lineHeight: 1.6 }}>
-            {prediction === 'hot10neutral9995' ? (
-              <><strong>Exactly!</strong> The 5mA that flows through the person goes to ground instead of returning through neutral. Hot current remains 10A, but neutral only gets 9.995A back. This tiny 5mA difference is what GFCIs detect!</>
-            ) : (
-              <><strong>Not quite!</strong> Current that flows to ground doesn't return through neutral. So hot stays at 10A, but neutral drops to 9.995A - a 5mA imbalance that GFCIs can detect.</>
-            )}
-          </p>
-        </div>
-      )}
+        {/* GFCI box */}
+        <rect
+          x={width/2 - 40} y={height/2 - 60} width="80" height="120"
+          rx="8"
+          fill={colors.bgSecondary}
+          stroke={gfciTripped ? colors.error : colors.accent}
+          strokeWidth="3"
+        />
+        <text x={width/2} y={height/2 - 40} textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">GFCI</text>
 
-    </div>
-  );
+        {/* GFCI current transformer ring */}
+        <ellipse cx={width/2} cy={height/2 - 15} rx="25" ry="8" fill="none" stroke={colors.textMuted} strokeWidth="2" />
+        <ellipse cx={width/2} cy={height/2 - 15} rx="18" ry="5" fill="none" stroke={colors.textSecondary} strokeWidth="1" />
 
-  const renderPlay = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
-        GFCI Circuit Simulator
-      </h2>
-      <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
-        Simulate ground fault leakage and see when the GFCI trips
-      </p>
+        {/* GFCI indicator */}
+        <circle cx={width/2} cy={height/2 + 30} r="10" fill={gfciTripped ? colors.error : colors.success} filter="url(#glow)" />
+        <text x={width/2} y={height/2 + 50} textAnchor="middle" fill={gfciStatus.color} fontSize="10" fontWeight="bold">
+          {gfciStatus.status}
+        </text>
 
-      {/* GFCI Status */}
-      <div style={{
-        background: gfciTripped
-          ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-          : 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '24px',
-        textAlign: 'center',
-        border: gfciTripped ? '2px solid #fca5a5' : '2px solid #22c55e',
-      }}>
-        <div style={{ fontSize: '12px', color: gfciTripped ? 'white' : '#94a3b8', marginBottom: '8px' }}>
-          GFCI STATUS
-        </div>
-        <div style={{ fontSize: '36px', fontWeight: 'bold', color: gfciTripped ? 'white' : '#22c55e' }}>
-          {gfciTripped ? 'TRIPPED!' : 'ACTIVE'}
-        </div>
-        {gfciTripped && (
-          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', marginTop: '8px' }}>
-            Circuit disconnected - ground fault detected
-          </div>
-        )}
-      </div>
-
-      {/* Circuit visualization */}
-      <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
-        <defs>
-          {/* Background gradient */}
-          <linearGradient id="gfaultPlayBg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0f172a" />
-            <stop offset="30%" stopColor="#020617" />
-            <stop offset="70%" stopColor="#0f172a" />
-            <stop offset="100%" stopColor="#020617" />
-          </linearGradient>
-
-          {/* Hot wire gradient - active */}
-          <linearGradient id="gfaultPlayHotActive" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#b91c1c" />
-            <stop offset="20%" stopColor="#dc2626" />
-            <stop offset="40%" stopColor="#ef4444" />
-            <stop offset="60%" stopColor="#f87171" />
-            <stop offset="80%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#dc2626" />
-          </linearGradient>
-
-          {/* Hot wire gradient - tripped */}
-          <linearGradient id="gfaultPlayHotTripped" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#374151" />
-            <stop offset="50%" stopColor="#4b5563" />
-            <stop offset="100%" stopColor="#374151" />
-          </linearGradient>
-
-          {/* Neutral wire gradient - active */}
-          <linearGradient id="gfaultPlayNeutralActive" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1d4ed8" />
-            <stop offset="20%" stopColor="#2563eb" />
-            <stop offset="40%" stopColor="#3b82f6" />
-            <stop offset="60%" stopColor="#60a5fa" />
-            <stop offset="80%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#2563eb" />
-          </linearGradient>
-
-          {/* GFCI box gradient - normal */}
-          <linearGradient id="gfaultPlayGFCINormal" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1e3a5f" />
-            <stop offset="25%" stopColor="#1e40af" />
-            <stop offset="50%" stopColor="#1e3a5f" />
-            <stop offset="75%" stopColor="#172554" />
-            <stop offset="100%" stopColor="#1e3a5f" />
-          </linearGradient>
-
-          {/* GFCI box gradient - tripped */}
-          <linearGradient id="gfaultPlayGFCITripped" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#450a0a" />
-            <stop offset="25%" stopColor="#7f1d1d" />
-            <stop offset="50%" stopColor="#991b1b" />
-            <stop offset="75%" stopColor="#7f1d1d" />
-            <stop offset="100%" stopColor="#450a0a" />
-          </linearGradient>
-
-          {/* Current particle glow - hot */}
-          <radialGradient id="gfaultPlayHotParticle" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fecaca" stopOpacity="1" />
-            <stop offset="40%" stopColor="#fca5a5" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Current particle glow - neutral */}
-          <radialGradient id="gfaultPlayNeutralParticle" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#dbeafe" stopOpacity="1" />
-            <stop offset="40%" stopColor="#93c5fd" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Leakage spark glow */}
-          <radialGradient id="gfaultPlayLeakGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fde047" stopOpacity="1" />
-            <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.8" />
-            <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Person glow */}
-          <radialGradient id="gfaultPlayPersonGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fde047" stopOpacity="0.4" />
-            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Wire glow filter */}
-          <filter id="gfaultPlayWireGlow" x="-30%" y="-100%" width="160%" height="300%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Particle glow filter */}
-          <filter id="gfaultPlayParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Spark filter */}
-          <filter id="gfaultPlaySparkFilter" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* GFCI glow filter */}
-          <filter id="gfaultPlayGFCIGlow" x="-30%" y="-20%" width="160%" height="140%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        <rect width="400" height="180" fill="url(#gfaultPlayBg)" rx="12" />
-
-        {/* Hot wire with gradient and glow */}
+        {/* Neutral wire (bottom) */}
         <line
-          x1="30" y1="50" x2="370" y2="50"
-          stroke={gfciTripped ? 'url(#gfaultPlayHotTripped)' : 'url(#gfaultPlayHotActive)'}
-          strokeWidth="5"
-          filter={gfciTripped ? undefined : 'url(#gfaultPlayWireGlow)'}
+          x1="70" y1={height/2 + 30} x2={width - 100} y2={height/2 + 30}
+          stroke={gfciTripped ? colors.textMuted : "url(#neutralWireGrad)"}
+          strokeWidth="4"
+          filter={gfciTripped ? undefined : "url(#glow)"}
         />
 
-        {/* Animated current flow on hot (if not tripped) */}
-        {!gfciTripped && (
-          <>
-            {[0, 1, 2, 3, 4, 5].map(i => (
-              <circle
-                key={i}
-                cx={30 + ((animationTime * 60 + i * 57) % 340)}
-                cy="50"
-                r="6"
-                fill="url(#gfaultPlayHotParticle)"
-                filter="url(#gfaultPlayParticleGlow)"
-              />
-            ))}
-          </>
-        )}
+        {/* Animated current flow on neutral (opposite direction, less if leaking) */}
+        {!gfciTripped && Array.from({ length: Math.max(1, 6 - Math.floor(leakageCurrent / 2)) }).map((_, i) => (
+          <circle
+            key={`neutral-${i}`}
+            cx={width - 100 - ((animationFrame * 3 + i * 60) % (width - 170))}
+            cy={height/2 + 30}
+            r="5"
+            fill={colors.neutral}
+            opacity="0.8"
+          />
+        ))}
 
-        {/* Neutral wire with gradient and glow */}
-        <line
-          x1="30" y1="130" x2="370" y2="130"
-          stroke={gfciTripped ? 'url(#gfaultPlayHotTripped)' : 'url(#gfaultPlayNeutralActive)'}
-          strokeWidth="5"
-          filter={gfciTripped ? undefined : 'url(#gfaultPlayWireGlow)'}
+        {/* Load (right side) */}
+        <rect x={width - 90} y={height/2 - 50} width="60" height="100" rx="8" fill={colors.bgSecondary} stroke={colors.warning} strokeWidth="2" />
+        <text x={width - 60} y={height/2 - 10} textAnchor="middle" fill={colors.warning} fontSize="12" fontWeight="bold">LOAD</text>
+        {/* Resistor symbol */}
+        <path
+          d={`M ${width - 75} ${height/2 + 10} l 5 0 l 2 -8 l 4 16 l 4 -16 l 4 16 l 4 -16 l 4 16 l 2 -8 l 5 0`}
+          fill="none"
+          stroke={colors.warning}
+          strokeWidth="2"
         />
 
-        {/* Animated current flow on neutral (if not tripped) */}
-        {!gfciTripped && (
+        {/* Leakage path (person touching live part) */}
+        {showLeakage && leakageCurrent > 0 && !gfciTripped && (
           <>
-            {[0, 1, 2, 3, 4, 5].map(i => (
+            {/* Person figure */}
+            <circle cx={width - 140} cy={height/2 + 90} r="15" fill="none" stroke={colors.warning} strokeWidth="2" />
+            <circle cx={width - 140} cy={height/2 + 78} r="6" fill="none" stroke={colors.warning} strokeWidth="2" />
+
+            {/* Leakage path line */}
+            <line
+              x1={width - 140} y1={height/2 - 30}
+              x2={width - 140} y2={height/2 + 72}
+              stroke={colors.warning}
+              strokeWidth="2"
+              strokeDasharray="5,3"
+            />
+
+            {/* Sparks at contact */}
+            {Array.from({ length: 3 }).map((_, i) => (
               <circle
-                key={i}
-                cx={370 - ((animationTime * 60 + i * 57) % 340)}
-                cy="130"
-                r="6"
-                fill="url(#gfaultPlayNeutralParticle)"
-                filter="url(#gfaultPlayParticleGlow)"
+                key={`spark-${i}`}
+                cx={width - 140 + Math.sin(animationFrame * 0.5 + i * 2) * 10}
+                cy={height/2 - 25 + Math.cos(animationFrame * 0.5 + i * 2) * 5}
+                r={3 + Math.sin(animationFrame * 0.3 + i) * 2}
+                fill="url(#sparkGlow)"
               />
             ))}
-          </>
-        )}
-
-        {/* Leakage path with premium spark effect */}
-        {leakageCurrent > 0 && !gfciTripped && (
-          <>
-            {/* Leakage line from hot */}
-            <line x1="280" y1="50" x2="280" y2="85" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4,2" />
-
-            {/* Person being shocked with glow */}
-            <circle cx="280" cy="90" r="14" fill="url(#gfaultPlayPersonGlow)" />
-            <circle cx="280" cy="90" r="10" fill="none" stroke="#f59e0b" strokeWidth="2" />
-            {/* Person head */}
-            <circle cx="280" cy="84" r="4" fill="none" stroke="#fbbf24" strokeWidth="1.5" />
-
-            {/* Sparks at contact point */}
-            {[0, 1, 2].map(i => (
-              <circle
-                key={i}
-                cx={280 + Math.sin(animationTime * 8 + i * 2) * 8}
-                cy={70 + Math.cos(animationTime * 8 + i * 2) * 4}
-                r={2 + Math.sin(animationTime * 10 + i) * 1}
-                fill="url(#gfaultPlayLeakGlow)"
-                filter="url(#gfaultPlaySparkFilter)"
-              />
-            ))}
-
-            {/* Leakage line to ground */}
-            <line x1="280" y1="100" x2="280" y2="130" stroke="#22c55e" strokeWidth="2" strokeDasharray="4,2" />
 
             {/* Ground symbol */}
-            <g transform="translate(280, 135)">
-              <line x1="0" y1="0" x2="0" y2="8" stroke="#22c55e" strokeWidth="2" />
-              <line x1="-8" y1="8" x2="8" y2="8" stroke="#22c55e" strokeWidth="2" />
-              <line x1="-5" y1="12" x2="5" y2="12" stroke="#22c55e" strokeWidth="1.5" />
-              <line x1="-2" y1="16" x2="2" y2="16" stroke="#22c55e" strokeWidth="1" />
+            <g transform={`translate(${width - 140}, ${height/2 + 110})`}>
+              <line x1="0" y1="0" x2="0" y2="10" stroke={colors.ground} strokeWidth="2" />
+              <line x1="-12" y1="10" x2="12" y2="10" stroke={colors.ground} strokeWidth="3" />
+              <line x1="-8" y1="16" x2="8" y2="16" stroke={colors.ground} strokeWidth="2" />
+              <line x1="-4" y1="22" x2="4" y2="22" stroke={colors.ground} strokeWidth="1" />
             </g>
+
+            {/* Leakage current label */}
+            <text x={width - 100} y={height/2 + 100} fill={colors.warning} fontSize="11" fontWeight="bold">
+              {leakageCurrent} mA
+            </text>
           </>
         )}
 
-        {/* GFCI detector with premium styling */}
-        <rect
-          x="100" y="40" width="60" height="100"
-          fill={gfciTripped ? 'url(#gfaultPlayGFCITripped)' : 'url(#gfaultPlayGFCINormal)'}
-          stroke={gfciTripped ? '#ef4444' : '#3b82f6'}
-          strokeWidth="2" rx="6"
-          filter="url(#gfaultPlayGFCIGlow)"
-        />
+        {/* Current readings */}
+        <text x="90" y={height/2 - 45} fill={colors.hot} fontSize="11" fontWeight="600">
+          HOT: {gfciTripped ? '0' : hotCurrent.toFixed(3)} A
+        </text>
+        <text x="90" y={height/2 + 50} fill={colors.neutral} fontSize="11" fontWeight="600">
+          NEUTRAL: {gfciTripped ? '0' : neutralCurrent.toFixed(3)} A
+        </text>
 
-        {/* GFCI internal - current transformer ring */}
-        <ellipse cx="130" cy="70" rx="20" ry="6" fill="none" stroke={gfciTripped ? '#f87171' : '#60a5fa'} strokeWidth="2" />
-        <ellipse cx="130" cy="70" rx="14" ry="4" fill="none" stroke={gfciTripped ? '#fca5a5' : '#93c5fd'} strokeWidth="1" />
-
-        {/* Test/Reset buttons on GFCI */}
-        <rect x="108" y="95" width="12" height="8" rx="1" fill={gfciTripped ? '#ef4444' : '#475569'} />
-        <rect x="124" y="95" width="12" height="8" rx="1" fill={gfciTripped ? '#22c55e' : '#475569'} />
-
-        {/* GFCI indicator LED */}
-        <circle cx="130" cy="115" r="4" fill={gfciTripped ? '#ef4444' : '#22c55e'} filter="url(#gfaultPlaySparkFilter)" />
+        {/* Imbalance indicator */}
+        <rect x={width/2 - 50} y={height - 45} width="100" height="30" rx="6" fill={colors.bgSecondary} stroke={gfciStatus.color} strokeWidth="2" />
+        <text x={width/2} y={height - 25} textAnchor="middle" fill={gfciStatus.color} fontSize="12" fontWeight="bold">
+          Imbalance: {currentImbalance} mA
+        </text>
       </svg>
+    );
+  };
 
-      {/* Labels moved outside SVG using typo system */}
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
       <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
-        justifyContent: 'space-between',
-        maxWidth: '500px',
-        margin: '0 auto 8px',
-        padding: '0 30px',
-        fontSize: typo.small
-      }}>
-        <span style={{ color: gfciTripped ? '#64748b' : '#ef4444', fontWeight: 600 }}>
-          HOT: {gfciTripped ? '0' : hotCurrent.toFixed(3)}A
-        </span>
-        <span style={{ color: gfciTripped ? '#64748b' : '#60a5fa', fontWeight: 600 }}>
-          NEUTRAL: {gfciTripped ? '0' : neutralCurrent.toFixed(3)}A
-        </span>
-      </div>
-
-      {/* GFCI status label */}
-      <div style={{
-        textAlign: 'center',
-        fontSize: typo.small,
-        color: '#94a3b8',
-        marginBottom: '8px'
-      }}>
-        <span style={{ color: gfciTripped ? '#ef4444' : '#3b82f6', fontWeight: 'bold' }}>GFCI</span>
-        {' · '}
-        <span style={{ color: imbalance >= 5 ? '#ef4444' : imbalance > 0 ? '#f59e0b' : '#94a3b8' }}>
-          {imbalance}mA imbalance
-        </span>
-        {!gfciTripped && imbalance > 0 && imbalance < 5 && (
-          <span style={{ color: '#f59e0b' }}> · Monitoring...</span>
-        )}
-      </div>
-
-      {leakageCurrent > 0 && !gfciTripped && (
-        <div style={{
-          textAlign: 'center',
-          fontSize: typo.small,
-          color: '#f59e0b',
-          marginBottom: '16px'
-        }}>
-          {leakageCurrent}mA leaking through fault path
-        </div>
-      )}
-
-      {/* Leakage slider */}
-      <div style={{ marginBottom: '24px' }}>
-        <label style={{ display: 'block', color: '#94a3b8', fontSize: '14px', marginBottom: '8px' }}>
-          Ground Fault Leakage: {leakageCurrent} mA
-          {leakageCurrent >= 5 && <span style={{ color: '#ef4444' }}> (TRIP THRESHOLD!)</span>}
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="10"
-          step="1"
-          value={leakageCurrent}
-          onChange={(e) => handleLeakageChange(parseInt(e.target.value))}
-          disabled={gfciTripped}
-          style={{ width: '100%', accentColor: leakageCurrent >= 5 ? '#ef4444' : '#f59e0b' }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-          <span>0 mA (Safe)</span>
-          <span style={{ color: '#ef4444' }}>5 mA (Trip)</span>
-          <span>10 mA</span>
-        </div>
-      </div>
-
-      {gfciTripped && (
-        <button
-          onClick={handleResetGFCI}
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '8px',
-            border: '2px solid #ef4444',
-            background: 'transparent',
-            color: '#ef4444',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            marginBottom: '16px',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          Reset GFCI
-        </button>
-      )}
-
-      <div style={{
-        background: 'rgba(59, 130, 246, 0.1)',
-        border: '1px solid rgba(59, 130, 246, 0.3)',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '24px',
-      }}>
-        <p style={{ color: '#93c5fd', fontSize: '13px', lineHeight: 1.6 }}>
-          <strong>Key insight:</strong> The GFCI compares hot and neutral current. Any difference means
-          current is escaping somewhere - potentially through a person! 5mA is enough to cause harm,
-          so that's the trip threshold.
-        </p>
-      </div>
-
-      {!hasExperimented && (
-        <div style={{
-          textAlign: 'center',
-          padding: '12px',
-          background: 'rgba(245, 158, 11, 0.1)',
-          borderRadius: '8px',
-          color: '#fcd34d',
-          fontSize: '13px',
-        }}>
-          Experiment more ({Math.max(0, 3 - experimentCount)} adjustments left)
-        </div>
-      )}
-    </div>
-  );
-
-  const renderReview = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '24px' }}>
-        How GFCIs Save Lives
-      </h2>
-
-      <div style={{
-        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '24px',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
         textAlign: 'center',
       }}>
-        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginBottom: '8px' }}>The Detection Principle</div>
-        <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>I_hot - I_neutral = I_leakage</div>
-        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginTop: '8px' }}>
-          Any imbalance {'≥'} 5mA triggers disconnection in ~25ms
-        </div>
-      </div>
+        {renderProgressBar()}
 
-      {[
-        {
-          icon: '🔄',
-          title: 'Current Transformer Sensing',
-          desc: 'Hot and neutral pass through a toroidal transformer. If currents are equal, the magnetic fields cancel. Any imbalance induces a voltage that triggers the trip.',
-        },
-        {
-          icon: '⚡',
-          title: 'Why 5 milliamps?',
-          desc: 'Human heart fibrillation can occur at 10-30mA. The 5mA threshold provides a safety margin, tripping before dangerous current levels.',
-        },
-        {
-          icon: '⏱️',
-          title: 'Fast Response',
-          desc: 'GFCIs trip in about 1/40th of a second (25 milliseconds). This is faster than the time needed for electrical shock to cause harm.',
-        },
-      ].map((item, i) => (
-        <div key={i} style={{
-          background: 'rgba(30, 41, 59, 0.8)',
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '12px',
-          display: 'flex',
-          gap: '12px',
-        }}>
-          <span style={{ fontSize: '24px' }}>{item.icon}</span>
-          <div>
-            <h4 style={{ color: '#f8fafc', fontWeight: 'bold', marginBottom: '4px' }}>{item.title}</h4>
-            <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.5 }}>{item.desc}</p>
-          </div>
-        </div>
-      ))}
-
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '16px' }}>
-        The Hidden Danger: High-Impedance Faults
-      </h2>
-
-      <div style={{
-        background: 'rgba(245, 158, 11, 0.1)',
-        border: '1px solid rgba(245, 158, 11, 0.3)',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '24px',
-      }}>
-        <p style={{ color: '#fcd34d', fontSize: '14px', lineHeight: 1.6 }}>
-          A wire is damaged and touching a wooden beam (high resistance).
-          The fault current is only 100mA - well below the 15A circuit breaker.
-          What's the danger?
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        {[
-          { id: 'safe', label: 'Low current means no danger', icon: '✅' },
-          { id: 'breaker', label: 'Breaker will trip eventually', icon: '⏱️' },
-          { id: 'fire', label: 'Low current can still cause arcing and fire!', icon: '🔥' },
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            disabled={showTwistFeedback}
-            style={{
-              padding: '16px',
-              borderRadius: '12px',
-              border: twistPrediction === option.id
-                ? '2px solid #f59e0b'
-                : '2px solid rgba(100, 116, 139, 0.3)',
-              background: twistPrediction === option.id
-                ? 'rgba(245, 158, 11, 0.2)'
-                : 'rgba(30, 41, 59, 0.5)',
-              color: '#f8fafc',
-              fontSize: '14px',
-              fontWeight: 500,
-              cursor: showTwistFeedback ? 'default' : 'pointer',
-              textAlign: 'left',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <span style={{ fontSize: '20px' }}>{option.icon}</span>
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      {showTwistFeedback && (
         <div style={{
-          background: twistPrediction === 'fire' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(251, 191, 36, 0.2)',
-          border: `1px solid ${twistPrediction === 'fire' ? '#22c55e' : '#f59e0b'}`,
-          borderRadius: '12px',
-          padding: '16px',
+          fontSize: '64px',
           marginBottom: '24px',
+          animation: 'pulse 2s infinite',
         }}>
-          <p style={{ color: twistPrediction === 'fire' ? '#86efac' : '#fcd34d', fontSize: '14px', lineHeight: 1.6 }}>
-            {twistPrediction === 'fire' ? (
-              <><strong>Correct!</strong> Even 100mA through a high-resistance path can cause arcing and heat. P = I²R means even small current through resistance creates heat. The breaker doesn't trip, but the fault can smolder for hours before igniting a fire!</>
-            ) : (
-              <><strong>Dangerous misconception!</strong> High-impedance faults are silent killers. 100mA won't trip a 15A breaker, but arcing at the fault point can start fires. This is why arc fault detection (AFCI) was invented.</>
-            )}
+          ⚡🛡️
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Ground Fault Detection
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "If current flows through YOU instead of the neutral wire, how does the electrical system know? The answer has saved <span style={{ color: colors.accent }}>thousands of lives</span> since GFCI protection became mandatory."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "In a healthy circuit, current flows out through hot and returns through neutral. If current escapes through another path - like a person - there's an imbalance. That imbalance is detectable, and it saves lives."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Electrical Safety Engineering
           </p>
         </div>
-      )}
-    </div>
-  );
 
-  const renderTwistPlay = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '8px' }}>
-        High-Impedance Fault Simulator
-      </h2>
-      <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
-        See how fault impedance affects detection
-      </p>
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Ground Fault Detection →
+        </button>
 
-      {/* Fault analysis */}
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Both stay at 10A - the fault doesn\'t affect current flow' },
+      { id: 'b', text: 'Hot stays at 10A, Neutral drops to 9.995A - the difference is detectable', correct: true },
+      { id: 'c', text: 'Both increase to handle the additional fault current' },
+    ];
+
+    return (
       <div style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '24px',
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>FAULT IMPEDANCE</div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#f59e0b' }}>{faultImpedance}Ω</div>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              🤔 Make Your Prediction
+            </p>
           </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '10px', color: '#94a3b8' }}>FAULT CURRENT</div>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: highImpedanceFaultCurrent > 100 ? '#ef4444' : '#22c55e' }}>
-              {highImpedanceFaultCurrent.toFixed(0)} mA
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A circuit draws 10 amps normally. If someone touches a live wire and 5 milliamps (0.005A) flows through them to ground, what happens to hot and neutral current?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '36px' }}>🔌</div>
+                <p style={{ ...typo.small, color: colors.hot }}>Hot: 10A out</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{
+                background: colors.bgSecondary,
+                padding: '20px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.warning}`,
+              }}>
+                <div style={{ fontSize: '32px' }}>💡</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Load</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '36px' }}>🔌</div>
+                <p style={{ ...typo.small, color: colors.neutral }}>Neutral: ? A back</p>
+              </div>
+            </div>
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${colors.border}` }}>
+              <p style={{ ...typo.small, color: colors.warning }}>
+                ⚠️ Meanwhile, 5 mA is escaping through a person to ground...
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Detection status */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{
-            padding: '8px 12px',
-            borderRadius: '8px',
-            background: canTripGFCI ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}>
-            <span style={{ color: '#94a3b8', fontSize: '12px' }}>GFCI Detection (5mA)</span>
-            <span style={{ color: canTripGFCI ? '#22c55e' : '#ef4444', fontSize: '12px', fontWeight: 'bold' }}>
-              {canTripGFCI ? 'WILL TRIP' : 'NO TRIP'}
-            </span>
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
           </div>
-          <div style={{
-            padding: '8px 12px',
-            borderRadius: '8px',
-            background: canTripBreaker ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}>
-            <span style={{ color: '#94a3b8', fontSize: '12px' }}>Circuit Breaker (15A)</span>
-            <span style={{ color: canTripBreaker ? '#22c55e' : '#ef4444', fontSize: '12px', fontWeight: 'bold' }}>
-              {canTripBreaker ? 'WILL TRIP' : 'NO TRIP'}
-            </span>
-          </div>
-        </div>
-      </div>
 
-      {/* Impedance slider */}
-      <div style={{ marginBottom: '24px' }}>
-        <label style={{ display: 'block', color: '#94a3b8', fontSize: '14px', marginBottom: '8px' }}>
-          Fault Impedance: {faultImpedance} Ohms
-        </label>
-        <input
-          type="range"
-          min="1"
-          max="50000"
-          step="100"
-          value={faultImpedance}
-          onChange={(e) => handleImpedanceChange(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: '#f59e0b' }}
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-          <span>1Ω (Direct short)</span>
-          <span>50kΩ (Dry wood)</span>
-        </div>
-      </div>
-
-      {/* Power calculation */}
-      <div style={{
-        background: !canTripGFCI && !canTripBreaker ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-        border: `1px solid ${!canTripGFCI && !canTripBreaker ? '#ef4444' : '#22c55e'}`,
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '24px',
-      }}>
-        <p style={{ color: !canTripGFCI && !canTripBreaker ? '#fca5a5' : '#86efac', fontSize: '13px', lineHeight: 1.6 }}>
-          <strong>Power at fault: {(Math.pow(highImpedanceFaultCurrent / 1000, 2) * faultImpedance).toFixed(2)} Watts</strong>
-          <br />
-          {!canTripGFCI && !canTripBreaker ? (
-            <>Even this small power can cause arcing and heat buildup over time. Without GFCI, this fault goes undetected but can start a fire!</>
-          ) : canTripGFCI ? (
-            <>GFCI will detect this fault and trip, preventing potential fire hazard.</>
-          ) : (
-            <>Circuit breaker will trip at this current level.</>
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction →
+            </button>
           )}
-        </p>
-      </div>
-
-      {!hasExploredTwist && (
-        <div style={{
-          textAlign: 'center',
-          padding: '12px',
-          background: 'rgba(245, 158, 11, 0.1)',
-          borderRadius: '8px',
-          color: '#fcd34d',
-          fontSize: '13px',
-        }}>
-          Adjust the impedance slider to continue
         </div>
-      )}
-    </div>
-  );
 
-  const renderTwistReview = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '24px' }}>
-        Protection Layers
-      </h2>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
+  // PLAY PHASE - Interactive GFCI Simulator
+  if (phase === 'play') {
+    return (
       <div style={{
-        background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '24px',
-        textAlign: 'center',
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
       }}>
-        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginBottom: '8px' }}>Protection Hierarchy</div>
-        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '12px' }}>
-          <div>
-            <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>GFCI</div>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>5mA shock</div>
-          </div>
-          <div>
-            <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>AFCI</div>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>Arc/fire</div>
-          </div>
-          <div>
-            <div style={{ color: 'white', fontSize: '20px', fontWeight: 'bold' }}>Breaker</div>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>Overload</div>
-          </div>
-        </div>
-      </div>
+        {renderProgressBar()}
 
-      {[
-        {
-          icon: '⚡',
-          title: 'GFCI - Personnel Protection',
-          desc: 'Detects current imbalance from ground faults. Protects people from electrocution. Required near water.',
-        },
-        {
-          icon: '🔥',
-          title: 'AFCI - Fire Prevention',
-          desc: 'Detects arcing signatures from damaged wires. Protects against fires from high-impedance faults that breakers miss.',
-        },
-        {
-          icon: '🔒',
-          title: 'Combination Devices',
-          desc: 'Modern code often requires dual-function AFCI/GFCI breakers that provide both types of protection.',
-        },
-      ].map((item, i) => (
-        <div key={i} style={{
-          background: 'rgba(30, 41, 59, 0.8)',
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '12px',
-          display: 'flex',
-          gap: '12px',
-        }}>
-          <span style={{ fontSize: '24px' }}>{item.icon}</span>
-          <div>
-            <h4 style={{ color: '#f8fafc', fontWeight: 'bold', marginBottom: '4px' }}>{item.title}</h4>
-            <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.5 }}>{item.desc}</p>
-          </div>
-        </div>
-      ))}
-
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div style={{ padding: '24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
-        Real-World Applications
-      </h2>
-      <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
-        Complete all 4 to unlock the assessment
-      </p>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto' }}>
-        {TRANSFER_APPS.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveAppTab(index)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              background: activeAppTab === index
-                ? '#ef4444'
-                : completedApps.has(index)
-                ? 'rgba(34, 197, 94, 0.2)'
-                : 'rgba(51, 65, 85, 0.5)',
-              color: activeAppTab === index ? 'white' : completedApps.has(index) ? '#22c55e' : '#94a3b8',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {completedApps.has(index) && '✓'} App {index + 1}
-          </button>
-        ))}
-      </div>
-
-      {/* Active App Content */}
-      <div style={{
-        background: 'rgba(30, 41, 59, 0.8)',
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '24px',
-      }}>
-        <div style={{ fontSize: '40px', textAlign: 'center', marginBottom: '16px' }}>
-          {TRANSFER_APPS[activeAppTab].icon}
-        </div>
-        <h3 style={{ color: '#f8fafc', fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' }}>
-          {TRANSFER_APPS[activeAppTab].title}
-        </h3>
-        <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6, textAlign: 'center', marginBottom: '20px' }}>
-          {TRANSFER_APPS[activeAppTab].description}
-        </p>
-
-        {!completedApps.has(activeAppTab) ? (
-          <button
-            onClick={() => handleCompleteApp(activeAppTab)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Mark as Complete
-          </button>
-        ) : (
-          <div style={{
-            textAlign: 'center',
-            padding: '12px',
-            background: 'rgba(34, 197, 94, 0.2)',
-            borderRadius: '8px',
-            color: '#22c55e',
-            fontWeight: 'bold',
-          }}>
-            Completed
-          </div>
-        )}
-      </div>
-
-      {/* Progress */}
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ color: '#94a3b8', fontSize: '14px' }}>Progress</span>
-          <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: 'bold' }}>{completedApps.size}/4</span>
-        </div>
-        <div style={{ height: '8px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '4px' }}>
-          <div style={{
-            height: '100%',
-            width: `${(completedApps.size / 4) * 100}%`,
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            borderRadius: '4px',
-            transition: 'width 0.3s ease',
-          }} />
-        </div>
-      </div>
-
-      {completedApps.size < 4 && (
-        <div style={{
-          textAlign: 'center',
-          padding: '12px',
-          background: 'rgba(245, 158, 11, 0.1)',
-          borderRadius: '8px',
-          color: '#fcd34d',
-          fontSize: '13px',
-        }}>
-          Complete {4 - completedApps.size} more application(s) to continue
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTest = () => {
-    const answeredCount = testAnswers.filter(a => a !== null).length;
-
-    if (testSubmitted) {
-      return (
-        <div style={{ padding: '24px', textAlign: 'center' }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            background: testScore >= 7
-              ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
-              : 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 24px',
-          }}>
-            <span style={{ fontSize: '36px' }}>{testScore >= 7 ? '🛡️' : '📚'}</span>
-          </div>
-
-          <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
-            {testScore}/10 Correct
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            GFCI Circuit Simulator
           </h2>
-          <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
-            {testScore >= 7 ? 'Excellent! You understand ground fault detection!' : 'Review the concepts and try again.'}
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Introduce a ground fault and watch the GFCI detect the current imbalance
           </p>
 
-          {/* Answer Review */}
-          <div style={{ textAlign: 'left', marginBottom: '24px' }}>
-            {TEST_QUESTIONS.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{
-                  background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                  border: `1px solid ${isCorrect ? '#22c55e' : '#ef4444'}`,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  marginBottom: '8px',
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <CircuitVisualization />
+            </div>
+
+            {/* Load current slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>💡 Load Current</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{hotCurrent} A</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="15"
+                value={hotCurrent}
+                onChange={(e) => setHotCurrent(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Leakage current slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>⚡ Ground Fault Leakage</span>
+                <span style={{
+                  ...typo.small,
+                  color: leakageCurrent >= 5 ? colors.error : leakageCurrent > 0 ? colors.warning : colors.success,
+                  fontWeight: 600
                 }}>
-                  <p style={{ color: '#f8fafc', fontSize: '13px', marginBottom: '8px' }}>
-                    {qIndex + 1}. {q.question}
-                  </p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{
-                      color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : '#64748b',
-                      fontSize: '12px',
-                      padding: '2px 0',
-                    }}>
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+                  {leakageCurrent} mA {leakageCurrent >= 5 && '(TRIP!)'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                value={leakageCurrent}
+                onChange={(e) => !gfciTripped && setLeakageCurrent(parseInt(e.target.value))}
+                disabled={gfciTripped}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: gfciTripped ? 'not-allowed' : 'pointer',
+                  opacity: gfciTripped ? 0.5 : 1,
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>0 mA (Safe)</span>
+                <span style={{ ...typo.small, color: colors.error }}>5 mA (Trip Threshold)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10 mA</span>
+              </div>
+            </div>
+
+            {/* Reset button */}
+            {gfciTripped && (
+              <button
+                onClick={() => {
+                  setGfciTripped(false);
+                  setLeakageCurrent(0);
+                  playSound('click');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: `2px solid ${colors.error}`,
+                  background: 'transparent',
+                  color: colors.error,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginBottom: '16px',
+                }}
+              >
+                Reset GFCI
+              </button>
+            )}
+
+            {/* Status display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.hot }}>{gfciTripped ? '0' : hotCurrent.toFixed(3)} A</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Hot Current</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.neutral }}>{gfciTripped ? '0' : neutralCurrent.toFixed(3)} A</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Neutral Current</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: gfciStatus.color }}>{gfciStatus.status}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>GFCI Status</div>
+              </div>
+            </div>
           </div>
 
+          {/* Discovery prompt */}
+          {gfciTripped && (
+            <div style={{
+              background: `${colors.error}22`,
+              border: `1px solid ${colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                🛡️ GFCI Tripped! The 5 mA imbalance was detected in under 25 milliseconds.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand How GFCIs Work →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            How GFCIs Detect Ground Faults
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>The Core Principle: Current Balance</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                In a healthy circuit, <span style={{ color: colors.hot }}>I_hot</span> = <span style={{ color: colors.neutral }}>I_neutral</span>. All current flowing out must return.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                If current escapes to ground (through a person, damaged insulation, or water), there's an <span style={{ color: colors.warning }}>imbalance</span>: I_hot - I_neutral = I_leakage
+              </p>
+              <p>
+                GFCIs use a <span style={{ color: colors.accent, fontWeight: 600 }}>differential current transformer</span> to detect this imbalance. Both wires pass through a toroidal core - if currents are equal, magnetic fields cancel. Any imbalance induces a voltage that triggers the trip mechanism.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              💡 Why 5 Milliamps?
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              <strong>Human physiology drives the threshold:</strong>
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              1 mA - Barely perceptible tingling
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              5 mA - Maximum "let-go" current for most people
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              10-30 mA - Can cause ventricular fibrillation
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              The 5 mA trip threshold ensures GFCIs act <strong>before</strong> dangerous current levels are reached.
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore Hidden Dangers →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Low current means low danger - nothing to worry about' },
+      { id: 'b', text: 'The circuit breaker will eventually trip when current builds up' },
+      { id: 'c', text: 'Even low current can cause arcing and fires without tripping any protection', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              🔥 New Variable: High-Impedance Faults
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A damaged wire touches a wooden beam. The fault impedance is 1000 ohms, limiting current to only 120 mA. What's the danger?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>
+              I = V/R = 120V / 1000Ω = 0.12A (120 mA)
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              Well below the 15A circuit breaker threshold...
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              But P = I²R = (0.12)² × 1000 = 14.4 watts concentrated at the fault point
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Explore High-Impedance Faults →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const faultPower = Math.pow(highImpedanceFaultCurrent / 1000, 2) * faultImpedance;
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            High-Impedance Fault Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            See when different protection devices can detect the fault
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {/* Impedance slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>⚡ Fault Impedance</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{faultImpedance} Ω</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="50000"
+                step="100"
+                value={faultImpedance}
+                onChange={(e) => {
+                  setFaultImpedance(parseInt(e.target.value));
+                  setShowArcingSparks(parseInt(e.target.value) > 100 && parseInt(e.target.value) < 10000);
+                }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>1Ω (Direct short)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>50kΩ (Dry wood)</span>
+              </div>
+            </div>
+
+            {/* Results display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '16px',
+              marginBottom: '24px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>{highImpedanceFaultCurrent.toFixed(0)} mA</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Fault Current</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: faultPower > 10 ? colors.error : colors.warning }}>{faultPower.toFixed(1)} W</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Power at Fault</div>
+              </div>
+            </div>
+
+            {/* Protection status */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                background: canTripGFCI ? `${colors.success}22` : `${colors.error}22`,
+              }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>GFCI Protection (5 mA threshold)</span>
+                <span style={{ ...typo.small, color: canTripGFCI ? colors.success : colors.error, fontWeight: 600 }}>
+                  {canTripGFCI ? '✓ WILL TRIP' : '✗ NO TRIP'}
+                </span>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                background: canTripBreaker ? `${colors.success}22` : `${colors.error}22`,
+              }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Circuit Breaker (15A threshold)</span>
+                <span style={{ ...typo.small, color: canTripBreaker ? colors.success : colors.error, fontWeight: 600 }}>
+                  {canTripBreaker ? '✓ WILL TRIP' : '✗ NO TRIP'}
+                </span>
+              </div>
+            </div>
+
+            {/* Danger warning */}
+            {!canTripGFCI && !canTripBreaker && faultPower > 1 && (
+              <div style={{
+                marginTop: '20px',
+                padding: '16px',
+                borderRadius: '8px',
+                background: `${colors.error}22`,
+                border: `1px solid ${colors.error}`,
+              }}>
+                <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                  🔥 <strong>Danger!</strong> {faultPower.toFixed(1)}W concentrated at the fault can cause arcing and ignite materials over time - but neither GFCI nor breaker will trip!
+                </p>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Protection Layers →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Layered Electrical Protection
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🛡️</span>
+                <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>GFCI - Personnel Protection</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Detects <span style={{ color: colors.accent }}>5 mA</span> current imbalance. Protects against <strong>electrocution</strong>. Required near water and outdoors. Response: ~25 ms.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔥</span>
+                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>AFCI - Fire Prevention</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Detects <span style={{ color: colors.warning }}>arcing signatures</span> from damaged wiring. Protects against <strong>electrical fires</strong>. Required in bedrooms and living areas.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚡</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Circuit Breaker - Overcurrent</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Trips at <span style={{ color: colors.textPrimary }}>15-20A</span> for branch circuits. Protects against <strong>overloads and short circuits</strong>. Basic protection present in all circuits.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔒</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Dual-Function AFCI/GFCI</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Modern code increasingly requires <strong>combination devices</strong> that provide both arc-fault and ground-fault protection in a single breaker or outlet.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Ground Fault Detection Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand ground fault detection and electrical safety!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review & Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
         </div>
       );
     }
 
+    const question = testQuestions[currentQuestion];
+
     return (
-      <div style={{ padding: '24px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
-          Knowledge Assessment
-        </h2>
-        <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '24px' }}>
-          10 questions - 70% to pass
-        </p>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        {/* Progress */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#94a3b8', fontSize: '14px' }}>Progress</span>
-            <span style={{ color: '#ef4444', fontSize: '14px', fontWeight: 'bold' }}>{answeredCount}/10</span>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
           </div>
-          <div style={{ height: '8px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '4px' }}>
-            <div style={{
-              height: '100%',
-              width: `${(answeredCount / 10) * 100}%`,
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              borderRadius: '4px',
-              transition: 'width 0.3s ease',
-            }} />
-          </div>
-        </div>
 
-        {/* Questions */}
-        <div style={{ marginBottom: '24px' }}>
-          {TEST_QUESTIONS.map((q, qIndex) => (
-            <div key={qIndex} style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '12px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
                 <span style={{
+                  display: 'inline-block',
                   width: '24px',
                   height: '24px',
-                  borderRadius: '6px',
-                  background: testAnswers[qIndex] !== null ? '#ef4444' : '#475569',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
                   fontSize: '12px',
-                  fontWeight: 'bold',
-                  flexShrink: 0,
+                  fontWeight: 700,
                 }}>
-                  {qIndex + 1}
+                  {opt.id.toUpperCase()}
                 </span>
-                <p style={{ color: '#f8fafc', fontSize: '14px', lineHeight: 1.5 }}>{q.question}</p>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: '36px' }}>
-                {q.options.map((opt, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: testAnswers[qIndex] === oIndex ? '#ef4444' : 'rgba(51, 65, 85, 0.5)',
-                      color: testAnswers[qIndex] === oIndex ? 'white' : '#cbd5e1',
-                      fontSize: '13px',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent',
-                    }}
-                  >
-                    {opt.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                ← Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
         </div>
 
-        <button
-          onClick={handleSubmitTest}
-          disabled={answeredCount < 10}
-          style={{
-            width: '100%',
-            padding: '16px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            color: 'white',
-            background: answeredCount >= 10
-              ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
-              : '#475569',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: answeredCount >= 10 ? 'pointer' : 'not-allowed',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          {answeredCount >= 10 ? 'Submit Assessment' : `Answer ${10 - answeredCount} more questions`}
-        </button>
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => (
-    <div style={{ padding: '24px', textAlign: 'center' }}>
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
       <div style={{
-        width: '100px',
-        height: '100px',
-        borderRadius: '50%',
-        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        margin: '0 auto 24px',
-        boxShadow: '0 0 40px rgba(239, 68, 68, 0.4)',
+        padding: '24px',
+        textAlign: 'center',
       }}>
-        <span style={{ fontSize: '48px' }}>🛡️</span>
-      </div>
+        {renderProgressBar()}
 
-      <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#f8fafc', marginBottom: '8px' }}>
-        Ground Fault Detection Master!
-      </h1>
-      <p style={{ color: '#94a3b8', fontSize: '16px', marginBottom: '32px' }}>
-        You now understand electrical safety protection
-      </p>
-
-      <div style={{
-        background: 'rgba(30, 41, 59, 0.8)',
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '24px',
-        textAlign: 'left',
-      }}>
-        <h3 style={{ color: '#ef4444', fontWeight: 'bold', marginBottom: '16px' }}>Key Takeaways</h3>
-        {[
-          'GFCIs detect current imbalance between hot and neutral',
-          '5mA difference triggers trip in about 25 milliseconds',
-          'High-impedance faults may not trip breakers but can cause fires',
-          'AFCIs detect arcing signatures for fire prevention',
-          'Multiple protection layers provide defense in depth',
-        ].map((item, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
-            <span style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              background: '#ef4444',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '12px',
-              flexShrink: 0,
-            }}>✓</span>
-            <span style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.5 }}>{item}</span>
-          </div>
-        ))}
-      </div>
-
-      <div style={{
-        background: 'rgba(239, 68, 68, 0.1)',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '24px',
-      }}>
-        <p style={{ color: '#fca5a5', fontSize: '14px' }}>
-          Assessment Score: <strong>{testScore}/10</strong>
-        </p>
-      </div>
-    </div>
-  );
-
-  // Main render
-  const renderContent = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return null;
-    }
-  };
-
-  // Determine bottom bar state based on phase
-  const getBottomBarState = () => {
-    switch (phase) {
-      case 'hook':
-        return { canBack: false, canNext: true, label: 'Make a Prediction' };
-      case 'predict':
-        return { canBack: true, canNext: showPredictionFeedback, label: 'Try the GFCI Simulator' };
-      case 'play':
-        return { canBack: true, canNext: hasExperimented, label: 'Continue to Review' };
-      case 'review':
-        return { canBack: true, canNext: true, label: 'Now for a Twist...' };
-      case 'twist_predict':
-        return { canBack: true, canNext: showTwistFeedback, label: 'Explore High-Impedance Faults' };
-      case 'twist_play':
-        return { canBack: true, canNext: hasExploredTwist, label: 'Continue' };
-      case 'twist_review':
-        return { canBack: true, canNext: true, label: 'See Real Applications' };
-      case 'transfer':
-        return { canBack: true, canNext: completedApps.size >= 4, label: 'Take the Assessment' };
-      case 'test':
-        return { canBack: true, canNext: testSubmitted, label: testScore >= 7 ? 'Complete Lesson' : 'Continue Anyway' };
-      case 'mastery':
-        return { canBack: true, canNext: false, label: 'Review Again' };
-      default:
-        return { canBack: true, canNext: true, label: 'Continue' };
-    }
-  };
-
-  const bottomState = getBottomBarState();
-
-  return (
-    <div style={{
-      position: 'absolute',
-      inset: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      background: `linear-gradient(135deg, ${colors.bgDark} 0%, #1e1b4b 50%, ${colors.bgDark} 100%)`,
-      color: colors.textPrimary,
-      overflow: 'hidden',
-    }}>
-      {/* Progress Bar */}
-      {renderProgressBar()}
-
-      {/* Main Content */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-      }}>
-        {renderContent()}
-      </div>
-
-      {/* Bottom Navigation */}
-      {phase !== 'mastery' && renderBottomBar(bottomState.canBack, bottomState.canNext, bottomState.label)}
-
-      {/* Mastery phase has its own button */}
-      {phase === 'mastery' && (
         <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          padding: isMobile ? '12px' : '12px 16px',
-          borderTop: `1px solid ${colors.border}`,
-          backgroundColor: colors.bgCard,
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
         }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Ground Fault Detection Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how GFCIs protect against electrocution and why layered electrical protection saves lives.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'GFCIs detect current imbalance between hot and neutral',
+              '5 mA trip threshold protects against electrocution',
+              'High-impedance faults can cause fires without tripping breakers',
+              'AFCIs detect arcing for fire prevention',
+              'Layered protection provides defense in depth',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => goToPhase('hook')}
             style={{
-              padding: '16px 40px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              color: colors.primary,
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
               background: 'transparent',
-              border: `2px solid ${colors.primary}`,
-              borderRadius: '12px',
+              color: colors.textSecondary,
               cursor: 'pointer',
             }}
           >
-            Review Again
+            Play Again
           </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
         </div>
-      )}
-    </div>
-  );
-}
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default GroundFaultRenderer;

@@ -1,12 +1,173 @@
-import React, { useState, useEffect, useCallback } from 'react';
+'use client';
 
-interface SwingPumpingRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// -----------------------------------------------------------------------------
+// Swing Pumping - Complete 10-Phase Game
+// The physics of how you pump a swing higher without being pushed
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
+interface SwingPumpingRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A child on a playground swing wants to go higher without anyone pushing. They've been told to 'pump' the swing but don't know the exact timing.",
+    question: "When should they stand up (raise their center of mass) to maximize energy gain?",
+    options: [
+      { id: 'a', label: "When passing through the lowest point of the swing" },
+      { id: 'b', label: "At the highest points (extremes) of the swing arc", correct: true },
+      { id: 'c', label: "Continuously throughout the entire swing motion" },
+      { id: 'd', label: "Only when moving in the forward direction" }
+    ],
+    explanation: "Standing up at the extremes (highest points) of the swing adds energy most efficiently. This is because angular momentum is conserved: when you shorten the pendulum (stand up), angular velocity must increase to keep L = I*omega constant."
+  },
+  {
+    scenario: "A physics student is explaining swing pumping to their younger sibling. They want to explain why changing body position adds energy.",
+    question: "What fundamental principle explains why shortening the pendulum increases angular velocity?",
+    options: [
+      { id: 'a', label: "Conservation of linear momentum (p = mv)" },
+      { id: 'b', label: "Conservation of angular momentum (L = I*omega)", correct: true },
+      { id: 'c', label: "Newton's third law of action-reaction" },
+      { id: 'd', label: "Conservation of total energy alone" }
+    ],
+    explanation: "Angular momentum L = I*omega is conserved. When moment of inertia I decreases (standing up shortens the pendulum), angular velocity omega must increase proportionally. This is the same principle figure skaters use when spinning."
+  },
+  {
+    scenario: "An engineer is designing a parametric oscillator for a radio receiver. They need to add energy to a resonating circuit by varying a parameter.",
+    question: "At what frequency should they vary the circuit parameter for optimal energy transfer?",
+    options: [
+      { id: 'a', label: "At the natural frequency of oscillation (1x)" },
+      { id: 'b', label: "At twice the natural frequency (2x)", correct: true },
+      { id: 'c', label: "At half the natural frequency (0.5x)" },
+      { id: 'd', label: "Frequency doesn't matter for parametric pumping" }
+    ],
+    explanation: "Parametric pumping works optimally at twice the natural frequency because you need to add energy twice per cycle - once at each extreme of oscillation. This is why swing pumpers stand up at both extremes, not just one."
+  },
+  {
+    scenario: "A researcher studies a child who just learned to pump a swing. Despite no physics training, the child naturally discovered the correct timing.",
+    question: "How did the child learn the correct pumping phase without understanding the physics?",
+    options: [
+      { id: 'a', label: "Children have innate physics intuition from birth" },
+      { id: 'b', label: "Trial and error reinforces the timing that adds energy", correct: true },
+      { id: 'c', label: "Adults unconsciously teach them the correct timing" },
+      { id: 'd', label: "Swing sets are designed to enforce correct pumping" }
+    ],
+    explanation: "Children learn through trial and error. Correct timing feels rewarding (swing goes higher), while wrong timing feels frustrating (swing slows down). This feedback loop naturally reinforces the correct phase relationship."
+  },
+  {
+    scenario: "A mischievous child decides to do the opposite of normal pumping: squatting at the extremes and standing at the bottom.",
+    question: "What happens to the swing's amplitude with this reversed timing?",
+    options: [
+      { id: 'a', label: "The swing speeds up more slowly than normal pumping" },
+      { id: 'b', label: "The swing loses energy and amplitude decreases", correct: true },
+      { id: 'c', label: "Nothing changes - timing doesn't affect energy transfer" },
+      { id: 'd', label: "The swing becomes unstable and motion becomes chaotic" }
+    ],
+    explanation: "Wrong timing removes energy instead of adding it. This is called parametric damping. By doing work against the natural motion instead of with it, you systematically extract energy from the oscillation."
+  },
+  {
+    scenario: "A surfer is pumping their board on a wave to maintain speed. They're applying the same physics as swing pumping.",
+    question: "When should the surfer shift their weight to add the most energy to their motion?",
+    options: [
+      { id: 'a', label: "Shift weight forward on the downward part, backward on upward part", correct: true },
+      { id: 'b', label: "Keep weight centered at all times for maximum stability" },
+      { id: 'c', label: "Shift weight randomly to create unpredictable motion" },
+      { id: 'd', label: "Lean forward continuously to fight gravity" }
+    ],
+    explanation: "Surfboard pumping follows the same phase relationship as swing pumping. Weight shifts must be timed with the wave's oscillation to add energy at the right phase of each pump cycle."
+  },
+  {
+    scenario: "An earthquake engineer is studying why some buildings collapsed while neighbors survived. Both buildings were similar height and construction.",
+    question: "How might parametric resonance explain the selective collapse?",
+    options: [
+      { id: 'a', label: "The collapsed buildings were older and weaker" },
+      { id: 'b', label: "Ground motion matched the building's natural frequency, amplifying oscillation", correct: true },
+      { id: 'c', label: "Random variation in earthquake intensity between buildings" },
+      { id: 'd', label: "Different soil conditions beneath each building" }
+    ],
+    explanation: "When earthquake frequency matches a building's natural frequency, parametric resonance can dramatically amplify oscillations. Engineers tune building frequencies to avoid common earthquake frequencies to prevent this resonance catastrophe."
+  },
+  {
+    scenario: "A quantum physicist is using parametric amplification to boost weak signals from a qubit. They need to understand the limits of amplification.",
+    question: "What fundamentally limits how much you can pump a swing (or any oscillator)?",
+    options: [
+      { id: 'a', label: "The swing can only reach 90 degrees from vertical" },
+      { id: 'b', label: "Energy losses per cycle eventually equal energy added by pumping", correct: true },
+      { id: 'c', label: "Human legs can only push with limited force" },
+      { id: 'd', label: "The swing chains reach maximum tension" }
+    ],
+    explanation: "In any real oscillator, damping removes energy each cycle. Maximum amplitude is reached when energy added by pumping equals energy lost to air resistance and friction. This applies to swings, quantum amplifiers, and all parametric systems."
+  },
+  {
+    scenario: "A skateboard enthusiast notices that pumping on a half-pipe feels very similar to pumping a swing.",
+    question: "Why are these two actions physically equivalent?",
+    options: [
+      { id: 'a', label: "Both involve moving legs up and down" },
+      { id: 'b', label: "Both use timed center-of-mass changes to add energy to pendulum-like motion", correct: true },
+      { id: 'c', label: "Both require pushing against a surface" },
+      { id: 'd', label: "They're not equivalent - one uses gravity, one uses momentum" }
+    ],
+    explanation: "Both swing pumping and half-pipe pumping are parametric oscillations where you change the effective pendulum length (center of mass height) at the right phase to add energy. The physics is identical."
+  },
+  {
+    scenario: "A MEMS (microelectromechanical systems) designer is building a tiny oscillator that uses parametric pumping to sustain vibration with minimal power.",
+    question: "Why is parametric pumping preferred over direct driving for this application?",
+    options: [
+      { id: 'a', label: "Parametric pumping requires no electronics" },
+      { id: 'b', label: "Parametric pumping adds energy only at resonance, rejecting noise at other frequencies", correct: true },
+      { id: 'c', label: "Direct driving is impossible at the microscale" },
+      { id: 'd', label: "Parametric pumping is easier to manufacture" }
+    ],
+    explanation: "Parametric amplifiers only add energy at specific phase relationships, naturally filtering out noise at other frequencies. This makes them ideal for precision timing and sensing applications where signal selectivity is critical."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '🔬',
@@ -14,17 +175,17 @@ const realWorldApps = [
     short: 'Amplifying signals by pumping parameters',
     tagline: 'When changing conditions creates gain',
     description: 'Parametric amplifiers boost weak signals by periodically varying a circuit parameter like capacitance. The same physics that pumps a swing high applies to amplifying radio and quantum signals.',
-    connection: 'Just as pumping a swing at twice its natural frequency adds energy, parametric amplifiers pump a circuit parameter at twice the signal frequency to achieve gain.',
+    connection: 'Just as pumping a swing at twice its natural frequency adds energy, parametric amplifiers pump a circuit parameter at twice the signal frequency to achieve gain without adding noise.',
     howItWorks: 'A varactor diode\'s capacitance is modulated by a pump signal at 2f. Energy transfers from pump to signal. In quantum systems, Josephson junctions provide parametric amplification near the quantum limit.',
     stats: [
       { value: '20dB', label: 'Typical gain', icon: '📈' },
       { value: '0.5K', label: 'Quantum noise temp', icon: '❄️' },
       { value: '10GHz', label: 'Operating frequency', icon: '📡' }
     ],
-    examples: ['Radio telescopes', 'Quantum computing', 'Radar receivers', 'Satellite communications'],
+    examples: ['Radio telescopes', 'Quantum computing readout', 'Radar receivers', 'Satellite communications'],
     companies: ['Low Noise Factory', 'Quantum Microwave', 'CalTech', 'IBM Quantum'],
-    futureImpact: 'Quantum-limited parametric amplifiers will enable the readout of millions of qubits needed for practical quantum computers.',
-    color: '#8b5cf6'
+    futureImpact: 'Quantum-limited parametric amplifiers will enable readout of millions of qubits needed for practical quantum computers.',
+    color: '#8B5CF6'
   },
   {
     icon: '🛸',
@@ -41,8 +202,8 @@ const realWorldApps = [
     ],
     examples: ['Orbital debris removal', 'Moon cargo delivery', 'Deorbit systems', 'Inter-orbital transfer'],
     companies: ['Tethers Unlimited', 'NASA', 'ESA', 'JAXA'],
-    futureImpact: 'Spinning tether systems could dramatically reduce the cost of reaching orbit and enable affordable Mars missions by eliminating most chemical propellant.',
-    color: '#3b82f6'
+    futureImpact: 'Spinning tether systems could dramatically reduce the cost of reaching orbit and enable affordable Mars missions.',
+    color: '#3B82F6'
   },
   {
     icon: '⚡',
@@ -53,14 +214,14 @@ const realWorldApps = [
     connection: 'MEMS resonators behave like miniature pendulums or swings. Parametric pumping at twice the resonant frequency sustains oscillation while filtering out noise at other frequencies.',
     howItWorks: 'Silicon microstructures resonate at MHz frequencies. Electrostatic actuation drives motion. Parametric excitation modulates spring constant. Phase-locked loops maintain frequency accuracy.',
     stats: [
-      { value: '32kHz-100MHz', label: 'Frequency range', icon: '🎵' },
+      { value: '100MHz', label: 'Frequency range', icon: '🎵' },
       { value: '1ppm', label: 'Frequency accuracy', icon: '🎯' },
       { value: '1uW', label: 'Power consumption', icon: '🔋' }
     ],
     examples: ['Smartphone timing', 'IoT sensors', 'Wearable devices', 'Automotive electronics'],
     companies: ['SiTime', 'Analog Devices', 'Microchip', 'Murata'],
-    futureImpact: 'Parametrically pumped MEMS will enable atomic-clock-like accuracy in consumer devices, revolutionizing GPS, 5G timing, and distributed systems.',
-    color: '#f59e0b'
+    futureImpact: 'Parametrically pumped MEMS will enable atomic-clock-like accuracy in consumer devices.',
+    color: '#F59E0B'
   },
   {
     icon: '🌊',
@@ -68,7 +229,7 @@ const realWorldApps = [
     short: 'Harvesting ocean energy through resonance',
     tagline: 'Riding the waves for power',
     description: 'Wave energy devices use parametric resonance to efficiently extract power from ocean waves. Tuning the device to resonate with wave frequencies maximizes energy capture.',
-    connection: 'Like pumping a swing in time with its motion, wave energy converters tune their natural frequency to match dominant wave periods. Parametric resonance can amplify the response.',
+    connection: 'Like pumping a swing in time with its motion, wave energy converters tune their natural frequency to match dominant wave periods. Parametric resonance amplifies the response.',
     howItWorks: 'Floating buoys or oscillating water columns resonate with wave periods. Power take-off systems convert mechanical motion to electricity. Active tuning adjusts to changing sea states.',
     stats: [
       { value: '2TW', label: 'Global wave power', icon: '🌊' },
@@ -77,71 +238,62 @@ const realWorldApps = [
     ],
     examples: ['Pelamis wave farm', 'Oscillating buoys', 'Overtopping devices', 'Oscillating water columns'],
     companies: ['Ocean Power Technologies', 'Wello', 'CorPower', 'Carnegie Clean Energy'],
-    futureImpact: 'Parametrically tuned wave farms will provide reliable baseload renewable energy to coastal communities, complementing wind and solar.',
-    color: '#22c55e'
+    futureImpact: 'Parametrically tuned wave farms will provide reliable baseload renewable energy to coastal communities.',
+    color: '#10B981'
   }
 ];
 
-const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#ec4899',
-  accentGlow: 'rgba(236, 72, 153, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  swing: '#f59e0b',
-  person: '#3b82f6',
-  energy: '#10b981',
-};
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-interface SwingState {
-  theta: number;
-  omega: number;
-  length: number;
-  isPumping: boolean;
-  pumpPhase: 'up' | 'down' | 'idle';
-}
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
 
-const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
-  // Simulation state
-  const [swing, setSwing] = useState<SwingState>({
-    theta: 0.3,
-    omega: 0,
-    length: 1.5,
-    isPumping: false,
-    pumpPhase: 'idle',
-  });
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Swing simulation state
+  const [swingAngle, setSwingAngle] = useState(0.3); // radians
+  const [swingVelocity, setSwingVelocity] = useState(0);
+  const [swingLength, setSwingLength] = useState(1.5); // meters
   const [isPlaying, setIsPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [maxAmplitude, setMaxAmplitude] = useState(0.3);
-
-  // Game parameters
   const [pumpMode, setPumpMode] = useState<'none' | 'correct' | 'wrong'>('none');
-  const [autoPump, setAutoPump] = useState(false);
+  const [pumpPhase, setPumpPhase] = useState<'up' | 'down' | 'idle'>('idle');
 
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistResult, setShowTwistResult] = useState(false);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  // Twist phase - timing comparison
+  const [pumpFrequency, setPumpFrequency] = useState(2.0); // relative to natural frequency
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Responsive detection
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Physics constants
+  const g = 9.81;
+  const baseLength = 1.5;
+  const pumpAmount = 0.2;
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -149,463 +301,206 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Physics constants
-  const g = 9.81;
-  const baseLength = 1.5;
-  const pumpAmount = 0.2; // How much length changes during pump
-
-  // Physics simulation with parametric pumping
-  const updatePhysics = useCallback((dt: number, state: SwingState): SwingState => {
-    // Parametric resonance: changing length at the right time adds energy
-    let newLength = baseLength;
-    let newPumpPhase: 'up' | 'down' | 'idle' = 'idle';
-
-    if (pumpMode === 'correct' || (autoPump && pumpMode !== 'wrong')) {
-      // Correct pumping: stand up (shorten) at extremes, squat (lengthen) at bottom
-      if (Math.abs(state.theta) > 0.7 * Math.abs(maxAmplitude)) {
-        // At extremes - stand up (shorten pendulum)
-        newLength = baseLength - pumpAmount;
-        newPumpPhase = 'up';
-      } else if (Math.abs(state.theta) < 0.3 * Math.abs(maxAmplitude)) {
-        // At bottom - squat down (lengthen pendulum)
-        newLength = baseLength + pumpAmount;
-        newPumpPhase = 'down';
-      }
-    } else if (pumpMode === 'wrong') {
-      // Wrong pumping: opposite timing
-      if (Math.abs(state.theta) > 0.7 * Math.abs(maxAmplitude)) {
-        // At extremes - squat (wrong!)
-        newLength = baseLength + pumpAmount;
-        newPumpPhase = 'down';
-      } else if (Math.abs(state.theta) < 0.3 * Math.abs(maxAmplitude)) {
-        // At bottom - stand (wrong!)
-        newLength = baseLength - pumpAmount;
-        newPumpPhase = 'up';
-      }
-    }
-
-    // Angular momentum conservation when length changes
-    // L = m * r² * ω is conserved, so ω₂ = ω₁ * (r₁/r₂)²
-    const lengthRatio = state.length / newLength;
-    const newOmega = state.omega * lengthRatio * lengthRatio;
-
-    // Equation of motion: d²θ/dt² = -(g/L)sin(θ)
-    const alpha = -(g / newLength) * Math.sin(state.theta);
-    const damping = 0.002;
-
-    const omega = newOmega * (1 - damping) + alpha * dt;
-    const theta = state.theta + omega * dt;
-
-    // Track max amplitude
-    if (Math.abs(theta) > maxAmplitude) {
-      setMaxAmplitude(Math.abs(theta));
-    }
-
-    return {
-      theta,
-      omega,
-      length: newLength,
-      isPumping: newPumpPhase !== 'idle',
-      pumpPhase: newPumpPhase,
-    };
-  }, [pumpMode, autoPump, maxAmplitude, g, baseLength, pumpAmount]);
-
-  // Animation loop
+  // Physics simulation
   useEffect(() => {
     if (!isPlaying) return;
 
     const dt = 0.016;
     const interval = setInterval(() => {
-      setSwing(prev => updatePhysics(dt, prev));
-      setTime(prev => prev + dt);
+      setTime(t => t + dt);
+
+      setSwingAngle(prevAngle => {
+        let newLength = baseLength;
+        let newPumpPhase: 'up' | 'down' | 'idle' = 'idle';
+
+        if (pumpMode === 'correct') {
+          if (Math.abs(prevAngle) > 0.7 * Math.abs(maxAmplitude)) {
+            newLength = baseLength - pumpAmount;
+            newPumpPhase = 'up';
+          } else if (Math.abs(prevAngle) < 0.3 * Math.abs(maxAmplitude)) {
+            newLength = baseLength + pumpAmount;
+            newPumpPhase = 'down';
+          }
+        } else if (pumpMode === 'wrong') {
+          if (Math.abs(prevAngle) > 0.7 * Math.abs(maxAmplitude)) {
+            newLength = baseLength + pumpAmount;
+            newPumpPhase = 'down';
+          } else if (Math.abs(prevAngle) < 0.3 * Math.abs(maxAmplitude)) {
+            newLength = baseLength - pumpAmount;
+            newPumpPhase = 'up';
+          }
+        }
+
+        setPumpPhase(newPumpPhase);
+        setSwingLength(newLength);
+
+        // Angular momentum conservation
+        const lengthRatio = swingLength / newLength;
+        const adjustedVelocity = swingVelocity * lengthRatio * lengthRatio;
+
+        // Equation of motion
+        const alpha = -(g / newLength) * Math.sin(prevAngle);
+        const damping = 0.002;
+        const newVelocity = adjustedVelocity * (1 - damping) + alpha * dt;
+        const newAngle = prevAngle + newVelocity * dt;
+
+        setSwingVelocity(newVelocity);
+
+        if (Math.abs(newAngle) > maxAmplitude) {
+          setMaxAmplitude(Math.abs(newAngle));
+        }
+
+        return newAngle;
+      });
     }, 16);
 
     return () => clearInterval(interval);
-  }, [isPlaying, updatePhysics]);
+  }, [isPlaying, pumpMode, maxAmplitude, swingLength, swingVelocity, g, baseLength, pumpAmount]);
 
   // Reset simulation
   const resetSimulation = useCallback(() => {
     setTime(0);
     setIsPlaying(false);
     setMaxAmplitude(0.3);
-    setSwing({
-      theta: 0.3,
-      omega: 0,
-      length: baseLength,
-      isPumping: false,
-      pumpPhase: 'idle',
-    });
+    setSwingAngle(0.3);
+    setSwingVelocity(0);
+    setSwingLength(baseLength);
+    setPumpPhase('idle');
   }, [baseLength]);
 
   // Calculate energy
-  const getEnergy = useCallback(() => {
+  const getEnergy = () => {
     const m = 1;
-    const v = swing.length * swing.omega;
+    const v = swingLength * swingVelocity;
     const KE = 0.5 * m * v * v;
-    const PE = m * g * swing.length * (1 - Math.cos(swing.theta));
+    const PE = m * g * swingLength * (1 - Math.cos(swingAngle));
     return { KE, PE, total: KE + PE };
-  }, [swing, g]);
-
-  const predictions = [
-    { id: 'always', label: 'Stand up at any time during the swing' },
-    { id: 'bottom', label: 'Stand up when passing through the bottom' },
-    { id: 'extremes', label: 'Stand up at the highest points (extremes)' },
-    { id: 'never', label: 'Pumping doesn\'t work - you need a push' },
-  ];
-
-  const twistPredictions = [
-    { id: 'stops', label: 'The swing will slow down and eventually stop' },
-    { id: 'faster', label: 'The swing will speed up even more' },
-    { id: 'same', label: 'No difference - timing doesn\'t matter' },
-    { id: 'breaks', label: 'The swing motion becomes unstable' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'Earthquake Building Resonance',
-      description: 'Some earthquake frequencies match building natural frequencies. The ground acts like a "pump" adding energy to the building\'s oscillation.',
-      question: 'Why do some buildings survive earthquakes while neighbors collapse?',
-      answer: 'Buildings with natural frequencies matching the earthquake\'s dominant frequency experience parametric resonance, amplifying oscillations. Engineers tune building frequencies to avoid common earthquake frequencies.',
-    },
-    {
-      title: 'Laser Cooling of Atoms',
-      description: 'Physicists use carefully timed laser pulses to remove energy from atoms, cooling them to near absolute zero - essentially "reverse pumping".',
-      question: 'How is laser cooling related to swing pumping?',
-      answer: 'Both involve transferring energy at specific phases of oscillation. In pumping, energy is added at the right time. In laser cooling, photon absorption and emission are timed to remove energy from atomic motion.',
-    },
-    {
-      title: 'Surfboard Pumping',
-      description: 'Surfers pump their boards to generate speed by shifting weight in sync with the wave - similar to pumping a swing but on a moving surface.',
-      question: 'When should a surfer shift their weight to gain the most speed?',
-      answer: 'Shift weight forward on the downward part of the pump and backward on the upward part. This matches the phase relationship of swing pumping - timing weight shifts to add energy to the wave-riding motion.',
-    },
-    {
-      title: 'Radio Receivers',
-      description: 'AM radio uses parametric amplification. A varying capacitor (like changing swing length) amplifies weak radio signals when varied at twice the signal frequency.',
-      question: 'Why must the "pump" frequency be twice the signal frequency in parametric amplifiers?',
-      answer: 'Just like standing twice per swing cycle (once at each extreme), the parametric pumping needs two energy inputs per oscillation cycle to constructively add energy at the right phase.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'To pump a swing effectively, when should you stand up (raise your center of mass)?',
-      options: [
-        { text: 'When passing through the lowest point', correct: false },
-        { text: 'At the highest points of the swing', correct: true },
-        { text: 'Continuously throughout the motion', correct: false },
-        { text: 'Only when moving forward', correct: false },
-      ],
-    },
-    {
-      question: 'Why does standing up at the extremes add energy to a swing?',
-      options: [
-        { text: 'You push against the air', correct: false },
-        { text: 'Angular momentum conservation increases speed when radius decreases', correct: true },
-        { text: 'Gravity pulls harder on a standing person', correct: false },
-        { text: 'The chains become tighter', correct: false },
-      ],
-    },
-    {
-      question: 'What is "parametric resonance"?',
-      options: [
-        { text: 'Resonance that only works with certain parameters', correct: false },
-        { text: 'Energy addition by periodically changing a system parameter', correct: true },
-        { text: 'The natural frequency of a parametric equation', correct: false },
-        { text: 'Resonance between two parameters of motion', correct: false },
-      ],
-    },
-    {
-      question: 'If you pump a swing at the wrong phase (stand at bottom, squat at extremes), what happens?',
-      options: [
-        { text: 'The swing still speeds up, just more slowly', correct: false },
-        { text: 'The swing slows down and loses energy', correct: true },
-        { text: 'Nothing changes - timing doesn\'t matter', correct: false },
-        { text: 'The swing becomes unstable', correct: false },
-      ],
-    },
-    {
-      question: 'How many times should you pump (stand and squat) per complete swing cycle?',
-      options: [
-        { text: 'Once per cycle', correct: false },
-        { text: 'Twice per cycle (once at each extreme)', correct: true },
-        { text: 'Four times per cycle', correct: false },
-        { text: 'Continuously throughout', correct: false },
-      ],
-    },
-    {
-      question: 'What physical principle explains why shortening the pendulum increases angular velocity?',
-      options: [
-        { text: 'Energy conservation', correct: false },
-        { text: 'Conservation of angular momentum (L = Iω)', correct: true },
-        { text: 'Newton\'s third law', correct: false },
-        { text: 'Conservation of linear momentum', correct: false },
-      ],
-    },
-    {
-      question: 'Why do children learn to pump swings without understanding physics?',
-      options: [
-        { text: 'They have natural physics intuition', correct: false },
-        { text: 'Trial and error reinforces the correct phase relationship', correct: true },
-        { text: 'Adults teach them the correct timing', correct: false },
-        { text: 'Swings are designed to enforce correct pumping', correct: false },
-      ],
-    },
-    {
-      question: 'In parametric oscillators, energy is typically added at what frequency relative to natural oscillation?',
-      options: [
-        { text: 'Same frequency', correct: false },
-        { text: 'Twice the natural frequency', correct: true },
-        { text: 'Half the natural frequency', correct: false },
-        { text: 'Any frequency works', correct: false },
-      ],
-    },
-    {
-      question: 'What limits how high a pumped swing can go?',
-      options: [
-        { text: 'The swing can only go up to 90 degrees', correct: false },
-        { text: 'Air resistance and energy lost each cycle exceed energy added', correct: true },
-        { text: 'The chains become too tense', correct: false },
-        { text: 'Human legs can only push so hard', correct: false },
-      ],
-    },
-    {
-      question: 'Which everyday action is most similar to swing pumping?',
-      options: [
-        { text: 'Bouncing on a trampoline', correct: false },
-        { text: 'Walking up stairs', correct: false },
-        { text: 'Pumping a skateboard on a halfpipe', correct: true },
-        { text: 'Jumping rope', correct: false },
-      ],
-    },
-  ];
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
   };
 
-  const submitTest = () => {
-    let score = 0;
-    testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]].correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#EC4899', // Pink for swing/motion theme
+    accentGlow: 'rgba(236, 72, 153, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    swing: '#F59E0B',
+    person: '#3B82F6',
   };
 
-  const renderVisualization = (interactive: boolean) => {
-    const width = 500;
-    const height = 420;
-    const pivotY = 70;
-    const scale = 110;
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-    // Calculate swing position
-    const swingLength = swing.length * scale;
-    const seatX = width / 2 + swingLength * Math.sin(swing.theta);
-    const seatY = pivotY + swingLength * Math.cos(swing.theta);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Wrong Timing',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-    // Person dimensions based on pump phase
-    const isStanding = swing.pumpPhase === 'up';
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'swing-pumping',
+        gameTitle: 'Swing Pumping',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Swing Visualization SVG Component
+  const SwingVisualization = ({ interactive = false }: { interactive?: boolean }) => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 320 : 380;
+    const pivotY = 60;
+    const scale = 100;
+
+    const displayLength = swingLength * scale;
+    const seatX = width / 2 + displayLength * Math.sin(swingAngle);
+    const seatY = pivotY + displayLength * Math.cos(swingAngle);
+
+    const isStanding = pumpPhase === 'up';
     const personHeight = isStanding ? 55 : 38;
 
-    // Energy display
     const energy = getEnergy();
-    const maxPossibleEnergy = energy.total * 3; // Scale for display
+    const maxPossibleEnergy = energy.total * 3;
     const energyPercent = Math.min(100, 100 * energy.total / maxPossibleEnergy);
-
-    // Calculate swing angle for visual feedback
-    const angleInDegrees = swing.theta * 180 / Math.PI;
+    const angleInDegrees = swingAngle * 180 / Math.PI;
     const maxAngleDegrees = maxAmplitude * 180 / Math.PI;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '550px' }}
-        >
-          {/* === COMPREHENSIVE DEFS SECTION === */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
           <defs>
-            {/* Premium sky gradient with 6 color stops for depth */}
-            <linearGradient id="swpmpSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="swingSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0c1929" />
-              <stop offset="20%" stopColor="#122136" />
-              <stop offset="40%" stopColor="#1a2f4a" />
-              <stop offset="60%" stopColor="#162842" />
-              <stop offset="80%" stopColor="#0f1f35" />
+              <stop offset="50%" stopColor="#1a2f4a" />
               <stop offset="100%" stopColor="#0a1628" />
             </linearGradient>
-
-            {/* Premium metal frame gradient with depth */}
-            <linearGradient id="swpmpFrameMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="swingFrameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#64748b" />
-              <stop offset="25%" stopColor="#475569" />
               <stop offset="50%" stopColor="#5a6a7d" />
-              <stop offset="75%" stopColor="#3d4c5e" />
               <stop offset="100%" stopColor="#2d3a4a" />
             </linearGradient>
-
-            {/* Frame highlight gradient */}
-            <linearGradient id="swpmpFrameHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="30%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
-            </linearGradient>
-
-            {/* Chain metal gradient */}
-            <linearGradient id="swpmpChainMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="swingChainGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#71717a" />
-              <stop offset="30%" stopColor="#a1a1aa" />
               <stop offset="50%" stopColor="#d4d4d8" />
-              <stop offset="70%" stopColor="#a1a1aa" />
               <stop offset="100%" stopColor="#71717a" />
             </linearGradient>
-
-            {/* Premium swing seat gradient with wood effect */}
-            <linearGradient id="swpmpSeatWood" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#b45309" />
-              <stop offset="25%" stopColor="#d97706" />
+            <linearGradient id="swingSeatGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#d97706" />
               <stop offset="50%" stopColor="#f59e0b" />
-              <stop offset="75%" stopColor="#d97706" />
               <stop offset="100%" stopColor="#92400e" />
             </linearGradient>
-
-            {/* Seat edge highlight */}
-            <linearGradient id="swpmpSeatHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#92400e" stopOpacity="0.1" />
-            </linearGradient>
-
-            {/* Person body gradient - shirt */}
-            <linearGradient id="swpmpShirtGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="swingShirtGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="30%" stopColor="#2563eb" />
-              <stop offset="70%" stopColor="#1d4ed8" />
               <stop offset="100%" stopColor="#1e40af" />
             </linearGradient>
-
-            {/* Person pants gradient */}
-            <linearGradient id="swpmpPantsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* Skin tone radial gradient for head */}
-            <radialGradient id="swpmpSkinHead" cx="40%" cy="35%" r="60%">
+            <radialGradient id="swingSkinGrad" cx="40%" cy="35%" r="60%">
               <stop offset="0%" stopColor="#fde68a" />
-              <stop offset="40%" stopColor="#fcd34d" />
-              <stop offset="80%" stopColor="#fbbf24" />
               <stop offset="100%" stopColor="#f59e0b" />
             </radialGradient>
-
-            {/* Skin tone for hands */}
-            <radialGradient id="swpmpSkinHand" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fde68a" />
-              <stop offset="60%" stopColor="#fcd34d" />
-              <stop offset="100%" stopColor="#fbbf24" />
-            </radialGradient>
-
-            {/* Energy bar gradient */}
-            <linearGradient id="swpmpEnergyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id="swingEnergyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#10b981" />
-              <stop offset="40%" stopColor="#34d399" />
-              <stop offset="60%" stopColor="#6ee7b7" />
+              <stop offset="50%" stopColor="#6ee7b7" />
               <stop offset="100%" stopColor="#10b981" />
             </linearGradient>
-
-            {/* Amplitude indicator gradient */}
-            <linearGradient id="swpmpAmplitudeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ec4899" />
-              <stop offset="50%" stopColor="#f472b6" />
-              <stop offset="100%" stopColor="#ec4899" />
-            </linearGradient>
-
-            {/* Ground gradient with depth */}
-            <linearGradient id="swpmpGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e3a5f" />
-              <stop offset="30%" stopColor="#1e293b" />
-              <stop offset="70%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
-
-            {/* Shadow beneath swing */}
-            <radialGradient id="swpmpSwingShadow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#000000" stopOpacity="0.4" />
-              <stop offset="60%" stopColor="#000000" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Pump indicator glow (stand - green) */}
-            <radialGradient id="swpmpStandGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="1" />
-              <stop offset="40%" stopColor="#10b981" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Pump indicator glow (squat - orange) */}
-            <radialGradient id="swpmpSquatGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
-              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-            </radialGradient>
-
-            {/* === GLOW FILTERS === */}
-            {/* Soft glow filter for energy effects */}
-            <filter id="swpmpSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id="swingGlow">
               <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Strong glow filter for indicators */}
-            <filter id="swpmpStrongGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Subtle shadow filter */}
-            <filter id="swpmpDropShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2" result="shadow" />
-              <feOffset dx="2" dy="2" in="shadow" result="offsetShadow" />
-              <feMerge>
-                <feMergeNode in="offsetShadow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Metal shine filter */}
-            <filter id="swpmpMetalShine" x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation="1" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -613,289 +508,148 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
             </filter>
           </defs>
 
-          {/* === BACKGROUND === */}
-          <rect width={width} height={height} fill="url(#swpmpSkyGradient)" />
+          {/* Background */}
+          <rect width={width} height={height} fill="url(#swingSkyGrad)" />
 
-          {/* Subtle grid pattern for depth */}
-          <pattern id="swpmpGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-            <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.3" />
-          </pattern>
-          <rect width={width} height={height - 50} fill="url(#swpmpGrid)" />
+          {/* Title */}
+          <text x={width / 2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+            Swing Pumping Simulation
+          </text>
 
-          {/* === SWING FRAME STRUCTURE === */}
-          <g filter="url(#swpmpDropShadow)">
-            {/* Left A-frame leg */}
+          {/* Frame structure */}
+          <g>
             <polygon
-              points={`${width/2 - 8},${pivotY - 5} ${width/2 - 75},${pivotY + 45} ${width/2 - 65},${pivotY + 45}`}
-              fill="url(#swpmpFrameMetal)"
+              points={`${width / 2 - 8},${pivotY - 5} ${width / 2 - 70},${pivotY + 40} ${width / 2 - 60},${pivotY + 40}`}
+              fill="url(#swingFrameGrad)"
               stroke="#64748b"
               strokeWidth="1"
             />
-            {/* Right A-frame leg */}
             <polygon
-              points={`${width/2 + 8},${pivotY - 5} ${width/2 + 75},${pivotY + 45} ${width/2 + 65},${pivotY + 45}`}
-              fill="url(#swpmpFrameMetal)"
+              points={`${width / 2 + 8},${pivotY - 5} ${width / 2 + 70},${pivotY + 40} ${width / 2 + 60},${pivotY + 40}`}
+              fill="url(#swingFrameGrad)"
               stroke="#64748b"
               strokeWidth="1"
             />
-
-            {/* Cross beam (top bar) */}
-            <rect x={width/2 - 85} y={pivotY + 38} width={170} height={10} rx={3} fill="url(#swpmpFrameHighlight)" stroke="#475569" strokeWidth="1" />
-
-            {/* Frame feet (stabilizers) */}
-            <rect x={width/2 - 80} y={pivotY + 45} width={25} height={6} rx={2} fill="#475569" />
-            <rect x={width/2 + 55} y={pivotY + 45} width={25} height={6} rx={2} fill="#475569" />
-
-            {/* Top pivot assembly */}
-            <rect x={width/2 - 25} y={pivotY - 15} width={50} height={20} rx={5} fill="url(#swpmpFrameMetal)" stroke="#64748b" strokeWidth="1" />
-            <ellipse cx={width/2} cy={pivotY} rx={12} ry={8} fill="#334155" stroke="#475569" strokeWidth="1.5" />
-            <circle cx={width/2} cy={pivotY} r={5} fill="#1e293b" stroke="#64748b" strokeWidth="1" />
+            <rect x={width / 2 - 80} y={pivotY + 33} width={160} height={10} rx={3} fill="url(#swingFrameGrad)" />
+            <ellipse cx={width / 2} cy={pivotY} rx={10} ry={6} fill="#334155" stroke="#475569" strokeWidth="1.5" />
           </g>
 
-          {/* === SWING CHAINS === */}
-          <g filter="url(#swpmpMetalShine)">
-            {/* Left chain */}
-            <line
-              x1={width/2 - 12} y1={pivotY + 2}
-              x2={seatX - 12} y2={seatY - 3}
-              stroke="url(#swpmpChainMetal)"
-              strokeWidth={4}
-              strokeLinecap="round"
-            />
-            <line
-              x1={width/2 - 12} y1={pivotY + 2}
-              x2={seatX - 12} y2={seatY - 3}
-              stroke="#d4d4d8"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-              strokeDasharray="8 6"
-            />
+          {/* Chains */}
+          <line x1={width / 2 - 10} y1={pivotY} x2={seatX - 10} y2={seatY - 3} stroke="url(#swingChainGrad)" strokeWidth="3" />
+          <line x1={width / 2 + 10} y1={pivotY} x2={seatX + 10} y2={seatY - 3} stroke="url(#swingChainGrad)" strokeWidth="3" />
 
-            {/* Right chain */}
-            <line
-              x1={width/2 + 12} y1={pivotY + 2}
-              x2={seatX + 12} y2={seatY - 3}
-              stroke="url(#swpmpChainMetal)"
-              strokeWidth={4}
-              strokeLinecap="round"
-            />
-            <line
-              x1={width/2 + 12} y1={pivotY + 2}
-              x2={seatX + 12} y2={seatY - 3}
-              stroke="#d4d4d8"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-              strokeDasharray="8 6"
-            />
-          </g>
-
-          {/* === SWING SEAT === */}
+          {/* Seat and person */}
           <g transform={`translate(${seatX}, ${seatY})`}>
-            {/* Seat shadow */}
-            <ellipse cx={0} cy={8} rx={22} ry={5} fill="rgba(0,0,0,0.3)" />
+            {/* Shadow */}
+            <ellipse cx={0} cy={height - seatY - 30} rx={25 + Math.abs(swingAngle) * 10} ry={6} fill="rgba(0,0,0,0.3)" />
 
-            {/* Main seat */}
-            <rect x={-20} y={-5} width={40} height={10} rx={3} fill="url(#swpmpSeatWood)" stroke="#92400e" strokeWidth="1" />
-
-            {/* Seat highlight */}
-            <rect x={-18} y={-4} width={36} height={4} rx={2} fill="url(#swpmpSeatHighlight)" />
-
-            {/* Seat texture lines */}
-            <line x1={-15} y1={-3} x2={-15} y2={4} stroke="#92400e" strokeWidth="0.5" strokeOpacity="0.5" />
-            <line x1={-5} y1={-3} x2={-5} y2={4} stroke="#92400e" strokeWidth="0.5" strokeOpacity="0.5" />
-            <line x1={5} y1={-3} x2={5} y2={4} stroke="#92400e" strokeWidth="0.5" strokeOpacity="0.5" />
-            <line x1={15} y1={-3} x2={15} y2={4} stroke="#92400e" strokeWidth="0.5" strokeOpacity="0.5" />
-          </g>
-
-          {/* === PERSON ON SWING === */}
-          <g transform={`translate(${seatX}, ${seatY})`}>
-            {/* Person shadow on ground */}
-            <ellipse
-              cx={0}
-              cy={height - seatY - 35}
-              rx={25 + Math.abs(swing.theta) * 10}
-              ry={8}
-              fill="url(#swpmpSwingShadow)"
-            />
+            {/* Seat */}
+            <rect x={-18} y={-4} width={36} height={8} rx={3} fill="url(#swingSeatGrad)" />
 
             {/* Legs */}
-            <rect x={-10} y={-personHeight + 18} width={8} height={personHeight - 16} rx={3} fill="url(#swpmpPantsGradient)" />
-            <rect x={2} y={-personHeight + 18} width={8} height={personHeight - 16} rx={3} fill="url(#swpmpPantsGradient)" />
+            <rect x={-9} y={-personHeight + 18} width={7} height={personHeight - 16} rx={3} fill="#334155" />
+            <rect x={2} y={-personHeight + 18} width={7} height={personHeight - 16} rx={3} fill="#334155" />
 
             {/* Shoes */}
-            <ellipse cx={-6} cy={2} rx={6} ry={4} fill="#1e293b" />
-            <ellipse cx={6} cy={2} rx={6} ry={4} fill="#1e293b" />
+            <ellipse cx={-5} cy={2} rx={5} ry={3} fill="#1e293b" />
+            <ellipse cx={5} cy={2} rx={5} ry={3} fill="#1e293b" />
 
-            {/* Body/Torso */}
-            <rect x={-12} y={-personHeight - 8} width={24} height={28} rx={5} fill="url(#swpmpShirtGradient)" stroke="#1d4ed8" strokeWidth="0.5" />
+            {/* Body */}
+            <rect x={-11} y={-personHeight - 6} width={22} height={26} rx={5} fill="url(#swingShirtGrad)" />
 
-            {/* Shirt collar detail */}
-            <path
-              d={`M -6 ${-personHeight - 8} Q 0 ${-personHeight - 3} 6 ${-personHeight - 8}`}
-              fill="none"
-              stroke="#1e40af"
-              strokeWidth="2"
-            />
-
-            {/* Arms holding chains */}
-            <line x1={-10} y1={-personHeight - 2} x2={-14} y2={-personHeight - 25} stroke="url(#swpmpSkinHand)" strokeWidth={5} strokeLinecap="round" />
-            <line x1={10} y1={-personHeight - 2} x2={14} y2={-personHeight - 25} stroke="url(#swpmpSkinHand)" strokeWidth={5} strokeLinecap="round" />
+            {/* Arms */}
+            <line x1={-9} y1={-personHeight} x2={-12} y2={-personHeight - 22} stroke="url(#swingSkinGrad)" strokeWidth={4} strokeLinecap="round" />
+            <line x1={9} y1={-personHeight} x2={12} y2={-personHeight - 22} stroke="url(#swingSkinGrad)" strokeWidth={4} strokeLinecap="round" />
 
             {/* Hands */}
-            <circle cx={-14} cy={-personHeight - 27} r={4} fill="url(#swpmpSkinHand)" />
-            <circle cx={14} cy={-personHeight - 27} r={4} fill="url(#swpmpSkinHand)" />
+            <circle cx={-12} cy={-personHeight - 24} r={3} fill="url(#swingSkinGrad)" />
+            <circle cx={12} cy={-personHeight - 24} r={3} fill="url(#swingSkinGrad)" />
 
             {/* Head */}
-            <circle cx={0} cy={-personHeight - 20} r={12} fill="url(#swpmpSkinHead)" stroke="#f59e0b" strokeWidth="0.5" />
+            <circle cx={0} cy={-personHeight - 18} r={10} fill="url(#swingSkinGrad)" />
+            <ellipse cx={0} cy={-personHeight - 25} rx={8} ry={5} fill="#451a03" />
 
-            {/* Hair */}
-            <ellipse cx={0} cy={-personHeight - 28} rx={10} ry={6} fill="#451a03" />
-
-            {/* Face details */}
-            <circle cx={-4} cy={-personHeight - 22} r={1.5} fill="#1e293b" /> {/* Left eye */}
-            <circle cx={4} cy={-personHeight - 22} r={1.5} fill="#1e293b" /> {/* Right eye */}
-            <path
-              d={`M -3 ${-personHeight - 16} Q 0 ${-personHeight - 14} 3 ${-personHeight - 16}`}
-              fill="none"
-              stroke="#92400e"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            /> {/* Smile */}
+            {/* Face */}
+            <circle cx={-3} cy={-personHeight - 19} r={1.2} fill="#1e293b" />
+            <circle cx={3} cy={-personHeight - 19} r={1.2} fill="#1e293b" />
+            <path d={`M -2 ${-personHeight - 14} Q 0 ${-personHeight - 12} 2 ${-personHeight - 14}`} fill="none" stroke="#92400e" strokeWidth="1.2" />
           </g>
 
-          {/* === PUMP INDICATOR === */}
-          {swing.isPumping && (
-            <g transform={`translate(${seatX + 55}, ${seatY - personHeight - 10})`}>
-              {/* Glow background */}
-              <circle
-                cx={0} cy={0} r={25}
-                fill={swing.pumpPhase === 'up' ? 'url(#swpmpStandGlow)' : 'url(#swpmpSquatGlow)'}
-                filter="url(#swpmpStrongGlow)"
-              />
-
-              {/* Indicator box */}
+          {/* Pump indicator */}
+          {pumpPhase !== 'idle' && (
+            <g transform={`translate(${seatX + 50}, ${seatY - personHeight - 10})`}>
               <rect
-                x={-35} y={-12}
-                width={70} height={24}
-                rx={6}
-                fill={swing.pumpPhase === 'up' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(245, 158, 11, 0.9)'}
-                stroke={swing.pumpPhase === 'up' ? '#34d399' : '#fbbf24'}
-                strokeWidth="2"
+                x={-32} y={-10}
+                width={64} height={20}
+                rx={5}
+                fill={pumpPhase === 'up' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(245, 158, 11, 0.9)'}
+                filter="url(#swingGlow)"
               />
-
-              {/* Arrow and text */}
-              <text
-                x={0}
-                y={5}
-                textAnchor="middle"
-                fill="white"
-                fontSize={14}
-                fontWeight="bold"
-                fontFamily="system-ui, sans-serif"
-              >
-                {swing.pumpPhase === 'up' ? '↑ STAND' : '↓ SQUAT'}
+              <text x={0} y={5} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
+                {pumpPhase === 'up' ? '^ STAND' : 'v SQUAT'}
               </text>
             </g>
           )}
 
-          {/* === GROUND === */}
-          <rect x={0} y={height - 50} width={width} height={50} fill="url(#swpmpGroundGradient)" />
+          {/* Ground */}
+          <rect x={0} y={height - 45} width={width} height={45} fill="#1e293b" />
+          <ellipse cx={width / 2} cy={height - 45} rx={100} ry={12} fill="#334155" />
 
-          {/* Ground texture */}
-          <ellipse cx={width/2} cy={height - 50} rx={120} ry={15} fill="#334155" />
-          <ellipse cx={width/2} cy={height - 48} rx={100} ry={10} fill="#3d4c5e" />
-
-          {/* Grass tufts */}
-          {[80, 150, 200, 300, 350, 420].map((x, i) => (
-            <g key={i} transform={`translate(${x}, ${height - 50})`}>
-              <path d="M0,0 Q-3,-8 -1,-12 M0,0 Q0,-10 1,-14 M0,0 Q3,-8 2,-11" stroke="#166534" strokeWidth="1.5" fill="none" />
-            </g>
-          ))}
-
-          {/* === ENERGY/AMPLITUDE INDICATOR PANEL === */}
-          <g transform={`translate(15, ${height - 45})`}>
-            {/* Panel background */}
-            <rect x={0} y={0} width={180} height={40} rx={8} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
-
-            {/* Energy section */}
-            <text x={10} y={14} fill={colors.textMuted} fontSize={10} fontWeight="bold" fontFamily="system-ui, sans-serif">ENERGY</text>
-            <rect x={10} y={18} width={75} height={12} rx={4} fill="rgba(255,255,255,0.1)" />
-            <rect
-              x={10} y={18}
-              width={Math.max(5, 75 * energyPercent / 100)}
-              height={12}
-              rx={4}
-              fill="url(#swpmpEnergyGradient)"
-              filter="url(#swpmpSoftGlow)"
-            />
-
-            {/* Amplitude section */}
-            <text x={95} y={14} fill={colors.textMuted} fontSize={10} fontWeight="bold" fontFamily="system-ui, sans-serif">AMPLITUDE</text>
-            <rect x={95} y={18} width={75} height={12} rx={4} fill="rgba(255,255,255,0.1)" />
-            <rect
-              x={95} y={18}
-              width={Math.max(5, Math.min(75, maxAngleDegrees * 1.5))}
-              height={12}
-              rx={4}
-              fill="url(#swpmpAmplitudeGradient)"
-              filter="url(#swpmpSoftGlow)"
-            />
+          {/* Stats panel */}
+          <g transform={`translate(15, ${height - 40})`}>
+            <rect x={0} y={0} width={160} height={35} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" />
+            <text x={10} y={12} fill={colors.textMuted} fontSize="9" fontWeight="bold">ENERGY</text>
+            <rect x={10} y={16} width={65} height={10} rx={4} fill="rgba(255,255,255,0.1)" />
+            <rect x={10} y={16} width={Math.max(5, 65 * energyPercent / 100)} height={10} rx={4} fill="url(#swingEnergyGrad)" />
+            <text x={85} y={12} fill={colors.textMuted} fontSize="9" fontWeight="bold">AMPLITUDE</text>
+            <rect x={85} y={16} width={65} height={10} rx={4} fill="rgba(255,255,255,0.1)" />
+            <rect x={85} y={16} width={Math.max(5, Math.min(65, maxAngleDegrees * 1.3))} height={10} rx={4} fill={colors.accent} />
           </g>
 
-          {/* === ANGLE/STATS DISPLAY === */}
-          <g transform={`translate(${width - 120}, ${height - 45})`}>
-            <rect x={0} y={0} width={105} height={40} rx={8} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
-
-            <text x={10} y={16} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
-              Angle: <tspan fill={colors.textPrimary} fontWeight="bold">{angleInDegrees.toFixed(1)}°</tspan>
+          {/* Angle display */}
+          <g transform={`translate(${width - 100}, ${height - 40})`}>
+            <rect x={0} y={0} width={85} height={35} rx={6} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" />
+            <text x={10} y={14} fill={colors.textSecondary} fontSize="10">
+              Angle: <tspan fill={colors.textPrimary} fontWeight="bold">{angleInDegrees.toFixed(1)}deg</tspan>
             </text>
-            <text x={10} y={32} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
-              Max: <tspan fill="#f472b6" fontWeight="bold">{maxAngleDegrees.toFixed(0)}°</tspan>
+            <text x={10} y={28} fill={colors.textSecondary} fontSize="10">
+              Max: <tspan fill={colors.accent} fontWeight="bold">{maxAngleDegrees.toFixed(0)}deg</tspan>
             </text>
           </g>
-
-          {/* === TITLE LABEL === */}
-          <text
-            x={width/2} y={25}
-            textAnchor="middle"
-            fill={colors.textPrimary}
-            fontSize={16}
-            fontWeight="bold"
-            fontFamily="system-ui, sans-serif"
-            opacity={0.9}
-          >
-            Swing Pumping Simulation
-          </text>
         </svg>
 
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={() => {
+                playSound('click');
+                setIsPlaying(!isPlaying);
+              }}
               style={{
-                padding: '12px 24px',
+                padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
                 background: isPlaying ? colors.error : colors.success,
                 color: 'white',
-                fontWeight: 'bold',
+                fontWeight: 600,
                 cursor: 'pointer',
-                fontSize: '14px',
               }}
             >
               {isPlaying ? 'Pause' : 'Play'}
             </button>
             <button
-              onClick={resetSimulation}
+              onClick={() => {
+                playSound('click');
+                resetSimulation();
+              }}
               style={{
-                padding: '12px 24px',
+                padding: '10px 20px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
-                fontWeight: 'bold',
+                fontWeight: 600,
                 cursor: 'pointer',
-                fontSize: '14px',
               }}
             >
               Reset
@@ -906,186 +660,232 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
     );
   };
 
-  const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Pumping Mode:
-        </label>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {[
-            { mode: 'none' as const, label: 'No Pumping' },
-            { mode: 'correct' as const, label: 'Correct Timing' },
-            { mode: 'wrong' as const, label: 'Wrong Timing' },
-          ].map(({ mode, label }) => (
-            <button
-              key={mode}
-              onClick={() => {
-                setPumpMode(mode);
-                resetSimulation();
-              }}
-              style={{
-                padding: '10px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                background: pumpMode === mode ? colors.accent : 'rgba(255,255,255,0.1)',
-                color: pumpMode === mode ? 'white' : colors.textSecondary,
-                cursor: 'pointer',
-                fontSize: '13px',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{
-        background: 'rgba(236, 72, 153, 0.2)',
-        padding: '12px',
-        borderRadius: '8px',
-        borderLeft: `3px solid ${colors.accent}`,
-      }}>
-        <div style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '4px' }}>
-          Time: {time.toFixed(1)}s
-        </div>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          {pumpMode === 'correct' && 'Energy is being added! Watch the amplitude grow.'}
-          {pumpMode === 'wrong' && 'Energy is being removed! Watch the amplitude shrink.'}
-          {pumpMode === 'none' && 'Swing oscillates with slight damping.'}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  // Progress bar component
+  const renderProgressBar = () => (
     <div style={{
       position: 'fixed',
-      bottom: 0,
+      top: 0,
       left: 0,
       right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
     }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #BE185D)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              🎢 The Self-Propelled Swing
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              How do you pump a swing higher without anyone pushing?
-            </p>
-          </div>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Every child learns to pump a swing - stand, squat, stand, squat. But why does this work?
-                No one pushes you, yet you go higher and higher!
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                The secret lies in precise timing and a physics principle called parametric resonance.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(236, 72, 153, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                💡 Can you figure out when you should stand up to go higher?
-              </p>
-            </div>
-          </div>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'swing 2s ease-in-out infinite',
+        }}>
+          🎢
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction →')}
+        <style>{`@keyframes swing { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Swing Pumping
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "How do you go <span style={{ color: colors.accent }}>higher and higher</span> on a swing without anyone pushing? The secret lies in precise timing and a beautiful physics principle called <span style={{ color: colors.warning }}>parametric resonance</span>."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Every child learns to pump a swing - stand, squat, stand, squat. But why does this work? No one pushes you, yet you go higher and higher! The same physics powers quantum amplifiers and orbital mechanics."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - The Hidden Physics of Everyday Motion
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover the Physics
+        </button>
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+    const options = [
+      { id: 'a', text: 'Stand up at any time - timing doesn\'t matter' },
+      { id: 'b', text: 'Stand up when passing through the lowest point' },
+      { id: 'c', text: 'Stand up at the highest points (extremes) of the swing', correct: true },
+      { id: 'd', text: 'Pumping doesn\'t work - you need someone to push you' },
+    ];
 
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
+            background: `${colors.accent}22`,
             borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A person on a swing. They can stand up (raise their center of mass) or squat down
-              (lower it). The energy bar shows the total mechanical energy in the swing system.
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
             </p>
           </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              🤔 To pump the swing higher, when should you stand up?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            To pump a swing higher, when should you stand up (raise your center of mass)?
+          </h2>
+
+          {/* Swing preview */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <SwingVisualization interactive={false} />
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
+              Watch the swing oscillate. When would standing up add the most energy?
+            </p>
           </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1093,145 +893,294 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Swing Pumping</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Compare correct vs wrong timing to see parametric resonance in action
-            </p>
-          </div>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-          {renderVisualization(true)}
-          {renderControls()}
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Swing Pumping Experiment
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Test different pumping strategies and watch the amplitude change
+          </p>
 
           <div style={{
             background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>🔬 Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>"No Pumping" - natural oscillation with damping</li>
+            <SwingVisualization interactive={true} />
+
+            {/* Pump mode selector */}
+            <div style={{ marginTop: '20px' }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>
+                Pumping Strategy:
+              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {[
+                  { mode: 'none' as const, label: 'No Pumping' },
+                  { mode: 'correct' as const, label: 'Correct Timing' },
+                  { mode: 'wrong' as const, label: 'Wrong Timing' },
+                ].map(({ mode, label }) => (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      playSound('click');
+                      setPumpMode(mode);
+                      resetSimulation();
+                    }}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: pumpMode === mode ? colors.accent : colors.bgSecondary,
+                      color: pumpMode === mode ? 'white' : colors.textSecondary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Current state info */}
+            <div style={{
+              background: `${colors.accent}22`,
+              padding: '12px 16px',
+              borderRadius: '8px',
+              marginTop: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textPrimary, margin: 0 }}>
+                Time: {time.toFixed(1)}s |{' '}
+                {pumpMode === 'correct' && 'Energy is being added! Watch the amplitude grow.'}
+                {pumpMode === 'wrong' && 'Energy is being removed! Watch the amplitude shrink.'}
+                {pumpMode === 'none' && 'Natural oscillation with slight damping.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Instructions */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>Try These Experiments:</h4>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li>"No Pumping" - see natural oscillation with damping</li>
               <li>"Correct Timing" - stand at extremes, squat at bottom</li>
-              <li>"Wrong Timing" - the opposite (energy removed!)</li>
-              <li>Watch the amplitude and energy bar change</li>
+              <li>"Wrong Timing" - opposite timing removes energy!</li>
             </ul>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review →')}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
-    const wasCorrect = prediction === 'extremes';
+    const wasCorrect = prediction === 'c';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Result banner */}
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
+            background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
+            border: `1px solid ${wasCorrect ? colors.success : colors.error}`,
             borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
+            <div style={{ fontSize: '40px', marginBottom: '8px' }}>{wasCorrect ? '✓' : '✗'}</div>
+            <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error }}>
+              {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ ...typo.body, color: colors.textPrimary }}>
               You should stand up at the highest points (extremes) of the swing!
             </p>
           </div>
 
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Swing Pumping
+          </h2>
+
           <div style={{
             background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 The Physics of Pumping</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Angular Momentum Conservation:</strong> When
-                you stand up (shorten the pendulum), angular momentum L = Iω must stay constant. Since
-                I decreases (closer to pivot), ω must increase - you speed up!
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Angular Momentum Conservation (L = I * omega)</strong>
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Why at the Extremes?</strong> At the extremes,
-                you have maximum potential energy. Standing up converts some gravitational PE into kinetic
-                energy. At the bottom, you already have max KE - squatting stores energy for the next pump.
+              <p style={{ marginBottom: '16px' }}>
+                When you stand up (shorten the pendulum), moment of inertia I decreases. To conserve angular momentum, angular velocity omega must <span style={{ color: colors.success }}>increase</span> - you speed up!
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Why at the Extremes?</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                At the extremes, you have maximum potential energy. Standing up converts some gravitational PE into kinetic energy. At the bottom, you already have max KE - squatting stores energy for the next pump.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Parametric Resonance:</strong> This is called
-                parametric pumping because you change a parameter (length) at twice the natural frequency
-                to add energy with each cycle.
+                <strong style={{ color: colors.textPrimary }}>Parametric Resonance</strong>: You change a parameter (pendulum length) at <span style={{ color: colors.accent }}>twice the natural frequency</span> to add energy each cycle.
               </p>
             </div>
           </div>
+
+          <div style={{
+            background: `${colors.warning}11`,
+            border: `1px solid ${colors.warning}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>
+              Key Formula
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, fontFamily: 'monospace' }}>
+              L = I * omega = m * r^2 * omega = constant
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              When r decreases (stand up), omega must increase proportionally!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore the Twist
+          </button>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist! →')}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'The swing still speeds up, just more slowly' },
+      { id: 'b', text: 'The swing slows down and loses energy', correct: true },
+      { id: 'c', text: 'Nothing changes - timing doesn\'t matter' },
+      { id: 'd', text: 'The swing becomes unstable and chaotic' },
+    ];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What if you pump with exactly wrong timing?
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: What If Timing Is Reversed?
             </p>
           </div>
 
-          {renderVisualization(false)}
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What happens if you pump with exactly WRONG timing? (Squat at extremes, stand at bottom)
+          </h2>
 
           <div style={{
             background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Instead of standing at the extremes and squatting at the bottom, imagine doing
-              the exact opposite: squat at the extremes, stand at the bottom.
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Instead of: Stand at extremes, squat at bottom (correct)
+            </p>
+            <p style={{ ...typo.body, color: colors.warning, marginTop: '8px' }}>
+              Try: Squat at extremes, stand at bottom (reversed)
             </p>
           </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              🤔 What happens with this reversed timing?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
           </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test Wrong Timing
+            </button>
+          )}
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction →')}
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1239,165 +1188,343 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Wrong Timing</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Compare correct timing vs wrong timing and observe the energy changes
-            </p>
-          </div>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-          {renderVisualization(true)}
-          {renderControls()}
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Compare Correct vs Wrong Timing
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Observe how phase relationship determines energy flow
+          </p>
 
           <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>💡 Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Watch what happens to the amplitude with "Wrong Timing" - you're actually
-              removing energy from the system! This is called parametric damping.
+            <SwingVisualization interactive={true} />
+
+            {/* Pump mode selector */}
+            <div style={{ marginTop: '20px' }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>
+                Compare Timing Strategies:
+              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {[
+                  { mode: 'correct' as const, label: 'Correct (adds energy)', color: colors.success },
+                  { mode: 'wrong' as const, label: 'Wrong (removes energy)', color: colors.error },
+                ].map(({ mode, label, color }) => (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      playSound('click');
+                      setPumpMode(mode);
+                      resetSimulation();
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      border: `2px solid ${pumpMode === mode ? color : colors.border}`,
+                      background: pumpMode === mode ? `${color}22` : 'transparent',
+                      color: pumpMode === mode ? color : colors.textSecondary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Frequency slider for advanced exploration */}
+            <div style={{ marginTop: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Pump Frequency Ratio</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pumpFrequency.toFixed(1)}x natural</span>
+              </div>
+              <input
+                type="range"
+                min="0.5"
+                max="3"
+                step="0.1"
+                value={pumpFrequency}
+                onChange={(e) => setPumpFrequency(parseFloat(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                Optimal: 2x (pump twice per oscillation cycle)
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.warning}22`,
+            border: `1px solid ${colors.warning}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h4 style={{ ...typo.h3, color: colors.warning, marginBottom: '8px' }}>Key Observation</h4>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Wrong timing systematically removes energy - this is <strong>parametric damping</strong>.
+              The same principle is used in vibration control systems!
             </p>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Deep Physics
+          </button>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation →')}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'stops';
+    const wasCorrect = twistPrediction === 'b';
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
+            background: wasCorrect ? `${colors.success}22` : `${colors.error}22`,
+            border: `1px solid ${wasCorrect ? colors.success : colors.error}`,
             borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
+            <div style={{ fontSize: '40px', marginBottom: '8px' }}>{wasCorrect ? '✓' : '✗'}</div>
+            <h3 style={{ ...typo.h3, color: wasCorrect ? colors.success : colors.error }}>
+              {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Wrong timing causes the swing to slow down and lose energy!
+            <p style={{ ...typo.body, color: colors.textPrimary }}>
+              Wrong timing causes the swing to lose energy and slow down!
             </p>
           </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>🔬 Parametric Damping</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Phase Matters:</strong> When you do work
-                against the motion instead of with it, you remove energy. Standing at the bottom means
-                your muscle work fights the swing's motion rather than enhancing it.
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Parametric Damping & Phase Sensitivity
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Phase</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Phase Matters Critically</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                When you do work <span style={{ color: colors.error }}>against</span> the natural motion instead of with it, you systematically remove energy. This is why children quickly learn the correct timing - wrong timing feels "off" because you're fighting the swing!
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Practical Application:</strong> This principle
-                is used in vibration damping. By changing stiffness at the right phase, engineers can
-                remove unwanted oscillations from structures.
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Damp</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Parametric Damping</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Engineers use this principle intentionally in vibration control. By changing stiffness at the <span style={{ color: colors.success }}>right phase</span>, they can remove unwanted oscillations from buildings, bridges, and machines.
               </p>
-              <p>
-                This is why children quickly learn the correct timing - wrong timing feels "off" because
-                you're working against the natural motion!
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>2x</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>The 2x Frequency Rule</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Optimal parametric pumping occurs at <strong>twice</strong> the natural frequency - you add energy twice per oscillation (once at each extreme). This is universal: swings, quantum amplifiers, MEMS oscillators all follow this rule.
               </p>
             </div>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge →')}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              🌍 Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Parametric resonance appears in surprising places
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    +
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && (
-                  <span style={{ color: colors.success }}>✓</span>
-                )}
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>
-                {app.description}
-              </p>
-              <div style={{
-                background: 'rgba(236, 72, 153, 0.1)',
-                padding: '12px',
-                borderRadius: '8px',
-                marginBottom: '8px',
-              }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold', marginBottom: '4px' }}>
-                  💭 {app.question}
-                </p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  borderLeft: `3px solid ${colors.success}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
             </div>
-          ))}
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Connection to Swing Pumping:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test →')}
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1405,187 +1532,211 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
+      const passed = testScore >= 7;
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>
-                {testScore} / 10
-              </p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You\'ve mastered parametric resonance!' : 'Review the material and try again.'}
-              </p>
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              {passed ? '🏆' : '📚'}
             </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand parametric resonance and swing pumping!'
+                : 'Review the concepts and try again.'}
+            </p>
 
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-
-              return (
-                <div
-                  key={qIndex}
-                  style={{
-                    background: colors.bgCard,
-                    margin: '16px',
-                    padding: '16px',
-                    borderRadius: '12px',
-                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
-                  }}
-                >
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>
-                    {qIndex + 1}. {q.question}
-                  </p>
-                  {q.options.map((opt, oIndex) => (
-                    <div
-                      key={oIndex}
-                      style={{
-                        padding: '8px 12px',
-                        marginBottom: '4px',
-                        borderRadius: '6px',
-                        background: opt.correct
-                          ? 'rgba(16, 185, 129, 0.2)'
-                          : userAnswer === oIndex
-                          ? 'rgba(239, 68, 68, 0.2)'
-                          : 'transparent',
-                        color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary,
-                      }}
-                    >
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
+          {renderNavDots()}
         </div>
       );
     }
 
-    const currentQ = testQuestions[currentTestQuestion];
+    const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>
-                {currentTestQuestion + 1} / {testQuestions.length}
-              </span>
-            </div>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-            <div style={{
-              display: 'flex',
-              gap: '4px',
-              marginBottom: '24px',
-            }}>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setCurrentTestQuestion(i)}
-                  style={{
-                    flex: 1,
-                    height: '4px',
-                    borderRadius: '2px',
-                    background: testAnswers[i] !== null
-                      ? colors.accent
-                      : i === currentTestQuestion
-                      ? colors.textMuted
-                      : 'rgba(255,255,255,0.1)',
-                    cursor: 'pointer',
-                  }}
-                />
-              ))}
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>
-                {currentQ.question}
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button
-                  key={oIndex}
-                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: testAnswers[currentTestQuestion] === oIndex
-                      ? `2px solid ${colors.accent}`
-                      : '1px solid rgba(255,255,255,0.2)',
-                    background: testAnswers[currentTestQuestion] === oIndex
-                      ? 'rgba(236, 72, 153, 0.2)'
-                      : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                  }}
-                >
-                  {opt.text}
-                </button>
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
               ))}
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-              }}
-            >
-              ← Previous
-            </button>
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
 
-            {currentTestQuestion < testQuestions.length - 1 ? (
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: colors.accent,
-                  color: 'white',
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
                   cursor: 'pointer',
                 }}
               >
-                Next →
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
               </button>
             ) : (
               <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
                   color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
                 }}
               >
                 Submit Test
@@ -1593,6 +1744,8 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
             )}
           </div>
         </div>
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1600,50 +1753,88 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              You've mastered parametric resonance and swing pumping
-            </p>
-          </div>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Parametric resonance through parameter variation</li>
-              <li>Angular momentum conservation in pumping</li>
-              <li>Correct phase timing for energy addition</li>
-              <li>Parametric damping with wrong phase</li>
-              <li>Applications from swings to radio amplifiers</li>
-            </ul>
-          </div>
-
-          <div style={{
-            background: 'rgba(236, 72, 153, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🚀 Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Parametric amplification is used in quantum computing to amplify
-              signals without adding noise, in MEMS accelerometers for smartphones,
-              and even proposed for spacecraft propulsion using solar sails with
-              oscillating tilt!
-            </p>
-          </div>
-
-          {renderVisualization(true)}
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
         </div>
-        {renderBottomBar(false, true, 'Complete Game →')}
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Swing Pumping Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand parametric resonance - the physics behind swings, quantum amplifiers, and orbital mechanics!
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Concepts Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Angular momentum conservation (L = I * omega)',
+              'Parametric resonance at 2x natural frequency',
+              'Correct phase timing adds energy',
+              'Wrong phase causes parametric damping',
+              'Applications from playgrounds to quantum computing',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
     );
   }

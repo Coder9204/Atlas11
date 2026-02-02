@@ -1,152 +1,291 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ============================================================================
-// MOMENT OF INERTIA RENDERER - 10-PHASE STRUCTURE
-// Covers rotational inertia, I = mr², and conservation of angular momentum
-// ============================================================================
+// -----------------------------------------------------------------------------
+// MOMENT OF INERTIA - Complete 10-Phase Game
+// How mass distribution affects rotational motion
+// -----------------------------------------------------------------------------
 
-// Real-world applications for moment of inertia
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface MomentOfInertiaRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A figure skater begins a spin with arms extended and then pulls them close to her body. She notices her spin speed increases dramatically.",
+    question: "What fundamental physics principle explains this phenomenon?",
+    options: [
+      { id: 'a', label: "Conservation of energy - she gains kinetic energy" },
+      { id: 'b', label: "Conservation of angular momentum - L = I times omega stays constant", correct: true },
+      { id: 'c', label: "Newton's third law - the ice pushes back harder" },
+      { id: 'd', label: "Conservation of mass - her mass is redistributed" }
+    ],
+    explanation: "When no external torque acts on a system, angular momentum L = I times omega is conserved. By pulling in her arms, she decreases I, so omega must increase to keep L constant."
+  },
+  {
+    scenario: "Two wheels have the same mass and radius. One is a solid disk, and the other is a thin ring (hoop) with all mass at the rim. Both are released from rest at the top of an identical inclined ramp.",
+    question: "Which wheel reaches the bottom of the ramp first?",
+    options: [
+      { id: 'a', label: "The solid disk reaches the bottom first", correct: true },
+      { id: 'b', label: "The ring reaches the bottom first" },
+      { id: 'c', label: "They reach the bottom at exactly the same time" },
+      { id: 'd', label: "It depends on the steepness of the ramp" }
+    ],
+    explanation: "The solid disk has I = (1/2)MR^2, while the ring has I = MR^2. More of the disk's gravitational potential energy goes into translational kinetic energy rather than rotational, so it accelerates faster down the ramp."
+  },
+  {
+    scenario: "An engineer is designing a flywheel for energy storage. She must choose between a solid cylinder and a hollow cylinder of the same mass and outer radius.",
+    question: "Which design stores more rotational kinetic energy at the same angular velocity?",
+    options: [
+      { id: 'a', label: "The solid cylinder stores more energy" },
+      { id: 'b', label: "The hollow cylinder stores more energy", correct: true },
+      { id: 'c', label: "Both store exactly the same energy" },
+      { id: 'd', label: "Energy storage doesn't depend on mass distribution" }
+    ],
+    explanation: "Rotational kinetic energy is KE = (1/2)I*omega^2. The hollow cylinder has higher I because mass is farther from the axis. At the same omega, higher I means more stored energy."
+  },
+  {
+    scenario: "A diver jumps off a platform and performs a triple somersault. She starts in a straight (layout) position, then tucks tightly, completes the rotations, and opens up before entering the water.",
+    question: "Why does she tuck for the somersaults and open up before entry?",
+    options: [
+      { id: 'a', label: "Tucking reduces air resistance, opening increases it" },
+      { id: 'b', label: "Tucking decreases I to spin faster, opening increases I to slow rotation", correct: true },
+      { id: 'c', label: "Tucking generates more angular momentum" },
+      { id: 'd', label: "Opening creates lift to slow her fall" }
+    ],
+    explanation: "By tucking, the diver reduces her moment of inertia, which increases omega (conservation of angular momentum). Opening up before entry increases I, slowing rotation for a clean vertical entry."
+  },
+  {
+    scenario: "A playground merry-go-round is spinning freely. A child walks from the edge toward the center of the merry-go-round.",
+    question: "What happens to the merry-go-round's rotation speed as the child walks inward?",
+    options: [
+      { id: 'a', label: "It slows down because the child adds friction" },
+      { id: 'b', label: "It speeds up because total moment of inertia decreases", correct: true },
+      { id: 'c', label: "It stays the same because the child's mass doesn't change" },
+      { id: 'd', label: "It stops because angular momentum transfers to the child" }
+    ],
+    explanation: "The system's total angular momentum is conserved. As the child moves inward, the system's total I decreases (mr^2 decreases as r decreases), so omega must increase."
+  },
+  {
+    scenario: "NASA engineers design a satellite with three reaction wheels oriented along perpendicular axes. Each wheel can be spun up or down by electric motors.",
+    question: "How do reaction wheels control the satellite's orientation without using fuel?",
+    options: [
+      { id: 'a', label: "By creating thrust from the spinning mass" },
+      { id: 'b', label: "By using gyroscopic forces to push against space" },
+      { id: 'c', label: "By trading angular momentum between wheels and spacecraft body", correct: true },
+      { id: 'd', label: "By generating magnetic fields that interact with Earth's field" }
+    ],
+    explanation: "When a reaction wheel speeds up, the spacecraft body must rotate in the opposite direction to conserve total angular momentum. This allows precise pointing without expelling propellant."
+  },
+  {
+    scenario: "A physics teacher places equal masses at different positions on a rotating rod: one mass close to the axis and one far from the axis.",
+    question: "How does the position of mass affect its contribution to the total moment of inertia?",
+    options: [
+      { id: 'a', label: "Position doesn't matter, only total mass counts" },
+      { id: 'b', label: "Contribution increases linearly with distance from axis" },
+      { id: 'c', label: "Contribution increases with the square of distance from axis", correct: true },
+      { id: 'd', label: "Mass closer to axis contributes more to I" }
+    ],
+    explanation: "For a point mass, I = mr^2. The contribution to moment of inertia depends on the square of the distance from the rotation axis, so mass far from the axis has a much larger effect."
+  },
+  {
+    scenario: "A star collapses to form a neutron star, shrinking from a radius of 1 million km to about 10 km while conserving most of its angular momentum.",
+    question: "If the original star rotated once per month, approximately how fast does the neutron star rotate?",
+    options: [
+      { id: 'a', label: "Once per day - slightly faster" },
+      { id: 'b', label: "Once per hour - much faster" },
+      { id: 'c', label: "Many times per second - extremely fast", correct: true },
+      { id: 'd', label: "Once per year - slower due to mass loss" }
+    ],
+    explanation: "Since L = I*omega is conserved and I ~ MR^2, reducing R by a factor of 100,000 means omega increases by about 10 billion times! Neutron stars can spin hundreds of times per second."
+  },
+  {
+    scenario: "A figure skater spinning with arms extended has rotational kinetic energy of 100 J. She pulls her arms in and her spin rate doubles.",
+    question: "What is her new rotational kinetic energy?",
+    options: [
+      { id: 'a', label: "50 J - energy is lost when arms move in" },
+      { id: 'b', label: "100 J - energy is conserved" },
+      { id: 'c', label: "200 J - energy increases when arms pull in", correct: true },
+      { id: 'd', label: "400 J - energy quadruples when omega doubles" }
+    ],
+    explanation: "KE = (1/2)I*omega^2. If omega doubles and L = I*omega is constant, then I must halve. So KE_new = (1/2)(I/2)(2*omega)^2 = (1/2)(I/2)(4*omega^2) = I*omega^2 = 2*KE_old. The skater does work by pulling her arms in."
+  },
+  {
+    scenario: "A car manufacturer is choosing between steel and aluminum for a new wheel design. The aluminum wheel has 60% of the mass of the steel wheel with the same dimensions.",
+    question: "How does the lighter wheel affect the car's acceleration performance?",
+    options: [
+      { id: 'a', label: "No significant effect - wheel mass is negligible" },
+      { id: 'b', label: "Better acceleration - less rotational inertia to overcome", correct: true },
+      { id: 'c', label: "Worse acceleration - lighter wheels have less traction" },
+      { id: 'd', label: "Better top speed but worse acceleration" }
+    ],
+    explanation: "Engine torque must accelerate both the car's linear motion and the wheels' rotation. Lighter wheels with lower I require less torque to spin up, leaving more for linear acceleration. This is why racing cars use lightweight wheels."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
-    icon: '⛸️',
+    icon: '---',
     title: 'Figure Skating Spins',
     short: 'Angular momentum conservation on ice',
     tagline: 'Pulling arms in to spin faster',
     description: 'Figure skaters demonstrate moment of inertia beautifully. By pulling their arms close to their body, they reduce moment of inertia and spin dramatically faster - the same total angular momentum distributed in a smaller radius means higher angular velocity.',
-    connection: 'The game showed how extending arms slows rotation while tucking them speeds it up. Skaters exploit L = Iω conservation - reducing I forces ω to increase. The physics you simulated is exactly what enables triple axels.',
-    howItWorks: 'Skater starts spin with arms extended (large I, moderate ω). Arms pulled tight to body dramatically reduce I. Angular momentum L = Iω conserved. Smaller I means larger ω. Can increase spin rate 3-4x.',
+    connection: 'The simulation showed how extending arms slows rotation while tucking them speeds it up. Skaters exploit L = I*omega conservation - reducing I forces omega to increase. The physics you explored is exactly what enables triple axels.',
+    howItWorks: 'Skater starts spin with arms extended (large I, moderate omega). Arms pulled tight to body dramatically reduce I. Angular momentum L = I*omega conserved. Smaller I means larger omega. Can increase spin rate 3-4x.',
     stats: [
-      { value: '6rev/s', label: 'Top spin speed', icon: '🔄' },
-      { value: '4x', label: 'Speed increase tucking in', icon: '⚡' },
-      { value: '$400M', label: 'Figure skating industry', icon: '📈' }
+      { value: '6 rev/s', label: 'Top spin speed', icon: '---' },
+      { value: '4x', label: 'Speed increase tucking', icon: '---' },
+      { value: '$400M', label: 'Industry value', icon: '---' }
     ],
     examples: ['Sit spins', 'Camel spins', 'Jump landings', 'Ice dance'],
     companies: ['US Figure Skating', 'ISU', 'Jackson Ultima', 'Riedell'],
     futureImpact: 'Biomechanical sensors will optimize arm positioning for maximum spin speed while maintaining stability.',
-    color: '#3b82f6'
+    color: '#3B82F6'
   },
   {
-    icon: '🚗',
+    icon: '---',
     title: 'Automotive Flywheels',
     short: 'Energy storage in rotating mass',
     tagline: 'Smoothing engine pulses with inertia',
     description: 'Engine flywheels use high moment of inertia to store rotational energy and smooth power delivery. The same physics applies to regenerative braking systems that store energy in spinning flywheels for later acceleration.',
-    connection: 'The game demonstrated how mass distribution affects rotational inertia. Flywheels concentrate mass at large radius to maximize I = mr², storing more kinetic energy (½Iω²) for a given spin rate.',
-    howItWorks: 'Heavy rim concentrates mass at large radius, maximizing I. Stores rotational kinetic energy E = ½Iω². Releases energy to smooth engine pulses between combustion strokes. Dual-mass flywheels isolate drivetrain vibrations.',
+    connection: 'The simulation demonstrated how mass distribution affects rotational inertia. Flywheels concentrate mass at large radius to maximize I = mr^2, storing more kinetic energy (0.5*I*omega^2) for a given spin rate.',
+    howItWorks: 'Heavy rim concentrates mass at large radius, maximizing I. Stores rotational kinetic energy E = 0.5*I*omega^2. Releases energy to smooth engine pulses between combustion strokes. Dual-mass flywheels isolate drivetrain vibrations.',
     stats: [
-      { value: '25kg', label: 'Typical flywheel mass', icon: '⚖️' },
-      { value: '60kJ', label: 'Energy storage', icon: '⚡' },
-      { value: '$5B', label: 'Automotive flywheel market', icon: '📈' }
+      { value: '25 kg', label: 'Typical mass', icon: '---' },
+      { value: '60 kJ', label: 'Energy storage', icon: '---' },
+      { value: '$5B', label: 'Market size', icon: '---' }
     ],
     examples: ['Engine flywheels', 'KERS systems', 'Flywheel batteries', 'Grid storage'],
     companies: ['LuK', 'Valeo', 'ZF', 'Beacon Power'],
     futureImpact: 'Carbon fiber flywheels spinning at 100,000 rpm will compete with batteries for grid-scale energy storage.',
-    color: '#f59e0b'
+    color: '#F59E0B'
   },
   {
-    icon: '🛰️',
+    icon: '---',
     title: 'Satellite Attitude Control',
     short: 'Reaction wheels for spacecraft orientation',
     tagline: 'Spinning to point at stars',
     description: 'Satellites use reaction wheels - spinning masses whose angular momentum can be traded with the spacecraft body. Speeding up or slowing down wheels causes the satellite to rotate in the opposite direction, enabling precise pointing without fuel.',
-    connection: 'The simulation showed angular momentum conservation when changing arm position. Reaction wheels use the same physics - changing wheel spin rate (Iω) forces the spacecraft body to counter-rotate to conserve total L.',
+    connection: 'The simulation showed angular momentum conservation when changing arm position. Reaction wheels use the same physics - changing wheel spin rate (I*omega) forces the spacecraft body to counter-rotate to conserve total L.',
     howItWorks: 'Multiple reaction wheels oriented along spacecraft axes. Electric motors speed up or slow down wheels. Change in wheel angular momentum must be balanced by spacecraft body. Result: precise attitude control. Desaturation uses thrusters.',
     stats: [
-      { value: '0.001°', label: 'Pointing accuracy', icon: '🎯' },
-      { value: '6000rpm', label: 'Wheel speed', icon: '🔄' },
-      { value: '$2B', label: 'Attitude control market', icon: '📈' }
+      { value: '0.001 deg', label: 'Pointing accuracy', icon: '---' },
+      { value: '6000 rpm', label: 'Wheel speed', icon: '---' },
+      { value: '$2B', label: 'Market size', icon: '---' }
     ],
     examples: ['Hubble Space Telescope', 'GPS satellites', 'Earth observation', 'Communication sats'],
     companies: ['Honeywell', 'Rockwell Collins', 'SSTL', 'Blue Canyon'],
     futureImpact: 'Control moment gyroscopes will enable rapid repointing for satellite constellations providing real-time Earth imaging.',
-    color: '#8b5cf6'
+    color: '#8B5CF6'
   },
   {
-    icon: '🏍️',
+    icon: '---',
     title: 'Motorcycle Dynamics',
     short: 'Gyroscopic stability from spinning wheels',
     tagline: 'Why bicycles stay upright',
     description: 'Motorcycle and bicycle stability relies heavily on the gyroscopic effects of spinning wheels. The angular momentum of the wheels resists changes in orientation, and the moment of inertia distribution affects handling characteristics.',
-    connection: 'The game showed how moment of inertia affects rotational response. Motorcycle wheels have significant angular momentum (Iω), and this gyroscopic effect makes the bike resist tipping - harder to change L means harder to fall over.',
+    connection: 'The simulation showed how moment of inertia affects rotational response. Motorcycle wheels have significant angular momentum (I*omega), and this gyroscopic effect makes the bike resist tipping - harder to change L means harder to fall over.',
     howItWorks: 'Front wheel angular momentum creates gyroscopic stability. Steering input precesses wheel, causing lean. Heavier wheels (higher I) increase stability but reduce agility. Racing bikes optimize wheel I for quick direction changes.',
     stats: [
-      { value: '100rad/s', label: 'Highway wheel speed', icon: '🔄' },
-      { value: '10kg·m²', label: 'Typical wheel I', icon: '⚖️' },
-      { value: '$100B', label: 'Motorcycle market', icon: '📈' }
+      { value: '100 rad/s', label: 'Highway wheel speed', icon: '---' },
+      { value: '10 kg m^2', label: 'Typical wheel I', icon: '---' },
+      { value: '$100B', label: 'Industry size', icon: '---' }
     ],
     examples: ['Sportbike handling', 'Touring stability', 'Trials balance', 'Electric motorcycles'],
     companies: ['Honda', 'BMW', 'Ducati', 'Harley-Davidson'],
-    futureImpact: 'Active gyroscopic stabilization will enable self-balancing motorcycles that can\'t tip over at stops.',
-    color: '#22c55e'
+    futureImpact: 'Active gyroscopic stabilization will enable self-balancing motorcycles that cannot tip over at stops.',
+    color: '#10B981'
   }
 ];
 
-// Phase type - string-based for clarity
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
 
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Introduction',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Understanding',
-  twist_predict: 'New Scenario',
-  twist_play: 'Spin Simulation',
-  twist_review: 'Deep Insight',
-  transfer: 'Real World',
-  test: 'Knowledge Test',
-  mastery: 'Mastery'
-};
-
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'simulation_stopped'
-  | 'parameter_changed'
-  | 'arm_position_changed'
-  | 'spin_toggled'
-  | 'milestone_reached'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'app_completed'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
-}
-
-interface Props {
-  onGameEvent?: (event: GameEvent) => void;
-  gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
-}
-
-const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [testScore, setTestScore] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Animation states
+  // Simulation state for play phase
+  const [armExtension, setArmExtension] = useState(0.7); // 0 = tucked, 1 = extended
+  const [initialL, setInitialL] = useState(15); // angular momentum (conserved)
   const [rotation, setRotation] = useState(0);
-  const [armExtension, setArmExtension] = useState(1); // 0 = tucked, 1 = extended
-  const [angularVelocity, setAngularVelocity] = useState(3); // base spin rate
   const [isSpinning, setIsSpinning] = useState(true);
-  const [initialL, setInitialL] = useState(15); // constant angular momentum
 
-  const lastClickRef = useRef(0);
+  // Twist phase state - comparing shapes
+  const [selectedShape, setSelectedShape] = useState<'disk' | 'ring' | 'sphere' | 'hollow'>('disk');
+  const [rampAngle, setRampAngle] = useState(30);
+  const [raceTime, setRaceTime] = useState(0);
+  const [isRacing, setIsRacing] = useState(false);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
 
   // Responsive design
   useEffect(() => {
@@ -156,1512 +295,1550 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Sound utility with Web Audio API
-  const playSound = useCallback((type: 'click' | 'correct' | 'incorrect' | 'complete' | 'transition' | 'spin') => {
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
-        click: { freq: 600, duration: 0.1, type: 'sine' },
-        correct: { freq: 800, duration: 0.2, type: 'sine' },
-        incorrect: { freq: 300, duration: 0.3, type: 'sawtooth' },
-        complete: { freq: 1000, duration: 0.3, type: 'sine' },
-        transition: { freq: 500, duration: 0.15, type: 'triangle' },
-        spin: { freq: 200, duration: 0.1, type: 'sine' }
-      };
-
-      const sound = sounds[type] || sounds.click;
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch {
-      // Audio not available
-    }
-  }, []);
-
-  // Sync with external phase control
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
-      setPhase(gamePhase as Phase);
-    }
-  }, [gamePhase, phase]);
-
-  const goToPhase = useCallback((newPhase: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 300) return;
-    lastClickRef.current = now;
-    playSound('transition');
-    setPhase(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseLabels[newPhase] } });
-    onPhaseComplete?.(newPhase);
-  }, [playSound, onGameEvent, onPhaseComplete]);
-
-  // Calculate effective angular velocity based on arm position
-  // L = I * omega is constant, so omega = L / I
-  // When arms are tucked (extension=0), I is smaller, so omega is larger
-  const calculateOmega = useCallback((extension: number) => {
-    // I = I_body + m*r^2 for arms
-    // Simplified: I scales from 1 (tucked) to 3 (extended)
-    const momentOfInertia = 1 + 2 * extension;
-    return initialL / momentOfInertia;
-  }, [initialL]);
-
-  // Skater animation
+  // Skater spinning animation
   useEffect(() => {
     if (!isSpinning) return;
+    const momentOfInertia = 1 + 2 * armExtension; // I scales from 1 (tucked) to 3 (extended)
+    const omega = initialL / momentOfInertia; // omega = L/I
 
     const interval = setInterval(() => {
-      const omega = calculateOmega(armExtension);
-      setAngularVelocity(omega);
       setRotation(prev => (prev + omega * 2) % 360);
     }, 50);
-
     return () => clearInterval(interval);
-  }, [isSpinning, armExtension, calculateOmega]);
+  }, [isSpinning, armExtension, initialL]);
 
+  // Race animation for twist phase
   useEffect(() => {
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', data: { phase } });
-    }
-  }, [phase, onGameEvent]);
+    if (!isRacing) return;
+    const interval = setInterval(() => {
+      setRaceTime(prev => {
+        if (prev >= 100) {
+          setIsRacing(false);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 50);
+    return () => clearInterval(interval);
+  }, [isRacing]);
 
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-    playSound(prediction === 'B' ? 'correct' : 'incorrect');
-  }, [playSound]);
+  // Calculate current omega based on arm position
+  const currentOmega = initialL / (1 + 2 * armExtension);
+  const currentI = 1 + 2 * armExtension;
 
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-    playSound(prediction === 'A' ? 'correct' : 'incorrect');
-  }, [playSound]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-  }, [playSound]);
-
-  const testQuestions = [
-    {
-      question: "What quantity is conserved when an ice skater pulls in their arms?",
-      options: [
-        { text: "Angular velocity", correct: false },
-        { text: "Angular momentum", correct: true },
-        { text: "Rotational energy", correct: false },
-        { text: "Moment of inertia", correct: false }
-      ]
-    },
-    {
-      question: "When a skater pulls in their arms, their moment of inertia:",
-      options: [
-        { text: "Increases", correct: false },
-        { text: "Decreases", correct: true },
-        { text: "Stays the same", correct: false },
-        { text: "Becomes zero", correct: false }
-      ]
-    },
-    {
-      question: "The moment of inertia depends on:",
-      options: [
-        { text: "Only the total mass", correct: false },
-        { text: "Mass distribution relative to the rotation axis", correct: true },
-        { text: "Only the rotation speed", correct: false },
-        { text: "The temperature", correct: false }
-      ]
-    },
-    {
-      question: "Angular momentum L is calculated as:",
-      options: [
-        { text: "L = mv", correct: false },
-        { text: "L = I times omega", correct: true },
-        { text: "L = half I omega squared", correct: false },
-        { text: "L = mgh", correct: false }
-      ]
-    },
-    {
-      question: "A diver in the tuck position spins faster because:",
-      options: [
-        { text: "They have more energy", correct: false },
-        { text: "Their moment of inertia is smaller", correct: true },
-        { text: "Gravity pulls them faster", correct: false },
-        { text: "Air resistance is lower", correct: false }
-      ]
-    },
-    {
-      question: "When a neutron star collapses and shrinks, its spin rate:",
-      options: [
-        { text: "Decreases dramatically", correct: false },
-        { text: "Increases dramatically", correct: true },
-        { text: "Stays exactly the same", correct: false },
-        { text: "Becomes zero", correct: false }
-      ]
-    },
-    {
-      question: "Which shape has the largest moment of inertia for the same mass?",
-      options: [
-        { text: "Solid sphere", correct: false },
-        { text: "Hollow sphere", correct: true },
-        { text: "Point mass at center", correct: false },
-        { text: "All have the same I", correct: false }
-      ]
-    },
-    {
-      question: "If you double the distance of a mass from the rotation axis, its contribution to I:",
-      options: [
-        { text: "Doubles", correct: false },
-        { text: "Quadruples", correct: true },
-        { text: "Halves", correct: false },
-        { text: "Stays the same", correct: false }
-      ]
-    },
-    {
-      question: "When an ice skater extends their arms, their kinetic energy:",
-      options: [
-        { text: "Increases", correct: false },
-        { text: "Decreases", correct: true },
-        { text: "Stays constant", correct: false },
-        { text: "Becomes negative", correct: false }
-      ]
-    },
-    {
-      question: "The equation I = mr squared shows that moment of inertia depends on distance:",
-      options: [
-        { text: "Linearly", correct: false },
-        { text: "Quadratically (squared)", correct: true },
-        { text: "Cubically", correct: false },
-        { text: "Exponentially", correct: false }
-      ]
-    }
-  ];
-
-  const calculateScore = () => {
-    return testAnswers.reduce((score, answer, index) => {
-      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
-    }, 0);
+  // Shape moment of inertia factors (I = factor * MR^2)
+  const shapeFactors: Record<string, { factor: number; name: string; color: string }> = {
+    disk: { factor: 0.5, name: 'Solid Disk', color: '#EC4899' },
+    ring: { factor: 1.0, name: 'Ring/Hoop', color: '#06B6D4' },
+    sphere: { factor: 0.4, name: 'Solid Sphere', color: '#10B981' },
+    hollow: { factor: 0.67, name: 'Hollow Sphere', color: '#F59E0B' }
   };
 
-  // Premium SVG defs for moment of inertia visualizations
-  const renderSvgDefs = () => (
-    <defs>
-      {/* === PREMIUM GRADIENTS === */}
+  // Calculate race position based on shape (lower I factor = faster)
+  const getRacePosition = (shape: string, time: number) => {
+    const factor = shapeFactors[shape].factor;
+    // Position proportional to 1/(1 + factor) - shapes with lower I roll faster
+    const speed = 1 / (1 + factor);
+    return Math.min(time * speed, 100);
+  };
 
-      {/* Ice rink surface gradient with depth */}
-      <linearGradient id="moiIceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.2" />
-        <stop offset="25%" stopColor="#67e8f9" stopOpacity="0.4" />
-        <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.6" />
-        <stop offset="75%" stopColor="#67e8f9" stopOpacity="0.4" />
-        <stop offset="100%" stopColor="#a5f3fc" stopOpacity="0.2" />
-      </linearGradient>
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#EC4899', // Pink for rotation/skating theme
+    accentGlow: 'rgba(236, 72, 153, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
 
-      {/* Premium dress gradient with 3D effect */}
-      <linearGradient id="moiDressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#f472b6" />
-        <stop offset="20%" stopColor="#ec4899" />
-        <stop offset="50%" stopColor="#db2777" />
-        <stop offset="80%" stopColor="#be185d" />
-        <stop offset="100%" stopColor="#9d174d" />
-      </linearGradient>
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-      {/* Skirt gradient with fabric sheen */}
-      <linearGradient id="moiSkirtGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#f9a8d4" />
-        <stop offset="15%" stopColor="#f472b6" />
-        <stop offset="50%" stopColor="#ec4899" />
-        <stop offset="85%" stopColor="#db2777" />
-        <stop offset="100%" stopColor="#be185d" />
-      </linearGradient>
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Shape Race',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-      {/* Skin tone gradient with 3D shading */}
-      <radialGradient id="moiSkinGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" stopColor="#fde4d4" />
-        <stop offset="50%" stopColor="#fcd9b6" />
-        <stop offset="100%" stopColor="#e0b090" />
-      </radialGradient>
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'moment-of-inertia',
+        gameTitle: 'Moment of Inertia',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-      {/* Hair gradient with shine */}
-      <linearGradient id="moiHairGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#a0522d" />
-        <stop offset="30%" stopColor="#8B4513" />
-        <stop offset="70%" stopColor="#654321" />
-        <stop offset="100%" stopColor="#5c4033" />
-      </linearGradient>
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
-      {/* Ice skate metallic gradient */}
-      <linearGradient id="moiSkateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="20%" stopColor="#f8f8f8" />
-        <stop offset="50%" stopColor="#e8e8e8" />
-        <stop offset="80%" stopColor="#d0d0d0" />
-        <stop offset="100%" stopColor="#c0c0c0" />
-      </linearGradient>
-
-      {/* Skate blade chrome gradient */}
-      <linearGradient id="moiBladeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#e8e8e8" />
-        <stop offset="30%" stopColor="#d0d0d0" />
-        <stop offset="50%" stopColor="#a0a0a0" />
-        <stop offset="70%" stopColor="#c0c0c0" />
-        <stop offset="100%" stopColor="#909090" />
-      </linearGradient>
-
-      {/* Rotation trail gradient */}
-      <linearGradient id="moiRotationTrailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#6366f1" stopOpacity="0" />
-        <stop offset="25%" stopColor="#8b5cf6" stopOpacity="0.6" />
-        <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.8" />
-        <stop offset="75%" stopColor="#8b5cf6" stopOpacity="0.6" />
-        <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-      </linearGradient>
-
-      {/* Angular velocity arc gradient */}
-      <linearGradient id="moiVelocityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.2" />
-        <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.7" />
-        <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
-        <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.7" />
-        <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.2" />
-      </linearGradient>
-
-      {/* Axis of rotation gradient */}
-      <linearGradient id="moiAxisGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
-        <stop offset="20%" stopColor="#f59e0b" stopOpacity="0.8" />
-        <stop offset="50%" stopColor="#d97706" stopOpacity="1" />
-        <stop offset="80%" stopColor="#f59e0b" stopOpacity="0.8" />
-        <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-      </linearGradient>
-
-      {/* Mass distribution radial gradient */}
-      <radialGradient id="moiMassDistribution" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="#ec4899" stopOpacity="0.8" />
-        <stop offset="40%" stopColor="#db2777" stopOpacity="0.5" />
-        <stop offset="70%" stopColor="#be185d" stopOpacity="0.3" />
-        <stop offset="100%" stopColor="#9d174d" stopOpacity="0" />
-      </radialGradient>
-
-      {/* Speed particle glow gradient */}
-      <radialGradient id="moiParticleGlow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stopColor="#a78bfa" stopOpacity="1" />
-        <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.7" />
-        <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4" />
-        <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
-      </radialGradient>
-
-      {/* Solid disk 3D gradient */}
-      <radialGradient id="moiSolidDiskGradient" cx="30%" cy="30%" r="70%">
-        <stop offset="0%" stopColor="#f9a8d4" />
-        <stop offset="30%" stopColor="#ec4899" />
-        <stop offset="60%" stopColor="#db2777" />
-        <stop offset="100%" stopColor="#9d174d" />
-      </radialGradient>
-
-      {/* Ring/hoop gradient with 3D depth */}
-      <linearGradient id="moiRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#67e8f9" />
-        <stop offset="25%" stopColor="#22d3ee" />
-        <stop offset="50%" stopColor="#06b6d4" />
-        <stop offset="75%" stopColor="#0891b2" />
-        <stop offset="100%" stopColor="#0e7490" />
-      </linearGradient>
-
-      {/* === GLOW FILTERS === */}
-
-      {/* Rotation glow filter */}
-      <filter id="moiRotationGlow" x="-100%" y="-100%" width="300%" height="300%">
-        <feGaussianBlur stdDeviation="3" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-
-      {/* Axis glow filter */}
-      <filter id="moiAxisGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="2" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-
-      {/* Speed particle glow filter */}
-      <filter id="moiParticleBlur" x="-100%" y="-100%" width="300%" height="300%">
-        <feGaussianBlur stdDeviation="2" />
-      </filter>
-
-      {/* Intense velocity glow */}
-      <filter id="moiVelocityGlow" x="-100%" y="-100%" width="300%" height="300%">
-        <feGaussianBlur stdDeviation="4" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-
-      {/* Mass distribution blur */}
-      <filter id="moiMassBlur" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="8" />
-      </filter>
-
-      {/* Skater shadow filter */}
-      <filter id="moiShadow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="3" result="shadow" />
-        <feOffset dx="2" dy="4" result="offsetShadow" />
-        <feMerge>
-          <feMergeNode in="offsetShadow" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-    </defs>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
   );
 
-  const renderSkater = (extension: number, rot: number, size: number = 200) => {
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #BE185D)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // Skater SVG Component
+  const SkaterVisualization = ({ size = 200 }: { size?: number }) => {
     const centerX = size / 2;
     const centerY = size / 2 + 20;
-    const armLength = 25 + extension * 40; // Arm length based on extension
-    const armAngle = 70 - extension * 60; // Angle from vertical
-    const intensity = Math.min(1, angularVelocity / 10);
-    const massRadius = 20 + extension * 35; // Mass distribution visualization radius
+    const armLength = 25 + armExtension * 40;
+    const armAngle = 70 - armExtension * 60;
+    const intensity = Math.min(1, currentOmega / 10);
 
     return (
-      <svg width={size} height={size + 40} className="overflow-visible">
-        {renderSvgDefs()}
+      <svg width={size} height={size + 40} style={{ overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="iceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.2" />
+            <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#a5f3fc" stopOpacity="0.2" />
+          </linearGradient>
+          <radialGradient id="skinGrad" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#fde4d4" />
+            <stop offset="100%" stopColor="#e0b090" />
+          </radialGradient>
+          <linearGradient id="dressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f472b6" />
+            <stop offset="100%" stopColor="#9d174d" />
+          </linearGradient>
+          <filter id="glowFilter">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-        {/* === AXIS OF ROTATION === */}
+        {/* Ice surface */}
+        <ellipse cx={centerX} cy={size + 20} rx={80} ry={15} fill="url(#iceGrad)" />
+
+        {/* Rotation trail */}
         <g transform={`translate(${centerX}, ${centerY})`}>
-          {/* Vertical axis line with glow */}
-          <line
-            x1="0" y1="-85"
-            x2="0" y2="75"
-            stroke="url(#moiAxisGradient)"
-            strokeWidth="3"
-            strokeDasharray="8 4"
-            filter="url(#moiAxisGlow)"
-            opacity="0.8"
-          />
-          {/* Axis endpoint markers */}
-          <circle cx="0" cy="-85" r="4" fill="#f59e0b" filter="url(#moiAxisGlow)" />
-          <circle cx="0" cy="75" r="4" fill="#f59e0b" filter="url(#moiAxisGlow)" />
-        </g>
-
-        {/* === MASS DISTRIBUTION VISUALIZATION === */}
-        <g transform={`translate(${centerX}, ${centerY})`}>
-          {/* Outer mass distribution ring - shows where mass is concentrated */}
-          <ellipse
-            cx="0" cy="0"
-            rx={massRadius} ry={massRadius * 0.3}
-            fill="url(#moiMassDistribution)"
-            filter="url(#moiMassBlur)"
-            opacity={0.4 + extension * 0.4}
-          />
-          {/* Mass concentration indicators */}
-          {extension > 0.3 && (
-            <>
-              <circle
-                cx={-massRadius * 0.8} cy="0"
-                r={4 + extension * 4}
-                fill="url(#moiParticleGlow)"
-                filter="url(#moiParticleBlur)"
-              />
-              <circle
-                cx={massRadius * 0.8} cy="0"
-                r={4 + extension * 4}
-                fill="url(#moiParticleGlow)"
-                filter="url(#moiParticleBlur)"
-              />
-            </>
-          )}
-        </g>
-
-        {/* === PREMIUM ICE SURFACE === */}
-        <ellipse
-          cx={centerX} cy={size + 20}
-          rx={80} ry={15}
-          fill="url(#moiIceGradient)"
-        />
-        {/* Ice reflection highlights */}
-        <ellipse
-          cx={centerX - 20} cy={size + 18}
-          rx={25} ry={4}
-          fill="#ffffff"
-          opacity="0.15"
-        />
-
-        {/* === ANGULAR VELOCITY INDICATOR === */}
-        <g transform={`translate(${centerX}, ${centerY})`}>
-          {/* Rotation trail ellipse with gradient */}
           <ellipse
             cx="0" cy="60"
             rx="50" ry="12"
             fill="none"
-            stroke="url(#moiRotationTrailGradient)"
+            stroke={colors.accent}
             strokeWidth={2 + intensity * 2}
             strokeDasharray={isSpinning ? `${12 - intensity * 8} ${4 + intensity * 4}` : "8 4"}
-            filter="url(#moiRotationGlow)"
+            filter="url(#glowFilter)"
+            opacity={0.6}
           />
-
-          {/* Velocity arc showing speed */}
-          <path
-            d={`M -40 60 A 40 10 0 0 1 ${-40 + intensity * 80} 60`}
-            fill="none"
-            stroke="url(#moiVelocityGradient)"
-            strokeWidth={3 + intensity * 3}
-            strokeLinecap="round"
-            filter="url(#moiVelocityGlow)"
-            opacity={intensity}
-          />
-
-          {/* Speed indicator particles with glow */}
-          {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-            const r = 45;
-            const particleSize = 2 + intensity * 3;
-            return (
-              <g key={i}>
-                {/* Glow layer */}
-                <circle
-                  cx={Math.cos((angle + rot) * Math.PI / 180) * r}
-                  cy={60 + Math.sin((angle + rot) * Math.PI / 180) * 12}
-                  r={particleSize * 2}
-                  fill="url(#moiParticleGlow)"
-                  filter="url(#moiParticleBlur)"
-                  opacity={0.3 + intensity * 0.5}
-                />
-                {/* Core particle */}
-                <circle
-                  cx={Math.cos((angle + rot) * Math.PI / 180) * r}
-                  cy={60 + Math.sin((angle + rot) * Math.PI / 180) * 12}
-                  r={particleSize}
-                  fill="#a78bfa"
-                />
-              </g>
-            );
-          })}
         </g>
 
-        {/* === SKATER BODY WITH PREMIUM GRADIENTS === */}
-        <g transform={`translate(${centerX}, ${centerY}) rotate(${rot * 0.5})`} filter="url(#moiShadow)">
-          {/* Head with 3D skin gradient */}
-          <circle cx="0" cy="-55" r="15" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="1.5" />
-          {/* Eyes */}
-          <ellipse cx="-5" cy="-58" rx="2.5" ry="2" fill="#2d3748" />
-          <ellipse cx="5" cy="-58" rx="2.5" ry="2" fill="#2d3748" />
-          <circle cx="-4" cy="-58" r="0.8" fill="#ffffff" />
-          <circle cx="6" cy="-58" r="0.8" fill="#ffffff" />
-          {/* Mouth */}
-          <ellipse cx="0" cy="-51" rx="4" ry="2" fill="#e88" opacity="0.8" />
+        {/* Skater body */}
+        <g transform={`translate(${centerX}, ${centerY}) rotate(${rotation * 0.5})`}>
+          {/* Head */}
+          <circle cx="0" cy="-55" r="15" fill="url(#skinGrad)" stroke="#d4a574" strokeWidth="1.5" />
+          <ellipse cx="-5" cy="-58" rx="2" ry="2" fill="#2d3748" />
+          <ellipse cx="5" cy="-58" rx="2" ry="2" fill="#2d3748" />
 
-          {/* Hair with gradient */}
-          <path d="M-12,-62 Q-15,-75 0,-72 Q15,-75 12,-62" fill="url(#moiHairGradient)" />
-          {/* Hair shine */}
-          <path d="M-8,-66 Q-5,-70 2,-68" stroke="#c9a065" strokeWidth="2" fill="none" opacity="0.5" />
+          {/* Hair */}
+          <path d="M-12,-62 Q-15,-75 0,-72 Q15,-75 12,-62" fill="#8B4513" />
 
-          {/* Torso with 3D dress gradient */}
-          <path d="M-15,-40 L-12,-10 L12,-10 L15,-40 Z" fill="url(#moiDressGradient)" />
-          {/* Dress highlight */}
-          <path d="M-10,-38 L-8,-12 L0,-10" stroke="#f9a8d4" strokeWidth="1" fill="none" opacity="0.4" />
+          {/* Torso */}
+          <path d="M-15,-40 L-12,-10 L12,-10 L15,-40 Z" fill="url(#dressGrad)" />
 
-          {/* Skirt with fabric gradient */}
-          <path d={`M-15,-10 Q-25,10 -30,40 L30,40 Q25,10 15,-10 Z`} fill="url(#moiSkirtGradient)" />
-          {/* Skirt folds */}
-          <path d="M-10,-8 Q-15,15 -18,38" stroke="#be185d" strokeWidth="1" fill="none" opacity="0.3" />
-          <path d="M5,-8 Q8,15 12,38" stroke="#be185d" strokeWidth="1" fill="none" opacity="0.3" />
+          {/* Skirt */}
+          <path d="M-15,-10 Q-25,10 -30,40 L30,40 Q25,10 15,-10 Z" fill="url(#dressGrad)" />
 
-          {/* Arms with skin gradient */}
+          {/* Arms */}
           <g transform={`rotate(${-armAngle})`}>
-            <rect x="-50" y="-5" width={armLength} height="8" rx="4" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
-            <circle cx={-armLength + 5} cy="0" r="6" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
+            <rect x="-50" y="-5" width={armLength} height="8" rx="4" fill="url(#skinGrad)" />
+            <circle cx={-armLength + 5} cy="0" r="6" fill="url(#skinGrad)" />
           </g>
           <g transform={`rotate(${armAngle})`}>
-            <rect x={50 - armLength} y="-5" width={armLength} height="8" rx="4" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
-            <circle cx={armLength - 5} cy="0" r="6" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
+            <rect x={50 - armLength} y="-5" width={armLength} height="8" rx="4" fill="url(#skinGrad)" />
+            <circle cx={armLength - 5} cy="0" r="6" fill="url(#skinGrad)" />
           </g>
 
-          {/* Legs with skin gradient */}
-          <rect x="-8" y="35" width="6" height="35" rx="2" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
-          <rect x="2" y="35" width="6" height="35" rx="2" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
+          {/* Legs */}
+          <rect x="-8" y="35" width="6" height="35" rx="2" fill="url(#skinGrad)" />
+          <rect x="2" y="35" width="6" height="35" rx="2" fill="url(#skinGrad)" />
 
-          {/* Premium skates with metallic gradient */}
-          <rect x="-12" y="68" width="14" height="6" rx="2" fill="url(#moiSkateGradient)" stroke="#b0b0b0" strokeWidth="0.5" />
-          <rect x="-2" y="68" width="14" height="6" rx="2" fill="url(#moiSkateGradient)" stroke="#b0b0b0" strokeWidth="0.5" />
-          {/* Chrome blades */}
-          <rect x="-12" y="73" width="16" height="2" rx="1" fill="url(#moiBladeGradient)" />
-          <rect x="-2" y="73" width="16" height="2" rx="1" fill="url(#moiBladeGradient)" />
-          {/* Blade edge highlight */}
-          <line x1="-11" y1="74" x2="3" y2="74" stroke="#ffffff" strokeWidth="0.5" opacity="0.6" />
-          <line x1="-1" y1="74" x2="11" y2="74" stroke="#ffffff" strokeWidth="0.5" opacity="0.6" />
+          {/* Skates */}
+          <rect x="-12" y="68" width="14" height="6" rx="2" fill="#e8e8e8" />
+          <rect x="-2" y="68" width="14" height="6" rx="2" fill="#e8e8e8" />
+          <rect x="-12" y="73" width="16" height="2" rx="1" fill="#a0a0a0" />
+          <rect x="-2" y="73" width="16" height="2" rx="1" fill="#a0a0a0" />
         </g>
       </svg>
     );
   };
 
-  // ============================================================================
-  // PHASE: HOOK - Welcome page explaining moment of inertia
-  // ============================================================================
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6">
-      {/* Premium badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" />
-        <span className="text-pink-400/80 text-sm font-medium tracking-wide uppercase">Rotational Mechanics</span>
-      </div>
-
-      {/* Gradient title */}
-      <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-        Moment of Inertia
-      </h1>
-
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
-        Discover how mass distribution affects rotation
-      </p>
-
-      {/* Premium card */}
-      <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-        <div className="flex justify-center">
-          {renderSkater(0.3, rotation, 180)}
-        </div>
-        <div className="mt-4 space-y-3 text-gray-300 text-center">
-          <p className="leading-relaxed">
-            <strong className="text-pink-400">Moment of inertia</strong> (also called rotational inertia) is how much an object resists changes to its rotation.
-          </p>
-          <p className="text-sm text-slate-400">
-            It depends not just on mass, but on how that mass is distributed relative to the axis of rotation.
-          </p>
-        </div>
-      </div>
-
-      {/* CTA Button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        style={{ zIndex: 10 }}
-        className="group px-8 py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 flex items-center gap-2"
-      >
-        Make a Prediction
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </button>
-
-      {/* Hint text */}
-      <p className="text-slate-500 text-sm mt-6">
-        Learn why ice skaters spin faster with tucked arms
-      </p>
-    </div>
-  );
-
-  // ============================================================================
-  // PHASE: PREDICT - Prediction about which shape rolls down a ramp faster
-  // ============================================================================
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          A <span className="text-pink-400 font-semibold">solid disk</span> and a <span className="text-cyan-400 font-semibold">ring</span> (hoop) have the same mass and radius. They roll down a ramp from the same height.
-        </p>
-        <div className="flex justify-center gap-8 my-6">
-          {/* Solid disk with premium 3D gradient */}
-          <div className="text-center">
-            <svg width="80" height="80" viewBox="0 0 80 80">
-              <defs>
-                <radialGradient id="moiPredictDiskGrad" cx="30%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#f9a8d4" />
-                  <stop offset="30%" stopColor="#ec4899" />
-                  <stop offset="60%" stopColor="#db2777" />
-                  <stop offset="100%" stopColor="#9d174d" />
-                </radialGradient>
-                <filter id="moiPredictDiskGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              <circle cx="40" cy="40" r="35" fill="url(#moiPredictDiskGrad)" filter="url(#moiPredictDiskGlow)" />
-              {/* Center axis point */}
-              <circle cx="40" cy="40" r="5" fill="#be185d" />
-              <circle cx="40" cy="40" r="2" fill="#ffffff" opacity="0.6" />
-            </svg>
-          </div>
-          {/* Ring with premium gradient */}
-          <div className="text-center">
-            <svg width="80" height="80" viewBox="0 0 80 80">
-              <defs>
-                <linearGradient id="moiPredictRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#67e8f9" />
-                  <stop offset="25%" stopColor="#22d3ee" />
-                  <stop offset="50%" stopColor="#06b6d4" />
-                  <stop offset="75%" stopColor="#0891b2" />
-                  <stop offset="100%" stopColor="#0e7490" />
-                </linearGradient>
-                <filter id="moiPredictRingGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              <circle cx="40" cy="40" r="35" fill="none" stroke="url(#moiPredictRingGrad)" strokeWidth="8" filter="url(#moiPredictRingGlow)" />
-              {/* Center axis point */}
-              <circle cx="40" cy="40" r="5" fill="#06b6d4" />
-              <circle cx="40" cy="40" r="2" fill="#ffffff" opacity="0.6" />
-            </svg>
-          </div>
-        </div>
-        {/* Labels outside SVG using typo system */}
-        <div className="flex justify-center gap-8">
-          <p style={{ fontSize: typo.small }} className="text-pink-400 font-medium">Solid Disk</p>
-          <p style={{ fontSize: typo.small }} className="text-cyan-400 font-medium">Ring (Hoop)</p>
-        </div>
-        <p className="text-lg text-cyan-400 font-medium">
-          Which one reaches the bottom first?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'The ring reaches the bottom first' },
-          { id: 'B', text: 'The solid disk reaches the bottom first' },
-          { id: 'C', text: 'They reach the bottom at the same time' },
-          { id: 'D', text: 'It depends on the mass' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            style={{ zIndex: 10 }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            The solid disk wins! It has a <span className="text-pink-400">lower moment of inertia</span> relative to its mass.
-          </p>
-          <p className="text-slate-400 text-sm mt-2">
-            More of its energy goes into linear motion rather than rotation.
-          </p>
-          <button
-            onClick={() => goToPhase('play')}
-            style={{ zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
-          >
-            Explore the Physics
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  // ============================================================================
-  // PHASE: PLAY - Interactive simulation with different shapes
-  // ============================================================================
-  const renderPlay = () => {
-    const momentOfInertia = 1 + 2 * armExtension;
-    const currentOmega = calculateOmega(armExtension);
+  // Shape comparison visualization for twist phase
+  const ShapeRaceVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 320;
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Shape Comparison Lab</h2>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="rampGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4B5563" />
+            <stop offset="100%" stopColor="#1F2937" />
+          </linearGradient>
+        </defs>
 
-        {/* Shape formulas with premium SVG icons */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 max-w-3xl w-full">
-          {/* Solid Disk */}
-          <div className="bg-slate-800/50 rounded-xl p-3 border border-pink-500/30">
-            <div className="flex justify-center mb-2">
-              <svg width="40" height="40" viewBox="0 0 40 40">
-                <defs>
-                  <radialGradient id="moiPlayDiskGrad" cx="30%" cy="30%" r="70%">
-                    <stop offset="0%" stopColor="#f9a8d4" />
-                    <stop offset="50%" stopColor="#ec4899" />
-                    <stop offset="100%" stopColor="#9d174d" />
-                  </radialGradient>
-                </defs>
-                <circle cx="20" cy="20" r="16" fill="url(#moiPlayDiskGrad)" />
-                <circle cx="20" cy="20" r="2" fill="#ffffff" opacity="0.6" />
-              </svg>
-            </div>
-            <p style={{ fontSize: typo.small }} className="text-pink-400 font-semibold text-center">Solid Disk</p>
-            <p style={{ fontSize: typo.label }} className="text-slate-300 mt-1 font-mono text-center">I = (1/2)MR^2</p>
-          </div>
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Rolling Race: Different Shapes
+        </text>
 
-          {/* Ring (Hoop) */}
-          <div className="bg-slate-800/50 rounded-xl p-3 border border-cyan-500/30">
-            <div className="flex justify-center mb-2">
-              <svg width="40" height="40" viewBox="0 0 40 40">
-                <defs>
-                  <linearGradient id="moiPlayRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#67e8f9" />
-                    <stop offset="50%" stopColor="#06b6d4" />
-                    <stop offset="100%" stopColor="#0e7490" />
-                  </linearGradient>
-                </defs>
-                <circle cx="20" cy="20" r="14" fill="none" stroke="url(#moiPlayRingGrad)" strokeWidth="4" />
-                <circle cx="20" cy="20" r="2" fill="#06b6d4" />
-              </svg>
-            </div>
-            <p style={{ fontSize: typo.small }} className="text-cyan-400 font-semibold text-center">Ring (Hoop)</p>
-            <p style={{ fontSize: typo.label }} className="text-slate-300 mt-1 font-mono text-center">I = MR^2</p>
-          </div>
+        {/* Ramp */}
+        <polygon
+          points={`40,${height - 40} ${width - 40},${height - 40} ${width - 40},${height - 120}`}
+          fill="url(#rampGrad)"
+          stroke={colors.border}
+          strokeWidth="2"
+        />
 
-          {/* Solid Sphere */}
-          <div className="bg-slate-800/50 rounded-xl p-3 border border-emerald-500/30">
-            <div className="flex justify-center mb-2">
-              <svg width="40" height="40" viewBox="0 0 40 40">
-                <defs>
-                  <radialGradient id="moiPlaySphereGrad" cx="30%" cy="30%" r="70%">
-                    <stop offset="0%" stopColor="#6ee7b7" />
-                    <stop offset="40%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#047857" />
-                  </radialGradient>
-                </defs>
-                <circle cx="20" cy="20" r="16" fill="url(#moiPlaySphereGrad)" />
-                {/* 3D highlight arc */}
-                <path d="M 10 16 Q 20 8 30 16" stroke="#a7f3d0" strokeWidth="1.5" fill="none" opacity="0.5" />
-                <circle cx="20" cy="20" r="2" fill="#ffffff" opacity="0.4" />
-              </svg>
-            </div>
-            <p style={{ fontSize: typo.small }} className="text-emerald-400 font-semibold text-center">Solid Sphere</p>
-            <p style={{ fontSize: typo.label }} className="text-slate-300 mt-1 font-mono text-center">I = (2/5)MR^2</p>
-          </div>
+        {/* Start line */}
+        <line x1="60" y1={height - 125} x2="60" y2={height - 140} stroke={colors.success} strokeWidth="3" />
+        <text x="60" y={height - 145} textAnchor="middle" fill={colors.success} fontSize="10">START</text>
 
-          {/* Hollow Sphere */}
-          <div className="bg-slate-800/50 rounded-xl p-3 border border-amber-500/30">
-            <div className="flex justify-center mb-2">
-              <svg width="40" height="40" viewBox="0 0 40 40">
-                <defs>
-                  <linearGradient id="moiPlayHollowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#fcd34d" />
-                    <stop offset="50%" stopColor="#f59e0b" />
-                    <stop offset="100%" stopColor="#b45309" />
-                  </linearGradient>
-                  <radialGradient id="moiPlayHollowInner" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#1e293b" />
-                    <stop offset="100%" stopColor="#0f172a" />
-                  </radialGradient>
-                </defs>
-                <circle cx="20" cy="20" r="16" fill="url(#moiPlayHollowGrad)" />
-                <circle cx="20" cy="20" r="10" fill="url(#moiPlayHollowInner)" />
-                {/* 3D highlight */}
-                <path d="M 8 14 Q 16 6 28 12" stroke="#fef3c7" strokeWidth="1" fill="none" opacity="0.4" />
-              </svg>
-            </div>
-            <p style={{ fontSize: typo.small }} className="text-amber-400 font-semibold text-center">Hollow Sphere</p>
-            <p style={{ fontSize: typo.label }} className="text-slate-300 mt-1 font-mono text-center">I = (2/3)MR^2</p>
-          </div>
-        </div>
+        {/* Finish line */}
+        <line x1={width - 60} y1={height - 45} x2={width - 60} y2={height - 60} stroke={colors.error} strokeWidth="3" />
+        <text x={width - 60} y={height - 65} textAnchor="middle" fill={colors.error} fontSize="10">FINISH</text>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-          {renderSkater(armExtension, rotation, 220)}
-        </div>
+        {/* Racing shapes */}
+        {Object.entries(shapeFactors).map(([key, shape], index) => {
+          const position = getRacePosition(key, raceTime);
+          const startX = 60;
+          const endX = width - 80;
+          const x = startX + (endX - startX) * (position / 100);
+          const startY = height - 130;
+          const endY = height - 55;
+          const y = startY + (endY - startY) * (position / 100);
+          const radius = 12;
+          const offset = index * 5 - 7.5;
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
-          <div className="bg-slate-700/50 rounded-xl p-4">
-            <label className="text-slate-300 text-sm block mb-2">Arm Position: {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Partial'}</label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={armExtension}
-              onChange={(e) => setArmExtension(parseFloat(e.target.value))}
-              className="w-full accent-pink-500"
-            />
-            <div className="flex justify-between text-xs text-slate-400 mt-1">
-              <span>Tucked (Low I)</span>
-              <span>Extended (High I)</span>
-            </div>
-          </div>
+          return (
+            <g key={key}>
+              {key === 'disk' && (
+                <circle cx={x} cy={y + offset} r={radius} fill={shape.color} />
+              )}
+              {key === 'ring' && (
+                <circle cx={x} cy={y + offset} r={radius} fill="none" stroke={shape.color} strokeWidth="4" />
+              )}
+              {key === 'sphere' && (
+                <circle cx={x} cy={y + offset} r={radius} fill={shape.color} opacity="0.8" />
+              )}
+              {key === 'hollow' && (
+                <>
+                  <circle cx={x} cy={y + offset} r={radius} fill={shape.color} />
+                  <circle cx={x} cy={y + offset} r={radius - 4} fill={colors.bgCard} />
+                </>
+              )}
+            </g>
+          );
+        })}
 
-          <div className="bg-slate-700/50 rounded-xl p-4">
-            <label className="text-slate-300 text-sm block mb-2">Angular Momentum L = {initialL.toFixed(0)}</label>
-            <input
-              type="range"
-              min="5"
-              max="25"
-              value={initialL}
-              onChange={(e) => setInitialL(parseFloat(e.target.value))}
-              className="w-full accent-pink-500"
-            />
-            <p className="text-xs text-slate-400 mt-1">L stays constant (conserved)</p>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-pink-900/40 to-purple-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-pink-400">{momentOfInertia.toFixed(2)}</div>
-              <div className="text-sm text-slate-300">Moment of Inertia (I)</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-cyan-400">{currentOmega.toFixed(2)}</div>
-              <div className="text-sm text-slate-300">Angular Velocity (omega)</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-emerald-400">{initialL.toFixed(0)}</div>
-              <div className="text-sm text-slate-300">L = I times omega (constant!)</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-4 mb-6">
-          <button
-            onClick={() => setIsSpinning(!isSpinning)}
-            style={{ zIndex: 10 }}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              isSpinning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
-            } text-white`}
-          >
-            {isSpinning ? 'Pause' : 'Play'}
-          </button>
-        </div>
-
-        <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-2">Key Insight:</h3>
-          <p className="text-slate-300 text-sm">
-            <span className="text-pink-400 font-semibold">L = I times omega</span> is constant. When you decrease <span className="text-pink-400">I</span> by pulling in arms, <span className="text-cyan-400">omega</span> must increase to keep L the same!
-          </p>
-        </div>
-
-        <button
-          onClick={() => goToPhase('review')}
-          style={{ zIndex: 10 }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
-        >
-          Review the Concepts
-        </button>
-      </div>
+        {/* Legend */}
+        <g transform={`translate(20, ${height - 30})`}>
+          {Object.entries(shapeFactors).map(([key, shape], index) => (
+            <g key={key} transform={`translate(${index * (isMobile ? 80 : 110)}, 0)`}>
+              <circle cx="8" cy="0" r="6" fill={shape.color} opacity={key === 'ring' ? 0 : 1} stroke={shape.color} strokeWidth="2" />
+              <text x="20" y="4" fill={colors.textSecondary} fontSize="10">{shape.name}</text>
+            </g>
+          ))}
+        </g>
+      </svg>
     );
   };
 
-  // ============================================================================
-  // PHASE: REVIEW - Explain I = mr^2 and formulas for different shapes
-  // ============================================================================
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Understanding Moment of Inertia</h2>
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-pink-900/50 to-purple-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-pink-400 mb-3">The Formula: I = mr^2</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>For a point mass: <span className="text-cyan-400 font-mono">I = mr^2</span></li>
-            <li><strong>m</strong> = mass of the object</li>
-            <li><strong>r</strong> = distance from the rotation axis</li>
-            <li>Distance is <span className="text-pink-400">squared</span> - doubling r quadruples I!</li>
-            <li>Mass far from the axis contributes more to I</li>
-          </ul>
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'spin 3s linear infinite',
+        }}>
+          ---
         </div>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
 
-        <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">Common Shapes</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Solid disk/cylinder: <span className="text-pink-400 font-mono">I = (1/2)MR^2</span></li>
-            <li>Ring/hoop: <span className="text-pink-400 font-mono">I = MR^2</span></li>
-            <li>Solid sphere: <span className="text-pink-400 font-mono">I = (2/5)MR^2</span></li>
-            <li>Hollow sphere: <span className="text-pink-400 font-mono">I = (2/3)MR^2</span></li>
-            <li>The ring has the highest I for same mass and radius!</li>
-          </ul>
-        </div>
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Moment of Inertia
+        </h1>
 
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Why It Matters for Rolling</h3>
-          <div className="text-slate-300 text-sm space-y-2">
-            <p>When an object rolls down a ramp, its potential energy converts to:</p>
-            <p><strong>1. Translational KE:</strong> (1/2)mv^2 (moving forward)</p>
-            <p><strong>2. Rotational KE:</strong> (1/2)I omega^2 (spinning)</p>
-            <p className="text-cyan-400 mt-3">
-              Objects with lower I (like solid disks) put more energy into translation and roll faster!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <button
-        onClick={() => goToPhase('twist_predict')}
-        style={{ zIndex: 10 }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
-      >
-        Discover a Surprising Twist
-      </button>
-    </div>
-  );
-
-  // ============================================================================
-  // PHASE: TWIST_PREDICT - Scenario about figure skater spinning
-  // ============================================================================
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Figure Skater Challenge</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          A figure skater is spinning with arms extended. They then pull their arms in close to their body.
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Why do figure skaters spin faster when they pull in their arms? The answer lies in how <span style={{ color: colors.accent }}>mass distribution</span> affects rotation."
         </p>
-        <div className="flex justify-center items-center gap-4 my-4">
-          {renderSkater(1, 0, 120)}
-          {/* Premium transition arrow */}
-          <div className="flex flex-col items-center">
-            <svg width="60" height="40" viewBox="0 0 60 40">
-              <defs>
-                <linearGradient id="moiArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
-                  <stop offset="50%" stopColor="#06b6d4" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
-                </linearGradient>
-                <filter id="moiArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              {/* Arrow shaft */}
-              <line x1="5" y1="20" x2="45" y2="20" stroke="url(#moiArrowGrad)" strokeWidth="3" strokeLinecap="round" filter="url(#moiArrowGlow)" />
-              {/* Arrow head */}
-              <polygon points="45,20 35,12 35,28" fill="#06b6d4" filter="url(#moiArrowGlow)" />
-            </svg>
-            <span style={{ fontSize: typo.label }} className="text-cyan-400 font-medium mt-1">then</span>
-          </div>
-          {renderSkater(0, 0, 120)}
-        </div>
-        {/* Labels outside SVG */}
-        <div className="flex justify-center gap-16 mt-2 mb-4">
-          <span style={{ fontSize: typo.small }} className="text-slate-400">Arms Extended</span>
-          <span style={{ fontSize: typo.small }} className="text-slate-400">Arms Tucked</span>
-        </div>
-        <p className="text-lg text-cyan-400 font-medium">
-          What happens to their spin speed?
-        </p>
-      </div>
 
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Spin speed increases significantly' },
-          { id: 'B', text: 'Spin speed stays the same' },
-          { id: 'C', text: 'Spin speed decreases' },
-          { id: 'D', text: 'The skater stops spinning' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            style={{ zIndex: 10 }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'A'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'A'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! The spin speed increases dramatically!
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Moment of inertia is to rotation what mass is to linear motion. It determines how hard it is to change an object's rotational state - but unlike mass, it depends on where the mass is located."
           </p>
-          <p className="text-slate-400 text-sm mt-2">
-            This is due to <span className="text-cyan-400 font-semibold">conservation of angular momentum</span>. When I decreases, omega must increase!
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Rotational Mechanics Principles
           </p>
-          <button
-            onClick={() => goToPhase('twist_play')}
-            style={{ zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
-          >
-            See It In Action
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  // ============================================================================
-  // PHASE: TWIST_PLAY - Interactive simulation showing arms in/out effect
-  // ============================================================================
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Arms In vs Arms Out</h2>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 max-w-2xl w-full">
-        <div className="flex justify-center">
-          {renderSkater(armExtension, rotation, 220)}
         </div>
 
-        <div className="mt-4">
-          <label className="text-slate-300 text-sm block mb-2">
-            Arm Position: <span className="text-pink-400 font-semibold">{armExtension < 0.3 ? 'Tucked In' : armExtension > 0.7 ? 'Extended Out' : 'Partial'}</span>
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.05"
-            value={armExtension}
-            onChange={(e) => setArmExtension(parseFloat(e.target.value))}
-            className="w-full accent-amber-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-pink-400">{(1 + 2 * armExtension).toFixed(2)}</div>
-            <div className="text-xs text-slate-400">Moment of Inertia (I)</div>
-          </div>
-          <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-            <div className="text-2xl font-bold text-cyan-400">{angularVelocity.toFixed(2)}</div>
-            <div className="text-xs text-slate-400">Angular Velocity (omega)</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
-        <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-pink-400 mb-2 text-center">Arms Extended</h3>
-          <ul className="text-sm text-slate-300 space-y-1">
-            <li>Mass far from axis</li>
-            <li>High moment of inertia</li>
-            <li>Slow spin speed</li>
-          </ul>
-        </div>
-
-        <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-amber-400 mb-2 text-center">Arms Tucked</h3>
-          <ul className="text-sm text-slate-300 space-y-1">
-            <li>Mass close to axis</li>
-            <li>Low moment of inertia</li>
-            <li>Fast spin speed!</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="flex gap-4 mb-4">
         <button
-          onClick={() => setIsSpinning(!isSpinning)}
-          style={{ zIndex: 10 }}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            isSpinning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
-          } text-white`}
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
         >
-          {isSpinning ? 'Pause Spin' : 'Resume Spin'}
+          Explore Rotation
         </button>
+
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <button
-        onClick={() => goToPhase('twist_review')}
-        style={{ zIndex: 10 }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
-      >
-        Review the Discovery
-      </button>
-    </div>
-  );
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Her spin slows down because she is doing work against friction' },
+      { id: 'b', text: 'Her spin speeds up because moment of inertia decreases', correct: true },
+      { id: 'c', text: 'Her spin stays exactly the same because angular momentum is conserved' },
+    ];
 
-  // ============================================================================
-  // PHASE: TWIST_REVIEW - Explain conservation of angular momentum and how I affects omega
-  // ============================================================================
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Conservation of Angular Momentum</h2>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-amber-400 mb-4">The Key Equation: L = I times omega</h3>
-        <div className="space-y-4 text-slate-300">
-          <p>
-            <strong className="text-pink-400">L (Angular Momentum)</strong> is conserved when no external torque acts on a system.
-          </p>
-          <p>
-            Since L = I times omega must stay constant:
-          </p>
-          <ul className="space-y-2 text-sm ml-4">
-            <li>When <span className="text-pink-400">I decreases</span> (arms pulled in), <span className="text-cyan-400">omega must increase</span></li>
-            <li>When <span className="text-pink-400">I increases</span> (arms extended), <span className="text-cyan-400">omega must decrease</span></li>
-          </ul>
-          <div className="bg-slate-800/50 rounded-lg p-4 mt-4">
-            <p className="text-center font-mono">
-              I<sub>1</sub> times omega<sub>1</sub> = I<sub>2</sub> times omega<sub>2</sub>
-            </p>
-            <p className="text-center text-sm text-slate-400 mt-2">
-              If I drops by half, omega doubles!
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
             </p>
           </div>
-        </div>
-      </div>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-lg font-bold text-emerald-400 mb-3">Real Example: Figure Skating</h3>
-        <p className="text-slate-300 text-sm">
-          A figure skater can go from 2 rotations per second (arms out) to over 6 rotations per second (arms tucked) - a 3x increase! Some elite skaters achieve over 300 RPM in their spins.
-        </p>
-      </div>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A figure skater is spinning with arms extended. She then pulls her arms in close to her body. What happens?
+          </h2>
 
-      <button
-        onClick={() => goToPhase('transfer')}
-        style={{ zIndex: 10 }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
-      >
-        Explore Real-World Applications
-      </button>
-    </div>
-  );
-
-  // ============================================================================
-  // PHASE: TRANSFER - 4 real-world applications
-  // ============================================================================
-  const applications = [
-    {
-      title: "Figure Skating",
-      icon: "Figure Skating",
-      description: "Skaters control spin speed by adjusting body position. Tucked positions enable spins over 300 RPM!",
-      details: "The scratch spin starts with arms extended, building angular momentum. As the skater pulls into a tight position, their moment of inertia can decrease by a factor of 3-4, tripling their spin rate."
-    },
-    {
-      title: "Flywheels",
-      icon: "Flywheels",
-      description: "Heavy rotating wheels store kinetic energy efficiently using their high moment of inertia.",
-      details: "Modern flywheel energy storage systems can store megawatts of power. The key is using materials that allow high rotation speeds while maximizing moment of inertia for energy storage."
-    },
-    {
-      title: "Baseball Bats",
-      icon: "Baseball Bats",
-      description: "The distribution of mass along a bat affects how easily it can be swung.",
-      details: "End-loaded bats have more mass toward the tip (higher I), generating more power but being harder to control. Balanced bats have mass distributed evenly, allowing faster swings with better control."
-    },
-    {
-      title: "Diving",
-      icon: "Diving",
-      description: "Divers use tuck and pike positions to control rotation speed during complex maneuvers.",
-      details: "A diver in layout position rotates slowly. Pulling into a tight tuck reduces I by about 3.5x, allowing rapid somersaults. They then extend to slow rotation for a clean entry."
-    }
-  ];
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveAppTab(index)}
-            style={{ zIndex: 10 }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index
-                ? 'bg-pink-600 text-white'
-                : completedApps.has(index)
-                ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.title}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
-        </div>
-
-        <p className="text-lg text-slate-300 mt-4 mb-3">
-          {applications[activeAppTab].description}
-        </p>
-        <p className="text-sm text-slate-400">
-          {applications[activeAppTab].details}
-        </p>
-
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onClick={() => handleAppComplete(activeAppTab)}
-            style={{ zIndex: 10 }}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
-          {applications.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`}
-            />
-          ))}
-        </div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-
-      {completedApps.size >= 4 && (
-        <button
-          onClick={() => goToPhase('test')}
-          style={{ zIndex: 10 }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
-        >
-          Take the Knowledge Test
-        </button>
-      )}
-    </div>
-  );
-
-  // ============================================================================
-  // PHASE: TEST - 10 multiple choice questions
-  // ============================================================================
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ zIndex: 10 }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-pink-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+          {/* Visual diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>---</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Arms Extended</p>
               </div>
+              <div style={{ fontSize: '24px', color: colors.accent }}>--&gt;</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>---</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Arms Tucked</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>= ???</div>
             </div>
-          ))}
+          </div>
 
-          <button
-            onClick={() => {
-              const score = calculateScore();
-              setTestScore(score);
-              setShowTestResults(true);
-            }}
-            style={{ zIndex: 10 }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-500 hover:to-purple-500'
-            }`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">
-            Score: {testScore}/10
-          </h3>
-          <p className="text-slate-300 mb-6">
-            {testScore >= 7
-              ? 'Excellent! You have mastered moment of inertia and angular momentum!'
-              : 'Keep studying! Review the concepts and try again.'}
-          </p>
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
 
-          {testScore >= 7 ? (
+          {prediction && (
             <button
-              onClick={() => goToPhase('mastery')}
-              style={{ zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
-              style={{ zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
-            >
-              Review and Try Again
+              Test My Prediction
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  // ============================================================================
-  // PHASE: MASTERY - Congratulations page
-  // ============================================================================
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-pink-900/50 via-purple-900/50 to-indigo-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">Congratulations!</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Rotational Dynamics Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">
-          You have mastered moment of inertia and angular momentum conservation!
-        </p>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">I = mr^2</div>
-            <p className="text-sm text-slate-300">Moment of Inertia</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">L = I times omega</div>
-            <p className="text-sm text-slate-300">Angular Momentum</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">Conservation</div>
-            <p className="text-sm text-slate-300">L stays constant</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">Applications</div>
-            <p className="text-sm text-slate-300">Skating, Diving, Flywheels</p>
-          </div>
-        </div>
+  // PLAY PHASE - Interactive Skater Simulation
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        <div className="flex gap-4 justify-center">
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Skater Spin Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Move the slider to change arm position and observe the spin speed change
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <SkaterVisualization size={isMobile ? 180 : 220} />
+            </div>
+
+            {/* Arm position slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Arm Position</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                  {armExtension < 0.3 ? 'Tucked In' : armExtension > 0.7 ? 'Extended Out' : 'Partial'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={armExtension}
+                onChange={(e) => setArmExtension(parseFloat(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  accentColor: colors.accent,
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Tucked (Low I)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Extended (High I)</span>
+              </div>
+            </div>
+
+            {/* Angular momentum slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Initial Angular Momentum (L)</span>
+                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{initialL}</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="25"
+                value={initialL}
+                onChange={(e) => setInitialL(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  accentColor: colors.success,
+                }}
+              />
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                L stays constant (conserved) - change arm position to see omega change!
+              </p>
+            </div>
+
+            {/* Play/Pause button */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <button
+                onClick={() => setIsSpinning(!isSpinning)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: isSpinning ? colors.error : colors.success,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {isSpinning ? 'Pause Spin' : 'Resume Spin'}
+              </button>
+            </div>
+
+            {/* Stats display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{currentI.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Moment of Inertia (I)</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: '#06B6D4' }}>{currentOmega.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Angular Velocity (omega)</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>{initialL}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>L = I * omega (constant!)</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Discovery prompt */}
+          {armExtension < 0.3 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Notice how tucking in arms increases spin speed! L = I * omega stays constant.
+              </p>
+            </div>
+          )}
+
           <button
-            onClick={() => goToPhase('hook')}
-            style={{ zIndex: 10 }}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore Again
+            Understand the Physics
           </button>
         </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  // ============================================================================
-  // RENDER PHASE SWITCH
-  // ============================================================================
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-  const phaseIndex = phaseOrder.indexOf(phase);
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Rotation
+          </h2>
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Ambient background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Premium progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-400">Moment of Inertia</span>
-            <span className="text-sm text-slate-500">{phaseLabels[phase]}</span>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Moment of Inertia: I = sum(m * r^2)</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                Moment of inertia depends on both <span style={{ color: colors.accent }}>mass</span> and <span style={{ color: colors.accent }}>distance from the rotation axis</span>. Mass far from the axis contributes much more to I because r is squared!
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Angular Momentum: L = I * omega</strong>
+              </p>
+              <p>
+                When no external torque acts, L is conserved. If I decreases, omega must increase to keep L constant!
+              </p>
+            </div>
           </div>
-          {/* Phase dots */}
-          <div className="flex justify-between px-1">
-            {phaseOrder.map((p, idx) => (
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              The Skater's Secret
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              When a skater pulls arms in:
+            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li>Mass moves closer to the rotation axis</li>
+              <li>Moment of inertia (I) decreases dramatically</li>
+              <li>Since L = I * omega is constant, omega increases</li>
+              <li>The skater spins 3-4x faster!</li>
+            </ul>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              Energy Considerations
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Rotational KE = (1/2) * I * omega^2. When I decreases and omega increases, the kinetic energy actually increases! Where does this energy come from? The skater does work by pulling their arms inward against the centrifugal effect.
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore a New Twist
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'The ring (hoop) reaches the bottom first - all mass at the edge' },
+      { id: 'b', text: 'The solid disk reaches the bottom first - mass distributed throughout', correct: true },
+      { id: 'c', text: 'They reach the bottom at exactly the same time - same mass and radius' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Scenario: Rolling Objects
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A solid disk and a ring (hoop) have the same mass and radius. They roll down a ramp from rest. Which reaches the bottom first?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginBottom: '16px' }}>
+              <div>
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                  <circle cx="30" cy="30" r="25" fill="#EC4899" />
+                </svg>
+                <p style={{ ...typo.small, color: colors.accent }}>Solid Disk</p>
+                <p style={{ ...typo.small, color: colors.textMuted }}>I = (1/2)MR^2</p>
+              </div>
+              <div>
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                  <circle cx="30" cy="30" r="25" fill="none" stroke="#06B6D4" strokeWidth="6" />
+                </svg>
+                <p style={{ ...typo.small, color: '#06B6D4' }}>Ring/Hoop</p>
+                <p style={{ ...typo.small, color: colors.textMuted }}>I = MR^2</p>
+              </div>
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              Same mass M, same radius R - but different mass distributions
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  idx <= phaseIndex
-                    ? 'bg-pink-500'
-                    : 'bg-slate-700'
-                } ${p === phase ? 'w-6' : 'w-2'}`}
-                title={phaseLabels[p]}
-              />
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See the Race!
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Shape Rolling Race
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Watch which shape wins - lower moment of inertia means faster rolling!
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <ShapeRaceVisualization />
+            </div>
+
+            {/* Race control */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button
+                onClick={() => {
+                  setRaceTime(0);
+                  setIsRacing(true);
+                  playSound('click');
+                }}
+                disabled={isRacing}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: isRacing ? colors.border : colors.success,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: isRacing ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isRacing ? 'Racing...' : 'Start Race!'}
+              </button>
+              <button
+                onClick={() => {
+                  setRaceTime(0);
+                  setIsRacing(false);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Reset
+              </button>
+            </div>
+
+            {/* Shape I values comparison */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '8px',
+            }}>
+              {Object.entries(shapeFactors).map(([key, shape]) => (
+                <div key={key} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                  border: `2px solid ${selectedShape === key ? shape.color : 'transparent'}`,
+                  cursor: 'pointer',
+                }}
+                onClick={() => setSelectedShape(key as typeof selectedShape)}
+                >
+                  <div style={{ ...typo.h3, color: shape.color }}>{shape.factor}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{shape.name}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>
+                    I = {shape.factor}MR^2
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {raceTime >= 100 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Solid sphere wins! Lower I (0.4MR^2) means more energy goes to translation, less to rotation.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Results
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why Mass Distribution Matters for Rolling
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>---</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Energy Split</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                When an object rolls down a ramp, gravitational PE converts to both <span style={{ color: colors.accent }}>translational KE</span> (forward motion) and <span style={{ color: '#06B6D4' }}>rotational KE</span> (spinning). Objects with higher I put more energy into rotation.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>---</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>The Math</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                For rolling without slipping: v = omega * R. Total KE = (1/2)mv^2 + (1/2)I*omega^2. Objects with lower I (relative to MR^2) have more energy in the (1/2)mv^2 term, so they move faster!
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>---</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Ranking by Speed</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                From fastest to slowest: <span style={{ color: colors.success }}>Solid sphere (0.4)</span> &gt; <span style={{ color: colors.accent }}>Solid disk (0.5)</span> &gt; <span style={{ color: colors.warning }}>Hollow sphere (0.67)</span> &gt; <span style={{ color: '#06B6D4' }}>Ring (1.0)</span>
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>---</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Key Insight</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The race outcome doesn't depend on mass or radius - only on how mass is distributed! A tiny marble and a huge bowling ball of the same shape will tie.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    +++
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Moment of Inertia Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '---' : '---'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand moment of inertia and rotational dynamics!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          ---
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Rotational Dynamics Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how mass distribution affects rotational motion - from figure skating spins to rolling objects!
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Moment of inertia: I = sum(m*r^2)',
+              'Conservation of angular momentum: L = I*omega',
+              'Why skaters spin faster with arms tucked',
+              'Why solid spheres roll faster than hoops',
+              'Real-world applications in engineering',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>+++</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
             ))}
           </div>
         </div>
-      </div>
 
-      <div className="pt-20 pb-8 relative z-10">
-        {renderPhase()}
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
 export default MomentOfInertiaRenderer;

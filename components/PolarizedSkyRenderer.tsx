@@ -1,18 +1,184 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+// -----------------------------------------------------------------------------
+// Polarized Sky - Complete 10-Phase Game
+// How Vikings and bees navigate using sky polarization patterns
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface PolarizedSkyRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "You're teaching a friend about optics and they ask why the sky appears blue and why sunglasses work better in certain directions.",
+    question: "What physical process causes skylight to become polarized?",
+    options: [
+      { id: 'a', label: "Reflection of sunlight off water vapor droplets in the atmosphere" },
+      { id: 'b', label: "Rayleigh scattering by nitrogen and oxygen molecules that preferentially scatters light perpendicular to the scattering plane", correct: true },
+      { id: 'c', label: "Absorption and re-emission by ozone molecules in the stratosphere" },
+      { id: 'd', label: "Refraction through ice crystals suspended in cirrus clouds" }
+    ],
+    explanation: "Rayleigh scattering occurs when light interacts with particles much smaller than its wavelength, like N2 and O2 molecules. The electric field of scattered light oscillates perpendicular to the scattering plane, creating a systematic polarization pattern across the entire sky."
+  },
+  {
+    scenario: "A photographer notices that when wearing polarized sunglasses and looking at different parts of the clear blue sky, some regions appear much darker than others when tilting their head.",
+    question: "Why do polarized sunglasses reduce glare more effectively when looking at certain parts of the sky?",
+    options: [
+      { id: 'a', label: "The sunglasses block UV radiation which varies across the sky" },
+      { id: 'b', label: "Skylight at 90 degrees from the sun is highly polarized, so aligned polarized lenses can block most of it", correct: true },
+      { id: 'c', label: "The lenses have a gradient tint that matches sky brightness patterns" },
+      { id: 'd', label: "Human eyes are more sensitive to polarized light in peripheral vision" }
+    ],
+    explanation: "Skylight is most strongly polarized at 90 degrees from the sun, where it can reach 75-80% polarization. When polarized sunglasses are oriented perpendicular to this polarization direction, they block most of the polarized light, dramatically darkening that region of the sky."
+  },
+  {
+    scenario: "An engineer is designing an outdoor optical sensor and needs to account for skylight polarization. The sun is at azimuth 180 degrees (due south) and 45 degrees elevation.",
+    question: "At what position in the sky would the sensor detect maximum polarization?",
+    options: [
+      { id: 'a', label: "Looking directly toward the sun at 180 degrees azimuth" },
+      { id: 'b', label: "Looking at the antisolar point, 180 degrees opposite the sun" },
+      { id: 'c', label: "Along a band 90 degrees from the sun - such as due east, due west, or at the zenith", correct: true },
+      { id: 'd', label: "Near the horizon in all directions equally" }
+    ],
+    explanation: "Maximum polarization occurs along a great circle 90 degrees from the sun. With the sun due south at 45 degrees elevation, maximum polarization would be found due east, due west, and along the entire arc 90 degrees away from the sun's position."
+  },
+  {
+    scenario: "Archaeologists discovered calcite crystals (Iceland spar) in Viking shipwrecks. Historical records suggest Vikings sailed across the North Atlantic without magnetic compasses, even on overcast days.",
+    question: "How could Vikings have used calcite sunstones to navigate when the sun was hidden by clouds?",
+    options: [
+      { id: 'a', label: "Calcite glows when exposed to the Earth's magnetic field, pointing north" },
+      { id: 'b', label: "Calcite birefringence creates double images that merge when aligned with sky polarization, revealing the sun's position", correct: true },
+      { id: 'c', label: "The crystals reflect starlight that penetrates clouds at night" },
+      { id: 'd', label: "Calcite changes color based on water temperature, indicating latitude" }
+    ],
+    explanation: "Calcite exhibits birefringence - it splits light into two polarized rays. When held up to an overcast sky and rotated, the crystal shows two images of equal brightness only when its optical axis aligns with the polarization direction of skylight, revealing the sun's hidden position."
+  },
+  {
+    scenario: "A biologist observing honeybees notices they can navigate accurately back to the hive even when the sun is obscured by a tree line, but struggle on heavily overcast or hazy days.",
+    question: "What specialized adaptation allows bees to use sky polarization for navigation?",
+    options: [
+      { id: 'a', label: "Bees have magnetic particles in their abdomens that sense Earth's field" },
+      { id: 'b', label: "Bees memorize landmark patterns and only use polarization as backup" },
+      { id: 'c', label: "Specialized photoreceptors in their compound eyes detect the e-vector orientation of polarized light", correct: true },
+      { id: 'd', label: "Bees communicate sun position through waggle dances and don't need to see the sky" }
+    ],
+    explanation: "Honeybees possess specialized UV-sensitive photoreceptors in the dorsal rim area of their compound eyes that can detect the electric field oscillation direction (e-vector) of polarized light. They use this as a celestial compass even when only a small patch of blue sky is visible."
+  },
+  {
+    scenario: "A landscape photographer is shooting a mountain scene at midday with the sun almost directly overhead. They attach a circular polarizing filter to their lens.",
+    question: "In which direction will the polarizing filter have the strongest effect on sky darkness?",
+    options: [
+      { id: 'a', label: "Looking toward the zenith directly above" },
+      { id: 'b', label: "Looking toward the horizon in all directions equally" },
+      { id: 'c', label: "Looking horizontally in any direction, since all horizontal views are roughly 90 degrees from an overhead sun", correct: true },
+      { id: 'd', label: "Looking at the sun through the filter to reduce its intensity" }
+    ],
+    explanation: "With the sun nearly overhead, the 90-degree maximum polarization zone forms a ring around the horizon. Looking horizontally in any direction puts you at approximately 90 degrees from the sun, where polarization is strongest and the filter has maximum effect."
+  },
+  {
+    scenario: "An atmospheric physicist measures sky polarization and finds the degree of polarization is only 40% at 90 degrees from the sun, much lower than the theoretical maximum of about 94%.",
+    question: "What is the primary reason real-world sky polarization never reaches the theoretical maximum?",
+    options: [
+      { id: 'a', label: "The sun emits partially polarized light that interferes with atmospheric polarization" },
+      { id: 'b', label: "Multiple scattering events and ground reflections mix polarization states, reducing the net polarization", correct: true },
+      { id: 'c', label: "Quantum effects prevent light from being fully polarized at visible wavelengths" },
+      { id: 'd', label: "Earth's magnetic field rotates the polarization direction unpredictably" }
+    ],
+    explanation: "In the real atmosphere, light undergoes multiple scattering events before reaching an observer. Each additional scattering randomizes polarization direction. Ground reflections and aerosols (Mie scattering) also contribute unpolarized light, reducing the net polarization."
+  },
+  {
+    scenario: "A researcher notices that the sky polarization pattern looks different at sunset compared to midday. With the sun on the horizon, the band of maximum polarization now passes through the zenith.",
+    question: "Why does the geometry of sky polarization change so dramatically between midday and sunset?",
+    options: [
+      { id: 'a', label: "The atmosphere is thicker at sunset, changing scattering properties" },
+      { id: 'b', label: "The 90-degree maximum polarization zone always forms a great circle around the sun's position, which changes as the sun moves", correct: true },
+      { id: 'c', label: "Sunset light is redder and red wavelengths have different polarization than blue" },
+      { id: 'd', label: "Humidity increases in the evening, altering the polarization pattern" }
+    ],
+    explanation: "The zone of maximum polarization always lies along a great circle 90 degrees from the sun. At midday with sun high, this zone is near the horizon. At sunset with sun on the horizon, the 90-degree zone passes through the zenith. This predictable relationship enables navigation."
+  },
+  {
+    scenario: "Engineers are developing an autonomous drone for polar exploration where GPS signals are unreliable and magnetic compasses are inaccurate near the poles.",
+    question: "What key advantage does a polarimetric navigation system offer over GPS or magnetic compasses for polar operations?",
+    options: [
+      { id: 'a', label: "Polarization sensors are smaller and use less power than GPS receivers" },
+      { id: 'b', label: "Sky polarization provides a heading reference independent of magnetic anomalies and doesn't require satellite signals", correct: true },
+      { id: 'c', label: "Polarization works at night using starlight polarization patterns" },
+      { id: 'd', label: "Ice crystals in polar air enhance polarization, making it more accurate" }
+    ],
+    explanation: "Near Earth's magnetic poles, magnetic compasses become unreliable. GPS can have coverage gaps and is vulnerable to jamming. Sky polarization provides a stable heading reference as long as any blue sky is visible, derived purely from the sun's position - ideal for polar operations."
+  },
+  {
+    scenario: "A climate scientist uses a satellite-mounted polarimeter to study clouds from above. They notice that liquid water clouds and ice crystal clouds produce distinctly different polarization signatures.",
+    question: "How does polarimetry help distinguish between liquid water clouds and ice crystal clouds?",
+    options: [
+      { id: 'a', label: "Ice clouds polarize light clockwise while water clouds polarize counterclockwise" },
+      { id: 'b', label: "Spherical water droplets and hexagonal ice crystals scatter light at different angles with different polarization characteristics", correct: true },
+      { id: 'c', label: "Water absorbs polarized light while ice reflects it unchanged" },
+      { id: 'd', label: "Temperature differences cause different polarization in thermal infrared emissions" }
+    ],
+    explanation: "Liquid cloud droplets are nearly spherical and exhibit Mie scattering with characteristic polarization features. Ice crystals have hexagonal shapes that produce different angular scattering patterns. Polarimeters measure these differences to reveal particle shape and phase (liquid vs ice)."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '🐝',
     title: 'Bee Navigation',
     short: 'Insects see polarized sky patterns invisible to us',
-    tagline: 'Nature\'s compass in the sky',
+    tagline: "Nature's compass in the sky",
     description: 'Honeybees and many insects can detect sky polarization patterns with specialized photoreceptors. They use this as a compass for navigation, even when the sun is behind clouds.',
-    connection: 'The sky polarization pattern forms concentric circles around the sun due to Rayleigh scattering. Bees detect this pattern to determine the sun\'s position.',
+    connection: 'The sky polarization pattern forms concentric circles around the sun due to Rayleigh scattering. Bees detect this pattern to determine the sun\'s position for accurate hive navigation.',
     howItWorks: 'Bee eyes have polarization-sensitive photoreceptors arranged in specific patterns. The brain processes the e-vector orientation to compute the solar meridian direction.',
     stats: [
-      { value: '90°', label: 'max polarization angle', icon: '📐' },
+      { value: '90 deg', label: 'max polarization angle', icon: '📐' },
       { value: '70%', label: 'max sky polarization', icon: '☀️' },
       { value: '20K+', label: 'bee species', icon: '🐝' }
     ],
@@ -28,11 +194,11 @@ const realWorldApps = [
     tagline: 'Crossing oceans with physics',
     description: 'Vikings may have used calcite crystals (Iceland spar) to locate the sun through overcast skies. These "sunstones" show different appearances when viewing polarized light from different directions.',
     connection: 'Calcite crystals are birefringent - they split light into two polarizations. Rotating the crystal while viewing polarized skylight reveals the solar direction.',
-    howItWorks: 'The navigator views the sky through the crystal and rotates it. The two images from birefringence become equal brightness when pointing at 90° from the sun.',
+    howItWorks: 'The navigator views the sky through the crystal and rotates it. The two images from birefringence become equal brightness when pointing at 90 degrees from the sun.',
     stats: [
-      { value: '5°', label: 'navigation accuracy', icon: '🧭' },
+      { value: '5 deg', label: 'navigation accuracy', icon: '🧭' },
       { value: '1000+', label: 'years ago', icon: '📅' },
-      { value: '3000', label: 'km Atlantic crossings', icon: '🌊' }
+      { value: '3000 km', label: 'Atlantic crossings', icon: '🌊' }
     ],
     examples: ['North Atlantic voyages', 'Iceland to Greenland routes', 'Exploration of Vinland', 'Trading expeditions'],
     companies: ['Maritime Museums', 'Historical Research', 'Viking Heritage Sites', 'Crystal Suppliers'],
@@ -41,15 +207,15 @@ const realWorldApps = [
   },
   {
     icon: '📷',
-    title: 'Photography Polarizing Filters',
+    title: 'Photography Filters',
     short: 'Darken blue skies by blocking polarized light',
     tagline: 'Making skies dramatic since 1938',
     description: 'Photographers use polarizing filters to darken blue skies, reduce reflections, and increase color saturation. The effect varies across the sky based on the natural polarization pattern.',
     connection: 'Since skylight is polarized perpendicular to the sun-sky-observer plane, rotating a polarizer blocks different amounts of sky light at different angles from the sun.',
-    howItWorks: 'The filter is rotated until the sky darkens optimally. Maximum effect occurs at 90° from the sun. Near the sun or opposite it, polarization is low so the filter has little effect.',
+    howItWorks: 'The filter is rotated until the sky darkens optimally. Maximum effect occurs at 90 degrees from the sun. Near the sun or opposite it, polarization is low so the filter has little effect.',
     stats: [
-      { value: '90°', label: 'optimal sun angle', icon: '☀️' },
-      { value: '3', label: 'stops of sky darkening', icon: '📊' },
+      { value: '90 deg', label: 'optimal sun angle', icon: '☀️' },
+      { value: '3 stops', label: 'sky darkening', icon: '📊' },
       { value: '$500M', label: 'filter market', icon: '📈' }
     ],
     examples: ['Landscape photography', 'Architectural shoots', 'Car photography', 'Nature documentation'],
@@ -61,12 +227,12 @@ const realWorldApps = [
     icon: '🛩️',
     title: 'Polarimetric Navigation',
     short: 'Aircraft use sky polarization as GPS backup',
-    tagline: 'When satellites aren\'t enough',
+    tagline: "When satellites aren't enough",
     description: 'Modern aircraft and drones can use polarized skylight sensors as navigation backup when GPS is unavailable or jammed. The sky polarization pattern provides absolute heading reference.',
     connection: 'Military and civilian applications need GPS-independent navigation. The predictable polarization pattern based on sun position offers a physics-based backup.',
     howItWorks: 'Multiple polarization sensors measure the e-vector pattern. Algorithms calculate the solar meridian from the pattern, providing heading without magnetic or satellite reference.',
     stats: [
-      { value: '1°', label: 'heading accuracy', icon: '🎯' },
+      { value: '1 deg', label: 'heading accuracy', icon: '🎯' },
       { value: '24/7', label: 'availability', icon: '⏰' },
       { value: '$10B', label: 'nav systems market', icon: '📈' }
     ],
@@ -77,474 +243,49 @@ const realWorldApps = [
   }
 ];
 
-// =============================================================================
-// POLARIZED SKY RENDERER - NAVIGATION PHYSICS IN THE ATMOSPHERE
-// =============================================================================
-// Game 129: Premium educational game demonstrating how Rayleigh scattering
-// polarizes light in a pattern across the sky. Vikings and bees use this
-// for navigation. Students explore how polarization varies with sun position.
-// =============================================================================
-
-interface PolarizedSkyRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
-}
-
-// Premium Design System
-const defined = {
-  colors: {
-    primary: '#6366F1',
-    primaryDark: '#4F46E5',
-    secondary: '#8B5CF6',
-    accent: '#F59E0B',
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    background: {
-      primary: '#0F172A',
-      secondary: '#1E293B',
-      tertiary: '#334155',
-      card: 'rgba(30, 41, 59, 0.8)',
-    },
-    text: {
-      primary: '#F8FAFC',
-      secondary: '#CBD5E1',
-      muted: '#64748B',
-    },
-    sky: {
-      zenith: '#1E40AF',
-      horizon: '#7DD3FC',
-      sun: '#FCD34D',
-      polarized: '#60A5FA',
-    },
-  },
-  typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    sizes: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      base: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
-      '2xl': '1.5rem',
-      '3xl': '1.875rem',
-    },
-    weights: {
-      normal: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
-    },
-  },
-  spacing: {
-    xs: '0.25rem',
-    sm: '0.5rem',
-    md: '1rem',
-    lg: '1.5rem',
-    xl: '2rem',
-  },
-  radius: {
-    sm: '0.375rem',
-    md: '0.5rem',
-    lg: '0.75rem',
-    xl: '1rem',
-    full: '9999px',
-  },
-};
-
-// =============================================================================
-// QUESTIONS DATA
-// =============================================================================
-interface QuestionOption {
-  text: string;
-  correct: boolean;
-}
-
-interface Question {
-  id: number;
-  question: string;
-  options: QuestionOption[];
-  explanation: string;
-}
-
-const questions: Question[] = [
-  {
-    id: 1,
-    question: 'What causes skylight to become polarized?',
-    options: [
-      { text: 'Reflection from clouds', correct: false },
-      { text: 'Rayleigh scattering by air molecules', correct: true },
-      { text: 'Absorption by ozone', correct: false },
-      { text: 'Refraction through ice crystals', correct: false },
-    ],
-    explanation: 'Rayleigh scattering by nitrogen and oxygen molecules preferentially scatters light polarized perpendicular to the scattering plane, creating a pattern of polarization across the sky.',
-  },
-  {
-    id: 2,
-    question: 'At what angle from the sun is skylight most strongly polarized?',
-    options: [
-      { text: '0 degrees (toward sun)', correct: false },
-      { text: '45 degrees', correct: false },
-      { text: '90 degrees', correct: true },
-      { text: '180 degrees (opposite sun)', correct: false },
-    ],
-    explanation: 'Polarization is maximum at 90 degrees from the sun. At this angle, the scattered light is nearly 100% polarized perpendicular to the scattering plane.',
-  },
-  {
-    id: 3,
-    question: 'How did Vikings likely use sky polarization for navigation?',
-    options: [
-      { text: 'To predict weather', correct: false },
-      { text: 'To locate the sun through overcast skies using sunstones', correct: true },
-      { text: 'To measure altitude', correct: false },
-      { text: 'To find magnetic north', correct: false },
-    ],
-    explanation: 'Vikings used calcite crystals (sunstones) that change appearance based on polarization direction. This let them find the sun\'s position even through clouds.',
-  },
-  {
-    id: 4,
-    question: 'What happens to sky polarization on a hazy or polluted day?',
-    options: [
-      { text: 'It increases dramatically', correct: false },
-      { text: 'It stays exactly the same', correct: false },
-      { text: 'It decreases because large particles scatter unpolarized light', correct: true },
-      { text: 'It reverses direction', correct: false },
-    ],
-    explanation: 'Haze and pollution contain larger particles that scatter all polarizations equally (Mie scattering), diluting the polarization pattern created by Rayleigh scattering.',
-  },
-  {
-    id: 5,
-    question: 'How do honeybees use sky polarization?',
-    options: [
-      { text: 'To find flowers by color', correct: false },
-      { text: 'To navigate using the polarization pattern as a compass', correct: true },
-      { text: 'To detect predators', correct: false },
-      { text: 'To communicate with other bees', correct: false },
-    ],
-    explanation: 'Bees have specialized photoreceptors that detect polarization direction. They use the sky\'s polarization pattern as a compass to navigate to and from the hive.',
-  },
-  {
-    id: 6,
-    question: 'Why is the sky near the horizon less polarized than at the zenith?',
-    options: [
-      { text: 'Less air molecules there', correct: false },
-      { text: 'Light travels through more atmosphere, experiencing multiple scatterings', correct: true },
-      { text: 'The sun is brighter near horizon', correct: false },
-      { text: 'Ground reflections interfere', correct: false },
-    ],
-    explanation: 'Near the horizon, light passes through much more atmosphere. Multiple scattering events randomize the polarization, reducing the net polarization degree.',
-  },
-  {
-    id: 7,
-    question: 'A polarizing filter in photography can darken blue skies because:',
-    options: [
-      { text: 'It blocks all blue light', correct: false },
-      { text: 'It selectively blocks polarized scattered light when oriented correctly', correct: true },
-      { text: 'It reflects skylight back', correct: false },
-      { text: 'It absorbs UV radiation', correct: false },
-    ],
-    explanation: 'The polarizing filter blocks the polarized component of scattered skylight. Since blue sky is partially polarized, the filter darkens it while leaving unpolarized objects unchanged.',
-  },
-  {
-    id: 8,
-    question: 'The neutral points (Arago, Babinet, Brewster) in the sky are where:',
-    options: [
-      { text: 'The sky is brightest', correct: false },
-      { text: 'Polarization is zero due to cancellation effects', correct: true },
-      { text: 'Stars are visible during day', correct: false },
-      { text: 'UV radiation is maximum', correct: false },
-    ],
-    explanation: 'Neutral points are locations where multiple polarization contributions cancel out. They occur near the sun and anti-sun points due to complex scattering geometry.',
-  },
-  {
-    id: 9,
-    question: 'Why does polarization direction form a pattern around the sun?',
-    options: [
-      { text: 'The sun emits polarized light', correct: false },
-      { text: 'Electric oscillations in scattered light are perpendicular to the scattering plane', correct: true },
-      { text: 'Magnetic fields align the air molecules', correct: false },
-      { text: 'Temperature gradients rotate polarization', correct: false },
-    ],
-    explanation: 'Rayleigh scattering produces light polarized perpendicular to the plane containing the sun, scattering molecule, and observer. This creates a systematic pattern around the sun.',
-  },
-  {
-    id: 10,
-    question: 'Atmospheric scientists study sky polarization to:',
-    options: [
-      { text: 'Predict earthquakes', correct: false },
-      { text: 'Monitor aerosol and pollution levels', correct: true },
-      { text: 'Measure ocean currents', correct: false },
-      { text: 'Track bird migrations', correct: false },
-    ],
-    explanation: 'Aerosols and pollutants reduce sky polarization. Polarimetric measurements help scientists monitor air quality and study atmospheric particle distributions.',
-  },
-];
-
-// =============================================================================
-// APPLICATIONS DATA
-// =============================================================================
-interface Application {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
-  details: string[];
-}
-
-const applications: Application[] = [
-  {
-    id: 1,
-    title: 'Viking Navigation',
-    description: 'Finding the sun through clouds',
-    icon: '⛵',
-    details: [
-      'Vikings sailed the North Atlantic without magnetic compasses',
-      'Calcite "sunstones" act as natural polarizers',
-      'Even under overcast skies, polarization pattern persists',
-      'Could locate sun position to within a few degrees',
-    ],
-  },
-  {
-    id: 2,
-    title: 'Bee Navigation',
-    description: 'How insects find their way home',
-    icon: '🐝',
-    details: [
-      'Bees have polarization-sensitive photoreceptors in their eyes',
-      'They memorize the polarization pattern during orientation flights',
-      'Use it as a compass to navigate to flowers and back',
-      'Works even when sun is obscured by clouds or terrain',
-    ],
-  },
-  {
-    id: 3,
-    title: 'Atmospheric Science',
-    description: 'Monitoring air quality',
-    icon: '🌍',
-    details: [
-      'Degree of polarization indicates aerosol concentration',
-      'Satellites measure global polarization patterns',
-      'Helps track pollution, dust storms, and volcanic ash',
-      'Key data for climate models and air quality forecasts',
-    ],
-  },
-  {
-    id: 4,
-    title: 'Photography',
-    description: 'Controlling reflections and sky darkness',
-    icon: '📷',
-    details: [
-      'Polarizing filters darken blue skies dramatically',
-      'Maximum effect at 90 degrees from the sun',
-      'Also reduces reflections from water and glass',
-      'Essential tool for landscape and outdoor photographers',
-    ],
-  },
-];
-
-// =============================================================================
-// TEST QUESTIONS DATA - Scenario-Based Multiple Choice
-// =============================================================================
-interface TestQuestionOption {
-  id: 'a' | 'b' | 'c' | 'd';
-  label: string;
-  correct?: boolean;
-}
-
-interface TestQuestion {
-  scenario: string;
-  question: string;
-  options: TestQuestionOption[];
-  explanation: string;
-}
-
-const testQuestions: TestQuestion[] = [
-  // 1. Core concept - why the sky is polarized (Easy)
-  {
-    scenario: "You're teaching a friend about optics and they ask why the sky appears blue and why sunglasses work better in certain directions.",
-    question: "What physical process causes skylight to become polarized?",
-    options: [
-      { id: 'a', label: "Reflection of sunlight off water vapor droplets in the atmosphere" },
-      { id: 'b', label: "Rayleigh scattering by nitrogen and oxygen molecules that preferentially scatters light perpendicular to the scattering plane", correct: true },
-      { id: 'c', label: "Absorption and re-emission by ozone molecules in the stratosphere" },
-      { id: 'd', label: "Refraction through ice crystals suspended in cirrus clouds" },
-    ],
-    explanation: "Rayleigh scattering occurs when light interacts with particles much smaller than its wavelength, like N2 and O2 molecules. The electric field of scattered light oscillates perpendicular to the scattering plane (the plane containing the sun, molecule, and observer), creating a systematic polarization pattern across the entire sky.",
-  },
-  // 2. Polarized sunglasses effectiveness (Easy-Medium)
-  {
-    scenario: "A photographer notices that when wearing polarized sunglasses and looking at different parts of the clear blue sky, some regions appear much darker than others when tilting their head.",
-    question: "Why do polarized sunglasses reduce glare more effectively when looking at certain parts of the sky?",
-    options: [
-      { id: 'a', label: "The sunglasses block UV radiation which varies across the sky" },
-      { id: 'b', label: "Skylight at 90 degrees from the sun is highly polarized, so aligned polarized lenses can block most of it", correct: true },
-      { id: 'c', label: "The lenses have a gradient tint that matches sky brightness patterns" },
-      { id: 'd', label: "Human eyes are more sensitive to polarized light in peripheral vision" },
-    ],
-    explanation: "Skylight is most strongly polarized at 90 degrees from the sun, where it can reach 75-80% polarization. When polarized sunglasses are oriented perpendicular to this polarization direction, they block most of the polarized light, dramatically darkening that region of the sky. Near the sun or directly opposite it, the light is less polarized, so the effect is reduced.",
-  },
-  // 3. Maximum polarization direction (Medium)
-  {
-    scenario: "An engineer is designing an outdoor optical sensor and needs to account for skylight polarization. The sun is at azimuth 180 degrees (due south) and 45 degrees elevation.",
-    question: "At what position in the sky would the sensor detect maximum polarization?",
-    options: [
-      { id: 'a', label: "Looking directly toward the sun at 180 degrees azimuth" },
-      { id: 'b', label: "Looking at the antisolar point, 180 degrees opposite the sun" },
-      { id: 'c', label: "Along a band 90 degrees from the sun - such as due east, due west, or at the zenith", correct: true },
-      { id: 'd', label: "Near the horizon in all directions equally" },
-    ],
-    explanation: "Maximum polarization occurs along a great circle 90 degrees from the sun. With the sun due south at 45 degrees elevation, maximum polarization would be found due east, due west, at the zenith (if sun were at horizon), and along the entire arc 90 degrees away. At these positions, the scattering geometry produces light polarized perpendicular to the line connecting that point to the sun.",
-  },
-  // 4. Viking sunstone navigation (Medium)
-  {
-    scenario: "Archaeologists discovered calcite crystals (Iceland spar) in Viking shipwrecks. Historical records suggest Vikings sailed across the North Atlantic to Greenland and North America without magnetic compasses, even on overcast days.",
-    question: "How could Vikings have used calcite sunstones to navigate when the sun was hidden by clouds?",
-    options: [
-      { id: 'a', label: "Calcite glows when exposed to the Earth's magnetic field, pointing north" },
-      { id: 'b', label: "Calcite birefringence creates double images that merge when aligned with sky polarization, revealing the sun's position", correct: true },
-      { id: 'c', label: "The crystals reflect starlight that penetrates clouds at night" },
-      { id: 'd', label: "Calcite changes color based on water temperature, indicating latitude" },
-    ],
-    explanation: "Calcite exhibits birefringence - it splits light into two polarized rays. When held up to an overcast sky and rotated, the crystal shows two images of equal brightness only when its optical axis aligns with the polarization direction of skylight. Since the polarization pattern is fixed relative to the sun's position, Vikings could determine where the sun was hidden behind clouds to within a few degrees, enabling accurate open-ocean navigation.",
-  },
-  // 5. Insect navigation using polarization (Medium-Hard)
-  {
-    scenario: "A biologist observing honeybees notices they can navigate accurately back to the hive even when the sun is obscured by a tree line or partial cloud cover, but struggle on heavily overcast or hazy days.",
-    question: "What specialized adaptation allows bees to use sky polarization for navigation?",
-    options: [
-      { id: 'a', label: "Bees have magnetic particles in their abdomens that sense Earth's field" },
-      { id: 'b', label: "Bees memorize landmark patterns and only use polarization as backup" },
-      { id: 'c', label: "Specialized photoreceptors in their compound eyes detect the e-vector orientation of polarized light", correct: true },
-      { id: 'd', label: "Bees communicate sun position through waggle dances and don't need to see the sky" },
-    ],
-    explanation: "Honeybees possess specialized UV-sensitive photoreceptors in the dorsal rim area of their compound eyes that can detect the electric field oscillation direction (e-vector) of polarized light. They memorize the sky's polarization pattern during orientation flights and use it as a celestial compass. This works even when only a small patch of blue sky is visible, but fails on heavily overcast or polluted days when Mie scattering from large particles destroys the polarization pattern.",
-  },
-  // 6. Photography with polarizing filters (Hard)
-  {
-    scenario: "A landscape photographer is shooting a mountain scene at midday with the sun almost directly overhead. They attach a circular polarizing filter to their lens and rotate it while looking through the viewfinder.",
-    question: "In which direction will the polarizing filter have the strongest effect on sky darkness?",
-    options: [
-      { id: 'a', label: "Looking toward the zenith directly above" },
-      { id: 'b', label: "Looking toward the horizon in all directions equally" },
-      { id: 'c', label: "Looking horizontally in any direction, since all horizontal views are roughly 90 degrees from an overhead sun", correct: true },
-      { id: 'd', label: "Looking at the sun through the filter to reduce its intensity" },
-    ],
-    explanation: "With the sun nearly overhead, the 90-degree maximum polarization zone forms a ring around the horizon. Looking horizontally in any direction puts you at approximately 90 degrees from the sun, where polarization is strongest. The polarizing filter can darken these horizontal sky regions significantly (up to 2 stops) while having minimal effect on the zenith (near the sun) or clouds (unpolarized). Photographers must be careful as this can cause uneven sky darkening in wide-angle shots.",
-  },
-  // 7. Atmospheric scattering physics (Hard)
-  {
-    scenario: "An atmospheric physicist measures sky polarization and finds the degree of polarization is only 40% at 90 degrees from the sun, much lower than the theoretical maximum of about 94% for single Rayleigh scattering.",
-    question: "What is the primary reason real-world sky polarization never reaches the theoretical maximum?",
-    options: [
-      { id: 'a', label: "The sun emits partially polarized light that interferes with atmospheric polarization" },
-      { id: 'b', label: "Multiple scattering events and ground reflections mix polarization states, reducing the net polarization", correct: true },
-      { id: 'c', label: "Quantum effects prevent light from being fully polarized at visible wavelengths" },
-      { id: 'd', label: "Earth's magnetic field rotates the polarization direction unpredictably" },
-    ],
-    explanation: "In the real atmosphere, light undergoes multiple scattering events before reaching an observer. Each additional scattering randomizes polarization direction somewhat. Additionally, light reflected from the ground (depolarized) mixes with sky light. Aerosols cause Mie scattering producing unpolarized light. Even on the clearest days, these factors reduce maximum polarization to 70-80%. In typical conditions, 30-50% is common. This reduction is actually useful for monitoring air quality.",
-  },
-  // 8. Polarization at sunrise/sunset (Hard)
-  {
-    scenario: "A researcher notices that the sky polarization pattern looks different at sunset compared to midday. With the sun on the horizon, they observe that the band of maximum polarization now passes through the zenith.",
-    question: "Why does the geometry of sky polarization change so dramatically between midday and sunset?",
-    options: [
-      { id: 'a', label: "The atmosphere is thicker at sunset, changing scattering properties" },
-      { id: 'b', label: "The 90-degree maximum polarization zone always forms a great circle around the sun's position, which changes as the sun moves", correct: true },
-      { id: 'c', label: "Sunset light is redder and red wavelengths have different polarization than blue" },
-      { id: 'd', label: "Humidity increases in the evening, altering the polarization pattern" },
-    ],
-    explanation: "The zone of maximum polarization always lies along a great circle 90 degrees from the sun. At midday with sun high, this zone forms a ring closer to the horizon. At sunset with sun on the horizon, the 90-degree zone passes through the zenith and down to the opposite horizon. This predictable geometric relationship is what makes polarization useful for navigation - no matter where the sun is, the pattern orientation reveals the sun's position.",
-  },
-  // 9. Robotic navigation systems (Hard)
-  {
-    scenario: "Engineers are developing an autonomous drone for polar exploration where GPS signals are unreliable and magnetic compasses are inaccurate near the poles. They consider using sky polarization for navigation.",
-    question: "What key advantage does a polarimetric navigation system offer over GPS or magnetic compasses for polar operations?",
-    options: [
-      { id: 'a', label: "Polarization sensors are smaller and use less power than GPS receivers" },
-      { id: 'b', label: "Sky polarization provides a heading reference independent of magnetic anomalies and doesn't require satellite signals", correct: true },
-      { id: 'c', label: "Polarization works at night using starlight polarization patterns" },
-      { id: 'd', label: "Ice crystals in polar air enhance polarization, making it more accurate" },
-    ],
-    explanation: "Near Earth's magnetic poles, magnetic compasses become unreliable due to the steep inclination of field lines and local anomalies from iron deposits. GPS can have coverage gaps at high latitudes and is vulnerable to jamming or solar interference. Sky polarization provides a stable heading reference as long as any blue sky is visible, derived purely from the sun's position. Modern bio-inspired polarimetric sensors can determine heading to within 1 degree, making them valuable for polar, underwater, and space applications.",
-  },
-  // 10. Polarimetric cloud detection (Hard)
-  {
-    scenario: "A climate scientist uses a satellite-mounted polarimeter to study clouds from above. They notice that liquid water clouds and ice crystal clouds produce distinctly different polarization signatures.",
-    question: "How does polarimetry help distinguish between liquid water clouds and ice crystal clouds from satellite observations?",
-    options: [
-      { id: 'a', label: "Ice clouds polarize light clockwise while water clouds polarize counterclockwise" },
-      { id: 'b', label: "Spherical water droplets and hexagonal ice crystals scatter light at different angles with different polarization characteristics", correct: true },
-      { id: 'c', label: "Water absorbs polarized light while ice reflects it unchanged" },
-      { id: 'd', label: "Temperature differences cause different polarization in thermal infrared emissions" },
-    ],
-    explanation: "Liquid cloud droplets are nearly spherical and exhibit Mie scattering with characteristic rainbow and glory features at specific angles. Ice crystals have hexagonal shapes that produce different angular scattering patterns and polarization signatures, including halos at 22 and 46 degrees. Polarimeters measure the degree and angle of polarization at multiple wavelengths, creating a fingerprint that reveals particle shape, size distribution, and phase (liquid vs ice). This is crucial for climate models since ice and liquid clouds have very different radiative properties.",
-  },
-];
-
-// =============================================================================
+// -----------------------------------------------------------------------------
 // MAIN COMPONENT
-// =============================================================================
-export default function PolarizedSkyRenderer({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}: PolarizedSkyRendererProps) {
-  // State management
+// -----------------------------------------------------------------------------
+const PolarizedSkyRenderer: React.FC<PolarizedSkyRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [selectedApp, setSelectedApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
-  const [testSubmitted, setTestSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Interactive simulation state
+  // Simulation state
   const [sunAzimuth, setSunAzimuth] = useState(45);
   const [sunElevation, setSunElevation] = useState(45);
   const [polarizerAngle, setPolarizerAngle] = useState(0);
   const [showVectors, setShowVectors] = useState(true);
   const [hazeLevel, setHazeLevel] = useState(0);
-  const [animationFrame, setAnimationFrame] = useState(0);
 
-  // Navigation refs
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const animationRef = useRef<number | null>(null);
+  // Twist phase - haze comparison
+  const [twistHazeLevel, setTwistHazeLevel] = useState(0);
 
-  // Sound function
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
-  // Responsive detection
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -552,126 +293,101 @@ export default function PolarizedSkyRenderer({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#6366F1', // Indigo for sky theme
+    accentGlow: 'rgba(99, 102, 241, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    sky: '#3B82F6',
+    sun: '#FCD34D',
   };
 
-  // Animation loop
-  useEffect(() => {
-    const animate = () => {
-      setAnimationFrame((prev) => (prev + 1) % 360);
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    animationRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-      }
-    };
-  }, []);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Haze Effect',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  // =============================================================================
-  // PHYSICS CALCULATIONS
-  // =============================================================================
-  const calculatePolarization = useCallback((angleFromSun: number): number => {
-    // Polarization is maximum at 90 degrees from sun
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'polarized-sky',
+        gameTitle: 'Polarized Sky',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Physics calculations
+  const calculatePolarization = useCallback((angleFromSun: number, haze: number = hazeLevel): number => {
     const radians = (angleFromSun * Math.PI) / 180;
-    const maxPolarization = 0.75 * (1 - hazeLevel / 100);
+    const maxPolarization = 0.75 * (1 - haze / 100);
     return maxPolarization * Math.pow(Math.sin(radians), 2);
   }, [hazeLevel]);
 
   const getPolarizationDirection = useCallback((x: number, y: number, sunX: number, sunY: number): number => {
-    // Polarization direction is perpendicular to the line from sun to this point
     const dx = x - sunX;
     const dy = y - sunY;
     return Math.atan2(dy, dx) + Math.PI / 2;
   }, []);
 
-  // =============================================================================
-  // NAVIGATION HANDLERS
-  // =============================================================================
-  const handleCompleteApp = useCallback(() => {
-    const newCompleted = [...completedApps];
-    newCompleted[selectedApp] = true;
-    setCompletedApps(newCompleted);
-
-    if (selectedApp < applications.length - 1) {
-      setSelectedApp(selectedApp + 1);
-    }
-  }, [completedApps, selectedApp]);
-
-  const handleAnswerSelect = useCallback(
-    (index: number) => {
-      if (showResult) return;
-      setSelectedAnswer(index);
-      setShowResult(true);
-
-      const isCorrect = questions[currentQuestion].options[index].correct;
-      if (isCorrect) {
-        setScore((prev) => prev + 1);
-        if (onCorrectAnswer) onCorrectAnswer();
-      } else {
-        if (onIncorrectAnswer) onIncorrectAnswer();
-      }
-    },
-    [showResult, currentQuestion, onCorrectAnswer, onIncorrectAnswer]
-  );
-
-  const handleNextQuestion = useCallback(() => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setShowResult(false);
-    } else {
-      setTestSubmitted(true);
-    }
-  }, [currentQuestion]);
-
-  const handlePhaseComplete = useCallback(() => {
-    playSound('transition');
-    if (onPhaseComplete) onPhaseComplete();
-  }, [playSound, onPhaseComplete]);
-
-  const allAppsCompleted = completedApps.every(Boolean);
-
-  // =============================================================================
-  // SKY DOME VISUALIZATION
-  // =============================================================================
-  const renderSkyDome = useCallback(() => {
-    const width = isMobile ? 320 : 500;
-    const height = isMobile ? 300 : 400;
+  // Sky Dome Visualization Component
+  const SkyDomeVisualization = ({ currentHaze = hazeLevel }: { currentHaze?: number }) => {
+    const width = isMobile ? 320 : 480;
+    const height = isMobile ? 280 : 360;
     const centerX = width / 2;
     const centerY = height / 2;
-    const radius = Math.min(width, height) * 0.4;
+    const radius = Math.min(width, height) * 0.38;
 
     // Sun position in sky dome coordinates
     const sunRadians = (sunAzimuth * Math.PI) / 180;
     const sunDist = radius * (1 - sunElevation / 90);
     const sunX = centerX + sunDist * Math.cos(sunRadians);
-    const sunY = centerY + sunDist * Math.sin(sunRadians);
+    const sunY = centerY - sunDist * Math.sin(sunRadians);
 
-    // Generate polarization vectors across the dome
+    // Generate polarization vectors
     const vectors: { x: number; y: number; angle: number; strength: number }[] = [];
-    const gridSize = isMobile ? 6 : 8;
+    const gridSize = isMobile ? 5 : 7;
 
     for (let i = -gridSize; i <= gridSize; i++) {
       for (let j = -gridSize; j <= gridSize; j++) {
@@ -679,10 +395,10 @@ export default function PolarizedSkyRenderer({
         const y = centerY + (j / gridSize) * radius;
         const distFromCenter = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
 
-        if (distFromCenter <= radius) {
+        if (distFromCenter <= radius * 0.9) {
           const distFromSun = Math.sqrt((x - sunX) ** 2 + (y - sunY) ** 2);
           const angleFromSun = Math.atan2(distFromSun, radius) * (180 / Math.PI);
-          const strength = calculatePolarization(Math.min(90, angleFromSun * 1.5));
+          const strength = calculatePolarization(Math.min(90, angleFromSun * 1.5), currentHaze);
           const direction = getPolarizationDirection(x, y, sunX, sunY);
 
           vectors.push({ x, y, angle: direction, strength });
@@ -690,1526 +406,1344 @@ export default function PolarizedSkyRenderer({
       }
     }
 
-    // Calculate what the polarizer sees
     const polarizerRad = (polarizerAngle * Math.PI) / 180;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: defined.spacing.md }}>
-        <svg width={width} height={height} style={{ overflow: 'visible' }}>
-          <defs>
-            {/* =================================================================== */}
-            {/* PREMIUM LINEAR GRADIENTS - Sky depth and atmospheric layers        */}
-            {/* =================================================================== */}
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <radialGradient id="skyGrad" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#1e40af" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#93c5fd" />
+          </radialGradient>
+          <radialGradient id="sunGrad" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="50%" stopColor="#fcd34d" />
+            <stop offset="100%" stopColor="#f59e0b" />
+          </radialGradient>
+          <filter id="glowFilter">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Sky dome gradient - deep zenith to light horizon with atmosphere layers */}
-            <linearGradient id="pskySkyDome" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0c1445" />
-              <stop offset="25%" stopColor="#1e40af" />
-              <stop offset="50%" stopColor="#3b82f6" />
-              <stop offset="75%" stopColor="#60a5fa" />
-              <stop offset="90%" stopColor="#93c5fd" />
-              <stop offset="100%" stopColor="#bfdbfe" />
-            </linearGradient>
+        {/* Title */}
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+          Sky Dome - Polarization Pattern
+        </text>
 
-            {/* Horizon glow gradient - warm atmospheric scattering near horizon */}
-            <linearGradient id="pskyHorizonGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0" />
-              <stop offset="60%" stopColor="#fde68a" stopOpacity="0.2" />
-              <stop offset="80%" stopColor="#fcd34d" stopOpacity="0.4" />
-              <stop offset="95%" stopColor="#fbbf24" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.3" />
-            </linearGradient>
+        {/* Sky dome background */}
+        <circle cx={centerX} cy={centerY} r={radius} fill="url(#skyGrad)" opacity={1 - currentHaze / 150} />
 
-            {/* Polarization band gradient - shows maximum polarization zone */}
-            <linearGradient id="pskyPolarBand" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
-              <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.5" />
-              <stop offset="80%" stopColor="#60a5fa" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-            </linearGradient>
+        {/* Haze overlay */}
+        {currentHaze > 0 && (
+          <circle cx={centerX} cy={centerY} r={radius} fill="#94a3b8" opacity={currentHaze / 120} />
+        )}
 
-            {/* Haze overlay gradient - simulates atmospheric particles */}
-            <linearGradient id="pskyHazeOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.1" />
-              <stop offset="40%" stopColor="#cbd5e1" stopOpacity="0.2" />
-              <stop offset="70%" stopColor="#94a3b8" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#64748b" stopOpacity="0.5" />
-            </linearGradient>
+        {/* 90-degree polarization band */}
+        <circle
+          cx={sunX}
+          cy={sunY}
+          r={radius * 0.65}
+          fill="none"
+          stroke={colors.sky}
+          strokeWidth="6"
+          strokeDasharray="8,4"
+          opacity={0.6 - currentHaze / 200}
+        />
 
-            {/* Polarizer glass gradient - realistic optical filter look */}
-            <linearGradient id="pskyPolarizerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="25%" stopColor="#334155" />
-              <stop offset="50%" stopColor="#1e293b" />
-              <stop offset="75%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
+        {/* Polarization vectors */}
+        {showVectors && vectors.map((v, i) => {
+          const length = 12 * v.strength;
+          const baseOpacity = 0.3 + v.strength * 0.7;
+          const angleDiff = v.angle - polarizerRad;
+          const transmission = Math.pow(Math.cos(angleDiff), 2);
+          const finalOpacity = baseOpacity * transmission * (1 - currentHaze / 150);
 
-            {/* =================================================================== */}
-            {/* PREMIUM RADIAL GRADIENTS - Sun, glow effects, polarization patterns */}
-            {/* =================================================================== */}
-
-            {/* Sun core gradient - bright center with corona layers */}
-            <radialGradient id="pskySunCore" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="15%" stopColor="#fffbeb" />
-              <stop offset="35%" stopColor="#fef3c7" />
-              <stop offset="55%" stopColor="#fde68a" />
-              <stop offset="75%" stopColor="#fcd34d" />
-              <stop offset="100%" stopColor="#f59e0b" />
-            </radialGradient>
-
-            {/* Sun corona gradient - outer atmospheric glow */}
-            <radialGradient id="pskySunCorona" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.9" />
-              <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.4" />
-              <stop offset="70%" stopColor="#d97706" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Atmospheric scattering gradient - Rayleigh scattering rings around sun */}
-            <radialGradient id="pskyScatterRing" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.5" />
-              <stop offset="25%" stopColor="#fde68a" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.2" />
-              <stop offset="75%" stopColor="#60a5fa" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Polarization vector glow - for highlighting E-field oscillation */}
-            <radialGradient id="pskyVectorGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="1" />
-              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.7" />
-              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Zenith glow - deepest blue at top of dome */}
-            <radialGradient id="pskyZenithGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#1e40af" stopOpacity="0.8" />
-              <stop offset="40%" stopColor="#1e3a8a" stopOpacity="0.5" />
-              <stop offset="70%" stopColor="#172554" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#0c1445" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Neutral point marker gradient - for Arago/Babinet/Brewster points */}
-            <radialGradient id="pskyNeutralPoint" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#64748b" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#475569" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#334155" stopOpacity="0" />
-            </radialGradient>
-
-            {/* =================================================================== */}
-            {/* PREMIUM GLOW FILTERS - Using feGaussianBlur + feMerge pattern      */}
-            {/* =================================================================== */}
-
-            {/* Sun glow filter - intense radial bloom effect */}
-            <filter id="pskySunGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="8" result="blur1" />
-              <feGaussianBlur stdDeviation="4" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur1" />
-                <feMergeNode in="blur2" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Soft atmospheric glow for corona */}
-            <filter id="pskyCoronaGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="12" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Polarization vector glow filter */}
-            <filter id="pskyVectorFilter" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Haze blur filter - adjustable atmospheric scattering */}
-            <filter id="pskyHazeFilter" x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation={hazeLevel / 8} result="haze" />
-              <feMerge>
-                <feMergeNode in="haze" />
-              </feMerge>
-            </filter>
-
-            {/* Label background glow */}
-            <filter id="pskyLabelGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Horizon haze effect */}
-            <filter id="pskyHorizonHaze" x="0%" y="0%" width="100%" height="100%">
-              <feGaussianBlur stdDeviation="1.5" />
-            </filter>
-          </defs>
-
-          {/* =================================================================== */}
-          {/* SKY DOME - Layered atmosphere visualization                         */}
-          {/* =================================================================== */}
-
-          {/* Base sky gradient - zenith to horizon color transition */}
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r={radius}
-            fill="url(#pskySkyDome)"
-          />
-
-          {/* Zenith deep blue overlay */}
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r={radius * 0.5}
-            fill="url(#pskyZenithGlow)"
-          />
-
-          {/* Horizon warm glow - atmospheric scattering at low angles */}
-          <ellipse
-            cx={centerX}
-            cy={centerY + radius * 0.3}
-            rx={radius}
-            ry={radius * 0.7}
-            fill="url(#pskyHorizonGlow)"
-            opacity={0.6 - hazeLevel / 200}
-          />
-
-          {/* Haze overlay - increases with haze level */}
-          {hazeLevel > 0 && (
-            <circle
-              cx={centerX}
-              cy={centerY}
-              r={radius}
-              fill="url(#pskyHazeOverlay)"
-              opacity={hazeLevel / 80}
-              filter={hazeLevel > 30 ? "url(#pskyHazeFilter)" : undefined}
-            />
-          )}
-
-          {/* =================================================================== */}
-          {/* SUN WITH ATMOSPHERIC SCATTERING                                     */}
-          {/* =================================================================== */}
-
-          {/* Outer scattering ring - Rayleigh scattering visible around sun */}
-          <circle
-            cx={sunX}
-            cy={sunY}
-            r={45}
-            fill="url(#pskyScatterRing)"
-            filter="url(#pskyCoronaGlow)"
-            opacity={0.8 - hazeLevel / 150}
-          />
-
-          {/* Sun corona - outer atmospheric glow */}
-          <circle
-            cx={sunX}
-            cy={sunY}
-            r={32}
-            fill="url(#pskySunCorona)"
-            filter="url(#pskyCoronaGlow)"
-          />
-
-          {/* Sun main body */}
-          <circle
-            cx={sunX}
-            cy={sunY}
-            r={20}
-            fill="url(#pskySunCore)"
-            filter="url(#pskySunGlow)"
-          />
-
-          {/* Sun bright center highlight */}
-          <circle
-            cx={sunX - 4}
-            cy={sunY - 4}
-            r={8}
-            fill="#ffffff"
-            opacity="0.9"
-          />
-
-          {/* Sun position label */}
-          <text
-            x={sunX}
-            y={sunY + 35}
-            fill="#fcd34d"
-            fontSize="9"
-            fontWeight="600"
-            textAnchor="middle"
-            filter="url(#pskyLabelGlow)"
-          >
-            SUN
-          </text>
-
-          {/* =================================================================== */}
-          {/* POLARIZATION PATTERN VISUALIZATION                                  */}
-          {/* =================================================================== */}
-
-          {/* 90-degree arc from sun - maximum polarization zone */}
-          <circle
-            cx={sunX}
-            cy={sunY}
-            r={radius * 0.7}
-            fill="none"
-            stroke="url(#pskyPolarBand)"
-            strokeWidth="8"
-            strokeDasharray="12,6"
-            opacity={0.7 - hazeLevel / 150}
-          />
-
-          {/* Inner guide circle at 45 degrees */}
-          <circle
-            cx={sunX}
-            cy={sunY}
-            r={radius * 0.4}
-            fill="none"
-            stroke="#60a5fa"
-            strokeWidth="1"
-            strokeDasharray="4,8"
-            opacity={0.3}
-          />
-
-          {/* Outer guide circle at 135 degrees */}
-          <circle
-            cx={sunX}
-            cy={sunY}
-            r={radius * 0.9}
-            fill="none"
-            stroke="#60a5fa"
-            strokeWidth="1"
-            strokeDasharray="4,8"
-            opacity={0.2}
-          />
-
-          {/* Polarization vectors - E-field oscillation direction */}
-          {showVectors && vectors.map((v, i) => {
-            const length = 14 * v.strength;
-            const baseOpacity = 0.3 + v.strength * 0.7;
-
-            // Calculate transmission through polarizer
-            const angleDiff = v.angle - polarizerRad;
-            const transmission = Math.pow(Math.cos(angleDiff), 2);
-            const finalOpacity = baseOpacity * transmission * (1 - hazeLevel / 150);
-
-            // Color intensity based on polarization strength
-            const colorIntensity = Math.floor(150 + 105 * v.strength);
-            const color = `rgba(${96}, ${colorIntensity}, 250, ${finalOpacity})`;
-
-            return (
-              <g key={i} filter={v.strength > 0.5 ? "url(#pskyVectorFilter)" : undefined}>
-                {/* Vector line showing polarization direction */}
-                <line
-                  x1={v.x - length * Math.cos(v.angle)}
-                  y1={v.y - length * Math.sin(v.angle)}
-                  x2={v.x + length * Math.cos(v.angle)}
-                  y2={v.y + length * Math.sin(v.angle)}
-                  stroke={color}
-                  strokeWidth={2 + v.strength}
-                  strokeLinecap="round"
-                />
-                {/* Endpoint dots for strong polarization */}
-                {v.strength > 0.4 && (
-                  <>
-                    <circle
-                      cx={v.x - length * Math.cos(v.angle)}
-                      cy={v.y - length * Math.sin(v.angle)}
-                      r={1.5}
-                      fill={color}
-                    />
-                    <circle
-                      cx={v.x + length * Math.cos(v.angle)}
-                      cy={v.y + length * Math.sin(v.angle)}
-                      r={1.5}
-                      fill={color}
-                    />
-                  </>
-                )}
-              </g>
-            );
-          })}
-
-          {/* =================================================================== */}
-          {/* HORIZON AND CARDINAL DIRECTIONS                                     */}
-          {/* =================================================================== */}
-
-          {/* Horizon circle - atmospheric boundary */}
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r={radius}
-            fill="none"
-            stroke="#475569"
-            strokeWidth="2.5"
-            opacity="0.8"
-          />
-
-          {/* Ground/terrain hint below horizon */}
-          <ellipse
-            cx={centerX}
-            cy={centerY + radius + 10}
-            rx={radius * 1.1}
-            ry={15}
-            fill="#1e293b"
-            opacity="0.5"
-          />
-
-          {/* Cardinal directions with premium styling */}
-          {['N', 'E', 'S', 'W'].map((dir, i) => {
-            const angle = (i * Math.PI) / 2 - Math.PI / 2;
-            const x = centerX + (radius + 22) * Math.cos(angle);
-            const y = centerY + (radius + 22) * Math.sin(angle);
-            const isNorth = dir === 'N';
-            return (
-              <g key={dir}>
-                <text
-                  x={x}
-                  y={y}
-                  fill={isNorth ? '#f59e0b' : '#94a3b8'}
-                  fontSize={isNorth ? "14" : "12"}
-                  fontWeight={isNorth ? "700" : "500"}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                >
-                  {dir}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* =================================================================== */}
-          {/* 90-DEGREE MAX POLARIZATION LABEL                                    */}
-          {/* =================================================================== */}
-
-          {/* Label background */}
-          <rect
-            x={sunX + radius * 0.7 + 5}
-            y={sunY - 20}
-            width={isMobile ? 70 : 85}
-            height={40}
-            rx="6"
-            fill="rgba(15, 23, 42, 0.85)"
-            stroke="#3b82f6"
-            strokeWidth="1"
-          />
-          <text
-            x={sunX + radius * 0.7 + (isMobile ? 40 : 48)}
-            y={sunY - 5}
-            fill="#60a5fa"
-            fontSize="9"
-            fontWeight="600"
-            textAnchor="middle"
-          >
-            90 deg from sun
-          </text>
-          <text
-            x={sunX + radius * 0.7 + (isMobile ? 40 : 48)}
-            y={sunY + 10}
-            fill="#93c5fd"
-            fontSize="8"
-            textAnchor="middle"
-          >
-            MAX POLARIZATION
-          </text>
-
-          {/* =================================================================== */}
-          {/* POLARIZER INDICATOR - Premium optical filter visualization          */}
-          {/* =================================================================== */}
-
-          <g transform={`translate(${width - 65}, 35)`}>
-            {/* Polarizer housing */}
-            <rect
-              x="-30"
-              y="-20"
-              width="60"
-              height="40"
-              fill="url(#pskyPolarizerGlass)"
-              rx="8"
-              stroke="#475569"
-              strokeWidth="1"
-            />
-            {/* Polarizer glass */}
-            <rect
-              x="-22"
-              y="-12"
-              width="44"
-              height="24"
-              fill="rgba(59, 130, 246, 0.2)"
-              rx="4"
-            />
-            {/* Polarization axis line */}
+          return (
             <line
-              x1={-18 * Math.cos(polarizerRad)}
-              y1={-18 * Math.sin(polarizerRad)}
-              x2={18 * Math.cos(polarizerRad)}
-              y2={18 * Math.sin(polarizerRad)}
-              stroke="#f59e0b"
-              strokeWidth="3"
+              key={i}
+              x1={v.x - length * Math.cos(v.angle)}
+              y1={v.y - length * Math.sin(v.angle)}
+              x2={v.x + length * Math.cos(v.angle)}
+              y2={v.y + length * Math.sin(v.angle)}
+              stroke={`rgba(96, 165, 250, ${finalOpacity})`}
+              strokeWidth={2 + v.strength}
               strokeLinecap="round"
-              filter="url(#pskyVectorFilter)"
             />
-            {/* Arrow heads to show transmission axis */}
-            <circle
-              cx={16 * Math.cos(polarizerRad)}
-              cy={16 * Math.sin(polarizerRad)}
-              r="3"
-              fill="#f59e0b"
-            />
-            <circle
-              cx={-16 * Math.cos(polarizerRad)}
-              cy={-16 * Math.sin(polarizerRad)}
-              r="3"
-              fill="#f59e0b"
-            />
-            {/* Label */}
+          );
+        })}
+
+        {/* Sun */}
+        <circle cx={sunX} cy={sunY} r={18} fill="url(#sunGrad)" filter="url(#glowFilter)" />
+        <circle cx={sunX - 4} cy={sunY - 4} r={6} fill="#ffffff" opacity="0.8" />
+        <text x={sunX} y={sunY + 32} textAnchor="middle" fill={colors.sun} fontSize="10" fontWeight="600">
+          SUN
+        </text>
+
+        {/* Horizon ring */}
+        <circle cx={centerX} cy={centerY} r={radius} fill="none" stroke={colors.textMuted} strokeWidth="2" />
+
+        {/* Cardinal directions */}
+        {['N', 'E', 'S', 'W'].map((dir, i) => {
+          const angle = (i * Math.PI) / 2 - Math.PI / 2;
+          const x = centerX + (radius + 18) * Math.cos(angle);
+          const y = centerY + (radius + 18) * Math.sin(angle);
+          return (
             <text
-              x="0"
-              y="32"
-              fill="#94a3b8"
-              fontSize="9"
-              fontWeight="600"
+              key={dir}
+              x={x}
+              y={y}
+              fill={dir === 'N' ? colors.warning : colors.textMuted}
+              fontSize={dir === 'N' ? '12' : '10'}
+              fontWeight={dir === 'N' ? '700' : '500'}
               textAnchor="middle"
+              dominantBaseline="middle"
             >
-              POLARIZER
+              {dir}
             </text>
-            <text
-              x="0"
-              y="42"
-              fill="#64748b"
-              fontSize="8"
-              textAnchor="middle"
-            >
-              {polarizerAngle}deg
-            </text>
-          </g>
+          );
+        })}
 
-          {/* =================================================================== */}
-          {/* LEGEND - Premium information panel                                  */}
-          {/* =================================================================== */}
+        {/* Stats panel */}
+        <g transform={`translate(${width - 95}, 40)`}>
+          <rect x="0" y="0" width="85" height="70" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+          <text x="42" y="16" textAnchor="middle" fill={colors.textMuted} fontSize="9">Max Polarization</text>
+          <text x="42" y="34" textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700">
+            {Math.round(75 * (1 - currentHaze / 100))}%
+          </text>
+          <text x="42" y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">at 90 deg from sun</text>
+          <text x="42" y="64" textAnchor="middle" fill={currentHaze < 30 ? colors.success : currentHaze < 60 ? colors.warning : colors.error} fontSize="9">
+            {currentHaze < 30 ? 'Clear' : currentHaze < 60 ? 'Hazy' : 'Polluted'}
+          </text>
+        </g>
 
-          <g transform={`translate(15, ${height - 75})`}>
-            {/* Legend background */}
-            <rect
-              x="0"
-              y="0"
-              width={isMobile ? 130 : 150}
-              height="70"
-              fill="rgba(15, 23, 42, 0.9)"
-              rx="8"
-              stroke="#334155"
-              strokeWidth="1"
-            />
-
-            {/* Legend title */}
-            <text x="10" y="15" fill="#94a3b8" fontSize="8" fontWeight="600">
-              LEGEND
-            </text>
-
-            {/* Polarization vector */}
-            <line x1="10" y1="30" x2="30" y2="30" stroke="#60a5fa" strokeWidth="2.5" strokeLinecap="round" />
-            <text x="38" y="33" fill="#cbd5e1" fontSize="9">E-field polarization</text>
-
-            {/* Sun indicator */}
-            <circle cx="20" cy="48" r="6" fill="url(#pskySunCore)" />
-            <text x="38" y="51" fill="#cbd5e1" fontSize="9">Sun position</text>
-
-            {/* Max zone indicator */}
-            <line x1="10" y1="62" x2="30" y2="62" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4,2" />
-            <text x="38" y="65" fill="#cbd5e1" fontSize="9">90deg zone</text>
-          </g>
-
-          {/* =================================================================== */}
-          {/* ATMOSPHERIC CONDITIONS INDICATOR                                    */}
-          {/* =================================================================== */}
-
-          <g transform={`translate(15, 15)`}>
-            <rect
-              x="0"
-              y="0"
-              width={isMobile ? 85 : 100}
-              height="32"
-              fill="rgba(15, 23, 42, 0.9)"
-              rx="6"
-              stroke="#334155"
-              strokeWidth="1"
-            />
-            <text x="10" y="13" fill="#64748b" fontSize="8">
-              CLARITY
-            </text>
-            <text
-              x="10"
-              y="25"
-              fill={hazeLevel < 30 ? '#10b981' : hazeLevel < 60 ? '#f59e0b' : '#ef4444'}
-              fontSize="10"
-              fontWeight="600"
-            >
-              {hazeLevel < 30 ? 'CLEAR' : hazeLevel < 60 ? 'HAZY' : 'POLLUTED'}
-            </text>
-          </g>
-        </svg>
-
-        {/* Controls */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          gap: defined.spacing.md,
-          width: '100%',
-          maxWidth: '500px',
-        }}>
-          <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '4px' }}>
-              Sun Azimuth: {sunAzimuth}deg
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="360"
-              value={sunAzimuth}
-              onChange={(e) => setSunAzimuth(Number(e.target.value))}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '4px' }}>
-              Sun Elevation: {sunElevation}deg
-            </label>
-            <input
-              type="range"
-              min="5"
-              max="90"
-              value={sunElevation}
-              onChange={(e) => setSunElevation(Number(e.target.value))}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '4px' }}>
-              Polarizer Angle: {polarizerAngle}deg
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="180"
-              value={polarizerAngle}
-              onChange={(e) => setPolarizerAngle(Number(e.target.value))}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '4px' }}>
-              Haze Level: {hazeLevel}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={hazeLevel}
-              onChange={(e) => setHazeLevel(Number(e.target.value))}
-              style={{ width: '100%' }}
-            />
-          </div>
-        </div>
-
-        {/* Toggle */}
-        <button
-          onClick={() => setShowVectors(!showVectors)}
-          style={{
-            padding: `${defined.spacing.sm} ${defined.spacing.md}`,
-            background: showVectors ? defined.colors.primary : defined.colors.background.tertiary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            cursor: 'pointer',
-            fontSize: defined.typography.sizes.sm,
-          }}
-        >
-          {showVectors ? 'Hide' : 'Show'} Polarization Vectors
-        </button>
-      </div>
+        {/* Polarizer indicator */}
+        <g transform={`translate(15, 40)`}>
+          <rect x="0" y="0" width="70" height="55" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+          <text x="35" y="14" textAnchor="middle" fill={colors.textMuted} fontSize="9">Polarizer</text>
+          <line
+            x1={35 - 20 * Math.cos(polarizerRad)}
+            y1={32 - 20 * Math.sin(polarizerRad)}
+            x2={35 + 20 * Math.cos(polarizerRad)}
+            y2={32 + 20 * Math.sin(polarizerRad)}
+            stroke={colors.warning}
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <text x="35" y="50" textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="600">
+            {polarizerAngle}deg
+          </text>
+        </g>
+      </svg>
     );
-  }, [isMobile, sunAzimuth, sunElevation, polarizerAngle, hazeLevel, showVectors, calculatePolarization, getPolarizationDirection]);
+  };
 
-  // =============================================================================
-  // PHASE RENDERERS
-  // =============================================================================
-  const renderHook = () => (
+  // Progress bar component
+  const renderProgressBar = () => (
     <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '70vh',
-      textAlign: 'center',
-      padding: defined.spacing.lg,
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
     }}>
       <div style={{
-        background: 'rgba(99, 102, 241, 0.1)',
-        border: '1px solid rgba(99, 102, 241, 0.3)',
-        borderRadius: defined.radius.full,
-        padding: `${defined.spacing.sm} ${defined.spacing.md}`,
-        marginBottom: defined.spacing.lg,
-      }}>
-        <span style={{ color: defined.colors.primary, fontSize: defined.typography.sizes.sm }}>ATMOSPHERIC OPTICS</span>
-      </div>
-
-      <h1 style={{
-        fontSize: isMobile ? defined.typography.sizes['2xl'] : defined.typography.sizes['3xl'],
-        fontWeight: defined.typography.weights.bold,
-        color: defined.colors.text.primary,
-        marginBottom: defined.spacing.md,
-      }}>
-        Is the Sky Polarized in a Pattern You Can Map?
-      </h1>
-
-      <p style={{
-        color: defined.colors.text.secondary,
-        fontSize: defined.typography.sizes.lg,
-        maxWidth: '500px',
-        marginBottom: defined.spacing.xl,
-      }}>
-        Vikings navigated without compasses. Bees find their way home through forests. The secret is hidden in plain sight - in the sky itself.
-      </p>
-
-      <div style={{
-        background: defined.colors.background.card,
-        borderRadius: defined.radius.xl,
-        padding: defined.spacing.xl,
-        maxWidth: '400px',
-        marginBottom: defined.spacing.xl,
-      }}>
-        <div style={{ fontSize: '4rem', marginBottom: defined.spacing.md }}>🌤</div>
-        <p style={{ color: defined.colors.text.primary, fontSize: defined.typography.sizes.base }}>
-          Look at the sky through polarized sunglasses and rotate them. Notice anything strange?
-        </p>
-        <p style={{ color: defined.colors.sky.polarized, marginTop: defined.spacing.md, fontWeight: defined.typography.weights.semibold }}>
-          The sky changes brightness depending on where you look and how you rotate!
-        </p>
-      </div>
-
-      <button
-        onClick={handlePhaseComplete}
-        style={{
-          background: `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})`,
-          color: defined.colors.text.primary,
-          border: 'none',
-          borderRadius: defined.radius.lg,
-          padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-          fontSize: defined.typography.sizes.lg,
-          fontWeight: defined.typography.weights.semibold,
-          cursor: 'pointer',
-        }}
-      >
-        Explore Sky Polarization
-      </button>
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderPredict = () => (
-    <div style={{ padding: defined.spacing.lg, maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        Make Your Prediction
-      </h2>
-
-      <div style={{
-        background: defined.colors.background.card,
-        borderRadius: defined.radius.lg,
-        padding: defined.spacing.lg,
-        marginBottom: defined.spacing.lg,
-      }}>
-        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md }}>
-          You notice that scattered blue skylight appears darker in some directions when viewed through polarized sunglasses.
-        </p>
-        <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold }}>
-          Where in the sky would you expect the light to be MOST polarized?
-        </p>
-      </div>
-
-      {[
-        { id: 'A', text: 'Directly toward the sun' },
-        { id: 'B', text: 'At 90 degrees from the sun' },
-        { id: 'C', text: 'Directly opposite the sun' },
-        { id: 'D', text: 'Near the horizon everywhere' },
-      ].map((option) => (
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
         <button
-          key={option.id}
-          onClick={() => setPrediction(option.id)}
+          key={p}
+          onClick={() => goToPhase(p)}
           style={{
-            width: '100%',
-            padding: defined.spacing.md,
-            marginBottom: defined.spacing.sm,
-            background: prediction === option.id ? defined.colors.primary : defined.colors.background.tertiary,
-            color: defined.colors.text.primary,
-            border: prediction === option.id ? `2px solid ${defined.colors.primary}` : '2px solid transparent',
-            borderRadius: defined.radius.md,
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
-            textAlign: 'left',
+            transition: 'all 0.3s ease',
           }}
-        >
-          {option.id}. {option.text}
-        </button>
+          aria-label={phaseLabels[p]}
+        />
       ))}
-
-      {prediction && (
-        <div style={{
-          background: prediction === 'B' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-          border: `1px solid ${prediction === 'B' ? defined.colors.success : defined.colors.warning}`,
-          borderRadius: defined.radius.lg,
-          padding: defined.spacing.lg,
-          marginTop: defined.spacing.lg,
-        }}>
-          <p style={{ color: prediction === 'B' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold }}>
-            {prediction === 'B' ? 'Correct!' : 'Not quite!'}
-          </p>
-          <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.sm }}>
-            Rayleigh scattering creates maximum polarization at 90 degrees from the sun. The scattered light oscillates perpendicular to the scattering plane.
-          </p>
-          <button
-            onClick={handlePhaseComplete}
-            style={{
-              marginTop: defined.spacing.md,
-              background: defined.colors.primary,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-              cursor: 'pointer',
-            }}
-          >
-            See It In Action
-          </button>
-        </div>
-      )}
     </div>
   );
 
-  const renderPlay = () => (
-    <div style={{ padding: defined.spacing.lg }}>
-      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.md }}>
-        Sky Polarization Lab
-      </h2>
-      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        Move the sun and rotate the polarizer to see how polarization varies across the sky.
-      </p>
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #4F46E5)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-      {renderSkyDome()}
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
       <div style={{
-        background: defined.colors.background.card,
-        borderRadius: defined.radius.lg,
-        padding: defined.spacing.lg,
-        marginTop: defined.spacing.lg,
-        maxWidth: '500px',
-        margin: '0 auto',
-      }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.sm }}>Key Observations:</h3>
-        <ul style={{ color: defined.colors.text.secondary, paddingLeft: defined.spacing.lg, lineHeight: '1.8' }}>
-          <li>Polarization is strongest at 90 degrees from the sun (dashed circle)</li>
-          <li>Near the sun and opposite the sun, polarization is weakest</li>
-          <li>Rotating the polarizer changes which vectors appear bright</li>
-          <li>Increasing haze reduces the overall polarization strength</li>
-        </ul>
-      </div>
-
-      <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            background: defined.colors.primary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-            cursor: 'pointer',
-            fontSize: defined.typography.sizes.base,
-          }}
-        >
-          Understand the Physics
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        The Physics of Sky Polarization
-      </h2>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        gap: defined.spacing.md,
-        marginBottom: defined.spacing.lg,
-      }}>
-        <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg }}>
-          <h3 style={{ color: defined.colors.sky.polarized, marginBottom: defined.spacing.sm }}>Rayleigh Scattering</h3>
-          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
-            Air molecules scatter light by re-radiating it. The scattered light is polarized perpendicular to the scattering plane (the plane containing the sun, molecule, and observer).
-          </p>
-        </div>
-        <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg }}>
-          <h3 style={{ color: defined.colors.accent, marginBottom: defined.spacing.sm }}>90-Degree Rule</h3>
-          <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
-            At 90 degrees from the sun, the scattering plane is edge-on to us, so we only see polarization perpendicular to it. Maximum polarization can reach 75-80%.
-          </p>
-        </div>
-      </div>
-
-      <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, marginBottom: defined.spacing.lg }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md, textAlign: 'center' }}>Key Formula</h3>
-        <div style={{
-          background: defined.colors.background.primary,
-          padding: defined.spacing.md,
-          borderRadius: defined.radius.md,
-          textAlign: 'center',
-          fontFamily: 'monospace',
-          color: defined.colors.text.primary,
-          fontSize: defined.typography.sizes.lg,
-        }}>
-          P = P_max * sin^2(theta)
-        </div>
-        <p style={{ color: defined.colors.text.muted, textAlign: 'center', marginTop: defined.spacing.sm, fontSize: defined.typography.sizes.sm }}>
-          theta = angular distance from sun, P_max depends on atmospheric clarity
-        </p>
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            background: defined.colors.secondary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-            cursor: 'pointer',
-          }}
-        >
-          See the Twist
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div style={{ padding: defined.spacing.lg, maxWidth: '600px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        The Twist: Clear vs Hazy Skies
-      </h2>
-
-      <div style={{
-        background: defined.colors.background.card,
-        borderRadius: defined.radius.lg,
-        padding: defined.spacing.lg,
-        marginBottom: defined.spacing.lg,
-      }}>
-        <p style={{ color: defined.colors.text.secondary, marginBottom: defined.spacing.md }}>
-          On a clear mountain day, the sky polarization is strong and easy to detect. But what about in a polluted city or on a hazy day?
-        </p>
-        <p style={{ color: defined.colors.text.primary, fontWeight: defined.typography.weights.semibold }}>
-          How does haze affect sky polarization?
-        </p>
-      </div>
-
-      {[
-        { id: 'A', text: 'Haze increases polarization by filtering light' },
-        { id: 'B', text: 'Haze decreases polarization - large particles scatter unpolarized light' },
-        { id: 'C', text: 'Haze has no effect on polarization' },
-        { id: 'D', text: 'Haze reverses the polarization direction' },
-      ].map((option) => (
-        <button
-          key={option.id}
-          onClick={() => setTwistPrediction(option.id)}
-          style={{
-            width: '100%',
-            padding: defined.spacing.md,
-            marginBottom: defined.spacing.sm,
-            background: twistPrediction === option.id ? defined.colors.secondary : defined.colors.background.tertiary,
-            color: defined.colors.text.primary,
-            border: twistPrediction === option.id ? `2px solid ${defined.colors.secondary}` : '2px solid transparent',
-            borderRadius: defined.radius.md,
-            cursor: 'pointer',
-            textAlign: 'left',
-          }}
-        >
-          {option.id}. {option.text}
-        </button>
-      ))}
-
-      {twistPrediction && (
-        <div style={{
-          background: twistPrediction === 'B' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-          border: `1px solid ${twistPrediction === 'B' ? defined.colors.success : defined.colors.warning}`,
-          borderRadius: defined.radius.lg,
-          padding: defined.spacing.lg,
-          marginTop: defined.spacing.lg,
-        }}>
-          <p style={{ color: twistPrediction === 'B' ? defined.colors.success : defined.colors.warning, fontWeight: defined.typography.weights.semibold }}>
-            {twistPrediction === 'B' ? 'Exactly right!' : 'Not quite!'}
-          </p>
-          <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.sm }}>
-            Large particles (dust, pollution, water droplets) scatter light via Mie scattering, which produces unpolarized light. This dilutes the polarization pattern from Rayleigh scattering.
-          </p>
-          <button
-            onClick={handlePhaseComplete}
-            style={{
-              marginTop: defined.spacing.md,
-              background: defined.colors.secondary,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-              cursor: 'pointer',
-            }}
-          >
-            Compare Clear vs Hazy
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div style={{ padding: defined.spacing.lg }}>
-      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.md }}>
-        Clear vs Hazy Day Comparison
-      </h2>
-      <p style={{ color: defined.colors.text.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        Use the haze slider to see how air quality affects polarization strength.
-      </p>
-
-      {renderSkyDome()}
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        gap: defined.spacing.md,
-        marginTop: defined.spacing.lg,
-        maxWidth: '600px',
-        margin: '0 auto',
-      }}>
-        <div style={{
-          background: 'rgba(16, 185, 129, 0.1)',
-          border: `1px solid ${defined.colors.success}`,
-          borderRadius: defined.radius.lg,
-          padding: defined.spacing.md,
-        }}>
-          <h4 style={{ color: defined.colors.success, marginBottom: defined.spacing.sm }}>Clear Day (0% haze)</h4>
-          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md }}>
-            <li>Strong polarization pattern</li>
-            <li>Vikings could navigate accurately</li>
-            <li>Bees navigate easily</li>
-          </ul>
-        </div>
-        <div style={{
-          background: 'rgba(239, 68, 68, 0.1)',
-          border: `1px solid ${defined.colors.error}`,
-          borderRadius: defined.radius.lg,
-          padding: defined.spacing.md,
-        }}>
-          <h4 style={{ color: defined.colors.error, marginBottom: defined.spacing.sm }}>Hazy Day (high haze)</h4>
-          <ul style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, paddingLeft: defined.spacing.md }}>
-            <li>Weak polarization pattern</li>
-            <li>Navigation more difficult</li>
-            <li>Mie scattering dominates</li>
-          </ul>
-        </div>
-      </div>
-
-      <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            background: defined.colors.secondary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-            cursor: 'pointer',
-          }}
-        >
-          Review the Discovery
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.secondary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        Key Discovery: Atmospheric Clarity Matters
-      </h2>
-
-      <div style={{ background: defined.colors.background.card, padding: defined.spacing.lg, borderRadius: defined.radius.lg, marginBottom: defined.spacing.lg }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md }}>Two Types of Scattering</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: defined.spacing.md }}>
-          <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md }}>
-            <h4 style={{ color: defined.colors.sky.polarized }}>Rayleigh (small particles)</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
-              Air molecules N2, O2 (diameter much smaller than wavelength). Produces polarized light. Creates blue sky.
-            </p>
-          </div>
-          <div style={{ background: defined.colors.background.secondary, padding: defined.spacing.md, borderRadius: defined.radius.md }}>
-            <h4 style={{ color: defined.colors.warning }}>Mie (large particles)</h4>
-            <p style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
-              Dust, pollen, pollution, water droplets (diameter comparable to wavelength). Produces unpolarized white light.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            background: defined.colors.primary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-            cursor: 'pointer',
-          }}
-        >
-          Real-World Applications
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div style={{ padding: defined.spacing.lg, maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-        Real-World Applications
-      </h2>
-
-      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
-        gap: defined.spacing.sm,
-        marginBottom: defined.spacing.lg,
-        flexWrap: 'wrap',
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
       }}>
-        {applications.map((app, i) => (
-          <button
-            key={app.id}
-            onClick={() => setSelectedApp(i)}
-            style={{
-              padding: `${defined.spacing.sm} ${defined.spacing.md}`,
-              background: selectedApp === i ? defined.colors.primary : defined.colors.background.tertiary,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              cursor: 'pointer',
-              opacity: completedApps[i] ? 0.7 : 1,
-            }}
-          >
-            {app.icon} {app.title} {completedApps[i] && '✓'}
-          </button>
-        ))}
-      </div>
+        {renderProgressBar()}
 
-      <div style={{
-        background: defined.colors.background.card,
-        borderRadius: defined.radius.xl,
-        padding: defined.spacing.xl,
-      }}>
-        <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: defined.spacing.md }}>
-          {applications[selectedApp].icon}
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🌤🐝
         </div>
-        <h3 style={{ color: defined.colors.text.primary, textAlign: 'center', marginBottom: defined.spacing.sm }}>
-          {applications[selectedApp].title}
-        </h3>
-        <p style={{ color: defined.colors.primary, textAlign: 'center', marginBottom: defined.spacing.lg }}>
-          {applications[selectedApp].description}
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Polarized Sky
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Vikings crossed the Atlantic without compasses. Bees find their way home through forests. The secret? A <span style={{ color: colors.accent }}>hidden pattern</span> in the sky that humans can&apos;t see."
         </p>
-        <ul style={{ color: defined.colors.text.secondary, lineHeight: '2' }}>
-          {applications[selectedApp].details.map((detail, i) => (
-            <li key={i}>{detail}</li>
-          ))}
-        </ul>
 
-        {!completedApps[selectedApp] && (
-          <button
-            onClick={handleCompleteApp}
-            style={{
-              display: 'block',
-              margin: `${defined.spacing.lg} auto 0`,
-              padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-              background: defined.colors.success,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.md,
-              cursor: 'pointer',
-            }}
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-
-      {allAppsCompleted && (
-        <div style={{ textAlign: 'center', marginTop: defined.spacing.lg }}>
-          <button
-            onClick={handlePhaseComplete}
-            style={{
-              background: defined.colors.primary,
-              color: defined.colors.text.primary,
-              border: 'none',
-              borderRadius: defined.radius.lg,
-              padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-              cursor: 'pointer',
-              fontSize: defined.typography.sizes.lg,
-            }}
-          >
-            Take the Test
-          </button>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Put on polarized sunglasses and slowly rotate your head while looking at different parts of a clear blue sky. You&apos;ll notice something strange - some parts of the sky change brightness!"
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Atmospheric Optics Phenomenon
+          </p>
         </div>
-      )}
-    </div>
-  );
 
-  const renderTest = () => {
-    const question = questions[currentQuestion];
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover Sky Polarization
+        </button>
 
-    if (testSubmitted) {
-      const passed = score >= 7;
-      return (
-        <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Directly toward the sun - brightest means most polarized' },
+      { id: 'b', text: 'At 90 degrees from the sun - perpendicular scattering creates maximum polarization', correct: true },
+      { id: 'c', text: 'Directly opposite the sun (antisolar point)' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
-            background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            borderRadius: defined.radius.lg,
-            padding: defined.spacing.xl,
-            textAlign: 'center',
-            marginBottom: defined.spacing.lg,
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
           }}>
-            <h2 style={{ color: passed ? defined.colors.success : defined.colors.error, marginBottom: defined.spacing.md }}>
-              {passed ? 'Excellent Work!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ color: defined.colors.text.primary, fontSize: defined.typography.sizes['2xl'], fontWeight: defined.typography.weights.bold }}>
-              {score} / {questions.length}
-            </p>
-            <p style={{ color: defined.colors.text.secondary, marginTop: defined.spacing.md }}>
-              {passed ? 'You\'ve mastered sky polarization!' : 'Review the material and try again.'}
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              🤔 Make Your Prediction
             </p>
           </div>
-          {passed && (
-            <div style={{ textAlign: 'center' }}>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Where in the sky would you expect scattered light to be MOST polarized?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>☀️</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Sun</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
+              <div style={{
+                background: colors.sky + '33',
+                padding: '20px 30px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.sky}`,
+              }}>
+                <div style={{ fontSize: '24px', color: colors.sky }}>Air Molecules</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Rayleigh Scattering</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>👁️</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Observer</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                onClick={handlePhaseComplete}
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
                 style={{
-                  background: defined.colors.primary,
-                  color: defined.colors.text.primary,
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE - Interactive Sky Polarization Simulator
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Sky Polarization Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Move the sun and rotate the polarizer to explore the pattern.
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <SkyDomeVisualization />
+            </div>
+
+            {/* Sun Azimuth slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Sun Azimuth</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sunAzimuth}deg</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="360"
+                value={sunAzimuth}
+                onChange={(e) => setSunAzimuth(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Sun Elevation slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Sun Elevation</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sunElevation}deg</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="90"
+                value={sunElevation}
+                onChange={(e) => setSunElevation(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Polarizer Angle slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Polarizer Angle</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{polarizerAngle}deg</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="180"
+                value={polarizerAngle}
+                onChange={(e) => setPolarizerAngle(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Toggle vectors button */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <button
+                onClick={() => setShowVectors(!showVectors)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
                   border: 'none',
-                  borderRadius: defined.radius.md,
-                  padding: `${defined.spacing.md} ${defined.spacing.xl}`,
+                  background: showVectors ? colors.accent : colors.bgSecondary,
+                  color: 'white',
                   cursor: 'pointer',
                 }}
               >
-                Continue to Mastery
+                {showVectors ? 'Hide' : 'Show'} Polarization Vectors
               </button>
             </div>
+
+            {/* Key observations */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Key Observations:
+              </h4>
+              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
+                <li>The dashed circle shows the 90-degree zone from the sun (maximum polarization)</li>
+                <li>Vectors are longest and brightest in this zone</li>
+                <li>Rotating the polarizer changes which vectors appear bright</li>
+              </ul>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Sky Polarization
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Rayleigh Scattering</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                When sunlight hits air molecules (N2, O2), it gets scattered. The scattered light oscillates perpendicular to the <span style={{ color: colors.accent }}>scattering plane</span> (the plane containing the sun, molecule, and observer).
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>The 90-Degree Rule</strong>
+              </p>
+              <p>
+                At 90 degrees from the sun, you&apos;re viewing the scattering plane edge-on, so you see only the perpendicular component. Polarization reaches <span style={{ color: colors.success }}>75-80%</span> on clear days.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Formula
+            </h3>
+            <div style={{
+              background: colors.bgPrimary,
+              padding: '16px',
+              borderRadius: '8px',
+              textAlign: 'center',
+              fontFamily: 'monospace',
+              fontSize: '18px',
+              color: colors.textPrimary,
+            }}>
+              P = P_max * sin^2(theta)
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '12px' }}>
+              Where theta is the angle from the sun, and P_max depends on atmospheric clarity (typically 75-80% for clear skies).
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.sky, marginBottom: '12px' }}>
+              Navigation Applications
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Because the polarization pattern is fixed relative to the sun&apos;s position, it acts as a celestial compass. Vikings used calcite crystals to detect this pattern. Bees have specialized eye structures that see it directly!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover the Twist
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Haze increases polarization by filtering out unpolarized light' },
+      { id: 'b', text: 'Haze decreases polarization - large particles scatter unpolarized light (Mie scattering)', correct: true },
+      { id: 'c', text: 'Haze has no effect on polarization' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              🔄 New Variable: Atmospheric Clarity
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            On a clear mountain day vs a hazy city day, how does the sky polarization change?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Rayleigh scattering works with tiny air molecules. But haze contains larger particles like dust, pollution, and water droplets...
+            </p>
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '36px' }}>🏔️</div>
+                <p style={{ ...typo.small, color: colors.success }}>Clear Mountain</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>vs</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '36px' }}>🏭</div>
+                <p style={{ ...typo.small, color: colors.error }}>Hazy City</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See the Haze Effect
+            </button>
           )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Clear vs Hazy Sky Comparison
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust haze level to see how it destroys the polarization pattern
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <SkyDomeVisualization currentHaze={twistHazeLevel} />
+            </div>
+
+            {/* Haze slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Haze / Pollution Level</span>
+                <span style={{ ...typo.small, color: twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error, fontWeight: 600 }}>
+                  {twistHazeLevel}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={twistHazeLevel}
+                onChange={(e) => setTwistHazeLevel(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.success }}>Clear Mountain</span>
+                <span style={{ ...typo.small, color: colors.error }}>Polluted City</span>
+              </div>
+            </div>
+
+            {/* Comparison stats */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>75%</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Clear Sky Max Polarization</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+                border: `1px solid ${twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error}33`,
+              }}>
+                <div style={{ ...typo.h3, color: twistHazeLevel < 30 ? colors.success : twistHazeLevel < 60 ? colors.warning : colors.error }}>
+                  {Math.round(75 * (1 - twistHazeLevel / 100))}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Current Max Polarization</div>
+              </div>
+            </div>
+          </div>
+
+          {twistHazeLevel > 50 && (
+            <div style={{
+              background: `${colors.error}22`,
+              border: `1px solid ${colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                High haze destroys the polarization pattern! Bees struggle to navigate on polluted days.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Why
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Two Types of Scattering
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.sky}44`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>💨</span>
+                <h3 style={{ ...typo.h3, color: colors.sky, margin: 0 }}>Rayleigh Scattering</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>Small particles</strong> (N2, O2 molecules) much smaller than light wavelength. Produces <span style={{ color: colors.success }}>strongly polarized</span> scattered light. Creates blue sky and the polarization pattern.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🌫️</span>
+                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Mie Scattering</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>Large particles</strong> (dust, pollution, water droplets) comparable to light wavelength. Produces <span style={{ color: colors.error }}>unpolarized</span> white light. Dilutes the polarization pattern and creates haze.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔬</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Practical Implications</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                This is why polarization-based navigation works best on clear days. It&apos;s also why atmospheric scientists use polarimetry to monitor air quality and aerosol content!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Polarization Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand sky polarization and its applications!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
         </div>
       );
     }
 
-    return (
-      <div style={{ padding: defined.spacing.lg, maxWidth: '700px', margin: '0 auto' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: defined.spacing.lg,
-        }}>
-          <span style={{ color: defined.colors.text.secondary }}>
-            Question {currentQuestion + 1} of {questions.length}
-          </span>
-          <span style={{ color: defined.colors.success }}>Score: {score}</span>
-        </div>
+    const question = testQuestions[currentQuestion];
 
-        <div style={{
-          background: defined.colors.background.card,
-          borderRadius: defined.radius.lg,
-          padding: defined.spacing.xl,
-          marginBottom: defined.spacing.lg,
-        }}>
-          <h3 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.lg }}>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
             {question.question}
           </h3>
 
-          {question.options.map((option, i) => {
-            let bg = defined.colors.background.tertiary;
-            let border = 'transparent';
-
-            if (showResult) {
-              if (option.correct) {
-                bg = 'rgba(16, 185, 129, 0.3)';
-                border = defined.colors.success;
-              } else if (i === selectedAnswer) {
-                bg = 'rgba(239, 68, 68, 0.3)';
-                border = defined.colors.error;
-              }
-            } else if (i === selectedAnswer) {
-              bg = defined.colors.primary;
-            }
-
-            return (
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                key={i}
-                onClick={() => handleAnswerSelect(i)}
-                disabled={showResult}
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
                 style={{
-                  width: '100%',
-                  padding: defined.spacing.md,
-                  marginBottom: defined.spacing.sm,
-                  background: bg,
-                  color: defined.colors.text.primary,
-                  border: `2px solid ${border}`,
-                  borderRadius: defined.radius.md,
-                  cursor: showResult ? 'default' : 'pointer',
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
                   textAlign: 'left',
+                  cursor: 'pointer',
                 }}
               >
-                {option.text}
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
               </button>
-            );
-          })}
-
-          {showResult && (
-            <div style={{
-              background: defined.colors.background.secondary,
-              borderRadius: defined.radius.md,
-              padding: defined.spacing.md,
-              marginTop: defined.spacing.lg,
-            }}>
-              <p style={{ color: defined.colors.text.secondary }}>{question.explanation}</p>
-            </div>
-          )}
-        </div>
-
-        {showResult && (
-          <div style={{ textAlign: 'center' }}>
-            <button
-              onClick={handleNextQuestion}
-              style={{
-                background: defined.colors.primary,
-                color: defined.colors.text.primary,
-                border: 'none',
-                borderRadius: defined.radius.md,
-                padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-                cursor: 'pointer',
-              }}
-            >
-              {currentQuestion < questions.length - 1 ? 'Next Question' : 'See Results'}
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderMastery = () => (
-    <div style={{
-      padding: defined.spacing.lg,
-      maxWidth: '600px',
-      margin: '0 auto',
-      textAlign: 'center',
-    }}>
-      <div style={{ fontSize: '4rem', marginBottom: defined.spacing.lg }}>
-        🏆
-      </div>
-
-      <h2 style={{ color: defined.colors.text.primary, marginBottom: defined.spacing.md }}>
-        Sky Polarization Master!
-      </h2>
-
-      <div style={{
-        background: defined.colors.background.card,
-        borderRadius: defined.radius.xl,
-        padding: defined.spacing.xl,
-        marginBottom: defined.spacing.lg,
-      }}>
-        <div style={{
-          fontSize: defined.typography.sizes['3xl'],
-          fontWeight: defined.typography.weights.bold,
-          color: defined.colors.success,
-          marginBottom: defined.spacing.md,
-        }}>
-          {score} / {questions.length}
-        </div>
-        <p style={{ color: defined.colors.text.secondary }}>
-          You understand how Rayleigh scattering creates sky polarization and its applications!
-        </p>
-      </div>
-
-      <div style={{
-        background: defined.colors.background.card,
-        borderRadius: defined.radius.lg,
-        padding: defined.spacing.lg,
-        marginBottom: defined.spacing.lg,
-        textAlign: 'left',
-      }}>
-        <h3 style={{ color: defined.colors.primary, marginBottom: defined.spacing.md }}>Key Takeaways</h3>
-        <ul style={{ color: defined.colors.text.secondary, lineHeight: '2' }}>
-          <li>Rayleigh scattering polarizes skylight in a pattern around the sun</li>
-          <li>Maximum polarization occurs at 90 degrees from the sun</li>
-          <li>Vikings and bees use this pattern for navigation</li>
-          <li>Haze and pollution reduce polarization (Mie scattering)</li>
-        </ul>
-      </div>
-
-      <button
-        onClick={handlePhaseComplete}
-        style={{
-          background: defined.colors.primary,
-          color: defined.colors.text.primary,
-          border: 'none',
-          borderRadius: defined.radius.md,
-          padding: `${defined.spacing.md} ${defined.spacing.xl}`,
-          cursor: 'pointer',
-        }}
-      >
-        Complete Game
-      </button>
-    </div>
-  );
-
-  // =============================================================================
-  // MAIN RENDER
-  // =============================================================================
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  const phaseLabels: Record<string, string> = {
-    hook: 'Hook',
-    predict: 'Predict',
-    play: 'Lab',
-    review: 'Review',
-    twist_predict: 'Twist Predict',
-    twist_play: 'Twist Lab',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
-    mastery: 'Mastery',
-  };
-
-  const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const currentPhaseIndex = phaseOrder.indexOf(phase);
-
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: defined.colors.background.primary,
-      fontFamily: defined.typography.fontFamily,
-      color: defined.colors.text.primary,
-      position: 'relative',
-    }}>
-      {/* Fixed Header */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        background: 'rgba(15, 23, 42, 0.95)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: `1px solid ${defined.colors.background.tertiary}`,
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-          maxWidth: '1200px',
-          margin: '0 auto',
-        }}>
-          <span style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
-            Polarized Sky
-          </span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {phaseOrder.map((p, index) => (
-              <div
-                key={p}
-                style={{
-                  width: phase === p ? '24px' : '8px',
-                  height: '8px',
-                  borderRadius: defined.radius.full,
-                  background: phase === p ? defined.colors.primary : index < currentPhaseIndex ? defined.colors.success : defined.colors.background.tertiary,
-                  transition: 'all 0.3s ease',
-                }}
-                title={phaseLabels[p]}
-              />
             ))}
           </div>
-          <span style={{ color: defined.colors.primary, fontSize: defined.typography.sizes.sm }}>
-            {phaseLabels[phase]}
-          </span>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div style={{ paddingTop: '60px', paddingBottom: '100px' }}>
-        {renderPhase()}
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      {/* Fixed Footer Navigation */}
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
       <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        minHeight: '72px',
-        background: 'rgba(30, 41, 59, 0.98)',
-        borderTop: '1px solid rgba(148, 163, 184, 0.2)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.5)',
-        padding: '16px 20px',
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
-        justifyContent: 'space-between',
+        flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
       }}>
-        <span style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
-          {currentPhaseIndex + 1} / {phaseOrder.length}
-        </span>
-        <button
-          onClick={handlePhaseComplete}
-          style={{
-            padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-            background: defined.colors.primary,
-            color: defined.colors.text.primary,
-            border: 'none',
-            borderRadius: defined.radius.md,
-            cursor: 'pointer',
-            fontWeight: defined.typography.weights.semibold,
-          }}
-        >
-          Continue
-        </button>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Sky Polarization Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand the hidden polarization pattern that Vikings and bees use for navigation.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Rayleigh scattering creates a polarization pattern across the sky',
+              'Maximum polarization occurs at 90 degrees from the sun',
+              'Vikings used calcite sunstones to detect sky polarization',
+              'Bees have specialized eye structures to see the pattern',
+              'Haze and pollution reduce polarization (Mie scattering)',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
-}
+    );
+  }
+
+  return null;
+};
+
+export default PolarizedSkyRenderer;

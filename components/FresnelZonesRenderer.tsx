@@ -1,48 +1,288 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // =============================================================================
 // FRESNEL ZONES RENDERER - RADIO WAVE PROPAGATION
-// =============================================================================
-// Educational visualization demonstrating Fresnel zones and their importance
-// in radio wave propagation, microwave links, and wireless communications.
+// Complete 10-Phase Game teaching Fresnel zone physics in wireless communications
 // =============================================================================
 
-interface FresnelZonesRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#8b5cf6',
-  accentGlow: 'rgba(139, 92, 246, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  zone1: '#22d3ee',
-  zone2: '#a78bfa',
-  zone3: '#f472b6',
-  signal: '#fbbf24',
+interface FresnelZonesRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
+// =============================================================================
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// =============================================================================
+const testQuestions = [
+  {
+    scenario: "A wireless engineer is planning a 5 km microwave backhaul link between two cell towers. The direct line-of-sight is clear, but a building rises 15 meters above the direct path at the midpoint.",
+    question: "Why might this link still fail even with clear line-of-sight?",
+    options: [
+      { id: 'a', label: "The building blocks the antenna's radiation pattern" },
+      { id: 'b', label: "The building intrudes into the first Fresnel zone, causing diffraction losses", correct: true },
+      { id: 'c', label: "Microwave links cannot span 5 km distances" },
+      { id: 'd', label: "The building reflects too much signal back to the transmitter" }
+    ],
+    explanation: "Radio waves don't travel in pencil-thin lines - they spread out in an ellipsoidal pattern. The first Fresnel zone can be tens of meters wide at midpoint. Even if the building doesn't touch the direct path, intruding into this zone causes diffraction losses that degrade signal quality."
+  },
+  {
+    scenario: "Two identical WiFi bridges are installed: one at 2.4 GHz over 100 meters, another at 5 GHz over the same 100 meters. Both have clear line-of-sight and identical antenna heights.",
+    question: "Which link has the larger first Fresnel zone radius at midpoint?",
+    options: [
+      { id: 'a', label: "The 5 GHz link has a larger Fresnel zone" },
+      { id: 'b', label: "The 2.4 GHz link has a larger Fresnel zone", correct: true },
+      { id: 'c', label: "Both have identical Fresnel zone sizes" },
+      { id: 'd', label: "Fresnel zones don't apply to WiFi frequencies" }
+    ],
+    explanation: "Fresnel zone radius is proportional to the square root of wavelength. Since wavelength = c/frequency, lower frequencies have longer wavelengths and thus larger Fresnel zones. At 2.4 GHz (12.5 cm wavelength) vs 5 GHz (6 cm), the 2.4 GHz link has a Fresnel zone about 1.4x larger."
+  },
+  {
+    scenario: "A rural internet service provider's 900 MHz link works perfectly in winter but experiences intermittent outages during summer months. No changes were made to the equipment.",
+    question: "What is the most likely cause of the summer signal degradation?",
+    options: [
+      { id: 'a', label: "Summer heat causes equipment to overheat" },
+      { id: 'b', label: "Deciduous trees in the Fresnel zone grow leaves that obstruct the signal", correct: true },
+      { id: 'c', label: "Higher atmospheric humidity blocks 900 MHz signals" },
+      { id: 'd', label: "Solar interference increases during summer months" }
+    ],
+    explanation: "At 900 MHz, the first Fresnel zone can be several meters wide. Trees that are bare in winter may grow leaves that intrude into this zone during summer. Even partial obstruction causes diffraction losses. This seasonal variation is a common issue in rural wireless deployments."
+  },
+  {
+    scenario: "An engineer calculates the first Fresnel zone radius at midpoint for a 10 km link using the formula r = sqrt(n * lambda * d1 * d2 / (d1 + d2)). At 6 GHz, she gets 12.5 meters.",
+    question: "What happens to the Fresnel zone radius at a point 2 km from the transmitter (8 km from receiver)?",
+    options: [
+      { id: 'a', label: "It remains 12.5 meters throughout the path" },
+      { id: 'b', label: "It becomes smaller because the zone is narrower near the endpoints", correct: true },
+      { id: 'c', label: "It becomes larger because more path length remains" },
+      { id: 'd', label: "The formula doesn't apply at non-midpoint locations" }
+    ],
+    explanation: "The Fresnel zone is an ellipsoid, widest at midpoint and tapering toward both ends. At any point, radius depends on d1*d2/(d1+d2). At midpoint (d1=d2=5km), this equals 2.5km. At 2km/8km, it equals 1.6km - giving a smaller radius. This is why Fresnel clearance is most critical at midpoint."
+  },
+  {
+    scenario: "A telecommunications company is upgrading from 6 GHz microwave links to 80 GHz millimeter-wave for higher bandwidth. They plan to use the same tower heights.",
+    question: "How will the Fresnel zone requirements change?",
+    options: [
+      { id: 'a', label: "The 80 GHz links need taller towers due to larger Fresnel zones" },
+      { id: 'b', label: "The 80 GHz links can use shorter towers due to smaller Fresnel zones", correct: true },
+      { id: 'c', label: "Tower height requirements remain the same" },
+      { id: 'd', label: "Millimeter-wave links don't have Fresnel zones" }
+    ],
+    explanation: "At 80 GHz, the wavelength is only 3.75mm compared to 50mm at 6 GHz. The Fresnel zone radius is proportional to sqrt(wavelength), so the 80 GHz zone is about 3.6x smaller. This means less clearance is needed, allowing lower tower heights - but 80 GHz has other challenges like rain fade."
+  },
+  {
+    scenario: "A network engineer notices that a point-to-point wireless link shows different signal quality readings throughout the day, with best performance in early morning and worst at midday.",
+    question: "What phenomenon related to Fresnel zones might cause this pattern?",
+    options: [
+      { id: 'a', label: "Solar radiation directly interferes with radio frequencies" },
+      { id: 'b', label: "Thermal gradients cause atmospheric refraction, changing the effective path and Fresnel clearance", correct: true },
+      { id: 'c', label: "The sun physically blocks the Fresnel zone at midday" },
+      { id: 'd', label: "Equipment efficiency decreases as temperature rises" }
+    ],
+    explanation: "Atmospheric refraction varies with temperature gradients. The K-factor (effective Earth radius factor) changes throughout the day. At midday, thermal conditions can cause the radio path to bend, reducing effective Fresnel clearance over terrain. Links are typically designed for worst-case K-factor conditions."
+  },
+  {
+    scenario: "A satellite earth station designer must ensure reliable links to satellites. They consider both the uplink at 14 GHz and downlink at 12 GHz.",
+    question: "Why are Fresnel zone obstructions less of a concern for satellite links compared to terrestrial microwave links?",
+    options: [
+      { id: 'a', label: "Satellites use different physics than ground-based radio" },
+      { id: 'b', label: "The extreme distance makes Fresnel zones astronomically large, but the near-vertical path clears terrestrial obstacles easily", correct: true },
+      { id: 'c', label: "Fresnel zones don't exist in space" },
+      { id: 'd', label: "Satellite frequencies are immune to diffraction" }
+    ],
+    explanation: "While Fresnel zones grow with path length, satellite paths point mostly upward. Buildings and terrain near the earth station are far from the midpoint where zones are widest. The key concern becomes the antenna's elevation angle - low-angle links have larger terrestrial Fresnel clearance requirements."
+  },
+  {
+    scenario: "Two antennas are being synchronized before connecting a new generator to the power grid. Engineers watch oscilloscopes showing the generator's waveform compared to the grid waveform.",
+    question: "How does the Fresnel zone concept from optics relate to this power engineering scenario?",
+    options: [
+      { id: 'a', label: "Power grids use Fresnel lenses for voltage transformation" },
+      { id: 'b', label: "Both involve wave interference - radio waves in Fresnel zones and AC waveforms in synchronization", correct: true },
+      { id: 'c', label: "There is no relationship between these concepts" },
+      { id: 'd', label: "Fresnel zones determine optimal cable routing" }
+    ],
+    explanation: "Fresnel zones describe regions where waves arrive within specific phase relationships. Similarly, generator synchronization requires matching phase angles. Both concepts stem from wave physics - whether electromagnetic waves interfering in space or AC waveforms that must align before electrical connection."
+  },
+  {
+    scenario: "A lighthouse uses a Fresnel lens designed in the 1820s that remains in service today. The lens concentrates light from a small lamp into a powerful beam visible 20+ nautical miles away.",
+    question: "How do Fresnel lenses achieve the same optical effect as much heavier conventional lenses?",
+    options: [
+      { id: 'a', label: "They use special materials that bend light more efficiently" },
+      { id: 'b', label: "Concentric rings preserve the refracting surface angle while eliminating unnecessary glass thickness", correct: true },
+      { id: 'c', label: "They amplify light through chemical reactions" },
+      { id: 'd', label: "Multiple reflections inside the lens multiply the light intensity" }
+    ],
+    explanation: "Augustin-Jean Fresnel realized that only the surface angle matters for refraction, not the thickness behind it. By dividing a lens into concentric rings and collapsing each to minimum thickness, he created lightweight lenses with the same optical power. Light from each ring arrives in phase at the focus - the same wave interference principle behind Fresnel zones."
+  },
+  {
+    scenario: "A drone operator flying a survey mission notices video feed quality degrades when the drone flies behind a ridge, even though the ridge doesn't completely block line-of-sight to the controller.",
+    question: "What radio propagation principle explains this degradation?",
+    options: [
+      { id: 'a', label: "The ridge creates electromagnetic interference" },
+      { id: 'b', label: "The ridge causes knife-edge diffraction by partially obstructing the Fresnel zone", correct: true },
+      { id: 'c', label: "The ridge reflects signals away from the controller" },
+      { id: 'd', label: "Rock composition in the ridge absorbs radio frequencies" }
+    ],
+    explanation: "When an obstacle intrudes into the Fresnel zone without completely blocking line-of-sight, it causes knife-edge diffraction. The signal bends around the obstacle but loses energy. The closer the obstruction to the direct path centerline, the greater the diffraction loss. This is why Fresnel clearance - not just line-of-sight - determines link quality."
+  }
+];
+
+// =============================================================================
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// =============================================================================
+const realWorldApps = [
+  {
+    icon: '📡',
+    title: 'Microwave Link Planning',
+    short: 'Ensuring clear paths for wireless backhaul',
+    tagline: 'The invisible highways connecting cell towers',
+    description: 'Microwave links form the backbone of cellular networks, connecting cell towers to the core network. Engineers must carefully plan these point-to-point links to ensure the first Fresnel zone remains at least 60% clear of obstructions. A single tree or building in the wrong place can degrade a multi-gigabit link.',
+    connection: 'The ellipsoidal Fresnel zone you explored shows exactly why engineers calculate clearance at every point along a path, not just the endpoints. The zone is widest at midpoint - that\'s where obstructions cause the most damage.',
+    howItWorks: 'Engineers use path profile analysis software to map terrain and obstacles between two points. They calculate the first Fresnel zone radius at every point using r = sqrt(n*lambda*d1*d2/(d1+d2)). Antenna heights are chosen to maintain 60-100% first zone clearance, accounting for Earth curvature (K-factor) and worst-case atmospheric refraction.',
+    stats: [
+      { value: '60%', label: 'Minimum clearance', icon: '📊' },
+      { value: '80 GHz', label: 'E-band frequency', icon: '📶' },
+      { value: '50 km', label: 'Max link distance', icon: '📏' }
+    ],
+    examples: ['Cellular backhaul connecting thousands of towers', 'Enterprise campus links between buildings', 'Broadcasting studio-to-transmitter links', 'Emergency services networks'],
+    companies: ['Ericsson', 'Nokia', 'Huawei', 'Cambium Networks'],
+    futureImpact: 'As 5G networks densify with small cells, microwave and millimeter-wave backhaul become even more critical. AI-powered planning tools will automatically optimize link placement.',
+    color: '#22D3EE'
+  },
+  {
+    icon: '💡',
+    title: 'Fresnel Lens Design',
+    short: 'Bending light with elegant simplicity',
+    tagline: 'From lighthouses to VR headsets',
+    description: 'Fresnel lenses collapse the curved surface of a conventional lens into concentric rings, dramatically reducing thickness and weight while maintaining optical power. Invented for lighthouses in 1822, they now appear in everything from overhead projectors to solar concentrators and VR headsets.',
+    connection: 'The same wave interference principles that create Fresnel zones in radio propagation make Fresnel lenses work. Each ring is spaced so light arrives in phase at the focal point - constructive interference maximizes intensity.',
+    howItWorks: 'A Fresnel lens divides a conventional lens surface into concentric annular sections. Each ring has the same focal length but reduced thickness. Light passing through adjacent rings travels different path lengths but arrives at the focus with the same phase, creating constructive interference. Modern manufacturing creates rings as fine as 0.1mm.',
+    stats: [
+      { value: '90%', label: 'Weight reduction', icon: '⚖️' },
+      { value: '1000x', label: 'Solar concentration', icon: '☀️' },
+      { value: '0.1mm', label: 'Finest groove pitch', icon: '🔬' }
+    ],
+    examples: ['Lighthouse beacons visible 20+ nautical miles', 'Theatrical stage lighting', 'Solar concentrators for energy', 'VR headset lenses'],
+    companies: ['Fresnel Technologies', 'Edmund Optics', 'Carclo Optics', 'Orafol'],
+    futureImpact: 'Metalenses using nanostructured surfaces will eventually replace Fresnel lenses for many applications, offering even thinner profiles and wavelength-scale control.',
+    color: '#FBBF24'
+  },
+  {
+    icon: '🔭',
+    title: 'Radio Telescope Arrays',
+    short: 'Seeing the universe in radio waves',
+    tagline: 'Combining signals across kilometers for cosmic resolution',
+    description: 'Radio telescope arrays like ALMA and the VLA combine signals from multiple antennas spread across kilometers to achieve angular resolution impossible with single dishes. The spacing between antennas must account for Fresnel zones to properly combine wavefronts.',
+    connection: 'When radio waves from a cosmic source reach an array, each antenna samples a different part of the incoming wavefront. Signals must be combined with precise time delays accounting for path differences - the same physics that defines Fresnel zones.',
+    howItWorks: 'Each antenna pair forms a "baseline" that samples one spatial frequency of the sky brightness. Signals are timestamped with atomic clocks and combined in a correlator. The array\'s resolution equals that of a dish with diameter equal to the maximum baseline. Fresnel distance D^2/lambda determines near-field vs far-field imaging.',
+    stats: [
+      { value: '16 km', label: 'VLA max baseline', icon: '📡' },
+      { value: '66', label: 'ALMA antennas', icon: '🔭' },
+      { value: '10,000 km', label: 'VLBI baselines', icon: '🌍' }
+    ],
+    examples: ['First black hole image by Event Horizon Telescope', 'Cosmic microwave background mapping', 'Pulsar detection', 'SETI searches'],
+    companies: ['NRAO', 'ESO', 'CSIRO', 'MIT Haystack Observatory'],
+    futureImpact: 'The Square Kilometre Array will have thousands of antennas across continents. Space-based arrays could achieve baselines larger than Earth.',
+    color: '#A78BFA'
+  },
+  {
+    icon: '📶',
+    title: 'Wireless Network Planning',
+    short: 'Designing reliable WiFi coverage',
+    tagline: 'Why line-of-sight isn\'t enough for WiFi',
+    description: 'Enterprise wireless networks require careful RF planning. Fresnel zone analysis helps engineers understand why WiFi signals degrade around obstacles, across open spaces, and through materials. A "clear" path isn\'t enough for reliable wireless.',
+    connection: 'At 2.4 GHz over 50 meters, the first Fresnel zone radius is about 1.8 meters - significant compared to room dimensions. A conference table or partial wall can obstruct the zone and cause degradation even with line-of-sight.',
+    howItWorks: 'Network planners use predictive modeling software that calculates Fresnel zones between each access point and client locations. The software accounts for furniture, walls with material-specific attenuation, and even people as obstructions. Optimal AP placement maintains adequate Fresnel clearance while minimizing interference.',
+    stats: [
+      { value: '1.8m', label: 'Zone radius at 50m', icon: '📐' },
+      { value: '-67 dBm', label: 'Min voice/video', icon: '📊' },
+      { value: '25%', label: 'Capacity loss risk', icon: '📉' }
+    ],
+    examples: ['Stadium WiFi for 80,000 users', 'Hospital coverage requirements', 'Warehouse IoT tracking', 'Smart factory sensors'],
+    companies: ['Cisco Meraki', 'Aruba Networks', 'Ekahau', 'iBwave'],
+    futureImpact: 'WiFi 7 uses higher frequencies where Fresnel zones are smaller but attenuation is higher. AI-driven networks will continuously optimize based on real-time conditions.',
+    color: '#10B981'
+  }
+];
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Responsive detection
+  // Simulation state
+  const [frequency, setFrequency] = useState(2.4); // GHz
+  const [distance, setDistance] = useState(1000); // meters
+  const [obstacleHeight, setObstacleHeight] = useState(0); // percentage of first Fresnel zone
+  const [showZones, setShowZones] = useState(3);
+  const [animationFrame, setAnimationFrame] = useState(0);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -50,290 +290,106 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Animation loop
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimationFrame(f => f + 1);
+    }, 50);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#22D3EE', // Cyan for radio waves
+    accentGlow: 'rgba(34, 211, 238, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    zone1: '#22D3EE',
+    zone2: '#A78BFA',
+    zone3: '#F472B6',
+    signal: '#FBBF24',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
   };
 
-  // Simulation state
-  const [frequency, setFrequency] = useState(2.4); // GHz
-  const [distance, setDistance] = useState(1000); // meters
-  const [obstacleHeight, setObstacleHeight] = useState(0); // percentage of first Fresnel zone
-  const [showZones, setShowZones] = useState(3);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [testScore, setTestScore] = useState(0);
-
-  // Calculate Fresnel zone radius at midpoint
-  // r_n = sqrt(n * wavelength * d1 * d2 / (d1 + d2))
-  // At midpoint: d1 = d2 = D/2, so r_n = sqrt(n * wavelength * D / 4)
+  // Calculate Fresnel zone radii
   const wavelength = 0.3 / frequency; // c / f, in meters (c = 3e8 m/s, f in GHz)
-  const fresnelRadius1 = Math.sqrt(wavelength * distance / 4); // First Fresnel zone radius at midpoint
+  const fresnelRadius1 = Math.sqrt(wavelength * distance / 4);
   const fresnelRadius2 = Math.sqrt(2 * wavelength * distance / 4);
   const fresnelRadius3 = Math.sqrt(3 * wavelength * distance / 4);
 
-  // Signal loss calculation based on obstruction
-  const clearanceRatio = 1 - (obstacleHeight / 100);
+  // Signal loss calculation
   const signalLoss = obstacleHeight > 60 ?
-    6 + (obstacleHeight - 60) * 0.5 : // Significant loss when more than 60% obstructed
-    obstacleHeight > 0 ? obstacleHeight * 0.1 : 0; // Minor loss for partial obstruction
+    6 + (obstacleHeight - 60) * 0.5 :
+    obstacleHeight > 0 ? obstacleHeight * 0.1 : 0;
 
-  // =============================================================================
-  // REAL WORLD APPLICATIONS
-  // =============================================================================
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Frequency Lab',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  const realWorldApps = [
-    {
-      icon: '📡',
-      title: 'Microwave Link Planning',
-      short: 'Telecommunications',
-      tagline: 'Ensuring clear paths for wireless backhaul',
-      description: 'Microwave links form the backbone of cellular networks, connecting cell towers to the core network. Engineers must carefully plan these point-to-point links to ensure the first Fresnel zone remains at least 60% clear of obstructions. A single tree or building in the wrong place can degrade a multi-gigabit link to unusable levels, making Fresnel zone analysis critical for network reliability.',
-      connection: 'Radio waves don\'t travel in pencil-thin beams - they spread out in an ellipsoidal pattern described by Fresnel zones. The first Fresnel zone contains most of the signal energy, and any obstruction within it causes diffraction losses. Understanding this physics allows engineers to calculate minimum antenna heights, required clearances, and predict signal quality before installing expensive equipment.',
-      howItWorks: 'Engineers use path profile analysis software to map terrain and obstacles between two points. They calculate the first Fresnel zone radius at every point along the path using r = sqrt(n*lambda*d1*d2/(d1+d2)). Antenna heights are chosen to maintain 60-100% first zone clearance, accounting for Earth curvature (K-factor) and worst-case atmospheric refraction. Link budget calculations then predict received signal strength.',
-      stats: [
-        { value: '60%', label: 'Minimum first Fresnel zone clearance required' },
-        { value: '80 GHz', label: 'E-band frequencies for 10+ Gbps links' },
-        { value: '50 km', label: 'Maximum practical microwave link distance' }
-      ],
-      examples: [
-        'Cellular backhaul connecting thousands of cell towers to fiber networks',
-        'Enterprise campus links between buildings avoiding trenching costs',
-        'Broadcasting studio-to-transmitter links for live television',
-        'Emergency services networks requiring rapid deployment without fiber'
-      ],
-      companies: ['Ericsson', 'Nokia', 'Huawei', 'Cambium Networks', 'Ceragon'],
-      futureImpact: 'As 5G networks densify with small cells, microwave and millimeter-wave backhaul will become even more critical. AI-powered planning tools will automatically optimize link placement, while adaptive beamforming will dynamically adjust to changing obstruction conditions like seasonal foliage growth.',
-      color: 'from-cyan-500 to-blue-500'
-    },
-    {
-      icon: '💡',
-      title: 'Fresnel Lens Design',
-      short: 'Lighting',
-      tagline: 'Bending light with elegant simplicity',
-      description: 'Fresnel lenses collapse the curved surface of a conventional lens into concentric rings, dramatically reducing thickness and weight while maintaining optical power. Invented by Augustin-Jean Fresnel for lighthouses in 1822, these lenses revolutionized maritime safety by creating powerful beams visible for 20+ miles. Today they\'re found in everything from overhead projectors to solar concentrators.',
-      connection: 'The Fresnel zone concept in wave propagation shares its mathematical foundation with Fresnel lens design - both involve understanding how waves add constructively or destructively based on path length differences. In lenses, the concentric rings are spaced so light from each ring arrives in phase at the focal point, creating constructive interference just like the zones in radio propagation.',
-      howItWorks: 'A Fresnel lens divides a conventional lens surface into concentric annular sections. Each ring has the same focal length but reduced thickness - only the refracting surface angle matters, not the lens thickness. Light passing through adjacent rings travels different path lengths but arrives at the focus with the same phase (or differs by exactly one wavelength), creating constructive interference. Modern manufacturing uses precision molding or diamond turning to create rings as fine as 0.1mm.',
-      stats: [
-        { value: '90%', label: 'Weight reduction vs conventional lens' },
-        { value: '1000x', label: 'Solar concentration achievable' },
-        { value: '0.1mm', label: 'Finest groove pitch in precision lenses' }
-      ],
-      examples: [
-        'Lighthouse beacons visible 20+ nautical miles at sea',
-        'Theatrical stage lighting with smooth, controllable beams',
-        'Solar concentrators for photovoltaic and thermal energy',
-        'VR headset lenses reducing weight and eye strain'
-      ],
-      companies: ['Fresnel Technologies', 'Edmund Optics', 'Carclo Optics', 'Orafol', 'Ntkj'],
-      futureImpact: 'Metalenses using nanostructured surfaces will eventually replace Fresnel lenses for many applications, offering even thinner profiles and wavelength-scale control. However, Fresnel lenses will remain dominant for large-aperture, low-cost applications like solar concentration and automotive lighting.',
-      color: 'from-amber-500 to-orange-500'
-    },
-    {
-      icon: '🔭',
-      title: 'Radio Telescope Arrays',
-      short: 'Astronomy',
-      tagline: 'Seeing the universe in radio waves',
-      description: 'Radio telescope arrays like ALMA and the VLA combine signals from multiple antennas spread across kilometers to achieve angular resolution impossible with single dishes. The spacing between antennas must account for Fresnel zones to properly combine wavefronts and avoid destructive interference. This technique, called aperture synthesis, has revealed black holes, pulsars, and the cosmic microwave background.',
-      connection: 'When radio waves from a distant cosmic source reach an array, each antenna samples a different part of the incoming wavefront. The signals must be combined with precise time delays accounting for path length differences - essentially reconstructing what a dish the size of the entire array would see. Fresnel zone concepts help determine optimal antenna placement and the transition between near-field and far-field imaging.',
-      howItWorks: 'Each antenna pair forms a "baseline" that samples one spatial frequency of the sky brightness distribution. Signals are timestamped with atomic clocks and combined in a correlator that compensates for geometric delays. The array\'s resolution equals that of a single dish with diameter equal to the maximum baseline. For sources in the near field (within the Fresnel distance D^2/lambda), wavefront curvature must be corrected. Aperture synthesis builds up a complete image by observing as Earth rotates, filling in the UV plane.',
-      stats: [
-        { value: '16 km', label: 'Maximum VLA baseline for milliarcsecond resolution' },
-        { value: '66', label: 'Antennas in ALMA array at 5000m elevation' },
-        { value: '10,000 km', label: 'Very Long Baseline Interferometry Earth-spanning baselines' }
-      ],
-      examples: [
-        'First image of a black hole by Event Horizon Telescope array',
-        'Mapping cosmic microwave background anisotropies',
-        'Detecting pulsars and fast radio bursts from distant galaxies',
-        'SETI searches scanning for extraterrestrial signals'
-      ],
-      companies: ['NRAO', 'ESO', 'CSIRO', 'MIT Haystack Observatory', 'JAXA'],
-      futureImpact: 'The Square Kilometre Array (SKA) will be the world\'s largest radio telescope, with thousands of antennas across Australia and South Africa. Space-based arrays will achieve baselines larger than Earth, potentially imaging exoplanet surfaces and testing general relativity near black holes.',
-      color: 'from-purple-500 to-indigo-500'
-    },
-    {
-      icon: '📶',
-      title: 'Wireless Network Planning',
-      short: 'IT Infrastructure',
-      tagline: 'Designing reliable WiFi coverage',
-      description: 'Enterprise wireless networks require careful RF planning to ensure consistent coverage and throughput. Fresnel zone analysis helps network engineers understand why WiFi signals degrade around obstacles, across open spaces, and through different materials. Modern site surveys combine Fresnel calculations with ray-tracing to predict coverage before deploying access points.',
-      connection: 'WiFi signals at 2.4 GHz and 5 GHz have Fresnel zones measured in meters - significant compared to room dimensions. A conference table, partial wall, or even groups of people can obstruct the first Fresnel zone and cause signal degradation. Understanding this explains why a "clear" line of sight isn\'t enough for reliable wireless performance.',
-      howItWorks: 'Network planners use predictive modeling software that calculates Fresnel zones between each access point and potential client locations. At 2.4 GHz over 50 meters, the first Fresnel zone radius at midpoint is about 1.8 meters - a significant volume. The software accounts for furniture, walls (with material-specific attenuation), and people as obstructions. Access point placement is optimized to maintain adequate Fresnel clearance while minimizing co-channel interference.',
-      stats: [
-        { value: '1.8m', label: 'First Fresnel zone radius at 50m on 2.4 GHz' },
-        { value: '-67 dBm', label: 'Minimum signal for reliable voice/video' },
-        { value: '25%', label: 'Capacity loss from poor Fresnel clearance' }
-      ],
-      examples: [
-        'Stadium WiFi serving 80,000 simultaneous users',
-        'Hospital networks requiring coverage in every room',
-        'Warehouse logistics tracking with real-time inventory',
-        'Smart factory IoT connecting thousands of sensors'
-      ],
-      companies: ['Cisco Meraki', 'Aruba Networks', 'Ekahau', 'iBwave', 'NetAlly'],
-      futureImpact: 'WiFi 7 and beyond will use wider channels and higher frequencies where Fresnel zones are smaller but attenuation is higher. AI-driven networks will continuously optimize based on real-time Fresnel zone obstruction from people movement, automatically adjusting power and steering clients to maintain quality of service.',
-      color: 'from-emerald-500 to-teal-500'
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'fresnel-zones',
+        gameTitle: 'Fresnel Zones',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
     }
-  ];
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-  // =============================================================================
-  // PHASE RENDERERS
-  // =============================================================================
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
 
-  const predictions = [
-    { id: 'line_only', label: 'Only the direct line-of-sight path matters for signal quality' },
-    { id: 'wider_zone', label: 'Radio waves need clearance in a wider zone around the direct path' },
-    { id: 'frequency_irrelevant', label: 'The clearance needed is the same regardless of frequency' },
-    { id: 'obstacles_block', label: 'Any obstacle touching the path completely blocks the signal' },
-  ];
+  // Get signal status
+  const getSignalStatus = () => {
+    if (signalLoss < 1) return { status: 'Excellent', color: colors.success };
+    if (signalLoss < 3) return { status: 'Good', color: colors.zone1 };
+    if (signalLoss < 6) return { status: 'Degraded', color: colors.warning };
+    return { status: 'Critical', color: colors.error };
+  };
 
-  const twistPredictions = [
-    { id: 'same_zone', label: 'Higher frequencies need the same Fresnel zone clearance' },
-    { id: 'larger_zone', label: 'Higher frequencies need larger Fresnel zone clearance' },
-    { id: 'smaller_zone', label: 'Higher frequencies need smaller Fresnel zone clearance' },
-    { id: 'no_zones', label: 'Higher frequencies don\'t have Fresnel zones' },
-  ];
+  const signalStatus = getSignalStatus();
 
-  const transferApplications = [
-    {
-      title: 'Cellular Network Backhaul',
-      description: 'Cell towers connect to the core network using microwave links that must clear buildings and terrain.',
-      question: 'Why do engineers raise antennas higher than seemingly necessary for line-of-sight?',
-      answer: 'The first Fresnel zone forms an ellipsoid around the path that can be tens of meters wide at midpoint. Antennas must be high enough to keep this zone 60%+ clear of obstacles, not just the geometric line.',
-    },
-    {
-      title: 'Long-Distance WiFi Bridges',
-      description: 'Outdoor WiFi can span several kilometers between buildings using directional antennas.',
-      question: 'Why might a WiFi bridge work perfectly in winter but have problems in summer?',
-      answer: 'Trees in the Fresnel zone that are bare in winter grow leaves in summer, obstructing more of the zone. Even partial obstruction causes signal degradation through diffraction losses.',
-    },
-    {
-      title: 'Drone Communication Links',
-      description: 'UAVs need reliable command and video links across varying distances and terrain.',
-      question: 'How does flying altitude affect Fresnel zone clearance for a drone\'s radio link?',
-      answer: 'Higher altitude increases clearance above ground obstacles, but the Fresnel zone radius also increases with distance. Optimal altitude balances clearance against zone size and path loss.',
-    },
-    {
-      title: 'Maritime and Offshore Communications',
-      description: 'Ships and oil platforms use microwave and satellite links where water creates a reflective surface.',
-      question: 'Why is Fresnel zone analysis especially important over water?',
-      answer: 'Water is highly reflective at radio frequencies. Signals reflecting off the water surface can interfere destructively with direct signals. Antenna heights must ensure the reflection point is outside critical Fresnel zones.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'What is the first Fresnel zone?',
-      options: [
-        { text: 'The area where radio waves are completely blocked', correct: false },
-        { text: 'An ellipsoidal region where path lengths differ by less than half a wavelength from the direct path', correct: true },
-        { text: 'The maximum range of a radio transmitter', correct: false },
-        { text: 'The antenna\'s radiation pattern', correct: false },
-      ],
-    },
-    {
-      question: 'What percentage of the first Fresnel zone should ideally be clear for a microwave link?',
-      options: [
-        { text: '20%', correct: false },
-        { text: '40%', correct: false },
-        { text: '60% or more', correct: true },
-        { text: '100% is always required', correct: false },
-      ],
-    },
-    {
-      question: 'How does frequency affect the Fresnel zone radius?',
-      options: [
-        { text: 'Higher frequency = larger Fresnel zone', correct: false },
-        { text: 'Higher frequency = smaller Fresnel zone', correct: true },
-        { text: 'Frequency has no effect on Fresnel zone size', correct: false },
-        { text: 'Only the first zone is affected by frequency', correct: false },
-      ],
-    },
-    {
-      question: 'What happens when an obstacle partially blocks the first Fresnel zone?',
-      options: [
-        { text: 'Signal is completely blocked', correct: false },
-        { text: 'Signal experiences diffraction loss and degradation', correct: true },
-        { text: 'Signal quality improves due to focusing', correct: false },
-        { text: 'Nothing - only line-of-sight matters', correct: false },
-      ],
-    },
-    {
-      question: 'At what point along the path is the first Fresnel zone widest?',
-      options: [
-        { text: 'At the transmitter', correct: false },
-        { text: 'At the receiver', correct: false },
-        { text: 'At the midpoint of the path', correct: true },
-        { text: 'It is the same width throughout', correct: false },
-      ],
-    },
-    {
-      question: 'Why do higher Fresnel zones (2nd, 3rd, etc.) alternate between constructive and destructive interference?',
-      options: [
-        { text: 'Due to antenna design limitations', correct: false },
-        { text: 'Because path lengths differ by additional half-wavelengths', correct: true },
-        { text: 'Due to atmospheric absorption', correct: false },
-        { text: 'Higher zones don\'t actually exist', correct: false },
-      ],
-    },
-    {
-      question: 'The formula for first Fresnel zone radius includes which variables?',
-      options: [
-        { text: 'Only distance', correct: false },
-        { text: 'Only wavelength', correct: false },
-        { text: 'Wavelength and distances to both endpoints', correct: true },
-        { text: 'Transmitter power and frequency', correct: false },
-      ],
-    },
-    {
-      question: 'How does Earth\'s curvature affect long microwave links?',
-      options: [
-        { text: 'It has no effect', correct: false },
-        { text: 'The Earth bulges up into the Fresnel zone, requiring higher antennas', correct: true },
-        { text: 'It only affects satellite links', correct: false },
-        { text: 'It helps by focusing the signal', correct: false },
-      ],
-    },
-    {
-      question: 'What is the K-factor in microwave link planning?',
-      options: [
-        { text: 'A measure of antenna gain', correct: false },
-        { text: 'A factor accounting for atmospheric refraction effects on Earth\'s effective curvature', correct: true },
-        { text: 'The ratio of signal to noise', correct: false },
-        { text: 'The number of Fresnel zones to consider', correct: false },
-      ],
-    },
-    {
-      question: 'Why are Fresnel lenses designed with concentric rings?',
-      options: [
-        { text: 'For aesthetic purposes', correct: false },
-        { text: 'To reduce manufacturing cost only', correct: false },
-        { text: 'So light from each ring arrives in phase at the focus through constructive interference', correct: true },
-        { text: 'To block certain wavelengths', correct: false },
-      ],
-    },
-  ];
-
-  // Render visualization
-  const renderVisualization = (interactive: boolean) => {
-    const width = 600;
-    const height = 350;
+  // Fresnel Zone Visualization Component
+  const FresnelVisualization = ({ interactive = false }: { interactive?: boolean }) => {
+    const width = isMobile ? 340 : 500;
+    const height = isMobile ? 280 : 350;
     const margin = 40;
     const pathY = height / 2;
 
@@ -342,181 +398,468 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({
     const pathLength = rxX - txX;
     const midX = (txX + rxX) / 2;
 
-    // Scale Fresnel radii for visualization (actual values would be too small/large)
+    // Scale Fresnel radii for visualization
     const visualScale = 80 / fresnelRadius1;
     const r1Visual = fresnelRadius1 * visualScale;
     const r2Visual = fresnelRadius2 * visualScale;
     const r3Visual = fresnelRadius3 * visualScale;
 
-    // Obstacle position and size
+    // Obstacle
     const obstacleX = midX;
     const obstacleHeight_px = (obstacleHeight / 100) * r1Visual;
 
+    // Wave animation
+    const waveOffset = (animationFrame * 3) % 60;
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ borderRadius: '16px', maxWidth: '650px', background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)' }}
-        >
-          <defs>
-            <linearGradient id="zone1Gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.zone1} stopOpacity="0.3" />
-              <stop offset="50%" stopColor={colors.zone1} stopOpacity="0.1" />
-              <stop offset="100%" stopColor={colors.zone1} stopOpacity="0.3" />
-            </linearGradient>
-            <linearGradient id="zone2Gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.zone2} stopOpacity="0.2" />
-              <stop offset="50%" stopColor={colors.zone2} stopOpacity="0.05" />
-              <stop offset="100%" stopColor={colors.zone2} stopOpacity="0.2" />
-            </linearGradient>
-            <linearGradient id="zone3Gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.zone3} stopOpacity="0.15" />
-              <stop offset="50%" stopColor={colors.zone3} stopOpacity="0.03" />
-              <stop offset="100%" stopColor={colors.zone3} stopOpacity="0.15" />
-            </linearGradient>
-            <radialGradient id="antennaGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.signal} stopOpacity="0.8" />
-              <stop offset="100%" stopColor={colors.signal} stopOpacity="0" />
-            </radialGradient>
-          </defs>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="zone1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.zone1} stopOpacity="0.3" />
+            <stop offset="50%" stopColor={colors.zone1} stopOpacity="0.1" />
+            <stop offset="100%" stopColor={colors.zone1} stopOpacity="0.3" />
+          </linearGradient>
+          <linearGradient id="zone2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.zone2} stopOpacity="0.2" />
+            <stop offset="50%" stopColor={colors.zone2} stopOpacity="0.05" />
+            <stop offset="100%" stopColor={colors.zone2} stopOpacity="0.2" />
+          </linearGradient>
+          <linearGradient id="zone3Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={colors.zone3} stopOpacity="0.15" />
+            <stop offset="50%" stopColor={colors.zone3} stopOpacity="0.03" />
+            <stop offset="100%" stopColor={colors.zone3} stopOpacity="0.15" />
+          </linearGradient>
+          <radialGradient id="antennaGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={colors.signal} stopOpacity="0.8" />
+            <stop offset="100%" stopColor={colors.signal} stopOpacity="0" />
+          </radialGradient>
+          <filter id="waveGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-          {/* Ground */}
-          <rect x="0" y={height - 20} width={width} height="20" fill="#374151" />
-          <line x1="0" y1={height - 20} x2={width} y2={height - 20} stroke="#4b5563" strokeWidth="2" />
+        {/* Background */}
+        <rect width={width} height={height} fill="#0f172a" />
 
-          {/* Fresnel zones (ellipses) */}
-          {showZones >= 3 && (
-            <ellipse
-              cx={midX}
-              cy={pathY}
-              rx={pathLength / 2}
-              ry={r3Visual}
-              fill="url(#zone3Gradient)"
-              stroke={colors.zone3}
-              strokeWidth="1"
-              strokeDasharray="4,4"
-              opacity="0.6"
-            />
-          )}
-          {showZones >= 2 && (
-            <ellipse
-              cx={midX}
-              cy={pathY}
-              rx={pathLength / 2}
-              ry={r2Visual}
-              fill="url(#zone2Gradient)"
-              stroke={colors.zone2}
-              strokeWidth="1"
-              strokeDasharray="4,4"
-              opacity="0.7"
-            />
-          )}
-          {showZones >= 1 && (
-            <ellipse
-              cx={midX}
-              cy={pathY}
-              rx={pathLength / 2}
-              ry={r1Visual}
-              fill="url(#zone1Gradient)"
-              stroke={colors.zone1}
-              strokeWidth="2"
-              opacity="0.9"
-            />
-          )}
+        {/* Ground */}
+        <rect x="0" y={height - 25} width={width} height="25" fill="#374151" />
+        <line x1="0" y1={height - 25} x2={width} y2={height - 25} stroke="#4b5563" strokeWidth="2" />
 
-          {/* Direct path line */}
-          <line
-            x1={txX}
-            y1={pathY}
-            x2={rxX}
-            y2={pathY}
-            stroke={colors.signal}
-            strokeWidth="2"
-            strokeDasharray="8,4"
+        {/* Fresnel zones */}
+        {showZones >= 3 && (
+          <ellipse
+            cx={midX}
+            cy={pathY}
+            rx={pathLength / 2}
+            ry={r3Visual}
+            fill="url(#zone3Grad)"
+            stroke={colors.zone3}
+            strokeWidth="1"
+            strokeDasharray="4,4"
+            opacity="0.6"
           />
+        )}
+        {showZones >= 2 && (
+          <ellipse
+            cx={midX}
+            cy={pathY}
+            rx={pathLength / 2}
+            ry={r2Visual}
+            fill="url(#zone2Grad)"
+            stroke={colors.zone2}
+            strokeWidth="1"
+            strokeDasharray="4,4"
+            opacity="0.7"
+          />
+        )}
+        {showZones >= 1 && (
+          <ellipse
+            cx={midX}
+            cy={pathY}
+            rx={pathLength / 2}
+            ry={r1Visual}
+            fill="url(#zone1Grad)"
+            stroke={colors.zone1}
+            strokeWidth="2"
+            opacity="0.9"
+          />
+        )}
 
-          {/* Obstacle */}
-          {obstacleHeight > 0 && (
+        {/* Animated wave propagation */}
+        {[0, 1, 2, 3].map(i => {
+          const offset = (waveOffset + i * 15) % 60;
+          const progress = offset / 60;
+          const x = txX + progress * pathLength;
+          return (
+            <circle
+              key={i}
+              cx={x}
+              cy={pathY}
+              r={4 + progress * 6}
+              fill="none"
+              stroke={colors.signal}
+              strokeWidth="2"
+              opacity={1 - progress}
+              filter="url(#waveGlow)"
+            />
+          );
+        })}
+
+        {/* Direct path line */}
+        <line
+          x1={txX}
+          y1={pathY}
+          x2={rxX}
+          y2={pathY}
+          stroke={colors.signal}
+          strokeWidth="2"
+          strokeDasharray="8,4"
+        />
+
+        {/* Obstacle */}
+        {obstacleHeight > 0 && (
+          <g>
             <rect
               x={obstacleX - 15}
               y={pathY - obstacleHeight_px}
               width="30"
-              height={obstacleHeight_px + (height - 20 - pathY)}
+              height={obstacleHeight_px + (height - 25 - pathY)}
               fill="#64748b"
-              stroke="#94a3b8"
-              strokeWidth="1"
-              rx="2"
+              stroke={obstacleHeight > 60 ? colors.error : colors.warning}
+              strokeWidth="2"
+              rx="3"
             />
-          )}
+            <text
+              x={obstacleX}
+              y={pathY - obstacleHeight_px - 8}
+              textAnchor="middle"
+              fill={obstacleHeight > 60 ? colors.error : colors.warning}
+              fontSize="10"
+              fontWeight="600"
+            >
+              {obstacleHeight}% blocked
+            </text>
+          </g>
+        )}
 
-          {/* Transmitter */}
-          <circle cx={txX} cy={pathY} r="20" fill="url(#antennaGlow)" />
-          <rect x={txX - 5} y={pathY} width="10" height="50" fill="#475569" rx="2" />
-          <polygon points={`${txX - 12},${pathY} ${txX},${pathY - 20} ${txX + 12},${pathY}`} fill={colors.zone1} />
-          <text x={txX} y={pathY + 70} textAnchor="middle" fill={colors.textSecondary} fontSize="12">TX</text>
+        {/* Transmitter */}
+        <circle cx={txX} cy={pathY} r="20" fill="url(#antennaGlow)" />
+        <rect x={txX - 5} y={pathY} width="10" height="50" fill="#475569" rx="2" />
+        <polygon points={`${txX - 12},${pathY} ${txX},${pathY - 20} ${txX + 12},${pathY}`} fill={colors.zone1} />
+        <text x={txX} y={pathY + 70} textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">TX</text>
 
-          {/* Receiver */}
-          <circle cx={rxX} cy={pathY} r="20" fill="url(#antennaGlow)" />
-          <rect x={rxX - 5} y={pathY} width="10" height="50" fill="#475569" rx="2" />
-          <polygon points={`${rxX - 12},${pathY} ${rxX},${pathY - 20} ${rxX + 12},${pathY}`} fill={colors.zone1} />
-          <text x={rxX} y={pathY + 70} textAnchor="middle" fill={colors.textSecondary} fontSize="12">RX</text>
+        {/* Receiver */}
+        <circle cx={rxX} cy={pathY} r="20" fill="url(#antennaGlow)" />
+        <rect x={rxX - 5} y={pathY} width="10" height="50" fill="#475569" rx="2" />
+        <polygon points={`${rxX - 12},${pathY} ${rxX},${pathY - 20} ${rxX + 12},${pathY}`} fill={colors.zone1} />
+        <text x={rxX} y={pathY + 70} textAnchor="middle" fill={colors.textSecondary} fontSize="12" fontWeight="600">RX</text>
 
-          {/* Zone labels */}
-          <text x={midX + pathLength / 4} y={pathY - r1Visual - 5} textAnchor="middle" fill={colors.zone1} fontSize="11" fontWeight="bold">1st Zone</text>
-          {showZones >= 2 && (
-            <text x={midX + pathLength / 4} y={pathY - r2Visual - 5} textAnchor="middle" fill={colors.zone2} fontSize="10">2nd Zone</text>
-          )}
-          {showZones >= 3 && (
-            <text x={midX + pathLength / 4} y={pathY - r3Visual - 5} textAnchor="middle" fill={colors.zone3} fontSize="10">3rd Zone</text>
-          )}
+        {/* Zone labels */}
+        <text x={midX + pathLength / 4} y={pathY - r1Visual - 8} textAnchor="middle" fill={colors.zone1} fontSize="11" fontWeight="bold">1st Fresnel</text>
+        {showZones >= 2 && (
+          <text x={midX + pathLength / 4} y={pathY - r2Visual - 5} textAnchor="middle" fill={colors.zone2} fontSize="10">2nd Zone</text>
+        )}
+        {showZones >= 3 && (
+          <text x={midX + pathLength / 4} y={pathY - r3Visual - 5} textAnchor="middle" fill={colors.zone3} fontSize="10">3rd Zone</text>
+        )}
 
-          {/* Info panel */}
-          <rect x="10" y="10" width="160" height="80" fill="rgba(15, 23, 42, 0.9)" rx="8" stroke="#334155" />
-          <text x="20" y="30" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Fresnel Zone Analysis</text>
-          <text x="20" y="48" fill={colors.textSecondary} fontSize="11">Freq: {frequency.toFixed(1)} GHz</text>
-          <text x="20" y="64" fill={colors.textSecondary} fontSize="11">Dist: {distance} m</text>
-          <text x="20" y="80" fill={colors.textSecondary} fontSize="11">R1: {fresnelRadius1.toFixed(1)} m</text>
+        {/* Info panel */}
+        <rect x="10" y="10" width="130" height="75" fill={colors.bgSecondary} rx="8" opacity="0.95" />
+        <text x="20" y="28" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Fresnel Analysis</text>
+        <text x="20" y="44" fill={colors.textSecondary} fontSize="10">Freq: {frequency.toFixed(1)} GHz</text>
+        <text x="20" y="58" fill={colors.textSecondary} fontSize="10">Dist: {distance} m</text>
+        <text x="20" y="72" fill={colors.zone1} fontSize="10" fontWeight="600">R1: {fresnelRadius1.toFixed(1)} m</text>
 
-          {/* Signal quality indicator */}
-          <rect x={width - 120} y="10" width="110" height="50" fill="rgba(15, 23, 42, 0.9)" rx="8" stroke="#334155" />
-          <text x={width - 115} y="30" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Signal Quality</text>
-          <rect x={width - 115} y="38" width="95" height="12" fill="#1e293b" rx="4" />
-          <rect x={width - 115} y="38" width={95 * (1 - signalLoss / 20)} height="12" fill={signalLoss < 3 ? colors.success : signalLoss < 6 ? colors.warning : colors.error} rx="4" />
-        </svg>
+        {/* Signal quality indicator */}
+        <rect x={width - 120} y="10" width="110" height="55" fill={colors.bgSecondary} rx="8" opacity="0.95" />
+        <text x={width - 115} y="28" fill={colors.textPrimary} fontSize="10" fontWeight="bold">Signal Quality</text>
+        <rect x={width - 115} y="36" width="95" height="10" fill="#1e293b" rx="4" />
+        <rect x={width - 115} y="36" width={95 * Math.max(0, 1 - signalLoss / 15)} height="10" fill={signalStatus.color} rx="4" />
+        <text x={width - 115} y="58" fill={signalStatus.color} fontSize="10" fontWeight="600">{signalStatus.status}</text>
+      </svg>
+    );
+  };
 
-        {interactive && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '500px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ color: colors.textSecondary, fontSize: typo.small, minWidth: '80px' }}>Frequency:</label>
-              <input
-                type="range"
-                min="0.9"
-                max="60"
-                step="0.1"
-                value={frequency}
-                onChange={(e) => setFrequency(parseFloat(e.target.value))}
-                style={{ flex: 1 }}
-              />
-              <span style={{ color: colors.textPrimary, fontSize: typo.small, minWidth: '60px' }}>{frequency.toFixed(1)} GHz</span>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // =============================================================================
+  // PHASE RENDERS
+  // =============================================================================
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          📡🌊📶
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Fresnel Zones
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Two antennas with perfect line-of-sight. Nothing between them but air. Yet engineers obsess over an <span style={{ color: colors.accent }}>invisible ellipse of empty space</span>. What could possibly matter in thin air?"
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Radio waves don't travel in pencil-thin lines. Understanding the space they actually occupy is the difference between a reliable link and mysterious failures."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            — RF Engineering Principle
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover the Hidden Physics →
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Only the direct line-of-sight path matters for signal quality' },
+      { id: 'b', text: 'Radio waves need clearance in a wider zone around the direct path', correct: true },
+      { id: 'c', text: 'Any obstacle touching the path completely blocks the signal' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              🤔 Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A cell tower microwave link has a building nearby that doesn't touch the direct path. Will this affect signal quality?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>📡</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Tower A</p>
+              </div>
+              <div style={{ position: 'relative', width: '120px' }}>
+                <div style={{ position: 'absolute', top: '-20px', left: '50%', transform: 'translateX(-50%)', fontSize: '24px' }}>🏢</div>
+                <div style={{ borderBottom: `3px dashed ${colors.signal}`, width: '100%', marginTop: '20px' }}></div>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Building nearby</p>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>📡</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Tower B</p>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ color: colors.textSecondary, fontSize: typo.small, minWidth: '80px' }}>Distance:</label>
-              <input
-                type="range"
-                min="100"
-                max="10000"
-                step="100"
-                value={distance}
-                onChange={(e) => setDistance(parseInt(e.target.value))}
-                style={{ flex: 1 }}
-              />
-              <span style={{ color: colors.textPrimary, fontSize: typo.small, minWidth: '60px' }}>{distance} m</span>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Fresnel Zone Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Add an obstacle and watch how it affects signal quality - even without blocking line-of-sight
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <FresnelVisualization interactive={true} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ color: colors.textSecondary, fontSize: typo.small, minWidth: '80px' }}>Obstacle:</label>
+
+            {/* Obstacle slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>🏢 Obstacle Height (% of 1st zone)</span>
+                <span style={{ ...typo.small, color: obstacleHeight > 60 ? colors.error : obstacleHeight > 0 ? colors.warning : colors.success, fontWeight: 600 }}>
+                  {obstacleHeight}%
+                </span>
+              </div>
               <input
                 type="range"
                 min="0"
@@ -524,790 +867,931 @@ const FresnelZonesRenderer: React.FC<FresnelZonesRendererProps> = ({
                 step="5"
                 value={obstacleHeight}
                 onChange={(e) => setObstacleHeight(parseInt(e.target.value))}
-                style={{ flex: 1 }}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
               />
-              <span style={{ color: colors.textPrimary, fontSize: typo.small, minWidth: '60px' }}>{obstacleHeight}% blocked</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Clear</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>60% (Minimum clearance)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Full block</span>
+              </div>
+            </div>
+
+            {/* Distance slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>📏 Link Distance</span>
+                <span style={{ ...typo.small, color: colors.zone1, fontWeight: 600 }}>{distance} m</span>
+              </div>
+              <input
+                type="range"
+                min="100"
+                max="5000"
+                step="100"
+                value={distance}
+                onChange={(e) => setDistance(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Metrics */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.zone1 }}>{fresnelRadius1.toFixed(1)} m</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>1st Zone Radius</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: signalStatus.color }}>{signalLoss.toFixed(1)} dB</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Signal Loss</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: signalStatus.color }}>{signalStatus.status}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Link Quality</div>
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Discovery prompt */}
+          {obstacleHeight > 0 && obstacleHeight <= 40 && (
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                ⚠️ Notice: The obstacle doesn't touch the line-of-sight, but signal is already degrading!
+              </p>
+            </div>
+          )}
+
+          {obstacleHeight > 60 && (
+            <div style={{
+              background: `${colors.error}22`,
+              border: `1px solid ${colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                ❌ Critical: More than 60% of the first Fresnel zone is blocked - link unreliable!
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics →
+          </button>
+        </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // Hook phase
-  const renderHook = () => (
-    <div style={{
-      padding: typo.pagePadding,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: typo.sectionGap,
-      minHeight: '100%'
-    }}>
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
       <div style={{
-        textAlign: 'center',
-        maxWidth: '600px'
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
       }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 16px',
-          background: 'rgba(34, 211, 238, 0.1)',
-          border: '1px solid rgba(34, 211, 238, 0.2)',
-          borderRadius: '20px',
-          marginBottom: '16px'
-        }}>
-          <span style={{ width: '8px', height: '8px', background: colors.zone1, borderRadius: '50%' }} />
-          <span style={{ color: colors.zone1, fontSize: typo.small, fontWeight: 500 }}>WAVE PHYSICS</span>
-        </div>
+        {renderProgressBar()}
 
-        <h1 style={{
-          fontSize: typo.title,
-          fontWeight: 700,
-          color: colors.textPrimary,
-          marginBottom: '12px',
-          background: 'linear-gradient(135deg, #f8fafc, #22d3ee)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
-          The Invisible Highways of Radio
-        </h1>
-
-        <p style={{ color: colors.textSecondary, fontSize: typo.bodyLarge, marginBottom: '24px' }}>
-          Why do wireless engineers care about space that looks completely empty?
-        </p>
-      </div>
-
-      {renderVisualization(false)}
-
-      <div style={{
-        background: colors.bgCard,
-        borderRadius: '16px',
-        padding: '20px',
-        maxWidth: '500px',
-        border: '1px solid rgba(51, 65, 85, 0.5)'
-      }}>
-        <p style={{ color: colors.textPrimary, fontSize: typo.body, lineHeight: 1.6, marginBottom: '12px' }}>
-          Two antennas with perfect line-of-sight. Nothing between them but air.
-        </p>
-        <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.6, marginBottom: '12px' }}>
-          Yet engineers obsess over the "Fresnel zone" - an invisible ellipse of empty space.
-        </p>
-        <p style={{ color: colors.zone1, fontSize: typo.body, fontWeight: 600 }}>
-          What could possibly matter in empty space?
-        </p>
-      </div>
-
-      <button
-        onClick={onPhaseComplete}
-        style={{
-          padding: '14px 32px',
-          background: 'linear-gradient(135deg, #22d3ee, #0891b2)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: typo.body,
-          fontWeight: 600,
-          cursor: 'pointer',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          boxShadow: '0 4px 15px rgba(34, 211, 238, 0.3)'
-        }}
-      >
-        Discover the Hidden Physics
-      </button>
-    </div>
-  );
-
-  // Predict phase
-  const renderPredict = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: typo.heading, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
-        Make Your Prediction
-      </h2>
-      <p style={{ color: colors.textSecondary, fontSize: typo.body, textAlign: 'center', marginBottom: '24px' }}>
-        What determines whether a radio link works well?
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        {predictions.map((pred) => (
-          <button
-            key={pred.id}
-            onClick={() => setPrediction(pred.id)}
-            style={{
-              padding: '16px 20px',
-              background: prediction === pred.id ? 'rgba(34, 211, 238, 0.15)' : colors.bgCard,
-              border: `2px solid ${prediction === pred.id ? colors.zone1 : 'transparent'}`,
-              borderRadius: '12px',
-              color: colors.textPrimary,
-              fontSize: typo.body,
-              textAlign: 'left',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            {pred.label}
-          </button>
-        ))}
-      </div>
-
-      {prediction && (
-        <button
-          onClick={() => {
-            if (prediction === 'wider_zone') {
-              onCorrectAnswer?.();
-            } else {
-              onIncorrectAnswer?.();
-            }
-            onPhaseComplete?.();
-          }}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: 'linear-gradient(135deg, #22d3ee, #0891b2)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: typo.body,
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          Lock In Prediction
-        </button>
-      )}
-    </div>
-  );
-
-  // Play phase
-  const renderPlay = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: typo.heading, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-        Explore Fresnel Zones
-      </h2>
-      <p style={{ color: colors.textSecondary, fontSize: typo.small, textAlign: 'center', marginBottom: '20px' }}>
-        Adjust frequency, distance, and obstacles to see how Fresnel zones affect signal quality
-      </p>
-
-      {renderVisualization(true)}
-
-      <div style={{
-        marginTop: '20px',
-        padding: '16px',
-        background: colors.bgCard,
-        borderRadius: '12px',
-        border: '1px solid rgba(51, 65, 85, 0.5)'
-      }}>
-        <h3 style={{ color: colors.textPrimary, fontSize: typo.body, fontWeight: 600, marginBottom: '8px' }}>
-          Key Observations:
-        </h3>
-        <ul style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.8, paddingLeft: '20px' }}>
-          <li>Higher frequency = smaller Fresnel zone radius</li>
-          <li>Longer distance = larger Fresnel zone at midpoint</li>
-          <li>Blocking more than 40% of the first zone causes significant signal loss</li>
-          <li>The zone is widest at the midpoint between antennas</li>
-        </ul>
-      </div>
-
-      <button
-        onClick={onPhaseComplete}
-        style={{
-          marginTop: '20px',
-          width: '100%',
-          padding: '14px',
-          background: 'linear-gradient(135deg, #10b981, #059669)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: typo.body,
-          fontWeight: 600,
-          cursor: 'pointer'
-        }}
-      >
-        Continue to Review
-      </button>
-    </div>
-  );
-
-  // Review phase
-  const renderReview = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: typo.heading, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
-        Understanding Fresnel Zones
-      </h2>
-
-      <div style={{
-        background: colors.bgCard,
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '20px',
-        border: '1px solid rgba(51, 65, 85, 0.5)'
-      }}>
-        <h3 style={{ color: colors.zone1, fontSize: typo.body, fontWeight: 600, marginBottom: '12px' }}>
-          The Physics Revealed
-        </h3>
-        <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7, marginBottom: '12px' }}>
-          Radio waves don't travel in pencil-thin lines - they spread out like ripples. The <strong style={{ color: colors.textPrimary }}>first Fresnel zone</strong> is an ellipsoidal region where waves arrive within half a wavelength of the direct path, contributing constructively to the signal.
-        </p>
-        <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7 }}>
-          When obstacles intrude into this zone, they diffract the waves, causing <strong style={{ color: colors.textPrimary }}>destructive interference</strong> and signal loss. Engineers require at least 60% of the first zone to be clear for reliable links.
-        </p>
-      </div>
-
-      <div style={{
-        background: 'rgba(34, 211, 238, 0.1)',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '20px',
-        border: '1px solid rgba(34, 211, 238, 0.2)'
-      }}>
-        <h4 style={{ color: colors.zone1, fontSize: typo.small, fontWeight: 600, marginBottom: '8px' }}>
-          FRESNEL ZONE RADIUS FORMULA
-        </h4>
-        <p style={{ color: colors.textPrimary, fontSize: typo.body, fontFamily: 'monospace' }}>
-          r_n = sqrt(n * lambda * d1 * d2 / (d1 + d2))
-        </p>
-        <p style={{ color: colors.textMuted, fontSize: typo.small, marginTop: '8px' }}>
-          Where n = zone number, lambda = wavelength, d1 & d2 = distances to endpoints
-        </p>
-      </div>
-
-      <button
-        onClick={onPhaseComplete}
-        style={{
-          width: '100%',
-          padding: '14px',
-          background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: typo.body,
-          fontWeight: 600,
-          cursor: 'pointer'
-        }}
-      >
-        Explore the Twist
-      </button>
-    </div>
-  );
-
-  // Twist predict phase
-  const renderTwistPredict = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: typo.heading, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
-        The Frequency Twist
-      </h2>
-      <p style={{ color: colors.textSecondary, fontSize: typo.body, textAlign: 'center', marginBottom: '24px' }}>
-        5G networks use much higher frequencies than 4G. How does this affect Fresnel zones?
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        {twistPredictions.map((pred) => (
-          <button
-            key={pred.id}
-            onClick={() => setTwistPrediction(pred.id)}
-            style={{
-              padding: '16px 20px',
-              background: twistPrediction === pred.id ? 'rgba(167, 139, 250, 0.15)' : colors.bgCard,
-              border: `2px solid ${twistPrediction === pred.id ? colors.zone2 : 'transparent'}`,
-              borderRadius: '12px',
-              color: colors.textPrimary,
-              fontSize: typo.body,
-              textAlign: 'left',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-          >
-            {pred.label}
-          </button>
-        ))}
-      </div>
-
-      {twistPrediction && (
-        <button
-          onClick={() => {
-            if (twistPrediction === 'smaller_zone') {
-              onCorrectAnswer?.();
-            } else {
-              onIncorrectAnswer?.();
-            }
-            onPhaseComplete?.();
-          }}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: typo.body,
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          Lock In Prediction
-        </button>
-      )}
-    </div>
-  );
-
-  // Twist play phase
-  const renderTwistPlay = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: typo.heading, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-        Frequency vs Fresnel Zones
-      </h2>
-      <p style={{ color: colors.textSecondary, fontSize: typo.small, textAlign: 'center', marginBottom: '20px' }}>
-        Compare low frequency (900 MHz) vs high frequency (60 GHz) links
-      </p>
-
-      {renderVisualization(true)}
-
-      <div style={{
-        marginTop: '20px',
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '16px'
-      }}>
-        <div style={{
-          padding: '16px',
-          background: colors.bgCard,
-          borderRadius: '12px',
-          border: '1px solid rgba(34, 211, 238, 0.3)'
-        }}>
-          <h4 style={{ color: colors.zone1, fontSize: typo.small, fontWeight: 600, marginBottom: '8px' }}>
-            Low Frequency (900 MHz)
-          </h4>
-          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
-            Large Fresnel zones, harder to clear obstacles, but better penetration through foliage
-          </p>
-        </div>
-        <div style={{
-          padding: '16px',
-          background: colors.bgCard,
-          borderRadius: '12px',
-          border: '1px solid rgba(167, 139, 250, 0.3)'
-        }}>
-          <h4 style={{ color: colors.zone2, fontSize: typo.small, fontWeight: 600, marginBottom: '8px' }}>
-            High Frequency (60 GHz)
-          </h4>
-          <p style={{ color: colors.textSecondary, fontSize: typo.small }}>
-            Small Fresnel zones, easier clearance, but higher path loss and rain fade
-          </p>
-        </div>
-      </div>
-
-      <button
-        onClick={onPhaseComplete}
-        style={{
-          marginTop: '20px',
-          width: '100%',
-          padding: '14px',
-          background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: typo.body,
-          fontWeight: 600,
-          cursor: 'pointer'
-        }}
-      >
-        Continue to Twist Review
-      </button>
-    </div>
-  );
-
-  // Twist review phase
-  const renderTwistReview = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: typo.heading, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
-        The Frequency-Zone Tradeoff
-      </h2>
-
-      <div style={{
-        background: colors.bgCard,
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '20px',
-        border: '1px solid rgba(51, 65, 85, 0.5)'
-      }}>
-        <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7, marginBottom: '12px' }}>
-          The Fresnel zone radius is proportional to the <strong style={{ color: colors.textPrimary }}>square root of wavelength</strong>. Since wavelength = c/frequency, higher frequencies mean smaller wavelengths and thus smaller Fresnel zones.
-        </p>
-        <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7 }}>
-          This is why millimeter-wave 5G links can squeeze through urban canyons that would block lower frequencies - their Fresnel zones are measured in centimeters rather than meters!
-        </p>
-      </div>
-
-      <button
-        onClick={onPhaseComplete}
-        style={{
-          width: '100%',
-          padding: '14px',
-          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: typo.body,
-          fontWeight: 600,
-          cursor: 'pointer'
-        }}
-      >
-        See Real-World Applications
-      </button>
-    </div>
-  );
-
-  // Transfer phase
-  const renderTransfer = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ fontSize: typo.heading, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-        Real-World Applications
-      </h2>
-      <p style={{ color: colors.textSecondary, fontSize: typo.small, textAlign: 'center', marginBottom: '24px' }}>
-        See how Fresnel zone physics shapes technology around you
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-        {realWorldApps.map((app, index) => (
-          <div
-            key={index}
-            style={{
-              background: colors.bgCard,
-              borderRadius: '16px',
-              padding: '20px',
-              border: '1px solid rgba(51, 65, 85, 0.5)',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onClick={() => {
-              const newCompleted = new Set(transferCompleted);
-              newCompleted.add(index);
-              setTransferCompleted(newCompleted);
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-              <span style={{ fontSize: '28px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ color: colors.textPrimary, fontSize: typo.body, fontWeight: 600 }}>{app.title}</h3>
-                <p style={{ color: colors.textMuted, fontSize: typo.small }}>{app.short}</p>
-              </div>
-              {transferCompleted.has(index) && (
-                <span style={{ marginLeft: 'auto', color: colors.success, fontSize: '20px' }}>&#10003;</span>
-              )}
-            </div>
-            <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6 }}>
-              {app.tagline}
-            </p>
-            {transferCompleted.has(index) && (
-              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(51, 65, 85, 0.5)' }}>
-                <p style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 1.6, marginBottom: '8px' }}>
-                  {app.description}
-                </p>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
-                  {app.stats.map((stat, i) => (
-                    <div key={i} style={{
-                      background: 'rgba(34, 211, 238, 0.1)',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(34, 211, 238, 0.2)'
-                    }}>
-                      <span style={{ color: colors.zone1, fontWeight: 600, fontSize: typo.small }}>{stat.value}</span>
-                      <span style={{ color: colors.textMuted, fontSize: typo.label, marginLeft: '4px' }}>{stat.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {transferCompleted.size >= 2 && (
-        <button
-          onClick={onPhaseComplete}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: typo.body,
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          Continue to Test
-        </button>
-      )}
-    </div>
-  );
-
-  // Test phase
-  const renderTest = () => {
-    const currentQuestion = testQuestions[currentTestQuestion];
-
-    const handleAnswerSelect = (answerIndex: number) => {
-      const newAnswers = [...testAnswers];
-      newAnswers[currentTestQuestion] = answerIndex;
-      setTestAnswers(newAnswers);
-    };
-
-    const handleSubmitTest = () => {
-      let score = 0;
-      testAnswers.forEach((answer, index) => {
-        if (answer !== null && testQuestions[index].options[answer].correct) {
-          score++;
-        }
-      });
-      setTestScore(score);
-      setTestSubmitted(true);
-      if (score >= 7) {
-        onCorrectAnswer?.();
-      }
-    };
-
-    if (testSubmitted) {
-      return (
-        <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{ fontSize: typo.heading, color: colors.textPrimary, marginBottom: '16px' }}>
-            Test Complete!
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why Fresnel Zones Matter
           </h2>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
-            padding: '32px',
-            marginBottom: '24px'
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <div style={{
-              fontSize: '48px',
-              fontWeight: 700,
-              color: testScore >= 7 ? colors.success : colors.warning,
-              marginBottom: '8px'
-            }}>
-              {testScore}/10
-            </div>
-            <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
-              {testScore >= 7 ? 'Excellent! You\'ve mastered Fresnel zones!' : 'Good effort! Review the material and try again.'}
+            <h3 style={{ ...typo.h3, color: colors.zone1, marginBottom: '16px' }}>
+              The Physics of Radio Wave Propagation
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              Radio waves don't travel in pencil-thin lines - they spread out like ripples. The <strong style={{ color: colors.textPrimary }}>first Fresnel zone</strong> is an ellipsoidal region where waves arrive within half a wavelength of the direct path.
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Waves within this zone <strong style={{ color: colors.success }}>add constructively</strong> to strengthen the signal. When obstacles intrude, they cause <strong style={{ color: colors.error }}>diffraction losses</strong> even without blocking line-of-sight.
             </p>
           </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.signal, marginBottom: '16px' }}>
+              The Fresnel Radius Formula
+            </h3>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              textAlign: 'center',
+              marginBottom: '16px',
+            }}>
+              <code style={{ fontSize: '18px', color: colors.textPrimary }}>r = sqrt(n * lambda * d1 * d2 / (d1 + d2))</code>
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              Where <strong>n</strong> = zone number, <strong>lambda</strong> = wavelength, <strong>d1</strong> and <strong>d2</strong> = distances to endpoints. At midpoint, this simplifies to r = sqrt(n * lambda * D / 4).
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              💡 Key Insight: The 60% Rule
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Engineers require at least <strong style={{ color: colors.success }}>60% of the first Fresnel zone</strong> to be clear of obstructions. This provides adequate margin for reliable links with minimal diffraction loss.
+            </p>
+          </div>
+
           <button
-            onClick={onPhaseComplete}
-            style={{
-              padding: '14px 32px',
-              background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: typo.body,
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Continue to Mastery
+            Explore the Frequency Effect →
           </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Higher frequencies need the same Fresnel zone clearance' },
+      { id: 'b', text: 'Higher frequencies need larger Fresnel zone clearance' },
+      { id: 'c', text: 'Higher frequencies need smaller Fresnel zone clearance', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              📶 New Variable: Frequency
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            5G networks use millimeter-wave frequencies (28-80 GHz) while 4G uses lower frequencies (700 MHz - 2.5 GHz). How does this affect Fresnel zone clearance requirements?
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See the Frequency Effect →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Frequency vs Fresnel Zones
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare how different frequencies affect zone size over the same distance
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <FresnelVisualization interactive={true} />
+            </div>
+
+            {/* Frequency slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>📶 Frequency</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{frequency.toFixed(1)} GHz</span>
+              </div>
+              <input
+                type="range"
+                min="0.9"
+                max="80"
+                step="0.1"
+                value={frequency}
+                onChange={(e) => setFrequency(parseFloat(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>900 MHz (4G)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>2.4 GHz (WiFi)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>60+ GHz (5G mmWave)</span>
+              </div>
+            </div>
+
+            {/* Zones toggle */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Visible Zones</span>
+                <span style={{ ...typo.small, color: colors.zone2, fontWeight: 600 }}>{showZones}</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="1"
+                value={showZones}
+                onChange={(e) => setShowZones(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Comparison cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '16px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                borderLeft: `3px solid ${colors.zone1}`,
+              }}>
+                <h4 style={{ ...typo.small, color: colors.zone1, fontWeight: 600, marginBottom: '8px' }}>
+                  Low Frequency (900 MHz)
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  R1 = {Math.sqrt(0.333 * 1000 / 4).toFixed(1)} m at 1 km
+                </p>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                  Large zones, harder to clear
+                </p>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                borderLeft: `3px solid ${colors.zone2}`,
+              }}>
+                <h4 style={{ ...typo.small, color: colors.zone2, fontWeight: 600, marginBottom: '8px' }}>
+                  High Frequency (60 GHz)
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  R1 = {Math.sqrt(0.005 * 1000 / 4).toFixed(1)} m at 1 km
+                </p>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                  Small zones, easy to clear
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Tradeoffs →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Frequency-Zone Tradeoff
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📐</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Zone Size vs Wavelength</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Fresnel zone radius is proportional to <strong style={{ color: colors.accent }}>sqrt(wavelength)</strong>. Since wavelength = c/frequency, higher frequencies have smaller wavelengths and thus <strong style={{ color: colors.success }}>smaller Fresnel zones</strong>.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📱</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Why 5G mmWave Works in Cities</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                At 60 GHz, Fresnel zones are measured in <strong style={{ color: colors.zone1 }}>centimeters</strong> rather than meters. This allows mmWave links to squeeze through urban canyons where lower frequencies would suffer massive diffraction losses.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.warning}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.warning}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚠️</span>
+                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>The Other Side of the Tradeoff</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Higher frequencies face other challenges: <strong style={{ color: colors.error }}>rain fade</strong>, higher atmospheric absorption, and less material penetration. The small Fresnel zone advantage comes with its own costs.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Connection to Fresnel Zones:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand Fresnel zone physics!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review & Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
         </div>
       );
     }
 
+    const question = testQuestions[currentQuestion];
+
     return (
-      <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: typo.heading, color: colors.textPrimary }}>
-            Knowledge Test
-          </h2>
-          <span style={{ color: colors.textMuted, fontSize: typo.small }}>
-            Question {currentTestQuestion + 1} of {testQuestions.length}
-          </span>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                ← Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
         </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Fresnel Zone Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand the invisible physics that determine whether wireless links succeed or fail.
+        </p>
 
         <div style={{
           background: colors.bgCard,
           borderRadius: '16px',
           padding: '24px',
-          marginBottom: '20px'
+          marginBottom: '32px',
+          maxWidth: '400px',
         }}>
-          <p style={{ color: colors.textPrimary, fontSize: typo.body, fontWeight: 500, marginBottom: '20px' }}>
-            {currentQuestion.question}
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {currentQuestion.options.map((option, index) => (
-              <button
-                key={index}
-                onClick={() => handleAnswerSelect(index)}
-                style={{
-                  padding: '14px 16px',
-                  background: testAnswers[currentTestQuestion] === index ? 'rgba(139, 92, 246, 0.15)' : 'rgba(30, 41, 59, 0.6)',
-                  border: `2px solid ${testAnswers[currentTestQuestion] === index ? colors.accent : 'transparent'}`,
-                  borderRadius: '10px',
-                  color: colors.textPrimary,
-                  fontSize: typo.small,
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {option.text}
-              </button>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Radio waves spread in ellipsoidal Fresnel zones',
+              'The 60% clearance rule for reliable links',
+              'How frequency affects zone size',
+              'Why line-of-sight alone isn\'t enough',
+              'Real-world applications in microwave and WiFi',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
             ))}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {currentTestQuestion > 0 && (
-            <button
-              onClick={() => setCurrentTestQuestion(prev => prev - 1)}
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: 'rgba(51, 65, 85, 0.5)',
-                color: colors.textSecondary,
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: typo.small,
-                cursor: 'pointer'
-              }}
-            >
-              Previous
-            </button>
-          )}
-          {currentTestQuestion < testQuestions.length - 1 ? (
-            <button
-              onClick={() => setCurrentTestQuestion(prev => prev + 1)}
-              disabled={testAnswers[currentTestQuestion] === null}
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: testAnswers[currentTestQuestion] !== null ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' : 'rgba(51, 65, 85, 0.5)',
-                color: testAnswers[currentTestQuestion] !== null ? 'white' : colors.textMuted,
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: typo.small,
-                cursor: testAnswers[currentTestQuestion] !== null ? 'pointer' : 'not-allowed'
-              }}
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmitTest}
-              disabled={testAnswers.some(a => a === null)}
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: !testAnswers.some(a => a === null) ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(51, 65, 85, 0.5)',
-                color: !testAnswers.some(a => a === null) ? 'white' : colors.textMuted,
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: typo.small,
-                fontWeight: 600,
-                cursor: !testAnswers.some(a => a === null) ? 'pointer' : 'not-allowed'
-              }}
-            >
-              Submit Test
-            </button>
-          )}
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // Mastery phase
-  const renderMastery = () => (
-    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto', textAlign: 'center' }}>
-      <div style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '80px',
-        height: '80px',
-        background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-        borderRadius: '50%',
-        marginBottom: '20px',
-        fontSize: '40px'
-      }}>
-        &#127942;
-      </div>
-
-      <h2 style={{
-        fontSize: typo.title,
-        color: colors.textPrimary,
-        marginBottom: '12px',
-        background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent'
-      }}>
-        Fresnel Zones Mastered!
-      </h2>
-
-      <p style={{ color: colors.textSecondary, fontSize: typo.body, marginBottom: '32px', maxWidth: '500px', margin: '0 auto 32px' }}>
-        You now understand how radio waves propagate through space and why engineers obsess over "empty" air.
-      </p>
-
-      <div style={{
-        background: colors.bgCard,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '24px',
-        textAlign: 'left'
-      }}>
-        <h3 style={{ color: colors.textPrimary, fontSize: typo.body, fontWeight: 600, marginBottom: '16px' }}>
-          Key Takeaways:
-        </h3>
-        <ul style={{ color: colors.textSecondary, fontSize: typo.small, lineHeight: 2, paddingLeft: '20px' }}>
-          <li>Radio waves spread out in ellipsoidal Fresnel zones around the direct path</li>
-          <li>The first Fresnel zone must be 60%+ clear for reliable links</li>
-          <li>Higher frequencies have smaller zones (easier clearance, higher loss)</li>
-          <li>This physics underlies cellular backhaul, WiFi, satellite, and radio astronomy</li>
-        </ul>
-      </div>
-
-      <button
-        onClick={onPhaseComplete}
-        style={{
-          padding: '14px 32px',
-          background: 'linear-gradient(135deg, #22d3ee, #0891b2)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: typo.body,
-          fontWeight: 600,
-          cursor: 'pointer'
-        }}
-      >
-        Complete Lesson
-      </button>
-    </div>
-  );
-
-  // Phase router
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: colors.bgPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {renderPhase()}
-    </div>
-  );
+  return null;
 };
 
 export default FresnelZonesRenderer;

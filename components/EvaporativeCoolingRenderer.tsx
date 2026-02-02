@@ -1,22 +1,293 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-interface EvaporativeCoolingRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+// ─────────────────────────────────────────────────────────────────────────────
+// Evaporative Cooling - Complete 10-Phase Game
+// Teaching how evaporation removes heat through phase change
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer
-}) => {
-  // Responsive detection
+interface EvaporativeCoolingRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    scenario: "After a morning swim at the beach, you step out of the water on a breezy day. Despite the air being warm at 28°C, you immediately start shivering.",
+    question: "What physical process is causing you to feel so cold?",
+    options: [
+      { id: 'a', label: "The ocean water was colder than your body temperature" },
+      { id: 'b', label: "Evaporating water absorbs latent heat from your skin, rapidly cooling you", correct: true },
+      { id: 'c', label: "The wind is colder than the air temperature indicates" },
+      { id: 'd', label: "Salt from the ocean water creates a cooling chemical reaction" }
+    ],
+    explanation: "When water evaporates from your skin, each gram that transitions from liquid to vapor absorbs 2,260 joules of heat energy (the latent heat of vaporization). This energy comes directly from your skin, causing rapid cooling. The breeze accelerates evaporation by removing the humid air layer near your skin."
+  },
+  {
+    scenario: "A marathon runner in Phoenix, Arizona (10% humidity) feels comfortable running at 35°C. Another runner in Miami (90% humidity) struggles at just 28°C and risks heat exhaustion.",
+    question: "Why does humidity make such a dramatic difference in heat tolerance?",
+    options: [
+      { id: 'a', label: "Humid air is heavier and harder to breathe" },
+      { id: 'b', label: "High humidity reduces sweat evaporation, preventing the body from cooling itself", correct: true },
+      { id: 'c', label: "Humidity increases the actual temperature of the air" },
+      { id: 'd', label: "Desert air contains minerals that help cool the body" }
+    ],
+    explanation: "At 90% humidity, the air is nearly saturated with water vapor and cannot accept much more. Sweat stays liquid on the skin instead of evaporating, so the body cannot use its primary cooling mechanism. In dry air, sweat evaporates rapidly, providing powerful cooling even at higher temperatures."
+  },
+  {
+    scenario: "A wet-bulb thermometer (covered with wet cloth) reads 20°C while a dry-bulb thermometer next to it reads 32°C. Meteorologists issue a heat warning.",
+    question: "What does the 12°C difference between these readings indicate?",
+    options: [
+      { id: 'a', label: "The thermometers are malfunctioning" },
+      { id: 'b', label: "Low humidity allowing significant evaporative cooling potential", correct: true },
+      { id: 'c', label: "The wet cloth is adding moisture to the air" },
+      { id: 'd', label: "Solar radiation is affecting the dry thermometer" }
+    ],
+    explanation: "The wet-bulb temperature shows how much evaporative cooling is possible. A large difference means low humidity and good conditions for sweating to work. When wet-bulb approaches dry-bulb (small difference), humidity is high and evaporative cooling fails. A wet-bulb above 35°C is potentially fatal for humans."
+  },
+  {
+    scenario: "Your dog pants heavily after a run while you're sweating. Dogs have very few sweat glands but can still cool down effectively through panting.",
+    question: "How does panting achieve the same cooling effect as sweating?",
+    options: [
+      { id: 'a', label: "Panting brings cold air into the lungs" },
+      { id: 'b', label: "Evaporation from the tongue and respiratory tract removes heat", correct: true },
+      { id: 'c', label: "The rapid breathing cools the blood directly" },
+      { id: 'd', label: "Dogs' saliva contains cooling compounds" }
+    ],
+    explanation: "Panting moves large volumes of air across the wet surfaces of the tongue, mouth, and respiratory tract. Water evaporates from these surfaces, absorbing latent heat and cooling the blood flowing through them. The same physics applies - it's just evaporation from internal surfaces instead of external skin."
+  },
+  {
+    scenario: "A nurse applies rubbing alcohol to a patient's skin before an injection. The patient comments that it feels much colder than water would.",
+    question: "Why does alcohol feel colder than water when applied to skin?",
+    options: [
+      { id: 'a', label: "Alcohol is stored at a lower temperature than water" },
+      { id: 'b', label: "Alcohol evaporates faster, removing heat more quickly", correct: true },
+      { id: 'c', label: "Alcohol triggers cold receptors in the skin directly" },
+      { id: 'd', label: "The chemical reaction between alcohol and skin generates cold" }
+    ],
+    explanation: "Isopropyl alcohol has a lower latent heat of vaporization (about 665 J/g vs water's 2,260 J/g) but evaporates much faster due to higher vapor pressure. The faster evaporation rate means heat is removed more quickly, creating a stronger sensation of cold even though each gram removes less total energy."
+  },
+  {
+    scenario: "A swamp cooler in Las Vegas reduces indoor temperature from 40°C to 25°C using only water and fans. The same device in Houston barely drops temperature by 3°C.",
+    question: "What fundamental physical limitation explains this difference?",
+    options: [
+      { id: 'a', label: "The Houston device must be defective" },
+      { id: 'b', label: "Evaporative cooling is limited by the humidity - dry air can accept more vapor", correct: true },
+      { id: 'c', label: "Houston's air contains pollutants that prevent cooling" },
+      { id: 'd', label: "The water in Houston is warmer than in Las Vegas" }
+    ],
+    explanation: "Evaporative coolers can only lower air temperature to the wet-bulb temperature. In Las Vegas (10% humidity), the wet-bulb might be 18°C when air is 40°C, allowing a 22°C drop. In Houston (80% humidity), wet-bulb might be 25°C when air is 28°C, allowing only a 3°C drop. Physics sets the limit."
+  },
+  {
+    scenario: "A power plant cooling tower evaporates 5,000 gallons of water per minute. Engineers say this removes 1.1 gigawatts of heat from the power plant.",
+    question: "How is evaporating water removing such enormous amounts of heat?",
+    options: [
+      { id: 'a', label: "The water falls from a great height, converting potential energy" },
+      { id: 'b', label: "Each kilogram of water that evaporates absorbs 2.26 MJ of latent heat", correct: true },
+      { id: 'c', label: "The tower fans do the work of removing heat" },
+      { id: 'd', label: "Chemical reactions in the tower generate cooling" }
+    ],
+    explanation: "5,000 gallons/minute = about 19,000 kg/minute of water. At 2.26 MJ/kg latent heat, evaporating this much water absorbs 43,000 MJ/minute = 720 MW of heat. Only partial evaporation occurs (maybe 1-2%), which matches the 1.1 GW figure. This is pure phase-change physics at industrial scale."
+  },
+  {
+    scenario: "Ancient Egyptians used porous clay jars to keep water cool in the desert. Even without ice, the water inside would be 10-15°C cooler than air temperature.",
+    question: "What physical mechanism made this passive cooling technology work?",
+    options: [
+      { id: 'a', label: "Clay is a natural insulator that blocks heat" },
+      { id: 'b', label: "Water seeping through porous clay evaporates, absorbing heat from the jar's contents", correct: true },
+      { id: 'c', label: "Underground water naturally stayed cold" },
+      { id: 'd', label: "The clay absorbed heat during the day and released it at night" }
+    ],
+    explanation: "Porous clay allows water to slowly seep through to the outer surface. In dry desert air, this water evaporates readily, absorbing latent heat from the jar and its contents. This ancient technology demonstrates the same evaporative cooling physics used in modern swamp coolers and cooling towers."
+  },
+  {
+    scenario: "An athlete loses 1.5 liters of sweat during intense exercise. Their body successfully prevented dangerous overheating during this time.",
+    question: "How much thermal energy did this sweat remove from the athlete's body?",
+    options: [
+      { id: 'a', label: "About 150 kilojoules" },
+      { id: 'b', label: "About 3.4 megajoules (enough to run a 1,000W heater for nearly an hour)", correct: true },
+      { id: 'c', label: "About 1.5 megajoules" },
+      { id: 'd', label: "About 500 kilojoules" }
+    ],
+    explanation: "1.5 liters = 1.5 kg of water. The latent heat of vaporization is 2.26 MJ/kg, so complete evaporation would remove 1.5 × 2.26 = 3.39 MJ of heat. This is equivalent to a 1,000W space heater running for 56 minutes - demonstrating why sweating is such an effective cooling mechanism."
+  },
+  {
+    scenario: "A data center in Iceland uses free air cooling most of the year, but a data center in Singapore requires energy-intensive air conditioning year-round despite both having similar IT loads.",
+    question: "How could evaporative cooling principles help the Singapore facility?",
+    options: [
+      { id: 'a', label: "It cannot - evaporative cooling is useless in humid climates" },
+      { id: 'b', label: "Indirect evaporative cooling with heat exchangers can help without adding humidity", correct: true },
+      { id: 'c', label: "Using colder water would make evaporative cooling work" },
+      { id: 'd', label: "Running fans faster would overcome the humidity problem" }
+    ],
+    explanation: "Indirect evaporative cooling uses a heat exchanger - outside air is cooled by water evaporation, then that cooled air cools the indoor air without mixing. While less effective than direct evaporative cooling, it still provides significant energy savings. Modern systems combine this with traditional cooling for best efficiency."
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🏠',
+    title: 'Residential Swamp Coolers',
+    short: 'Desert home cooling',
+    tagline: 'Ancient physics for modern comfort',
+    description: 'Evaporative coolers (swamp coolers) pass hot dry air through water-saturated pads. As water evaporates from the pads, it absorbs heat from the air, dropping temperatures by 15-40 degrees Fahrenheit. This ancient cooling technique uses up to 75% less electricity than traditional air conditioning.',
+    connection: 'The same physics that cools your wet skin after swimming powers these home cooling systems. Water molecules absorbing latent heat from the air is identical to sweat absorbing heat from your body - both rely on the 2,260 J/g latent heat of vaporization.',
+    howItWorks: 'A pump circulates water over absorbent cellulose or aspen fiber pads while a fan pulls hot outside air through the wet media. As water evaporates, it absorbs heat from the air (about 8,000 BTU per gallon evaporated). The cooled, humidified air is then distributed throughout the home. Continuous airflow through open windows expels warm air.',
+    stats: [
+      { value: '75%', label: 'Less energy than AC', icon: '⚡' },
+      { value: '15-40°F', label: 'Temperature drop possible', icon: '🌡️' },
+      { value: '$150-400', label: 'Annual operating cost', icon: '💵' }
+    ],
+    examples: ['Portable swamp coolers for single rooms', 'Whole-house ducted evaporative systems', 'Rooftop down-draft coolers', 'Two-stage indirect/direct hybrid coolers'],
+    companies: ['Mastercool', 'Hessaire', 'Portacool', 'Breezair', 'Honeywell'],
+    futureImpact: 'As energy costs rise and climate change intensifies, next-generation evaporative coolers use recycled water and advanced materials. Hybrid systems combining evaporative pre-cooling with minimal refrigeration could reduce residential cooling energy by 50-70% in arid climates, saving billions globally.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '🏭',
+    title: 'Industrial Cooling Towers',
+    short: 'Power plant heat rejection',
+    tagline: 'The giants that keep civilization running',
+    description: 'Cooling towers are massive heat rejection devices that use evaporative cooling to remove waste heat from power plants, refineries, and factories. A single large cooling tower can evaporate millions of gallons daily, rejecting over 1 gigawatt of thermal energy to the atmosphere.',
+    connection: 'Just like sweat evaporating from skin, water droplets in cooling towers absorb latent heat as they evaporate. The physics is identical - phase change from liquid to vapor requires 2,260 joules per gram, which comes from the water being cooled.',
+    howItWorks: 'Hot water (35-45°C) from condensers sprays through nozzles or cascades over fill media inside the tower. Ambient air flows through naturally (hyperbolic towers) or via large fans (mechanical draft). Approximately 1-2% of the water evaporates, absorbing enough heat to cool the remaining 98% by 10-20°C. Cooled water collects in a basin and recirculates.',
+    stats: [
+      { value: '1-2%', label: 'Water lost to evaporation', icon: '💧' },
+      { value: '10-20°C', label: 'Water temperature drop', icon: '🌡️' },
+      { value: '1+ GW', label: 'Heat rejection capacity', icon: '🔥' }
+    ],
+    examples: ['Natural draft hyperboloid towers at power plants', 'Mechanical draft crossflow towers', 'Counterflow induced-draft towers', 'Hybrid wet-dry cooling towers'],
+    companies: ['SPX Cooling Technologies', 'Evapco', 'Baltimore Aircoil Company', 'Hamon', 'Paharpur'],
+    futureImpact: 'Water scarcity is driving cooling tower innovation. Advanced designs use treated wastewater, capture and recycle drift, and employ hybrid systems that switch between wet and dry operation. Some facilities are exploring direct air cooling despite lower efficiency, while others locate in regions with abundant water resources.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏃',
+    title: 'Human Thermoregulation',
+    short: 'Your built-in AC system',
+    tagline: 'Evolution\'s masterpiece of cooling',
+    description: 'Human sweating is the most sophisticated biological cooling system on Earth. Our 2-4 million eccrine sweat glands can produce 2-4 liters of sweat per hour during intense exercise, removing up to 580 calories of heat per gram evaporated. This gives humans unparalleled endurance in hot conditions.',
+    connection: 'This IS the original evaporative cooling. Every industrial application mimics what your body does naturally. The latent heat of vaporization that cools power plants is the same physics cooling your forehead on a hot day.',
+    howItWorks: 'When core temperature rises above 37°C, the hypothalamus signals eccrine glands to secrete hypotonic saline onto the skin. Blood vessels dilate to bring warm blood near the surface. As sweat evaporates, it absorbs 2,426 joules per gram from the skin. Cooled blood returns to lower core temperature. This system can reject 600-1000 watts of heat during exercise.',
+    stats: [
+      { value: '2-4 L/hr', label: 'Maximum sweat production', icon: '💧' },
+      { value: '580 cal/g', label: 'Heat removed per gram', icon: '🔥' },
+      { value: '600-1000W', label: 'Cooling capacity during exercise', icon: '⚡' }
+    ],
+    examples: ['Marathon running in extreme heat', 'Desert survival and adaptation', 'High-intensity interval training', 'Fever-breaking thermoregulation'],
+    companies: ['Under Armour (moisture-wicking)', 'Nike (Dri-FIT technology)', 'Columbia (Omni-Freeze)', 'Gatorade (electrolyte replacement)', 'CamelBak (hydration systems)'],
+    futureImpact: 'Understanding sweat is revolutionizing wearable tech and sports science. Sweat sensors now monitor glucose, lactate, cortisol, and electrolytes in real-time. Biomimetic cooling fabrics enhance natural evaporation, while personalized hydration algorithms optimize athletic performance and prevent heat-related illness.',
+    color: '#10B981'
+  },
+  {
+    icon: '🖥️',
+    title: 'Data Center Cooling',
+    short: 'Keeping the cloud cool',
+    tagline: 'Where evaporation meets the digital age',
+    description: 'Data centers consume 1-2% of global electricity, with cooling accounting for 30-40% of that. Tech giants are deploying massive evaporative cooling systems that save 50-90% of cooling energy compared to traditional air conditioning, enabling more sustainable cloud computing.',
+    connection: 'Server racks generate intense heat just like your body during exercise. Evaporative cooling removes this heat the same way sweat cools you - water absorbing latent heat and carrying it away as vapor. The physics scales from skin to megawatts.',
+    howItWorks: 'Hot air from server rooms (35-40°C) passes through evaporative media or misting systems. Water evaporates, dropping air temperature by 10-20°C. Direct systems inject this cooled air into server rooms. Indirect systems use heat exchangers to cool a separate air loop, preventing humidity issues with sensitive electronics. Outside air economizers use evaporative cooling when ambient conditions permit.',
+    stats: [
+      { value: '50-90%', label: 'Cooling energy reduction', icon: '⚡' },
+      { value: 'PUE 1.1', label: 'Best efficiency achieved', icon: '📊' },
+      { value: '40%', label: 'Typical cooling load share', icon: '❄️' }
+    ],
+    examples: ['Google evaporative-cooled data centers', 'Facebook Prineville facility', 'Microsoft Azure desert locations', 'Adiabatic pre-cooling for chillers'],
+    companies: ['Google (data center efficiency pioneers)', 'Microsoft (Project Natick underwater)', 'Meta (evaporative-cooled facilities)', 'Munters (industrial evaporative systems)'],
+    futureImpact: 'As AI computing explodes, data center cooling becomes critical. Evaporative cooling in arid regions, combined with renewable energy and water recycling, could make data centers nearly carbon-neutral. Some hyperscalers are exploring underwater data centers where ocean water provides free cooling.',
+    color: '#8B5CF6'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Simulation state
+  const [humidity, setHumidity] = useState(30);
+  const [skinWet, setSkinWet] = useState(false);
+  const [windSpeed, setWindSpeed] = useState(0);
+  const [animationFrame, setAnimationFrame] = useState(0);
+  const [waterDroplets, setWaterDroplets] = useState<{ x: number; y: number; id: number }[]>([]);
+  const [evaporatingDroplets, setEvaporatingDroplets] = useState<number[]>([]);
+  const dropletIdRef = useRef(0);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Constants
+  const bodyTempNormal = 37;
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -24,78 +295,75 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Animation loop
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimationFrame(f => (f + 1) % 360);
+    }, 50);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#06B6D4', // Cyan for cooling theme
+    accentGlow: 'rgba(6, 182, 212, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    hot: '#EF4444',
+    cold: '#3B82F6',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
   };
 
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  // Game-specific state
-  const [skinWet, setSkinWet] = useState(false);
-  const [humidity, setHumidity] = useState(30);
-  const [skinTemp, setSkinTemp] = useState(37);
-  const [waterDroplets, setWaterDroplets] = useState<{ x: number; y: number; id: number }[]>([]);
-  const [evaporatingDroplets, setEvaporatingDroplets] = useState<number[]>([]);
-  const [animationFrame, setAnimationFrame] = useState(0);
-  const dropletIdRef = useRef(0);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Wind Lab',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  // Twist state - wind effect
-  const [windSpeed, setWindSpeed] = useState(0);
-  const [twistSkinWet, setTwistSkinWet] = useState(true);
-  const [twistSkinTemp, setTwistSkinTemp] = useState(37);
-
-  const lastClickRef = useRef(0);
-
-  // Constants
-  const bodyTempNormal = 37;
-
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 300);
   }, []);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Calculate evaporation rate
   const calculateEvaporationRate = useCallback((humid: number, wind: number = 0): number => {
     const baseRate = (100 - humid) / 100;
     const windFactor = 1 + wind / 10;
-    return baseRate * windFactor;
+    return Math.min(baseRate * windFactor, 1);
   }, []);
 
   // Calculate cooling effect
@@ -103,19 +371,14 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     return evapRate * 3;
   }, []);
 
-  // Animation loop
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimationFrame((f) => (f + 1) % 360);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
+  // Calculate temperatures
+  const evapRate = calculateEvaporationRate(humidity, windSpeed);
+  const skinTemp = skinWet ? bodyTempNormal - calculateCooling(evapRate) : bodyTempNormal;
 
-  // Evaporation simulation
+  // Evaporation simulation effect
   useEffect(() => {
     if (!skinWet || waterDroplets.length === 0) return;
 
-    const evapRate = calculateEvaporationRate(humidity);
     const interval = setInterval(() => {
       if (Math.random() < evapRate * 0.3) {
         const droplet = waterDroplets[Math.floor(Math.random() * waterDroplets.length)];
@@ -130,35 +393,10 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     }, 200);
 
     return () => clearInterval(interval);
-  }, [skinWet, waterDroplets, humidity, evaporatingDroplets, calculateEvaporationRate]);
-
-  // Update skin temperature
-  useEffect(() => {
-    if (!skinWet) {
-      setSkinTemp(bodyTempNormal);
-      return;
-    }
-    const evapRate = calculateEvaporationRate(humidity);
-    const cooling = calculateCooling(evapRate);
-    setSkinTemp(bodyTempNormal - cooling);
-  }, [skinWet, humidity, calculateEvaporationRate, calculateCooling]);
-
-  // Twist: Update temperature with wind
-  useEffect(() => {
-    if (!twistSkinWet) {
-      setTwistSkinTemp(bodyTempNormal);
-      return;
-    }
-    const evapRate = calculateEvaporationRate(humidity, windSpeed);
-    const cooling = calculateCooling(evapRate);
-    setTwistSkinTemp(bodyTempNormal - cooling);
-  }, [twistSkinWet, humidity, windSpeed, calculateEvaporationRate, calculateCooling]);
+  }, [skinWet, waterDroplets, evapRate, evaporatingDroplets]);
 
   // Add water droplets
   const wetTheSkin = () => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setSkinWet(true);
     const newDroplets: { x: number; y: number; id: number }[] = [];
     for (let i = 0; i < 20; i++) {
@@ -172,43 +410,6 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     playSound('click');
   };
 
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-    playSound(prediction === 'B' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-    playSound(prediction === 'A' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-  }, [playSound]);
-
   // Get skin color based on temperature
   const getSkinColor = (temp: number): string => {
     if (temp >= 37) return "#e8b4a0";
@@ -217,1070 +418,1510 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     return "#b08878";
   };
 
-  const testQuestions = [
-    { question: "What provides the energy for water to evaporate from your skin?", options: [{ text: "The air around you", correct: false }, { text: "Heat from your skin (body)", correct: true }, { text: "The water itself", correct: false }, { text: "Sunlight only", correct: false }] },
-    { question: "Why doesn't sweating cool you down as well in humid weather?", options: [{ text: "Sweat is different in humid weather", correct: false }, { text: "Your body produces less sweat", correct: false }, { text: "Air saturated with water can't accept more evaporation", correct: true }, { text: "Humidity makes sweat hotter", correct: false }] },
-    { question: "The latent heat of vaporization for water is about:", options: [{ text: "226 J/g", correct: false }, { text: "2,260 J/g", correct: true }, { text: "22,600 J/g", correct: false }, { text: "4.18 J/g", correct: false }] },
-    { question: "Why does blowing on wet skin cool it faster?", options: [{ text: "Your breath is cold", correct: false }, { text: "Moving air carries away humid air, allowing faster evaporation", correct: true }, { text: "Blowing adds water to your skin", correct: false }, { text: "It doesn't actually cool faster", correct: false }] },
-    { question: "Why do dogs pant instead of sweating?", options: [{ text: "Dogs can't produce sweat", correct: false }, { text: "Fur traps sweat; panting evaporates water from tongue and lungs", correct: true }, { text: "Panting is just for breathing", correct: false }, { text: "Dogs don't need to cool down", correct: false }] },
-    { question: "Rubbing alcohol evaporates faster than water and feels colder because:", options: [{ text: "Alcohol is colder than water", correct: false }, { text: "Alcohol evaporates faster, removing heat more quickly", correct: true }, { text: "Alcohol absorbs heat from the air", correct: false }, { text: "Alcohol reflects body heat", correct: false }] },
-    { question: "In a desert with 10% humidity vs a jungle with 90%, which cools better by sweating?", options: [{ text: "Jungle (more moisture)", correct: false }, { text: "Desert (lower humidity allows more evaporation)", correct: true }, { text: "They're the same", correct: false }, { text: "Neither - too hot to sweat", correct: false }] },
-    { question: "Why does getting out of a swimming pool make you feel cold?", options: [{ text: "Pool water is always cold", correct: false }, { text: "Air temperature drops near pools", correct: false }, { text: "Water on skin evaporates rapidly, pulling heat from your body", correct: true }, { text: "Chlorine makes water feel colder", correct: false }] },
-    { question: "Evaporative coolers (swamp coolers) work best in:", options: [{ text: "Humid climates", correct: false }, { text: "Dry climates", correct: true }, { text: "Cold climates", correct: false }, { text: "Any climate equally", correct: false }] },
-    { question: "Which takes more energy: heating 1g of water by 1C, or evaporating 1g of water?", options: [{ text: "Heating by 1C (specific heat)", correct: false }, { text: "Evaporating (latent heat)", correct: true }, { text: "They're the same", correct: false }, { text: "Depends on the temperature", correct: false }] }
-  ];
-
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
-
-  const applications = [
-    {
-      title: "Sweating in Humans",
-      icon: "💪",
-      description: "Humans can produce 2-4 liters of sweat per hour during intense exercise. At 2,260 J/g, evaporating 1 liter removes 2.26 MJ of heat!",
-      details: "That's equivalent to a 1,000W heater running for 40 minutes."
-    },
-    {
-      title: "Evaporative Coolers",
-      icon: "❄️",
-      description: "Desert coolers (swamp coolers) blow air through wet pads. Water evaporates, cooling the air by 10-15C.",
-      details: "They use 75% less electricity than AC but only work in low humidity (<30%)."
-    },
-    {
-      title: "Wet Bulb Temperature",
-      icon: "🌡️",
-      description: "Meteorologists use wet bulb temperature to measure humidity's effect on cooling.",
-      details: "A thermometer wrapped in wet cloth shows how much evaporation can cool - critical for heat wave warnings."
-    },
-    {
-      title: "Cooling Towers",
-      icon: "🏭",
-      description: "Power plants and factories use massive cooling towers. Hot water sprays through the air, evaporating partially.",
-      details: "The remaining water cools by 10-20C and recirculates."
-    }
-  ];
-
-  const realWorldApps = [
-    {
-      icon: "🏠",
-      title: "Swamp Coolers",
-      short: "Residential Cooling",
-      tagline: "Desert-friendly cooling using nature's oldest trick",
-      description: "Swamp coolers, also known as evaporative coolers, pass hot dry air through water-saturated pads. As water evaporates from the pads, it absorbs heat from the air, dropping temperatures by 15-40 degrees Fahrenheit. This ancient cooling technique uses up to 75% less electricity than traditional air conditioning and adds beneficial humidity to dry desert air.",
-      connection: "The same physics that cools your wet skin after swimming powers these efficient home cooling systems. Water molecules absorbing latent heat from the air is identical to sweat absorbing heat from your body.",
-      howItWorks: "A pump circulates water over absorbent pads while a fan pulls hot outside air through the wet media. The water evaporates, absorbing 2,260 joules per gram from the air. The cooled, humidified air is then distributed throughout the home. Continuous airflow through open windows expels warm air and maintains the cooling cycle.",
-      stats: [
-        { value: "75%", label: "Less energy vs AC" },
-        { value: "15-40°F", label: "Temperature drop" },
-        { value: "$150-400", label: "Annual operating cost" }
-      ],
-      examples: [
-        "Portable swamp coolers for single rooms",
-        "Whole-house ducted evaporative systems",
-        "Rooftop down-draft coolers",
-        "Two-stage indirect/direct hybrid coolers"
-      ],
-      companies: [
-        "Mastercool",
-        "Hessaire",
-        "Portacool",
-        "Breezair",
-        "Honeywell"
-      ],
-      futureImpact: "As climate change intensifies and water becomes precious, next-generation evaporative coolers use recycled water and advanced materials. Hybrid systems combining evaporative pre-cooling with minimal refrigeration could reduce residential cooling energy by 50-70% in suitable climates, potentially saving billions in electricity costs globally.",
-      color: "cyan"
-    },
-    {
-      icon: "🏭",
-      title: "Cooling Towers",
-      short: "Industrial Cooling",
-      tagline: "The giants that keep power plants and factories running",
-      description: "Cooling towers are massive heat rejection devices that use evaporative cooling to remove waste heat from industrial processes. Power plants, refineries, and manufacturing facilities rely on these structures to cool water by 10-30 degrees Celsius. A single large cooling tower can evaporate millions of gallons daily, transferring enormous amounts of heat to the atmosphere.",
-      connection: "Just like sweat evaporating from skin, water droplets in cooling towers absorb latent heat as they evaporate. The principle is identical - phase change from liquid to vapor requires energy, which comes from the water itself, cooling what remains.",
-      howItWorks: "Hot water from industrial processes is sprayed or distributed over fill media inside the tower. Ambient air flows through (naturally or via fans), causing partial evaporation. Each gram of water that evaporates removes 2,260 joules of heat. The cooled water collects in a basin and recirculates. Only 1-3% of water evaporates; the rest returns significantly cooler.",
-      stats: [
-        { value: "1-3%", label: "Water loss to evaporation" },
-        { value: "10-30°C", label: "Water temperature reduction" },
-        { value: "500+ MW", label: "Heat rejection capacity" }
-      ],
-      examples: [
-        "Natural draft hyperboloid towers at power plants",
-        "Mechanical draft towers with large fans",
-        "Crossflow towers for HVAC systems",
-        "Hybrid wet-dry cooling towers"
-      ],
-      companies: [
-        "SPX Cooling Technologies",
-        "Evapco",
-        "Baltimore Aircoil",
-        "Hamon",
-        "Paharpur"
-      ],
-      futureImpact: "Water scarcity is driving innovation in cooling tower technology. Advanced designs use treated wastewater, capture and recycle drift, and employ hybrid systems that switch between wet and dry operation based on conditions. AI-optimized operation and new fill materials could reduce water consumption by 30-50% while maintaining cooling efficiency.",
-      color: "amber"
-    },
-    {
-      icon: "🧬",
-      title: "Sweating and Body Thermoregulation",
-      short: "Biological Cooling",
-      tagline: "Your body's built-in air conditioning system",
-      description: "Human sweating is evolution's masterpiece of thermal regulation. Our 2-4 million sweat glands can produce up to 2-4 liters of sweat per hour during intense activity. As sweat evaporates from skin, it removes approximately 580 calories (2,426 joules) per gram - an incredibly efficient cooling mechanism that allows humans to thrive in diverse climates and outperform most animals in endurance.",
-      connection: "This IS the original evaporative cooling. Every other application mimics what your body does naturally. The latent heat of vaporization that cools industrial processes is the same physics cooling your forehead on a hot day.",
-      howItWorks: "When core temperature rises, the hypothalamus signals eccrine sweat glands to secrete a dilute salt solution onto the skin surface. Heat energy from blood vessels near the skin surface transfers to the sweat. As water molecules gain enough energy to escape into vapor, they carry that thermal energy away. Blood returning from cooled skin lowers core temperature.",
-      stats: [
-        { value: "2-4 L/hr", label: "Maximum sweat rate" },
-        { value: "580 cal/g", label: "Heat removed per gram" },
-        { value: "2-4 million", label: "Sweat glands in humans" }
-      ],
-      examples: [
-        "Exercise-induced sweating during sports",
-        "Thermal sweating in hot environments",
-        "Emotional sweating on palms and soles",
-        "Fever-breaking sweats during illness recovery"
-      ],
-      companies: [
-        "Under Armour (moisture-wicking fabrics)",
-        "Nike (Dri-FIT technology)",
-        "Columbia (Omni-Freeze cooling)",
-        "Gatorade (electrolyte replacement)",
-        "CamelBak (hydration systems)"
-      ],
-      futureImpact: "Understanding sweat mechanics is revolutionizing wearable technology and sports science. Sweat sensors can now monitor glucose, lactate, and electrolytes in real-time. Biomimetic cooling fabrics enhance natural evaporation, while personalized hydration algorithms optimize athletic performance and prevent heat-related illness.",
-      color: "emerald"
-    },
-    {
-      icon: "🖥️",
-      title: "Data Center Cooling",
-      short: "IT Infrastructure",
-      tagline: "Keeping the internet cool, one droplet at a time",
-      description: "Data centers consume 1-2% of global electricity, with up to 40% used just for cooling. Evaporative cooling systems can reduce this dramatically by using water evaporation instead of energy-intensive compressors. Tech giants are deploying massive evaporative systems that can cool thousands of servers while cutting cooling energy use by 50-90%.",
-      connection: "Server racks generate intense heat just like your body during exercise. Evaporative cooling removes this heat the same way sweat cools you - water absorbing latent heat and carrying it away as vapor. The physics is identical, just scaled up to megawatt levels.",
-      howItWorks: "Hot air from server racks passes through wet media or misting systems where water evaporates, dropping air temperature by 10-20 degrees. In direct evaporative systems, cooled air enters the server room directly. Indirect systems use heat exchangers to cool a separate air loop, preventing humidity from reaching sensitive electronics. Advanced systems use outside air when conditions permit.",
-      stats: [
-        { value: "50-90%", label: "Cooling energy reduction" },
-        { value: "1.1-1.2", label: "Achievable PUE rating" },
-        { value: "40%", label: "Typical cooling load in data centers" }
-      ],
-      examples: [
-        "Direct evaporative cooling with wet pads",
-        "Indirect evaporative cooling with heat exchangers",
-        "Adiabatic pre-cooling for chillers",
-        "Free cooling with economizer modes"
-      ],
-      companies: [
-        "Google (data center efficiency)",
-        "Microsoft (Project Natick underwater)",
-        "Meta (evaporative-cooled facilities)",
-        "Munters (industrial evaporative systems)"
-      ],
-      futureImpact: "As AI and cloud computing explode, data center cooling is becoming critical. Liquid cooling, waste heat recovery, and locating facilities in cold climates or underwater are emerging solutions. Evaporative cooling in arid regions, combined with renewable energy and water recycling, could make data centers nearly carbon-neutral while meeting exponentially growing compute demands.",
-      color: "purple"
-    }
-  ];
-
-  // Render skin visualization with premium SVG graphics
-  const renderSkinVisualization = (wet: boolean, temp: number, wind: number = 0) => {
-    const evapRate = calculateEvaporationRate(humidity, wind);
+  // Skin Visualization Component
+  const SkinVisualization = ({ showWind = false }: { showWind?: boolean }) => {
+    const width = isMobile ? 340 : 450;
+    const height = isMobile ? 280 : 320;
+    const currentEvapRate = calculateEvaporationRate(humidity, showWind ? windSpeed : 0);
+    const currentSkinTemp = skinWet ? bodyTempNormal - calculateCooling(currentEvapRate) : bodyTempNormal;
 
     return (
-      <div className="relative">
-        <svg viewBox="0 0 400 350" className="w-full max-w-md mx-auto">
-          <defs>
-            {/* Premium air atmosphere gradient */}
-            <linearGradient id="evapAirGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0c1929" />
-              <stop offset="25%" stopColor="#152238" />
-              <stop offset="50%" stopColor="#1a3050" />
-              <stop offset="75%" stopColor="#1e3a5f" />
-              <stop offset="100%" stopColor="#234668" />
-            </linearGradient>
+      <svg width={width} height={height} viewBox="0 0 450 320" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="airGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0c1929" />
+            <stop offset="50%" stopColor="#152238" />
+            <stop offset="100%" stopColor="#234668" />
+          </linearGradient>
+          <linearGradient id="skinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={getSkinColor(currentSkinTemp)} />
+            <stop offset="100%" stopColor="#b88070" />
+          </linearGradient>
+          <radialGradient id="dropletGradient" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.75" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.6" />
+          </radialGradient>
+          <radialGradient id="vaporGradient" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#67e8f9" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Premium skin gradient with temperature coloring */}
-            <linearGradient id="evapSkinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={getSkinColor(temp)} />
-              <stop offset="20%" stopColor={getSkinColor(temp)} stopOpacity="0.95" />
-              <stop offset="50%" stopColor="#d4a090" />
-              <stop offset="80%" stopColor="#c89080" />
-              <stop offset="100%" stopColor="#b88070" />
-            </linearGradient>
+        {/* Air background */}
+        <rect width="450" height="100" fill="url(#airGradient)" />
 
-            {/* Liquid water droplet gradient */}
-            <radialGradient id="evapLiquidDroplet" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.95" />
-              <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.85" />
-              <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.75" />
-              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.6" />
-            </radialGradient>
+        {/* Humidity particles in air */}
+        {[...Array(Math.round(humidity / 10))].map((_, i) => (
+          <circle
+            key={`hum-${i}`}
+            cx={50 + i * 40 + Math.sin(animationFrame / 10 + i) * 15}
+            cy={35 + Math.cos(animationFrame / 15 + i) * 20}
+            r={5}
+            fill={colors.cold}
+            opacity="0.3"
+          />
+        ))}
 
-            {/* Vapor molecule gradient */}
-            <radialGradient id="evapVaporGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.8" />
-              <stop offset="40%" stopColor="#67e8f9" stopOpacity="0.5" />
-              <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Temperature hot gradient (for thermometer) */}
-            <linearGradient id="evapTempHot" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#dc2626" />
-              <stop offset="25%" stopColor="#ef4444" />
-              <stop offset="50%" stopColor="#f87171" />
-              <stop offset="75%" stopColor="#fca5a5" />
-              <stop offset="100%" stopColor="#fecaca" />
-            </linearGradient>
-
-            {/* Temperature warm gradient */}
-            <linearGradient id="evapTempWarm" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#d97706" />
-              <stop offset="25%" stopColor="#f59e0b" />
-              <stop offset="50%" stopColor="#fbbf24" />
-              <stop offset="75%" stopColor="#fcd34d" />
-              <stop offset="100%" stopColor="#fef08a" />
-            </linearGradient>
-
-            {/* Temperature cool gradient */}
-            <linearGradient id="evapTempCool" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#1d4ed8" />
-              <stop offset="25%" stopColor="#3b82f6" />
-              <stop offset="50%" stopColor="#60a5fa" />
-              <stop offset="75%" stopColor="#93c5fd" />
-              <stop offset="100%" stopColor="#bfdbfe" />
-            </linearGradient>
-
-            {/* Humidity particle gradient */}
-            <radialGradient id="evapHumidityParticle" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.7" />
-              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Wind streak gradient */}
-            <linearGradient id="evapWindStreak" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0" />
-              <stop offset="30%" stopColor="#93c5fd" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.9" />
-              <stop offset="70%" stopColor="#93c5fd" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Liquid surface shimmer */}
-            <linearGradient id="evapLiquidSurface" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
-              <stop offset="25%" stopColor="#93c5fd" stopOpacity="0.5" />
-              <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.7" />
-              <stop offset="75%" stopColor="#93c5fd" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
-            </linearGradient>
-
-            {/* Cooling effect radial */}
-            <radialGradient id="evapCoolingEffect" cx="50%" cy="0%" r="100%">
-              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.4" />
-              <stop offset="40%" stopColor="#06b6d4" stopOpacity="0.2" />
-              <stop offset="70%" stopColor="#0891b2" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Thermometer body gradient */}
-            <linearGradient id="evapThermometerBody" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1f2937" />
-              <stop offset="30%" stopColor="#374151" />
-              <stop offset="70%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#1f2937" />
-            </linearGradient>
-
-            {/* Glow filter for evaporating molecules */}
-            <filter id="evapVaporGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Subtle glow for water droplets */}
-            <filter id="evapDropletGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Intense glow for cooling effect indicator */}
-            <filter id="evapCoolingGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Wind blur effect */}
-            <filter id="evapWindBlur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Skin texture pattern */}
-            <pattern id="evapSkinTexture" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="transparent" />
-              <circle cx="10" cy="10" r="0.5" fill="rgba(0,0,0,0.05)" />
-            </pattern>
-          </defs>
-
-          {/* Premium air background */}
-          <rect width="400" height="100" fill="url(#evapAirGradient)" />
-
-          {/* Humidity particles in air */}
-          {[...Array(Math.round(humidity / 10))].map((_, i) => (
-            <circle
-              key={i}
-              cx={50 + i * 35 + Math.sin(animationFrame / 10 + i) * 10}
-              cy={30 + Math.cos(animationFrame / 15 + i) * 15}
-              r={4}
-              fill="url(#evapHumidityParticle)"
-            />
-          ))}
-
-          {/* Wind streaks */}
-          {wind > 0 && (
-            <g filter="url(#evapWindBlur)">
-              {[...Array(Math.round(wind / 2))].map((_, i) => {
-                const x = 30 + ((animationFrame * 2 + i * 50) % 340);
-                return (
-                  <g key={i} transform={`translate(${x}, ${40 + i * 15})`}>
-                    <path
-                      d="M -15 0 Q 0 -2 15 0 Q 0 2 -15 0"
-                      fill="url(#evapWindStreak)"
-                      opacity={0.7}
-                    />
-                    <path
-                      d="M 0 0 L 25 0 L 20 -4 M 25 0 L 20 4"
-                      fill="none"
-                      stroke="url(#evapWindStreak)"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                    />
-                  </g>
-                );
-              })}
-            </g>
-          )}
-
-          {/* Premium skin surface */}
-          <rect y="100" width="400" height="250" fill="url(#evapSkinGradient)" />
-          <rect y="100" width="400" height="250" fill="url(#evapSkinTexture)" />
-
-          {/* Skin texture lines */}
-          {[...Array(8)].map((_, i) => (
-            <path
-              key={i}
-              d={`M ${i * 50 + 25} 100 Q ${i * 50 + 40} 150 ${i * 50 + 25} 200`}
-              fill="none"
-              stroke="rgba(0,0,0,0.08)"
-              strokeWidth={1}
-            />
-          ))}
-
-          {/* Cooling effect overlay when wet */}
-          {wet && evapRate > 0.3 && (
-            <rect
-              y="100"
-              width="400"
-              height="100"
-              fill="url(#evapCoolingEffect)"
-              opacity={evapRate * 0.5}
-            />
-          )}
-
-          {/* Liquid surface layer when wet */}
-          {wet && waterDroplets.length > 5 && (
-            <g>
-              <ellipse
-                cx="200"
-                cy="105"
-                rx={150 + Math.sin(animationFrame / 15) * 10}
-                ry="8"
-                fill="url(#evapLiquidSurface)"
-                opacity={0.6}
-              />
-            </g>
-          )}
-
-          {/* Water droplets with premium gradient */}
-          {wet && waterDroplets.map((droplet) => {
-            const isEvaporating = evaporatingDroplets.includes(droplet.id);
-            return (
-              <g key={droplet.id} filter={isEvaporating ? "url(#evapVaporGlow)" : "url(#evapDropletGlow)"}>
-                <ellipse
-                  cx={droplet.x}
-                  cy={droplet.y}
-                  rx={isEvaporating ? 4 : 7}
-                  ry={isEvaporating ? 2 : 4}
-                  fill={isEvaporating ? "url(#evapVaporGradient)" : "url(#evapLiquidDroplet)"}
-                  className={isEvaporating ? "animate-pulse" : ""}
-                />
-                {/* Droplet highlight */}
-                {!isEvaporating && (
-                  <ellipse
-                    cx={droplet.x - 2}
-                    cy={droplet.y - 1}
-                    rx={2}
-                    ry={1}
-                    fill="rgba(255,255,255,0.4)"
+        {/* Wind streaks */}
+        {showWind && windSpeed > 0 && (
+          <g>
+            {[...Array(Math.round(windSpeed / 2))].map((_, i) => {
+              const x = 30 + ((animationFrame * 3 + i * 60) % 400);
+              return (
+                <g key={`wind-${i}`}>
+                  <line
+                    x1={x}
+                    y1={25 + i * 20}
+                    x2={x + 40}
+                    y2={25 + i * 20}
+                    stroke={colors.cold}
+                    strokeWidth="2"
+                    opacity="0.4"
+                    strokeLinecap="round"
                   />
-                )}
-                {/* Evaporating vapor trails */}
-                {isEvaporating && (
-                  <g filter="url(#evapVaporGlow)">
-                    {[0, 1, 2].map((i) => {
-                      const yOffset = (animationFrame + i * 7) % 25;
-                      const opacity = 0.6 * (1 - yOffset / 25);
-                      return (
-                        <circle
-                          key={i}
-                          cx={droplet.x + (i - 1) * 8}
-                          cy={droplet.y - 8 - yOffset}
-                          r={3 + i * 0.5}
-                          fill="url(#evapVaporGradient)"
-                          opacity={opacity}
-                        />
-                      );
-                    })}
-                  </g>
-                )}
-              </g>
-            );
-          })}
+                  <polygon
+                    points={`${x + 45},${25 + i * 20} ${x + 35},${20 + i * 20} ${x + 35},${30 + i * 20}`}
+                    fill={colors.cold}
+                    opacity="0.4"
+                  />
+                </g>
+              );
+            })}
+          </g>
+        )}
 
-          {/* Rising vapor molecules */}
-          {wet && evapRate > 0 && (
-            <g filter="url(#evapVaporGlow)">
-              {[...Array(Math.round(evapRate * 6))].map((_, i) => {
-                const x = 60 + i * 50 + Math.sin(animationFrame / 20 + i * 2) * 25;
-                const yProgress = ((animationFrame * 1.5 + i * 15) % 60);
-                const y = 95 - yProgress;
-                const opacity = 0.5 * (1 - yProgress / 60);
-                const scale = 0.8 + (yProgress / 60) * 0.4;
+        {/* Skin surface */}
+        <rect y="100" width="450" height="220" fill="url(#skinGradient)" />
+
+        {/* Skin texture lines */}
+        {[...Array(10)].map((_, i) => (
+          <path
+            key={`texture-${i}`}
+            d={`M ${i * 45 + 22} 100 Q ${i * 45 + 35} 160 ${i * 45 + 22} 220`}
+            fill="none"
+            stroke="rgba(0,0,0,0.06)"
+            strokeWidth="1"
+          />
+        ))}
+
+        {/* Water droplets */}
+        {skinWet && waterDroplets.map((droplet) => {
+          const isEvaporating = evaporatingDroplets.includes(droplet.id);
+          return (
+            <g key={droplet.id}>
+              <ellipse
+                cx={droplet.x}
+                cy={droplet.y}
+                rx={isEvaporating ? 4 : 7}
+                ry={isEvaporating ? 2 : 4}
+                fill={isEvaporating ? "url(#vaporGradient)" : "url(#dropletGradient)"}
+                filter={isEvaporating ? "url(#glow)" : undefined}
+              />
+              {!isEvaporating && (
+                <ellipse
+                  cx={droplet.x - 2}
+                  cy={droplet.y - 1}
+                  rx={2}
+                  ry={1}
+                  fill="rgba(255,255,255,0.4)"
+                />
+              )}
+              {/* Rising vapor */}
+              {isEvaporating && [...Array(3)].map((_, j) => {
+                const yOffset = (animationFrame + j * 8) % 30;
                 return (
                   <circle
-                    key={i}
-                    cx={x}
-                    cy={y}
-                    r={4 * scale}
-                    fill="url(#evapVaporGradient)"
-                    opacity={opacity}
+                    key={`vapor-${j}`}
+                    cx={droplet.x + (j - 1) * 10}
+                    cy={droplet.y - 10 - yOffset}
+                    r={4 + j * 0.5}
+                    fill="url(#vaporGradient)"
+                    opacity={0.6 * (1 - yOffset / 30)}
                   />
                 );
               })}
             </g>
-          )}
+          );
+        })}
 
-          {/* Premium thermometer */}
-          <g transform="translate(325, 140)">
-            {/* Thermometer outer body */}
-            <rect x={0} y={0} width={55} height={130} rx={8} fill="url(#evapThermometerBody)" stroke="#4b5563" strokeWidth={1} />
-
-            {/* Thermometer inner well */}
-            <rect x={10} y={10} width={35} height={110} rx={4} fill="#111827" />
-
-            {/* Temperature mercury/fill */}
-            <rect
-              x={15}
-              y={115 - (temp - 30) * 12}
-              width={25}
-              height={(temp - 30) * 12}
-              rx={3}
-              fill={temp >= 36 ? 'url(#evapTempHot)' : temp >= 34 ? 'url(#evapTempWarm)' : 'url(#evapTempCool)'}
-            />
-
-            {/* Temperature scale marks */}
-            {[30, 32, 34, 36, 38].map((mark, i) => (
-              <g key={mark}>
-                <line x1={45} y1={115 - (mark - 30) * 12} x2={50} y2={115 - (mark - 30) * 12} stroke="#6b7280" strokeWidth={1} />
-              </g>
-            ))}
-
-            {/* Bulb at bottom */}
-            <circle cx={27.5} cy={125} r={8} fill={temp >= 36 ? '#ef4444' : temp >= 34 ? '#fbbf24' : '#3b82f6'} />
+        {/* Rising vapor when wet */}
+        {skinWet && currentEvapRate > 0.3 && (
+          <g filter="url(#glow)">
+            {[...Array(Math.round(currentEvapRate * 5))].map((_, i) => {
+              const x = 80 + i * 60 + Math.sin(animationFrame / 20 + i) * 20;
+              const yProgress = ((animationFrame * 1.2 + i * 20) % 50);
+              return (
+                <circle
+                  key={`rise-${i}`}
+                  cx={x}
+                  cy={95 - yProgress}
+                  r={5}
+                  fill="url(#vaporGradient)"
+                  opacity={0.5 * (1 - yProgress / 50)}
+                />
+              );
+            })}
           </g>
+        )}
 
-          {/* Cooling effect indicator */}
-          {wet && evapRate > 0.5 && (
-            <g filter="url(#evapCoolingGlow)">
-              <path
-                d={`M 280 120 L 280 ${120 + evapRate * 30}`}
-                stroke="url(#evapTempCool)"
-                strokeWidth={3}
-                strokeLinecap="round"
-                opacity={0.7}
-              >
-                <animate
-                  attributeName="opacity"
-                  values="0.7;0.3;0.7"
-                  dur="1.5s"
-                  repeatCount="indefinite"
-                />
-              </path>
-              <polygon
-                points="280,150 275,140 285,140"
-                fill="#3b82f6"
-                opacity={evapRate}
-              >
-                <animate
-                  attributeName="opacity"
-                  values="0.8;0.4;0.8"
-                  dur="1.5s"
-                  repeatCount="indefinite"
-                />
-              </polygon>
-            </g>
-          )}
-        </svg>
+        {/* Thermometer */}
+        <g transform="translate(380, 130)">
+          <rect x="0" y="0" width="50" height="120" rx="6" fill="#1f2937" stroke="#4b5563" strokeWidth="1" />
+          <rect x="8" y="8" width="34" height="104" rx="4" fill="#111827" />
+          <rect
+            x="12"
+            y={108 - (currentSkinTemp - 30) * 12}
+            width="26"
+            height={(currentSkinTemp - 30) * 12}
+            rx="3"
+            fill={currentSkinTemp >= 36 ? colors.hot : currentSkinTemp >= 34 ? colors.warning : colors.cold}
+          />
+          <circle cx="25" cy="115" r="7" fill={currentSkinTemp >= 36 ? colors.hot : currentSkinTemp >= 34 ? colors.warning : colors.cold} />
+        </g>
 
-        {/* Labels outside SVG using typo system */}
-        <div className="absolute top-2 left-4 space-y-1">
-          <div className="text-slate-200" style={{ fontSize: typo.small }}>
-            Humidity: <span className="text-cyan-400 font-semibold">{humidity}%</span>
-          </div>
-          <div className="text-slate-200" style={{ fontSize: typo.small }}>
-            Evap Rate: <span className="text-emerald-400 font-semibold">{(evapRate * 100).toFixed(0)}%</span>
-          </div>
-          {wind > 0 && (
-            <div className="text-slate-200" style={{ fontSize: typo.small }}>
-              Wind: <span className="text-blue-400 font-semibold">{wind} m/s</span>
-            </div>
-          )}
-        </div>
-
-        {/* Temperature label outside SVG */}
-        <div className="absolute top-2 right-4 text-center">
-          <div className="text-white font-bold" style={{ fontSize: typo.bodyLarge }}>
-            {temp.toFixed(1)}C
-          </div>
-          <div className="text-slate-400" style={{ fontSize: typo.label }}>
-            Skin Temp
-          </div>
-        </div>
-      </div>
+        {/* Labels */}
+        <text x="20" y="25" fill={colors.textSecondary} fontSize="12">Humidity: <tspan fill={colors.accent}>{humidity}%</tspan></text>
+        <text x="20" y="45" fill={colors.textSecondary} fontSize="12">Evap Rate: <tspan fill={colors.success}>{(currentEvapRate * 100).toFixed(0)}%</tspan></text>
+        {showWind && windSpeed > 0 && (
+          <text x="20" y="65" fill={colors.textSecondary} fontSize="12">Wind: <tspan fill={colors.cold}>{windSpeed} m/s</tspan></text>
+        )}
+        <text x="380" y="270" fill={colors.textPrimary} fontSize="14" fontWeight="600">{currentSkinTemp.toFixed(1)}°C</text>
+        <text x="380" y="288" fill={colors.textMuted} fontSize="10">Skin Temp</text>
+      </svg>
     );
   };
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
-      </div>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
-        Evaporative Cooling
-      </h1>
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover why sweating keeps you cool and how phase changes remove heat
-      </p>
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 rounded-3xl" />
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
 
-        <div className="relative">
-          <div className="text-6xl mb-6">💧 🌡️ ❄️</div>
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              You step out of a shower, and even though the bathroom is warm, you feel chilly.
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Your wet skin loses heat rapidly as water evaporates. But where does that cooling power come from?
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-cyan-400 font-semibold">
-                Water doesn't just disappear - evaporation requires enormous energy!
-              </p>
-            </div>
-          </div>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          💧🌡️❄️
         </div>
-      </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-      <button
-        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Evaporative Cooling
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          You step out of a swimming pool on a warm day, and despite the heat, you feel <span style={{ color: colors.cold }}>suddenly cold</span>. Your wet skin loses heat rapidly as water evaporates. But where does that cooling power come from?
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Water doesn't just disappear - evaporation requires <span style={{ color: colors.accent }}>enormous energy</span>. Every gram that evaporates absorbs 2,260 joules of heat. That's why sweating keeps you alive in the desert."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            — Thermodynamics of Phase Change
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
           Explore Evaporative Cooling
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
-          Interactive Lab
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
-          Real-World Examples
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
-          Knowledge Test
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Your skin is wet with water. As the water evaporates, where does the energy come from to change liquid water into water vapor?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'The surrounding air - warm air provides the energy' },
-          { id: 'B', text: 'Your skin - the water "steals" heat from your body' },
-          { id: 'C', text: 'The water itself - it has stored energy' },
-          { id: 'D', text: 'Only sunlight can provide evaporation energy' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! The water pulls heat energy from your skin to evaporate. That's why wet skin feels cold - it's literally losing heat!
-          </p>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-          >
-            Explore the Physics
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Evaporation & Skin Temperature</h2>
-      <p className="text-slate-400 mb-4">Wet your skin and adjust humidity to see how evaporation affects temperature!</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderSkinVisualization(skinWet, skinTemp)}
-
-        <button
-          onPointerDown={(e) => { e.preventDefault(); wetTheSkin(); }}
-          disabled={skinWet && waterDroplets.length > 0}
-          className={`w-full mt-4 py-3 rounded-lg font-bold text-lg ${
-            skinWet && waterDroplets.length > 0
-              ? "bg-slate-600 text-slate-400 cursor-not-allowed"
-              : "bg-blue-500 text-white hover:bg-blue-400"
-          }`}
-        >
-          {skinWet && waterDroplets.length > 0 ? "Water Evaporating..." : "💧 Wet the Skin"}
         </button>
-      </div>
 
-      <div className="bg-slate-700/50 rounded-xl p-4 w-full max-w-2xl mb-4">
-        <label className="text-slate-300 text-sm block mb-2">Air Humidity: {humidity}%</label>
-        <input
-          type="range"
-          min="10"
-          max="95"
-          value={humidity}
-          onChange={(e) => setHumidity(parseInt(e.target.value))}
-          className="w-full accent-cyan-500"
-        />
-        <div className="flex justify-between text-xs text-slate-400">
-          <span>Desert (10%)</span>
-          <span>Normal (50%)</span>
-          <span>Jungle (95%)</span>
-        </div>
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div className="bg-gradient-to-r from-cyan-900/40 to-blue-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-cyan-400">{skinTemp.toFixed(1)}C</div>
-            <div className="text-sm text-slate-300">Skin Temp</div>
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'The surrounding air provides the energy - warm air heats the water' },
+      { id: 'b', text: 'Your skin provides the energy - water "steals" heat from your body' },
+      { id: 'c', text: 'The water itself has stored energy that gets released' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
           </div>
-          <div>
-            <div className="text-2xl font-bold text-amber-400">{(37 - skinTemp).toFixed(1)}C</div>
-            <div className="text-sm text-slate-300">Cooling</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-emerald-400">{(calculateEvaporationRate(humidity) * 100).toFixed(0)}%</div>
-            <div className="text-sm text-slate-300">Evap Rate</div>
-          </div>
-        </div>
-      </div>
 
-      <button
-        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-      >
-        Learn the Science
-      </button>
-    </div>
-  );
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Your skin is wet with water. As the water evaporates, where does the energy come from to change liquid water into vapor?
+          </h2>
 
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">The Science of Evaporative Cooling</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">🔥 Latent Heat of Vaporization</h3>
-          <p className="text-slate-300 text-sm mb-2">Converting liquid water to vapor requires enormous energy:</p>
-          <div className="font-mono text-center text-lg text-white mb-2">Lv = 2,260 J/g</div>
-          <p className="text-slate-300 text-sm">This energy comes from whatever is in contact with the water - your skin!</p>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">💧 Where Does the Heat Go?</h3>
-          <p className="text-slate-300 text-sm">
-            Water molecules need energy to break free from liquid and become gas. They "steal" this energy from your skin as heat. The fastest-moving (hottest) molecules escape first, leaving cooler ones behind.
-          </p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">💨 Humidity's Role</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">Low Humidity (Desert)</p>
-              <p className="text-slate-400">Lots of "room" for vapor - fast evaporation - strong cooling</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">High Humidity (Jungle)</p>
-              <p className="text-slate-400">Air "full" - slow evaporation - weak cooling</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <button
-        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-      >
-        Discover a Surprising Twist
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Wind Twist</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          You have wet skin. Someone starts blowing air across it (like a fan). The humidity stays the same.
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          What happens to the cooling effect when wind blows across wet skin?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Cooling increases - wind speeds up evaporation' },
-          { id: 'B', text: 'Cooling decreases - wind "blows away" the cool' },
-          { id: 'C', text: 'No change - humidity is what matters' },
-          { id: 'D', text: 'Skin dries instantly, no more cooling' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'A' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'A' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Wind removes the saturated boundary layer, allowing fresh dry air to contact the wet surface and accelerate evaporation.
-          </p>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-          >
-            See Wind Effect in Action
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Wind & Evaporative Cooling</h2>
-      <p className="text-slate-400 mb-4">Adjust wind speed and see how it affects the cooling!</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderSkinVisualization(twistSkinWet, twistSkinTemp, windSpeed)}
-
-        <button
-          onPointerDown={(e) => { e.preventDefault(); setTwistSkinWet(true); }}
-          disabled={twistSkinWet}
-          className={`w-full mt-4 py-3 rounded-lg font-bold ${
-            twistSkinWet ? "bg-slate-600 text-slate-400 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-400"
-          }`}
-        >
-          {twistSkinWet ? "Skin is Wet" : "💧 Wet the Skin"}
-        </button>
-      </div>
-
-      <div className="bg-slate-700/50 rounded-xl p-4 w-full max-w-2xl mb-4">
-        <label className="text-slate-300 text-sm block mb-2">Wind Speed: {windSpeed} m/s</label>
-        <input
-          type="range"
-          min="0"
-          max="10"
-          value={windSpeed}
-          onChange={(e) => setWindSpeed(parseInt(e.target.value))}
-          className="w-full accent-amber-500"
-        />
-        <div className="flex justify-between text-xs text-slate-400">
-          <span>Still Air</span>
-          <span>Light Breeze</span>
-          <span>Strong Wind</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 mb-4 w-full max-w-2xl">
-        <div className="bg-slate-700/50 p-3 rounded-lg">
-          <h4 className="font-bold text-sm text-white">No Wind</h4>
-          <p className="text-sm text-slate-300">Temp: {(37 - calculateCooling(calculateEvaporationRate(humidity, 0))).toFixed(1)}C</p>
-        </div>
-        <div className="bg-amber-900/30 p-3 rounded-lg">
-          <h4 className="font-bold text-sm text-white">With Wind</h4>
-          <p className="text-sm text-slate-300">Temp: {twistSkinTemp.toFixed(1)}C</p>
-          <p className="text-xs text-amber-400">
-            {windSpeed > 0 ? `${((37 - twistSkinTemp) - calculateCooling(calculateEvaporationRate(humidity, 0))).toFixed(1)}C extra cooling!` : "Add wind!"}
-          </p>
-        </div>
-      </div>
-
-      <button
-        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-        className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-      >
-        See Explanation
-      </button>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Wind Chill & Evaporation</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">💨 Why Wind Helps</h3>
-          <p className="text-slate-300 text-sm mb-2">
-            A thin layer of humid air forms right above wet skin. This "boundary layer" is nearly saturated with vapor, slowing further evaporation.
-          </p>
-          <p className="text-slate-300 text-sm">
-            Wind blows this humid layer away, replacing it with drier air. Result: faster evaporation and more cooling!
-          </p>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">🌡️ Wind Chill Effect</h3>
-          <p className="text-slate-300 text-sm">
-            This is why wind feels colder than still air at the same temperature. It's not that the air IS colder - it just removes heat faster by:
-          </p>
-          <ul className="text-sm text-slate-300 mt-2 space-y-1">
-            <li>1. Increasing evaporation (if wet)</li>
-            <li>2. Breaking up the insulating air layer</li>
-          </ul>
-        </div>
-      </div>
-      <button
-        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-      >
-        Explore Real-World Applications
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index ? 'bg-blue-600 text-white'
-              : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
-          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
-        </div>
-        <p className="text-lg text-slate-300 mb-3">{applications[activeAppTab].description}</p>
-        <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">{applications.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-      {completedApps.size >= 4 && (
-        <button
-          onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-        >
-          Take the Knowledge Test
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div style={{ padding: '12px 20px', background: '#3B82F633', borderRadius: '8px', border: '2px solid #3B82F6' }}>
+                <span style={{ color: '#3B82F6', fontWeight: 600 }}>Liquid Water</span>
+              </div>
+              <div style={{ fontSize: '24px' }}>➡️ + Energy ➡️</div>
+              <div style={{ padding: '12px 20px', background: '#06B6D433', borderRadius: '8px', border: '2px solid #06B6D4' }}>
+                <span style={{ color: '#06B6D4', fontWeight: 600 }}>Water Vapor</span>
               </div>
             </div>
-          ))}
-          <button
-            onPointerDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
-          <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered evaporative cooling!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() >= 7 ? (
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
+              Phase change requires 2,260 J/g - where does this energy come from?
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
             <button
-              onPointerDown={(e) => { e.preventDefault(); onCorrectAnswer?.(); onPhaseComplete?.(); }}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onPointerDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-            >
-              Review & Try Again
+              Test My Prediction
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-cyan-900/50 via-blue-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">💧</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Cooling Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">You've mastered evaporative cooling and heat transfer!</p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🌡️</div><p className="text-sm text-slate-300">Latent Heat</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">💨</div><p className="text-sm text-slate-300">Wind Chill</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">💧</div><p className="text-sm text-slate-300">Humidity Effects</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">❄️</div><p className="text-sm text-slate-300">Swamp Coolers</p></div>
-        </div>
-        <button
-          onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
-          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-        >
-          Complete
-        </button>
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
+  // PLAY PHASE - Interactive Skin Cooling
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Evaporative Cooling Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Wet your skin and adjust humidity to see how evaporation affects temperature
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <SkinVisualization />
+            </div>
+
+            {/* Wet skin button */}
+            <button
+              onClick={wetTheSkin}
+              disabled={skinWet && waterDroplets.length > 0}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: skinWet && waterDroplets.length > 0 ? colors.border : colors.cold,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: skinWet && waterDroplets.length > 0 ? 'not-allowed' : 'pointer',
+                marginBottom: '24px',
+              }}
+            >
+              {skinWet && waterDroplets.length > 0 ? 'Water Evaporating...' : 'Wet the Skin'}
+            </button>
+
+            {/* Humidity slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Air Humidity</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{humidity}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="95"
+                value={humidity}
+                onChange={(e) => setHumidity(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Desert (10%)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Normal (50%)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Jungle (95%)</span>
+              </div>
+            </div>
+
+            {/* Metrics */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.cold }}>{skinTemp.toFixed(1)}°C</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Skin Temp</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>{(37 - skinTemp).toFixed(1)}°C</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Cooling</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>{(evapRate * 100).toFixed(0)}%</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Evap Rate</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Discovery feedback */}
+          {skinWet && humidity < 50 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0, textAlign: 'center' }}>
+                Fast evaporation! Your skin is losing heat rapidly - that's why you feel cold.
+              </p>
+            </div>
+          )}
+
+          {skinWet && humidity > 80 && (
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0, textAlign: 'center' }}>
+                High humidity! Evaporation is slow - the air is too saturated to accept more vapor.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Evaporative Cooling
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
+              Latent Heat of Vaporization
+            </h3>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              textAlign: 'center',
+              marginBottom: '16px',
+            }}>
+              <code style={{ fontSize: '20px', color: colors.textPrimary }}>Lv = 2,260 J/g (water)</code>
+            </div>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Converting liquid water to vapor requires enormous energy - 2,260 joules per gram. This energy comes from whatever is in contact with the water. When sweat evaporates, that energy comes from <span style={{ color: colors.accent }}>your skin</span>.
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '16px' }}>
+              Why Fast Molecules Escape First
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              In liquid water, molecules move at different speeds. Only the <span style={{ color: colors.hot }}>fastest-moving</span> (hottest) molecules have enough energy to escape as vapor. They leave behind the <span style={{ color: colors.cold }}>slower-moving</span> (cooler) molecules. This is why evaporation cools!
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Humidity's Role
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+                <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>Low Humidity (Desert)</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>Lots of "room" for vapor - fast evaporation - strong cooling</p>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+                <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>High Humidity (Jungle)</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>Air already "full" - slow evaporation - weak cooling</p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover a Surprising Twist
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Cooling increases - wind speeds up evaporation' },
+      { id: 'b', text: 'Cooling decreases - wind "blows away" the cool' },
+      { id: 'c', text: 'No change - only humidity affects evaporation rate' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Wind Speed
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            You have wet skin. Someone starts blowing air across it (like a fan). Humidity stays the same. What happens to the cooling effect?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '8px' }}>💨 ➡️ 💧</div>
+            <p style={{ ...typo.small, color: colors.textMuted }}>Wind blowing across wet skin</p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See Wind Effect in Action
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const noWindEvapRate = calculateEvaporationRate(humidity, 0);
+    const withWindEvapRate = calculateEvaporationRate(humidity, windSpeed);
+    const noWindTemp = bodyTempNormal - calculateCooling(noWindEvapRate);
+    const withWindTemp = bodyTempNormal - calculateCooling(withWindEvapRate);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '8px', textAlign: 'center' }}>
+            Wind & Evaporative Cooling
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust wind speed and see how it affects cooling
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <SkinVisualization showWind={true} />
+            </div>
+
+            {/* Make skin wet for this phase */}
+            {!skinWet && (
+              <button
+                onClick={wetTheSkin}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: colors.cold,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginBottom: '20px',
+                }}
+              >
+                Wet the Skin
+              </button>
+            )}
+
+            {/* Wind speed slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Wind Speed</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{windSpeed} m/s</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                value={windSpeed}
+                onChange={(e) => setWindSpeed(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Still Air</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Light Breeze</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Strong Wind</span>
+              </div>
+            </div>
+
+            {/* Comparison */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>No Wind</div>
+                <div style={{ ...typo.h3, color: colors.cold }}>{noWindTemp.toFixed(1)}°C</div>
+              </div>
+              <div style={{
+                background: windSpeed > 0 ? `${colors.warning}22` : colors.bgSecondary,
+                border: windSpeed > 0 ? `1px solid ${colors.warning}` : 'none',
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>With Wind</div>
+                <div style={{ ...typo.h3, color: colors.cold }}>{withWindTemp.toFixed(1)}°C</div>
+                {windSpeed > 0 && (
+                  <div style={{ ...typo.small, color: colors.warning, marginTop: '4px' }}>
+                    {(noWindTemp - withWindTemp).toFixed(1)}°C extra cooling!
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Deep Principles
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.warning, marginBottom: '24px', textAlign: 'center' }}>
+            The Boundary Layer Effect
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '28px' }}>🌫️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>The Saturated Layer Problem</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Right above wet skin, a thin layer of air becomes nearly saturated with water vapor. This "boundary layer" is at near 100% humidity, slowing further evaporation even when ambient humidity is low.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '28px' }}>💨</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Wind Sweeps It Away</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Wind continuously replaces this saturated boundary layer with drier ambient air. Fresh dry air contacts the wet surface, allowing rapid evaporation. Result: <span style={{ color: colors.accent }}>more cooling at the same humidity!</span>
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.warning}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.warning}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '28px' }}>🌡️</span>
+                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Wind Chill Effect</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                This is why wind feels colder than still air at the same temperature. It's not that the air is colder - wind removes heat faster by:
+              </p>
+              <ul style={{ ...typo.body, color: colors.textSecondary, marginTop: '12px', paddingLeft: '20px' }}>
+                <li>Increasing evaporation from wet surfaces</li>
+                <li>Breaking up the insulating air layer near skin</li>
+                <li>Faster convective heat transfer</li>
+              </ul>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.short}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            {/* Physics connection */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Physics Connection:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            {/* How it works */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Examples */}
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+                Examples:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.examples.map((ex, i) => (
+                  <span key={i} style={{
+                    background: colors.bgSecondary,
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    ...typo.small,
+                    color: colors.textSecondary,
+                  }}>
+                    {ex}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Companies */}
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+                Key Companies:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.companies.map((co, i) => (
+                  <span key={i} style={{
+                    background: `${app.color}22`,
+                    border: `1px solid ${app.color}44`,
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    ...typo.small,
+                    color: app.color,
+                  }}>
+                    {co}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Future Impact */}
+            <div style={{
+              background: `${colors.success}11`,
+              border: `1px solid ${colors.success}33`,
+              borderRadius: '8px',
+              padding: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress indicator */}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <span style={{ ...typo.small, color: colors.textMuted }}>
+              Explored: {completedApps.filter(c => c).length}/4 applications
+            </span>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You\'ve mastered Evaporative Cooling!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review & Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
     }
-  };
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl" />
+    const question = testQuestions[currentQuestion];
 
-      {/* Main content */}
-      <div className="relative pt-8 pb-12">{renderPhase()}</div>
-    </div>
-  );
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Cooling Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You've mastered evaporative cooling - one of nature's most powerful heat transfer mechanisms. From sweating to swamp coolers to power plant cooling towers, this physics shapes our world.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Latent heat of vaporization (2,260 J/g)',
+              'Why humidity limits evaporative cooling',
+              'The wind chill effect and boundary layers',
+              'Human thermoregulation via sweating',
+              'Industrial cooling tower physics',
+              'Data center evaporative cooling',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '12px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          {[
+            { icon: '💧', label: 'Latent Heat' },
+            { icon: '💨', label: 'Wind Chill' },
+            { icon: '🌡️', label: 'Humidity' },
+            { icon: '❄️', label: 'Phase Change' },
+          ].map((badge, i) => (
+            <div key={i} style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '16px 8px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '28px', marginBottom: '4px' }}>{badge.icon}</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>{badge.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default EvaporativeCoolingRenderer;

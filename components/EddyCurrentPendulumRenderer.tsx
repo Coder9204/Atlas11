@@ -3,13 +3,16 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 // ============================================================================
-// EDDY-CURRENT PENDULUM GAME
+// EDDY-CURRENT PENDULUM GAME - Complete 10-Phase Learning Experience
 // Core Concept: Eddy currents create magnetic braking via Lenz's Law
-// Real-World Application: How trains brake, metal detectors, damping systems
+// Real-World Application: Train brakes, metal detectors, induction cooktops
 // ============================================================================
 
-interface GameEvent {
-  eventType: string;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
   gameType: string;
   gameTitle: string;
   details: Record<string, unknown>;
@@ -21,7 +24,7 @@ interface EddyCurrentPendulumRendererProps {
   gamePhase?: string;
 }
 
-// Sound effects
+// Sound utility
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   if (typeof window === 'undefined') return;
   try {
@@ -30,87 +33,273 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
     const gainNode = audioContext.createGain();
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    const sounds: Record<string, { freq: number; duration: number }> = {
-      click: { freq: 600, duration: 0.1 },
-      success: { freq: 800, duration: 0.2 },
-      failure: { freq: 300, duration: 0.3 },
-      transition: { freq: 500, duration: 0.15 },
-      complete: { freq: 900, duration: 0.4 }
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
     };
     const sound = sounds[type];
-    oscillator.frequency.setValueAtTime(sound.freq, audioContext.currentTime);
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
     gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-    oscillator.start(audioContext.currentTime);
+    oscillator.start();
     oscillator.stop(audioContext.currentTime + sound.duration);
   } catch { /* Audio not available */ }
 };
 
 // ============================================================================
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ============================================================================
+const testQuestions = [
+  {
+    scenario: "A physics teacher drops an aluminum plate through a gap between two powerful magnets. The plate falls much slower than expected, as if moving through honey, even though aluminum is not magnetic.",
+    question: "What causes this invisible braking effect on the non-magnetic aluminum?",
+    options: [
+      { id: 'a', label: "Air resistance increases between the magnets due to the magnetic field" },
+      { id: 'b', label: "Eddy currents induced in the aluminum create an opposing magnetic field", correct: true },
+      { id: 'c', label: "The aluminum becomes temporarily magnetized and sticks to the magnets" },
+      { id: 'd', label: "Static electricity builds up and creates electrostatic attraction" }
+    ],
+    explanation: "When a conductor moves through a magnetic field, electromagnetic induction creates circular currents (eddy currents) within the metal. By Lenz's Law, these currents generate their own magnetic field that opposes the motion, creating a braking force without any physical contact."
+  },
+  {
+    scenario: "At airport security, you walk through a metal detector archway. The device beeps when you forget to remove your watch, even though the watch isn't magnetic and doesn't touch the detector.",
+    question: "How does the metal detector sense the presence of your non-magnetic watch?",
+    options: [
+      { id: 'a', label: "It detects the watch's weight pressing on pressure sensors in the floor" },
+      { id: 'b', label: "It uses X-rays to see through your clothing and identify metal objects" },
+      { id: 'c', label: "The detector's alternating magnetic field induces eddy currents in the watch, which are detected", correct: true },
+      { id: 'd', label: "It measures changes in air density caused by the metal object" }
+    ],
+    explanation: "Metal detectors generate an alternating magnetic field. When metal passes through, eddy currents are induced in the metal, creating a secondary magnetic field that disturbs the original field. This disturbance is detected by the receiver coil, triggering the alarm regardless of whether the metal is magnetic."
+  },
+  {
+    scenario: "A chef demonstrates an induction cooktop by placing a cast iron skillet on it - the pan heats up rapidly. However, when she places an aluminum pan on the same cooktop, it barely gets warm.",
+    question: "Why does the cast iron pan heat efficiently while the aluminum pan does not?",
+    options: [
+      { id: 'a', label: "Cast iron is a better conductor of heat than aluminum" },
+      { id: 'b', label: "Aluminum reflects the heat waves generated by the cooktop" },
+      { id: 'c', label: "Cast iron is ferromagnetic, allowing stronger eddy currents and additional hysteresis heating", correct: true },
+      { id: 'd', label: "The aluminum pan is too shiny and reflects the induction energy" }
+    ],
+    explanation: "Induction cooktops work by inducing eddy currents in the cookware. Ferromagnetic materials like cast iron not only support strong eddy currents but also experience hysteresis heating as the magnetic domains repeatedly realign. Aluminum, being non-magnetic and highly conductive, allows eddy currents to flow too easily, generating less resistive heating."
+  },
+  {
+    scenario: "A high-speed train traveling at 300 km/h needs to make an emergency stop. The driver activates the electromagnetic brakes, and strong magnets are lowered toward the rails. The train decelerates smoothly without any screeching or sparks.",
+    question: "Why do electromagnetic brakes become more effective as the train's speed increases?",
+    options: [
+      { id: 'a', label: "The magnets get stronger when they move faster through the air" },
+      { id: 'b', label: "Higher speeds mean greater rate of change in magnetic flux, inducing stronger eddy currents", correct: true },
+      { id: 'c', label: "The rails expand from friction heat, creating more contact surface" },
+      { id: 'd', label: "Faster movement compresses the air between magnets and rails, increasing drag" }
+    ],
+    explanation: "Electromagnetic braking force is proportional to velocity. According to Faraday's Law, faster motion through the magnetic field creates a greater rate of change of magnetic flux, which induces stronger eddy currents in the rail. These stronger currents produce a proportionally stronger opposing magnetic field, creating more braking force exactly when it's needed most."
+  },
+  {
+    scenario: "An electrical engineer is designing a power transformer. She chooses to build the core from thin steel sheets stacked together with insulating varnish between them, rather than using a solid steel block of the same total mass.",
+    question: "Why is the laminated core design more efficient than a solid core?",
+    options: [
+      { id: 'a', label: "Laminations make the transformer lighter and easier to install" },
+      { id: 'b', label: "The insulating layers increase the magnetic field strength" },
+      { id: 'c', label: "Laminations restrict eddy current paths, reducing energy losses as heat", correct: true },
+      { id: 'd', label: "Solid steel cannot conduct magnetic flux as effectively as thin sheets" }
+    ],
+    explanation: "In a solid core, eddy currents would flow in large loops, wasting energy as heat. Laminations break up these current paths, forcing any eddy currents to flow within individual thin sheets. Since the sheets are thin and separated by insulation, the eddy current loops are small and have high resistance, dramatically reducing power losses."
+  },
+  {
+    scenario: "A quality control inspector tests aircraft aluminum parts for hidden cracks using an eddy current probe. She moves the probe across the surface and watches a display that shows signal variations.",
+    question: "How does the eddy current probe detect cracks that are invisible to the naked eye?",
+    options: [
+      { id: 'a', label: "Cracks emit ultrasonic sounds when eddy currents pass through them" },
+      { id: 'b', label: "The probe measures temperature changes caused by current flowing through cracks" },
+      { id: 'c', label: "Cracks disrupt the normal eddy current flow pattern, changing the probe's impedance reading", correct: true },
+      { id: 'd', label: "Magnetic particles accumulate in cracks and are detected by the probe" }
+    ],
+    explanation: "The probe generates eddy currents in the metal surface. These currents flow in circular patterns and create their own magnetic field that the probe detects. When a crack is present, it interrupts the eddy current flow path, like a roadblock forcing traffic to detour. This changes the detected signal in a characteristic way, revealing the crack's presence, size, and depth."
+  },
+  {
+    scenario: "A scientist demonstrates magnetic levitation by spinning a thick aluminum disk at high speed on a spindle, then bringing a strong magnet close above it. Remarkably, the magnet floats stably above the spinning disk without touching it.",
+    question: "What enables the magnet to levitate above the spinning aluminum disk?",
+    options: [
+      { id: 'a', label: "The centrifugal force from the spinning disk pushes air upward, supporting the magnet" },
+      { id: 'b', label: "Eddy currents in the spinning disk create a repulsive magnetic field that supports the magnet's weight", correct: true },
+      { id: 'c', label: "The aluminum becomes magnetized by the spinning motion and repels the magnet" },
+      { id: 'd', label: "Static electricity from the spinning disk creates an electrostatic levitation force" }
+    ],
+    explanation: "The spinning disk moves relative to the stationary magnet, inducing powerful eddy currents in the aluminum. By Lenz's Law, these currents create a magnetic field that opposes the magnet's field - a repulsive force. When spinning fast enough, this repulsion overcomes gravity, allowing stable levitation. This principle is used in some maglev train designs."
+  },
+  {
+    scenario: "At a recycling facility, a conveyor belt carries mixed metal scraps over a rapidly rotating drum containing powerful magnets. Aluminum cans fly off the belt in one direction, while plastic bottles fall straight down, even though aluminum is not magnetic.",
+    question: "How does this eddy current separator distinguish aluminum from non-conducting materials?",
+    options: [
+      { id: 'a', label: "The aluminum is lighter and is blown away by fans near the drum" },
+      { id: 'b', label: "The rotating magnetic field induces eddy currents in aluminum, creating a repulsive force that ejects it", correct: true },
+      { id: 'c', label: "The drum becomes electrically charged and repels the aluminum" },
+      { id: 'd', label: "Aluminum resonates with the drum's rotation frequency and bounces off" }
+    ],
+    explanation: "The rotating drum's alternating magnetic poles create a rapidly changing magnetic field. This induces strong eddy currents in conducting materials like aluminum, generating an opposing magnetic field. The interaction between these fields creates a repulsive force that launches the aluminum off the belt. Non-conductors like plastic cannot support eddy currents and simply fall with gravity."
+  },
+  {
+    scenario: "An electrical engineer notices that when transmitting high-frequency AC power through a solid copper wire, most of the current flows near the surface rather than through the entire cross-section. At very high frequencies, the center of the wire carries almost no current.",
+    question: "What phenomenon causes current to concentrate near the conductor's surface at high frequencies?",
+    options: [
+      { id: 'a', label: "The surface of the wire has lower resistance because it's in contact with cooling air" },
+      { id: 'b', label: "High-frequency electrons are lighter and travel faster along the surface" },
+      { id: 'c', label: "Eddy currents induced by the changing magnetic field oppose current flow in the conductor's interior", correct: true },
+      { id: 'd', label: "Electromagnetic waves travel only on the surface of conductors" }
+    ],
+    explanation: "This is the skin effect, caused by self-induced eddy currents within the conductor. The alternating current creates a changing magnetic field inside the wire, which induces opposing eddy currents. These eddy currents cancel the main current in the interior while reinforcing it near the surface. Higher frequencies create faster-changing fields, pushing current closer to the surface."
+  },
+  {
+    scenario: "A precision laboratory balance uses a metal vane attached to the weighing platform that moves between magnets. When you place an object on the balance, the needle swings once and quickly settles to the correct reading instead of oscillating back and forth.",
+    question: "How do the magnets help the balance reach a stable reading quickly?",
+    options: [
+      { id: 'a', label: "The magnets attract the metal vane and hold it in place once it stops moving" },
+      { id: 'b', label: "Eddy currents induced in the moving vane create a damping force that absorbs oscillation energy", correct: true },
+      { id: 'c', label: "The magnetic field increases air resistance around the vane" },
+      { id: 'd', label: "The magnets create friction by rubbing against the vane at a microscopic level" }
+    ],
+    explanation: "This is electromagnetic damping in action. When the vane oscillates, it moves through the magnetic field, inducing eddy currents. These currents convert the kinetic energy of oscillation into heat, quickly dissipating the unwanted motion. The damping force is automatically proportional to velocity - faster motion creates stronger eddy currents and more braking."
+  }
+];
+
+// ============================================================================
+// REAL-WORLD APPLICATIONS - 4 detailed applications with stats
+// ============================================================================
+const realWorldApps = [
+  {
+    icon: "🚄",
+    title: "Train Electromagnetic Brakes",
+    short: "High-speed rail safety systems",
+    tagline: "Stopping 300 km/h trains without friction or wear",
+    description: "High-speed trains use electromagnetic brakes that lower powerful magnets toward the steel rails. Unlike friction brakes that wear out and can overheat, electromagnetic brakes use eddy currents to convert kinetic energy directly into heat in the rails. The braking force increases with speed, providing maximum stopping power when it's needed most - at high velocities.",
+    connection: "Just like our pendulum slowed down when moving through the magnetic field, train wheels slow when rails pass through the magnetic field. The same Lenz's Law principle applies: motion through a magnetic field induces opposing currents.",
+    howItWorks: "Electromagnets are lowered to within millimeters of the rail surface. The relative motion between the magnetic field and the steel rail induces powerful eddy currents in the rail. By Lenz's Law, these currents generate an opposing magnetic field that creates a braking force proportional to velocity. The kinetic energy is converted to heat and dissipates into the massive rail.",
+    stats: [
+      { value: "300+ km/h", label: "Maximum braking speed", icon: "🏃" },
+      { value: "0 wear", label: "Contact-free operation", icon: "⚙️" },
+      { value: "5 MW", label: "Peak braking power", icon: "⚡" }
+    ],
+    examples: ["German ICE high-speed trains", "Japanese Shinkansen braking assist", "Roller coaster final brakes", "Maglev train deceleration"],
+    companies: ["Knorr-Bremse", "Wabtec", "CRRC", "Siemens Mobility"],
+    futureImpact: "Next-generation maglev systems will use superconducting magnets for even stronger eddy current braking, enabling safe stopping from speeds over 600 km/h while recovering energy back to the grid through regenerative systems.",
+    color: "#3B82F6"
+  },
+  {
+    icon: "🔍",
+    title: "Metal Detectors & Security",
+    short: "Finding hidden metal objects",
+    tagline: "Detecting metal without physical contact",
+    description: "Metal detectors use alternating magnetic fields to induce eddy currents in metallic objects. These currents create their own magnetic field that the detector senses, revealing hidden metal regardless of whether it's magnetic or not. From airport security to archaeological discoveries, eddy current detection is everywhere.",
+    connection: "Our pendulum showed how conductors interact with magnetic fields even without being magnetic themselves. Metal detectors exploit this same principle - aluminum, copper, and gold all generate detectable eddy currents when exposed to changing magnetic fields.",
+    howItWorks: "A transmitter coil creates an oscillating magnetic field (typically 5-25 kHz). When this field encounters metal, it induces circular eddy currents in the object. These eddy currents generate a secondary magnetic field that opposes the original, causing a measurable change in the receiver coil's signal. Signal processing identifies the metal type by analyzing response characteristics.",
+    stats: [
+      { value: "99.9%", label: "Detection accuracy", icon: "🎯" },
+      { value: "3 m", label: "Deep target depth", icon: "📏" },
+      { value: "1000+/hr", label: "People screened", icon: "👥" }
+    ],
+    examples: ["Airport security walkthrough gates", "Handheld security wands", "Archaeological survey equipment", "Industrial contamination detectors"],
+    companies: ["Garrett", "Minelab", "CEIA", "Fisher Research Labs"],
+    futureImpact: "AI-enhanced metal detectors will distinguish between harmless items and threats with near-perfect accuracy. Multi-sensor fusion combining eddy current detection with millimeter-wave imaging will enable walk-through screening at normal pace.",
+    color: "#EF4444"
+  },
+  {
+    icon: "🍳",
+    title: "Induction Cooktops",
+    short: "Cooking with invisible magnetic heat",
+    tagline: "The pot heats up, but the cooktop stays cool",
+    description: "Induction cooktops generate a high-frequency magnetic field (20-100 kHz) that passes through the ceramic surface and induces powerful eddy currents directly in ferromagnetic cookware. The pot's electrical resistance converts these currents into heat, cooking food with remarkable efficiency. The cooktop itself stays cool since no heat transfer occurs through conduction.",
+    connection: "Our pendulum's braking converted kinetic energy to heat through eddy current resistance. Induction cooking uses the same principle - instead of motion through a static field, a rapidly oscillating field in a stationary pot creates the same resistive heating effect.",
+    howItWorks: "A coil beneath the ceramic surface carries high-frequency alternating current, creating a rapidly oscillating magnetic field. This field penetrates ferromagnetic pans (iron, steel) and induces eddy currents. The pan's electrical resistance converts current to heat. Additionally, ferromagnetic materials experience hysteresis heating as magnetic domains repeatedly flip. Power is controlled by adjusting frequency and amplitude.",
+    stats: [
+      { value: "90%", label: "Energy efficiency", icon: "⚡" },
+      { value: "50%", label: "Faster than gas", icon: "⏱️" },
+      { value: "1 C", label: "Temperature precision", icon: "🌡️" }
+    ],
+    examples: ["Professional restaurant kitchens", "Home induction ranges", "Portable induction burners", "Industrial food processing"],
+    companies: ["Miele", "Bosch", "Samsung", "GE Appliances", "Thermador"],
+    futureImpact: "Smart induction cooktops with AI will automatically detect pan contents and adjust power to prevent boiling over. Flexible cooking zones will allow pans of any size to be placed anywhere on the surface.",
+    color: "#F59E0B"
+  },
+  {
+    icon: "🔬",
+    title: "Non-Destructive Testing (NDT)",
+    short: "Finding hidden flaws without damage",
+    tagline: "Detecting invisible cracks before they cause failure",
+    description: "Eddy current testing (ECT) is a critical inspection technique for finding cracks, corrosion, and material defects in conductive materials without damaging the part. A probe coil induces eddy currents in the test material, and any defects that disrupt the current flow are detected as changes in the probe's impedance. This technique inspects aircraft, pipelines, and nuclear plants.",
+    connection: "Remember how slits in our pendulum disrupted eddy current flow and reduced braking? NDT uses this same principle - defects like cracks interrupt eddy current paths just like our slits did, creating detectable signal changes.",
+    howItWorks: "An ECT probe coil generates an alternating magnetic field that induces eddy currents in the test material. These currents flow in closed loops perpendicular to the field. Defects create barriers that force currents to detour, changing the current distribution and altering the probe's impedance. Phase and amplitude analysis reveals defect depth, size, and orientation.",
+    stats: [
+      { value: "0.1 mm", label: "Min crack detection", icon: "🔍" },
+      { value: "25 mm", label: "Subsurface depth", icon: "📐" },
+      { value: "$45B", label: "NDT market size", icon: "💰" }
+    ],
+    examples: ["Aircraft fuselage inspection", "Heat exchanger tube testing", "Pipeline weld verification", "Turbine blade crack detection"],
+    companies: ["Olympus NDT", "Eddyfi Technologies", "GE Inspection", "Zetec"],
+    futureImpact: "AI-powered ECT systems will automatically interpret signals and classify defects in real-time. Robotic inspection systems will autonomously scan complex structures, enabling predictive maintenance that prevents failures before they happen.",
+    color: "#8B5CF6"
+  }
+];
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-
-const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = ({ onGameEvent }) => {
-  // Phase management
+const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
 
-  // Game state
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Pendulum simulation state
   const [materialType, setMaterialType] = useState<'aluminum' | 'copper' | 'plastic' | 'wood'>('aluminum');
   const [hasSlits, setHasSlits] = useState(false);
   const [magnetStrength, setMagnetStrength] = useState(80);
   const [isSwinging, setIsSwinging] = useState(false);
-
-  // Pendulum physics state
-  const [pendulumAngle, setPendulumAngle] = useState(45); // degrees
+  const [pendulumAngle, setPendulumAngle] = useState(45);
   const [angularVelocity, setAngularVelocity] = useState(0);
   const animationRef = useRef<number | null>(null);
-
-  // Transfer state
-  const [completedApps, setCompletedApps] = useState([false, false, false, false]);
-  const [activeApp, setActiveApp] = useState(0);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
   const isNavigating = useRef(false);
 
-  // Responsive check
+  // Responsive design
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
 
   // Material conductivity (affects damping)
   const materialConductivity = useMemo(() => {
     const conductivities: Record<string, number> = {
-      copper: 1.0,      // Highest
-      aluminum: 0.65,   // High
-      plastic: 0.0,     // None
-      wood: 0.0,        // None
+      copper: 1.0,
+      aluminum: 0.65,
+      plastic: 0.0,
+      wood: 0.0,
     };
     return conductivities[materialType] || 0;
   }, [materialType]);
@@ -138,32 +327,21 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     if (!isSwinging) return;
 
     const g = 9.81;
-    const L = 1.0; // Pendulum length in meters
-    const dt = 0.016; // 60 FPS
+    const L = 1.0;
+    const dt = 0.016;
 
     const simulate = () => {
       setPendulumAngle(prev => {
         const angleRad = (prev * Math.PI) / 180;
-
-        // Gravitational torque
         const gravityAccel = -(g / L) * Math.sin(angleRad) * (180 / Math.PI);
-
-        // Damping from eddy currents (velocity-dependent)
         const dampingForce = -dampingCoefficient * angularVelocity * 10;
-
-        // Air resistance (small)
         const airDamping = -0.01 * angularVelocity;
-
         const totalAccel = gravityAccel + dampingForce + airDamping;
 
-        setAngularVelocity(v => {
-          const newV = v + totalAccel * dt;
-          return newV;
-        });
+        setAngularVelocity(v => v + totalAccel * dt);
 
-        let newAngle = prev + angularVelocity * dt;
+        const newAngle = prev + angularVelocity * dt;
 
-        // Stop if energy is very low
         if (Math.abs(newAngle) < 0.5 && Math.abs(angularVelocity) < 1) {
           setIsSwinging(false);
           return 0;
@@ -188,27 +366,34 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     setIsSwinging(true);
   };
 
-  // Colors
+  // Premium design colors
   const colors = {
-    bgDeep: '#030712',
-    bgSurface: '#0f172a',
-    bgElevated: '#1e293b',
-    textPrimary: '#f8fafc',
-    textSecondary: '#cbd5e1',
-    textMuted: '#64748b',
-    primary: '#06b6d4',
-    primaryDark: '#0891b2',
-    accent: '#f59e0b',
-    warning: '#f59e0b',
-    success: '#22c55e',
-    error: '#ef4444',
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#8B5CF6', // Purple for eddy currents
+    accentGlow: 'rgba(139, 92, 246, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
     magnet: '#dc2626',
-    magnetSouth: '#3b82f6',
+    magnetBlue: '#3b82f6',
     aluminum: '#94a3b8',
     copper: '#f97316',
     plastic: '#84cc16',
     wood: '#a16207',
-    eddy: '#8b5cf6',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
   };
 
   // Material colors
@@ -222,1821 +407,1648 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     return materialColors[mat] || colors.aluminum;
   };
 
-  // Emit game events
-  const emitGameEvent = useCallback((eventType: string, details: Record<string, unknown> = {}) => {
-    onGameEvent?.({
-      eventType,
-      gameType: 'eddy_current_pendulum',
-      gameTitle: 'Eddy Current Pendulum',
-      details: { phase, materialType, hasSlits, magnetStrength, ...details },
-      timestamp: Date.now()
-    });
-  }, [onGameEvent, phase, materialType, hasSlits, magnetStrength]);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Slits Experiment',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  // Navigation
   const goToPhase = useCallback((p: Phase) => {
     if (isNavigating.current) return;
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    emitGameEvent('phase_changed', { newPhase: p });
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'eddy-current-pendulum',
+        gameTitle: 'Eddy Current Pendulum',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [emitGameEvent]);
+  }, [onGameEvent]);
 
-  const goNext = useCallback(() => {
-    const idx = phaseOrder.indexOf(phase);
-    if (idx < phaseOrder.length - 1) goToPhase(phaseOrder[idx + 1]);
-  }, [phase, goToPhase]);
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
-  const goBack = useCallback(() => {
-    const idx = phaseOrder.indexOf(phase);
-    if (idx > 0) goToPhase(phaseOrder[idx - 1]);
-  }, [phase, goToPhase]);
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #6D28D9)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-  // ============================================================================
-  // REUSABLE COMPONENTS
-  // ============================================================================
-
-  const Button: React.FC<{
-    onClick: () => void;
-    variant?: 'primary' | 'secondary' | 'ghost';
-    disabled?: boolean;
-    children: React.ReactNode;
-    style?: React.CSSProperties;
-  }> = ({ onClick, variant = 'primary', disabled, children, style }) => (
-    <button
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!disabled) {
-          playSound('click');
-          onClick();
-        }
-      }}
-      disabled={disabled}
-      style={{
-        padding: isMobile ? '14px 20px' : '16px 28px',
-        minHeight: '48px',
-        minWidth: '48px',
-        background: variant === 'primary'
-          ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
-          : variant === 'secondary' ? colors.bgElevated : 'transparent',
-        color: colors.textPrimary,
-        border: variant === 'ghost' ? `1px solid ${colors.bgElevated}` : 'none',
-        borderRadius: '12px',
-        fontSize: isMobile ? '14px' : '16px',
-        fontWeight: 600,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-        transition: 'all 0.2s',
-        touchAction: 'manipulation',
-        position: 'relative',
-        zIndex: 10,
-        ...style
-      }}
-    >
-      {children}
-    </button>
-  );
-
-  const ExplanationBox: React.FC<{
-    whatHappens: string;
-    whyItHappens: string;
-    realWorldExample: string;
-  }> = ({ whatHappens, whyItHappens, realWorldExample }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '10px' : '14px' }}>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
       <div style={{
-        padding: '14px 16px',
-        backgroundColor: `${colors.primary}15`,
-        borderLeft: `4px solid ${colors.primary}`,
-        borderRadius: '0 8px 8px 0'
-      }}>
-        <div style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, textTransform: 'uppercase', marginBottom: '6px' }}>
-          What Happens
-        </div>
-        <div style={{ fontSize: isMobile ? '13px' : '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
-          {whatHappens}
-        </div>
-      </div>
-      <div style={{
-        padding: '14px 16px',
-        backgroundColor: `${colors.eddy}15`,
-        borderLeft: `4px solid ${colors.eddy}`,
-        borderRadius: '0 8px 8px 0'
-      }}>
-        <div style={{ fontSize: '11px', fontWeight: 600, color: colors.eddy, textTransform: 'uppercase', marginBottom: '6px' }}>
-          Why It Happens (Lenz's Law)
-        </div>
-        <div style={{ fontSize: isMobile ? '13px' : '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
-          {whyItHappens}
-        </div>
-      </div>
-      <div style={{
-        padding: '14px 16px',
-        backgroundColor: `${colors.success}15`,
-        borderLeft: `4px solid ${colors.success}`,
-        borderRadius: '0 8px 8px 0'
-      }}>
-        <div style={{ fontSize: '11px', fontWeight: 600, color: colors.success, textTransform: 'uppercase', marginBottom: '6px' }}>
-          Real-World Example
-        </div>
-        <div style={{ fontSize: isMobile ? '13px' : '14px', color: colors.textPrimary, lineHeight: 1.5 }}>
-          {realWorldExample}
-        </div>
-      </div>
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  // ============================================================================
-  // PENDULUM VISUALIZATION (Premium SVG Graphics)
-  // ============================================================================
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-  const PendulumVisualization: React.FC<{
-    showLabels?: boolean;
-    showEddyCurrents?: boolean;
-    animated?: boolean;
-  }> = ({ showLabels = true, showEddyCurrents = true }) => {
-    const svgWidth = isMobile ? 340 : 500;
-    const svgHeight = isMobile ? 350 : 420;
-    const pivotX = svgWidth / 2;
-    const pivotY = 60;
-    const pendulumLength = isMobile ? 180 : 240;
+  // Pendulum Visualization SVG
+  const PendulumVisualization = ({ showLabels = true }: { showLabels?: boolean }) => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 300 : 360;
+    const pivotX = width / 2;
+    const pivotY = 50;
+    const pendulumLength = isMobile ? 160 : 200;
 
-    // Calculate pendulum bob position
     const angleRad = (pendulumAngle * Math.PI) / 180;
     const bobX = pivotX + Math.sin(angleRad) * pendulumLength;
     const bobY = pivotY + Math.cos(angleRad) * pendulumLength;
 
-    // Magnet gap position (where pendulum passes through)
-    const magnetY = pivotY + pendulumLength - 30;
-
-    // Sheet dimensions
-    const sheetWidth = isMobile ? 50 : 65;
-    const sheetHeight = isMobile ? 70 : 90;
+    const magnetY = pivotY + pendulumLength - 20;
+    const sheetWidth = isMobile ? 45 : 55;
+    const sheetHeight = isMobile ? 60 : 75;
 
     return (
-      <>
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          style={{ maxWidth: svgWidth, margin: '0 auto', display: 'block' }}
-        >
-          {/* === COMPREHENSIVE DEFINITIONS === */}
-          <defs>
-            {/* Premium Lab Background Gradient */}
-            <linearGradient id="ecpLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a0f1a" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a0f1a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="magnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </linearGradient>
+          <linearGradient id="magnetSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="100%" stopColor="#1d4ed8" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Premium Magnet North Pole Gradient */}
-            <linearGradient id="ecpMagnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="20%" stopColor="#f87171" />
-              <stop offset="40%" stopColor="#ef4444" />
-              <stop offset="60%" stopColor="#dc2626" />
-              <stop offset="80%" stopColor="#b91c1c" />
-              <stop offset="100%" stopColor="#7f1d1d" />
-            </linearGradient>
+        {/* Grid background */}
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
+        </pattern>
+        <rect width={width} height={height} fill="url(#grid)" />
 
-            {/* Premium Magnet South Pole Gradient */}
-            <linearGradient id="ecpMagnetSouth" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#93c5fd" />
-              <stop offset="20%" stopColor="#60a5fa" />
-              <stop offset="40%" stopColor="#3b82f6" />
-              <stop offset="60%" stopColor="#2563eb" />
-              <stop offset="80%" stopColor="#1d4ed8" />
-              <stop offset="100%" stopColor="#1e3a8a" />
-            </linearGradient>
+        {/* Support frame */}
+        <rect x={pivotX - 70} y={25} width={140} height={10} rx="3" fill="#374151" />
+        <rect x={pivotX - 80} y={25} width={12} height={height - 50} rx="3" fill="#374151" />
+        <rect x={pivotX + 68} y={25} width={12} height={height - 50} rx="3" fill="#374151" />
+        <rect x={pivotX - 90} y={height - 35} width={180} height={18} rx="4" fill="#1f2937" />
 
-            {/* Premium Aluminum Gradient (brushed metal effect) */}
-            <linearGradient id="ecpAluminum" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#f1f5f9" />
-              <stop offset="15%" stopColor="#e2e8f0" />
-              <stop offset="30%" stopColor="#cbd5e1" />
-              <stop offset="50%" stopColor="#94a3b8" />
-              <stop offset="70%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
+        {/* Magnets */}
+        <rect x={pivotX - 65} y={magnetY - 35} width={24} height={70} rx="4" fill="url(#magnetNorth)" />
+        <text x={pivotX - 53} y={magnetY} fill="white" fontSize="14" fontWeight="bold" textAnchor="middle">N</text>
+        <rect x={pivotX + 41} y={magnetY - 35} width={24} height={70} rx="4" fill="url(#magnetSouth)" />
+        <text x={pivotX + 53} y={magnetY} fill="white" fontSize="14" fontWeight="bold" textAnchor="middle">S</text>
 
-            {/* Premium Copper Gradient (polished metal) */}
-            <linearGradient id="ecpCopper" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fef3c7" />
-              <stop offset="15%" stopColor="#fed7aa" />
-              <stop offset="30%" stopColor="#fdba74" />
-              <stop offset="50%" stopColor="#fb923c" />
-              <stop offset="70%" stopColor="#ea580c" />
-              <stop offset="100%" stopColor="#9a3412" />
-            </linearGradient>
-
-            {/* Premium Plastic Gradient (glossy) */}
-            <linearGradient id="ecpPlastic" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ecfccb" />
-              <stop offset="20%" stopColor="#d9f99d" />
-              <stop offset="40%" stopColor="#bef264" />
-              <stop offset="60%" stopColor="#a3e635" />
-              <stop offset="80%" stopColor="#84cc16" />
-              <stop offset="100%" stopColor="#4d7c0f" />
-            </linearGradient>
-
-            {/* Premium Wood Gradient (grain effect) */}
-            <linearGradient id="ecpWood" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fcd34d" />
-              <stop offset="20%" stopColor="#d4a574" />
-              <stop offset="40%" stopColor="#b8860b" />
-              <stop offset="60%" stopColor="#a16207" />
-              <stop offset="80%" stopColor="#854d0e" />
-              <stop offset="100%" stopColor="#713f12" />
-            </linearGradient>
-
-            {/* Pendulum Rod Gradient (metallic) */}
-            <linearGradient id="ecpRod" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="25%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#94a3b8" />
-              <stop offset="75%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
-
-            {/* Pivot Point Gradient */}
-            <radialGradient id="ecpPivot" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="40%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </radialGradient>
-
-            {/* Support Frame Gradient (brushed steel) */}
-            <linearGradient id="ecpFrame" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1f2937" />
-              <stop offset="20%" stopColor="#374151" />
-              <stop offset="40%" stopColor="#4b5563" />
-              <stop offset="60%" stopColor="#374151" />
-              <stop offset="80%" stopColor="#4b5563" />
-              <stop offset="100%" stopColor="#1f2937" />
-            </linearGradient>
-
-            {/* Eddy Current Core Glow */}
-            <radialGradient id="ecpEddyCore" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="1" />
-              <stop offset="30%" stopColor="#a78bfa" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#8b5cf6" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Eddy Current Swirl Gradient */}
-            <linearGradient id="ecpEddySwirl" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.9" />
-              <stop offset="25%" stopColor="#a78bfa" stopOpacity="0.7" />
-              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.5" />
-              <stop offset="75%" stopColor="#7c3aed" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0.1" />
-            </linearGradient>
-
-            {/* Magnetic Field Gradient (N to S) */}
-            <linearGradient id="ecpFieldLines" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
-              <stop offset="25%" stopColor="#f87171" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.5" />
-              <stop offset="75%" stopColor="#60a5fa" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
-            </linearGradient>
-
-            {/* Magnetic Braking Effect Gradient */}
-            <radialGradient id="ecpBrakeEffect" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#f87171" stopOpacity="0.6" />
-              <stop offset="30%" stopColor="#a855f7" stopOpacity="0.4" />
-              <stop offset="60%" stopColor="#60a5fa" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Surface Highlight Gradient */}
-            <linearGradient id="ecpHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
-              <stop offset="50%" stopColor="rgba(255,255,255,0.1)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-            </linearGradient>
-
-            {/* Lab Grid Pattern */}
-            <pattern id="ecpGrid" width="25" height="25" patternUnits="userSpaceOnUse">
-              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
-            </pattern>
-
-            {/* === PREMIUM FILTERS === */}
-
-            {/* Drop Shadow Filter */}
-            <filter id="ecpShadow" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
-            </filter>
-
-            {/* Deep Shadow for Frame */}
-            <filter id="ecpDeepShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="3" dy="6" stdDeviation="6" floodColor="#000000" floodOpacity="0.6" />
-            </filter>
-
-            {/* Eddy Current Glow Filter */}
-            <filter id="ecpEddyGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="blur1" />
-              <feGaussianBlur stdDeviation="3" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur1" />
-                <feMergeNode in="blur2" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Magnet Glow Filter */}
-            <filter id="ecpMagnetGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Braking Effect Filter */}
-            <filter id="ecpBrakeGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="8" result="blur1" />
-              <feGaussianBlur stdDeviation="4" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur1" />
-                <feMergeNode in="blur2" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Inner Glow for Metal */}
-            <filter id="ecpMetalShine" x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation="1" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            {/* Field Line Animation Blur */}
-            <filter id="ecpFieldBlur" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* === PREMIUM BACKGROUND === */}
-          <rect width={svgWidth} height={svgHeight} fill="url(#ecpLabBg)" rx="12" />
-          <rect width={svgWidth} height={svgHeight} fill="url(#ecpGrid)" rx="12" />
-
-          {/* === SUPPORT FRAME (Premium Metal) === */}
-          <g filter="url(#ecpDeepShadow)">
-            {/* Top bar with metallic finish */}
-            <rect x={pivotX - 80} y={30} width={160} height={14} rx="4" fill="url(#ecpFrame)" />
-            <rect x={pivotX - 78} y={31} width={156} height={4} rx="2" fill="#6b7280" opacity="0.5" />
-
-            {/* Support posts with depth */}
-            <rect x={pivotX - 87} y={30} width={16} height={svgHeight - 58} rx="4" fill="url(#ecpFrame)" />
-            <rect x={pivotX - 85} y={32} width={4} height={svgHeight - 64} rx="2" fill="#6b7280" opacity="0.3" />
-
-            <rect x={pivotX + 71} y={30} width={16} height={svgHeight - 58} rx="4" fill="url(#ecpFrame)" />
-            <rect x={pivotX + 83} y={32} width={4} height={svgHeight - 64} rx="2" fill="#6b7280" opacity="0.3" />
-
-            {/* Base platform with texture */}
-            <rect x={pivotX - 105} y={svgHeight - 38} width={210} height={24} rx="5" fill="#111827" />
-            <rect x={pivotX - 103} y={svgHeight - 36} width={206} height={4} rx="2" fill="#1f2937" />
-            <rect x={pivotX - 103} y={svgHeight - 18} width={206} height={4} rx="2" fill="#0a0a0a" />
-          </g>
-
-          {/* === PREMIUM MAGNET ASSEMBLY === */}
-          <g filter="url(#ecpMagnetGlow)">
-            {/* Left magnet (North) with 3D effect */}
-            <rect
-              x={pivotX - 72}
-              y={magnetY - 42}
-              width={28}
-              height={84}
-              rx="5"
-              fill="url(#ecpMagnetNorth)"
+        {/* Magnetic field lines */}
+        <g opacity={0.4}>
+          {[-20, -10, 0, 10, 20].map((offset, i) => (
+            <path
+              key={i}
+              d={`M ${pivotX - 40} ${magnetY + offset} Q ${pivotX} ${magnetY + offset + (offset > 0 ? 6 : -6)} ${pivotX + 40} ${magnetY + offset}`}
+              fill="none"
+              stroke={colors.accent}
+              strokeWidth="1.5"
+              strokeDasharray="6,4"
             />
-            {/* Highlight edge */}
-            <rect
-              x={pivotX - 70}
-              y={magnetY - 40}
-              width={4}
-              height={80}
-              rx="2"
-              fill="rgba(255,255,255,0.2)"
-            />
+          ))}
+        </g>
 
-            {/* Right magnet (South) with 3D effect */}
-            <rect
-              x={pivotX + 44}
-              y={magnetY - 42}
-              width={28}
-              height={84}
-              rx="5"
-              fill="url(#ecpMagnetSouth)"
-            />
-            {/* Highlight edge */}
-            <rect
-              x={pivotX + 46}
-              y={magnetY - 40}
-              width={4}
-              height={80}
-              rx="2"
-              fill="rgba(255,255,255,0.2)"
-            />
+        {/* Pendulum rod */}
+        <line
+          x1={pivotX}
+          y1={pivotY}
+          x2={bobX}
+          y2={bobY}
+          stroke="#64748b"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
 
-            {/* Magnet yoke (base connection) */}
-            <rect
-              x={pivotX - 72}
-              y={magnetY + 47}
-              width={144}
-              height={14}
-              rx="4"
-              fill="url(#ecpFrame)"
-            />
-          </g>
+        {/* Pivot point */}
+        <circle cx={pivotX} cy={pivotY} r="8" fill="#475569" />
+        <circle cx={pivotX} cy={pivotY} r="4" fill="#1e293b" />
 
-          {/* === MAGNETIC FIELD VISUALIZATION === */}
-          <g opacity={magnetStrength / 120 + 0.3} filter="url(#ecpFieldBlur)">
-            {/* Curved field lines between poles */}
-            {[-25, -15, -5, 5, 15, 25].map((offset, i) => (
-              <path
+        {/* Pendulum bob (metal sheet) */}
+        <g transform={`translate(${bobX}, ${bobY}) rotate(${pendulumAngle})`}>
+          <rect
+            x={-sheetWidth / 2}
+            y={-5}
+            width={sheetWidth}
+            height={sheetHeight}
+            rx="4"
+            fill={getMaterialColor(materialType)}
+            stroke={getMaterialColor(materialType)}
+            strokeWidth="1"
+          />
+          {/* Slits */}
+          {hasSlits && materialConductivity > 0 && (
+            <>
+              {[0, 1, 2, 3].map(i => (
+                <rect
+                  key={i}
+                  x={-sheetWidth / 2 + 6 + i * 10}
+                  y={8}
+                  width={4}
+                  height={sheetHeight - 18}
+                  rx="1"
+                  fill={colors.bgPrimary}
+                />
+              ))}
+            </>
+          )}
+        </g>
+
+        {/* Eddy current visualization */}
+        {eddyCurrentIntensity > 5 && materialConductivity > 0 && (
+          <g transform={`translate(${bobX}, ${bobY + 20}) rotate(${pendulumAngle})`} filter="url(#glow)">
+            {[0, 1, 2].map(i => (
+              <circle
                 key={i}
-                d={`M ${pivotX - 42} ${magnetY + offset} Q ${pivotX} ${magnetY + offset + (offset > 0 ? 8 : -8)} ${pivotX + 42} ${magnetY + offset}`}
+                cx={0}
+                cy={0}
+                r={8 + i * 6}
                 fill="none"
-                stroke="url(#ecpFieldLines)"
-                strokeWidth="2"
-                strokeDasharray="8,5"
-                opacity={0.6 - Math.abs(offset) * 0.015}
+                stroke={colors.accent}
+                strokeWidth={2 - i * 0.5}
+                strokeDasharray={`${10 + i * 3},${5 + i * 2}`}
+                opacity={eddyCurrentIntensity / 150 * (1 - i * 0.25)}
               >
-                <animate
-                  attributeName="stroke-dashoffset"
-                  values="0;26"
-                  dur="1.5s"
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from={angularVelocity > 0 ? "0" : "360"}
+                  to={angularVelocity > 0 ? "360" : "0"}
+                  dur={`${0.8 + i * 0.2}s`}
                   repeatCount="indefinite"
                 />
-              </path>
+              </circle>
             ))}
           </g>
-
-          {/* === MAGNETIC BRAKING EFFECT (when pendulum near center) === */}
-          {showEddyCurrents && eddyCurrentIntensity > 10 && materialConductivity > 0 && Math.abs(pendulumAngle) < 30 && (
-            <g filter="url(#ecpBrakeGlow)">
-              <ellipse
-                cx={pivotX}
-                cy={magnetY}
-                rx={45 + eddyCurrentIntensity * 0.3}
-                ry={30 + eddyCurrentIntensity * 0.2}
-                fill="url(#ecpBrakeEffect)"
-                opacity={eddyCurrentIntensity / 150}
-              >
-                <animate
-                  attributeName="opacity"
-                  values={`${eddyCurrentIntensity / 200};${eddyCurrentIntensity / 120};${eddyCurrentIntensity / 200}`}
-                  dur="0.5s"
-                  repeatCount="indefinite"
-                />
-              </ellipse>
-            </g>
-          )}
-
-          {/* === PREMIUM PENDULUM === */}
-          <g>
-            {/* Pivot point with metallic finish */}
-            <circle cx={pivotX} cy={pivotY} r="10" fill="url(#ecpPivot)" filter="url(#ecpShadow)" />
-            <circle cx={pivotX - 2} cy={pivotY - 2} r="3" fill="rgba(255,255,255,0.3)" />
-            <circle cx={pivotX} cy={pivotY} r="4" fill="#1e293b" />
-
-            {/* Premium rod with gradient */}
-            <line
-              x1={pivotX}
-              y1={pivotY}
-              x2={bobX}
-              y2={bobY}
-              stroke="url(#ecpRod)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              filter="url(#ecpMetalShine)"
-            />
-
-            {/* Pendulum bob (metal/plastic sheet) with premium materials */}
-            <g transform={`translate(${bobX}, ${bobY}) rotate(${pendulumAngle})`} filter="url(#ecpShadow)">
-              {/* Get the right gradient based on material */}
-              {(() => {
-                const gradientMap: Record<string, string> = {
-                  aluminum: 'ecpAluminum',
-                  copper: 'ecpCopper',
-                  plastic: 'ecpPlastic',
-                  wood: 'ecpWood'
-                };
-                const gradientId = gradientMap[materialType];
-
-                return (
-                  <>
-                    {/* Sheet body with premium gradient */}
-                    <rect
-                      x={-sheetWidth / 2}
-                      y={-10}
-                      width={sheetWidth}
-                      height={sheetHeight}
-                      rx="5"
-                      fill={`url(#${gradientId})`}
-                      stroke={getMaterialColor(materialType)}
-                      strokeWidth="1.5"
-                    />
-
-                    {/* Surface highlight for 3D effect */}
-                    <rect
-                      x={-sheetWidth / 2 + 2}
-                      y={-8}
-                      width={sheetWidth - 4}
-                      height={12}
-                      rx="3"
-                      fill="url(#ecpHighlight)"
-                    />
-
-                    {/* Slits (if enabled) */}
-                    {hasSlits && materialConductivity > 0 && (
-                      <>
-                        {[0, 1, 2, 3].map(i => (
-                          <rect
-                            key={i}
-                            x={-sheetWidth / 2 + 8 + i * 12}
-                            y={8}
-                            width={4}
-                            height={sheetHeight - 24}
-                            rx="2"
-                            fill="#030712"
-                          />
-                        ))}
-                      </>
-                    )}
-
-                    {/* Bottom edge shadow */}
-                    <rect
-                      x={-sheetWidth / 2 + 2}
-                      y={sheetHeight - 16}
-                      width={sheetWidth - 4}
-                      height={4}
-                      rx="2"
-                      fill="rgba(0,0,0,0.3)"
-                    />
-                  </>
-                );
-              })()}
-            </g>
-
-            {/* === PREMIUM EDDY CURRENT VISUALIZATION === */}
-            {showEddyCurrents && eddyCurrentIntensity > 5 && materialConductivity > 0 && (
-              <g transform={`translate(${bobX}, ${bobY + 25}) rotate(${pendulumAngle})`} filter="url(#ecpEddyGlow)">
-                {/* Multiple swirling current loops */}
-                {[0, 1, 2, 3].map(i => {
-                  const loopRadius = 10 + i * 7;
-                  const opacity = (eddyCurrentIntensity / 100) * (1 - i * 0.2);
-                  const duration = 0.8 + i * 0.2;
-                  return (
-                    <circle
-                      key={i}
-                      cx={0}
-                      cy={0}
-                      r={loopRadius}
-                      fill="none"
-                      stroke="url(#ecpEddySwirl)"
-                      strokeWidth={2.5 - i * 0.3}
-                      strokeDasharray={`${loopRadius * 0.6},${loopRadius * 0.4}`}
-                      opacity={opacity}
-                    >
-                      <animateTransform
-                        attributeName="transform"
-                        type="rotate"
-                        from={angularVelocity > 0 ? "0" : "360"}
-                        to={angularVelocity > 0 ? "360" : "0"}
-                        dur={`${duration}s`}
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                  );
-                })}
-
-                {/* Central eddy current core glow */}
-                <circle
-                  cx={0}
-                  cy={0}
-                  r={12}
-                  fill="url(#ecpEddyCore)"
-                >
-                  <animate
-                    attributeName="r"
-                    values="10;14;10"
-                    dur="0.6s"
-                    repeatCount="indefinite"
-                  />
-                </circle>
-
-                {/* Induced field direction indicators */}
-                {angularVelocity !== 0 && (
-                  <>
-                    <circle cx={0} cy={-18} r="3" fill="#c4b5fd" opacity={eddyCurrentIntensity / 100}>
-                      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" repeatCount="indefinite" />
-                    </circle>
-                    <circle cx={0} cy={18} r="3" fill="#c4b5fd" opacity={eddyCurrentIntensity / 100}>
-                      <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.5s" repeatCount="indefinite" />
-                    </circle>
-                  </>
-                )}
-              </g>
-            )}
-
-            {/* Damping visualization trail (motion blur effect) */}
-            {isSwinging && dampingCoefficient > 0.03 && Math.abs(angularVelocity) > 5 && (
-              <g opacity={0.3}>
-                {[1, 2, 3].map(i => {
-                  const trailAngle = pendulumAngle - angularVelocity * 0.02 * i;
-                  const trailRad = (trailAngle * Math.PI) / 180;
-                  const trailX = pivotX + Math.sin(trailRad) * pendulumLength;
-                  const trailY = pivotY + Math.cos(trailRad) * pendulumLength;
-                  return (
-                    <ellipse
-                      key={i}
-                      cx={trailX}
-                      cy={trailY + 25}
-                      rx={sheetWidth / 2 - i * 3}
-                      ry={sheetHeight / 2 - i * 5}
-                      fill={colors.eddy}
-                      opacity={0.15 - i * 0.04}
-                      transform={`rotate(${trailAngle}, ${trailX}, ${trailY + 25})`}
-                    />
-                  );
-                })}
-              </g>
-            )}
-          </g>
-        </svg>
-
-        {/* === TEXT LABELS OUTSIDE SVG (using typo system) === */}
-        {showLabels && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            padding: `${typo.elementGap} ${typo.cardPadding}`,
-            marginTop: typo.elementGap,
-            flexWrap: 'wrap',
-            gap: typo.elementGap
-          }}>
-            {/* Material indicator */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 12px',
-              backgroundColor: 'rgba(15,23,42,0.95)',
-              borderRadius: '8px',
-              border: `1px solid ${colors.bgElevated}`
-            }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                borderRadius: '4px',
-                backgroundColor: getMaterialColor(materialType)
-              }} />
-              <div>
-                <div style={{ fontSize: typo.label, color: colors.textMuted, fontWeight: 600 }}>MATERIAL</div>
-                <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 600, textTransform: 'capitalize' }}>
-                  {materialType}
-                </div>
-              </div>
-            </div>
-
-            {/* Damping indicator */}
-            <div style={{
-              padding: '8px 12px',
-              backgroundColor: 'rgba(15,23,42,0.95)',
-              borderRadius: '8px',
-              border: `1px solid ${dampingCoefficient > 0.05 ? colors.success : colors.bgElevated}`,
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: typo.label, color: colors.textMuted, fontWeight: 600 }}>DAMPING</div>
-              <div style={{
-                fontSize: typo.body,
-                color: dampingCoefficient > 0.05 ? colors.success : colors.textMuted,
-                fontWeight: 700
-              }}>
-                {dampingCoefficient > 0.05 ? 'STRONG' : dampingCoefficient > 0.01 ? 'WEAK' : 'NONE'}
-              </div>
-            </div>
-
-            {/* Eddy current intensity */}
-            <div style={{
-              padding: '8px 12px',
-              backgroundColor: 'rgba(15,23,42,0.95)',
-              borderRadius: '8px',
-              border: `1px solid ${colors.bgElevated}`,
-              minWidth: '100px'
-            }}>
-              <div style={{ fontSize: typo.label, color: colors.textMuted, fontWeight: 600, marginBottom: '4px' }}>
-                EDDY CURRENTS
-              </div>
-              <div style={{
-                height: '6px',
-                backgroundColor: colors.bgElevated,
-                borderRadius: '3px',
-                overflow: 'hidden',
-                marginBottom: '4px'
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${Math.min(100, eddyCurrentIntensity)}%`,
-                  backgroundColor: colors.eddy,
-                  borderRadius: '3px',
-                  transition: 'width 0.1s'
-                }} />
-              </div>
-              <div style={{ fontSize: typo.body, color: colors.eddy, fontWeight: 700, textAlign: 'center' }}>
-                {Math.round(eddyCurrentIntensity)}%
-              </div>
-            </div>
-
-            {/* Angle indicator */}
-            <div style={{
-              padding: '8px 12px',
-              backgroundColor: 'rgba(15,23,42,0.95)',
-              borderRadius: '8px',
-              border: `1px solid ${colors.bgElevated}`,
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: typo.label, color: colors.textMuted, fontWeight: 600 }}>ANGLE</div>
-              <div style={{ fontSize: typo.heading, color: colors.textPrimary, fontWeight: 700 }}>
-                {Math.round(pendulumAngle)}°
-              </div>
-            </div>
-
-            {/* Slits indicator */}
-            {hasSlits && materialConductivity > 0 && (
-              <div style={{
-                padding: '8px 16px',
-                backgroundColor: `${colors.warning}20`,
-                borderRadius: '8px',
-                border: `1px solid ${colors.warning}`,
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: typo.small, color: colors.warning, fontWeight: 600 }}>
-                  SLITS ACTIVE
-                </div>
-              </div>
-            )}
-          </div>
         )}
-      </>
+
+        {/* Labels */}
+        {showLabels && (
+          <>
+            <text x={pivotX} y={height - 12} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+              {materialType.charAt(0).toUpperCase() + materialType.slice(1)} {hasSlits ? '(with slits)' : ''}
+              {materialConductivity > 0 ? ' - Conductor' : ' - Insulator'}
+            </text>
+            <text x={width - 60} y={30} fill={colors.accent} fontSize="14" fontWeight="600">
+              Eddy: {Math.round(eddyCurrentIntensity)}%
+            </text>
+          </>
+        )}
+      </svg>
     );
   };
 
   // ============================================================================
-  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // PHASE RENDERS
   // ============================================================================
 
-  const testQuestions = [
-    // Question 1: Core concept - what are eddy currents (Easy)
-    {
-      scenario: "A physics teacher drops an aluminum plate through a gap between two powerful magnets. The plate falls much slower than expected, as if moving through honey.",
-      question: "What causes this invisible braking effect on the non-magnetic aluminum?",
-      options: [
-        { id: 'a', label: "Air resistance increases between the magnets due to the magnetic field" },
-        { id: 'b', label: "Eddy currents induced in the aluminum create an opposing magnetic field", correct: true },
-        { id: 'c', label: "The aluminum becomes temporarily magnetized and sticks to the magnets" },
-        { id: 'd', label: "Static electricity builds up and creates electrostatic attraction" }
-      ],
-      explanation: "When a conductor moves through a magnetic field, electromagnetic induction creates circular currents (eddy currents) within the metal. By Lenz's Law, these currents generate their own magnetic field that opposes the motion, creating a braking force without any physical contact."
-    },
-    // Question 2: Metal detector operation (Easy-Medium)
-    {
-      scenario: "At airport security, you walk through a metal detector archway. The device beeps when you forget to remove your watch, even though the watch isn't magnetic and doesn't touch the detector.",
-      question: "How does the metal detector sense the presence of your non-magnetic watch?",
-      options: [
-        { id: 'a', label: "It detects the watch's weight pressing on pressure sensors in the floor" },
-        { id: 'b', label: "It uses X-rays to see through your clothing and identify metal objects" },
-        { id: 'c', label: "The detector's alternating magnetic field induces eddy currents in the watch, which are detected", correct: true },
-        { id: 'd', label: "It measures changes in air density caused by the metal object" }
-      ],
-      explanation: "Metal detectors generate an alternating magnetic field. When metal passes through, eddy currents are induced in the metal, creating a secondary magnetic field that disturbs the original field. This disturbance is detected by the receiver coil, triggering the alarm regardless of whether the metal is magnetic."
-    },
-    // Question 3: Induction cooktop heating (Medium)
-    {
-      scenario: "A chef demonstrates an induction cooktop by placing a cast iron skillet on it - the pan heats up rapidly. However, when she places an aluminum pan on the same cooktop, it barely gets warm.",
-      question: "Why does the cast iron pan heat efficiently while the aluminum pan does not?",
-      options: [
-        { id: 'a', label: "Cast iron is a better conductor of heat than aluminum" },
-        { id: 'b', label: "Aluminum reflects the heat waves generated by the cooktop" },
-        { id: 'c', label: "Cast iron is ferromagnetic, allowing stronger eddy currents and additional hysteresis heating", correct: true },
-        { id: 'd', label: "The aluminum pan is too shiny and reflects the induction energy" }
-      ],
-      explanation: "Induction cooktops work by inducing eddy currents in the cookware. Ferromagnetic materials like cast iron not only support strong eddy currents but also experience hysteresis heating as the magnetic domains repeatedly realign. Aluminum, being non-magnetic and highly conductive, allows eddy currents to flow too easily, generating less resistive heating."
-    },
-    // Question 4: Electromagnetic braking in trains (Medium)
-    {
-      scenario: "A high-speed train traveling at 300 km/h needs to make an emergency stop. The driver activates the electromagnetic brakes, and strong magnets are lowered toward the rails. The train decelerates smoothly without any screeching or sparks.",
-      question: "Why do electromagnetic brakes become more effective as the train's speed increases?",
-      options: [
-        { id: 'a', label: "The magnets get stronger when they move faster through the air" },
-        { id: 'b', label: "Higher speeds mean greater rate of change in magnetic flux, inducing stronger eddy currents", correct: true },
-        { id: 'c', label: "The rails expand from friction heat, creating more contact surface" },
-        { id: 'd', label: "Faster movement compresses the air between magnets and rails, increasing drag" }
-      ],
-      explanation: "Electromagnetic braking force is proportional to velocity. According to Faraday's Law, faster motion through the magnetic field creates a greater rate of change of magnetic flux, which induces stronger eddy currents in the rail. These stronger currents produce a proportionally stronger opposing magnetic field, creating more braking force exactly when it's needed most."
-    },
-    // Question 5: Transformer core lamination (Medium-Hard)
-    {
-      scenario: "An electrical engineer is designing a power transformer. She chooses to build the core from thin steel sheets stacked together with insulating varnish between them, rather than using a solid steel block of the same total mass.",
-      question: "Why is the laminated core design more efficient than a solid core?",
-      options: [
-        { id: 'a', label: "Laminations make the transformer lighter and easier to install" },
-        { id: 'b', label: "The insulating layers increase the magnetic field strength" },
-        { id: 'c', label: "Laminations restrict eddy current paths, reducing energy losses as heat", correct: true },
-        { id: 'd', label: "Solid steel cannot conduct magnetic flux as effectively as thin sheets" }
-      ],
-      explanation: "In a solid core, eddy currents would flow in large loops, wasting energy as heat. Laminations break up these current paths, forcing any eddy currents to flow within individual thin sheets. Since the sheets are thin and separated by insulation, the eddy current loops are small and have high resistance, dramatically reducing power losses. This is the same principle as cutting slits in the pendulum."
-    },
-    // Question 6: Non-destructive testing (Hard)
-    {
-      scenario: "A quality control inspector tests aircraft aluminum parts for hidden cracks using an eddy current probe. She moves the probe across the surface and watches a display that shows signal variations.",
-      question: "How does the eddy current probe detect cracks that are invisible to the naked eye?",
-      options: [
-        { id: 'a', label: "Cracks emit ultrasonic sounds when eddy currents pass through them" },
-        { id: 'b', label: "The probe measures temperature changes caused by current flowing through cracks" },
-        { id: 'c', label: "Cracks disrupt the normal eddy current flow pattern, changing the probe's impedance reading", correct: true },
-        { id: 'd', label: "Magnetic particles accumulate in cracks and are detected by the probe" }
-      ],
-      explanation: "The probe generates eddy currents in the metal surface. These currents flow in circular patterns and create their own magnetic field that the probe detects. When a crack is present, it interrupts the eddy current flow path, like a roadblock forcing traffic to detour. This changes the detected signal in a characteristic way, revealing the crack's presence, size, and depth without damaging the part."
-    },
-    // Question 7: Magnetic levitation (Hard)
-    {
-      scenario: "A scientist demonstrates magnetic levitation by spinning a thick aluminum disk at high speed on a spindle, then bringing a strong magnet close above it. Remarkably, the magnet floats stably above the spinning disk without touching it.",
-      question: "What enables the magnet to levitate above the spinning aluminum disk?",
-      options: [
-        { id: 'a', label: "The centrifugal force from the spinning disk pushes air upward, supporting the magnet" },
-        { id: 'b', label: "Eddy currents in the spinning disk create a repulsive magnetic field that supports the magnet's weight", correct: true },
-        { id: 'c', label: "The aluminum becomes magnetized by the spinning motion and repels the magnet" },
-        { id: 'd', label: "Static electricity from the spinning disk creates an electrostatic levitation force" }
-      ],
-      explanation: "The spinning disk moves relative to the stationary magnet, inducing powerful eddy currents in the aluminum. By Lenz's Law, these currents create a magnetic field that opposes the magnet's field - a repulsive force. When spinning fast enough, this repulsion overcomes gravity, allowing stable levitation. This principle is used in some maglev train designs and electromagnetic bearings."
-    },
-    // Question 8: Metal sorting in recycling (Hard)
-    {
-      scenario: "At a recycling facility, a conveyor belt carries mixed metal scraps over a rapidly rotating drum containing powerful magnets. Aluminum cans fly off the belt in one direction, while plastic bottles fall straight down, even though aluminum is not magnetic.",
-      question: "How does this eddy current separator distinguish aluminum from non-conducting materials?",
-      options: [
-        { id: 'a', label: "The aluminum is lighter and is blown away by fans near the drum" },
-        { id: 'b', label: "The rotating magnetic field induces eddy currents in aluminum, creating a repulsive force that ejects it", correct: true },
-        { id: 'c', label: "The drum becomes electrically charged and repels the aluminum" },
-        { id: 'd', label: "Aluminum resonates with the drum's rotation frequency and bounces off" }
-      ],
-      explanation: "The rotating drum's alternating magnetic poles create a rapidly changing magnetic field. This induces strong eddy currents in conducting materials like aluminum, generating an opposing magnetic field. The interaction between these fields creates a repulsive force that launches the aluminum off the belt. Non-conductors like plastic cannot support eddy currents and simply fall with gravity. This is how recycling plants efficiently separate metals from other materials."
-    },
-    // Question 9: Skin effect in conductors (Hard)
-    {
-      scenario: "An electrical engineer notices that when transmitting high-frequency AC power through a solid copper wire, most of the current flows near the surface rather than through the entire cross-section. At very high frequencies, the center of the wire carries almost no current.",
-      question: "What phenomenon causes current to concentrate near the conductor's surface at high frequencies?",
-      options: [
-        { id: 'a', label: "The surface of the wire has lower resistance because it's in contact with cooling air" },
-        { id: 'b', label: "High-frequency electrons are lighter and travel faster along the surface" },
-        { id: 'c', label: "Eddy currents induced by the changing magnetic field oppose current flow in the conductor's interior", correct: true },
-        { id: 'd', label: "Electromagnetic waves travel only on the surface of conductors like light on a fiber optic cable" }
-      ],
-      explanation: "This is the skin effect, caused by self-induced eddy currents within the conductor. The alternating current creates a changing magnetic field inside the wire, which induces opposing eddy currents. These eddy currents cancel the main current in the interior while reinforcing it near the surface. Higher frequencies create faster-changing fields, pushing current closer to the surface. This is why high-frequency cables often use stranded wire or hollow tubes instead of solid conductors."
-    },
-    // Question 10: Electromagnetic damping (Hard)
-    {
-      scenario: "A precision laboratory balance uses a metal vane attached to the weighing platform that moves between magnets. When you place an object on the balance, the needle swings once and quickly settles to the correct reading instead of oscillating back and forth for a long time.",
-      question: "How do the magnets help the balance reach a stable reading quickly?",
-      options: [
-        { id: 'a', label: "The magnets attract the metal vane and hold it in place once it stops moving" },
-        { id: 'b', label: "Eddy currents induced in the moving vane create a damping force that absorbs oscillation energy", correct: true },
-        { id: 'c', label: "The magnetic field increases air resistance around the vane" },
-        { id: 'd', label: "The magnets create friction by rubbing against the vane at a microscopic level" }
-      ],
-      explanation: "This is electromagnetic damping in action. When the vane oscillates, it moves through the magnetic field, inducing eddy currents. These currents convert the kinetic energy of oscillation into heat, quickly dissipating the unwanted motion. The damping force is automatically proportional to velocity - faster motion creates stronger eddy currents and more braking. This provides smooth, contact-free damping without any mechanical friction or wear, which is essential for precision instruments."
-    }
-  ];
-
-  // ============================================================================
-  // REAL-WORLD APPLICATIONS
-  // ============================================================================
-
-  const realWorldApps = [
-    {
-      icon: "🔋",
-      title: "Regenerative Braking",
-      short: "Electric Vehicles",
-      tagline: "Turning motion into stored energy",
-      description: "Electric vehicles use regenerative braking to capture kinetic energy that would otherwise be lost as heat. When the driver lifts off the accelerator or presses the brake, the electric motor reverses its role and becomes a generator. The moving vehicle's wheels spin the motor, inducing eddy currents in the motor windings that generate electricity. This electricity flows back to the battery, extending driving range by 10-25%. The same principle applies to hybrid vehicles, electric trains, and even some elevators.",
-      connection: "Just like our pendulum slows down when moving through a magnetic field, an electric vehicle slows when its motor is switched to generator mode. The kinetic energy of both systems is converted to electrical energy through electromagnetic induction—our pendulum dissipates it as heat in the metal, while EVs cleverly store it in batteries.",
-      howItWorks: "When regenerative braking is activated, the motor controller switches the drive motor to generator mode. As the wheels turn the motor shaft, the permanent magnets induce changing magnetic flux in the stator windings, creating eddy currents that generate AC electricity. Power electronics convert this to DC and regulate voltage to safely charge the battery. The resistance to turning (back-EMF) creates the braking force, proportional to rotational speed.",
-      stats: [
-        { val: "30%", label: "Energy recovered in city driving" },
-        { val: "70%", label: "Of braking handled regeneratively" },
-        { val: "15-25%", label: "Range extension per charge" }
-      ],
-      examples: [
-        "Tesla one-pedal driving system",
-        "Formula E racing cars with adjustable regen",
-        "Electric trains returning power to the grid",
-        "Hybrid vehicles capturing stop-and-go energy"
-      ],
-      companies: ["Tesla", "BMW", "Rivian", "Toyota", "Porsche"],
-      futureImpact: "Next-generation EVs will feature predictive regenerative braking using AI and GPS to anticipate stops and hills, maximizing energy recovery. Vehicle-to-grid technology will allow parked EVs to sell stored regenerated energy back to the power grid during peak demand, turning cars into mobile power stations.",
-      color: "#22c55e"
-    },
-    {
-      icon: "🚨",
-      title: "Metal Detectors",
-      short: "Security Systems",
-      tagline: "Finding hidden metal without contact",
-      description: "Metal detectors use alternating magnetic fields to detect metallic objects through electromagnetic induction. A transmitter coil generates a changing magnetic field that penetrates materials like clothing, soil, and walls. When this field encounters metal, it induces eddy currents that create a secondary magnetic field detectable by a receiver coil. The strength, phase shift, and frequency response of this secondary field reveal information about the metal's size, depth, conductivity, and magnetic properties.",
-      connection: "Our pendulum demonstrates the same principle in reverse—metal moving through a magnetic field creates eddy currents and braking. Metal detectors flip this: a moving (alternating) magnetic field passes through stationary metal, still creating eddy currents. In both cases, the interaction between conductors and changing magnetic fields is the key physics.",
-      howItWorks: "The detector's transmitter coil creates an oscillating magnetic field (typically 5-25 kHz). When this field passes through metal, it induces circular eddy currents proportional to the metal's conductivity and the field's rate of change. These eddy currents generate their own magnetic field that opposes the original, causing a measurable change in the receiver coil's signal. Signal processing algorithms analyze the response pattern to identify metal type and reject false positives from mineralized soil.",
-      stats: [
-        { val: "99.9%", label: "Detection rate for weapons" },
-        { val: "3m", label: "Detection depth for large objects" },
-        { val: "1000+", label: "People screened per hour" }
-      ],
-      examples: [
-        "Airport security walkthrough detectors",
-        "Archaeological survey equipment",
-        "Landmine and UXO detection systems",
-        "Industrial conveyor contamination sensors"
-      ],
-      companies: ["Garrett", "Minelab", "Fisher Research Labs", "CEIA"],
-      futureImpact: "AI-enhanced metal detectors will distinguish between harmless items and threats with near-perfect accuracy, eliminating most false alarms. Multi-sensor fusion combining eddy current detection with millimeter-wave imaging will enable walk-through screening at normal pace, revolutionizing security checkpoints at airports, stadiums, and public venues.",
-      color: "#ef4444"
-    },
-    {
-      icon: "🍳",
-      title: "Induction Cooktops",
-      short: "Kitchen Appliances",
-      tagline: "Cooking with invisible magnetic heat",
-      description: "Induction cooktops heat cookware directly through electromagnetic induction rather than thermal conduction from a hot surface. A coil beneath the ceramic surface generates a high-frequency alternating magnetic field (20-100 kHz). When ferromagnetic cookware is placed on top, this field induces powerful eddy currents in the pan's base. The electrical resistance of the metal converts these currents into heat, cooking food with remarkable efficiency and precise temperature control.",
-      connection: "Our pendulum converts kinetic energy to heat through eddy current resistance—the same physics powers induction cooking. The pan's base is like our metal plate, except the magnetic field oscillates in place rather than the metal moving through it. In both cases, electrical resistance in eddy current paths generates heat proportional to the field strength and material properties.",
-      howItWorks: "An induction coil creates a rapidly alternating magnetic field. Ferromagnetic pans (iron, steel, certain stainless) concentrate this field and develop strong eddy currents. The pan's electrical resistance converts eddy current energy to heat. Additionally, ferromagnetic materials experience hysteresis heating as magnetic domains repeatedly flip direction. Power is controlled by adjusting field frequency and strength. Because only the pan heats, efficiency reaches 85-90% compared to 40% for gas.",
-      stats: [
-        { val: "90%", label: "Energy efficiency rating" },
-        { val: "50%", label: "Faster than gas cooking" },
-        { val: "1°C", label: "Temperature precision" }
-      ],
-      examples: [
-        "Professional restaurant cooking stations",
-        "Home kitchen cooktop ranges",
-        "Portable induction hot plates",
-        "Industrial food processing equipment"
-      ],
-      companies: ["Miele", "Samsung", "Bosch", "GE Appliances", "Thermador"],
-      futureImpact: "Smart induction cooktops will use sensors and AI to automatically adjust power based on pan contents, preventing boiling over and ensuring perfect results. Wireless power zones will allow pans to be placed anywhere on the surface, with the system automatically detecting cookware position and energizing only the needed coils.",
-      color: "#f59e0b"
-    },
-    {
-      icon: "🔬",
-      title: "Non-Destructive Testing",
-      short: "Quality Control",
-      tagline: "Finding flaws without causing damage",
-      description: "Eddy current testing (ECT) is a non-destructive inspection technique used to detect cracks, corrosion, and material defects in conductive materials without damaging the part. A probe containing a coil generates an alternating magnetic field that induces eddy currents in the test material. Defects like cracks, voids, or material changes disrupt the normal eddy current flow, causing measurable changes in the probe's impedance. This technique inspects aircraft components, pipes, heat exchangers, and precision machinery.",
-      connection: "Our pendulum shows how material properties affect eddy current strength—slits disrupted the currents and reduced braking. NDT uses the same principle: defects in metal disrupt eddy current paths, just like our slits do. By measuring these disruptions, inspectors can find hidden flaws without cutting the material open.",
-      howItWorks: "An ECT probe coil generates an AC magnetic field that induces eddy currents in the test material. These currents flow in closed loops perpendicular to the magnetic field. Defects like cracks create barriers that force currents to detour, changing the current distribution. This alters the magnetic field, which changes the probe coil's impedance. Phase and amplitude analysis reveals defect depth, size, and orientation. Multi-frequency testing can distinguish surface from subsurface flaws.",
-      stats: [
-        { val: "0.1mm", label: "Minimum detectable crack size" },
-        { val: "25mm", label: "Subsurface detection depth" },
-        { val: "100%", label: "Coverage with automated scanning" }
-      ],
-      examples: [
-        "Aircraft fuselage fatigue crack inspection",
-        "Heat exchanger tube wall thickness measurement",
-        "Weld quality verification in pipelines",
-        "Turbine blade coating thickness testing"
-      ],
-      companies: ["Olympus NDT", "Eddyfi Technologies", "GE Inspection", "Zetec"],
-      futureImpact: "AI-powered ECT systems will automatically interpret signals and classify defects in real-time, reducing inspection time by 80%. Flexible array probes conforming to complex geometries will enable rapid scanning of turbine blades, aerospace structures, and additive-manufactured parts with unprecedented detail. Robotic inspection systems will access dangerous or confined spaces autonomously.",
-      color: "#8b5cf6"
-    }
-  ];
-
-  // ============================================================================
-  // PHASE RENDERERS
-  // ============================================================================
-
-  const renderHook = () => (
-    <div style={{
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: isMobile ? '20px' : '40px',
-      textAlign: 'center'
-    }}>
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
       <div style={{
-        padding: '8px 20px',
-        background: `${colors.eddy}20`,
-        border: `1px solid ${colors.eddy}40`,
-        borderRadius: '100px',
-        marginBottom: '24px'
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
       }}>
-        <span style={{ fontSize: '12px', fontWeight: 600, color: colors.eddy, textTransform: 'uppercase' }}>
-          Invisible Magnetic Braking
-        </span>
-      </div>
-
-      <h1 style={{
-        fontSize: isMobile ? '28px' : '40px',
-        fontWeight: 700,
-        color: colors.textPrimary,
-        marginBottom: '20px',
-        lineHeight: 1.2
-      }}>
-        Can a Metal Sheet Stop<br />Motion Without Touching?
-      </h1>
-
-      <p style={{
-        fontSize: isMobile ? '16px' : '18px',
-        color: colors.textSecondary,
-        maxWidth: '500px',
-        marginBottom: '24px',
-        lineHeight: 1.6
-      }}>
-        Swing a pendulum near magnets. If the pendulum is metal, something
-        <strong style={{ color: colors.eddy }}> mysterious happens</strong> -
-        it slows down dramatically, even though nothing touches it.
-      </p>
-
-      <div style={{
-        width: '100%',
-        maxWidth: '400px',
-        height: isMobile ? '240px' : '300px',
-        marginBottom: '32px',
-        backgroundColor: colors.bgSurface,
-        borderRadius: '16px',
-        overflow: 'hidden'
-      }}>
-        <PendulumVisualization showLabels={false} showEddyCurrents={false} />
-      </div>
-
-      <Button onClick={goNext}>
-        Discover the Secret →
-      </Button>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, textTransform: 'uppercase' }}>
-          Step 2 of 10 • Make a Prediction
-        </span>
-
-        <h2 style={{
-          fontSize: isMobile ? '22px' : '28px',
-          color: colors.textPrimary,
-          margin: '12px 0 20px'
-        }}>
-          A metal pendulum swings between strong magnets. What will happen?
-        </h2>
+        {renderProgressBar()}
 
         <div style={{
-          padding: '16px',
-          backgroundColor: colors.bgSurface,
-          borderRadius: '12px',
-          marginBottom: '24px'
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
         }}>
-          <p style={{ color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
-            The pendulum is a sheet of aluminum - a good conductor but NOT magnetic (a magnet won't stick to it).
-            We swing it so it passes through a strong magnetic field between two magnets.
+          🧲🔄
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Invisible Magnetic Braking
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "What if you could stop a speeding train with magnets, even though the wheels aren't magnetic? Discover the <span style={{ color: colors.accent }}>mysterious force</span> that brakes without touching."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Swing an aluminum plate through a magnetic field. Even though aluminum isn't magnetic at all - a magnet won't stick to it - something strange happens. The plate slows down dramatically, as if moving through invisible honey."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Electromagnetic Phenomenon
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-          {[
-            { id: 'nothing', icon: '↔️', label: 'Nothing special happens', desc: 'Aluminum isn\'t magnetic, so magnets don\'t affect it' },
-            { id: 'attract', icon: '🧲', label: 'The pendulum sticks to the magnets', desc: 'Magnets attract all metals' },
-            { id: 'slows', icon: '🛑', label: 'The pendulum slows down dramatically', desc: 'Something invisible brakes it' },
-          ].map(opt => (
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover the Secret
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Nothing happens - aluminum is not magnetic, so magnets have no effect' },
+      { id: 'b', text: 'The pendulum slows down dramatically - an invisible force brakes it', correct: true },
+      { id: 'c', text: 'The pendulum sticks to the magnets - all metals are attracted to magnets' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            An aluminum pendulum swings through a gap between two strong magnets. What will happen?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>🧲</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Strong Magnets</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
+              <div style={{
+                background: colors.accent + '33',
+                padding: '20px 30px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.accent}`,
+              }}>
+                <div style={{ fontSize: '32px' }}>Aluminum</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>NOT Magnetic</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>?</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>What happens?</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
             <button
-              key={opt.id}
-              onClick={() => { setPrediction(opt.id); playSound('click'); }}
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Eddy Current Pendulum
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare different materials swinging through the magnetic field
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <PendulumVisualization />
+            </div>
+
+            {/* Material selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>
+                Select Material:
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                {(['aluminum', 'copper', 'plastic', 'wood'] as const).map(mat => (
+                  <button
+                    key={mat}
+                    onClick={() => { setMaterialType(mat); setIsSwinging(false); setPendulumAngle(45); playSound('click'); }}
+                    style={{
+                      padding: '12px 8px',
+                      backgroundColor: materialType === mat ? `${getMaterialColor(mat)}30` : colors.bgSecondary,
+                      border: `2px solid ${materialType === mat ? getMaterialColor(mat) : colors.border}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      backgroundColor: getMaterialColor(mat),
+                      borderRadius: '4px',
+                      margin: '0 auto 6px'
+                    }} />
+                    <div style={{ color: colors.textPrimary, fontSize: '12px', fontWeight: 600, textTransform: 'capitalize' }}>
+                      {mat}
+                    </div>
+                    <div style={{ color: colors.textMuted, fontSize: '10px' }}>
+                      {mat === 'aluminum' || mat === 'copper' ? 'Conductor' : 'Insulator'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Magnet strength slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Magnet Strength</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{magnetStrength}%</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="100"
+                value={magnetStrength}
+                onChange={(e) => setMagnetStrength(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Swing button */}
+            <button
+              onClick={startSwing}
+              disabled={isSwinging}
               style={{
-                padding: '16px',
-                background: prediction === opt.id ? `${colors.primary}20` : colors.bgSurface,
-                border: prediction === opt.id ? `2px solid ${colors.primary}` : `1px solid ${colors.bgElevated}`,
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                cursor: 'pointer',
-                textAlign: 'left'
+                ...primaryButtonStyle,
+                width: '100%',
+                opacity: isSwinging ? 0.6 : 1,
+                cursor: isSwinging ? 'not-allowed' : 'pointer',
               }}
             >
-              <span style={{ fontSize: '28px' }}>{opt.icon}</span>
-              <div>
-                <div style={{ color: colors.textPrimary, fontWeight: 600 }}>{opt.label}</div>
-                <div style={{ color: colors.textMuted, fontSize: '13px' }}>{opt.desc}</div>
-              </div>
-              {prediction === opt.id && (
-                <span style={{ marginLeft: 'auto', color: colors.primary }}>✓</span>
-              )}
+              {isSwinging ? 'Swinging...' : 'Release Pendulum'}
             </button>
-          ))}
-        </div>
 
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
-          <Button variant="ghost" onClick={goBack}>← Back</Button>
-          <Button onClick={goNext} disabled={!prediction}>Test It →</Button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{
-        padding: isMobile ? '12px 16px' : '16px 24px',
-        borderBottom: `1px solid ${colors.bgElevated}`,
-        background: colors.bgSurface
-      }}>
-        <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600 }}>
-          Step 3 of 10 • Interactive Experiment
-        </span>
-        <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: '4px 0' }}>
-          EDDY CURRENT PENDULUM
-        </h2>
-        <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0 }}>
-          Compare different materials swinging through the magnetic field
-        </p>
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          {/* Visualization */}
-          <div style={{
-            backgroundColor: colors.bgSurface,
-            borderRadius: '12px',
-            padding: '8px',
-            marginBottom: '16px'
-          }}>
-            <PendulumVisualization />
-          </div>
-
-          {/* Material selector */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
-              SELECT MATERIAL
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-              {(['aluminum', 'copper', 'plastic', 'wood'] as const).map(mat => (
-                <button
-                  key={mat}
-                  onClick={() => { setMaterialType(mat); setIsSwinging(false); setPendulumAngle(45); playSound('click'); }}
-                  style={{
-                    padding: '12px 8px',
-                    backgroundColor: materialType === mat ? `${getMaterialColor(mat)}30` : colors.bgSurface,
-                    border: `2px solid ${materialType === mat ? getMaterialColor(mat) : colors.bgElevated}`,
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    textAlign: 'center'
-                  }}
-                >
-                  <div style={{
-                    width: '24px',
-                    height: '24px',
-                    backgroundColor: getMaterialColor(mat),
-                    borderRadius: '4px',
-                    margin: '0 auto 6px'
-                  }} />
-                  <div style={{ color: colors.textPrimary, fontSize: '11px', fontWeight: 600, textTransform: 'capitalize' }}>
-                    {mat}
-                  </div>
-                  <div style={{ color: colors.textMuted, fontSize: '9px' }}>
-                    {mat === 'aluminum' || mat === 'copper' ? 'Conductor' : 'Insulator'}
-                  </div>
-                </button>
-              ))}
+            {/* Results display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginTop: '20px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: dampingCoefficient > 0.05 ? colors.success : colors.textMuted }}>
+                  {dampingCoefficient > 0.05 ? 'STRONG' : dampingCoefficient > 0.01 ? 'WEAK' : 'NONE'}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Damping</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{Math.round(eddyCurrentIntensity)}%</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Eddy Current</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.textPrimary }}>{Math.round(pendulumAngle)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Angle</div>
+              </div>
             </div>
           </div>
 
-          {/* Swing button */}
-          <Button
-            onClick={startSwing}
-            disabled={isSwinging}
-            style={{ width: '100%', marginBottom: '16px' }}
+          {materialConductivity > 0 && dampingCoefficient > 0.03 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Notice the strong braking! The pendulum stops much faster with conductors.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            {isSwinging ? 'Swinging...' : '🔄 Release Pendulum'}
-          </Button>
+            Understand the Physics
+          </button>
+        </div>
 
-          {/* Results display */}
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Lenz's Law: Nature's Magnetic Brake
+          </h2>
+
           <div style={{
-            padding: '16px',
-            backgroundColor: colors.bgSurface,
-            borderRadius: '12px',
-            border: `1px solid ${dampingCoefficient > 0.05 ? colors.success : colors.bgElevated}`
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontSize: '12px', color: colors.textMuted }}>Braking Effect</div>
-                <div style={{ fontSize: '18px', color: dampingCoefficient > 0.05 ? colors.success : colors.textMuted, fontWeight: 700 }}>
-                  {dampingCoefficient > 0.05 ? 'STRONG DAMPING' : dampingCoefficient > 0.01 ? 'WEAK DAMPING' : 'NO DAMPING'}
-                </div>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>What Happened:</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                When the conducting sheet moved through the magnetic field, it slowed down dramatically - even though nothing physically touched it. Non-conductors (plastic, wood) swung freely without any braking.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.accent }}>Why It Happens (Lenz's Law):</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                Motion through a magnetic field induces circular electric currents (<span style={{ color: colors.accent }}>eddy currents</span>) in the conductor. By Lenz's Law, these currents create their own magnetic field that <strong>OPPOSES</strong> the motion that caused them. The kinetic energy is converted to heat in the metal.
+              </p>
+              <p>
+                <strong style={{ color: colors.success }}>Key Insight:</strong> The braking force is proportional to velocity - the faster you move, the stronger the brake. This is perfect for applications like train brakes!
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              The Physics Formula
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              <strong>Induced EMF = -dPhi/dt</strong> (Faraday's Law)
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              The negative sign represents Lenz's Law - the induced effect always opposes the change that caused it. This is nature's way of conserving energy.
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Try the Twist
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Braking becomes STRONGER - more edges means more magnetic interaction' },
+      { id: 'b', text: 'Braking becomes WEAKER - slits interrupt the eddy current paths', correct: true },
+      { id: 'c', text: 'No change - the material is still aluminum, slits don\'t matter' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Slits in the Metal
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What if we cut parallel slits through the metal sheet, like a comb?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: '60px',
+                  height: '80px',
+                  backgroundColor: colors.aluminum,
+                  borderRadius: '4px',
+                  margin: '0 auto 8px',
+                }} />
+                <p style={{ ...typo.small, color: colors.textMuted }}>Solid Sheet</p>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '12px', color: colors.textMuted }}>Conductivity</div>
-                <div style={{ fontSize: '18px', color: colors.textPrimary, fontWeight: 700 }}>
-                  {Math.round(materialConductivity * 100)}%
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: '60px',
+                  height: '80px',
+                  backgroundColor: colors.aluminum,
+                  borderRadius: '4px',
+                  margin: '0 auto 8px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '8px',
+                }}>
+                  {[0,1,2,3].map(i => (
+                    <div key={i} style={{ width: '4px', height: '50px', backgroundColor: colors.bgPrimary, borderRadius: '2px' }} />
+                  ))}
                 </div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Sheet with Slits</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div style={{
-        padding: '12px 16px',
-        borderTop: `1px solid ${colors.bgElevated}`,
-        display: 'flex',
-        justifyContent: 'space-between'
-      }}>
-        <Button variant="ghost" onClick={goBack}>← Back</Button>
-        <Button onClick={goNext}>See Why →</Button>
-      </div>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-      <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-        <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600 }}>
-          Step 4 of 10 • Understanding
-        </span>
-        <h2 style={{
-          fontSize: isMobile ? '22px' : '28px',
-          color: colors.textPrimary,
-          margin: '12px 0 24px'
-        }}>
-          Lenz's Law: Nature's Magnetic Brake
-        </h2>
-
-        <ExplanationBox
-          whatHappens="When the conducting sheet moves through the magnetic field, it slows down dramatically - even though nothing physically touches it. Non-conductors (plastic, wood) swing freely without any braking."
-          whyItHappens="Motion through a magnetic field induces circular electric currents (eddy currents) in the conductor. By Lenz's Law, these currents create their own magnetic field that OPPOSES the motion that caused them. The kinetic energy is converted to heat in the metal."
-          realWorldExample="This principle is used in electromagnetic brakes for trains, roller coasters, and exercise equipment. No friction, no wear, instant response - and the braking force increases automatically with speed!"
-        />
-
-        <div style={{
-          marginTop: '24px',
-          padding: '16px',
-          backgroundColor: `${colors.warning}15`,
-          borderRadius: '12px',
-          border: `1px solid ${colors.warning}40`
-        }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: colors.warning, marginBottom: '8px' }}>
-            ⚠️ Safety Note
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
           </div>
-          <div style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.5 }}>
-            Strong neodymium magnets can pinch fingers severely. Keep fingers clear of the gap when the pendulum is swinging. These magnets can also damage electronics and credit cards.
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
-          <Button variant="ghost" onClick={goBack}>← Back</Button>
-          <Button onClick={goNext}>Try the Twist →</Button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <span style={{ fontSize: '11px', color: colors.accent, fontWeight: 600, textTransform: 'uppercase' }}>
-          Step 5 of 10 • Twist Prediction
-        </span>
-
-        <h2 style={{
-          fontSize: isMobile ? '22px' : '28px',
-          color: colors.textPrimary,
-          margin: '12px 0 20px'
-        }}>
-          What if we cut slits in the metal sheet?
-        </h2>
-
-        <p style={{ color: colors.textSecondary, marginBottom: '24px', lineHeight: 1.6 }}>
-          We take the same aluminum sheet and cut several parallel slits through it (like a comb).
-          How will this affect the magnetic braking?
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-          {[
-            { id: 'stronger', icon: '📈', label: 'Braking becomes STRONGER', desc: 'More edges means more interaction' },
-            { id: 'weaker', icon: '📉', label: 'Braking becomes WEAKER', desc: 'Slits interrupt something important' },
-            { id: 'same', icon: '➡️', label: 'No change', desc: 'The material is still aluminum' },
-          ].map(opt => (
+          {twistPrediction && (
             <button
-              key={opt.id}
-              onClick={() => { setTwistPrediction(opt.id); playSound('click'); }}
-              style={{
-                padding: '16px',
-                background: twistPrediction === opt.id ? `${colors.accent}20` : colors.bgSurface,
-                border: twistPrediction === opt.id ? `2px solid ${colors.accent}` : `1px solid ${colors.bgElevated}`,
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px',
-                cursor: 'pointer',
-                textAlign: 'left'
-              }}
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              <span style={{ fontSize: '28px' }}>{opt.icon}</span>
-              <div>
-                <div style={{ color: colors.textPrimary, fontWeight: 600 }}>{opt.label}</div>
-                <div style={{ color: colors.textMuted, fontSize: '13px' }}>{opt.desc}</div>
-              </div>
-              {twistPrediction === opt.id && (
-                <span style={{ marginLeft: 'auto', color: colors.accent }}>✓</span>
-              )}
+              Test the Slits
             </button>
-          ))}
+          )}
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between' }}>
-          <Button variant="ghost" onClick={goBack}>← Back</Button>
-          <Button onClick={goNext} disabled={!twistPrediction}>Test It →</Button>
-        </div>
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderTwistPlay = () => (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
       <div style={{
-        padding: isMobile ? '12px 16px' : '16px 24px',
-        borderBottom: `1px solid ${colors.bgElevated}`,
-        background: `linear-gradient(135deg, ${colors.accent}20 0%, ${colors.bgSurface} 100%)`
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
       }}>
-        <span style={{ fontSize: '11px', color: colors.accent, fontWeight: 600 }}>
-          Step 6 of 10 • Twist Experiment
-        </span>
-        <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: '4px 0' }}>
-          SLITS VS SOLID SHEET
-        </h2>
-        <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0 }}>
-          Toggle slits on the metal sheet and compare the braking
-        </p>
-      </div>
+        {renderProgressBar()}
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '12px' : '20px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-          <div style={{
-            backgroundColor: colors.bgSurface,
-            borderRadius: '12px',
-            padding: '8px',
-            marginBottom: '16px'
-          }}>
-            <PendulumVisualization />
-          </div>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Solid vs Slotted Sheet
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Toggle slits on the metal sheet and compare the braking effect
+          </p>
 
-          {/* Slit toggle */}
           <div style={{
-            padding: '16px',
-            backgroundColor: colors.bgSurface,
-            borderRadius: '12px',
-            marginBottom: '16px'
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontSize: '14px', color: colors.textPrimary, fontWeight: 600 }}>
-                  Cut Slits in Sheet
-                </div>
-                <div style={{ fontSize: '12px', color: colors.textMuted }}>
-                  Interrupt the circular eddy current paths
-                </div>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <PendulumVisualization />
+            </div>
+
+            {/* Slit toggle */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Solid Sheet</span>
               <button
                 onClick={() => { setHasSlits(!hasSlits); setIsSwinging(false); setPendulumAngle(45); playSound('click'); }}
                 style={{
                   width: '60px',
-                  height: '32px',
-                  borderRadius: '16px',
-                  backgroundColor: hasSlits ? colors.accent : colors.bgElevated,
+                  height: '30px',
+                  borderRadius: '15px',
                   border: 'none',
+                  background: hasSlits ? colors.warning : colors.border,
                   cursor: 'pointer',
                   position: 'relative',
-                  transition: 'background-color 0.2s'
+                  transition: 'background 0.3s',
                 }}
               >
                 <div style={{
                   width: '24px',
                   height: '24px',
-                  borderRadius: '12px',
-                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  background: 'white',
                   position: 'absolute',
-                  top: '4px',
-                  left: hasSlits ? '32px' : '4px',
-                  transition: 'left 0.2s'
+                  top: '3px',
+                  left: hasSlits ? '33px' : '3px',
+                  transition: 'left 0.3s',
                 }} />
               </button>
+              <span style={{ ...typo.small, color: hasSlits ? colors.warning : colors.textSecondary, fontWeight: hasSlits ? 600 : 400 }}>
+                Slotted Sheet
+              </span>
+            </div>
+
+            {/* Material selector - ensure conductor is selected */}
+            {materialConductivity === 0 && (
+              <div style={{
+                background: `${colors.error}22`,
+                border: `1px solid ${colors.error}`,
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '16px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.small, color: colors.error, margin: 0 }}>
+                  Select a conductor (aluminum or copper) to see the slit effect!
+                </p>
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '20px' }}>
+              {(['aluminum', 'copper', 'plastic', 'wood'] as const).map(mat => (
+                <button
+                  key={mat}
+                  onClick={() => { setMaterialType(mat); setIsSwinging(false); setPendulumAngle(45); playSound('click'); }}
+                  style={{
+                    padding: '10px',
+                    backgroundColor: materialType === mat ? `${getMaterialColor(mat)}30` : colors.bgSecondary,
+                    border: `2px solid ${materialType === mat ? getMaterialColor(mat) : colors.border}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'center'
+                  }}
+                >
+                  <div style={{ color: colors.textPrimary, fontSize: '12px', fontWeight: 600, textTransform: 'capitalize' }}>
+                    {mat}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={startSwing}
+              disabled={isSwinging}
+              style={{
+                ...primaryButtonStyle,
+                width: '100%',
+                opacity: isSwinging ? 0.6 : 1,
+              }}
+            >
+              {isSwinging ? 'Swinging...' : 'Release Pendulum'}
+            </button>
+
+            {/* Comparison display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+              marginTop: '20px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: hasSlits ? colors.warning : colors.success }}>
+                  {hasSlits ? 'WEAK' : 'STRONG'}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Current Damping</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{hasSlits ? '20%' : '100%'}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Eddy Current Path</div>
+              </div>
             </div>
           </div>
 
-          {/* Make sure we're testing with a conductor */}
-          {materialConductivity === 0 && (
+          {hasSlits && materialConductivity > 0 && (
             <div style={{
-              padding: '12px',
-              backgroundColor: `${colors.warning}20`,
-              borderRadius: '8px',
-              marginBottom: '16px',
-              textAlign: 'center'
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
             }}>
-              <span style={{ color: colors.warning, fontSize: '13px' }}>
-                ⚠️ Select a conductor (aluminum or copper) to see the slit effect
-              </span>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                The slits dramatically reduce braking! The pendulum swings more freely now.
+              </p>
             </div>
           )}
 
-          <Button
-            onClick={startSwing}
-            disabled={isSwinging}
-            style={{ width: '100%' }}
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            {isSwinging ? 'Swinging...' : '🔄 Release Pendulum'}
-          </Button>
+            Understand Why
+          </button>
         </div>
+
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div style={{
-        padding: '12px 16px',
-        borderTop: `1px solid ${colors.bgElevated}`,
-        display: 'flex',
-        justifyContent: 'space-between'
-      }}>
-        <Button variant="ghost" onClick={goBack}>← Back</Button>
-        <Button onClick={goNext}>Continue →</Button>
-      </div>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-      <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-        <span style={{ fontSize: '11px', color: colors.accent, fontWeight: 600 }}>
-          Step 7 of 10 • Twist Understanding
-        </span>
-
-        <h2 style={{
-          fontSize: isMobile ? '22px' : '28px',
-          color: colors.textPrimary,
-          margin: '12px 0 24px'
-        }}>
-          Why Slits Weaken the Brake
-        </h2>
-
-        <ExplanationBox
-          whatHappens="With slits cut in the sheet, the braking effect becomes much weaker. The pendulum swings more freely, almost like it was plastic!"
-          whyItHappens="Eddy currents flow in circular loops. The slits interrupt these circular paths, forcing the current to take longer, higher-resistance routes. Less current means less opposing magnetic field, which means less braking force."
-          realWorldExample="This is why transformer cores are made of thin laminated sheets instead of solid metal. The laminations reduce eddy currents that would otherwise waste energy as heat."
-        />
-
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
-          <Button variant="ghost" onClick={goBack}>← Back</Button>
-          <Button onClick={goNext}>Real World →</Button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const applications = [
-      {
-        title: 'Train Brakes (Maglev & Emergency)',
-        icon: '🚄',
-        description: 'High-speed trains use eddy current brakes that never wear out. The faster the train, the stronger the braking - perfect for emergencies.',
-        insight: 'Some trains can stop from 300 km/h using only magnetic braking.'
-      },
-      {
-        title: 'Roller Coaster Brakes',
-        icon: '🎢',
-        description: 'At the end of the ride, magnetic fins on the car pass through arrays of magnets. Smooth, reliable braking with no friction parts to maintain.',
-        insight: 'These brakes work even if the power goes out - they\'re passive and failsafe.'
-      },
-      {
-        title: 'Metal Detectors',
-        icon: '🔍',
-        description: 'Airport and industrial metal detectors use eddy currents. A changing magnetic field induces currents in metal objects, which are then detected.',
-        insight: 'This is why you have to remove metal items at airport security.'
-      },
-      {
-        title: 'Induction Cooktops',
-        icon: '🍳',
-        description: 'Eddy currents in the pot bottom generate heat directly. The cooktop stays cool - only the pot heats up.',
-        insight: 'Only works with magnetic pots (iron, steel). Aluminum and copper pans won\'t work!'
-      }
-    ];
-
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
     return (
-      <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <span style={{ fontSize: '11px', color: colors.success, fontWeight: 600 }}>
-            Step 8 of 10 • Real-World Applications
-          </span>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-          <h2 style={{ fontSize: isMobile ? '22px' : '28px', color: colors.textPrimary, margin: '12px 0 24px' }}>
-            Eddy Currents Are Everywhere
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why Slits Weaken the Brake
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {applications.map((app, i) => (
-              <div
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔄</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Eddy Currents Flow in Loops</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Eddy currents are circular - they flow in closed loops within the metal. The larger and more complete these loops, the stronger the braking effect.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>✂️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Slits Interrupt the Paths</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The slits act as roadblocks, forcing currents to take longer, narrower routes. This increases resistance and reduces total current flow, weakening the braking force by up to <span style={{ color: colors.warning }}>80%</span>.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Real-World Application: Transformer Cores</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                This is why transformer cores are made of <strong>thin laminated sheets</strong> instead of solid metal blocks. The laminations (like our slits) reduce wasteful eddy currents that would otherwise heat up the core and waste energy!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
                 key={i}
                 onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
                   const newCompleted = [...completedApps];
                   newCompleted[i] = true;
                   setCompletedApps(newCompleted);
-                  setActiveApp(i);
-                  playSound('click');
                 }}
                 style={{
-                  padding: '16px',
-                  backgroundColor: activeApp === i ? `${colors.success}15` : colors.bgSurface,
-                  border: `1px solid ${completedApps[i] ? colors.success : colors.bgElevated}`,
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
                   borderRadius: '12px',
-                  cursor: 'pointer'
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '24px' }}>{app.icon}</span>
-                  <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{app.title}</span>
-                  {completedApps[i] && <span style={{ marginLeft: 'auto', color: colors.success }}>✓</span>}
-                </div>
-                {activeApp === i && (
-                  <>
-                    <p style={{ color: colors.textSecondary, fontSize: '14px', margin: '8px 0', lineHeight: 1.5 }}>
-                      {app.description}
-                    </p>
-                    <p style={{ color: colors.accent, fontSize: '13px', margin: 0, fontStyle: 'italic' }}>
-                      💡 {app.insight}
-                    </p>
-                  </>
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    checkmark
+                  </div>
                 )}
-              </div>
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.short}
+                </div>
+              </button>
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
-            <Button variant="ghost" onClick={goBack}>← Back</Button>
-            <Button onClick={goNext} disabled={!completedApps.some(c => c)}>
-              Take the Test →
-            </Button>
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Connection to Eddy Current Pendulum:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                Examples:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.examples.map((ex, i) => (
+                  <span key={i} style={{
+                    background: colors.bgPrimary,
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    color: colors.textSecondary,
+                  }}>
+                    {ex}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '8px', fontWeight: 600 }}>
+                Key Companies:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.companies.map((co, i) => (
+                  <span key={i} style={{
+                    background: app.color + '22',
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    color: app.color,
+                    fontWeight: 600,
+                  }}>
+                    {co}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '8px',
+              padding: '16px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
           </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+
+          {!allAppsCompleted && (
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+              Explore all 4 applications to continue ({completedApps.filter(c => c).length}/4 completed)
+            </p>
+          )}
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderTest = () => {
-    const currentQ = testQuestions[currentQuestion];
-    const selectedAnswer = testAnswers[currentQuestion];
-    const correctOption = currentQ.options.find(opt => opt.correct);
-    const hasAnswered = selectedAnswer !== null;
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand eddy current braking!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
 
     return (
-      <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          {/* Progress indicator */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600 }}>
-              Question {currentQuestion + 1} of {testQuestions.length}
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
             </span>
-            <span style={{ fontSize: '13px', color: colors.textMuted }}>
-              Score: {testScore}/{testQuestions.length}
-            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
           </div>
 
-          {/* Scenario box */}
+          {/* Scenario */}
           <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
             padding: '16px',
-            backgroundColor: `${colors.primary}10`,
-            borderLeft: `4px solid ${colors.primary}`,
-            borderRadius: '0 12px 12px 0',
-            marginBottom: '20px'
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <div style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, textTransform: 'uppercase', marginBottom: '8px' }}>
-              Scenario
-            </div>
-            <p style={{ fontSize: isMobile ? '14px' : '15px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
-              {currentQ.scenario}
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
             </p>
           </div>
 
           {/* Question */}
-          <h2 style={{ fontSize: isMobile ? '18px' : '22px', color: colors.textPrimary, margin: '0 0 20px', lineHeight: 1.4 }}>
-            {currentQ.question}
-          </h2>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
 
           {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-            {currentQ.options.map((opt) => {
-              const isSelected = selectedAnswer === opt.id;
-              const showCorrect = hasAnswered && opt.correct;
-              const showIncorrect = hasAnswered && isSelected && !opt.correct;
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => {
+              const isSelected = testAnswers[currentQuestion] === opt.id;
+              const showResult = testAnswers[currentQuestion] !== null;
+              const isCorrect = opt.correct;
 
               return (
                 <button
                   key={opt.id}
                   onClick={() => {
-                    if (hasAnswered) return;
+                    if (showResult) return;
+                    playSound('click');
                     const newAnswers = [...testAnswers];
                     newAnswers[currentQuestion] = opt.id;
                     setTestAnswers(newAnswers);
-                    if (opt.correct) setTestScore(prev => prev + 1);
-                    playSound(opt.correct ? 'success' : 'failure');
+                    if (opt.correct) {
+                      setTestScore(s => s + 1);
+                      playSound('success');
+                    } else {
+                      playSound('failure');
+                    }
                   }}
-                  disabled={hasAnswered}
+                  disabled={showResult}
                   style={{
+                    background: showResult
+                      ? isCorrect
+                        ? `${colors.success}22`
+                        : isSelected
+                          ? `${colors.error}22`
+                          : colors.bgCard
+                      : testAnswers[currentQuestion] === opt.id
+                        ? `${colors.accent}22`
+                        : colors.bgCard,
+                    border: `2px solid ${
+                      showResult
+                        ? isCorrect
+                          ? colors.success
+                          : isSelected
+                            ? colors.error
+                            : colors.border
+                        : testAnswers[currentQuestion] === opt.id
+                          ? colors.accent
+                          : colors.border
+                    }`,
+                    borderRadius: '10px',
                     padding: '14px 16px',
-                    background: showCorrect
-                      ? `${colors.success}15`
-                      : showIncorrect
-                        ? `${colors.error}15`
-                        : colors.bgSurface,
-                    border: showCorrect
-                      ? `2px solid ${colors.success}`
-                      : showIncorrect
-                        ? `2px solid ${colors.error}`
-                        : `1px solid ${colors.bgElevated}`,
-                    borderRadius: '12px',
-                    color: colors.textPrimary,
-                    fontSize: isMobile ? '14px' : '15px',
                     textAlign: 'left',
-                    cursor: hasAnswered ? 'default' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '12px',
-                    transition: 'all 0.2s'
+                    cursor: showResult ? 'default' : 'pointer',
                   }}
                 >
                   <span style={{
+                    display: 'inline-block',
                     width: '24px',
                     height: '24px',
                     borderRadius: '50%',
-                    backgroundColor: showCorrect
-                      ? colors.success
-                      : showIncorrect
-                        ? colors.error
-                        : colors.bgElevated,
-                    color: showCorrect || showIncorrect ? 'white' : colors.textMuted,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    background: showResult
+                      ? isCorrect
+                        ? colors.success
+                        : isSelected
+                          ? colors.error
+                          : colors.bgSecondary
+                      : testAnswers[currentQuestion] === opt.id
+                        ? colors.accent
+                        : colors.bgSecondary,
+                    color: showResult && (isCorrect || isSelected) ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '24px',
+                    marginRight: '10px',
                     fontSize: '12px',
-                    fontWeight: 600,
-                    flexShrink: 0
+                    fontWeight: 700,
                   }}>
-                    {showCorrect ? '✓' : showIncorrect ? '✗' : opt.id.toUpperCase()}
+                    {showResult && isCorrect ? 'O' : showResult && isSelected && !isCorrect ? 'X' : opt.id.toUpperCase()}
                   </span>
-                  <span style={{ lineHeight: 1.5 }}>{opt.label}</span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>
+                    {opt.label}
+                  </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Explanation (shown after answering) */}
-          {hasAnswered && (
+          {/* Explanation after answering */}
+          {testAnswers[currentQuestion] !== null && (
             <div style={{
+              background: `${colors.accent}11`,
+              borderRadius: '12px',
               padding: '16px',
-              backgroundColor: `${colors.eddy}10`,
-              borderLeft: `4px solid ${colors.eddy}`,
-              borderRadius: '0 12px 12px 0',
-              marginBottom: '20px',
-              animation: 'fadeIn 0.3s ease'
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}33`,
             }}>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: colors.eddy, textTransform: 'uppercase', marginBottom: '8px' }}>
-                {selectedAnswer === correctOption?.id ? 'Correct!' : `Correct Answer: ${correctOption?.id.toUpperCase()}`}
-              </div>
-              <p style={{ fontSize: isMobile ? '13px' : '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
-                {currentQ.explanation}
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Explanation:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.explanation}
               </p>
             </div>
           )}
 
           {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
-            <Button variant="ghost" onClick={goBack}>← Back</Button>
-            {hasAnswered && (
-              <Button
-                onClick={() => {
-                  if (currentQuestion < testQuestions.length - 1) {
-                    setCurrentQuestion(prev => prev + 1);
-                  } else {
-                    goNext();
-                  }
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
                 }}
               >
-                {currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →'}
-              </Button>
+                Previous
+              </button>
+            )}
+            {testAnswers[currentQuestion] !== null && (
+              currentQuestion < 9 ? (
+                <button
+                  onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: colors.accent,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(true);
+                    playSound(testScore >= 7 ? 'complete' : 'failure');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: colors.success,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )
             )}
           </div>
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => (
-    <div style={{
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: isMobile ? '20px' : '40px',
-      textAlign: 'center'
-    }}>
-      <div style={{ fontSize: '64px', marginBottom: '24px' }}>🎉🧲</div>
-
-      <h1 style={{
-        fontSize: isMobile ? '28px' : '36px',
-        fontWeight: 700,
-        color: colors.textPrimary,
-        marginBottom: '16px'
-      }}>
-        Mastery Achieved!
-      </h1>
-
-      <p style={{
-        fontSize: isMobile ? '16px' : '18px',
-        color: colors.textSecondary,
-        maxWidth: '500px',
-        marginBottom: '24px',
-        lineHeight: 1.6
-      }}>
-        You now understand how eddy currents create magnetic braking through Lenz's Law. This invisible force powers braking systems from trains to theme parks!
-      </p>
-
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
       <div style={{
-        padding: '20px',
-        backgroundColor: colors.bgSurface,
-        borderRadius: '12px',
-        marginBottom: '24px'
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
       }}>
-        <div style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '8px' }}>Test Score</div>
-        <div style={{ color: colors.success, fontSize: '36px', fontWeight: 700 }}>{testScore}/10</div>
-      </div>
+        {renderProgressBar()}
 
-      <Button onClick={() => goToPhase('hook')}>
-        Start Over
-      </Button>
-    </div>
-  );
-
-  // Phase renderer mapping
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div style={{
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: colors.bgDeep,
-      color: colors.textPrimary,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Progress bar */}
-      <div style={{ height: '4px', backgroundColor: colors.bgElevated, position: 'relative' }}>
         <div style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          height: '100%',
-          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-          backgroundColor: colors.eddy,
-          transition: 'width 0.3s ease'
-        }} />
-      </div>
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-      {/* Main content */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        {renderPhase()}
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Eddy Current Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how eddy currents create magnetic braking through Lenz's Law - the invisible force that powers everything from train brakes to metal detectors!
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <div style={{ ...typo.h2, color: colors.accent, marginBottom: '16px' }}>
+            {testScore} / 10
+          </div>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Eddy currents are induced by motion through magnetic fields',
+              'Lenz\'s Law: induced currents oppose the change that caused them',
+              'Braking force is proportional to velocity',
+              'Slits/laminations reduce eddy currents',
+              'Real applications: trains, detectors, cooktops, NDT',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>check</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
 export default EddyCurrentPendulumRenderer;

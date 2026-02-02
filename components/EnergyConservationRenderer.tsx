@@ -1,186 +1,295 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// ─────────────────────────────────────────────────────────────────────────────
+// Conservation of Energy - Complete 10-Phase Game
+// Why energy can never be created or destroyed, only transformed
+// ─────────────────────────────────────────────────────────────────────────────
 
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Lab',
-  review: 'Review',
-  twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
-  twist_review: 'Twist Review',
-  transfer: 'Transfer',
-  test: 'Test',
-  mastery: 'Mastery'
-};
-
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-interface Props {
+interface EnergyConservationRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
-  setTestScore?: (score: number) => void;
 }
 
-// Real-World Applications Data
-const applications = [
-  {
-    id: 'rollercoaster',
-    icon: '🎢',
-    title: 'Roller Coasters',
-    subtitle: 'Theme Park Engineering',
-    description: 'The first hill of a roller coaster is always the highest because all subsequent motion relies on that initial potential energy.',
-    physics: 'PE at top of first hill converts to KE throughout the ride. No motors push the cars after the initial climb.',
-  },
-  {
-    id: 'regenerative',
-    icon: '🚗',
-    title: 'Regenerative Braking',
-    subtitle: 'Electric Vehicle Technology',
-    description: 'Electric and hybrid vehicles capture kinetic energy during braking and convert it back to electrical energy to recharge batteries.',
-    physics: 'KE of moving car is converted to electrical energy instead of being wasted as heat in brake pads.',
-  },
-  {
-    id: 'bouncing',
-    icon: '🏀',
-    title: 'Bouncing Balls',
-    subtitle: 'Sports Physics',
-    description: 'A bouncing ball never returns to its original height because some energy is lost as heat and sound with each bounce.',
-    physics: 'Each collision converts some KE to thermal and acoustic energy, demonstrating energy dissipation.',
-  },
-  {
-    id: 'hydropower',
-    icon: '💧',
-    title: 'Hydroelectric Dams',
-    subtitle: 'Clean Energy Generation',
-    description: 'Dams store water at height, converting gravitational PE into KE as water falls, then into electrical energy.',
-    physics: 'Water PE = mgh converts to KE as it falls through penstocks. Turbines convert this to electricity.',
-  },
-];
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
 
-// Test Questions - 10 questions with correct: true marked
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    question: 'A marble is released from rest at height h. At what height will it have half kinetic and half potential energy?',
+    scenario: "A roller coaster car is at the top of the first hill, 50 meters high. Passengers notice that no motors push the car after the initial climb, yet it travels through loops, curves, and smaller hills.",
+    question: "Why must the first hill always be the tallest on a roller coaster without mid-ride motors?",
     options: [
-      { text: 'h/4', correct: false },
-      { text: 'h/2', correct: true },
-      { text: 'h/3', correct: false },
-      { text: '3h/4', correct: false }
-    ]
+      { id: 'a', label: "The first hill provides all the gravitational potential energy for the entire ride", correct: true },
+      { id: 'b', label: "Higher hills would make passengers too dizzy" },
+      { id: 'c', label: "Building taller hills later would be too expensive" },
+      { id: 'd', label: "Wind resistance pushes the car harder on later hills" }
+    ],
+    explanation: "The first hill stores gravitational potential energy (PE = mgh). This energy converts to kinetic energy going down and back to potential energy going up subsequent hills. Since some energy is always lost to friction and air resistance, each subsequent hill must be shorter than the previous peak."
   },
   {
-    question: 'Why can\'t a roller coaster\'s second hill be higher than the first (without motors)?',
+    scenario: "A physics student releases a marble from a height of 2 meters on a frictionless track shaped like a U. The marble rolls down, across the bottom, and up the other side.",
+    question: "How high will the marble rise on the opposite side of a perfectly frictionless track?",
     options: [
-      { text: 'Too scary', correct: false },
-      { text: 'Not enough potential energy', correct: true },
-      { text: 'Cars would derail', correct: false },
-      { text: 'Air resistance', correct: false }
-    ]
+      { id: 'a', label: "Less than 2 meters because gravity slows it down" },
+      { id: 'b', label: "Exactly 2 meters - all potential energy converts back", correct: true },
+      { id: 'c', label: "More than 2 meters because it gains speed going down" },
+      { id: 'd', label: "It depends on the mass of the marble" }
+    ],
+    explanation: "On a frictionless track, mechanical energy is perfectly conserved. At release: PE = mgh = mg(2m). At the bottom: all PE becomes KE. At the opposite peak: all KE converts back to PE. Since total energy is conserved and mass/gravity are constant, the marble returns to exactly 2 meters."
   },
   {
-    question: 'A ball rolls down from height h with final speed v. From twice the height (2h), the final speed would be:',
+    scenario: "A car traveling at 60 km/h applies its brakes and comes to a complete stop. The driver notices the brake discs glowing red-hot after the stop.",
+    question: "Where did the car's kinetic energy go when it stopped?",
     options: [
-      { text: 'v', correct: false },
-      { text: '2v', correct: false },
-      { text: 'v times sqrt(2)', correct: true },
-      { text: '4v', correct: false }
-    ]
+      { id: 'a', label: "The energy was destroyed by the friction of braking" },
+      { id: 'b', label: "The energy transferred to the road surface" },
+      { id: 'c', label: "The kinetic energy converted to thermal energy in the brakes", correct: true },
+      { id: 'd', label: "The energy was stored in the brake pads for later use" }
+    ],
+    explanation: "Energy cannot be destroyed, only transformed. The car's kinetic energy (1/2 mv^2) converts to thermal energy through friction between the brake pads and rotors. This is why brakes get extremely hot during heavy braking - the heat IS the car's former kinetic energy."
   },
   {
-    question: 'What happens to mechanical energy when friction is present?',
+    scenario: "A pendulum is released from a 30-degree angle in a vacuum chamber with no air resistance. After 1000 swings, a physicist measures its maximum angle.",
+    question: "What angle will the pendulum reach after 1000 swings in a perfect vacuum?",
     options: [
-      { text: 'Disappears completely', correct: false },
-      { text: 'Converts to thermal energy', correct: true },
-      { text: 'Increases', correct: false },
-      { text: 'Stays exactly the same', correct: false }
-    ]
+      { id: 'a', label: "Slightly less than 30 degrees due to accumulated losses" },
+      { id: 'b', label: "Exactly 30 degrees - no energy loss mechanisms exist", correct: true },
+      { id: 'c', label: "More than 30 degrees as it builds momentum" },
+      { id: 'd', label: "Zero degrees - it would have stopped by then" }
+    ],
+    explanation: "In a perfect vacuum with no friction, the pendulum experiences no energy dissipation. The sum PE + KE remains constant. At maximum displacement, KE = 0 and PE is maximum. Since total energy never changes, maximum displacement angle stays exactly 30 degrees forever."
   },
   {
-    question: 'A pendulum swings from point A (highest) to point B (other highest). At which point is kinetic energy maximum?',
+    scenario: "Two identical balls are dropped from 10 meters - Ball A onto a concrete floor and Ball B onto a foam mat. Ball A bounces back to 8 meters while Ball B bounces to only 2 meters.",
+    question: "Why does Ball B lose more mechanical energy than Ball A?",
     options: [
-      { text: 'At point A (highest)', correct: false },
-      { text: 'At point B (other highest)', correct: false },
-      { text: 'At the lowest point in the middle', correct: true },
-      { text: 'Kinetic energy is constant throughout', correct: false }
-    ]
+      { id: 'a', label: "Ball B is defective and doesn't store energy properly" },
+      { id: 'b', label: "The foam mat absorbs and dissipates more energy as heat and deformation", correct: true },
+      { id: 'c', label: "Concrete creates more kinetic energy during the collision" },
+      { id: 'd', label: "Ball A gains energy from the hard surface" }
+    ],
+    explanation: "The foam mat is an inelastic material that converts more kinetic energy into thermal energy and permanent deformation. Total energy is still conserved - it's just that more transforms into non-mechanical forms. Concrete is more elastic, returning more energy to the ball as kinetic energy."
   },
   {
-    question: 'Two marbles with masses m and 2m are released from the same height. Their speeds at the bottom are:',
+    scenario: "A hydroelectric dam generates electricity by releasing water from a reservoir 100 meters above the turbines. Engineers calculate that the falling water has potential energy of 1000 megajoules.",
+    question: "If the turbines are 90% efficient, how much electrical energy is generated?",
     options: [
-      { text: 'Heavier marble is faster', correct: false },
-      { text: 'Lighter marble is faster', correct: false },
-      { text: 'Same speed', correct: true },
-      { text: 'Cannot determine without more info', correct: false }
-    ]
+      { id: 'a', label: "1000 MJ - energy is always conserved" },
+      { id: 'b', label: "900 MJ - 90% is converted to electricity, 10% becomes heat", correct: true },
+      { id: 'c', label: "1100 MJ - the turbines add energy through spinning" },
+      { id: 'd', label: "100 MJ - most energy is lost to gravity" }
+    ],
+    explanation: "While total energy is conserved, not all can be converted to the desired form. 900 MJ becomes electrical energy, and 100 MJ becomes thermal energy (friction, turbulence, resistance). The sum is still 1000 MJ - energy conservation holds, but transformation efficiency is limited."
   },
   {
-    question: 'A skater at the top of a ramp has 100J of potential energy. At the bottom (ignoring friction), their kinetic energy is:',
+    scenario: "A pole vaulter sprints at 10 m/s, plants the pole, and launches into the air. At the peak of the vault, the athlete is momentarily stationary at 6 meters height.",
+    question: "What sequence of energy transformations occurs during a pole vault?",
     options: [
-      { text: '50J', correct: false },
-      { text: '100J', correct: true },
-      { text: '200J', correct: false },
-      { text: '0J', correct: false }
-    ]
+      { id: 'a', label: "Chemical -> Kinetic -> Elastic -> Gravitational Potential", correct: true },
+      { id: 'b', label: "Kinetic -> Gravitational -> Kinetic -> Elastic" },
+      { id: 'c', label: "Potential -> Kinetic -> Thermal -> Chemical" },
+      { id: 'd', label: "Elastic -> Kinetic -> Chemical -> Potential" }
+    ],
+    explanation: "The vaulter's muscles convert chemical energy (ATP) to kinetic energy during the sprint. The bending pole stores this as elastic potential energy. As the pole straightens, elastic PE converts to gravitational PE as the athlete rises. At the peak, all energy is gravitational potential."
   },
   {
-    question: 'In a hydroelectric dam, what is the intermediate form of energy between gravitational PE and electrical energy?',
+    scenario: "A Tesla Model 3 uses regenerative braking, which recovers energy when slowing down. The car approaches a stop sign at 50 km/h and activates regenerative braking.",
+    question: "How does regenerative braking recover energy that would otherwise be lost?",
     options: [
-      { text: 'Chemical energy', correct: false },
-      { text: 'Nuclear energy', correct: false },
-      { text: 'Kinetic energy of water', correct: true },
-      { text: 'Thermal energy', correct: false }
-    ]
+      { id: 'a', label: "It stores the kinetic energy in compressed springs" },
+      { id: 'b', label: "The electric motor runs as a generator, converting KE to electrical energy", correct: true },
+      { id: 'c', label: "It captures heat from friction and converts it to electricity" },
+      { id: 'd', label: "The battery directly absorbs kinetic energy from the wheels" }
+    ],
+    explanation: "In regenerative braking, the electric motor operates in reverse as a generator. The car's kinetic energy turns the motor/generator, inducing electrical current that charges the battery. This converts KE to electrical PE rather than wasting it as heat in brake pads."
   },
   {
-    question: 'If ALL friction and air resistance were eliminated, a pendulum would:',
+    scenario: "A ball is thrown straight up with 100 joules of kinetic energy. At the peak of its trajectory, a student measures its kinetic energy and gravitational potential energy.",
+    question: "At the peak, what are the ball's KE and PE values? (Ignore air resistance)",
     options: [
-      { text: 'Eventually stop due to gravity', correct: false },
-      { text: 'Swing forever returning to exactly starting height', correct: true },
-      { text: 'Gradually go higher with each swing', correct: false },
-      { text: 'Accelerate until it spins in circles', correct: false }
-    ]
+      { id: 'a', label: "KE = 50 J, PE = 50 J" },
+      { id: 'b', label: "KE = 0 J, PE = 100 J", correct: true },
+      { id: 'c', label: "KE = 100 J, PE = 0 J" },
+      { id: 'd', label: "KE = 100 J, PE = 100 J" }
+    ],
+    explanation: "At the peak, the ball momentarily stops (v = 0), so KE = 1/2mv^2 = 0. By conservation of energy, the original 100 J must still exist. Since KE = 0, all 100 J must be gravitational potential energy. The total (KE + PE = 0 + 100 = 100 J) equals the initial energy."
   },
   {
-    question: 'A bouncing ball loses height with each bounce. Where does the "lost" energy go?',
+    scenario: "Scientists create a perfect perpetual motion machine that generates 100 watts of power continuously without any energy input. They plan to patent it and solve the world's energy crisis.",
+    question: "Why is this perpetual motion machine impossible?",
     options: [
-      { text: 'It is destroyed', correct: false },
-      { text: 'It converts to heat and sound', correct: true },
-      { text: 'It stays in the ball', correct: false },
-      { text: 'It transfers to the Earth\'s core', correct: false }
-    ]
-  },
+      { id: 'a', label: "Friction always exists and cannot be eliminated" },
+      { id: 'b', label: "It would violate the law of conservation of energy - energy cannot be created", correct: true },
+      { id: 'c', label: "The materials would eventually wear out" },
+      { id: 'd', label: "Government regulations prohibit such devices" }
+    ],
+    explanation: "A machine generating energy without input would create energy from nothing, violating the first law of thermodynamics (conservation of energy). Energy can only transform between forms, not appear spontaneously. Every perpetual motion claim has been debunked - this is considered one of physics' most fundamental laws."
+  }
 ];
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🎢',
+    title: 'Roller Coaster Engineering',
+    short: 'Theme park physics in action',
+    tagline: 'Where gravity becomes the ultimate engine',
+    description: 'Roller coasters are masterpieces of energy conservation engineering. The initial climb stores gravitational potential energy that powers the entire ride. Every hill, loop, and curve is precisely designed to work within the energy budget established by that first drop.',
+    connection: 'The PE = mgh equation determines maximum speed at any point. Engineers calculate that velocity at any height equals sqrt(2g(h_initial - h_current)). This is why coasters feel fastest at the lowest points - all PE has converted to KE.',
+    howItWorks: 'A chain lift or launch system does work on the train, converting electrical energy to gravitational PE. As the train descends, PE transforms to KE (maximum at the bottom). Going up the next hill converts KE back to PE. Friction and air resistance dissipate about 10% per major element, explaining why each hill must be progressively shorter.',
+    stats: [
+      { value: '456 ft', label: 'Kingda Ka drop height', icon: '📐' },
+      { value: '149 mph', label: 'Top speed achieved', icon: '💨' },
+      { value: '6.2 g', label: 'Maximum G-force', icon: '🎯' }
+    ],
+    examples: ['Steel Vengeance uses terrain to maximize initial PE storage', 'Loop radii vary by height to maintain safe speeds (clothoid shapes)', 'Magnetic brakes convert KE to electrical energy via eddy currents', 'Launch coasters use linear induction motors for PE-free acceleration'],
+    companies: ['Intamin', 'Bolliger & Mabillard', 'Rocky Mountain Construction', 'Mack Rides', 'Vekoma'],
+    futureImpact: 'Next-generation coasters will feature regenerative braking systems that capture KE during deceleration to power the next launch, potentially reducing energy consumption by 30%. Virtual reality integration adds perceived thrills without requiring additional height or speed.',
+    color: '#EF4444'
+  },
+  {
+    icon: '💧',
+    title: 'Hydroelectric Power Generation',
+    short: 'Gravity powering civilization',
+    tagline: 'Converting water height to watts for billions',
+    description: 'Hydroelectric dams represent humanity\'s most efficient large-scale application of energy conservation. Water stored at height contains enormous gravitational potential energy. The Three Gorges Dam stores more energy than 50 nuclear power plants can generate in a day.',
+    connection: 'The power equation P = (density)(g)(height)(flow rate)(efficiency) comes directly from PE = mgh. A 100-meter dam with 90% efficient turbines converts 90% of the water\'s potential energy to electricity - far exceeding combustion efficiency.',
+    howItWorks: 'Water in the reservoir has PE = mgh based on dam height. When released, water accelerates through penstocks (large pipes), converting PE to KE. Fast-moving water spins turbine blades, converting KE to rotational mechanical energy. Generators use electromagnetic induction to convert rotation to electrical energy.',
+    stats: [
+      { value: '22.5 GW', label: 'Three Gorges capacity', icon: '⚡' },
+      { value: '90%+', label: 'Conversion efficiency', icon: '📊' },
+      { value: '16%', label: 'Global electricity share', icon: '🌍' }
+    ],
+    examples: ['Pumped storage facilities store grid energy by pumping water uphill during low demand', 'Run-of-river systems use natural elevation without large reservoirs', 'The Itaipu Dam generates 103 TWh annually - enough for Paraguay\'s entire needs', 'Micro-hydro systems power remote villages using small streams'],
+    companies: ['General Electric', 'Siemens Energy', 'Voith Hydro', 'Andritz', 'China Three Gorges Corporation'],
+    futureImpact: 'Pumped hydro storage is becoming crucial for renewable energy grids, storing excess solar/wind energy as gravitational PE. New fish-friendly turbines and environmental flow systems are making hydro more sustainable. Ocean current and tidal systems apply the same principles to marine energy.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'Regenerative Braking Systems',
+    short: 'Recapturing wasted motion',
+    tagline: 'Why electric cars are so efficient',
+    description: 'Traditional cars waste all kinetic energy as heat during braking - about 30% of total fuel energy in city driving. Regenerative braking captures this energy, storing it for later use. A Tesla Model 3 can recover up to 70% of braking energy, extending range by 20%.',
+    connection: 'The KE = 1/2mv^2 of a moving car represents energy invested during acceleration. Regenerative braking converts this KE back to electrical PE in the battery instead of thermal energy in brake pads. This directly applies conservation of energy to improve efficiency.',
+    howItWorks: 'When the driver releases the accelerator or brakes, the electric motor switches to generator mode. The car\'s momentum (kinetic energy) turns the motor/generator, inducing electrical current. This current flows to the battery, converting kinetic energy to electrochemical potential energy. The magnetic resistance slows the car.',
+    stats: [
+      { value: '70%', label: 'Energy recovery rate', icon: '🔋' },
+      { value: '20%', label: 'Range extension', icon: '📈' },
+      { value: '0.3 g', label: 'Regen deceleration', icon: '⚡' }
+    ],
+    examples: ['Formula 1 KERS systems recover 400 kJ per lap for boost power', 'Hybrid buses recover enough energy to reduce fuel use by 30%', 'Electric trains return power to the grid while braking downhill', 'BMW i3 can drive almost entirely without friction brakes using strong regen'],
+    companies: ['Tesla', 'BYD', 'Rivian', 'Toyota', 'Bosch', 'Continental'],
+    futureImpact: 'Vehicle-to-grid technology will allow parked EVs to store and release grid energy, turning millions of cars into a distributed battery network. Advanced supercapacitors will enable even faster energy capture during hard braking, approaching 90% recovery efficiency.',
+    color: '#10B981'
+  },
+  {
+    icon: '🏃',
+    title: 'Human Athletic Performance',
+    short: 'Biological energy systems',
+    tagline: 'From ATP to gold medals',
+    description: 'Elite athletes are masters of energy transformation. A pole vaulter converts metabolic chemical energy to kinetic energy (sprint), elastic potential energy (bent pole), and finally gravitational potential energy (6+ meter height). Understanding these transformations optimizes training and technique.',
+    connection: 'The human body is a complex energy transformation system. Chemical energy in ATP converts to mechanical energy in muscles with about 25% efficiency. The remaining 75% becomes heat - explaining why we sweat during exercise. This is energy conservation in biology.',
+    howItWorks: 'Glucose + oxygen undergoes cellular respiration, releasing chemical energy stored in ATP. Muscle fibers convert ATP\'s chemical energy to mechanical work through actin-myosin interactions. In running, this becomes kinetic energy. In jumping, KE transforms to gravitational PE. Tendons store elastic PE like springs.',
+    stats: [
+      { value: '6.24 m', label: 'Pole vault record', icon: '🏆' },
+      { value: '25%', label: 'Muscle efficiency', icon: '💪' },
+      { value: '2000 W', label: 'Peak cycling power', icon: '⚡' }
+    ],
+    examples: ['Sprinters store elastic energy in Achilles tendons between strides', 'High jumpers convert horizontal KE to vertical PE using the Fosbury Flop', 'Marathon runners optimize pace to balance energy output with fuel reserves', 'Swimmers reduce drag to minimize energy wasted overcoming resistance'],
+    companies: ['Nike', 'Adidas', 'Under Armour', 'WHOOP', 'Garmin', 'Peloton'],
+    futureImpact: 'Wearable sensors now measure metabolic energy expenditure in real-time. AI coaches optimize energy conservation during events. Advanced shoe designs like Nike\'s Vaporfly store and return elastic energy, reducing energy cost by 4%. Gene therapy may eventually improve muscle energy efficiency.',
+    color: '#8B5CF6'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete, setTestScore }) => {
-  // Responsive detection
+// ─────────────────────────────────────────────────────────────────────────────
+const EnergyConservationRenderer: React.FC<EnergyConservationRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Simulation state
+  const [releaseHeight, setReleaseHeight] = useState(80); // % of max height
+  const [frictionLevel, setFrictionLevel] = useState(0); // 0-100
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [marblePosition, setMarblePosition] = useState({ x: 10, y: 20 });
+  const [marbleVelocity, setMarbleVelocity] = useState({ x: 0, y: 0 });
+  const [trackType, setTrackType] = useState<'valley' | 'bowl' | 'hill'>('valley');
+  const animationRef = useRef<number | null>(null);
+
+  // Energy calculations
+  const [potentialEnergy, setPotentialEnergy] = useState(100);
+  const [kineticEnergy, setKineticEnergy] = useState(0);
+  const [thermalEnergy, setThermalEnergy] = useState(0);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -188,1329 +297,1658 @@ const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, o
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#A855F7', // Purple for energy
+    accentGlow: 'rgba(168, 85, 247, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    potential: '#F59E0B', // Amber for PE
+    kinetic: '#10B981', // Green for KE
+    thermal: '#EF4444', // Red for heat
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
   };
 
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [prediction, setPrediction] = useState<number | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
-  const [activeApp, setActiveApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [testIndex, setTestIndex] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
-  const [testSubmitted, setTestSubmitted] = useState(false);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  // Simulation state
-  const [isRunning, setIsRunning] = useState(false);
-  const [marblePos, setMarblePos] = useState({ x: 50, y: 20 });
-  const [marbleVel, setMarbleVel] = useState({ x: 0, y: 0 });
-  const [friction, setFriction] = useState(0);
-  const [trackType, setTrackType] = useState<'hill' | 'loop' | 'bowl'>('hill');
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Understanding',
+    twist_predict: 'Friction',
+    twist_play: 'Energy Loss',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  const animationRef = useRef<number | null>(null);
-  const timeRef = useRef(0);
-
-  // Phase sync from parent
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
-      setPhase(gamePhase as Phase);
-    }
-  }, [gamePhase, phase]);
-
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
     playSound('transition');
-    setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    if (newPhase === 'mastery') {
-      onGameEvent?.({ type: 'mastery_achieved', data: { topic: 'energy_conservation' } });
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'energy-conservation',
+        gameTitle: 'Conservation of Energy',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
     }
-  }, [playSound, onPhaseComplete, onGameEvent]);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-  // Track path calculations
-  const getTrackY = useCallback((x: number, type: string): number => {
-    if (type === 'hill') {
-      const normalizedX = (x - 50) / 50;
-      return 20 + 60 * (1 - normalizedX * normalizedX);
-    } else if (type === 'loop') {
-      if (x < 30) return 20 + (x / 30) * 50;
-      if (x > 70) return 20 + ((100 - x) / 30) * 50;
-      const loopX = (x - 50) / 20;
-      const loopY = Math.sqrt(Math.max(0, 1 - loopX * loopX));
-      return 50 - loopY * 25;
-    } else if (type === 'bowl') {
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Track calculations
+  const getTrackY = useCallback((x: number): number => {
+    if (trackType === 'valley') {
+      // U-shaped valley
       const normalizedX = (x - 50) / 50;
       return 20 + 60 * normalizedX * normalizedX;
+    } else if (trackType === 'bowl') {
+      // Semicircular bowl
+      const normalizedX = (x - 50) / 45;
+      const r = Math.max(0, 1 - normalizedX * normalizedX);
+      return 80 - Math.sqrt(r) * 55;
+    } else {
+      // Hill shape
+      const normalizedX = (x - 50) / 50;
+      return 20 + 40 * (1 - Math.cos(normalizedX * Math.PI));
     }
-    return 50;
-  }, []);
+  }, [trackType]);
 
   // Physics simulation
   const runSimulation = useCallback(() => {
-    if (!isRunning) return;
+    if (!isSimulating) return;
+
     const dt = 0.016;
     const g = 500;
-    const frictionCoeff = friction * 0.01;
+    const frictionCoeff = frictionLevel * 0.002;
 
-    setMarblePos(prev => {
-      let newX = prev.x + marbleVel.x * dt;
-      let newY = prev.y + marbleVel.y * dt;
-      const trackY = getTrackY(newX, trackType);
+    setMarblePosition(prev => {
+      let newX = prev.x + marbleVelocity.x * dt;
+      let newY = prev.y + marbleVelocity.y * dt;
 
+      const trackY = getTrackY(newX);
+
+      // Keep marble on track
       if (newY > trackY) {
         newY = trackY;
-        const slope = (getTrackY(newX + 1, trackType) - getTrackY(newX - 1, trackType)) / 2;
-        const normalAngle = Math.atan2(-1, slope);
-        const speed = Math.sqrt(marbleVel.x ** 2 + marbleVel.y ** 2);
-        const newSpeed = speed * (1 - frictionCoeff);
 
-        setMarbleVel({
-          x: newSpeed * Math.cos(normalAngle + Math.PI/2) * (marbleVel.x > 0 ? 1 : -1),
-          y: Math.max(0, marbleVel.y * -0.3),
+        // Calculate track slope
+        const slope = (getTrackY(newX + 1) - getTrackY(newX - 1)) / 2;
+        const angle = Math.atan(slope);
+
+        // Apply friction
+        const speed = Math.sqrt(marbleVelocity.x ** 2 + marbleVelocity.y ** 2);
+        const newSpeed = Math.max(0, speed * (1 - frictionCoeff));
+
+        // Direction based on slope
+        const direction = marbleVelocity.x > 0 ? 1 : -1;
+        const gravComponent = Math.sin(angle) * g * dt;
+
+        setMarbleVelocity({
+          x: direction * newSpeed * Math.cos(angle) + gravComponent * Math.cos(angle),
+          y: Math.max(0, marbleVelocity.y + g * dt) * 0.5,
         });
       } else {
-        setMarbleVel(v => ({ ...v, y: v.y + g * dt }));
+        setMarbleVelocity(v => ({ ...v, y: v.y + g * dt }));
       }
 
-      if (newX < 5) { newX = 5; setMarbleVel(v => ({ ...v, x: -v.x * 0.5 })); }
-      if (newX > 95) { newX = 95; setMarbleVel(v => ({ ...v, x: -v.x * 0.5 })); }
+      // Boundaries
+      if (newX < 5) { newX = 5; setMarbleVelocity(v => ({ ...v, x: Math.abs(v.x) * 0.8 })); }
+      if (newX > 95) { newX = 95; setMarbleVelocity(v => ({ ...v, x: -Math.abs(v.x) * 0.8 })); }
+
+      // Calculate energies
+      const height = 80 - newY;
+      const speed = Math.sqrt(marbleVelocity.x ** 2 + marbleVelocity.y ** 2);
+      const pe = Math.max(0, (height / 80) * 100);
+      const ke = Math.min(100, (speed / 150) * 100);
+
+      setPotentialEnergy(pe);
+      setKineticEnergy(ke);
+      setThermalEnergy(Math.max(0, 100 - pe - ke));
 
       return { x: Math.max(5, Math.min(95, newX)), y: Math.max(5, Math.min(95, newY)) };
     });
 
-    timeRef.current += dt;
     animationRef.current = requestAnimationFrame(runSimulation);
-  }, [isRunning, marbleVel, friction, trackType, getTrackY]);
+  }, [isSimulating, marbleVelocity, frictionLevel, getTrackY]);
 
   useEffect(() => {
-    if (isRunning) {
+    if (isSimulating) {
       animationRef.current = requestAnimationFrame(runSimulation);
     }
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [isRunning, runSimulation]);
+  }, [isSimulating, runSimulation]);
 
-  const resetSimulation = useCallback(() => {
-    setIsRunning(false);
-    setMarblePos({ x: 10, y: 20 });
-    setMarbleVel({ x: 0, y: 0 });
-    timeRef.current = 0;
+  const startSimulation = () => {
+    setMarblePosition({ x: 10, y: getTrackY(10) * (1 - releaseHeight / 100) + 5 });
+    setMarbleVelocity({ x: 30, y: 0 });
+    setPotentialEnergy(releaseHeight);
+    setKineticEnergy(0);
+    setThermalEnergy(0);
+    setIsSimulating(true);
+  };
+
+  const resetSimulation = () => {
+    setIsSimulating(false);
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
-  }, []);
+    setMarblePosition({ x: 10, y: 20 });
+    setMarbleVelocity({ x: 0, y: 0 });
+    setPotentialEnergy(100);
+    setKineticEnergy(0);
+    setThermalEnergy(0);
+  };
 
-  const startSimulation = useCallback(() => {
-    resetSimulation();
-    setMarblePos({ x: 10, y: 20 });
-    setMarbleVel({ x: 50, y: 0 });
-    setIsRunning(true);
-    onGameEvent?.({ type: 'simulation_started', data: { trackType, friction } });
-  }, [resetSimulation, trackType, friction, onGameEvent]);
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-  const calculateEnergy = useCallback(() => {
-    const maxHeight = 80;
-    const currentHeight = maxHeight - marblePos.y;
-    const speed = Math.sqrt(marbleVel.x ** 2 + marbleVel.y ** 2);
-    const pe = 10 * Math.max(0, currentHeight);
-    const ke = 0.5 * speed ** 2 / 100;
-    const total = pe + ke;
-    return {
-      potential: Math.min(100, (pe / 800) * 100),
-      kinetic: Math.min(100, (ke / 800) * 100),
-      total: Math.min(100, (total / 800) * 100),
-    };
-  }, [marblePos, marbleVel]);
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-  const handlePrediction = useCallback((id: number) => {
-    setPrediction(id);
-    playSound('click');
-    onGameEvent?.({ type: 'prediction_made', data: { prediction: id } });
-  }, [playSound, onGameEvent]);
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-  const handleTwistPrediction = useCallback((id: number) => {
-    setTwistPrediction(id);
-    playSound('click');
-    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction: id } });
-  }, [playSound, onGameEvent]);
+  // Energy visualization component
+  const EnergyVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 340;
 
-  const handleAppComplete = useCallback((index: number) => {
-    setCompletedApps(prev => new Set([...prev, index]));
-    playSound('complete');
-    onGameEvent?.({ type: 'app_explored', data: { app: applications[index].title } });
-  }, [playSound, onGameEvent]);
-
-  const handleTestAnswer = useCallback((answerIndex: number) => {
-    if (testAnswers[testIndex] !== null) return;
-    const newAnswers = [...testAnswers];
-    newAnswers[testIndex] = answerIndex;
-    setTestAnswers(newAnswers);
-    const correct = testQuestions[testIndex].options[answerIndex]?.correct ?? false;
-    playSound(correct ? 'success' : 'failure');
-    onGameEvent?.({ type: 'test_answered', data: { questionIndex: testIndex, answer: answerIndex, correct } });
-  }, [testAnswers, testIndex, playSound, onGameEvent]);
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // REAL-WORLD APPLICATIONS DATA (Comprehensive)
-  // ═══════════════════════════════════════════════════════════════════════════
-  const realWorldApps = [
-    {
-      icon: '🎢',
-      title: 'Roller Coasters',
-      short: 'Thrill Rides',
-      tagline: 'Where gravity becomes your engine',
-      description: 'Roller coasters are masterpieces of energy conservation engineering. The initial climb to the highest point stores gravitational potential energy, which then converts to kinetic energy as the train descends. Every subsequent hill, loop, and turn is carefully designed to work within the energy budget established by that first drop.',
-      connection: 'The first hill must always be the tallest because all subsequent motion relies entirely on the potential energy stored at that initial height. Without motors pushing the train after the first climb, the coaster can never rise higher than where it started.',
-      howItWorks: 'A chain lift or launch system does work on the train to raise it to the maximum height, storing gravitational potential energy (PE = mgh). As the train descends, PE converts to kinetic energy (KE = 1/2mv^2). At the bottom of each drop, KE is maximum. Going up the next hill converts KE back to PE. Friction and air resistance gradually dissipate energy as heat, which is why each successive hill must be slightly lower.',
-      stats: [
-        { value: '456 ft', label: 'Tallest drop (Kingda Ka)' },
-        { value: '149 mph', label: 'Fastest speed achieved' },
-        { value: '90%', label: 'Energy efficiency possible' }
-      ],
-      examples: [
-        'Steel Vengeance uses terrain to maximize potential energy storage',
-        'Loop designs require precise energy calculations to maintain safe speeds',
-        'Magnetic brakes convert kinetic energy to electrical energy',
-        'Launch coasters use electromagnetic energy conversion for acceleration'
-      ],
-      companies: ['Six Flags', 'Cedar Fair', 'Intamin', 'Bolliger & Mabillard', 'Rocky Mountain Construction'],
-      futureImpact: 'Next-generation coasters will feature regenerative braking systems that capture kinetic energy during deceleration and store it to power the next launch, making thrill rides more sustainable while enabling even more exciting designs.',
-      color: 'from-red-500 to-orange-500'
-    },
-    {
-      icon: '💧',
-      title: 'Hydroelectric Dams',
-      short: 'Power Generation',
-      tagline: 'Harnessing gravity to light the world',
-      description: 'Hydroelectric dams represent one of humanity\'s most efficient applications of energy conservation. Water stored at height contains enormous gravitational potential energy. As it flows downward through penstocks, this potential energy converts to kinetic energy, which turbines then transform into electrical energy with remarkable efficiency.',
-      connection: 'The dam creates an artificial height difference (head) that determines the potential energy available. The higher the dam and the more water stored, the greater the energy that can be extracted - directly applying PE = mgh on a massive scale.',
-      howItWorks: 'Water is stored in a reservoir behind the dam at elevation h. When released, the water accelerates through penstocks (large pipes), converting potential energy to kinetic energy. The fast-moving water spins turbine blades, converting kinetic energy to rotational mechanical energy. Generators then convert this rotational energy to electrical energy through electromagnetic induction.',
-      stats: [
-        { value: '22,500 MW', label: 'Three Gorges Dam capacity' },
-        { value: '90%+', label: 'Conversion efficiency' },
-        { value: '16%', label: 'World electricity from hydro' }
-      ],
-      examples: [
-        'Pumped storage facilities store energy by pumping water uphill during low demand',
-        'Run-of-river systems use natural water flow without large reservoirs',
-        'Tidal barrages capture energy from ocean tides using the same principles',
-        'Micro-hydro systems power remote communities using small streams'
-      ],
-      companies: ['General Electric', 'Siemens', 'Voith', 'Andritz'],
-      futureImpact: 'Advanced turbine designs and pumped-storage systems will make hydroelectric power a crucial component of renewable energy grids, storing excess solar and wind energy as gravitational potential energy for release during peak demand.',
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      icon: '🕰️',
-      title: 'Pendulum Clocks',
-      short: 'Timekeeping',
-      tagline: 'Energy conservation keeps perfect time',
-      description: 'Pendulum clocks exploit the conservation of mechanical energy in an oscillating system. As the pendulum swings, energy continuously converts between potential and kinetic forms while the total remains nearly constant. This predictable energy exchange creates the regular rhythm that makes accurate timekeeping possible.',
-      connection: 'The period of a pendulum depends only on its length and gravity, not on its energy. This means as long as the pendulum keeps swinging (energy is conserved), it maintains the same timing regardless of how wide the swing is - a principle called isochronism.',
-      howItWorks: 'At the highest points of its swing, the pendulum bob has maximum potential energy and zero kinetic energy (momentarily at rest). As it falls toward the center, PE converts to KE, reaching maximum speed at the lowest point. The bob then rises on the other side, converting KE back to PE. Small energy losses to friction are compensated by the escapement mechanism, which adds tiny impulses from a wound spring or falling weight.',
-      stats: [
-        { value: '1 sec', label: 'Period of 1-meter pendulum' },
-        { value: '±0.5 sec/day', label: 'Precision achievable' },
-        { value: '1656', label: 'Year Huygens invented it' }
-      ],
-      examples: [
-        'Grandfather clocks use long pendulums for slow, stately swings',
-        'Foucault pendulums demonstrate Earth\'s rotation while conserving energy',
-        'Metronomes help musicians by providing consistent energy-conserving beats',
-        'Seismometers use pendulum principles to detect ground motion'
-      ],
-      companies: ['Howard Miller', 'Hermle', 'Kieninger', 'Urgos', 'Seiko'],
-      futureImpact: 'While digital clocks have largely replaced pendulums for timekeeping, the principles continue in precision instruments. Atomic clocks use quantum energy level transitions, and gravitational wave detectors employ pendulum isolation systems to achieve incredible sensitivity.',
-      color: 'from-amber-500 to-yellow-500'
-    },
-    {
-      icon: '🏃',
-      title: 'Pole Vaulting',
-      short: 'Athletics',
-      tagline: 'Converting speed into flight',
-      description: 'Pole vaulting is a spectacular demonstration of energy transformation in athletics. The vaulter converts kinetic energy from their sprint into elastic potential energy stored in the bent pole, which then releases as kinetic energy to launch them upward, where it finally becomes gravitational potential energy at the peak of their vault.',
-      connection: 'The maximum height a vaulter can achieve is limited by their initial kinetic energy plus the work they can add during the vault. Energy conservation explains why faster approach speeds enable higher vaults - more kinetic energy means more potential energy available at the top.',
-      howItWorks: 'The athlete sprints down the runway, building kinetic energy (KE = 1/2mv^2). At takeoff, they plant the pole and begin converting KE into elastic potential energy as the pole bends. The pole then straightens, releasing stored energy to accelerate the vaulter upward. At the peak, nearly all energy has converted to gravitational potential energy (PE = mgh). The vaulter also adds energy through muscular work during the vault.',
-      stats: [
-        { value: '6.24 m', label: 'World record (Duplantis)' },
-        { value: '10 m/s', label: 'Typical approach speed' },
-        { value: '4,000 J', label: 'Energy stored in pole' }
-      ],
-      examples: [
-        'Carbon fiber poles store and release energy more efficiently than older materials',
-        'High jump uses similar KE to PE conversion but without the pole',
-        'Long jump converts horizontal KE to maximize projectile range',
-        'Gymnastics vaulting uses springboards for elastic energy storage'
-      ],
-      companies: ['Nike', 'Gill Athletics', 'UCS Spirit', 'Pacer', 'Nordic Sport'],
-      futureImpact: 'Advanced pole materials and biomechanical analysis will push records higher. Understanding energy conservation helps athletes optimize their technique, converting more of their kinetic energy into height rather than losing it to inefficient movements.',
-      color: 'from-emerald-500 to-teal-500'
-    }
-  ];
-
-  // Track visualization component
-  const TrackVisualization = ({ type }: { type: string }) => {
-    const energy = calculateEnergy();
-    const trackPoints = [];
+    // Generate track path
+    const trackPath = [];
     for (let x = 0; x <= 100; x += 2) {
-      trackPoints.push({ x, y: getTrackY(x, type) });
+      const y = getTrackY(x);
+      trackPath.push({ x: x * (width - 60) / 100 + 30, y: y * (height - 100) / 100 + 30 });
     }
-    const pathD = trackPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x * 3} ${p.y * 2}`).join(' ');
-
-    // Calculate energy transfer indicator position (flows from marble)
-    const energyFlowAngle = Math.atan2(marbleVel.y, marbleVel.x);
-    const speed = Math.sqrt(marbleVel.x ** 2 + marbleVel.y ** 2);
-    const flowIntensity = Math.min(1, speed / 100);
+    const pathD = trackPath.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
     return (
-      <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
-        {/* Height markers - moved outside SVG using typo system */}
-        <div className="flex justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400 font-semibold" style={{ fontSize: typo.label }}>PE</span>
-            <span className="text-slate-500" style={{ fontSize: typo.label }}>High</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400 font-semibold" style={{ fontSize: typo.label }}>KE</span>
-            <span className="text-slate-500" style={{ fontSize: typo.label }}>{isRunning ? 'Active' : 'Ready'}</span>
-          </div>
-        </div>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="trackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+          <radialGradient id="marbleGrad" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#c084fc" />
+            <stop offset="100%" stopColor="#7c3aed" />
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-        <svg viewBox="0 0 300 200" className="w-full h-48 bg-gradient-to-b from-slate-900 to-slate-800 rounded-xl overflow-hidden">
-          {/* Premium defs section with gradients and filters */}
-          <defs>
-            {/* Track gradient */}
-            <linearGradient id="enerTrackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="50%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
-
-            {/* Track surface highlight */}
-            <linearGradient id="enerTrackHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="50%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#334155" />
-            </linearGradient>
-
-            {/* Marble 3D gradient */}
-            <radialGradient id="enerMarbleGradient" cx="35%" cy="25%" r="60%">
-              <stop offset="0%" stopColor="#c084fc" />
-              <stop offset="40%" stopColor="#a855f7" />
-              <stop offset="80%" stopColor="#7c3aed" />
-              <stop offset="100%" stopColor="#5b21b6" />
-            </radialGradient>
-
-            {/* Marble inner glow */}
-            <radialGradient id="enerMarbleInnerGlow" cx="30%" cy="30%" r="50%">
-              <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
-            </radialGradient>
-
-            {/* PE energy aura (amber) */}
-            <radialGradient id="enerPEAura" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
-            </radialGradient>
-
-            {/* KE energy aura (emerald) */}
-            <radialGradient id="enerKEAura" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#34d399" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#10b981" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#059669" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Glow filter for marble */}
-            <filter id="enerMarbleGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Stronger glow for energy transfer */}
-            <filter id="enerEnergyGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Drop shadow for track */}
-            <filter id="enerTrackShadow" x="-10%" y="-10%" width="120%" height="130%">
-              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.3" />
-            </filter>
-
-            {/* Height marker gradient */}
-            <linearGradient id="enerHeightGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
-          {/* Background height zones */}
-          <rect x="0" y="0" width="300" height="50" fill="url(#enerHeightGradient)" />
-
-          {/* Grid lines with better styling */}
-          {[20, 40, 60, 80].map((y, i) => (
-            <g key={y}>
-              <line
-                x1="0"
-                y1={y * 2}
-                x2="300"
-                y2={y * 2}
-                stroke="#334155"
-                strokeWidth="0.5"
-                strokeDasharray="4,4"
-                opacity={0.5}
-              />
-              {/* Height markers on left */}
-              <rect
-                x="0"
-                y={y * 2 - 1}
-                width="3"
-                height="2"
-                fill={y < 40 ? '#fbbf24' : '#475569'}
-                opacity={y < 40 ? 0.6 : 0.3}
-              />
-            </g>
-          ))}
-
-          {/* Track shadow */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="#000"
-            strokeWidth="6"
-            strokeLinecap="round"
-            opacity="0.2"
-            transform="translate(1, 3)"
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75].map(frac => (
+          <line
+            key={`h-${frac}`}
+            x1="30"
+            y1={30 + frac * (height - 100)}
+            x2={width - 30}
+            y2={30 + frac * (height - 100)}
+            stroke={colors.border}
+            strokeDasharray="3,3"
+            opacity="0.5"
           />
+        ))}
 
-          {/* Track with 3D effect - bottom layer */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="#334155"
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
+        {/* Height labels */}
+        <text x="15" y="40" fill={colors.potential} fontSize="10" fontWeight="600">High</text>
+        <text x="15" y={height - 80} fill={colors.kinetic} fontSize="10" fontWeight="600">Low</text>
 
-          {/* Track main surface with gradient */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="url(#enerTrackHighlight)"
-            strokeWidth="5"
-            strokeLinecap="round"
-            filter="url(#enerTrackShadow)"
-          />
+        {/* Track shadow */}
+        <path d={pathD} fill="none" stroke="#000" strokeWidth="8" opacity="0.2" transform="translate(2, 4)" />
 
-          {/* Track highlight line */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="#94a3b8"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            opacity="0.6"
-            transform="translate(0, -2)"
-          />
+        {/* Track */}
+        <path d={pathD} fill="none" stroke="url(#trackGrad)" strokeWidth="6" strokeLinecap="round" />
+        <path d={pathD} fill="none" stroke="#94a3b8" strokeWidth="2" opacity="0.6" transform="translate(0, -2)" />
 
-          {/* Energy aura based on PE (amber) - shows when high */}
-          <circle
-            cx={marblePos.x * 3}
-            cy={marblePos.y * 2}
-            r={20 + (energy.potential / 5)}
-            fill="url(#enerPEAura)"
-            opacity={energy.potential / 100}
-            style={{ transition: 'all 0.1s ease-out' }}
-          />
+        {/* Energy auras */}
+        <circle
+          cx={marblePosition.x * (width - 60) / 100 + 30}
+          cy={marblePosition.y * (height - 100) / 100 + 30}
+          r={15 + potentialEnergy / 5}
+          fill={colors.potential}
+          opacity={potentialEnergy / 200}
+        />
+        <circle
+          cx={marblePosition.x * (width - 60) / 100 + 30}
+          cy={marblePosition.y * (height - 100) / 100 + 30}
+          r={15 + kineticEnergy / 5}
+          fill={colors.kinetic}
+          opacity={kineticEnergy / 200}
+        />
 
-          {/* Energy aura based on KE (emerald) - shows when moving fast */}
-          <circle
-            cx={marblePos.x * 3}
-            cy={marblePos.y * 2}
-            r={20 + (energy.kinetic / 5)}
-            fill="url(#enerKEAura)"
-            opacity={energy.kinetic / 100}
-            style={{ transition: 'all 0.1s ease-out' }}
-          />
+        {/* Marble shadow */}
+        <ellipse
+          cx={marblePosition.x * (width - 60) / 100 + 32}
+          cy={marblePosition.y * (height - 100) / 100 + 40}
+          rx="10"
+          ry="4"
+          fill="#000"
+          opacity="0.3"
+        />
 
-          {/* Energy transfer particles (animated when running) */}
-          {isRunning && flowIntensity > 0.1 && (
+        {/* Marble */}
+        <circle
+          cx={marblePosition.x * (width - 60) / 100 + 30}
+          cy={marblePosition.y * (height - 100) / 100 + 30}
+          r="12"
+          fill="url(#marbleGrad)"
+          filter="url(#glow)"
+          stroke="#5b21b6"
+          strokeWidth="0.5"
+        />
+
+        {/* Marble highlight */}
+        <circle
+          cx={marblePosition.x * (width - 60) / 100 + 26}
+          cy={marblePosition.y * (height - 100) / 100 + 26}
+          r="4"
+          fill="white"
+          opacity="0.6"
+        />
+
+        {/* Energy bars */}
+        <g transform={`translate(30, ${height - 55})`}>
+          {/* PE bar */}
+          <rect x="0" y="0" width={(width - 80) / 3} height="16" rx="4" fill={colors.potential + '33'} />
+          <rect x="0" y="0" width={potentialEnergy * (width - 80) / 300} height="16" rx="4" fill={colors.potential} />
+          <text x={(width - 80) / 6} y="30" textAnchor="middle" fill={colors.potential} fontSize="10" fontWeight="600">
+            PE: {Math.round(potentialEnergy)}%
+          </text>
+
+          {/* KE bar */}
+          <rect x={(width - 80) / 3 + 10} y="0" width={(width - 80) / 3} height="16" rx="4" fill={colors.kinetic + '33'} />
+          <rect x={(width - 80) / 3 + 10} y="0" width={kineticEnergy * (width - 80) / 300} height="16" rx="4" fill={colors.kinetic} />
+          <text x={(width - 80) / 2 + 10} y="30" textAnchor="middle" fill={colors.kinetic} fontSize="10" fontWeight="600">
+            KE: {Math.round(kineticEnergy)}%
+          </text>
+
+          {/* Thermal bar (if friction enabled) */}
+          {frictionLevel > 0 && (
             <>
-              {[0, 1, 2].map((i) => (
-                <circle
-                  key={i}
-                  cx={marblePos.x * 3 - Math.cos(energyFlowAngle) * (15 + i * 8)}
-                  cy={marblePos.y * 2 - Math.sin(energyFlowAngle) * (15 + i * 8)}
-                  r={3 - i * 0.5}
-                  fill={energy.kinetic > energy.potential ? '#34d399' : '#fbbf24'}
-                  opacity={(1 - i * 0.3) * flowIntensity}
-                  filter="url(#enerEnergyGlow)"
-                >
-                  <animate
-                    attributeName="opacity"
-                    values={`${(1 - i * 0.3) * flowIntensity};${(0.5 - i * 0.15) * flowIntensity};${(1 - i * 0.3) * flowIntensity}`}
-                    dur="0.3s"
-                    repeatCount="indefinite"
-                  />
-                </circle>
-              ))}
+              <rect x={2 * (width - 80) / 3 + 20} y="0" width={(width - 80) / 3} height="16" rx="4" fill={colors.thermal + '33'} />
+              <rect x={2 * (width - 80) / 3 + 20} y="0" width={thermalEnergy * (width - 80) / 300} height="16" rx="4" fill={colors.thermal} />
+              <text x={5 * (width - 80) / 6 + 20} y="30" textAnchor="middle" fill={colors.thermal} fontSize="10" fontWeight="600">
+                Heat: {Math.round(thermalEnergy)}%
+              </text>
             </>
           )}
-
-          {/* Marble shadow */}
-          <ellipse
-            cx={marblePos.x * 3 + 2}
-            cy={marblePos.y * 2 + 10}
-            rx="10"
-            ry="4"
-            fill="#000"
-            opacity="0.3"
-          />
-
-          {/* Marble with 3D effect */}
-          <circle
-            cx={marblePos.x * 3}
-            cy={marblePos.y * 2}
-            r="12"
-            fill="url(#enerMarbleGradient)"
-            filter="url(#enerMarbleGlow)"
-            stroke="#5b21b6"
-            strokeWidth="0.5"
-          />
-
-          {/* Marble highlight for 3D effect */}
-          <circle
-            cx={marblePos.x * 3 - 3}
-            cy={marblePos.y * 2 - 4}
-            r="4"
-            fill="url(#enerMarbleInnerGlow)"
-          />
-
-          {/* Small specular highlight */}
-          <circle
-            cx={marblePos.x * 3 - 4}
-            cy={marblePos.y * 2 - 5}
-            r="2"
-            fill="#fff"
-            opacity="0.7"
-          />
-        </svg>
-
-        {/* Height indicator labels - moved outside SVG using typo system */}
-        <div className="flex justify-between mt-2 px-2">
-          <span style={{ fontSize: typo.label }} className="text-amber-500/70">h = max</span>
-          <span style={{ fontSize: typo.label }} className="text-slate-500">Height Reference</span>
-          <span style={{ fontSize: typo.label }} className="text-emerald-500/70">h = 0</span>
-        </div>
-
-        {/* Energy bars with premium gradients */}
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <div>
-            <div className="flex justify-between mb-1">
-              <span style={{ fontSize: typo.label }} className="text-amber-400 font-medium">Potential (PE)</span>
-              <span style={{ fontSize: typo.label }} className="text-amber-400 font-bold">{Math.round(energy.potential)}%</span>
-            </div>
-            <div className="h-3 bg-slate-700/80 rounded-full overflow-hidden shadow-inner">
-              <div
-                className="h-full rounded-full transition-all duration-100 ease-out"
-                style={{
-                  width: `${energy.potential}%`,
-                  background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%)',
-                  boxShadow: energy.potential > 20 ? '0 0 10px rgba(251, 191, 36, 0.5)' : 'none'
-                }}
-              />
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between mb-1">
-              <span style={{ fontSize: typo.label }} className="text-emerald-400 font-medium">Kinetic (KE)</span>
-              <span style={{ fontSize: typo.label }} className="text-emerald-400 font-bold">{Math.round(energy.kinetic)}%</span>
-            </div>
-            <div className="h-3 bg-slate-700/80 rounded-full overflow-hidden shadow-inner">
-              <div
-                className="h-full rounded-full transition-all duration-100 ease-out"
-                style={{
-                  width: `${energy.kinetic}%`,
-                  background: 'linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%)',
-                  boxShadow: energy.kinetic > 20 ? '0 0 10px rgba(52, 211, 153, 0.5)' : 'none'
-                }}
-              />
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between mb-1">
-              <span style={{ fontSize: typo.label }} className="text-purple-400 font-medium">Total (E)</span>
-              <span style={{ fontSize: typo.label }} className="text-purple-400 font-bold">{Math.round(energy.total)}%</span>
-            </div>
-            <div className="h-3 bg-slate-700/80 rounded-full overflow-hidden shadow-inner">
-              <div
-                className="h-full rounded-full transition-all duration-100 ease-out"
-                style={{
-                  width: `${energy.total}%`,
-                  background: 'linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)',
-                  boxShadow: '0 0 10px rgba(168, 85, 247, 0.4)'
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Energy transfer indicator */}
-        <div className="mt-3 flex items-center justify-center gap-3">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-amber-400" style={{ boxShadow: energy.potential > 30 ? '0 0 6px #fbbf24' : 'none' }} />
-            <span style={{ fontSize: typo.label }} className="text-slate-400">PE</span>
-          </div>
-          <div className="flex items-center gap-1">
-            {isRunning ? (
-              <svg width="40" height="12" viewBox="0 0 40 12">
-                <defs>
-                  <linearGradient id="enerTransferArrow" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor={energy.potential > energy.kinetic ? '#fbbf24' : '#34d399'} />
-                    <stop offset="100%" stopColor={energy.potential > energy.kinetic ? '#34d399' : '#fbbf24'} />
-                  </linearGradient>
-                </defs>
-                <path
-                  d={energy.potential > energy.kinetic ? "M5 6 L30 6 L25 2 M30 6 L25 10" : "M35 6 L10 6 L15 2 M10 6 L15 10"}
-                  stroke="url(#enerTransferArrow)"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
-                </path>
-              </svg>
-            ) : (
-              <svg width="40" height="12" viewBox="0 0 40 12">
-                <line x1="5" y1="6" x2="35" y2="6" stroke="#475569" strokeWidth="2" strokeDasharray="4,2" />
-              </svg>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-emerald-400" style={{ boxShadow: energy.kinetic > 30 ? '0 0 6px #34d399' : 'none' }} />
-            <span style={{ fontSize: typo.label }} className="text-slate-400">KE</span>
-          </div>
-        </div>
-      </div>
+        </g>
+      </svg>
     );
   };
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // PHASE RENDERERS
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
 
-  // HOOK PHASE - Welcome page explaining conservation of energy
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-purple-400 tracking-wide">PHYSICS EXPLORATION</span>
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🎢⚡
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Conservation of Energy
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "A roller coaster climbs its first hill, then plunges down through loops and turns. No motors push it after the initial climb. How is this possible? The answer is one of physics' most fundamental laws."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
+            Energy cannot be created or destroyed
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "It can only change from one form to another. The total energy of an isolated system remains constant."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            — First Law of Thermodynamics
+          </p>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          gap: '24px',
+          marginBottom: '32px',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📐</div>
+            <div style={{ ...typo.small, color: colors.potential, fontWeight: 600 }}>PE = mgh</div>
+            <div style={{ ...typo.small, color: colors.textMuted }}>Potential</div>
+          </div>
+          <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>+</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>💨</div>
+            <div style={{ ...typo.small, color: colors.kinetic, fontWeight: 600 }}>KE = 1/2mv^2</div>
+            <div style={{ ...typo.small, color: colors.textMuted }}>Kinetic</div>
+          </div>
+          <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>=</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚡</div>
+            <div style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>Constant</div>
+            <div style={{ ...typo.small, color: colors.textMuted }}>Total Energy</div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Energy Conservation →
+        </button>
+
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-amber-200 bg-clip-text text-transparent">
-        Conservation of Energy
-      </h1>
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Much lower than the starting height - it loses energy rolling down' },
+      { id: 'b', text: 'Exactly the same height - all energy is conserved', correct: true },
+      { id: 'c', text: 'Higher than the starting height - it gains speed going down' },
+    ];
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Energy cannot be created or destroyed - it can only change form. Watch energy transform between potential and kinetic!
-      </p>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-amber-500/5 rounded-3xl" />
-        <div className="relative">
-          <div className="text-6xl mb-4">🎢</div>
-          <div className="mt-8 space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Why can't a roller coaster go higher than its starting point?
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              🤔 Make Your Prediction
             </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              The answer lies in the fundamental law of energy conservation!
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A marble is released from rest on one side of a perfectly frictionless U-shaped track. How high will it rise on the other side?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg width={isMobile ? 300 : 400} height={isMobile ? 150 : 180} style={{ display: 'block', margin: '0 auto' }}>
+              <defs>
+                <linearGradient id="uTrack" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#475569" />
+                  <stop offset="50%" stopColor="#64748b" />
+                  <stop offset="100%" stopColor="#475569" />
+                </linearGradient>
+              </defs>
+              {/* U-shaped track */}
+              <path
+                d={isMobile
+                  ? "M 30 30 Q 30 130 150 130 Q 270 130 270 30"
+                  : "M 40 40 Q 40 150 200 150 Q 360 150 360 40"
+                }
+                fill="none"
+                stroke="url(#uTrack)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
+              {/* Starting marble */}
+              <circle cx={isMobile ? 35 : 45} cy={isMobile ? 35 : 45} r="12" fill="#a855f7" />
+              {/* Height markers */}
+              <line x1={isMobile ? 20 : 30} y1={isMobile ? 35 : 45} x2={isMobile ? 20 : 30} y2={isMobile ? 130 : 150} stroke={colors.potential} strokeWidth="2" strokeDasharray="4,4" />
+              <text x={isMobile ? 10 : 15} y={isMobile ? 85 : 100} fill={colors.potential} fontSize="12" fontWeight="600">h</text>
+              {/* Question mark on other side */}
+              <text x={isMobile ? 275 : 365} y={isMobile ? 85 : 100} fill={colors.accent} fontSize="24" fontWeight="bold">?</text>
+            </svg>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
+              The marble starts at height h with zero velocity. No friction exists on the track.
             </p>
-            <div className="pt-2">
-              <p className="text-base text-purple-400 font-semibold">
-                PE + KE = Constant (in ideal systems)
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE - Interactive Energy Lab
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Energy Conservation Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Watch energy transform between potential (PE) and kinetic (KE) forms
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <EnergyVisualization />
+            </div>
+
+            {/* Track type selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px' }}>Track Shape:</p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {[
+                  { id: 'valley', label: 'U-Valley', icon: '⌣' },
+                  { id: 'bowl', label: 'Bowl', icon: '◡' },
+                  { id: 'hill', label: 'Hill', icon: '∩' }
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => { setTrackType(t.id as 'valley' | 'bowl' | 'hill'); resetSimulation(); playSound('click'); }}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: `2px solid ${trackType === t.id ? colors.accent : colors.border}`,
+                      background: trackType === t.id ? `${colors.accent}22` : 'transparent',
+                      color: trackType === t.id ? colors.accent : colors.textSecondary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {t.icon} {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Release height slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>📐 Release Height</span>
+                <span style={{ ...typo.small, color: colors.potential, fontWeight: 600 }}>{releaseHeight}%</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="100"
+                value={releaseHeight}
+                onChange={(e) => setReleaseHeight(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.potential} ${((releaseHeight - 20) / 80) * 100}%, ${colors.border} ${((releaseHeight - 20) / 80) * 100}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Control buttons */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => { startSimulation(); playSound('click'); }}
+                disabled={isSimulating}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: isSimulating ? colors.border : colors.success,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: isSimulating ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSimulating ? 'Running...' : 'Release Marble'}
+              </button>
+              <button
+                onClick={() => { resetSimulation(); playSound('click'); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          {/* Key observation */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.accent, margin: 0 }}>
+              💡 <strong>Key Observation:</strong> Watch how PE and KE trade places while their sum stays constant!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Conservation of Mechanical Energy
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ ...typo.h1, color: colors.accent, fontFamily: 'monospace' }}>
+                PE + KE = E<sub>total</sub> = constant
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+              <div style={{
+                background: `${colors.potential}11`,
+                borderRadius: '12px',
+                padding: '16px',
+                borderLeft: `4px solid ${colors.potential}`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.potential, marginBottom: '8px' }}>
+                  Potential Energy (PE)
+                </h3>
+                <p style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace', marginBottom: '8px' }}>
+                  PE = mgh
+                </p>
+                <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '16px' }}>
+                  <li>Energy stored due to position/height</li>
+                  <li>Maximum at the highest point</li>
+                  <li>Zero at reference level (bottom)</li>
+                </ul>
+              </div>
+
+              <div style={{
+                background: `${colors.kinetic}11`,
+                borderRadius: '12px',
+                padding: '16px',
+                borderLeft: `4px solid ${colors.kinetic}`,
+              }}>
+                <h3 style={{ ...typo.h3, color: colors.kinetic, marginBottom: '8px' }}>
+                  Kinetic Energy (KE)
+                </h3>
+                <p style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace', marginBottom: '8px' }}>
+                  KE = 1/2 mv^2
+                </p>
+                <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '16px' }}>
+                  <li>Energy of motion</li>
+                  <li>Maximum at lowest point (fastest)</li>
+                  <li>Zero when stationary</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              💡 Key Insight: Energy Transformation
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              <strong style={{ color: colors.textPrimary }}>At the top:</strong> All energy is potential (PE = max, KE = 0)
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              <strong style={{ color: colors.textPrimary }}>At the bottom:</strong> All energy is kinetic (PE = 0, KE = max)
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.textPrimary }}>In between:</strong> Energy is shared (PE + KE = constant)
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            What About Friction? →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'The energy is destroyed by friction' },
+      { id: 'b', text: 'The energy converts to heat (thermal energy)', correct: true },
+      { id: 'c', text: 'The energy transfers to the track surface permanently' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              🔥 New Variable: Friction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            In the real world, a marble on a track gradually loses height with each oscillation. Where does the "lost" mechanical energy go?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: '40px' }}>🎱</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Marble</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
+              <div>
+                <div style={{ fontSize: '40px' }}>🛤️</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Friction</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
+              <div>
+                <div style={{ fontSize: '40px' }}>❓</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Where does energy go?</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See Energy Dissipation →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Energy Dissipation Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Add friction and watch mechanical energy convert to heat
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <EnergyVisualization />
+            </div>
+
+            {/* Friction slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>🔥 Friction Level</span>
+                <span style={{ ...typo.small, color: frictionLevel > 50 ? colors.thermal : frictionLevel > 20 ? colors.warning : colors.success, fontWeight: 600 }}>
+                  {frictionLevel === 0 ? 'None (Ice)' : frictionLevel < 30 ? 'Low (Wood)' : frictionLevel < 60 ? 'Medium (Rubber)' : 'High (Sandpaper)'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="80"
+                value={frictionLevel}
+                onChange={(e) => setFrictionLevel(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.success} 0%, ${colors.warning} 50%, ${colors.thermal} 100%)`,
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Frictionless</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Maximum</span>
+              </div>
+            </div>
+
+            {/* Control buttons */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => { startSimulation(); playSound('click'); }}
+                disabled={isSimulating}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: isSimulating ? colors.border : colors.success,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: isSimulating ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isSimulating ? 'Running...' : 'Release Marble'}
+              </button>
+              <button
+                onClick={() => { resetSimulation(); playSound('click'); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          {frictionLevel > 0 && (
+            <div style={{
+              background: `${colors.thermal}11`,
+              border: `1px solid ${colors.thermal}33`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.thermal, margin: 0 }}>
+                🔥 Notice the red "Heat" bar growing! Mechanical energy is converting to thermal energy through friction.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Energy Dissipation →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Energy Transforms, Never Disappears
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
+              First Law of Thermodynamics
+            </h3>
+            <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '24px' }}>
+              Energy cannot be created or destroyed—only transformed from one form to another.
+            </p>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <div style={{
+                background: `${colors.potential}22`,
+                borderRadius: '8px',
+                padding: '12px 16px',
+              }}>
+                <div style={{ color: colors.potential, fontWeight: 600 }}>PE + KE</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Mechanical</div>
+              </div>
+              <span style={{ fontSize: '24px', color: colors.textMuted }}>→</span>
+              <div style={{
+                background: `${colors.kinetic}22`,
+                borderRadius: '8px',
+                padding: '12px 16px',
+              }}>
+                <div style={{ color: colors.kinetic, fontWeight: 600 }}>Less PE + KE</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Mechanical</div>
+              </div>
+              <span style={{ fontSize: '24px', color: colors.textMuted }}>+</span>
+              <div style={{
+                background: `${colors.thermal}22`,
+                borderRadius: '8px',
+                padding: '12px 16px',
+              }}>
+                <div style={{ color: colors.thermal, fontWeight: 600 }}>Heat</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Thermal</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🚗</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Car Brakes</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                When you brake, kinetic energy becomes heat in the brake pads. That's why brakes glow red-hot after heavy use! Hybrid cars capture this energy instead.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🏀</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Bouncing Ball</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                A bouncing ball loses height with each bounce because some kinetic energy converts to sound and heat during each collision. The energy isn't lost—it's transformed!
               </p>
             </div>
           </div>
-        </div>
-      </div>
 
-      <button
-        onClick={() => goToPhase('predict')}
-        style={{ zIndex: 10 }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-violet-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Make a Prediction
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2"><span className="text-amber-400">PE</span> = mgh</div>
-        <div className="flex items-center gap-2"><span className="text-emerald-400">KE</span> = 1/2 mv^2</div>
-        <div className="flex items-center gap-2"><span className="text-purple-400">Total E</span> = Constant</div>
-      </div>
-    </div>
-  );
-
-  // PREDICT PHASE - Prediction question about energy transformation
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300">
-          A marble is released from a certain height on a frictionless track. How high will it roll on the other side?
-        </p>
-        <p className="text-sm text-slate-400 mt-2">Think about what happens to the energy as the marble moves.</p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 0, label: 'Much lower than start', icon: '📉', description: 'It loses energy while rolling down' },
-          { id: 1, label: 'Exactly the same height', icon: '=', description: 'Energy is perfectly conserved' },
-          { id: 2, label: 'Slightly lower due to air resistance', icon: '📊', description: 'Some energy lost to environment' },
-          { id: 3, label: 'Higher than start', icon: '📈', description: 'It gains energy going down' },
-        ].map((option) => (
           <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            style={{ zIndex: 10 }}
-            disabled={prediction !== null}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              prediction === option.id
-                ? option.id === 1 ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : prediction !== null && option.id === 1 ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            <span className="mr-3 text-xl">{option.icon}</span>
-            <span className="text-white font-medium">{option.label}</span>
-            <span className="text-slate-400 text-sm block mt-1 ml-9">{option.description}</span>
-          </button>
-        ))}
-      </div>
-      {prediction !== null && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            {prediction === 1 ? 'Correct!' : 'Not quite!'} On a frictionless track, the marble returns to exactly the same height. All potential energy converts to kinetic energy and back again!
-          </p>
-          <button
-            onClick={() => goToPhase('play')}
-            style={{ zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-xl"
-          >
-            See It in Action
+            See Real-World Applications →
           </button>
         </div>
-      )}
-    </div>
-  );
 
-  // PLAY PHASE - Interactive simulation showing KE <-> PE conversion
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Energy Transformation Lab</h2>
-      <p className="text-slate-400 mb-4">Watch potential energy (PE) convert to kinetic energy (KE) and back!</p>
-
-      <TrackVisualization type={trackType} />
-
-      <div className="flex justify-center gap-4 mt-4 mb-4">
-        <button
-          onClick={() => {
-            startSimulation();
-            playSound('click');
-          }}
-          style={{ zIndex: 10 }}
-          className={`px-6 py-2 rounded-lg font-medium transition-all ${isRunning ? 'bg-slate-600 text-white' : 'bg-emerald-600 text-white hover:bg-emerald-500'}`}
-        >
-          {isRunning ? 'Running...' : 'Release Marble'}
-        </button>
-        <button
-          onClick={() => {
-            resetSimulation();
-            playSound('click');
-          }}
-          style={{ zIndex: 10 }}
-          className="px-6 py-2 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
-        >
-          Reset
-        </button>
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl w-full mb-4">
-        <p className="text-slate-400 text-sm mb-3">Track Shape:</p>
-        <div className="flex gap-2">
-          {[
-            { id: 'hill', label: 'Valley', icon: '⌣' },
-            { id: 'bowl', label: 'Bowl', icon: 'U' },
-            { id: 'loop', label: 'Loop', icon: 'O' },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => {
-                setTrackType(t.id as 'hill' | 'loop' | 'bowl');
-                resetSimulation();
-                playSound('click');
-              }}
-              style={{ zIndex: 10 }}
-              className={`flex-1 py-2 rounded-lg text-center transition-all ${trackType === t.id ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
-            >
-              {t.icon} {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
 
-      <div className="bg-gradient-to-r from-purple-900/40 to-violet-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-        <p className="text-purple-300 text-sm text-center">
-          <strong>Key Observation:</strong> Watch how PE and KE trade off while Total Energy stays constant!
-        </p>
-      </div>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      <button
-        onClick={() => goToPhase('review')}
-        style={{ zIndex: 10 }}
-        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-      >
-        Review the Science
-      </button>
-    </div>
-  );
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
 
-  // REVIEW PHASE - Explain KE + PE = constant
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Conservation of Mechanical Energy</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-2xl p-6 border border-amber-700/30">
-          <h3 className="text-xl font-bold text-amber-400 mb-3">Potential Energy (PE)</h3>
-          <p className="text-2xl text-white mb-2 font-mono">PE = mgh</p>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>- Energy stored due to position/height</li>
-            <li>- Maximum at the top, minimum at the bottom</li>
-            <li>- Depends on mass, gravity, and height</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 border border-emerald-700/30">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Kinetic Energy (KE)</h3>
-          <p className="text-2xl text-white mb-2 font-mono">KE = 1/2 mv^2</p>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>- Energy of motion</li>
-            <li>- Maximum at the bottom, zero when stationary</li>
-            <li>- Depends on mass and velocity squared</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-purple-900/50 to-violet-900/50 rounded-2xl p-6 md:col-span-2 border border-purple-700/30">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">The Conservation Law</h3>
-          <p className="text-3xl text-white text-center mb-4 font-mono">PE + KE = Constant</p>
-          <p className="text-slate-300 text-sm text-center">
-            In the absence of non-conservative forces (like friction), the total mechanical energy remains constant.
-            Energy continuously transforms between potential and kinetic forms, but the total never changes.
-          </p>
-        </div>
-      </div>
-      <button
-        onClick={() => goToPhase('twist_predict')}
-        style={{ zIndex: 10 }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-      >
-        Discover the Twist
-      </button>
-    </div>
-  );
-
-  // TWIST_PREDICT PHASE - Scenario with friction - where does energy go?
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Twist: What About Friction?</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300">
-          In the real world, surfaces have friction. When a marble rolls on a track with friction, where does the "lost" mechanical energy go?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 0, label: 'Converts to thermal energy (heat)', icon: '🔥', description: 'Friction generates heat in the track and marble' },
-          { id: 1, label: 'Energy is destroyed', icon: '💨', description: 'It simply disappears' },
-          { id: 2, label: 'Transfers to the Earth', icon: '🌍', description: 'Goes into the ground' },
-          { id: 3, label: 'Stays as mechanical energy', icon: '⚡', description: 'Just in a different form' },
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            style={{ zIndex: 10 }}
-            disabled={twistPrediction !== null}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              twistPrediction === option.id
-                ? option.id === 0 ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : twistPrediction !== null && option.id === 0 ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="mr-3 text-xl">{option.icon}</span>
-            <span className="text-white font-medium">{option.label}</span>
-            <span className="text-slate-400 text-sm block mt-1 ml-9">{option.description}</span>
-          </button>
-        ))}
-      </div>
-      {twistPrediction !== null && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            {twistPrediction === 0 ? 'Correct!' : 'Actually:'} Friction converts mechanical energy to thermal energy (heat). Energy is NEVER destroyed - it just changes form!
-          </p>
-          <button
-            onClick={() => goToPhase('twist_play')}
-            style={{ zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-          >
-            Test With Friction
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  // TWIST_PLAY PHASE - Interactive simulation with friction showing thermal energy
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Energy Dissipation Lab</h2>
-      <p className="text-slate-400 mb-4">Adjust friction and watch mechanical energy convert to heat!</p>
-
-      <TrackVisualization type="hill" />
-
-      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl w-full mt-4 mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-white font-medium">Friction Level</span>
-          <span className={`font-bold ${friction > 50 ? 'text-red-400' : friction > 20 ? 'text-amber-400' : 'text-emerald-400'}`}>
-            {friction}%
-          </span>
-        </div>
-        <input
-          type="range"
-          min="0"
-          max="80"
-          value={friction}
-          onChange={(e) => {
-            setFriction(Number(e.target.value));
-            onGameEvent?.({ type: 'parameter_changed', data: { friction: Number(e.target.value) } });
-          }}
-          className="w-full h-2 bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 rounded-full cursor-pointer"
-        />
-        <div className="flex justify-between mt-1 text-xs text-slate-400">
-          <span>Ice (0%)</span>
-          <span>Wood (40%)</span>
-          <span>Carpet (80%)</span>
-        </div>
-      </div>
-
-      <div className="flex justify-center gap-4 mb-4">
-        <button
-          onClick={() => {
-            startSimulation();
-            playSound('click');
-          }}
-          style={{ zIndex: 10 }}
-          className="px-6 py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-500"
-        >
-          {isRunning ? 'Running...' : 'Release Marble'}
-        </button>
-        <button
-          onClick={() => {
-            resetSimulation();
-            playSound('click');
-          }}
-          style={{ zIndex: 10 }}
-          className="px-6 py-2 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
-        >
-          Reset
-        </button>
-      </div>
-
-      <div className="bg-gradient-to-r from-amber-900/40 to-red-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-        <p className="text-amber-300 text-sm text-center">
-          <strong>Observe:</strong> With friction, total mechanical energy decreases - but that energy becomes heat! Touch your hands together and rub quickly - feel the warmth!
-        </p>
-      </div>
-
-      <button
-        onClick={() => goToPhase('twist_review')}
-        style={{ zIndex: 10 }}
-        className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-      >
-        Review Discovery
-      </button>
-    </div>
-  );
-
-  // TWIST_REVIEW PHASE - Explain dissipation and total energy conservation
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Energy Transforms, Never Disappears</h2>
-      <div className="bg-gradient-to-br from-amber-900/40 to-red-900/40 rounded-2xl p-6 max-w-2xl mb-6 border border-amber-700/30">
-        <h3 className="text-xl font-bold text-white mb-4 text-center">First Law of Thermodynamics</h3>
-        <p className="text-lg text-purple-400 text-center mb-4 font-semibold">
-          Energy cannot be created or destroyed, only transformed from one form to another
-        </p>
-        <div className="flex items-center justify-center gap-4 flex-wrap text-center">
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <div className="text-amber-400 font-bold">PE + KE</div>
-            <div className="text-xs text-slate-400">Mechanical</div>
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
           </div>
-          <span className="text-2xl text-slate-400">→</span>
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <div className="text-emerald-400 font-bold">Less PE + KE</div>
-            <div className="text-xs text-slate-400">Mechanical</div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Energy Conservation Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textSecondary, marginBottom: '8px', fontWeight: 600 }}>
+                Real Examples:
+              </h4>
+              <ul style={{ ...typo.small, color: colors.textMuted, margin: 0, paddingLeft: '20px' }}>
+                {app.examples.slice(0, 3).map((ex, i) => (
+                  <li key={i} style={{ marginBottom: '4px' }}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '4px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
           </div>
-          <span className="text-2xl text-slate-400">+</span>
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <div className="text-red-400 font-bold">Heat</div>
-            <div className="text-xs text-slate-400">Thermal</div>
-          </div>
-        </div>
-      </div>
-      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mb-6">
-        <p className="text-white font-semibold mb-2">Key Insight: Total Energy is ALWAYS Conserved</p>
-        <p className="text-slate-300 text-sm">
-          When we say "energy is lost to friction," we mean mechanical energy decreases. But that energy doesn't disappear -
-          it becomes thermal energy (heat). If we could measure ALL forms of energy (mechanical + thermal + sound + light),
-          the total would remain constant!
-        </p>
-      </div>
-      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mb-6">
-        <p className="text-amber-400 font-semibold mb-2">Real World Example: Car Brakes</p>
-        <p className="text-slate-300 text-sm">
-          When you brake, kinetic energy becomes heat in the brake pads. That's why brakes get hot after heavy use!
-          Hybrid and electric cars use regenerative braking to recover some of this energy as electricity.
-        </p>
-      </div>
-      <button
-        onClick={() => goToPhase('transfer')}
-        style={{ zIndex: 10 }}
-        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-      >
-        Explore Real-World Applications
-      </button>
-    </div>
-  );
 
-  // TRANSFER PHASE - 4 real-world applications
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-2">Real-World Applications</h2>
-      <p className="text-slate-400 mb-6">Explore all 4 applications to continue</p>
-      <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto mb-6">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => { setActiveApp(index); handleAppComplete(index); }}
-            style={{ zIndex: 10 }}
-            className={`p-4 rounded-xl border-2 transition-all text-left ${
-              completedApps.has(index)
-                ? 'border-emerald-500 bg-emerald-900/30'
-                : 'border-slate-700 bg-slate-800/50 hover:border-slate-600 hover:bg-slate-700/50'
-            }`}
-          >
-            <div className="text-3xl mb-2">{app.icon}</div>
-            <h3 className="text-white font-semibold text-sm">{app.title}</h3>
-            <p className="text-slate-400 text-xs mt-1">{app.subtitle}</p>
-            {completedApps.has(index) && <span className="text-emerald-400 text-xs mt-1 block">Explored!</span>}
-          </button>
-        ))}
-      </div>
-
-      {completedApps.size > 0 && (
-        <div className="bg-slate-800/50 rounded-xl p-4 max-w-lg w-full mb-6 border border-slate-700/50">
-          <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-            <span className="text-2xl">{applications[activeApp].icon}</span>
-            {applications[activeApp].title}
-          </h4>
-          <p className="text-slate-300 text-sm mb-3">{applications[activeApp].description}</p>
-          <p className="text-purple-400 text-sm font-medium">{applications[activeApp].physics}</p>
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 mb-6">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
-          {applications.map((_, i) => (
-            <div key={i} className={`w-3 h-3 rounded-full transition-all ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />
-          ))}
-        </div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-
-      {completedApps.size >= 4 && (
-        <button
-          onClick={() => goToPhase('test')}
-          style={{ zIndex: 10 }}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-        >
-          Take the Knowledge Test
-        </button>
-      )}
-    </div>
-  );
-
-  // TEST PHASE - 10 multiple choice questions
-  const renderTest = () => {
-    if (testSubmitted) {
-      const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
-      const percentage = Math.round((totalCorrect / testQuestions.length) * 100);
-      const passed = totalCorrect >= 7;
-
-      // Report score to parent
-      if (setTestScore) {
-        setTestScore(percentage);
-      }
-      onGameEvent?.({ type: 'test_completed', data: { score: totalCorrect, total: testQuestions.length, percentage, passed } });
-
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-          <div className="text-6xl mb-4">{passed ? '🎉' : '📚'}</div>
-          <h2 className="text-2xl font-bold text-white mb-2">Score: {totalCorrect}/10 ({percentage}%)</h2>
-          <p className="text-slate-300 mb-6">
-            {passed ? 'Excellent! You\'ve demonstrated mastery of energy conservation!' : 'Keep studying! Review the concepts and try again.'}
-          </p>
-          {passed ? (
+          {allAppsCompleted && (
             <button
-              onClick={() => { playSound('complete'); goToPhase('mastery'); }}
-              style={{ zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onClick={() => { setTestAnswers(Array(10).fill(null)); setTestIndex(0); setTestSubmitted(false); goToPhase('review'); }}
-              style={{ zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
-            >
-              Review & Try Again
+              Take the Knowledge Test →
             </button>
           )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand energy conservation!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review & Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
         </div>
       );
     }
 
-    const q = testQuestions[testIndex];
+    const question = testQuestions[currentQuestion];
+
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-xl font-bold text-white text-center mb-6">Quiz: Question {testIndex + 1} of {testQuestions.length}</h2>
-        <div className="flex gap-1 mb-4">
-          {testQuestions.map((_, i) => (
-            <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all ${
-              testAnswers[i] !== null
-                ? testQuestions[i].options[testAnswers[i] as number]?.correct ? 'bg-emerald-500' : 'bg-red-500'
-                : i === testIndex ? 'bg-purple-400 scale-125' : 'bg-slate-600'
-            }`} />
-          ))}
-        </div>
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-slate-700/50">
-          <p className="text-lg text-slate-300">{q.question}</p>
-        </div>
-        <div className="grid gap-3 w-full max-w-xl">
-          {q.options.map((option, i) => {
-            const isSelected = testAnswers[testIndex] === i;
-            const isCorrect = option.correct;
-            const showResult = testAnswers[testIndex] !== null;
-            return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                key={i}
-                onClick={() => handleTestAnswer(i)}
-                style={{ zIndex: 10 }}
-                disabled={showResult}
-                className={`p-4 rounded-xl text-left transition-all duration-300 ${
-                  showResult
-                    ? isCorrect ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                    : isSelected ? 'bg-red-600/40 border-2 border-red-400'
-                    : 'bg-slate-700/50 border-2 border-transparent'
-                    : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-                }`}
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
               >
-                <span className="font-bold text-white mr-2">{String.fromCharCode(65 + i)}.</span>
-                <span className="text-slate-200">{option.text}</span>
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
               </button>
-            );
-          })}
-        </div>
-        {testAnswers[testIndex] !== null && (
-          <div className="mt-6 flex gap-4">
-            {testIndex > 0 && (
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
               <button
-                onClick={() => setTestIndex(testIndex - 1)}
-                style={{ zIndex: 10 }}
-                className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-all"
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
               >
                 Previous
               </button>
             )}
-            {testIndex < testQuestions.length - 1 ? (
+            {currentQuestion < 9 ? (
               <button
-                onClick={() => setTestIndex(testIndex + 1)}
-                style={{ zIndex: 10 }}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
               >
-                Next Question
+                Next →
               </button>
             ) : (
               <button
-                onClick={() => setTestSubmitted(true)}
-                style={{ zIndex: 10 }}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
               >
-                See Results
+                Submit Test
               </button>
             )}
           </div>
-        )}
-      </div>
-    );
-  };
-
-  // MASTERY PHASE - Congratulations page
-  const renderMastery = () => {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-        <div className="bg-gradient-to-br from-purple-900/50 via-violet-900/50 to-indigo-900/50 rounded-3xl p-8 max-w-2xl border border-purple-700/30">
-          <div className="text-8xl mb-6">🏆</div>
-          <h1 className="text-3xl font-bold text-white mb-4">Energy Conservation Master!</h1>
-          <p className="text-xl text-slate-300 mb-6">You've mastered the fundamental law of energy conservation!</p>
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">⚡</div>
-              <p className="text-sm text-slate-300">PE ↔ KE</p>
-              <p className="text-xs text-slate-500">Transformation</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">🔥</div>
-              <p className="text-sm text-slate-300">Thermal</p>
-              <p className="text-xs text-slate-500">Dissipation</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <div className="text-2xl mb-2">🌍</div>
-              <p className="text-sm text-slate-300">Real World</p>
-              <p className="text-xs text-slate-500">Applications</p>
-            </div>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4 mb-6">
-            <p className="text-purple-400 text-sm mb-1">Key Formula Mastered</p>
-            <p className="text-xl text-white font-mono">E_total = PE + KE = mgh + 1/2mv^2 = constant</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4 mb-6">
-            <p className="text-emerald-400 text-sm mb-1">Universal Principle</p>
-            <p className="text-lg text-white">Energy cannot be created or destroyed - only transformed!</p>
-          </div>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{ zIndex: 10 }}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-all"
-          >
-            Explore Again
-          </button>
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl" />
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Energy Conservation</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-purple-400 w-6 shadow-lg shadow-purple-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Energy Conservation Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand one of physics' most fundamental laws: energy can transform but never disappear!
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '450px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Concepts Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'PE = mgh (gravitational potential energy)',
+              'KE = 1/2mv^2 (kinetic energy)',
+              'PE + KE = constant (in ideal systems)',
+              'Friction converts mechanical energy to heat',
+              'Total energy is always conserved',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
             ))}
           </div>
-          <span className="text-sm font-medium text-purple-400">{phaseLabels[phase]}</span>
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
-    </div>
-  );
+        <div style={{
+          background: `${colors.accent}11`,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '32px',
+          maxWidth: '450px',
+        }}>
+          <p style={{ ...typo.body, color: colors.accent, fontFamily: 'monospace', margin: 0 }}>
+            E<sub>total</sub> = PE + KE + Thermal + ... = constant
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default EnergyConservationRenderer;

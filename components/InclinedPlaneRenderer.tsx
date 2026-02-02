@@ -3,391 +3,290 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
-// INCLINED PLANE (GRAVITY COMPONENTS) RENDERER - Premium Design System
+// INCLINED PLANE RENDERER - Complete 10-Phase Learning Game
+// Discover how ramps multiply force using gravity components
 // ============================================================================
 
-// Phase Type Definition
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Lab',
-  review: 'Review',
-  twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
-  twist_review: 'Twist Review',
-  transfer: 'Transfer',
-  test: 'Test',
-  mastery: 'Mastery'
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
 interface InclinedPlaneRendererProps {
-  width?: number;
-  height?: number;
-  onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
 }
 
-// ============================================================================
-// PREMIUM DESIGN TOKENS
-// ============================================================================
-const design = {
-  colors: {
-    bgDeep: '#060810',
-    bgPrimary: '#0a0c14',
-    bgSecondary: '#10141e',
-    bgTertiary: '#181e2c',
-    bgElevated: '#222a3c',
-    textPrimary: '#f4f6fa',
-    textSecondary: '#98a4b8',
-    textTertiary: '#5a6880',
-    accentPrimary: '#06b6d4',
-    accentSecondary: '#22d3ee',
-    accentMuted: '#164e63',
-    accentGlow: 'rgba(6, 182, 212, 0.25)',
-    secondary: '#f97316',
-    secondaryMuted: '#7c2d12',
-    ball: '#ef4444',
-    ballHighlight: '#fca5a5',
-    ramp: '#4a5568',
-    rampLight: '#718096',
-    gravity: '#a855f7',
-    normal: '#22c55e',
-    parallel: '#f59e0b',
-    friction: '#ef4444',
-    success: '#10b981',
-    successMuted: 'rgba(16, 185, 129, 0.15)',
-    danger: '#ef4444',
-    dangerMuted: 'rgba(239, 68, 68, 0.15)',
-    border: 'rgba(152, 164, 184, 0.12)',
-    borderHover: 'rgba(152, 164, 184, 0.25)',
-  },
-  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 },
-  radius: { sm: 8, md: 12, lg: 16, xl: 20, full: 9999 },
-  font: {
-    sans: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
-    mono: '"SF Mono", "Fira Code", monospace'
-  },
-  shadow: {
-    sm: '0 2px 8px rgba(0,0,0,0.3)',
-    md: '0 8px 24px rgba(0,0,0,0.4)',
-    lg: '0 16px 48px rgba(0,0,0,0.5)',
-    glow: (color: string) => `0 0 32px ${color}40`
-  }
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
+// ============================================================================
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ============================================================================
+const testQuestions = [
+  {
+    scenario: "Ancient Egyptians are building a pyramid. They need to lift 2-ton stone blocks to a height of 50 meters. One engineer proposes a vertical lift using ropes and pulleys. Another suggests building a long ramp at a gentle 10-degree angle.",
+    question: "Why would the ramp approach require less force per pull, even though the total distance traveled is much longer?",
+    options: [
+      { id: 'a', label: "Ramps reduce the gravitational force acting on the stone" },
+      { id: 'b', label: "The ramp spreads the work over a longer distance, reducing the force needed at each moment", correct: true },
+      { id: 'c', label: "Friction on the ramp helps push the stone upward" },
+      { id: 'd', label: "Ramps are made of a special low-gravity material" }
+    ],
+    explanation: "An inclined plane trades distance for force. The work done (force x distance) remains the same, but by increasing the distance traveled, the required force at each moment decreases proportionally. A 10-degree ramp provides about a 5.7x mechanical advantage."
+  },
+  {
+    scenario: "A wheelchair user needs to access a building entrance that is 1 meter above ground level. Building codes require a maximum ramp slope of 1:12, meaning for every 1 meter of rise, the ramp must extend at least 12 meters horizontally.",
+    question: "What is the maximum angle this ADA-compliant ramp can have?",
+    options: [
+      { id: 'a', label: "About 4.8 degrees", correct: true },
+      { id: 'b', label: "About 12 degrees" },
+      { id: 'c', label: "About 8.3 degrees" },
+      { id: 'd', label: "About 15 degrees" }
+    ],
+    explanation: "The angle can be calculated using tan^(-1)(1/12) = 4.76 degrees. This gentle slope ensures wheelchair users can ascend independently without excessive force. The mechanical advantage is 12, meaning they only need 1/12 the force of lifting straight up."
+  },
+  {
+    scenario: "A physics student places a 5 kg box on a frictionless ramp tilted at 30 degrees. She calculates the force component pulling the box down the ramp using F = mg sin(theta).",
+    question: "What is the component of gravity pulling the box down the ramp?",
+    options: [
+      { id: 'a', label: "49 N (the full weight)" },
+      { id: 'b', label: "24.5 N (half the weight)", correct: true },
+      { id: 'c', label: "42.4 N" },
+      { id: 'd', label: "9.8 N" }
+    ],
+    explanation: "The parallel component of gravity is F = mg sin(30) = 5 kg x 9.8 m/s^2 x 0.5 = 24.5 N. Only half the gravitational force acts along the ramp because sin(30) = 0.5. The other component (mg cos 30) pushes perpendicular into the ramp surface."
+  },
+  {
+    scenario: "A loading dock worker needs to push a 200 kg refrigerator into a delivery truck. The truck bed is 1.2 meters off the ground. He has a 3-meter long ramp available.",
+    question: "What is the mechanical advantage of using this ramp, and approximately what force is needed to push the refrigerator up (ignoring friction)?",
+    options: [
+      { id: 'a', label: "MA = 2.5, Force needed = 784 N", correct: true },
+      { id: 'b', label: "MA = 3, Force needed = 653 N" },
+      { id: 'c', label: "MA = 1.2, Force needed = 1633 N" },
+      { id: 'd', label: "MA = 4, Force needed = 490 N" }
+    ],
+    explanation: "Mechanical advantage = Length / Height = 3m / 1.2m = 2.5. The force needed = Weight / MA = (200 kg x 9.8 m/s^2) / 2.5 = 784 N. Without the ramp, lifting straight up would require 1960 N - the ramp reduces the required force by 60%."
+  },
+  {
+    scenario: "On a rough wooden ramp (coefficient of friction = 0.3), a student tries to push a box uphill. She notices that friction seems to make the task harder when pushing up, but would help prevent sliding when stationary.",
+    question: "When pushing a box UP a ramp, how does friction affect the required force compared to a frictionless ramp?",
+    options: [
+      { id: 'a', label: "Friction has no effect on upward motion" },
+      { id: 'b', label: "Friction decreases the force needed by providing grip" },
+      { id: 'c', label: "Friction increases the force needed because it opposes the motion direction", correct: true },
+      { id: 'd', label: "Friction only matters when moving downward" }
+    ],
+    explanation: "Friction always opposes the direction of motion. When pushing upward, friction acts downward along the ramp, adding to the gravitational component you must overcome. Total force needed = mg sin(theta) + friction force, where friction = mu x mg cos(theta)."
+  },
+  {
+    scenario: "A mountain road switchbacks up a 300-meter elevation gain. Engineers could build a direct steep road (2 km long at 15% grade) or a longer switchback route (5 km long at 6% grade).",
+    question: "Why do mountain roads use switchbacks instead of going straight up the slope?",
+    options: [
+      { id: 'a', label: "Switchbacks provide better views for tourists" },
+      { id: 'b', label: "Steeper grades exceed vehicle engine capabilities and create safety hazards", correct: true },
+      { id: 'c', label: "Switchbacks are cheaper to construct than straight roads" },
+      { id: 'd', label: "Snow removal is easier on winding roads" }
+    ],
+    explanation: "A 15% grade requires vehicles to climb 15 meters for every 100 meters traveled. This steep angle demands high engine force, causes brake overheating on descent, and increases rollover risk. The 6% switchback reduces required engine force by 60%, making travel safer and more fuel-efficient."
+  },
+  {
+    scenario: "A screw has threads that spiral around the shaft at a very small angle (typically 2-5 degrees). When you turn the screwdriver, you apply force around a circular path while the screw advances a small linear distance into the wood.",
+    question: "Why do screws provide such enormous mechanical advantage (often 50:1 or more)?",
+    options: [
+      { id: 'a', label: "The threads are made of hardened steel" },
+      { id: 'b', label: "The screw is an inclined plane wrapped in a helix - gentle angle over long distance creates high MA", correct: true },
+      { id: 'c', label: "Friction between threads and wood multiplies the force" },
+      { id: 'd', label: "Screws work by compressing air inside the hole" }
+    ],
+    explanation: "A screw is a helical inclined plane. Each full turn moves the screw forward by only the thread pitch (a few mm), while your hand travels the full circumference of the screwdriver handle (often 100+ mm). This distance ratio creates mechanical advantages of 50:1 or higher."
+  },
+  {
+    scenario: "A wedge (like an axe blade) is placed against a log. When you strike the top with a hammer, the wedge is driven into the wood, splitting it apart. The wedge angle is 15 degrees from the centerline (30 degree total).",
+    question: "How does the wedge convert the downward hammer force into a splitting force?",
+    options: [
+      { id: 'a', label: "The wedge simply pushes the wood aside with brute force" },
+      { id: 'b', label: "The inclined surfaces redirect and multiply the downward force into perpendicular splitting forces", correct: true },
+      { id: 'c', label: "The sharp edge cuts through the wood fibers" },
+      { id: 'd', label: "Heat from friction weakens the wood structure" }
+    ],
+    explanation: "A wedge is a double inclined plane. The downward force on the wedge back is redirected by the angled surfaces into forces perpendicular to each face. With a 30-degree total angle, the splitting force on each side is about 2x the applied force (MA = 1/sin(15))."
+  },
+  {
+    scenario: "A conveyor belt at a warehouse moves packages up a 5-degree incline from ground level to a 2-meter high sorting platform. Engineers must calculate the motor power needed, accounting for the belt supporting multiple packages simultaneously.",
+    question: "If the conveyor must lift packages at a rate of 1000 kg per minute, what power output is required from the motor (ignoring friction)?",
+    options: [
+      { id: 'a', label: "About 327 watts", correct: true },
+      { id: 'b', label: "About 1960 watts" },
+      { id: 'c', label: "About 163 watts" },
+      { id: 'd', label: "About 2000 watts" }
+    ],
+    explanation: "Power = Work / Time = (mgh) / t = (1000 kg x 9.8 m/s^2 x 2 m) / 60 sec = 327 W. Interestingly, the 5-degree angle only affects the ramp length needed, not the power requirement - the work to lift against gravity is the same regardless of path."
+  },
+  {
+    scenario: "A ski slope is rated as a black diamond with a 45% grade (about 24 degrees). A 70 kg skier points their skis straight downhill and begins accelerating. Assuming minimal friction and air resistance.",
+    question: "What is the skier's acceleration down the slope?",
+    options: [
+      { id: 'a', label: "9.8 m/s^2 (full gravity)" },
+      { id: 'b', label: "About 4.0 m/s^2", correct: true },
+      { id: 'c', label: "About 6.9 m/s^2" },
+      { id: 'd', label: "About 2.5 m/s^2" }
+    ],
+    explanation: "Acceleration = g x sin(24) = 9.8 x 0.407 = 4.0 m/s^2. Only the component of gravity parallel to the slope accelerates the skier. After 5 seconds, they would be traveling at 20 m/s (45 mph) - which is why ski slope grooming and technique are so important for control."
+  }
+];
 
 // ============================================================================
-// APPLICATION TAB SVG GRAPHICS
+// REAL WORLD APPLICATIONS - 4 detailed applications
 // ============================================================================
-const MountainRoadsSVG: React.FC = () => (
-  <svg width="200" height="140" viewBox="0 0 200 140">
-    <defs>
-      <linearGradient id="mountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#6b7280" />
-        <stop offset="100%" stopColor="#374151" />
-      </linearGradient>
-      <linearGradient id="roadGradInc" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4b5563" />
-        <stop offset="100%" stopColor="#374151" />
-      </linearGradient>
-      <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#1e3a5f" />
-        <stop offset="100%" stopColor="#0f172a" />
-      </linearGradient>
-    </defs>
-
-    {/* Sky */}
-    <rect x="0" y="0" width="200" height="140" fill="url(#skyGrad)" />
-
-    {/* Mountains */}
-    <polygon points="0,140 40,60 80,140" fill="url(#mountainGrad)" />
-    <polygon points="50,140 100,30 150,140" fill="#4b5563" />
-    <polygon points="120,140 170,50 200,100 200,140" fill="url(#mountainGrad)" />
-
-    {/* Snow caps */}
-    <polygon points="100,30 90,55 110,55" fill="#e5e7eb" />
-    <polygon points="170,50 160,70 180,70" fill="#e5e7eb" />
-
-    {/* Switchback road */}
-    <path d="M20 130 L60 110 L30 90 L70 70 L40 50 L80 35" stroke="#6b7280" strokeWidth="8" fill="none" strokeLinecap="round" />
-    <path d="M20 130 L60 110 L30 90 L70 70 L40 50 L80 35" stroke="#f59e0b" strokeWidth="1" fill="none" strokeDasharray="4,8" />
-
-    {/* Car */}
-    <g transform="translate(55, 105) rotate(-20)">
-      <rect x="0" y="0" width="12" height="6" rx="2" fill="#ef4444" />
-      <rect x="1" y="-2" width="4" height="4" rx="1" fill="#93c5fd" />
-      <circle cx="2" cy="7" r="2" fill="#1f2937" />
-      <circle cx="10" cy="7" r="2" fill="#1f2937" />
-    </g>
-
-    {/* Labels */}
-    <text x="150" y="125" fill={design.colors.accentPrimary} fontSize="10" fontWeight="600">15% Grade</text>
-    <text x="100" y="15" fill="#9ca3af" fontSize="9">Switchback reduces slope</text>
-  </svg>
-);
-
-const WheelchairRampSVG: React.FC = () => (
-  <svg width="200" height="140" viewBox="0 0 200 140">
-    <defs>
-      <linearGradient id="concreteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#9ca3af" />
-        <stop offset="100%" stopColor="#6b7280" />
-      </linearGradient>
-      <linearGradient id="railGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#fbbf24" />
-        <stop offset="100%" stopColor="#d97706" />
-      </linearGradient>
-    </defs>
-
-    {/* Building */}
-    <rect x="140" y="20" width="60" height="120" fill="#374151" />
-    <rect x="150" y="30" width="15" height="20" fill="#60a5fa" opacity="0.5" />
-    <rect x="175" y="30" width="15" height="20" fill="#60a5fa" opacity="0.5" />
-    <rect x="155" y="80" width="25" height="40" rx="2" fill="#4b5563" />
-
-    {/* Ground */}
-    <rect x="0" y="120" width="200" height="20" fill="#374151" />
-
-    {/* Ramp */}
-    <polygon points="20,120 140,120 140,70" fill="url(#concreteGrad)" />
-
-    {/* Ramp surface lines */}
-    {[0, 20, 40, 60, 80, 100].map((x, i) => (
-      <line key={i} x1={30 + x} y1={118} x2={30 + x + 8} y2={118} stroke="#e5e7eb" strokeWidth="2" strokeLinecap="round" />
-    ))}
-
-    {/* Handrails */}
-    <line x1="25" y1="110" x2="138" y2="60" stroke="url(#railGrad)" strokeWidth="4" strokeLinecap="round" />
-    <line x1="25" y1="118" x2="138" y2="68" stroke="url(#railGrad)" strokeWidth="4" strokeLinecap="round" />
-
-    {/* Wheelchair user */}
-    <g transform="translate(70, 90)">
-      {/* Wheel */}
-      <circle cx="0" cy="15" r="12" fill="#1f2937" stroke="#4b5563" strokeWidth="2" />
-      <circle cx="0" cy="15" r="3" fill="#6b7280" />
-      {/* Small wheel */}
-      <circle cx="20" cy="20" r="5" fill="#1f2937" />
-      {/* Chair */}
-      <rect x="-5" y="0" width="25" height="15" rx="3" fill="#3b82f6" />
-      {/* Person */}
-      <circle cx="8" cy="-8" r="8" fill="#fcd34d" />
-      <rect x="2" y="0" width="12" height="10" rx="2" fill="#60a5fa" />
-    </g>
-
-    {/* Angle indicator */}
-    <path d="M130 120 A 20 20 0 0 0 138 100" stroke={design.colors.accentPrimary} strokeWidth="2" fill="none" />
-    <text x="115" y="115" fill={design.colors.accentPrimary} fontSize="10" fontWeight="600">4.8°</text>
-    <text x="10" y="15" fill={design.colors.textSecondary} fontSize="9">ADA Compliant: 1:12 slope</text>
-  </svg>
-);
-
-const ScrewsWedgesSVG: React.FC = () => (
-  <svg width="200" height="140" viewBox="0 0 200 140">
-    <defs>
-      <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#9ca3af" />
-        <stop offset="100%" stopColor="#6b7280" />
-      </linearGradient>
-      <linearGradient id="woodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#d97706" />
-        <stop offset="100%" stopColor="#92400e" />
-      </linearGradient>
-    </defs>
-
-    {/* Background */}
-    <rect x="0" y="0" width="200" height="140" fill="#1a1a2e" />
-
-    {/* Screw on left side */}
-    <g transform="translate(50, 70)">
-      {/* Screw head */}
-      <ellipse cx="0" cy="-35" rx="15" ry="5" fill="#9ca3af" />
-      <rect x="-15" y="-35" width="30" height="8" fill="url(#metalGrad)" />
-      {/* Slot */}
-      <rect x="-8" y="-33" width="16" height="2" fill="#4b5563" />
-      {/* Screw shaft with threads */}
-      <rect x="-4" y="-27" width="8" height="55" fill="url(#metalGrad)" />
-      {/* Thread lines */}
-      {[0, 8, 16, 24, 32, 40, 48].map((y, i) => (
-        <line key={i} x1="-6" y1={-25 + y} x2="6" y2={-22 + y} stroke="#6b7280" strokeWidth="2" />
-      ))}
-      {/* Pointed tip */}
-      <polygon points="-4,28 4,28 0,38" fill="url(#metalGrad)" />
-    </g>
-    <text x="50" y="125" textAnchor="middle" fill={design.colors.textSecondary} fontSize="10">Screw</text>
-
-    {/* Wedge/Axe on right side */}
-    <g transform="translate(150, 50)">
-      {/* Wood block */}
-      <rect x="-30" y="20" width="60" height="50" fill="url(#woodGrad)" />
-      {/* Wood grain */}
-      <line x1="-25" y1="30" x2="-25" y2="65" stroke="#78350f" strokeWidth="1" />
-      <line x1="-10" y1="25" x2="-10" y2="68" stroke="#78350f" strokeWidth="1" />
-      <line x1="10" y1="25" x2="10" y2="68" stroke="#78350f" strokeWidth="1" />
-      <line x1="25" y1="30" x2="25" y2="65" stroke="#78350f" strokeWidth="1" />
-      {/* Wedge/axe blade */}
-      <polygon points="0,-20 -8,25 8,25" fill="url(#metalGrad)" stroke="#4b5563" strokeWidth="1" />
-      {/* Crack in wood */}
-      <line x1="0" y1="25" x2="0" y2="70" stroke="#1a1a2e" strokeWidth="3" />
-      <line x1="-2" y1="35" x2="2" y2="40" stroke="#1a1a2e" strokeWidth="1" />
-      <line x1="2" y1="50" x2="-2" y2="55" stroke="#1a1a2e" strokeWidth="1" />
-    </g>
-    <text x="150" y="125" textAnchor="middle" fill={design.colors.textSecondary} fontSize="10">Wedge</text>
-
-    {/* Labels */}
-    <text x="100" y="15" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600">Inclined Planes in Disguise</text>
-  </svg>
-);
-
-const LoadingDockSVG: React.FC = () => (
-  <svg width="200" height="140" viewBox="0 0 200 140">
-    <defs>
-      <linearGradient id="truckGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#f97316" />
-        <stop offset="100%" stopColor="#c2410c" />
-      </linearGradient>
-      <linearGradient id="warehouseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#6b7280" />
-        <stop offset="100%" stopColor="#4b5563" />
-      </linearGradient>
-      <linearGradient id="rampGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#9ca3af" />
-        <stop offset="100%" stopColor="#6b7280" />
-      </linearGradient>
-    </defs>
-
-    {/* Warehouse */}
-    <rect x="0" y="20" width="80" height="100" fill="url(#warehouseGrad)" />
-    <rect x="10" y="30" width="25" height="20" fill="#1e3a5f" />
-    <rect x="45" y="30" width="25" height="20" fill="#1e3a5f" />
-    <rect x="20" y="70" width="40" height="50" rx="2" fill="#374151" />
-
-    {/* Loading dock platform */}
-    <rect x="60" y="70" width="25" height="50" fill="#4b5563" />
-
-    {/* Ramp */}
-    <polygon points="85,120 140,120 140,70 85,70" fill="url(#rampGrad2)" />
-
-    {/* Truck */}
-    <g transform="translate(130, 60)">
-      {/* Trailer */}
-      <rect x="0" y="10" width="60" height="40" rx="2" fill="url(#truckGrad)" />
-      {/* Cab */}
-      <rect x="55" y="25" width="20" height="25" rx="2" fill="#dc2626" />
-      <rect x="60" y="28" width="12" height="10" rx="1" fill="#93c5fd" />
-      {/* Wheels */}
-      <circle cx="15" cy="52" r="6" fill="#1f2937" />
-      <circle cx="45" cy="52" r="6" fill="#1f2937" />
-      <circle cx="68" cy="52" r="6" fill="#1f2937" />
-    </g>
-
-    {/* Forklift on ramp */}
-    <g transform="translate(100, 85)">
-      {/* Body */}
-      <rect x="0" y="5" width="20" height="15" rx="2" fill="#fbbf24" />
-      {/* Cage */}
-      <rect x="12" y="-5" width="10" height="15" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
-      {/* Forks */}
-      <rect x="-8" y="15" width="10" height="3" fill="#6b7280" />
-      <rect x="-8" y="20" width="10" height="3" fill="#6b7280" />
-      {/* Wheels */}
-      <circle cx="5" cy="22" r="4" fill="#1f2937" />
-      <circle cx="18" cy="22" r="4" fill="#1f2937" />
-      {/* Pallet */}
-      <rect x="-10" y="5" width="12" height="10" fill="#a3a3a3" />
-    </g>
-
-    {/* Ground */}
-    <rect x="0" y="120" width="200" height="20" fill="#374151" />
-
-    {/* Labels */}
-    <text x="95" y="135" fill={design.colors.accentPrimary} fontSize="9" fontWeight="600">5-10° incline</text>
-  </svg>
-);
+const realWorldApps = [
+  {
+    icon: '♿',
+    title: 'Wheelchair Ramps & Accessibility',
+    short: 'Engineering independence through gentle slopes',
+    tagline: 'The ADA mandates physics for inclusion',
+    description: 'Wheelchair ramps are perhaps the most visible application of inclined plane physics in daily life. The Americans with Disabilities Act (ADA) mandates a maximum slope of 1:12, ensuring wheelchair users can ascend independently without excessive effort.',
+    connection: 'The mechanical advantage you explored directly applies here. A 1:12 slope (4.76 degrees) means users only need to exert 1/12 the force of lifting straight up - about 8% of their body weight as additional pushing force.',
+    howItWorks: 'The ramp angle is carefully chosen to balance accessibility with practicality. Steeper ramps require less space but more effort; gentler ramps are easier to climb but need more room. Handrails provide stability, and non-slip surfaces ensure adequate friction for safety.',
+    stats: [
+      { value: '1:12', label: 'Max ADA Slope', icon: '📐' },
+      { value: '4.76', label: 'Degrees Maximum', icon: '📏' },
+      { value: '12x', label: 'Force Reduction', icon: '💪' }
+    ],
+    examples: ['Building entrances with gradual ramps', 'Curb cuts at street intersections', 'Vehicle ramps for wheelchair vans', 'Stadium accessible seating routes'],
+    companies: ['EZ-ACCESS', 'Prairie View Industries', 'Roll-A-Ramp', 'National Ramp'],
+    futureImpact: 'Smart ramps with powered assist will detect approaching wheelchairs and provide motorized boost. Modular quick-deploy ramps will enable temporary accessibility at any venue. AR navigation will guide users to optimal accessible routes.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚚',
+    title: 'Loading Docks & Logistics',
+    short: 'Moving tons of cargo with minimal effort',
+    tagline: 'The backbone of global supply chains',
+    description: 'Loading dock ramps enable efficient transfer of heavy cargo between warehouse floors and truck beds. Operating at 5-10 degree angles, these industrial inclined planes allow forklifts to safely transport pallets weighing thousands of pounds.',
+    connection: 'The force calculations from the simulation directly apply. A 10-degree dock ramp with 2000 kg of cargo requires only about 340 kg of pushing force instead of the full weight - critical for manual pallet jacks and forklift battery life.',
+    howItWorks: 'Hydraulic dock levelers automatically adjust to different truck bed heights, maintaining optimal ramp angles. The inclined plane converts horizontal pushing force into vertical lifting, while textured steel surfaces provide traction for rubber tires.',
+    stats: [
+      { value: '5-10', label: 'Typical Angle', icon: '📐' },
+      { value: '50K lbs', label: 'Max Capacity', icon: '📦' },
+      { value: '15%', label: 'Energy Saved', icon: '⚡' }
+    ],
+    examples: ['Distribution center dock levelers', 'Portable yard ramps for ground loading', 'Container ship loading ramps', 'Aircraft cargo loading systems'],
+    companies: ['Rite-Hite', 'Pentalift', 'Blue Giant', 'McGuire Loading Dock'],
+    futureImpact: 'AI-powered docks will auto-adjust angles based on cargo weight and forklift specs. Predictive maintenance will detect wear before failures. Integration with autonomous vehicles will enable fully automated 24/7 loading operations.',
+    color: '#F97316'
+  },
+  {
+    icon: '🔩',
+    title: 'Screws, Wedges & Fasteners',
+    short: 'Inclined planes wrapped and doubled for power',
+    tagline: 'Simple machines hiding in plain sight',
+    description: 'Screws and wedges are inclined planes in disguise. A screw is a helical inclined plane wrapped around a cylinder, while a wedge is two inclined planes joined at the base. Both provide enormous mechanical advantage in compact form.',
+    connection: 'The gentle angle of screw threads (typically 2-5 degrees) creates mechanical advantages of 50:1 or more. When you turn a screwdriver, the circular path your hand travels is much longer than the linear advance of the screw - classic distance-for-force tradeoff.',
+    howItWorks: 'For screws, MA = circumference / thread pitch. A screwdriver handle with 80mm circumference and 1.5mm pitch threads provides MA of 53. Wedges multiply force perpendicular to their faces; a 10-degree wedge multiplies input force by about 6x.',
+    stats: [
+      { value: '50:1', label: 'Screw MA', icon: '🔩' },
+      { value: '2-5', label: 'Thread Angle', icon: '📐' },
+      { value: '6x', label: 'Wedge Force', icon: '⚡' }
+    ],
+    examples: ['Wood screws and bolts', 'Axe and knife blades', 'Zipper teeth mechanism', 'Ship bow design for water splitting'],
+    companies: ['Stanley', 'DeWalt', 'Fastenal', 'Illinois Tool Works'],
+    futureImpact: 'Self-tightening fasteners with optimal thread geometry will eliminate loosening failures. 3D-printed custom screws will match specific material properties. Nano-structured wedge surfaces will reduce friction while maintaining grip.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '⛰️',
+    title: 'Mountain Roads & Switchbacks',
+    short: 'Conquering elevation through clever geometry',
+    tagline: 'Trading distance for manageable grades',
+    description: 'Mountain roads use switchback patterns to maintain drivable grades on steep terrain. Instead of climbing directly (which might require 20%+ grades), roads zigzag at gentler 6-8% grades, dramatically reducing required engine force.',
+    connection: 'This is mechanical advantage on a massive scale. A mountain rising 1000m might have a direct climbing distance of 2km (50% grade), but a switchback road stretching 15km reduces the effective grade to 6.7% - requiring 7.5x less force from vehicle engines.',
+    howItWorks: 'Each switchback turn reverses direction while maintaining a consistent uphill grade. Modern road design optimizes curve radii for safe speeds, adds runaway truck ramps for brake failures, and uses gear-reduction lanes for safe descent.',
+    stats: [
+      { value: '6-8%', label: 'Safe Road Grade', icon: '🚗' },
+      { value: '15%', label: 'Max US Grade', icon: '⚠️' },
+      { value: '7x', label: 'Force Reduction', icon: '💪' }
+    ],
+    examples: ['Trollstigen road in Norway', 'Going-to-the-Sun Road, Montana', 'Stelvio Pass, Italian Alps', 'Beartooth Highway, Wyoming'],
+    companies: ['Federal Highway Administration', 'State DOTs', 'Bechtel', 'AECOM'],
+    futureImpact: 'Electric vehicles with regenerative braking will transform mountain driving economics. Smart road surfaces will adjust friction for weather conditions. Autonomous trucks will optimize gear selection and braking for maximum efficiency.',
+    color: '#10B981'
+  }
+];
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
-  width = 400,
-  height = 500,
-  onComplete,
-  onGameEvent,
-  gamePhase,
-  onPhaseComplete
-}) => {
-  const [phase, setPhase] = useState<Phase>('hook');
+const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Simulation state
   const [angle, setAngle] = useState(30);
   const [hasFriction, setHasFriction] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
   const [ballPosition, setBallPosition] = useState(0);
   const [ballVelocity, setBallVelocity] = useState(0);
   const [showVectors, setShowVectors] = useState(true);
-  const [elapsedTime, setElapsedTime] = useState(0);
   const [experimentCount, setExperimentCount] = useState(0);
-  const [bestTimes, setBestTimes] = useState<Record<number, number>>({});
+
+  // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
-  const [activeApp, setActiveApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Animation ref
   const animationRef = useRef<number>();
   const startTimeRef = useRef<number>(0);
+  const isNavigating = useRef(false);
 
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
+  // Physics constants
   const g = 9.8;
   const mass = 1;
   const frictionCoef = hasFriction ? 0.3 : 0;
@@ -397,222 +296,95 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
   const frictionForce = frictionCoef * normalForce;
   const netAcceleration = Math.max(0, (gravityParallel - frictionForce) / mass);
 
-  const testQuestions = [
-    { question: "An inclined plane is one of the six classical simple machines. What is its primary purpose?", options: [
-      { text: "To increase the speed of moving objects", correct: false },
-      { text: "To reduce the force needed to lift objects by increasing distance", correct: true },
-      { text: "To generate electricity from gravity", correct: false },
-      { text: "To measure the weight of objects", correct: false }
-    ], explanation: "An inclined plane reduces the force needed to lift an object by spreading the work over a longer distance. The mechanical advantage equals the length divided by the height." },
-    { question: "If a ramp is 10 meters long and 2 meters high, what is its mechanical advantage?", options: [
-      { text: "2", correct: false },
-      { text: "5", correct: true },
-      { text: "10", correct: false },
-      { text: "20", correct: false }
-    ], explanation: "Mechanical advantage = Length / Height = 10m / 2m = 5. This means you only need 1/5 the force to push an object up compared to lifting it straight up." },
-    { question: "What is the formula for the force needed to push an object up a frictionless ramp?", options: [
-      { text: "F = mg", correct: false },
-      { text: "F = mg sin(θ)", correct: true },
-      { text: "F = mg cos(θ)", correct: false },
-      { text: "F = mg tan(θ)", correct: false }
-    ], explanation: "The force needed to push up a frictionless ramp equals mg sin(θ), where θ is the angle. This is the component of gravity acting parallel to the ramp surface." },
-    { question: "How does friction affect the force needed to push an object up a ramp?", options: [
-      { text: "It decreases the required force", correct: false },
-      { text: "It has no effect on the required force", correct: false },
-      { text: "It increases the required force", correct: true },
-      { text: "It only affects objects moving down", correct: false }
-    ], explanation: "Friction always opposes motion. When pushing up, friction acts downward along the ramp, so you need additional force to overcome both gravity's parallel component AND friction." },
-    { question: "The friction force on an inclined plane is calculated as F_f = μN = μmg cos(θ). Why does friction decrease as the angle increases?", options: [
-      { text: "The object weighs less at steeper angles", correct: false },
-      { text: "The normal force decreases as cos(θ) decreases", correct: true },
-      { text: "The coefficient of friction changes with angle", correct: false },
-      { text: "Gravity becomes weaker at steep angles", correct: false }
-    ], explanation: "The normal force N = mg cos(θ). As the angle increases, cos(θ) decreases, reducing the normal force and thus the friction force, even though the same surfaces are in contact." },
-    { question: "Why are wheelchair ramps required to have a maximum slope of 1:12 (about 4.8°)?", options: [
-      { text: "For aesthetic reasons", correct: false },
-      { text: "To minimize the force needed for wheelchair users", correct: true },
-      { text: "Because steeper ramps are more expensive", correct: false },
-      { text: "Due to building material limitations", correct: false }
-    ], explanation: "A gentler slope means less force is needed to push the wheelchair up. At 1:12, the mechanical advantage is 12, making it manageable for wheelchair users to ascend independently." },
-    { question: "A screw is actually an inclined plane wrapped around a cylinder. What advantage does this provide?", options: [
-      { text: "It makes the screw look better", correct: false },
-      { text: "It provides very high mechanical advantage in a compact form", correct: true },
-      { text: "It prevents the screw from rusting", correct: false },
-      { text: "It makes the screw easier to manufacture", correct: false }
-    ], explanation: "The thread of a screw is a long inclined plane wrapped tightly. This creates enormous mechanical advantage - a small rotation force produces a large linear force for driving into wood or holding things together." },
-    { question: "Why do mountain roads use switchbacks (zigzag patterns) instead of going straight up?", options: [
-      { text: "To provide better views for tourists", correct: false },
-      { text: "To reduce the effective slope and required engine force", correct: true },
-      { text: "Because curved roads are safer", correct: false },
-      { text: "To increase the road's drainage", correct: false }
-    ], explanation: "Switchbacks reduce the slope angle, decreasing the force vehicles need to climb. A road with half the slope angle requires much less than half the climbing force due to the sine relationship." },
-    { question: "If you double the angle of a ramp from 15° to 30°, what happens to the force needed to push an object up (ignoring friction)?", options: [
-      { text: "It exactly doubles", correct: false },
-      { text: "It more than doubles", correct: false },
-      { text: "It less than doubles (increases by about 93%)", correct: true },
-      { text: "It stays the same", correct: false }
-    ], explanation: "Force is proportional to sin(θ). sin(30°)/sin(15°) = 0.5/0.259 ≈ 1.93. So the force increases by about 93%, not exactly double, because sine is not a linear function." },
-    { question: "What is the ideal angle for maximum range when launching a projectile (like in ancient siege weapons using inclined planes)?", options: [
-      { text: "30°", correct: false },
-      { text: "45°", correct: true },
-      { text: "60°", correct: false },
-      { text: "90°", correct: false }
-    ], explanation: "For maximum range, 45° is optimal because it provides the best balance between horizontal distance and time in the air. This principle was used in designing ancient catapults and trebuchets." }
-  ];
-
-  const applications = [
-    { title: "Wheelchair Ramps", description: "ADA requires ramps with max 1:12 slope (4.8°) for accessibility. This keeps the force needed to push a wheelchair manageable, providing a mechanical advantage of 12.", stats: "ADA max: 1:12 (4.76°)", SVG: WheelchairRampSVG },
-    { title: "Loading Docks", description: "Truck ramps use gentle angles so forklifts can safely transport heavy loads. Too steep and the cargo could slide or tip. The mechanical advantage allows moving thousands of pounds with modest force.", stats: "Typical dock: 5-10° incline", SVG: LoadingDockSVG },
-    { title: "Screws & Wedges", description: "A screw is an inclined plane wrapped around a cylinder, providing enormous mechanical advantage. Wedges (axes, knives) are double inclined planes that convert downward force into splitting force.", stats: "Screw MA: up to 100:1", SVG: ScrewsWedgesSVG },
-    { title: "Mountain Roads", description: "Switchback roads reduce effective slope, allowing vehicles to climb mountains with reasonable power. The zigzag path trades distance for reduced gradient, making steep terrain accessible.", stats: "Max road grade: ~15% (8.5°)", SVG: MountainRoadsSVG }
-  ];
-
-  // Sync with external phase control
+  // Responsive design
   useEffect(() => {
-    if (gamePhase && gamePhase !== phase && phaseOrder.includes(gamePhase as Phase)) {
-      setPhase(gamePhase as Phase);
-    }
-  }, [gamePhase, phase]);
-
-  useEffect(() => {
-    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Web Audio API sound
-  const playSound = useCallback((type: 'click' | 'success' | 'error' | 'transition' = 'click') => {
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      const freqMap = { click: 440, success: 600, error: 300, transition: 520 };
-      oscillator.frequency.value = freqMap[type];
-      oscillator.type = 'sine';
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    } catch {}
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
   }, []);
 
-  // Emit events
-  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
-    if (onGameEvent) {
-      onGameEvent({ type, data });
-    }
-  }, [onGameEvent]);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#06B6D4', // Cyan
+    accentGlow: 'rgba(6, 182, 212, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    gravity: '#A855F7',
+    normal: '#22C55E',
+    parallel: '#F59E0B',
+    friction: '#EF4444',
+  };
 
-  // Alias for emit
-  const emit = useCallback((category: string, data?: Record<string, unknown>, action?: string) => {
-    emitEvent('parameter_changed', { category, action, ...data });
-  }, [emitEvent]);
-
-  // Return to dashboard handler
-  const handleReturnToDashboard = useCallback(() => {
-    emitEvent('mastery_achieved', { action: 'return_to_dashboard' });
-    window.dispatchEvent(new CustomEvent('returnToDashboard'));
-  }, [emitEvent]);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
   // Phase navigation
-  const goToPhase = useCallback((newPhase: Phase) => {
-    playSound('transition');
-    setPhase(newPhase);
-    emitEvent('phase_change', { from: phase, to: newPhase });
-    if (onPhaseComplete) onPhaseComplete(newPhase);
-  }, [emitEvent, phase, playSound, onPhaseComplete]);
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Friction Lab',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  const goNext = useCallback(() => {
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'inclined-plane',
+        gameTitle: 'Inclined Plane Physics',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
-    } else if (onComplete) {
-      onComplete();
     }
-  }, [phase, goToPhase, onComplete]);
+  }, [phase, goToPhase, phaseOrder]);
 
-  const goBack = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phaseOrder[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
-
-  // Render button helper function
-  const renderButton = (
-    label: string,
-    onClick: () => void,
-    variant: 'primary' | 'secondary' | 'success' | 'ghost' = 'primary',
-    options?: { disabled?: boolean; fullWidth?: boolean; size?: 'sm' | 'md' | 'lg' }
-  ) => {
-    const { disabled = false, fullWidth = false, size = 'md' } = options || {};
-    const baseStyle: React.CSSProperties = {
-      padding: size === 'lg' ? `${design.spacing.md}px ${design.spacing.xl}px` :
-               size === 'sm' ? `${design.spacing.xs}px ${design.spacing.md}px` :
-               `${design.spacing.sm}px ${design.spacing.lg}px`,
-      borderRadius: design.radius.md,
-      border: 'none',
-      fontWeight: 600,
-      fontSize: size === 'lg' ? 17 : size === 'sm' ? 13 : 15,
-      fontFamily: design.font.sans,
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      opacity: disabled ? 0.5 : 1,
-      width: fullWidth ? '100%' : 'auto',
-      transition: 'all 0.2s ease',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: design.spacing.sm,
-      position: 'relative' as const,
-      zIndex: 10
-    };
-
-    const variants: Record<string, React.CSSProperties> = {
-      primary: {
-        background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
-        color: '#000',
-        boxShadow: design.shadow.glow(design.colors.accentPrimary)
-      },
-      secondary: {
-        background: design.colors.bgTertiary,
-        color: design.colors.textPrimary,
-        border: `1px solid ${design.colors.border}`
-      },
-      success: {
-        background: `linear-gradient(135deg, ${design.colors.success} 0%, #34d399 100%)`,
-        color: '#000',
-        boxShadow: design.shadow.glow(design.colors.success)
-      },
-      ghost: {
-        background: 'transparent',
-        color: design.colors.textSecondary,
-        border: `1px solid ${design.colors.border}`
-      }
-    };
-
-    return (
-      <button
-        onClick={() => {
-          if (!disabled) onClick();
-        }}
-        disabled={disabled}
-        style={{ ...baseStyle, ...variants[variant] }}
-      >
-        {label}
-      </button>
-    );
-  };
-
+  // Start rolling animation
   const startRolling = useCallback(() => {
     if (isRolling) return;
     setIsRolling(true);
     setBallPosition(0);
     setBallVelocity(0);
-    setElapsedTime(0);
     startTimeRef.current = Date.now();
-
-    emit('interaction', { angle, hasFriction, acceleration: netAcceleration }, 'roll_start');
 
     let pos = 0;
     let vel = 0;
@@ -625,1775 +397,1414 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
 
       setBallPosition(Math.min(pos, 100));
       setBallVelocity(vel);
-      setElapsedTime((Date.now() - startTimeRef.current) / 1000);
 
       if (pos < 100) {
         animationRef.current = requestAnimationFrame(animate);
       } else {
-        const finalTime = (Date.now() - startTimeRef.current) / 1000;
         setIsRolling(false);
         setExperimentCount(prev => prev + 1);
-        setBestTimes(prev => ({
-          ...prev,
-          [angle]: prev[angle] ? Math.min(prev[angle], finalTime) : finalTime
-        }));
-        emit('result', { time: finalTime, angle, acceleration: accel });
       }
     };
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [isRolling, angle, hasFriction, netAcceleration, emit]);
+  }, [isRolling, netAcceleration]);
 
   const resetExperiment = useCallback(() => {
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
     setIsRolling(false);
     setBallPosition(0);
     setBallVelocity(0);
-    setElapsedTime(0);
-    emit('interaction', { action: 'reset' }, 'reset');
-  }, [emit]);
+  }, []);
 
-  const handleTestAnswer = useCallback((answerIndex: number) => {
-    if (answeredQuestions.has(currentQuestion)) return;
-    setSelectedAnswer(answerIndex);
-    setShowExplanation(true);
-    const isCorrect = testQuestions[currentQuestion].options[answerIndex]?.correct;
-    if (isCorrect) {
-      setCorrectAnswers(prev => prev + 1);
-      setTestScore(prev => prev + 1);
-    }
-    setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
-  }, [currentQuestion, answeredQuestions, emit, testQuestions]);
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-  // ============================================================================
-  // VISUALIZATION - Premium SVG Graphics
-  // ============================================================================
-  const renderVisualization = () => {
-    const rampLength = width - 100;
-    const rampHeight = rampLength * Math.tan(angleRad);
-    const rampStartX = 50;
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // Inclined Plane SVG Visualization
+  const InclinedPlaneVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 220 : 280;
+
+    const rampLength = width - 80;
+    const rampHeight = rampLength * Math.tan(angleRad) * 0.6;
+    const rampStartX = 40;
     const rampStartY = 40;
     const rampEndX = rampStartX + rampLength;
-    const rampEndY = rampStartY + rampHeight;
+    const rampEndY = Math.min(rampStartY + rampHeight, height - 30);
 
     const ballProgress = ballPosition / 100;
-    const ballX = rampStartX + ballProgress * rampLength;
-    const ballY = rampStartY + ballProgress * rampHeight;
-    const ballRadius = 18;
+    const ballX = rampStartX + ballProgress * (rampEndX - rampStartX);
+    const ballY = rampStartY + ballProgress * (rampEndY - rampStartY);
+    const ballRadius = isMobile ? 14 : 18;
 
-    const vectorScale = 3;
-    const svgHeight = height * 0.55;
+    const vectorScale = isMobile ? 2.5 : 3;
 
     return (
-      <div style={{ position: 'relative' }}>
-        <svg width={width} height={svgHeight} viewBox={`0 0 ${width} ${svgHeight}`} style={{ display: 'block' }}>
-          <defs>
-            {/* === PREMIUM GRADIENTS === */}
-
-            {/* Background gradient */}
-            <linearGradient id="inclBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0a0c14" />
-              <stop offset="100%" stopColor="#060810" />
-            </linearGradient>
-
-            {/* Incline - Wood/Metal hybrid gradient */}
-            <linearGradient id="inclRampGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="20%" stopColor="#94a3b8" />
-              <stop offset="40%" stopColor="#78716c" />
-              <stop offset="60%" stopColor="#a8a29e" />
-              <stop offset="80%" stopColor="#94a3b8" />
-              <stop offset="100%" stopColor="#64748b" />
-            </linearGradient>
-
-            {/* Incline top surface highlight */}
-            <linearGradient id="inclRampTop" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#cbd5e1" />
-              <stop offset="100%" stopColor="#94a3b8" />
-            </linearGradient>
-
-            {/* 3D Block gradient */}
-            <linearGradient id="inclBlockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="30%" stopColor="#ef4444" />
-              <stop offset="70%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#991b1b" />
-            </linearGradient>
-
-            {/* Block highlight */}
-            <radialGradient id="inclBlockHighlight" cx="25%" cy="25%">
-              <stop offset="0%" stopColor="#fef2f2" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#fca5a5" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Ground gradient */}
-            <linearGradient id="inclGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#1f2937" />
-            </linearGradient>
-
-            {/* Force arrow gradients with glow */}
-            <linearGradient id="inclGravityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#c084fc" />
-              <stop offset="50%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#7c3aed" />
-            </linearGradient>
-
-            <linearGradient id="inclNormalGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="50%" stopColor="#4ade80" />
-              <stop offset="100%" stopColor="#86efac" />
-            </linearGradient>
-
-            <linearGradient id="inclParallelGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f59e0b" />
-              <stop offset="50%" stopColor="#fbbf24" />
-              <stop offset="100%" stopColor="#fcd34d" />
-            </linearGradient>
-
-            <linearGradient id="inclFrictionGrad" x1="100%" y1="0%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="50%" stopColor="#f87171" />
-              <stop offset="100%" stopColor="#fca5a5" />
-            </linearGradient>
-
-            {/* Angle arc gradient */}
-            <linearGradient id="inclAngleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#06b6d4" />
-              <stop offset="100%" stopColor="#22d3ee" />
-            </linearGradient>
-
-            {/* === GLOW FILTERS === */}
-
-            {/* Block shadow */}
-            <filter id="inclBlockShadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
-              <feOffset in="blur" dx="3" dy="4" result="offsetBlur" />
-              <feFlood floodColor="#000000" floodOpacity="0.5" result="color" />
-              <feComposite in="color" in2="offsetBlur" operator="in" result="shadow" />
-              <feMerge>
-                <feMergeNode in="shadow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Gravity glow (purple) */}
-            <filter id="inclGravityGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-              <feFlood floodColor="#a855f7" floodOpacity="0.6" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Normal glow (green) */}
-            <filter id="inclNormalGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-              <feFlood floodColor="#22c55e" floodOpacity="0.6" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Parallel glow (amber) */}
-            <filter id="inclParallelGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-              <feFlood floodColor="#f59e0b" floodOpacity="0.6" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Friction glow (red) */}
-            <filter id="inclFrictionGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-              <feFlood floodColor="#ef4444" floodOpacity="0.6" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Angle arc glow */}
-            <filter id="inclAngleGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-              <feFlood floodColor="#06b6d4" floodOpacity="0.5" result="color" />
-              <feComposite in="color" in2="blur" operator="in" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Ramp edge highlight */}
-            <filter id="inclRampGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="-2" stdDeviation="2" floodColor="#cbd5e1" floodOpacity="0.3" />
-            </filter>
-
-            {/* Surface texture pattern for rough surface */}
-            <pattern id="inclRoughTexture" patternUnits="userSpaceOnUse" width="8" height="8">
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="rampGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748B" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+          <linearGradient id="ballGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FCA5A5" />
+            <stop offset="100%" stopColor="#DC2626" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          {hasFriction && (
+            <pattern id="roughTexture" patternUnits="userSpaceOnUse" width="8" height="8">
               <circle cx="2" cy="2" r="1" fill="#78716c" opacity="0.4" />
               <circle cx="6" cy="6" r="1" fill="#78716c" opacity="0.4" />
-              <circle cx="6" cy="2" r="0.5" fill="#a8a29e" opacity="0.3" />
-              <circle cx="2" cy="6" r="0.5" fill="#a8a29e" opacity="0.3" />
             </pattern>
-          </defs>
+          )}
+        </defs>
 
-          {/* Background */}
-          <rect width={width} height={svgHeight} fill="url(#inclBgGrad)" />
+        {/* Ground */}
+        <rect x={0} y={rampEndY + 5} width={width} height={height - rampEndY - 5} fill="#1F2937" />
+        <line x1={0} y1={rampEndY + 5} x2={width} y2={rampEndY + 5} stroke="#374151" strokeWidth={2} />
 
-          {/* Ground with gradient */}
-          <rect x={0} y={rampEndY + 6} width={width} height={svgHeight - rampEndY - 6} fill="url(#inclGroundGrad)" />
-          <line x1={0} y1={rampEndY + 6} x2={width} y2={rampEndY + 6} stroke="#4b5563" strokeWidth={2} />
+        {/* Ramp */}
+        <polygon
+          points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 15} ${rampStartX},${rampStartY + 15}`}
+          fill="url(#rampGrad)"
+          stroke="#64748B"
+          strokeWidth={1}
+        />
+        {hasFriction && (
+          <polygon
+            points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 15} ${rampStartX},${rampStartY + 15}`}
+            fill="url(#roughTexture)"
+          />
+        )}
 
-          {/* Incline/Ramp with 3D effect */}
-          <g filter="url(#inclRampGlow)">
-            {/* Ramp body */}
-            <polygon
-              points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 20} ${rampStartX},${rampStartY + 20}`}
-              fill="url(#inclRampGrad)"
-              stroke="#475569"
-              strokeWidth={1}
-            />
-            {/* Ramp top surface (lighter) */}
-            <polygon
-              points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 4} ${rampStartX},${rampStartY + 4}`}
-              fill="url(#inclRampTop)"
-            />
-            {/* Surface texture overlay for friction */}
-            {hasFriction && (
-              <polygon
-                points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 20} ${rampStartX},${rampStartY + 20}`}
-                fill="url(#inclRoughTexture)"
-                opacity="0.8"
-              />
-            )}
-            {/* Left edge highlight */}
+        {/* Angle arc */}
+        <path
+          d={`M${rampEndX - 40} ${rampEndY} A 40 40 0 0 0 ${rampEndX - 40 * Math.cos(angleRad)} ${rampEndY - 40 * Math.sin(angleRad)}`}
+          fill="none"
+          stroke={colors.accent}
+          strokeWidth={2}
+          filter="url(#glow)"
+        />
+        <text x={rampEndX - 55} y={rampEndY - 15} fill={colors.accent} fontSize="14" fontWeight="bold">
+          {angle}
+        </text>
+
+        {/* Ball */}
+        <circle
+          cx={ballX}
+          cy={ballY - ballRadius - 5}
+          r={ballRadius}
+          fill="url(#ballGrad)"
+          filter="url(#glow)"
+        />
+
+        {/* Force vectors */}
+        {showVectors && (
+          <g transform={`translate(${ballX}, ${ballY - ballRadius - 5})`}>
+            {/* Gravity (straight down) */}
             <line
-              x1={rampStartX} y1={rampStartY}
-              x2={rampStartX} y2={rampStartY + 20}
-              stroke="#e2e8f0"
-              strokeWidth={2}
-            />
-          </g>
-
-          {/* Angle arc with glow */}
-          <g filter="url(#inclAngleGlow)">
-            <path
-              d={`M${rampEndX - 50} ${rampEndY} A 50 50 0 0 0 ${rampEndX - 50 * Math.cos(angleRad)} ${rampEndY - 50 * Math.sin(angleRad)}`}
-              fill="none"
-              stroke="url(#inclAngleGrad)"
+              x1={0} y1={0}
+              x2={0} y2={mass * g * vectorScale}
+              stroke={colors.gravity}
               strokeWidth={3}
-              strokeLinecap="round"
+              filter="url(#glow)"
             />
-            {/* Angle tick marks */}
-            <line
-              x1={rampEndX - 45} y1={rampEndY}
-              x2={rampEndX - 55} y2={rampEndY}
-              stroke="#22d3ee"
-              strokeWidth={2}
+            <polygon
+              points={`0,${mass * g * vectorScale + 8} -5,${mass * g * vectorScale} 5,${mass * g * vectorScale}`}
+              fill={colors.gravity}
             />
-            <line
-              x1={rampEndX - 45 * Math.cos(angleRad)} y1={rampEndY - 45 * Math.sin(angleRad)}
-              x2={rampEndX - 55 * Math.cos(angleRad)} y2={rampEndY - 55 * Math.sin(angleRad)}
-              stroke="#22d3ee"
-              strokeWidth={2}
-            />
-          </g>
-          {/* Angle label */}
-          <text
-            x={rampEndX - 70}
-            y={rampEndY - 25}
-            fill="#22d3ee"
-            fontSize="16"
-            fontWeight="700"
-            fontFamily={design.font.mono}
-            style={{ textShadow: '0 0 10px rgba(6, 182, 212, 0.5)' }}
-          >
-            {angle}°
-          </text>
 
-          {/* 3D Block/Ball with shadow */}
-          <g filter="url(#inclBlockShadow)">
-            {/* Block body - rectangular for better 3D effect */}
-            <rect
-              x={ballX - ballRadius}
-              y={ballY - ballRadius * 2 - 8}
-              width={ballRadius * 2}
-              height={ballRadius * 1.8}
-              rx={4}
-              fill="url(#inclBlockGrad)"
-              transform={`rotate(${angle}, ${ballX}, ${ballY - ballRadius - 8})`}
-            />
-            {/* Block highlight overlay */}
-            <rect
-              x={ballX - ballRadius}
-              y={ballY - ballRadius * 2 - 8}
-              width={ballRadius * 2}
-              height={ballRadius * 1.8}
-              rx={4}
-              fill="url(#inclBlockHighlight)"
-              transform={`rotate(${angle}, ${ballX}, ${ballY - ballRadius - 8})`}
-            />
-            {/* Block edge highlight */}
-            <line
-              x1={ballX - ballRadius + 3}
-              y1={ballY - ballRadius * 2 - 5}
-              x2={ballX + ballRadius - 3}
-              y2={ballY - ballRadius * 2 - 5}
-              stroke="rgba(255,255,255,0.4)"
-              strokeWidth={2}
-              strokeLinecap="round"
-              transform={`rotate(${angle}, ${ballX}, ${ballY - ballRadius - 8})`}
-            />
-          </g>
+            {/* Normal force */}
+            <g transform={`rotate(${-angle})`}>
+              <line
+                x1={0} y1={0}
+                x2={0} y2={-normalForce * vectorScale}
+                stroke={colors.normal}
+                strokeWidth={3}
+                filter="url(#glow)"
+              />
+              <polygon
+                points={`0,${-normalForce * vectorScale - 8} -5,${-normalForce * vectorScale} 5,${-normalForce * vectorScale}`}
+                fill={colors.normal}
+              />
+            </g>
 
-          {/* Force vectors with glowing effects */}
-          {showVectors && (
-            <g transform={`translate(${ballX}, ${ballY - ballRadius - 8})`}>
-              {/* Gravity (straight down) - purple glow */}
-              <g filter="url(#inclGravityGlow)">
-                <line
-                  x1={0} y1={0}
-                  x2={0} y2={mass * g * vectorScale}
-                  stroke="url(#inclGravityGrad)"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                />
-                <polygon
-                  points={`0,${mass * g * vectorScale + 10} -6,${mass * g * vectorScale} 6,${mass * g * vectorScale}`}
-                  fill="#a855f7"
-                />
-              </g>
+            {/* Parallel component */}
+            <g transform={`rotate(${angle})`}>
+              <line
+                x1={0} y1={0}
+                x2={gravityParallel * vectorScale} y2={0}
+                stroke={colors.parallel}
+                strokeWidth={3}
+                filter="url(#glow)"
+              />
+              <polygon
+                points={`${gravityParallel * vectorScale + 8},0 ${gravityParallel * vectorScale},-5 ${gravityParallel * vectorScale},5`}
+                fill={colors.parallel}
+              />
 
-              {/* Normal force (perpendicular to ramp) - green glow */}
-              <g transform={`rotate(${-angle})`} filter="url(#inclNormalGlow)">
-                <line
-                  x1={0} y1={0}
-                  x2={0} y2={-normalForce * vectorScale}
-                  stroke="url(#inclNormalGrad)"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                />
-                <polygon
-                  points={`0,${-normalForce * vectorScale - 10} -6,${-normalForce * vectorScale} 6,${-normalForce * vectorScale}`}
-                  fill="#22c55e"
-                />
-              </g>
-
-              {/* Parallel component (along ramp) - amber glow */}
-              <g transform={`rotate(${angle})`}>
-                <g filter="url(#inclParallelGlow)">
+              {/* Friction */}
+              {hasFriction && frictionForce > 0 && (
+                <>
                   <line
                     x1={0} y1={0}
-                    x2={gravityParallel * vectorScale} y2={0}
-                    stroke="url(#inclParallelGrad)"
-                    strokeWidth={4}
-                    strokeLinecap="round"
+                    x2={-frictionForce * vectorScale} y2={0}
+                    stroke={colors.friction}
+                    strokeWidth={3}
+                    filter="url(#glow)"
                   />
                   <polygon
-                    points={`${gravityParallel * vectorScale + 10},0 ${gravityParallel * vectorScale},-6 ${gravityParallel * vectorScale},6`}
-                    fill="#f59e0b"
+                    points={`${-frictionForce * vectorScale - 8},0 ${-frictionForce * vectorScale},-5 ${-frictionForce * vectorScale},5`}
+                    fill={colors.friction}
                   />
-                </g>
-
-                {/* Friction - red glow */}
-                {hasFriction && frictionForce > 0 && (
-                  <g filter="url(#inclFrictionGlow)">
-                    <line
-                      x1={0} y1={0}
-                      x2={-frictionForce * vectorScale} y2={0}
-                      stroke="url(#inclFrictionGrad)"
-                      strokeWidth={4}
-                      strokeLinecap="round"
-                    />
-                    <polygon
-                      points={`${-frictionForce * vectorScale - 10},0 ${-frictionForce * vectorScale},-6 ${-frictionForce * vectorScale},6`}
-                      fill="#ef4444"
-                    />
-                  </g>
-                )}
-              </g>
-            </g>
-          )}
-
-          {/* Info panel with premium styling */}
-          <g transform={`translate(${width - 120}, 12)`}>
-            <rect
-              x={0} y={0}
-              width={108} height={88}
-              rx={10}
-              fill={design.colors.bgSecondary}
-              stroke={design.colors.border}
-              strokeWidth={1}
-            />
-            <rect
-              x={0} y={0}
-              width={108} height={24}
-              rx={10}
-              fill={design.colors.bgTertiary}
-            />
-            <rect x={0} y={14} width={108} height={10} fill={design.colors.bgTertiary} />
-            <text
-              x={54} y={17}
-              textAnchor="middle"
-              fill={design.colors.textSecondary}
-              fontSize="11"
-              fontFamily={design.font.sans}
-              fontWeight="600"
-            >
-              Acceleration
-            </text>
-            <text
-              x={54} y={48}
-              textAnchor="middle"
-              fill={design.colors.success}
-              fontSize="22"
-              fontWeight="bold"
-              fontFamily={design.font.mono}
-            >
-              {netAcceleration.toFixed(2)}
-            </text>
-            <text
-              x={54} y={62}
-              textAnchor="middle"
-              fill={design.colors.textTertiary}
-              fontSize="10"
-              fontFamily={design.font.sans}
-            >
-              m/s²
-            </text>
-            <line x1={10} y1={70} x2={98} y2={70} stroke={design.colors.border} strokeWidth={1} />
-            <text
-              x={54} y={82}
-              textAnchor="middle"
-              fill={design.colors.textTertiary}
-              fontSize="10"
-              fontFamily={design.font.sans}
-            >
-              v: {ballVelocity.toFixed(1)} m/s
-            </text>
-          </g>
-        </svg>
-
-        {/* Force labels outside SVG using typo system */}
-        {showVectors && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none'
-          }}>
-            {/* Legend panel */}
-            <div style={{
-              position: 'absolute',
-              bottom: 12,
-              left: 12,
-              background: design.colors.bgSecondary,
-              border: `1px solid ${design.colors.border}`,
-              borderRadius: design.radius.md,
-              padding: `${design.spacing.sm}px ${design.spacing.md}px`,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 6
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: design.colors.gravity, boxShadow: `0 0 8px ${design.colors.gravity}` }} />
-                <span style={{ fontSize: typo.label, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
-                  Weight (mg)
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: design.colors.normal, boxShadow: `0 0 8px ${design.colors.normal}` }} />
-                <span style={{ fontSize: typo.label, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
-                  Normal (N)
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: design.colors.parallel, boxShadow: `0 0 8px ${design.colors.parallel}` }} />
-                <span style={{ fontSize: typo.label, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
-                  Parallel (mg sin{'\u03B8'})
-                </span>
-              </div>
-              {hasFriction && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: design.colors.friction, boxShadow: `0 0 8px ${design.colors.friction}` }} />
-                  <span style={{ fontSize: typo.label, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
-                    Friction (f)
-                  </span>
-                </div>
+                </>
               )}
-            </div>
-
-            {/* Rough surface indicator */}
-            {hasFriction && (
-              <div style={{
-                position: 'absolute',
-                top: svgHeight * 0.4,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: `${design.colors.friction}20`,
-                border: `1px solid ${design.colors.friction}40`,
-                borderRadius: design.radius.sm,
-                padding: `4px 12px`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
-                <span style={{ fontSize: typo.label, color: design.colors.friction, fontFamily: design.font.sans, fontWeight: 600 }}>
-                  Rough Surface
-                </span>
-                <span style={{ fontSize: typo.label, color: design.colors.textTertiary, fontFamily: design.font.mono }}>
-                  {'\u03BC'} = 0.3
-                </span>
-              </div>
-            )}
-          </div>
+            </g>
+          </g>
         )}
-      </div>
+
+        {/* Info panel */}
+        <rect x={width - 100} y={10} width={90} height={60} rx={8} fill={colors.bgSecondary} stroke={colors.border} />
+        <text x={width - 55} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize="10">Acceleration</text>
+        <text x={width - 55} y={50} textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="bold">
+          {netAcceleration.toFixed(2)}
+        </text>
+        <text x={width - 55} y={62} textAnchor="middle" fill={colors.textMuted} fontSize="9">m/s^2</text>
+
+        {/* Legend */}
+        <g transform={`translate(10, ${height - 60})`}>
+          <rect x={0} y={0} width={isMobile ? 100 : 120} height={50} rx={6} fill={colors.bgSecondary} stroke={colors.border} />
+          <circle cx={12} cy={12} r={5} fill={colors.gravity} />
+          <text x={22} y={15} fill={colors.textSecondary} fontSize="9">Weight (mg)</text>
+          <circle cx={12} cy={26} r={5} fill={colors.normal} />
+          <text x={22} y={29} fill={colors.textSecondary} fontSize="9">Normal (N)</text>
+          <circle cx={12} cy={40} r={5} fill={colors.parallel} />
+          <text x={22} y={43} fill={colors.textSecondary} fontSize="9">Parallel</text>
+        </g>
+      </svg>
     );
   };
 
   // ============================================================================
-  // REAL-WORLD APPLICATIONS DATA
+  // PHASE RENDERS
   // ============================================================================
-  const realWorldApps = [
-    {
-      icon: "♿",
-      title: "Wheelchair Ramps",
-      short: "Accessibility Infrastructure",
-      tagline: "Engineering inclusion through physics",
-      description: "Wheelchair ramps are inclined planes designed to make buildings accessible to people with mobility challenges. The ADA mandates a maximum slope of 1:12, meaning for every inch of vertical rise, the ramp must extend at least 12 inches horizontally. This creates an angle of approximately 4.76 degrees.",
-      connection: "Just like our simulation shows how a gentler angle reduces the force needed to move an object up a slope, wheelchair ramps apply the same principle. By extending the distance traveled, the ramp reduces the force a wheelchair user must exert to overcome gravity, making independent mobility possible.",
-      howItWorks: "The mechanical advantage of a ramp equals its length divided by its height. A 1:12 slope provides a mechanical advantage of 12, meaning pushing a wheelchair up requires only 1/12 the force of lifting it straight up. Handrails provide additional support, and non-slip surfaces ensure safety by maintaining adequate friction.",
-      stats: [
-        { val: "1:12", label: "Maximum ADA slope ratio" },
-        { val: "4.76°", label: "Maximum angle in degrees" },
-        { val: "30 ft", label: "Max run before landing required" }
-      ],
-      examples: [
-        "Building entrances with gradual ramps replacing stairs",
-        "Curb cuts at intersections for street crossing",
-        "Vehicle ramps for wheelchair-accessible vans",
-        "Stadium seating access ramps for spectators"
-      ],
-      companies: ["EZ-ACCESS", "Prairie View Industries", "Roll-A-Ramp", "Handi-Ramp", "National Ramp"],
-      futureImpact: "Smart ramps with embedded sensors will detect approaching wheelchairs and adjust surface texture for optimal traction. Modular ramp systems with quick-connect technology will enable rapid deployment at temporary venues. Integration with building management systems will provide real-time accessibility mapping for navigation apps.",
-      color: "#3b82f6"
-    },
-    {
-      icon: "📦",
-      title: "Loading Docks",
-      short: "Logistics & Warehousing",
-      tagline: "Moving tons with minimal effort",
-      description: "Loading dock ramps bridge the gap between warehouse floors and truck beds, enabling efficient transfer of heavy cargo. These industrial inclined planes typically operate at 5-10 degree angles, allowing forklifts and pallet jacks to safely transport loads weighing thousands of pounds.",
-      connection: "Our simulation demonstrates how angle affects the force needed to move objects up a slope. Loading dock engineers apply this exact principle—keeping angles gentle enough that forklifts can safely transport heavy pallets without the cargo sliding or the vehicle tipping, while making the ramp short enough to be practical.",
-      howItWorks: "Dock levelers use hydraulic or mechanical systems to create adjustable ramps between the fixed dock height and varying truck bed heights. The inclined plane reduces the effective weight the forklift must push against gravity. Steel plate construction handles heavy loads while textured surfaces provide traction for rubber tires.",
-      stats: [
-        { val: "5-10°", label: "Typical dock ramp angle" },
-        { val: "50,000 lbs", label: "Heavy-duty load capacity" },
-        { val: "15%", label: "Energy saved vs vertical lifting" }
-      ],
-      examples: [
-        "Hydraulic dock levelers at distribution centers",
-        "Portable yard ramps for ground-level loading",
-        "Edge-of-dock levelers for light-duty applications",
-        "Container loading ramps at shipping ports"
-      ],
-      companies: ["Rite-Hite", "Pentalift", "Blue Giant", "McGuire", "Serco"],
-      futureImpact: "AI-powered loading docks will automatically adjust ramp angles based on cargo weight and forklift specifications. Predictive maintenance sensors will detect wear before failures occur. Integration with autonomous forklifts and trucks will enable fully automated loading sequences, increasing throughput while reducing workplace injuries.",
-      color: "#f97316"
-    },
-    {
-      icon: "⛷️",
-      title: "Ski Slopes",
-      short: "Recreation & Sports",
-      tagline: "Gravity-powered adventure",
-      description: "Ski slopes are carefully engineered inclined planes that provide controlled descents for winter sports. Slope difficulty is rated by angle: green circles (6-25%), blue squares (25-40%), and black diamonds (40%+ grade). The physics of inclined planes determines speed, control, and safety.",
-      connection: "Our simulation shows how steeper angles increase the parallel component of gravity, accelerating objects faster. Ski slope designers use this principle to create progressively challenging terrain—the steeper the slope, the greater the gravitational acceleration, requiring more skill to control speed through turns and friction management.",
-      howItWorks: "Skiers control their descent by adjusting the angle of their skis relative to the fall line, effectively changing their personal 'ramp angle.' Carving turns increases friction and reduces speed, while pointing straight downhill maximizes the gravitational component. Snow grooming creates consistent friction conditions across the slope surface.",
-      stats: [
-        { val: "6-25%", label: "Beginner slope grade range" },
-        { val: "87°", label: "Steepest skiable slope angle" },
-        { val: "60+ mph", label: "Speed on expert slopes" }
-      ],
-      examples: [
-        "Olympic downhill courses with precise grade specifications",
-        "Terrain parks with calculated jump and landing angles",
-        "Cross-country trails with varied elevation changes",
-        "Snow tubing hills with controlled descent paths"
-      ],
-      companies: ["Vail Resorts", "Alterra Mountain Company", "Boyne Resorts", "POWDR"],
-      futureImpact: "Climate-adaptive snowmaking using AI weather prediction will optimize snow coverage. Smart slope monitoring with embedded sensors will track conditions in real-time, adjusting grooming patterns automatically. Augmented reality goggles will overlay optimal line choices and hazard warnings, enhancing safety for all skill levels.",
-      color: "#06b6d4"
-    },
-    {
-      icon: "🏭",
-      title: "Conveyor Systems",
-      short: "Manufacturing & Production",
-      tagline: "Continuous motion through smart angles",
-      description: "Industrial conveyor systems use inclined planes to move materials between different elevations in factories, warehouses, and distribution centers. Belt conveyors, roller conveyors, and gravity chutes all apply inclined plane physics to transport goods efficiently.",
-      connection: "Our simulation reveals how the balance between gravity's parallel component and friction determines motion on a slope. Conveyor engineers use this same physics—designing belt angles that allow gravity-assisted movement while maintaining control, or calculating motor power needed to push materials uphill against gravitational resistance.",
-      howItWorks: "Gravity conveyors use slope angles between 2-5 degrees to move packages with minimal energy. Powered incline conveyors use motors to overcome gravity when moving upward. The angle must account for product weight, surface friction, and desired speed. Too steep causes sliding; too shallow stops movement.",
-      stats: [
-        { val: "2-5°", label: "Typical gravity conveyor angle" },
-        { val: "18°", label: "Maximum practical incline angle" },
-        { val: "500 ft/min", label: "High-speed conveyor rate" }
-      ],
-      examples: [
-        "Amazon fulfillment center sorting systems",
-        "Airport baggage handling conveyor networks",
-        "Mining ore transport on inclined belts",
-        "Food processing lines with sanitary conveyors"
-      ],
-      companies: ["Dematic", "Honeywell Intelligrated", "Siemens Logistics", "Bastian Solutions", "Hytrol"],
-      futureImpact: "Self-adjusting conveyors will modify angle and speed based on real-time load sensing. Modular conveyor systems with hot-swappable components will minimize downtime. Integration with robotic picking systems and digital twins will optimize entire facility logistics, reducing energy consumption while increasing throughput by 40%.",
-      color: "#10b981"
-    }
-  ];
 
-  // ============================================================================
-  // PHASE RENDERERS
-  // ============================================================================
-  const renderHook = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      padding: design.spacing.xl,
-      background: `radial-gradient(ellipse at 50% 30%, ${design.colors.accentMuted}30 0%, ${design.colors.bgDeep} 70%)`,
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      {/* Animated background elements */}
-      <div style={{
-        position: 'absolute',
-        top: '20%',
-        left: '10%',
-        width: 70,
-        height: 70,
-        borderRadius: design.radius.lg,
-        background: `linear-gradient(135deg, ${design.colors.gravity}30 0%, transparent 100%)`,
-        animation: 'float 4s ease-in-out infinite',
-        opacity: 0.4
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '25%',
-        right: '12%',
-        width: 50,
-        height: 50,
-        borderRadius: design.radius.full,
-        background: `linear-gradient(135deg, ${design.colors.accentPrimary}30 0%, transparent 100%)`,
-        animation: 'float 5s ease-in-out infinite reverse',
-        opacity: 0.5
-      }} />
-
-      <div style={{
-        fontSize: 80,
-        marginBottom: design.spacing.lg,
-        filter: `drop-shadow(0 8px 24px ${design.colors.accentGlow})`,
-        animation: 'float 3s ease-in-out infinite'
-      }}>
-        🎢
-      </div>
-
-      <h1 style={{
-        fontSize: 32,
-        fontWeight: 700,
-        color: design.colors.textPrimary,
-        marginBottom: design.spacing.sm,
-        fontFamily: design.font.sans,
-        textAlign: 'center',
-        letterSpacing: '-0.02em',
-        lineHeight: 1.2
-      }}>
-        The Inclined Plane
-      </h1>
-
-      <p style={{
-        fontSize: 17,
-        color: design.colors.textSecondary,
-        marginBottom: design.spacing.xl,
-        fontFamily: design.font.sans,
-        textAlign: 'center',
-        maxWidth: 340,
-        lineHeight: 1.6
-      }}>
-        One of humanity's oldest and most powerful simple machines! Discover how ramps multiply your force and make impossible tasks easy.
-      </p>
-
-      <div style={{
-        background: `linear-gradient(135deg, ${design.colors.accentMuted}80 0%, ${design.colors.bgTertiary} 100%)`,
-        border: `1px solid ${design.colors.accentPrimary}30`,
-        borderRadius: design.radius.xl,
-        padding: `${design.spacing.lg}px ${design.spacing.xl}px`,
-        marginBottom: design.spacing.xl,
-        maxWidth: 360,
-        boxShadow: design.shadow.glow(design.colors.accentPrimary)
-      }}>
-        <p style={{
-          fontSize: 20,
-          color: design.colors.accentSecondary,
-          fontFamily: design.font.sans,
-          textAlign: 'center',
-          fontWeight: 600,
-          lineHeight: 1.5,
-          margin: 0
-        }}>
-          "Give me a lever long enough and a ramp steep enough, and I shall move the world!"
-        </p>
-      </div>
-
-      {renderButton("Let's Investigate", () => goToPhase('predict'), 'primary', { size: 'lg' })}
-
-      <p style={{
-        fontSize: 13,
-        color: design.colors.textTertiary,
-        marginTop: design.spacing.lg,
-        fontFamily: design.font.sans,
-        letterSpacing: '0.02em'
-      }}>
-        Mechanical Advantage • Force Components • Work & Energy
-      </p>
-
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-12px); }
-        }
-      `}</style>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: design.spacing.xl,
-      height: '100%',
-      background: design.colors.bgPrimary
-    }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>🤔</div>
-      <h2 style={{
-        fontSize: 24,
-        fontWeight: 700,
-        color: design.colors.textPrimary,
-        marginBottom: design.spacing.sm,
-        fontFamily: design.font.sans
-      }}>Make Your Prediction</h2>
-      <p style={{
-        fontSize: 15,
-        color: design.colors.textSecondary,
-        marginBottom: design.spacing.lg,
-        fontFamily: design.font.sans,
-        textAlign: 'center'
-      }}>
-        To push a 100 kg box up a 30° ramp, how much force do you need compared to lifting it straight up?
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 360 }}>
-        {[
-          { id: 'same', label: 'The same force (980 N)', icon: '=' },
-          { id: 'half', label: 'About half the force (~500 N)', icon: '½' },
-          { id: 'more', label: 'More force (ramps are harder!)', icon: '↑' }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => {
-              setPrediction(option.id);
-              emit('prediction', { prediction: option.id });
-            }}
-            style={{
-              padding: `${design.spacing.md}px ${design.spacing.lg}px`,
-              borderRadius: design.radius.md,
-              border: prediction === option.id ? `2px solid ${design.colors.accentPrimary}` : `1px solid ${design.colors.border}`,
-              background: prediction === option.id ? `${design.colors.accentMuted}60` : design.colors.bgSecondary,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: design.spacing.md,
-              transition: 'all 0.2s ease',
-              boxShadow: prediction === option.id ? design.shadow.glow(design.colors.accentPrimary) : 'none',
-              position: 'relative' as const,
-              zIndex: 10
-            }}
-          >
-            <span style={{ fontSize: 28, width: 40, textAlign: 'center' }}>{option.icon}</span>
-            <span style={{ fontSize: 15, color: design.colors.textPrimary, fontFamily: design.font.sans, fontWeight: 500, textAlign: 'left' }}>
-              {option.label}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {prediction && (
-        <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Test It!', () => goToPhase('play'))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgPrimary }}>
-      {renderVisualization()}
-      <div style={{
-        flex: 1,
-        padding: design.spacing.lg,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: design.spacing.md,
-        background: design.colors.bgSecondary,
-        borderTop: `1px solid ${design.colors.border}`
-      }}>
-        <div style={{ width: '100%', maxWidth: 300 }}>
-          <p style={{ fontSize: 13, color: design.colors.textSecondary, marginBottom: design.spacing.sm, fontFamily: design.font.sans }}>
-            Ramp angle: <span style={{ color: design.colors.accentPrimary, fontWeight: 600 }}>{angle}°</span>
-          </p>
-          <input
-            type="range"
-            min="10"
-            max="60"
-            step="5"
-            value={angle}
-            onChange={(e) => { setAngle(parseInt(e.target.value)); resetExperiment(); emit('interaction', { angle: e.target.value }, 'angle_change'); }}
-            disabled={isRolling}
-            style={{ width: '100%', accentColor: design.colors.accentPrimary }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: design.colors.textTertiary, fontFamily: design.font.sans }}>
-            <span>10° (gentle)</span>
-            <span>60° (steep)</span>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: design.spacing.md }}>
-          <span style={{ fontSize: 13, color: design.colors.textSecondary, fontFamily: design.font.sans }}>Vectors:</span>
-          <button
-            onClick={() => setShowVectors(!showVectors)}
-            style={{
-              padding: `${design.spacing.xs}px ${design.spacing.md}px`,
-              borderRadius: design.radius.md,
-              border: 'none',
-              background: showVectors ? design.colors.accentPrimary : design.colors.bgTertiary,
-              color: showVectors ? '#000' : design.colors.textSecondary,
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: 'pointer',
-              position: 'relative' as const,
-              zIndex: 10
-            }}
-          >
-            {showVectors ? 'ON' : 'OFF'}
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', gap: design.spacing.md }}>
-          {!isRolling && ballPosition === 0 && renderButton('Roll Ball!', startRolling, 'success')}
-          {(isRolling || ballPosition > 0) && renderButton('Reset', resetExperiment, 'secondary')}
-        </div>
-
-        <p style={{ fontSize: 13, color: design.colors.textTertiary, fontFamily: design.font.sans }}>
-          Experiments: {experimentCount} • Try different angles!
-        </p>
-
-        {experimentCount >= 3 && renderButton('I see the pattern!', () => goToPhase('review'))}
-      </div>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: design.spacing.xl,
-      height: '100%',
-      background: design.colors.bgPrimary,
-      overflowY: 'auto'
-    }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>💡</div>
-      <h2 style={{
-        fontSize: 24,
-        fontWeight: 700,
-        color: design.colors.textPrimary,
-        marginBottom: design.spacing.md,
-        fontFamily: design.font.sans
-      }}>The Mechanical Advantage!</h2>
-
-      <div style={{
-        background: design.colors.bgSecondary,
-        borderRadius: design.radius.lg,
-        padding: design.spacing.lg,
-        marginBottom: design.spacing.lg,
-        maxWidth: 360,
-        width: '100%',
-        border: `1px solid ${design.colors.border}`
-      }}>
-        <p style={{
-          fontSize: 22,
-          color: design.colors.accentPrimary,
-          fontFamily: design.font.mono,
-          textAlign: 'center',
-          fontWeight: 700
-        }}>
-          F = mg × sin(θ)
-        </p>
-        <p style={{
-          fontSize: 14,
-          color: design.colors.textSecondary,
-          fontFamily: design.font.sans,
-          textAlign: 'center',
-          marginTop: design.spacing.md,
-          lineHeight: 1.6
-        }}>
-          The force to push up a ramp is less than lifting straight up!
-        </p>
-      </div>
-
-      <div style={{
-        background: `${design.colors.accentMuted}50`,
-        border: `1px solid ${design.colors.accentPrimary}30`,
-        borderRadius: design.radius.md,
-        padding: design.spacing.md,
-        maxWidth: 360,
-        width: '100%',
-        marginBottom: design.spacing.md
-      }}>
-        <p style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.8, margin: 0 }}>
-          <strong>30° ramp:</strong> sin(30°) = 0.50<br/>
-          Force needed = 980N × 0.5 = <span style={{ color: design.colors.success, fontWeight: 600 }}>490N</span><br/>
-          <strong>Mechanical Advantage:</strong> 2× (half the force!)
-        </p>
-      </div>
-
-      <p style={{
-        fontSize: 14,
-        color: prediction === 'half' ? design.colors.success : design.colors.textSecondary,
-        fontFamily: design.font.sans,
-        marginBottom: design.spacing.lg
-      }}>
-        Your prediction: {prediction === 'half' ? '✅ Correct!' : '🤔 Ramps actually reduce the force needed!'}
-      </p>
-
-      {renderButton('What About Friction?', () => goToPhase('twist_predict'))}
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: design.spacing.xl,
-      height: '100%',
-      background: design.colors.bgPrimary
-    }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>🧱</div>
-      <h2 style={{
-        fontSize: 22,
-        fontWeight: 700,
-        color: design.colors.textPrimary,
-        marginBottom: design.spacing.sm,
-        fontFamily: design.font.sans
-      }}>Plot Twist: Friction on Ramps!</h2>
-      <p style={{
-        fontSize: 15,
-        color: design.colors.textSecondary,
-        marginBottom: design.spacing.lg,
-        fontFamily: design.font.sans,
-        textAlign: 'center'
-      }}>
-        Real ramps have friction. How does this affect the force needed to push up?
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 360 }}>
-        {[
-          { id: 'no_effect', label: "No effect - gravity is the same" },
-          { id: 'more_force', label: "Need MORE force - friction opposes motion" },
-          { id: 'less_force', label: "Need LESS force - friction helps somehow" }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => {
-              setTwistPrediction(option.id);
-              emit('prediction', { twistPrediction: option.id });
-            }}
-            style={{
-              padding: `${design.spacing.md}px ${design.spacing.lg}px`,
-              borderRadius: design.radius.md,
-              border: twistPrediction === option.id ? `2px solid ${design.colors.accentPrimary}` : `1px solid ${design.colors.border}`,
-              background: twistPrediction === option.id ? `${design.colors.accentMuted}60` : design.colors.bgSecondary,
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'all 0.2s ease',
-              position: 'relative' as const,
-              zIndex: 10
-            }}
-          >
-            <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans }}>{option.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {twistPrediction && (
-        <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Add Friction!', () => { setHasFriction(true); resetExperiment(); goToPhase('twist_play'); })}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgPrimary }}>
-      {renderVisualization()}
-      <div style={{
-        flex: 1,
-        padding: design.spacing.lg,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: design.spacing.md,
-        background: design.colors.bgSecondary,
-        borderTop: `1px solid ${design.colors.border}`
-      }}>
-        <div style={{ display: 'flex', gap: design.spacing.md, alignItems: 'center' }}>
-          <span style={{ fontSize: 13, color: design.colors.textSecondary, fontFamily: design.font.sans }}>Surface:</span>
-          <button
-            onClick={() => { setHasFriction(false); resetExperiment(); }}
-            disabled={isRolling}
-            style={{
-              padding: `${design.spacing.sm}px ${design.spacing.md}px`,
-              borderRadius: design.radius.md,
-              border: 'none',
-              background: !hasFriction ? design.colors.success : design.colors.bgTertiary,
-              color: !hasFriction ? '#fff' : design.colors.textSecondary,
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: isRolling ? 'not-allowed' : 'pointer',
-              position: 'relative' as const,
-              zIndex: 10
-            }}
-          >
-            Smooth
-          </button>
-          <button
-            onClick={() => { setHasFriction(true); resetExperiment(); }}
-            disabled={isRolling}
-            style={{
-              padding: `${design.spacing.sm}px ${design.spacing.md}px`,
-              borderRadius: design.radius.md,
-              border: 'none',
-              background: hasFriction ? design.colors.friction : design.colors.bgTertiary,
-              color: hasFriction ? '#fff' : design.colors.textSecondary,
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: isRolling ? 'not-allowed' : 'pointer',
-              position: 'relative' as const,
-              zIndex: 10
-            }}
-          >
-            Rough
-          </button>
-        </div>
-
-        <div style={{ width: '100%', maxWidth: 300 }}>
-          <p style={{ fontSize: 13, color: design.colors.textSecondary, marginBottom: design.spacing.sm, fontFamily: design.font.sans }}>
-            Angle: {angle}°
-          </p>
-          <input
-            type="range"
-            min="10"
-            max="60"
-            step="5"
-            value={angle}
-            onChange={(e) => { setAngle(parseInt(e.target.value)); resetExperiment(); }}
-            disabled={isRolling}
-            style={{ width: '100%', accentColor: design.colors.accentPrimary }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: design.spacing.md }}>
-          <div style={{
-            textAlign: 'center',
-            padding: design.spacing.sm,
-            background: design.colors.bgTertiary,
-            borderRadius: design.radius.md,
-            minWidth: 70
-          }}>
-            <p style={{ fontSize: 10, color: design.colors.textTertiary, fontFamily: design.font.sans, margin: 0 }}>mg·sinθ</p>
-            <p style={{ fontSize: 16, fontWeight: 700, color: design.colors.parallel, fontFamily: design.font.mono, margin: 0 }}>{gravityParallel.toFixed(1)}N</p>
-          </div>
-          {hasFriction && (
-            <div style={{
-              textAlign: 'center',
-              padding: design.spacing.sm,
-              background: design.colors.bgTertiary,
-              borderRadius: design.radius.md,
-              minWidth: 70
-            }}>
-              <p style={{ fontSize: 10, color: design.colors.textTertiary, fontFamily: design.font.sans, margin: 0 }}>Friction</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: design.colors.friction, fontFamily: design.font.mono, margin: 0 }}>{frictionForce.toFixed(1)}N</p>
-            </div>
-          )}
-          <div style={{
-            textAlign: 'center',
-            padding: design.spacing.sm,
-            background: design.colors.bgTertiary,
-            borderRadius: design.radius.md,
-            minWidth: 70
-          }}>
-            <p style={{ fontSize: 10, color: design.colors.textTertiary, fontFamily: design.font.sans, margin: 0 }}>Net Accel</p>
-            <p style={{ fontSize: 16, fontWeight: 700, color: design.colors.success, fontFamily: design.font.mono, margin: 0 }}>{netAcceleration.toFixed(1)}</p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: design.spacing.md }}>
-          {!isRolling && ballPosition === 0 && renderButton('Roll!', startRolling, 'success')}
-          {(isRolling || ballPosition > 0) && renderButton('Reset', resetExperiment, 'secondary')}
-        </div>
-
-        {experimentCount >= 5 && renderButton('I understand!', () => goToPhase('twist_review'))}
-      </div>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: design.spacing.xl,
-      height: '100%',
-      background: design.colors.bgPrimary,
-      overflowY: 'auto'
-    }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>⚔️</div>
-      <h2 style={{
-        fontSize: 22,
-        fontWeight: 700,
-        color: design.colors.textPrimary,
-        marginBottom: design.spacing.md,
-        fontFamily: design.font.sans
-      }}>Friction Force on Ramps!</h2>
-
-      <div style={{
-        background: design.colors.bgSecondary,
-        borderRadius: design.radius.lg,
-        padding: design.spacing.lg,
-        marginBottom: design.spacing.lg,
-        maxWidth: 360,
-        width: '100%',
-        border: `1px solid ${design.colors.border}`
-      }}>
-        <p style={{
-          fontSize: 20,
-          color: design.colors.accentPrimary,
-          fontFamily: design.font.mono,
-          textAlign: 'center',
-          fontWeight: 700
-        }}>
-          F_friction = μN = μmg cos(θ)
-        </p>
-        <p style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.8, marginTop: design.spacing.md }}>
-          <span style={{ color: design.colors.parallel, fontWeight: 600 }}>Push force:</span> mg·sin(θ) + μmg·cos(θ)<br/>
-          Friction adds to the force needed!
-        </p>
-      </div>
-
-      <div style={{
-        background: `${design.colors.accentMuted}50`,
-        border: `1px solid ${design.colors.accentPrimary}30`,
-        borderRadius: design.radius.lg,
-        padding: design.spacing.lg,
-        marginBottom: design.spacing.lg,
-        maxWidth: 360,
-        width: '100%'
-      }}>
-        <p style={{ fontSize: 14, color: design.colors.accentSecondary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
-          Interesting fact: As angle increases, normal force (and thus friction) DECREASES because N = mg·cos(θ). At 90°, there's no friction at all!
-        </p>
-      </div>
-
-      <p style={{
-        fontSize: 14,
-        color: twistPrediction === 'more_force' ? design.colors.success : design.colors.textSecondary,
-        fontFamily: design.font.sans,
-        marginBottom: design.spacing.lg
-      }}>
-        Your prediction: {twistPrediction === 'more_force' ? '✅ Correct!' : '🤔 Friction always opposes motion, requiring more force!'}
-      </p>
-
-      {renderButton('See Real Applications', () => goToPhase('transfer'))}
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const app = applications[activeApp];
-    const AppSVG = app.SVG;
-
+  // HOOK PHASE
+  if (phase === 'hook') {
     return (
       <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        padding: design.spacing.lg,
-        background: design.colors.bgPrimary
-      }}>
-        <h2 style={{
-          fontSize: 20,
-          fontWeight: 700,
-          color: design.colors.textPrimary,
-          marginBottom: design.spacing.md,
-          fontFamily: design.font.sans,
-          textAlign: 'center'
-        }}>
-          Inclined Planes in Real Life
-        </h2>
-
-        {/* Tab buttons */}
-        <div style={{
-          display: 'flex',
-          gap: design.spacing.xs,
-          marginBottom: design.spacing.md,
-          background: design.colors.bgSecondary,
-          padding: design.spacing.xs,
-          borderRadius: design.radius.md
-        }}>
-          {applications.map((a, idx) => {
-            const isUnlocked = idx === 0 || completedApps.has(idx - 1);
-            return (
-              <button
-                key={idx}
-                onClick={() => {
-                  if (isUnlocked) setActiveApp(idx);
-                }}
-                style={{
-                  flex: 1,
-                  padding: `${design.spacing.sm}px ${design.spacing.xs}px`,
-                  borderRadius: design.radius.sm,
-                  border: 'none',
-                  background: activeApp === idx ? design.colors.accentPrimary : 'transparent',
-                  color: activeApp === idx ? '#000' : isUnlocked ? design.colors.textSecondary : design.colors.textTertiary,
-                  fontWeight: 600,
-                  fontSize: 11,
-                  cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.2s ease',
-                  fontFamily: design.font.sans,
-                  opacity: isUnlocked ? 1 : 0.5,
-                  position: 'relative' as const,
-                  zIndex: 10
-                }}
-              >
-                {completedApps.has(idx) && <span style={{ marginRight: 4 }}>✓</span>}
-                {a.title.split(' ')[0]}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Content */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          background: design.colors.bgSecondary,
-          borderRadius: design.radius.lg,
-          padding: design.spacing.lg,
-          border: `1px solid ${design.colors.border}`,
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: design.spacing.md
-          }}>
-            <AppSVG />
-          </div>
-
-          <h3 style={{
-            fontSize: 18,
-            fontWeight: 700,
-            color: design.colors.accentPrimary,
-            fontFamily: design.font.sans,
-            textAlign: 'center',
-            marginBottom: design.spacing.sm
-          }}>
-            {app.title}
-          </h3>
-
-          <p style={{
-            fontSize: 14,
-            color: design.colors.textSecondary,
-            fontFamily: design.font.sans,
-            textAlign: 'center',
-            lineHeight: 1.6,
-            marginBottom: design.spacing.md,
-            flex: 1
-          }}>
-            {app.description}
-          </p>
-
-          <div style={{
-            background: design.colors.bgTertiary,
-            borderRadius: design.radius.md,
-            padding: design.spacing.sm,
-            textAlign: 'center',
-            marginBottom: design.spacing.md
-          }}>
-            <span style={{
-              fontSize: 13,
-              color: design.colors.accentSecondary,
-              fontFamily: design.font.mono,
-              fontWeight: 600
-            }}>
-              📊 {app.stats}
-            </span>
-          </div>
-
-          {/* Mark as Read button */}
-          {!completedApps.has(activeApp) ? (
-            <button
-              onClick={() => {
-                const newCompleted = new Set(completedApps);
-                newCompleted.add(activeApp);
-                setCompletedApps(newCompleted);
-                emit('interaction', { app: app.title, action: 'marked_read' });
-                if (activeApp < applications.length - 1) {
-                  setTimeout(() => setActiveApp(activeApp + 1), 300);
-                }
-              }}
-              style={{
-                width: '100%',
-                padding: `${design.spacing.sm}px ${design.spacing.md}px`,
-                borderRadius: design.radius.md,
-                border: `1px solid ${design.colors.success}`,
-                background: design.colors.successMuted,
-                color: design.colors.success,
-                fontWeight: 600,
-                fontSize: 14,
-                cursor: 'pointer',
-                fontFamily: design.font.sans,
-                transition: 'all 0.2s ease',
-                position: 'relative' as const,
-                zIndex: 10
-              }}
-            >
-              ✓ Mark "{app.title}" as Read
-            </button>
-          ) : (
-            <div style={{
-              textAlign: 'center',
-              padding: design.spacing.sm,
-              color: design.colors.success,
-              fontWeight: 600,
-              fontSize: 14,
-              fontFamily: design.font.sans
-            }}>
-              ✓ Completed
-            </div>
-          )}
-        </div>
-
-        {/* Quiz button */}
-        <div style={{ marginTop: design.spacing.md }}>
-          {completedApps.size >= applications.length ? (
-            renderButton('Take the Quiz!', () => goToPhase('test'), 'primary', { fullWidth: true })
-          ) : (
-            <div style={{
-              textAlign: 'center',
-              padding: design.spacing.md,
-              color: design.colors.textTertiary,
-              fontSize: 13,
-              fontFamily: design.font.sans
-            }}>
-              Read all {applications.length} applications to unlock the quiz ({completedApps.size}/{applications.length})
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderTest = () => {
-    const q = testQuestions[currentQuestion];
-    const isAnswered = answeredQuestions.has(currentQuestion);
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        padding: design.spacing.lg,
-        background: design.colors.bgPrimary
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: design.spacing.md
-        }}>
-          <span style={{ fontSize: 13, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
-            Question {currentQuestion + 1}/{testQuestions.length}
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: design.colors.success, fontFamily: design.font.sans }}>
-            Score: {correctAnswers}/{answeredQuestions.size}
-          </span>
-        </div>
-
-        {/* Progress bar */}
-        <div style={{
-          height: 4,
-          background: design.colors.bgTertiary,
-          borderRadius: design.radius.full,
-          marginBottom: design.spacing.md,
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${((currentQuestion + 1) / testQuestions.length) * 100}%`,
-            background: `linear-gradient(90deg, ${design.colors.accentPrimary}, ${design.colors.accentSecondary})`,
-            borderRadius: design.radius.full,
-            transition: 'width 0.3s ease'
-          }} />
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          <h3 style={{
-            fontSize: 16,
-            fontWeight: 600,
-            color: design.colors.textPrimary,
-            fontFamily: design.font.sans,
-            marginBottom: design.spacing.lg,
-            lineHeight: 1.5
-          }}>
-            {q.question}
-          </h3>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.sm }}>
-            {q.options.map((option, idx) => {
-              let bg = design.colors.bgSecondary;
-              let border = design.colors.border;
-              if (isAnswered) {
-                if (option.correct) { bg = design.colors.successMuted; border = design.colors.success; }
-                else if (idx === selectedAnswer && !option.correct) { bg = design.colors.dangerMuted; border = design.colors.danger; }
-              }
-              return (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    if (!isAnswered) handleTestAnswer(idx);
-                  }}
-                  style={{
-                    padding: `${design.spacing.md}px ${design.spacing.md}px`,
-                    borderRadius: design.radius.md,
-                    border: `1px solid ${border}`,
-                    background: bg,
-                    cursor: isAnswered ? 'default' : 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s ease',
-                    position: 'relative' as const,
-                    zIndex: 10
-                  }}
-                >
-                  <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans }}>
-                    {option.text}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {showExplanation && (
-            <div style={{
-              marginTop: design.spacing.md,
-              background: `${design.colors.accentMuted}50`,
-              border: `1px solid ${design.colors.accentPrimary}30`,
-              borderRadius: design.radius.md,
-              padding: design.spacing.md
-            }}>
-              <p style={{ fontSize: 13, color: design.colors.accentSecondary, fontFamily: design.font.sans, lineHeight: 1.5, margin: 0 }}>
-                💡 {q.explanation}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: design.spacing.md }}>
-          {renderButton('← Back', () => {
-            setCurrentQuestion(prev => Math.max(0, prev - 1));
-            setSelectedAnswer(null);
-            setShowExplanation(answeredQuestions.has(currentQuestion - 1));
-          }, 'secondary', { disabled: currentQuestion === 0 })}
-
-          {currentQuestion < testQuestions.length - 1 ? (
-            renderButton('Next →', () => {
-              setCurrentQuestion(prev => prev + 1);
-              setSelectedAnswer(null);
-              setShowExplanation(answeredQuestions.has(currentQuestion + 1));
-            }, 'secondary')
-          ) : answeredQuestions.size === testQuestions.length ? (
-            renderButton('Complete!', () => goToPhase('mastery'))
-          ) : (
-            <span style={{ fontSize: 13, color: design.colors.textTertiary, fontFamily: design.font.sans, alignSelf: 'center' }}>
-              Answer all questions
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderMastery = () => {
-    const percentage = Math.round((correctAnswers / testQuestions.length) * 100);
-    const passed = correctAnswers >= 7;
-
-    const resetGame = () => {
-      setPhase('hook');
-      setExperimentCount(0);
-      setCurrentQuestion(0);
-      setCorrectAnswers(0);
-      setAnsweredQuestions(new Set());
-      setPrediction(null);
-      setTwistPrediction(null);
-      setAngle(30);
-      setHasFriction(false);
-      setActiveApp(0);
-      setCompletedApps(new Set());
-      setTestScore(0);
-      resetExperiment();
-    };
-
-    return (
-      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100%',
-        padding: design.spacing.xl,
-        background: `radial-gradient(ellipse at 50% 40%, ${design.colors.accentMuted}40 0%, ${design.colors.bgDeep} 70%)`,
-        position: 'relative',
-        overflow: 'hidden'
+        padding: '24px',
+        textAlign: 'center',
       }}>
-        {/* Confetti only for passing */}
-        {passed && (
-          <>
-            <style>{`
-              @keyframes confettiFall {
-                0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-                100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
-              }
-            `}</style>
-            {[...Array(18)].map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  left: `${Math.random() * 100}%`,
-                  top: '-20px',
-                  animation: `confettiFall ${2 + Math.random() * 2}s linear ${Math.random() * 2}s forwards`,
-                  pointerEvents: 'none',
-                  fontSize: '20px'
-                }}
-              >
-                {['🎢', '⛷️', '⭐', '✨', '🏆'][Math.floor(Math.random() * 5)]}
-              </div>
-            ))}
-          </>
-        )}
+        {renderProgressBar()}
 
         <div style={{
-          fontSize: 80,
-          marginBottom: design.spacing.md,
-          filter: `drop-shadow(0 8px 24px ${design.colors.accentGlow})`
+          fontSize: '72px',
+          marginBottom: '24px',
+          animation: 'float 3s ease-in-out infinite',
         }}>
-          {passed ? '🏆' : '📚'}
+          🎢
         </div>
+        <style>{`@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <h2 style={{
-          fontSize: 28,
-          fontWeight: 700,
-          color: design.colors.textPrimary,
-          marginBottom: design.spacing.sm,
-          fontFamily: design.font.sans,
-          textAlign: 'center'
-        }}>
-          {passed ? 'Congratulations! Inclined Plane Master!' : 'Keep Practicing!'}
-        </h2>
-
-        <div style={{
-          fontSize: 64,
-          fontWeight: 700,
-          color: passed ? design.colors.success : '#f59e0b',
-          marginBottom: design.spacing.sm,
-          fontFamily: design.font.sans
-        }}>
-          {percentage}%
-        </div>
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          The Inclined Plane
+        </h1>
 
         <p style={{
-          fontSize: 16,
-          color: design.colors.textSecondary,
-          marginBottom: design.spacing.xl,
-          fontFamily: design.font.sans
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
         }}>
-          {correctAnswers}/{testQuestions.length} correct answers
+          "How did ancient Egyptians lift 2-ton stones to build pyramids? The secret lies in one of humanity's <span style={{ color: colors.accent }}>oldest simple machines</span> - the humble ramp."
         </p>
 
         <div style={{
-          background: design.colors.bgSecondary,
-          borderRadius: design.radius.lg,
-          padding: design.spacing.lg,
-          marginBottom: design.spacing.xl,
-          maxWidth: 340,
-          width: '100%',
-          border: `1px solid ${design.colors.border}`
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
         }}>
-          <h3 style={{
-            fontSize: 15,
-            fontWeight: 700,
-            color: design.colors.accentPrimary,
-            fontFamily: design.font.sans,
-            marginBottom: design.spacing.md,
-            textAlign: 'center'
-          }}>
-            {passed ? 'Concepts Mastered:' : 'Key Concepts to Review:'}
-          </h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {[
-              'F = mg × sin(θ) for ramp force',
-              'Mechanical Advantage = Length / Height',
-              'Friction: F_f = μmg cos(θ)',
-              'Real applications: ramps, screws, wedges'
-            ].map((item, idx) => (
-              <li key={idx} style={{
-                fontSize: 13,
-                color: design.colors.textPrimary,
-                fontFamily: design.font.sans,
-                marginBottom: design.spacing.sm,
-                display: 'flex',
-                alignItems: 'center',
-                gap: design.spacing.sm
-              }}>
-                <span style={{ color: design.colors.success }}>{passed ? '✓' : '○'}</span> {item}
-              </li>
-            ))}
-          </ul>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Give me a place to stand and a ramp long enough, and I shall move the world with minimal effort."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Modern interpretation of Archimedes
+          </p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 340 }}>
-          {passed ? (
-            <>
-              {renderButton('🏠 Return to Dashboard', handleReturnToDashboard, 'primary', { fullWidth: true })}
-              {renderButton('🔬 Review Lesson', resetGame, 'secondary', { fullWidth: true })}
-            </>
-          ) : (
-            <>
-              {renderButton('↻ Retake Test', () => {
-                setCurrentQuestion(0);
-                setCorrectAnswers(0);
-                setAnsweredQuestions(new Set());
-                setSelectedAnswer(null);
-                setShowExplanation(false);
-                setTestScore(0);
-                goToPhase('test');
-              }, 'primary', { fullWidth: true })}
-              {renderButton('🔬 Review Lesson', resetGame, 'secondary', { fullWidth: true })}
-              <button
-                onClick={handleReturnToDashboard}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: design.colors.textTertiary,
-                  fontSize: 14,
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  marginTop: design.spacing.sm,
-                  position: 'relative' as const,
-                  zIndex: 10
-                }}
-              >
-                Return to Dashboard
-              </button>
-            </>
-          )}
-        </div>
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover the Physics
+        </button>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-  const phaseRenderers: Record<Phase, () => JSX.Element> = {
-    hook: renderHook,
-    predict: renderPredict,
-    play: renderPlay,
-    review: renderReview,
-    twist_predict: renderTwistPredict,
-    twist_play: renderTwistPlay,
-    twist_review: renderTwistReview,
-    transfer: renderTransfer,
-    test: renderTest,
-    mastery: renderMastery
-  };
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'The same force (980 N) - gravity is gravity!' },
+      { id: 'b', text: 'About half the force (~500 N) - ramps reduce effort', correct: true },
+      { id: 'c', text: 'More force - ramps add extra distance to push' },
+    ];
 
-  return (
-    <div style={{
-      width,
-      height,
-      borderRadius: design.radius.lg,
-      overflow: 'hidden',
-      position: 'relative',
-      background: design.colors.bgPrimary,
-      fontFamily: design.font.sans
-    }}>
-      {phaseRenderers[phase]()}
-
-      {/* Progress dots */}
+    return (
       <div style={{
-        position: 'absolute',
-        top: design.spacing.md,
-        left: design.spacing.md,
-        display: 'flex',
-        gap: design.spacing.xs
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
       }}>
-        {phaseOrder.map((p) => (
-          <div
-            key={p}
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: design.radius.full,
-              background: phase === p
-                ? design.colors.accentPrimary
-                : phaseOrder.indexOf(p) < phaseOrder.indexOf(phase)
-                  ? design.colors.accentSecondary
-                  : design.colors.bgElevated,
-              boxShadow: phase === p ? design.shadow.glow(design.colors.accentPrimary) : 'none',
-              transition: 'all 0.3s ease'
-            }}
-          />
-        ))}
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            To push a 100 kg box up a 30-degree ramp, how much force do you need compared to lifting it straight up (980 N)?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>📦</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>100 kg Box</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
+              <div style={{
+                background: colors.accent + '33',
+                padding: '20px 30px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.accent}`,
+                transform: 'rotate(-15deg)',
+              }}>
+                <div style={{ fontSize: '32px', transform: 'rotate(15deg)' }}>30</div>
+                <p style={{ ...typo.small, color: colors.textPrimary, transform: 'rotate(15deg)' }}>Ramp</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>?</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Force needed</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  // PLAY PHASE - Interactive Simulation
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Inclined Plane Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust the angle and observe how forces change. Watch the block accelerate down the ramp.
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <InclinedPlaneVisualization />
+            </div>
+
+            {/* Angle slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Ramp Angle</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{angle}</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="60"
+                step="5"
+                value={angle}
+                onChange={(e) => { setAngle(parseInt(e.target.value)); resetExperiment(); }}
+                disabled={isRolling}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: isRolling ? 'not-allowed' : 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>10 (gentle)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>60 (steep)</span>
+              </div>
+            </div>
+
+            {/* Vector toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Show Vectors</span>
+              <button
+                onClick={() => setShowVectors(!showVectors)}
+                style={{
+                  width: '50px',
+                  height: '26px',
+                  borderRadius: '13px',
+                  border: 'none',
+                  background: showVectors ? colors.accent : colors.border,
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background 0.3s',
+                }}
+              >
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  position: 'absolute',
+                  top: '3px',
+                  left: showVectors ? '27px' : '3px',
+                  transition: 'left 0.3s',
+                }} />
+              </button>
+            </div>
+
+            {/* Control buttons */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '16px' }}>
+              {!isRolling && ballPosition === 0 && (
+                <button
+                  onClick={() => { playSound('click'); startRolling(); }}
+                  style={{
+                    ...primaryButtonStyle,
+                    background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  }}
+                >
+                  Roll Ball
+                </button>
+              )}
+              {(isRolling || ballPosition > 0) && (
+                <button
+                  onClick={() => { playSound('click'); resetExperiment(); }}
+                  style={{
+                    ...primaryButtonStyle,
+                    background: colors.bgSecondary,
+                    border: `1px solid ${colors.border}`,
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+
+            {/* Experiment counter */}
+            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+              Experiments completed: {experimentCount}
+            </p>
+          </div>
+
+          {/* Discovery prompt */}
+          {experimentCount >= 3 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Notice how steeper angles mean faster acceleration!
+              </p>
+            </div>
+          )}
+
+          {experimentCount >= 3 && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Mechanical Advantage of Ramps
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Key Formula: F = mg sin(theta)</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                The force needed to push an object up a ramp is only the <span style={{ color: colors.parallel }}>parallel component</span> of gravity, not the full weight!
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                At <span style={{ color: colors.accent, fontWeight: 600 }}>30 degrees</span>: sin(30) = 0.5, so you only need <span style={{ color: colors.success }}>half the force</span>.
+              </p>
+              <p>
+                The <span style={{ color: colors.accent, fontWeight: 600 }}>Mechanical Advantage</span> = 1 / sin(theta). Lower angles = higher MA = less force needed!
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Your Prediction: {prediction === 'b' ? 'Correct!' : 'Learning Moment!'}
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              {prediction === 'b'
+                ? 'You correctly identified that ramps reduce the force needed by spreading work over distance.'
+                : 'Ramps actually reduce force! A 30-degree ramp requires only half the force (490 N) compared to lifting straight up (980 N).'}
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            What About Friction?
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'No effect - friction only matters when stationary' },
+      { id: 'b', text: 'Need MORE force - friction opposes your pushing direction', correct: true },
+      { id: 'c', text: 'Need LESS force - friction helps grip the ramp' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Friction!
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Real ramps have friction. When pushing a box UP a rough ramp, how does friction affect the force you need?
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); setHasFriction(true); resetExperiment(); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Add Friction to the Ramp
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Friction on Inclined Planes
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare smooth vs rough surfaces and see how friction affects motion
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <InclinedPlaneVisualization />
+            </div>
+
+            {/* Surface toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '20px' }}>
+              <button
+                onClick={() => { setHasFriction(false); resetExperiment(); }}
+                disabled={isRolling}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: !hasFriction ? colors.success : colors.bgSecondary,
+                  color: !hasFriction ? 'white' : colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: isRolling ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Smooth Surface
+              </button>
+              <button
+                onClick={() => { setHasFriction(true); resetExperiment(); }}
+                disabled={isRolling}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: hasFriction ? colors.friction : colors.bgSecondary,
+                  color: hasFriction ? 'white' : colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: isRolling ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Rough Surface (mu = 0.3)
+              </button>
+            </div>
+
+            {/* Angle slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Ramp Angle</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{angle}</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="60"
+                step="5"
+                value={angle}
+                onChange={(e) => { setAngle(parseInt(e.target.value)); resetExperiment(); }}
+                disabled={isRolling}
+                style={{ width: '100%', cursor: isRolling ? 'not-allowed' : 'pointer' }}
+              />
+            </div>
+
+            {/* Force display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.parallel }}>{gravityParallel.toFixed(1)} N</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Gravity Parallel</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: hasFriction ? colors.friction : colors.textMuted }}>
+                  {hasFriction ? frictionForce.toFixed(1) : '0.0'} N
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Friction Force</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ ...typo.h3, color: colors.success }}>{netAcceleration.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Net Accel (m/s^2)</div>
+              </div>
+            </div>
+
+            {/* Control buttons */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              {!isRolling && ballPosition === 0 && (
+                <button
+                  onClick={() => { playSound('click'); startRolling(); }}
+                  style={{
+                    ...primaryButtonStyle,
+                    background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  }}
+                >
+                  Roll Ball
+                </button>
+              )}
+              {(isRolling || ballPosition > 0) && (
+                <button
+                  onClick={() => { playSound('click'); resetExperiment(); }}
+                  style={{
+                    ...primaryButtonStyle,
+                    background: colors.bgSecondary,
+                    border: `1px solid ${colors.border}`,
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Observation prompt */}
+          {experimentCount >= 5 && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              I Understand the Pattern
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Friction on Inclined Planes
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Formula</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Friction = mu x N = mu x mg cos(theta)</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Friction depends on the <span style={{ color: colors.normal }}>normal force</span>, which decreases as the angle increases (because more weight acts parallel to the ramp).
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Key Insight</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Friction Always Opposes Motion</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                When pushing UP: Friction acts DOWN (adds to required force)<br/>
+                When sliding DOWN: Friction acts UP (reduces acceleration)
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Critical Angle</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Static Equilibrium</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                When tan(theta) = mu, friction exactly balances the parallel gravity component. The object neither slides nor needs pushing - it stays put!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    check
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How This Connects to Your Experiment:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              {passed ? 'trophy' : 'books'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand inclined plane physics!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          trophy
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Inclined Plane Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how inclined planes provide mechanical advantage and how friction affects motion on slopes.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Force = mg sin(theta) for frictionless ramps',
+              'Mechanical Advantage = 1 / sin(theta)',
+              'Friction adds mu mg cos(theta) to required force',
+              'Normal force = mg cos(theta)',
+              'Real-world applications from ramps to screws',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>check</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default InclinedPlaneRenderer;

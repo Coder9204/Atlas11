@@ -1,60 +1,326 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ============================================================================
-// HAND WARMER RENDERER
-// Physics: Fe + O2 -> Fe2O3 + heat (exothermic oxidation)
-// Also covers sodium acetate phase change (crystallization)
-// ============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
+// Hand Warmer Physics - Complete 10-Phase Game
+// Exothermic reactions: Iron oxidation and sodium acetate crystallization
+// ─────────────────────────────────────────────────────────────────────────────
 
-interface HandWarmerRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-// Play crystallization sound
-const playCrystallizeSound = (): void => {
-  if (typeof window === "undefined") return;
-  try {
-    const audioContext = new (window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext)();
+interface HandWarmerRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
 
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// Crystallization sound effect
+const playCrystallizeSound = () => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const bufferSize = audioContext.sampleRate * 0.3;
     const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
     const output = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
       output[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 0.5) * 0.3;
     }
-
     const noise = audioContext.createBufferSource();
     noise.buffer = noiseBuffer;
-
     const filter = audioContext.createBiquadFilter();
-    filter.type = "bandpass";
+    filter.type = 'bandpass';
     filter.frequency.value = 2000;
     filter.Q.value = 2;
-
     noise.connect(filter);
     filter.connect(audioContext.destination);
-
     noise.start();
-  } catch {
-    // Audio not available
-  }
+  } catch { /* Audio not available */ }
 };
 
-export default function HandWarmerRenderer({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer
-}: HandWarmerRendererProps) {
-  // Responsive detection
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    scenario: "You're at a winter sports event and pull out a reusable hand warmer. It's a clear liquid pouch at room temperature (20C). You click the metal disc inside, and within seconds the liquid turns solid and heats up to 54C.",
+    question: "What is the source of the heat energy released?",
+    options: [
+      { id: 'a', label: "A tiny battery hidden inside the pouch" },
+      { id: 'b', label: "Chemical reaction that consumes the liquid permanently" },
+      { id: 'c', label: "Latent heat released when the supercooled liquid crystallizes", correct: true },
+      { id: 'd', label: "Friction energy from flexing the metal disc" }
+    ],
+    explanation: "Sodium acetate releases 264 kJ/kg of latent heat during crystallization. The liquid was 'supercooled' - held below its freezing point without solidifying. The metal disc creates a nucleation site that triggers rapid crystallization."
+  },
+  {
+    scenario: "A scientist stores sodium acetate solution at room temperature (20C) even though its melting point is 54C. This means the liquid is 34C below where it should freeze, yet it remains liquid.",
+    question: "What allows sodium acetate to exist as a liquid below its freezing point?",
+    options: [
+      { id: 'a', label: "The container's pressure keeps it liquid" },
+      { id: 'b', label: "Without nucleation sites, crystals cannot form (supercooling)", correct: true },
+      { id: 'c', label: "Special additives prevent freezing" },
+      { id: 'd', label: "The solution has no true freezing point" }
+    ],
+    explanation: "Supercooling occurs when a liquid is cooled below its freezing point without crystallizing. The liquid needs a 'seed' - a nucleation site - to start the crystallization process. The metal disc provides this trigger."
+  },
+  {
+    scenario: "You compare two hand warmers: a disposable iron-based warmer and a reusable sodium acetate warmer. The disposable one stays warm for 8 hours, while the reusable one only lasts 45 minutes.",
+    question: "Why does the chemical (iron) warmer last so much longer?",
+    options: [
+      { id: 'a', label: "Iron warmers store more energy per gram" },
+      { id: 'b', label: "The oxidation reaction proceeds slowly and steadily over hours", correct: true },
+      { id: 'c', label: "Sodium acetate warmers waste energy through radiation" },
+      { id: 'd', label: "Iron warmers are always larger in size" }
+    ],
+    explanation: "Iron oxidation (4Fe + 3O2 -> 2Fe2O3) is a slow, sustained reaction controlled by oxygen diffusion through the porous warmer. Phase change warmers release their latent heat quickly during the rapid crystallization event."
+  },
+  {
+    scenario: "When manufacturing disposable hand warmers, engineers add salt (NaCl) to the iron powder mixture even though salt doesn't produce heat itself.",
+    question: "What role does salt play in iron oxidation warmers?",
+    options: [
+      { id: 'a', label: "Salt provides additional heat energy" },
+      { id: 'b', label: "Salt acts as a catalyst, speeding up the oxidation reaction", correct: true },
+      { id: 'c', label: "Salt absorbs moisture to prevent corrosion" },
+      { id: 'd', label: "Salt is just filler to reduce costs" }
+    ],
+    explanation: "Salt acts as a catalyst and electrolyte, creating an electrochemical cell that dramatically accelerates iron oxidation. The salt is not consumed - it facilitates electron transfer between iron and oxygen, making the reaction fast enough to produce useful heat."
+  },
+  {
+    scenario: "After using a reusable hand warmer, you want to reset it. The instructions say to boil it in water for 10 minutes, then let it cool slowly.",
+    question: "Why does boiling reset the hand warmer?",
+    options: [
+      { id: 'a', label: "Boiling adds new energy that can be released later" },
+      { id: 'b', label: "Heat dissolves the crystals back into liquid solution", correct: true },
+      { id: 'c', label: "Boiling kills bacteria that would prevent crystallization" },
+      { id: 'd', label: "Steam pressure reshapes the metal disc" }
+    ],
+    explanation: "Boiling (100C) is well above the melting point (54C), so the solid sodium acetate dissolves back into liquid. Cooling slowly without disturbance allows the liquid to supercool below its freezing point without crystallizing, storing the latent heat for later release."
+  },
+  {
+    scenario: "During the crystallization of a sodium acetate hand warmer, you notice that once it starts at the metal disc, the crystal formation spreads extremely rapidly throughout the entire pouch.",
+    question: "What causes this rapid chain-reaction crystallization?",
+    options: [
+      { id: 'a', label: "The metal disc heats up and melts nearby solution" },
+      { id: 'b', label: "Each new crystal becomes a nucleation site for neighbors", correct: true },
+      { id: 'c', label: "Air bubbles spread through the liquid" },
+      { id: 'd', label: "Pressure waves from the disc click propagate outward" }
+    ],
+    explanation: "Crystallization is autocatalytic - each newly formed crystal provides nucleation sites for neighboring supercooled liquid. This creates a rapid chain reaction where the crystallization front spreads at several centimeters per second through the pouch."
+  },
+  {
+    scenario: "A chemical engineer is designing a new hand warmer and needs to calculate how much heat a 100g sodium acetate warmer will release. The latent heat of fusion is 264 kJ/kg.",
+    question: "How much heat energy will be released during complete crystallization?",
+    options: [
+      { id: 'a', label: "264 kJ" },
+      { id: 'b', label: "26.4 kJ", correct: true },
+      { id: 'c', label: "2.64 kJ" },
+      { id: 'd', label: "2640 kJ" }
+    ],
+    explanation: "Energy = mass x latent heat = 0.1 kg x 264 kJ/kg = 26.4 kJ. This is enough energy to heat 100g of water by about 63C, or keep your hands warm for 30-60 minutes through gradual heat loss to the environment."
+  },
+  {
+    scenario: "An emergency responder is treating a hypothermia victim and has both types of hand warmers available: disposable iron-based and reusable sodium acetate warmers.",
+    question: "Which type would be better for rapid initial warming, and why?",
+    options: [
+      { id: 'a', label: "Iron warmer - it gets hotter overall" },
+      { id: 'b', label: "Either type - they produce the same heat" },
+      { id: 'c', label: "Sodium acetate - it releases heat faster during crystallization", correct: true },
+      { id: 'd', label: "Iron warmer - it lasts longer" }
+    ],
+    explanation: "Phase change warmers release their heat rapidly during crystallization (minutes), providing quick warming. Iron warmers release heat slowly over hours. For emergency hypothermia treatment, rapid heat delivery is critical, making sodium acetate warmers better for initial warming."
+  },
+  {
+    scenario: "When storing disposable iron hand warmers, the packages are vacuum-sealed or stored in airtight containers. Once opened, they begin warming immediately.",
+    question: "Why must iron warmers be kept sealed until use?",
+    options: [
+      { id: 'a', label: "To prevent moisture from rusting the iron" },
+      { id: 'b', label: "To keep oxygen away, which would start the exothermic reaction", correct: true },
+      { id: 'c', label: "To maintain sterility of the contents" },
+      { id: 'd', label: "To prevent the salt catalyst from absorbing humidity" }
+    ],
+    explanation: "Iron oxidation requires oxygen: 4Fe + 3O2 -> 2Fe2O3 + heat. Without oxygen, no reaction occurs. The sealed package creates an oxygen-free environment until the user is ready. Opening exposes the iron to air, starting the heat-producing oxidation."
+  },
+  {
+    scenario: "A materials scientist is comparing the temperature profiles of both warmer types. The sodium acetate warmer jumps quickly to 54C then slowly cools, while the iron warmer gradually rises to 50C and maintains that temperature for hours.",
+    question: "What fundamental principle explains why the sodium acetate warmer stays at exactly 54C during crystallization?",
+    options: [
+      { id: 'a', label: "The chemical bonds limit maximum temperature" },
+      { id: 'b', label: "Temperature stays constant during phase change (latent heat)", correct: true },
+      { id: 'c', label: "The plastic pouch acts as a thermostat" },
+      { id: 'd', label: "Heat loss to the environment matches heat production" }
+    ],
+    explanation: "During phase change, temperature remains constant as energy goes into changing the state rather than changing temperature. The latent heat is released at the melting/freezing point (54C for sodium acetate) until all material has crystallized, then cooling begins."
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🏕️',
+    title: 'Outdoor Recreation & Survival',
+    short: 'Portable heat for wilderness adventures',
+    tagline: 'From ski slopes to emergency kits',
+    description: 'Hand warmer technology powers portable heating solutions for outdoor enthusiasts. Iron oxidation warmers provide 8-12 hours of steady heat for hunters, hikers, and winter sports. Reusable crystallization warmers offer quick emergency heat in survival situations.',
+    connection: 'The iron oxidation reaction (4Fe + 3O2 -> Fe2O3 + heat) you explored provides the sustained, steady warmth needed for all-day outdoor activities. Phase change warmers offer rapid heating for emergencies.',
+    howItWorks: 'Disposable warmers use porous pouches that control oxygen diffusion rate, regulating heat output. Salt catalysts and activated carbon optimize reaction kinetics. Reusable warmers are reset by boiling, allowing hundreds of uses.',
+    stats: [
+      { value: '$450M', label: 'US market size', icon: '💰' },
+      { value: '12 hrs', label: 'Max duration', icon: '⏱️' },
+      { value: '-40F', label: 'Extreme cold use', icon: '❄️' }
+    ],
+    examples: ['Toe warmers for skiing', 'Hand warmers for ice fishing', 'Body warmers for hunting', 'Emergency survival kits'],
+    companies: ['HotHands', 'Grabber', 'Zippo', 'Heat Factory'],
+    futureImpact: 'Next-generation warmers incorporate graphene for faster heat distribution and bio-based iron sources for sustainability.',
+    color: '#22c55e'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Heat Therapy',
+    short: 'Therapeutic warmth for healing',
+    tagline: 'Controlled heat for pain relief',
+    description: 'Medical applications use the precise temperature control of phase change materials for therapeutic heat therapy. Sodium acetate warmers provide safe, consistent 54C heat ideal for muscle pain relief, while iron warmers offer extended low-level heat for chronic conditions.',
+    connection: 'The constant temperature during phase change that you observed is critical for medical use. Unlike heating pads that can overheat, phase change warmers naturally regulate at their melting point, preventing burns while delivering consistent therapy.',
+    howItWorks: 'Medical warmers use the same chemistry with enhanced safety features. Air-activated wraps provide sustained heat for chronic pain. Instant crystallization packs deliver rapid warming for acute injuries or post-surgical warming.',
+    stats: [
+      { value: '$3.2B', label: 'Heat therapy market', icon: '📊' },
+      { value: '40C', label: 'Therapeutic temp', icon: '🌡️' },
+      { value: '25%', label: 'Pain reduction', icon: '📉' }
+    ],
+    examples: ['ThermaCare wraps', 'Post-surgical warming', 'Menstrual pain relief', 'Physical therapy'],
+    companies: ['ThermaCare', 'Sunbeam', 'Carex Health', 'Medela'],
+    futureImpact: 'Smart warmers with embedded temperature sensors provide precise feedback for optimal therapeutic effect.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🍱',
+    title: 'Self-Heating Food Packaging',
+    short: 'Hot meals anywhere',
+    tagline: 'No microwave needed',
+    description: 'Self-heating food containers use exothermic reactions to warm meals without external power. Military MREs, emergency rations, and consumer convenience products use calcium oxide-water reactions or iron oxidation to heat food to serving temperature.',
+    connection: 'The exothermic chemistry you explored directly applies to food warming. Understanding reaction rates helps engineers design systems that heat food to 70C in 15 minutes without overcooking or creating hot spots.',
+    howItWorks: 'A separate heating chamber contains reactants (often CaO + H2O or iron oxidation systems). Activating the heater starts the reaction, transferring heat through the container wall to warm the food compartment. Insulation maintains temperature.',
+    stats: [
+      { value: '$890M', label: 'Self-heating market', icon: '📈' },
+      { value: '15 min', label: 'Heating time', icon: '⏰' },
+      { value: '70C', label: 'Serving temp', icon: '🔥' }
+    ],
+    examples: ['Military MRE heaters', 'Self-heating coffee', 'Emergency food kits', 'Baby bottle warmers'],
+    companies: ['Heatgen', 'HotCan', 'Luxfer Magtech', 'Crown Holdings'],
+    futureImpact: 'Biodegradable heating elements and improved insulation are making self-heating food more sustainable and practical for everyday use.',
+    color: '#f97316'
+  },
+  {
+    icon: '🔋',
+    title: 'Battery Thermal Management',
+    short: 'Optimal temperature for batteries',
+    tagline: 'Cold weather EV range extension',
+    description: 'Electric vehicle batteries lose 40% of their range in extreme cold. Phase change materials and exothermic warmers keep battery packs at optimal operating temperature (20-40C), ensuring reliable performance and extended lifespan in all weather conditions.',
+    connection: 'Phase change materials absorb excess heat during charging (melting) and release it when cold (crystallizing), buffering temperature swings. This is the same latent heat storage principle you explored with sodium acetate.',
+    howItWorks: 'Battery thermal management systems embed phase change materials around cells to absorb heat spikes and release warmth in cold. Some systems use resistive or exothermic heating for pre-conditioning in extreme cold before driving.',
+    stats: [
+      { value: '40%', label: 'Cold weather range loss', icon: '📉' },
+      { value: '20-40C', label: 'Optimal Li-ion temp', icon: '🌡️' },
+      { value: '$8.5B', label: '2028 market size', icon: '💵' }
+    ],
+    examples: ['Tesla battery conditioning', 'Drone cold weather ops', 'Grid storage thermal', 'Phone thermal management'],
+    companies: ['Tesla', 'LG Energy Solution', 'CATL', 'Panasonic'],
+    futureImpact: 'Advanced phase change composites with tunable melting points will enable precise thermal management for next-generation solid-state batteries.',
+    color: '#8b5cf6'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+const HandWarmerRenderer: React.FC<HandWarmerRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Phase change warmer simulation
+  const [warmerState, setWarmerState] = useState<'liquid' | 'crystallizing' | 'solid'>('liquid');
+  const [temperature, setTemperature] = useState(20);
+  const [crystalProgress, setCrystalProgress] = useState(0);
+  const [crystalPoints, setCrystalPoints] = useState<{ x: number; y: number; size: number }[]>([]);
+  const [animationFrame, setAnimationFrame] = useState(0);
+  const [discClicked, setDiscClicked] = useState(false);
+
+  // Chemical warmer simulation
+  const [ironPowder, setIronPowder] = useState(50);
+  const [saltConcentration, setSaltConcentration] = useState(50);
+  const [oxygenAvailability, setOxygenAvailability] = useState(50);
+  const [chemicalTemp, setChemicalTemp] = useState(20);
+  const [reactionProgress, setReactionProgress] = useState(0);
+  const [isReacting, setIsReacting] = useState(false);
+
+  // Twist phase state
+  const [warmerType, setWarmerType] = useState<'phase' | 'chemical'>('phase');
+  const [twistTemperature, setTwistTemperature] = useState(20);
+  const [twistState, setTwistState] = useState<'inactive' | 'active' | 'depleted'>('inactive');
+  const [energyRemaining, setEnergyRemaining] = useState(100);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -62,2437 +328,1606 @@ export default function HandWarmerRenderer({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<Record<number, number>>({});
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [testScore, setTestScore] = useState(0);
-  const [currentApp, setCurrentApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const lastClickRef = useRef(0);
-
-  // Game-specific state for phase-change warmer
-  const [warmerState, setWarmerState] = useState<"liquid" | "crystallizing" | "solid">("liquid");
-  const [temperature, setTemperature] = useState(20);
-  const [crystalProgress, setCrystalProgress] = useState(0);
-  const [crystalPoints, setCrystalPoints] = useState<{ x: number; y: number; size: number }[]>([]);
-  const [animationFrame, setAnimationFrame] = useState(0);
-  const [discClicked, setDiscClicked] = useState(false);
-
-  // Interactive slider controls for chemical (iron oxidation) warmer
-  const [ironPowder, setIronPowder] = useState(50); // 0-100%
-  const [saltConcentration, setSaltConcentration] = useState(50); // 0-100%
-  const [oxygenAvailability, setOxygenAvailability] = useState(50); // 0-100%
-  const [ambientTemp, setAmbientTemp] = useState(20); // -10 to 40C
-
-  // Chemical warmer simulation state
-  const [chemicalTemp, setChemicalTemp] = useState(20);
-  const [reactionProgress, setReactionProgress] = useState(0);
-  const [isReacting, setIsReacting] = useState(false);
-  const [heatOutput, setHeatOutput] = useState(0);
-  const [temperatureHistory, setTemperatureHistory] = useState<number[]>([20]);
-  const [timeElapsed, setTimeElapsed] = useState(0);
-
-  // Twist state
-  const [warmerType, setWarmerType] = useState<"phase" | "chemical">("phase");
-  const [twistTemperature, setTwistTemperature] = useState(20);
-  const [twistState, setTwistState] = useState<"inactive" | "active" | "depleted">("inactive");
-  const [energyRemaining, setEnergyRemaining] = useState(100);
-
-  // Crystallization animation state
-  const [crystalWaveRadius, setCrystalWaveRadius] = useState(0);
-
-  // Constants
-  const latentHeatFusion = 264;
-  const meltingPoint = 54;
-  const maxTemp = 54;
-
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
   // Animation loop
   useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimationFrame((f) => (f + 1) % 360);
+    const timer = setInterval(() => {
+      setAnimationFrame(f => (f + 1) % 360);
     }, 50);
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
-
-  // Chemical reaction simulation (iron oxidation)
-  useEffect(() => {
-    if (!isReacting || reactionProgress >= 100) return;
-
-    const interval = setInterval(() => {
-      // Calculate reaction rate based on parameters
-      const ironFactor = ironPowder / 100;
-      const saltFactor = 0.5 + (saltConcentration / 200); // Salt acts as catalyst
-      const oxygenFactor = oxygenAvailability / 100;
-      const reactionRate = ironFactor * saltFactor * oxygenFactor * 2;
-
-      setReactionProgress((p) => {
-        const newProgress = Math.min(100, p + reactionRate);
-        if (newProgress >= 100) {
-          setIsReacting(false);
-        }
-        return newProgress;
-      });
-
-      // Calculate heat output (exothermic reaction)
-      const baseHeat = 30 * ironFactor * oxygenFactor;
-      const newHeatOutput = baseHeat * saltFactor * (1 - reactionProgress / 200);
-      setHeatOutput(newHeatOutput);
-
-      // Update temperature
-      const maxChemicalTemp = ambientTemp + 35 * ironFactor * oxygenFactor;
-      setChemicalTemp((t) => {
-        const targetTemp = ambientTemp + (maxChemicalTemp - ambientTemp) * (reactionProgress / 100);
-        const diff = targetTemp - t;
-        return t + diff * 0.1;
-      });
-
-      // Update temperature history
-      setTemperatureHistory((prev) => [...prev.slice(-50), chemicalTemp]);
-      setTimeElapsed((t) => t + 1);
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [isReacting, reactionProgress, ironPowder, saltConcentration, oxygenAvailability, ambientTemp, chemicalTemp]);
 
   // Crystallization animation
   useEffect(() => {
-    if (warmerState !== "crystallizing") return;
-
+    if (warmerState !== 'crystallizing') return;
     const interval = setInterval(() => {
-      setCrystalProgress((p) => {
+      setCrystalProgress(p => {
         if (p >= 100) {
-          setWarmerState("solid");
+          setWarmerState('solid');
           return 100;
         }
         return p + 2;
       });
-
-      setCrystalWaveRadius((r) => Math.min(150, r + 3));
-
       if (crystalProgress < 100) {
-        setCrystalPoints((prev) => [
+        setCrystalPoints(prev => [
           ...prev,
-          {
-            x: 100 + Math.random() * 200,
-            y: 150 + Math.random() * 150,
-            size: 2 + Math.random() * 8,
-          },
+          { x: 100 + Math.random() * 200, y: 80 + Math.random() * 100, size: 2 + Math.random() * 6 }
         ]);
       }
-
-      setTemperature((t) => Math.min(maxTemp, t + 1));
+      setTemperature(t => Math.min(54, t + 1.5));
     }, 100);
-
     return () => clearInterval(interval);
   }, [warmerState, crystalProgress]);
 
+  // Chemical reaction simulation
+  useEffect(() => {
+    if (!isReacting || reactionProgress >= 100) return;
+    const interval = setInterval(() => {
+      const ironFactor = ironPowder / 100;
+      const saltFactor = 0.5 + saltConcentration / 200;
+      const oxygenFactor = oxygenAvailability / 100;
+      const reactionRate = ironFactor * saltFactor * oxygenFactor * 2;
+      setReactionProgress(p => {
+        const newProgress = Math.min(100, p + reactionRate);
+        if (newProgress >= 100) setIsReacting(false);
+        return newProgress;
+      });
+      const maxTemp = 20 + 35 * ironFactor * oxygenFactor;
+      setChemicalTemp(t => {
+        const target = 20 + (maxTemp - 20) * (reactionProgress / 100);
+        return t + (target - t) * 0.1;
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isReacting, reactionProgress, ironPowder, saltConcentration, oxygenAvailability]);
+
+  // Twist simulation
+  useEffect(() => {
+    if (twistState !== 'active') return;
+    const interval = setInterval(() => {
+      if (warmerType === 'chemical') {
+        setTwistTemperature(t => {
+          if (energyRemaining > 80) return Math.min(50, t + 1);
+          if (energyRemaining > 20) return Math.max(35, Math.min(50, t));
+          return Math.max(20, t - 0.5);
+        });
+        setEnergyRemaining(e => {
+          const newE = e - 0.3;
+          if (newE <= 0) { setTwistState('depleted'); return 0; }
+          return newE;
+        });
+      } else {
+        setTwistTemperature(t => {
+          if (energyRemaining > 10) return Math.min(54, t + 2);
+          return Math.max(20, t - 0.5);
+        });
+        setEnergyRemaining(e => {
+          const newE = e - 0.8;
+          if (newE <= 0) { setTwistState('depleted'); return 0; }
+          return newE;
+        });
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [twistState, warmerType, energyRemaining]);
+
   // Cooling after crystallization
   useEffect(() => {
-    if (warmerState !== "solid" || temperature <= 25) return;
-
+    if (warmerState !== 'solid' || temperature <= 25) return;
     const interval = setInterval(() => {
-      setTemperature((t) => Math.max(25, t - 0.3));
+      setTemperature(t => Math.max(25, t - 0.3));
     }, 200);
-
     return () => clearInterval(interval);
   }, [warmerState, temperature]);
 
-  // Activate the hand warmer (phase change)
-  const activateWarmer = () => {
-    if (warmerState !== "liquid") return;
-    setDiscClicked(true);
-    playCrystallizeSound();
-
-    setTimeout(() => {
-      setWarmerState("crystallizing");
-    }, 300);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#F97316', // Orange
+    accentGlow: 'rgba(249, 115, 22, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
   };
 
-  // Reset the warmer
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Comparison',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'hand-warmer',
+        gameTitle: 'Hand Warmer Physics',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Helper functions
+  const getTempColor = (temp: number): string => {
+    if (temp < 25) return '#3b82f6';
+    if (temp < 35) return '#22c55e';
+    if (temp < 45) return '#eab308';
+    if (temp < 52) return '#f97316';
+    return '#ef4444';
+  };
+
+  const activateWarmer = () => {
+    if (warmerState !== 'liquid') return;
+    setDiscClicked(true);
+    playCrystallizeSound();
+    setTimeout(() => setWarmerState('crystallizing'), 300);
+  };
+
   const resetWarmer = () => {
-    setWarmerState("liquid");
+    setWarmerState('liquid');
     setTemperature(20);
     setCrystalProgress(0);
     setCrystalPoints([]);
     setDiscClicked(false);
-    setCrystalWaveRadius(0);
-    playSound("click");
+    playSound('click');
   };
 
-  // Start chemical reaction
   const startChemicalReaction = () => {
     if (isReacting) return;
     setIsReacting(true);
     setReactionProgress(0);
-    setChemicalTemp(ambientTemp);
-    setTemperatureHistory([ambientTemp]);
-    setTimeElapsed(0);
-    playSound("click");
+    setChemicalTemp(20);
+    playSound('click');
   };
 
-  // Reset chemical warmer
   const resetChemicalWarmer = () => {
     setIsReacting(false);
     setReactionProgress(0);
-    setChemicalTemp(ambientTemp);
-    setHeatOutput(0);
-    setTemperatureHistory([ambientTemp]);
-    setTimeElapsed(0);
-    playSound("click");
+    setChemicalTemp(20);
+    playSound('click');
   };
 
-  // Twist: activate chemical warmer
-  const activateChemicalWarmer = () => {
-    if (twistState !== "inactive" || warmerType !== "chemical") return;
-    setTwistState("active");
-    playSound("click");
-  };
-
-  // Twist: activate phase change warmer
-  const activatePhaseWarmer = () => {
-    if (twistState !== "inactive" || warmerType !== "phase") return;
-    setTwistState("active");
-    playCrystallizeSound();
-  };
-
-  // Twist simulation
-  useEffect(() => {
-    if (twistState !== "active") return;
-
-    const interval = setInterval(() => {
-      if (warmerType === "chemical") {
-        setTwistTemperature((t) => {
-          if (energyRemaining > 80) return Math.min(50, t + 2);
-          if (energyRemaining > 20) return Math.max(35, Math.min(50, t));
-          return Math.max(20, t - 0.5);
-        });
-        setEnergyRemaining((e) => {
-          const newE = e - 0.5;
-          if (newE <= 0) {
-            setTwistState("depleted");
-            return 0;
-          }
-          return newE;
-        });
-      } else {
-        setTwistTemperature((t) => {
-          if (energyRemaining > 10) return Math.min(54, t + 3);
-          return Math.max(20, t - 0.5);
-        });
-        setEnergyRemaining((e) => {
-          const newE = e - 0.8;
-          if (newE <= 0) {
-            setTwistState("depleted");
-            return 0;
-          }
-          return newE;
-        });
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [twistState, warmerType, energyRemaining]);
-
-  // Reset twist
   const resetTwist = () => {
-    setTwistState("inactive");
+    setTwistState('inactive');
     setTwistTemperature(20);
     setEnergyRemaining(100);
   };
 
-  // Test questions
-  const testQuestions = [
-    {
-      question: "What is 'latent heat of fusion'?",
-      options: [
-        { text: "Heat needed to change temperature", correct: false },
-        { text: "Energy released or absorbed during phase change (solid-liquid)", correct: true },
-        { text: "Heat from nuclear fusion", correct: false },
-        { text: "Temperature of melting", correct: false }
-      ]
-    },
-    {
-      question: "Why can sodium acetate stay liquid below its freezing point (54C)?",
-      options: [
-        { text: "It's not real sodium acetate", correct: false },
-        { text: "The container keeps it warm", correct: false },
-        { text: "Without nucleation sites, crystals can't form (supercooling)", correct: true },
-        { text: "It has no freezing point", correct: false }
-      ]
-    },
-    {
-      question: "When the metal disc is clicked, what happens?",
-      options: [
-        { text: "It heats the solution electrically", correct: false },
-        { text: "It creates a nucleation site that triggers crystallization", correct: true },
-        { text: "It mixes chemicals together", correct: false },
-        { text: "It releases stored heat directly", correct: false }
-      ]
-    },
-    {
-      question: "During crystallization, the hand warmer's temperature:",
-      options: [
-        { text: "Drops to freezing", correct: false },
-        { text: "Rises to the melting/freezing point and stays there", correct: true },
-        { text: "Fluctuates randomly", correct: false },
-        { text: "Stays at room temperature", correct: false }
-      ]
-    },
-    {
-      question: "How do you 'recharge' a reusable hand warmer?",
-      options: [
-        { text: "Plug it into electricity", correct: false },
-        { text: "Add more chemicals", correct: false },
-        { text: "Boil it in water to re-dissolve the crystals", correct: true },
-        { text: "Let it sit overnight", correct: false }
-      ]
-    },
-    {
-      question: "Chemical (iron oxidation) hand warmers differ from phase-change ones because:",
-      options: [
-        { text: "They're reusable", correct: false },
-        { text: "They produce heat through irreversible chemical reaction", correct: true },
-        { text: "They work faster", correct: false },
-        { text: "They get hotter", correct: false }
-      ]
-    },
-    {
-      question: "The latent heat of fusion for sodium acetate is about 264 kJ/kg. This means:",
-      options: [
-        { text: "It heats up 264C", correct: false },
-        { text: "264 kJ is released when 1 kg crystallizes", correct: true },
-        { text: "It takes 264 kg to heat it", correct: false },
-        { text: "264 is its melting point", correct: false }
-      ]
-    },
-    {
-      question: "Why does the crystallization spread so rapidly after the disc is clicked?",
-      options: [
-        { text: "The disc is very hot", correct: false },
-        { text: "Each new crystal triggers neighbors to crystallize (chain reaction)", correct: true },
-        { text: "The solution is compressed", correct: false },
-        { text: "Air rushes in", correct: false }
-      ]
-    },
-    {
-      question: "A supercooled liquid is:",
-      options: [
-        { text: "Colder than absolute zero", correct: false },
-        { text: "A liquid below its normal freezing point", correct: true },
-        { text: "A very cold solid", correct: false },
-        { text: "Liquid nitrogen", correct: false }
-      ]
-    },
-    {
-      question: "In disposable hand warmers, what role does salt play in iron oxidation?",
-      options: [
-        { text: "Provides the iron", correct: false },
-        { text: "Acts as a catalyst to speed up the reaction", correct: true },
-        { text: "Creates the heat directly", correct: false },
-        { text: "Absorbs moisture", correct: false }
-      ]
-    }
-  ];
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.warning})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-  // Real-world applications
-  const applications = [
-    {
-      title: "Reusable Hand Warmers",
-      description:
-        "Sodium acetate hand warmers can be reused hundreds of times. Click to crystallize and release heat (54C for up to an hour). Boil in water for 10 minutes to reset. More economical and eco-friendly than disposables.",
-      icon: "glove"
-    },
-    {
-      title: "Thermal Energy Storage",
-      description:
-        "Phase change materials (PCMs) store energy in buildings. Melting during hot days and solidifying at night, they reduce heating/cooling costs by 20-30%. Paraffin wax and salt hydrates are common PCMs.",
-      icon: "building"
-    },
-    {
-      title: "Food Transport",
-      description:
-        "Phase change gel packs keep vaccines, organs, and temperature-sensitive foods within precise ranges during shipping. They absorb/release heat while staying at constant temperature during phase change.",
-      icon: "package"
-    },
-    {
-      title: "Spacecraft Thermal Control",
-      description:
-        "Satellites use PCMs to handle extreme temperature swings between sun and shadow. The PCM absorbs excess heat (melting) and releases it when cold (solidifying), maintaining stable equipment temperatures.",
-      icon: "satellite"
-    }
-  ];
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-  // Calculate score
-  const handleTestSubmit = () => {
-    let score = 0;
-    testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) score++;
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-
-    if (score >= 7) {
-      playSound("complete");
-    } else {
-      playSound("failure");
-    }
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #ea580c)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  // Get temperature color
-  const getTempColor = (temp: number): string => {
-    if (temp < 25) return "#3b82f6";
-    if (temp < 35) return "#22c55e";
-    if (temp < 45) return "#eab308";
-    if (temp < 52) return "#f97316";
-    return "#ef4444";
-  };
-
-  // Render temperature graph - Premium SVG
-  const renderTemperatureGraph = () => {
-    const graphWidth = 280;
-    const graphHeight = 100;
-    const padding = 20;
-
-    const maxHistoryTemp = Math.max(...temperatureHistory, 60);
-    const minHistoryTemp = Math.min(...temperatureHistory, 0);
-
-    const points = temperatureHistory.map((temp, i) => {
-      const x = padding + (i / 50) * (graphWidth - 2 * padding);
-      const y = graphHeight - padding - ((temp - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding);
-      return `${x},${y}`;
-    }).join(" ");
-
-    // Create fill area points
-    const fillPoints = temperatureHistory.length > 0
-      ? `${padding},${graphHeight - padding} ${points} ${padding + ((temperatureHistory.length - 1) / 50) * (graphWidth - 2 * padding)},${graphHeight - padding}`
-      : '';
-
-    return (
-      <div style={{ width: '100%', maxWidth: '280px' }}>
-        <div style={{
-          fontSize: typo.small,
-          fontWeight: 'bold',
-          color: '#e2e8f0',
-          textAlign: 'center',
-          marginBottom: '6px'
-        }}>
-          Temperature vs Time
-        </div>
-        <svg viewBox={`0 0 ${graphWidth} ${graphHeight}`} style={{ width: '100%', borderRadius: '8px' }}>
-          <defs>
-            {/* Graph background gradient */}
-            <linearGradient id="warmGraphBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="50%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            {/* Temperature line gradient */}
-            <linearGradient id="warmTempLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="30%" stopColor="#22c55e" />
-              <stop offset="60%" stopColor="#eab308" />
-              <stop offset="80%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-
-            {/* Area fill gradient */}
-            <linearGradient id="warmAreaFill" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0.4" />
-              <stop offset="50%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0.2" />
-              <stop offset="100%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0" />
-            </linearGradient>
-
-            {/* Dot glow filter */}
-            <filter id="warmDotGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Background */}
-          <rect width={graphWidth} height={graphHeight} fill="url(#warmGraphBg)" rx="8" />
-
-          {/* Grid lines */}
-          {[0, 25, 50].map((temp, i) => {
-            const y = graphHeight - padding - ((temp - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding);
-            return (
-              <g key={i}>
-                <line x1={padding} y1={y} x2={graphWidth - padding} y2={y} stroke="#374151" strokeWidth="1" strokeDasharray="3,3" />
-                <text x={padding - 3} y={y + 3} fontSize="7" fill="#64748b" textAnchor="end">{temp}C</text>
-              </g>
-            );
-          })}
-
-          {/* Area fill under the line */}
-          {temperatureHistory.length > 1 && (
-            <polygon
-              points={fillPoints}
-              fill="url(#warmAreaFill)"
-            />
-          )}
-
-          {/* Temperature line with gradient */}
-          <polyline
-            points={points}
-            fill="none"
-            stroke={getTempColor(chemicalTemp)}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Current temperature dot with glow */}
-          {temperatureHistory.length > 0 && (
-            <g filter="url(#warmDotGlow)">
-              <circle
-                cx={padding + ((temperatureHistory.length - 1) / 50) * (graphWidth - 2 * padding)}
-                cy={graphHeight - padding - ((temperatureHistory[temperatureHistory.length - 1] - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding)}
-                r="5"
-                fill={getTempColor(chemicalTemp)}
-              />
-              <circle
-                cx={padding + ((temperatureHistory.length - 1) / 50) * (graphWidth - 2 * padding)}
-                cy={graphHeight - padding - ((temperatureHistory[temperatureHistory.length - 1] - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding)}
-                r="2.5"
-                fill="#ffffff"
-              />
-            </g>
-          )}
-        </svg>
-        <div style={{
-          fontSize: typo.label,
-          color: '#64748b',
-          textAlign: 'center',
-          marginTop: '4px'
-        }}>
-          Time Elapsed
-        </div>
+  // Slider component
+  const renderSlider = (label: string, value: number, setValue: (v: number) => void, min: number, max: number, unit: string, color: string) => (
+    <div style={{ marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <span style={{ ...typo.small, color: colors.textSecondary }}>{label}</span>
+        <span style={{ ...typo.small, color, fontWeight: 600 }}>{value}{unit}</span>
       </div>
-    );
-  };
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => setValue(parseInt(e.target.value))}
+        disabled={isReacting}
+        style={{
+          width: '100%',
+          height: '8px',
+          borderRadius: '4px',
+          background: `linear-gradient(to right, ${color} ${((value - min) / (max - min)) * 100}%, ${colors.border} ${((value - min) / (max - min)) * 100}%)`,
+          cursor: isReacting ? 'not-allowed' : 'pointer',
+          appearance: 'none',
+          WebkitAppearance: 'none',
+        }}
+      />
+    </div>
+  );
 
-  // Render iron oxidation animation - Premium SVG
-  const renderIronOxidationAnimation = () => {
-    const ironParticles: { x: number; y: number; opacity: number }[] = [];
-    const oxygenParticles: { x: number; y: number; opacity: number }[] = [];
-    const rustParticles: { x: number; y: number; opacity: number }[] = [];
-
-    // Generate particles based on reaction progress
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2 + animationFrame / 30;
-      const baseRadius = 30 + (isReacting ? Math.sin(animationFrame / 10 + i) * 5 : 0);
-
-      if (reactionProgress < 50 + i * 5) {
-        // Iron particles (gray)
-        ironParticles.push({
-          x: 80 + Math.cos(angle) * baseRadius,
-          y: 80 + Math.sin(angle) * baseRadius,
-          opacity: 1 - reactionProgress / 100
-        });
-      }
-
-      if (reactionProgress > i * 10 && reactionProgress < 80 + i * 2) {
-        // Oxygen particles coming in (blue)
-        const oxygenAngle = angle + Math.PI / 8;
-        const oxygenRadius = 60 - (reactionProgress - i * 10) * 0.3;
-        oxygenParticles.push({
-          x: 80 + Math.cos(oxygenAngle) * oxygenRadius,
-          y: 80 + Math.sin(oxygenAngle) * oxygenRadius,
-          opacity: Math.min(1, (reactionProgress - i * 10) / 20)
-        });
-      }
-
-      if (reactionProgress > 30 + i * 8) {
-        // Rust particles forming (rust color)
-        rustParticles.push({
-          x: 80 + Math.cos(angle + Math.PI / 4) * (baseRadius - 10),
-          y: 80 + Math.sin(angle + Math.PI / 4) * (baseRadius - 10),
-          opacity: Math.min(1, (reactionProgress - 30 - i * 8) / 30)
-        });
-      }
-    }
+  // Hand Warmer SVG Visualization
+  const WarmerVisualization = () => {
+    const width = isMobile ? 320 : 400;
+    const height = isMobile ? 220 : 260;
+    const isLiquid = warmerState === 'liquid';
+    const isCrystallizing = warmerState === 'crystallizing';
+    const isSolid = warmerState === 'solid';
 
     return (
-      <div style={{ width: '100%', maxWidth: '160px' }}>
-        <svg viewBox="0 0 160 140" style={{ width: '100%' }}>
-          <defs>
-            {/* Iron particle gradient */}
-            <radialGradient id="warmIronGrad" cx="35%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="40%" stopColor="#6b7280" />
-              <stop offset="70%" stopColor="#4b5563" />
-              <stop offset="100%" stopColor="#374151" />
-            </radialGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <radialGradient id="liquidGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.8" />
+          </radialGradient>
+          <radialGradient id="crystalGrad" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.75" />
+          </radialGradient>
+          <radialGradient id="solidGrad" cx="45%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#cbd5e1" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#64748b" stopOpacity="0.75" />
+          </radialGradient>
+          <linearGradient id="heatWaveGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#f97316" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
+          </linearGradient>
+          <filter id="glowFilter">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Oxygen particle gradient */}
-            <radialGradient id="warmOxygenGrad" cx="40%" cy="35%" r="60%">
-              <stop offset="0%" stopColor="#93c5fd" />
-              <stop offset="40%" stopColor="#60a5fa" />
-              <stop offset="70%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#2563eb" />
-            </radialGradient>
+        {/* Warmer pouch shadow */}
+        <ellipse cx={width / 2 + 5} cy={height / 2 + 5} rx="130" ry="80" fill="#000" opacity="0.3" />
 
-            {/* Rust particle gradient */}
-            <radialGradient id="warmRustGrad" cx="40%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#fbbf24" />
-              <stop offset="30%" stopColor="#f59e0b" />
-              <stop offset="60%" stopColor="#d97706" />
-              <stop offset="100%" stopColor="#b45309" />
-            </radialGradient>
+        {/* Warmer pouch outer */}
+        <ellipse cx={width / 2} cy={height / 2} rx="130" ry="80" fill="#475569" stroke="#334155" strokeWidth="2" />
 
-            {/* Heat wave gradient */}
-            <linearGradient id="warmOxidHeatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
-              <stop offset="40%" stopColor="#f97316" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
-            </linearGradient>
+        {/* Warmer pouch inner content */}
+        <ellipse
+          cx={width / 2}
+          cy={height / 2}
+          rx="120"
+          ry="70"
+          fill={isLiquid ? 'url(#liquidGrad)' : isCrystallizing ? 'url(#crystalGrad)' : 'url(#solidGrad)'}
+        />
 
-            {/* Background gradient */}
-            <linearGradient id="warmOxidBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="50%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            {/* Particle glow filter */}
-            <filter id="warmParticleGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Heat glow filter */}
-            <filter id="warmOxidHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Background */}
-          <rect width="160" height="140" fill="url(#warmOxidBg)" rx="8" />
-
-          {/* Subtle center glow during reaction */}
-          {isReacting && (
-            <circle cx="80" cy="80" r="40" fill="#f97316" opacity={0.1 + heatOutput * 0.01} />
-          )}
-
-          {/* Iron particles with gradient */}
-          <g filter="url(#warmParticleGlow)">
-            {ironParticles.map((p, i) => (
-              <circle key={`iron-${i}`} cx={p.x} cy={p.y} r="9" fill="url(#warmIronGrad)" opacity={p.opacity} />
-            ))}
-          </g>
-
-          {/* Oxygen particles with gradient */}
-          <g filter="url(#warmParticleGlow)">
-            {oxygenParticles.map((p, i) => (
-              <circle key={`oxygen-${i}`} cx={p.x} cy={p.y} r="6" fill="url(#warmOxygenGrad)" opacity={p.opacity} />
-            ))}
-          </g>
-
-          {/* Rust particles with gradient */}
-          <g filter="url(#warmParticleGlow)">
-            {rustParticles.map((p, i) => (
-              <circle key={`rust-${i}`} cx={p.x} cy={p.y} r="11" fill="url(#warmRustGrad)" opacity={p.opacity} />
-            ))}
-          </g>
-
-          {/* Heat waves when reacting */}
-          {isReacting && heatOutput > 5 && (
-            <g filter="url(#warmOxidHeatGlow)">
-              {[0, 1, 2, 3].map((i) => {
-                const offset = (animationFrame + i * 15) % 40;
-                const baseX = 50 + i * 20;
-                return (
-                  <path
-                    key={i}
-                    d={`M ${baseX} ${35 - offset}
-                        Q ${baseX + 5} ${30 - offset} ${baseX} ${25 - offset}
-                        Q ${baseX - 5} ${20 - offset} ${baseX} ${15 - offset}`}
-                    fill="none"
-                    stroke="url(#warmOxidHeatGrad)"
-                    strokeWidth="2.5"
-                    opacity={(40 - offset) / 40}
-                    strokeLinecap="round"
-                  />
-                );
-              })}
-            </g>
-          )}
-        </svg>
-        {/* Reaction equation outside SVG */}
-        <div style={{
-          textAlign: 'center',
-          fontSize: typo.label,
-          color: '#94a3b8',
-          marginTop: '4px'
-        }}>
-          4Fe + 3O<sub>2</sub> = 2Fe<sub>2</sub>O<sub>3</sub> + heat
-        </div>
-      </div>
-    );
-  };
-
-  // Render heat output indicator - Premium SVG
-  const renderHeatOutputIndicator = () => {
-    const indicatorHeight = 120;
-    const indicatorWidth = 60;
-    const fillHeight = Math.min(100, heatOutput * 3);
-
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <div style={{ fontSize: typo.small, color: '#94a3b8' }}>Heat Output</div>
-        <svg viewBox={`0 0 ${indicatorWidth} ${indicatorHeight}`} style={{ width: '60px', height: '120px' }}>
-          <defs>
-            {/* Heat output gradient */}
-            <linearGradient id="warmHeatOutputGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="25%" stopColor="#22c55e" />
-              <stop offset="50%" stopColor="#eab308" />
-              <stop offset="75%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-
-            {/* Indicator background gradient */}
-            <linearGradient id="warmIndicatorBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* Heat glow for active state */}
-            <filter id="warmHeatIndicatorGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Inner glow */}
-            <radialGradient id="warmHeatInnerGlow" cx="50%" cy="0%" r="100%">
-              <stop offset="0%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0.4" />
-              <stop offset="100%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0" />
-            </radialGradient>
-          </defs>
-
-          {/* Background container */}
-          <rect
-            x="2"
-            y="2"
-            width={indicatorWidth - 4}
-            height={indicatorHeight - 4}
-            fill="url(#warmIndicatorBg)"
-            stroke="#334155"
-            strokeWidth="2"
-            rx="6"
+        {/* Liquid shimmer */}
+        {isLiquid && (
+          <ellipse
+            cx={width / 2 - 20 + Math.sin(animationFrame / 20) * 10}
+            cy={height / 2 - 15}
+            rx="50"
+            ry="25"
+            fill="rgba(255,255,255,0.15)"
           />
+        )}
 
-          {/* Inner track */}
-          <rect
-            x="8"
-            y="8"
-            width={indicatorWidth - 16}
-            height={indicatorHeight - 16}
-            fill="#0f172a"
-            rx="4"
+        {/* Crystal points */}
+        {(isCrystallizing || isSolid) && crystalPoints.map((point, i) => (
+          <polygon
+            key={i}
+            points={`0,${-point.size} ${point.size * 0.866},${-point.size / 2} ${point.size * 0.866},${point.size / 2} 0,${point.size} ${-point.size * 0.866},${point.size / 2} ${-point.size * 0.866},${-point.size / 2}`}
+            transform={`translate(${point.x}, ${point.y})`}
+            fill="rgba(255,255,255,0.8)"
+            stroke="#94a3b8"
+            strokeWidth="0.5"
           />
+        ))}
 
-          {/* Heat fill with gradient */}
-          <rect
-            x="10"
-            y={indicatorHeight - 12 - (fillHeight * (indicatorHeight - 20) / 100)}
-            width={indicatorWidth - 20}
-            height={(fillHeight * (indicatorHeight - 20) / 100)}
-            fill="url(#warmHeatOutputGrad)"
-            rx="3"
-            filter={heatOutput > 10 ? "url(#warmHeatIndicatorGlow)" : undefined}
-          />
+        {/* Metal disc */}
+        <g transform={`translate(${width / 2}, ${height / 2 - 10})`} style={{ cursor: isLiquid ? 'pointer' : 'default' }} onClick={isLiquid ? activateWarmer : undefined}>
+          <circle r="18" fill="#64748b" stroke={discClicked ? '#f59e0b' : '#94a3b8'} strokeWidth={discClicked ? 3 : 2} filter="url(#glowFilter)" />
+          <circle r="12" fill="none" stroke="#94a3b8" strokeWidth="1" opacity="0.6" />
+          <circle r="6" fill="#94a3b8" />
+          <circle r="3" fill="#cbd5e1" />
+        </g>
 
-          {/* Inner glow overlay */}
-          {heatOutput > 5 && (
-            <rect
-              x="10"
-              y={indicatorHeight - 12 - (fillHeight * (indicatorHeight - 20) / 100)}
-              width={indicatorWidth - 20}
-              height={(fillHeight * (indicatorHeight - 20) / 100)}
-              fill="url(#warmHeatInnerGlow)"
-              rx="3"
-            />
-          )}
-
-          {/* Scale markers */}
-          {[25, 50, 75].map((val) => {
-            const y = indicatorHeight - 12 - (val * (indicatorHeight - 20) / 100);
-            return (
-              <g key={val}>
-                <line
-                  x1="6"
-                  y1={y}
-                  x2="12"
-                  y2={y}
-                  stroke="#475569"
-                  strokeWidth="1"
+        {/* Heat waves when warm */}
+        {temperature > 30 && (
+          <g filter="url(#glowFilter)">
+            {[0, 1, 2, 3].map(i => {
+              const offset = (animationFrame + i * 20) % 50;
+              const baseX = width / 2 - 45 + i * 30;
+              return (
+                <path
+                  key={i}
+                  d={`M ${baseX} ${height / 2 - 50 - offset}
+                      Q ${baseX + 6} ${height / 2 - 58 - offset} ${baseX} ${height / 2 - 66 - offset}
+                      Q ${baseX - 6} ${height / 2 - 74 - offset} ${baseX} ${height / 2 - 82 - offset}`}
+                  fill="none"
+                  stroke="url(#heatWaveGrad)"
+                  strokeWidth="2.5"
+                  opacity={(50 - offset) / 50}
+                  strokeLinecap="round"
                 />
-                <line
-                  x1={indicatorWidth - 12}
-                  y1={y}
-                  x2={indicatorWidth - 6}
-                  y2={y}
-                  stroke="#475569"
-                  strokeWidth="1"
-                />
-              </g>
-            );
-          })}
-        </svg>
-        <div style={{
-          fontSize: typo.body,
-          fontWeight: 'bold',
-          color: getTempColor(chemicalTemp)
-        }}>
-          {heatOutput.toFixed(1)} W
-        </div>
-      </div>
-    );
-  };
-
-  // Render slider control
-  const renderSlider = (
-    label: string,
-    value: number,
-    setValue: (v: number) => void,
-    min: number,
-    max: number,
-    unit: string,
-    color: string
-  ) => {
-    return (
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span style={{ fontSize: '12px', color: '#e2e8f0' }}>{label}</span>
-          <span style={{ fontSize: '12px', color: color, fontWeight: 'bold' }}>{value}{unit}</span>
-        </div>
-        <div style={{ position: 'relative', height: '24px' }}>
-          <div style={{
-            position: 'absolute',
-            top: '10px',
-            left: 0,
-            right: 0,
-            height: '4px',
-            background: '#374151',
-            borderRadius: '2px'
-          }} />
-          <div style={{
-            position: 'absolute',
-            top: '10px',
-            left: 0,
-            width: `${((value - min) / (max - min)) * 100}%`,
-            height: '4px',
-            background: color,
-            borderRadius: '2px'
-          }} />
-          <input
-            type="range"
-            min={min}
-            max={max}
-            value={value}
-            onChange={(e) => setValue(Number(e.target.value))}
-            disabled={isReacting}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '24px',
-              opacity: 0,
-              cursor: isReacting ? 'not-allowed' : 'pointer',
-              zIndex: 10
-            }}
-          />
-          <div style={{
-            position: 'absolute',
-            top: '4px',
-            left: `calc(${((value - min) / (max - min)) * 100}% - 8px)`,
-            width: '16px',
-            height: '16px',
-            background: color,
-            borderRadius: '50%',
-            border: '2px solid white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-          }} />
-        </div>
-      </div>
-    );
-  };
-
-  // Render hand warmer visualization (phase change) - Premium SVG
-  const renderHandWarmer = () => {
-    const isLiquid = warmerState === "liquid";
-    const isCrystallizing = warmerState === "crystallizing";
-    const isSolid = warmerState === "solid";
-
-    return (
-      <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
-        <svg viewBox="0 0 400 340" className="w-full">
-          <defs>
-            {/* Premium dark lab background gradient */}
-            <linearGradient id="warmLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="30%" stopColor="#0f172a" />
-              <stop offset="70%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
-
-            {/* Hand warmer pack outer gradient */}
-            <linearGradient id="warmPackOuter" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="25%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#475569" />
-              <stop offset="75%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* Supercooled liquid gradient */}
-            <radialGradient id="warmLiquidGrad" cx="40%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
-              <stop offset="30%" stopColor="#0ea5e9" stopOpacity="0.9" />
-              <stop offset="60%" stopColor="#0284c7" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.8" />
-            </radialGradient>
-
-            {/* Crystallizing state gradient */}
-            <radialGradient id="warmCrystalGrad" cx="50%" cy="50%" r="60%">
-              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.95" />
-              <stop offset="25%" stopColor="#fde68a" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.85" />
-              <stop offset="75%" stopColor="#fbbf24" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.75" />
-            </radialGradient>
-
-            {/* Solid crystallized gradient */}
-            <radialGradient id="warmSolidGrad" cx="45%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.9" />
-              <stop offset="30%" stopColor="#cbd5e1" stopOpacity="0.85" />
-              <stop offset="60%" stopColor="#94a3b8" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#64748b" stopOpacity="0.75" />
-            </radialGradient>
-
-            {/* Metal disc gradient */}
-            <radialGradient id="warmDiscGrad" cx="35%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="40%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
-            </radialGradient>
-
-            {/* Heat radiation gradient */}
-            <linearGradient id="warmHeatRadiation" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
-              <stop offset="30%" stopColor="#f97316" stopOpacity="0.7" />
-              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Thermometer gradient */}
-            <linearGradient id="warmThermoGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="30%" stopColor="#22c55e" />
-              <stop offset="60%" stopColor="#eab308" />
-              <stop offset="80%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-
-            {/* Crystal shimmer gradient */}
-            <linearGradient id="warmCrystalShimmer" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
-            </linearGradient>
-
-            {/* Glow filters */}
-            <filter id="warmHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="warmCrystalGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="warmDiscGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="warmWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Premium dark lab background */}
-          <rect width="400" height="340" fill="url(#warmLabBg)" />
-
-          {/* Subtle grid pattern for lab feel */}
-          <g opacity="0.05">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <line key={`vg-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="340" stroke="#94a3b8" strokeWidth="0.5" />
-            ))}
-            {Array.from({ length: 17 }).map((_, i) => (
-              <line key={`hg-${i}`} x1="0" y1={i * 20} x2="400" y2={i * 20} stroke="#94a3b8" strokeWidth="0.5" />
-            ))}
+              );
+            })}
           </g>
+        )}
 
-          {/* Hand warmer pack shadow */}
-          <ellipse
-            cx="205"
-            cy="195"
-            rx="135"
-            ry="105"
-            fill="#000"
-            opacity={0.3}
-          />
+        {/* Temperature indicator */}
+        <g transform={`translate(${width - 45}, ${height / 2})`}>
+          <rect x="-12" y="-50" width="24" height="100" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" rx="4" />
+          <rect x="-8" y={40 - Math.min(80, (temperature - 15) * 2)} width="16" height={Math.min(80, (temperature - 15) * 2)} fill={getTempColor(temperature)} rx="2" />
+          <circle cx="0" cy="50" r="10" fill={getTempColor(temperature)} />
+        </g>
 
-          {/* Hand warmer pack outer shell */}
-          <ellipse
-            cx="200"
-            cy="190"
-            rx="135"
-            ry="105"
-            fill="url(#warmPackOuter)"
-            stroke="#334155"
-            strokeWidth={2}
-          />
+        {/* Temperature text */}
+        <text x={width - 45} y={height / 2 + 80} textAnchor="middle" fill={getTempColor(temperature)} fontSize="16" fontWeight="bold">
+          {temperature.toFixed(0)}C
+        </text>
 
-          {/* Hand warmer pack inner content area */}
-          <ellipse
-            cx="200"
-            cy="190"
-            rx="125"
-            ry="95"
-            fill={isLiquid ? "url(#warmLiquidGrad)" : isCrystallizing ? "url(#warmCrystalGrad)" : "url(#warmSolidGrad)"}
-            stroke="#475569"
-            strokeWidth={1}
-          />
+        {/* Status text */}
+        <text x={width / 2} y={height - 15} textAnchor="middle" fill={colors.textSecondary} fontSize="12">
+          {isLiquid ? 'Supercooled Liquid (Click disc to activate)' : isCrystallizing ? `Crystallizing... ${crystalProgress.toFixed(0)}%` : 'Crystallized - Releasing Heat'}
+        </text>
+      </svg>
+    );
+  };
 
-          {/* Liquid shimmer effects */}
-          {isLiquid && (
-            <g>
-              <ellipse
-                cx={175 + Math.sin(animationFrame / 20) * 12}
-                cy={175}
-                rx={75}
-                ry={45}
-                fill="rgba(255,255,255,0.15)"
-              />
-              <ellipse
-                cx={225}
-                cy={205 + Math.cos(animationFrame / 15) * 6}
-                rx={55}
-                ry={28}
-                fill="rgba(255,255,255,0.1)"
-              />
-              {/* Bubble effects */}
-              {[0, 1, 2].map((i) => {
-                const bubbleY = 220 - ((animationFrame + i * 40) % 80);
-                const bubbleX = 160 + i * 40 + Math.sin(animationFrame / 10 + i) * 5;
-                return (
-                  <circle
-                    key={`bubble-${i}`}
-                    cx={bubbleX}
-                    cy={bubbleY}
-                    r={3 + i}
-                    fill="rgba(255,255,255,0.2)"
-                    opacity={bubbleY > 140 ? 1 : 0}
-                  />
-                );
-              })}
-            </g>
-          )}
+  // Chemical Warmer Visualization
+  const ChemicalWarmerVisualization = () => {
+    const width = isMobile ? 320 : 400;
+    const height = isMobile ? 180 : 200;
 
-          {/* Crystal formation during crystallization and solid state */}
-          {(isCrystallizing || isSolid) && (
-            <g filter="url(#warmCrystalGlow)">
-              {crystalPoints.map((point, i) => (
-                <g key={i} transform={`translate(${point.x}, ${point.y})`}>
-                  <polygon
-                    points={`0,${-point.size} ${point.size * 0.866},${-point.size / 2} ${point.size * 0.866},${point.size / 2} 0,${point.size} ${-point.size * 0.866},${point.size / 2} ${-point.size * 0.866},${-point.size / 2}`}
-                    fill="url(#warmCrystalShimmer)"
-                    stroke="#94a3b8"
-                    strokeWidth={0.5}
-                    opacity={0.85}
-                  />
-                </g>
-              ))}
-            </g>
-          )}
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <radialGradient id="ironGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="50%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#475569" />
+          </radialGradient>
+          <radialGradient id="rustGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#92400e" />
+          </radialGradient>
+          <radialGradient id="oxygenGrad" cx="40%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#1d4ed8" />
+          </radialGradient>
+        </defs>
 
-          {/* Crystallization wave effect */}
-          {isCrystallizing && crystalWaveRadius > 0 && (
-            <g filter="url(#warmWaveGlow)">
-              <circle
-                cx="200"
-                cy="160"
-                r={crystalWaveRadius}
-                fill="none"
-                stroke="#fef3c7"
-                strokeWidth="3"
-                opacity={0.6 * (1 - crystalWaveRadius / 150)}
-              />
-              <circle
-                cx="200"
-                cy="160"
-                r={crystalWaveRadius * 0.7}
-                fill="none"
-                stroke="#fde68a"
-                strokeWidth="2"
-                opacity={0.4 * (1 - crystalWaveRadius / 150)}
-              />
-            </g>
-          )}
+        {/* Warmer pouch */}
+        <rect x="30" y="20" width={width - 60} height={height - 60} fill="#334155" stroke="#475569" strokeWidth="2" rx="12" />
+        <rect x="40" y="30" width={width - 80} height={height - 80} fill="#1e293b" rx="8" />
 
-          {/* Metal activation disc */}
-          <g transform="translate(200, 160)" filter={isLiquid ? "url(#warmDiscGlow)" : undefined}>
+        {/* Particles */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const angle = (i / 8) * Math.PI * 2 + (isReacting ? animationFrame / 20 : 0);
+          const radius = 35 + (isReacting ? Math.sin(animationFrame / 10 + i) * 5 : 0);
+          const cx = width / 2 + Math.cos(angle) * radius;
+          const cy = height / 2 + Math.sin(angle) * radius * 0.6;
+          const isRusted = reactionProgress > (i + 1) * 10;
+
+          return (
             <circle
-              r={22}
-              fill="url(#warmDiscGrad)"
-              stroke={discClicked ? "#f59e0b" : "#64748b"}
-              strokeWidth={discClicked ? 3 : 2}
-              style={{ cursor: isLiquid ? "pointer" : "default" }}
-              onClick={isLiquid ? activateWarmer : undefined}
+              key={i}
+              cx={cx}
+              cy={cy}
+              r={isRusted ? 10 : 8}
+              fill={isRusted ? 'url(#rustGrad)' : 'url(#ironGrad)'}
+              opacity={0.9}
             />
-            {/* Disc concentric rings */}
-            <circle r={17} fill="none" stroke="#94a3b8" strokeWidth={1} opacity={0.6} />
-            <circle r={10} fill="#94a3b8" opacity={0.8} />
-            <circle r={5} fill="#cbd5e1" />
-            {/* Disc highlight */}
-            <ellipse cx={-6} cy={-6} rx={4} ry={3} fill="rgba(255,255,255,0.3)" />
-          </g>
+          );
+        })}
 
-          {/* Heat radiation waves when warm */}
-          {temperature > 30 && (
-            <g filter="url(#warmHeatGlow)">
-              {[0, 1, 2, 3, 4].map((i) => {
-                const offset = (animationFrame + i * 24) % 60;
-                const baseX = 130 + i * 35;
-                return (
-                  <path
-                    key={i}
-                    d={`M ${baseX} ${100 - offset}
-                        Q ${baseX + 8} ${90 - offset} ${baseX} ${80 - offset}
-                        Q ${baseX - 8} ${70 - offset} ${baseX} ${60 - offset}`}
-                    fill="none"
-                    stroke="url(#warmHeatRadiation)"
-                    strokeWidth={2.5}
-                    opacity={(60 - offset) / 60}
-                    strokeLinecap="round"
-                  />
-                );
-              })}
-            </g>
-          )}
-
-          {/* Premium temperature indicator */}
-          <g transform="translate(355, 170)">
-            {/* Thermometer body */}
-            <rect x={-18} y={-55} width={36} height={110} fill="#0f172a" stroke="#334155" strokeWidth={2} rx={8} />
-            {/* Inner track */}
-            <rect x={-10} y={-45} width={20} height={90} fill="#1e293b" rx={4} />
-            {/* Temperature fill with gradient */}
-            <rect
-              x={-8}
-              y={35 - Math.min(70, (temperature - 15) * 1.8)}
-              width={16}
-              height={Math.min(70, (temperature - 15) * 1.8)}
-              fill="url(#warmThermoGrad)"
-              rx={3}
+        {/* Oxygen particles when reacting */}
+        {isReacting && Array.from({ length: 4 }).map((_, i) => {
+          const angle = (i / 4) * Math.PI * 2 + animationFrame / 15;
+          const radius = 55 - (reactionProgress * 0.2);
+          return (
+            <circle
+              key={`o2-${i}`}
+              cx={width / 2 + Math.cos(angle) * radius}
+              cy={height / 2 + Math.sin(angle) * radius * 0.6}
+              r={5}
+              fill="url(#oxygenGrad)"
+              opacity={0.7}
             />
-            {/* Scale marks */}
-            {[20, 30, 40, 50].map((t, i) => (
-              <g key={i}>
-                <line x1={-14} y1={35 - (t - 15) * 1.8} x2={-10} y2={35 - (t - 15) * 1.8} stroke="#64748b" strokeWidth={1} />
-              </g>
-            ))}
-            {/* Bulb at bottom */}
-            <circle cx={0} cy={50} r={12} fill={getTempColor(temperature)} />
-            <circle cx={0} cy={50} r={8} fill={getTempColor(temperature)} opacity={0.6} />
-          </g>
-        </svg>
+          );
+        })}
 
-        {/* Text labels outside SVG using typo system */}
-        <div style={{ textAlign: 'center', marginTop: '12px' }}>
-          <div style={{
-            fontSize: typo.bodyLarge,
-            fontWeight: 'bold',
-            color: '#e2e8f0',
-            marginBottom: '4px'
-          }}>
-            {isLiquid ? "Supercooled Liquid (Ready)" :
-             isCrystallizing ? `Crystallizing... ${crystalProgress.toFixed(0)}%` :
-             "Crystallized (Releasing Heat)"}
-          </div>
-          <div style={{
-            fontSize: typo.small,
-            color: '#94a3b8',
-            marginBottom: '8px'
-          }}>
-            Latent Heat: {latentHeatFusion} kJ/kg | Melting Point: {meltingPoint}C
-          </div>
-          <div style={{
-            fontSize: typo.heading,
-            fontWeight: 'bold',
-            color: getTempColor(temperature)
-          }}>
-            {temperature.toFixed(1)}C
-          </div>
-          {!discClicked && isLiquid && (
-            <div style={{
-              fontSize: typo.small,
-              color: '#94a3b8',
-              marginTop: '8px'
-            }}>
-              Click the metal disc to activate
-            </div>
-          )}
-        </div>
-      </div>
+        {/* Heat waves when reacting */}
+        {isReacting && reactionProgress > 20 && (
+          <g>
+            {[0, 1, 2].map(i => {
+              const offset = (animationFrame + i * 20) % 40;
+              const baseX = width / 2 - 30 + i * 30;
+              return (
+                <path
+                  key={i}
+                  d={`M ${baseX} ${25 - offset} Q ${baseX + 5} ${18 - offset} ${baseX} ${11 - offset}`}
+                  fill="none"
+                  stroke={colors.warning}
+                  strokeWidth="2"
+                  opacity={(40 - offset) / 40}
+                  strokeLinecap="round"
+                />
+              );
+            })}
+          </g>
+        )}
+
+        {/* Temperature and status */}
+        <text x={width / 2} y={height - 25} textAnchor="middle" fill={getTempColor(chemicalTemp)} fontSize="14" fontWeight="bold">
+          {chemicalTemp.toFixed(1)}C
+        </text>
+        <text x={width / 2} y={height - 8} textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          4Fe + 3O2 = 2Fe2O3 + heat
+        </text>
+      </svg>
     );
   };
 
-  // Render comparison visualization for twist - Premium SVG
-  const renderComparisonVisualization = () => {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // HOOK PHASE
+  if (phase === 'hook') {
     return (
-      <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
-        <svg viewBox="0 0 400 220" className="w-full">
-          <defs>
-            {/* Background gradient */}
-            <linearGradient id="warmCompBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="30%" stopColor="#0f172a" />
-              <stop offset="70%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-            {/* Phase warmer - inactive (blue liquid) */}
-            <radialGradient id="warmCompPhaseInactive" cx="40%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
-              <stop offset="40%" stopColor="#0ea5e9" stopOpacity="0.9" />
-              <stop offset="70%" stopColor="#0284c7" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.8" />
-            </radialGradient>
-
-            {/* Phase warmer - active (warm yellow) */}
-            <radialGradient id="warmCompPhaseActive" cx="50%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.95" />
-              <stop offset="30%" stopColor="#fde68a" stopOpacity="0.9" />
-              <stop offset="60%" stopColor="#fcd34d" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.75" />
-            </radialGradient>
-
-            {/* Phase warmer - depleted (gray) */}
-            <radialGradient id="warmCompPhaseDepleted" cx="45%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#64748b" stopOpacity="0.75" />
-              <stop offset="100%" stopColor="#475569" stopOpacity="0.7" />
-            </radialGradient>
-
-            {/* Chemical warmer - inactive (orange) */}
-            <radialGradient id="warmCompChemInactive" cx="40%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#fed7aa" stopOpacity="0.95" />
-              <stop offset="40%" stopColor="#fdba74" stopOpacity="0.9" />
-              <stop offset="70%" stopColor="#f97316" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#c2410c" stopOpacity="0.8" />
-            </radialGradient>
-
-            {/* Chemical warmer - active (red hot) */}
-            <radialGradient id="warmCompChemActive" cx="50%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#fecaca" stopOpacity="0.95" />
-              <stop offset="30%" stopColor="#f87171" stopOpacity="0.9" />
-              <stop offset="60%" stopColor="#ef4444" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.75" />
-            </radialGradient>
-
-            {/* Crystal gradient */}
-            <linearGradient id="warmCompCrystal" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
-            </linearGradient>
-
-            {/* Rust particle gradient */}
-            <radialGradient id="warmCompRust" cx="40%" cy="35%" r="60%">
-              <stop offset="0%" stopColor="#fbbf24" />
-              <stop offset="50%" stopColor="#d97706" />
-              <stop offset="100%" stopColor="#92400e" />
-            </radialGradient>
-
-            {/* Heat wave gradient */}
-            <linearGradient id="warmCompHeatWave" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
-              <stop offset="40%" stopColor="#f97316" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
-            </linearGradient>
-
-            {/* Energy bar gradient - full */}
-            <linearGradient id="warmCompEnergyFull" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="50%" stopColor="#16a34a" />
-              <stop offset="100%" stopColor="#22c55e" />
-            </linearGradient>
-
-            {/* Energy bar gradient - medium */}
-            <linearGradient id="warmCompEnergyMed" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f97316" />
-              <stop offset="50%" stopColor="#ea580c" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
-
-            {/* Energy bar gradient - low */}
-            <linearGradient id="warmCompEnergyLow" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="50%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-
-            {/* Glow filters */}
-            <filter id="warmCompGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="warmCompCrystalGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Background */}
-          <rect width="400" height="220" fill="url(#warmCompBg)" />
-
-          {/* Subtle grid */}
-          <g opacity="0.03">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <line key={`cv-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="220" stroke="#94a3b8" strokeWidth="0.5" />
-            ))}
-            {Array.from({ length: 11 }).map((_, i) => (
-              <line key={`ch-${i}`} x1="0" y1={i * 20} x2="400" y2={i * 20} stroke="#94a3b8" strokeWidth="0.5" />
-            ))}
-          </g>
-
-          {/* Warmer pack shadow */}
-          <ellipse cx="205" cy="95" rx="105" ry="75" fill="#000" opacity={0.3} />
-
-          {/* Warmer pack - use appropriate gradient based on type and state */}
-          <ellipse
-            cx="200"
-            cy="90"
-            rx="105"
-            ry="75"
-            fill={
-              warmerType === "phase"
-                ? twistState === "inactive" ? "url(#warmCompPhaseInactive)"
-                : twistState === "active" ? "url(#warmCompPhaseActive)"
-                : "url(#warmCompPhaseDepleted)"
-                : twistState === "inactive" ? "url(#warmCompChemInactive)"
-                : twistState === "active" ? "url(#warmCompChemActive)"
-                : "url(#warmCompPhaseDepleted)"
-            }
-            stroke="#475569"
-            strokeWidth={2}
-          />
-
-          {/* Crystallization animation for phase warmer */}
-          {warmerType === "phase" && twistState === "active" && (
-            <g filter="url(#warmCompCrystalGlow)">
-              {Array.from({ length: 10 }).map((_, i) => {
-                const angle = (i / 10) * Math.PI * 2 + animationFrame / 20;
-                const radius = 25 + (100 - energyRemaining) * 0.5;
-                const size = 4 + (100 - energyRemaining) * 0.03;
-                return (
-                  <polygon
-                    key={i}
-                    points={`0,${-size} ${size * 0.866},${-size / 2} ${size * 0.866},${size / 2} 0,${size} ${-size * 0.866},${size / 2} ${-size * 0.866},${-size / 2}`}
-                    transform={`translate(${200 + Math.cos(angle) * radius}, ${90 + Math.sin(angle) * radius * 0.7})`}
-                    fill="url(#warmCompCrystal)"
-                  />
-                );
-              })}
-            </g>
-          )}
-
-          {/* Iron oxidation animation for chemical warmer */}
-          {warmerType === "chemical" && twistState === "active" && (
-            <g filter="url(#warmCompCrystalGlow)">
-              {Array.from({ length: 8 }).map((_, i) => {
-                const angle = (i / 8) * Math.PI * 2 + animationFrame / 15;
-                const radius = 35 + Math.sin(animationFrame / 10 + i) * 5;
-                return (
-                  <circle
-                    key={i}
-                    cx={200 + Math.cos(angle) * radius}
-                    cy={90 + Math.sin(angle) * radius * 0.6}
-                    r={6}
-                    fill="url(#warmCompRust)"
-                    opacity={0.9}
-                  />
-                );
-              })}
-            </g>
-          )}
-
-          {/* Heat waves when active */}
-          {twistState === "active" && (
-            <g filter="url(#warmCompGlow)">
-              {[0, 1, 2, 3, 4].map((i) => {
-                const offset = (animationFrame + i * 20) % 50;
-                const baseX = 120 + i * 40;
-                return (
-                  <path
-                    key={i}
-                    d={`M ${baseX} ${30 - offset}
-                        Q ${baseX + 6} ${22 - offset} ${baseX} ${14 - offset}
-                        Q ${baseX - 6} ${6 - offset} ${baseX} ${-2 - offset}`}
-                    fill="none"
-                    stroke="url(#warmCompHeatWave)"
-                    strokeWidth="2.5"
-                    opacity={(50 - offset) / 50}
-                    strokeLinecap="round"
-                  />
-                );
-              })}
-            </g>
-          )}
-
-          {/* Energy bar background */}
-          <g transform="translate(100, 180)">
-            <rect width="200" height="16" fill="#0f172a" stroke="#334155" strokeWidth="1" rx={4} />
-            {/* Energy fill */}
-            <rect
-              width={energyRemaining * 2}
-              height="16"
-              fill={
-                energyRemaining > 50 ? "url(#warmCompEnergyFull)"
-                : energyRemaining > 20 ? "url(#warmCompEnergyMed)"
-                : "url(#warmCompEnergyLow)"
-              }
-              rx={4}
-            />
-            {/* Energy bar segments */}
-            {[25, 50, 75].map((val) => (
-              <line
-                key={val}
-                x1={val * 2}
-                y1="0"
-                x2={val * 2}
-                y2="16"
-                stroke="#0f172a"
-                strokeWidth="1"
-                opacity={0.5}
-              />
-            ))}
-          </g>
-        </svg>
-
-        {/* Text labels outside SVG */}
-        <div style={{ textAlign: 'center', marginTop: '12px' }}>
-          <div style={{
-            fontSize: typo.heading,
-            fontWeight: 'bold',
-            color: getTempColor(twistTemperature),
-            marginBottom: '4px'
-          }}>
-            {twistTemperature.toFixed(1)}C
-          </div>
-          <div style={{
-            fontSize: typo.small,
-            color: '#94a3b8',
-            marginBottom: '8px'
-          }}>
-            Energy Remaining: {energyRemaining.toFixed(0)}%
-          </div>
-          <div style={{
-            fontSize: typo.bodyLarge,
-            fontWeight: 'bold',
-            color: '#e2e8f0',
-            marginBottom: '4px'
-          }}>
-            {warmerType === "phase" ? "Phase-Change (Reusable)" : "Chemical (Disposable)"}
-          </div>
-          <div style={{
-            fontSize: typo.small,
-            color: '#94a3b8',
-            marginBottom: '4px'
-          }}>
-            {warmerType === "phase"
-              ? "Sodium acetate crystallization"
-              : "4Fe + 3O2 = 2Fe2O3 + heat"}
-          </div>
-          <div style={{
-            fontSize: typo.body,
-            fontWeight: '600',
-            color: twistState === "inactive" ? "#0ea5e9" :
-                   twistState === "active" ? "#f97316" : "#64748b"
-          }}>
-            {twistState === "inactive" ? "Ready" :
-             twistState === "active" ? "Heating..." : "Depleted"}
-          </div>
+        <div style={{ fontSize: '64px', marginBottom: '24px', animation: 'pulse 2s infinite' }}>
+          🧤🔥
         </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          The Magic Hand Warmer
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '600px', marginBottom: '32px' }}>
+          "A clear liquid pouch at room temperature. Click a tiny metal disc, and INSTANT heat - warm enough to hold for an hour. Where does all that <span style={{ color: colors.accent }}>thermal energy</span> come from?"
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "The energy was there all along - stored invisibly in the liquid's molecular structure. Crystallization releases 264 kJ per kilogram of stored thermal energy."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            — Thermodynamics of Phase Change Materials
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover Phase Change Energy
+        </button>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-orange-400 tracking-wide">THERMAL PHYSICS</span>
-      </div>
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'A hidden battery inside the pouch powers a heating element' },
+      { id: 'b', text: 'Chemical reaction permanently consumes the liquid' },
+      { id: 'c', text: 'Latent heat released when supercooled liquid crystallizes', correct: true },
+    ];
 
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-yellow-200 bg-clip-text text-transparent">
-        The Magic Hand Warmer
-      </h1>
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        {renderProgressBar()}
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover how a simple click unleashes hidden thermal energy
-      </p>
-
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-yellow-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <div className="text-6xl mb-6">
-            <span role="img" aria-label="glove">&#129350;</span>
-            <span role="img" aria-label="ice">&#10052;</span>
-            <span style={{ margin: '0 8px' }}>-&gt;</span>
-            <span role="img" aria-label="fire">&#128293;</span>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>Make Your Prediction</p>
           </div>
 
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              It's just a pouch of clear liquid—but click a tiny metal disc inside, and INSTANT heat!
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A reusable hand warmer contains clear liquid at 20C. You click the metal disc, and it instantly heats to 54C while turning solid. Where does the heat come from?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>💧</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Clear Liquid</p>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>20C</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.accent }}>→ CLICK →</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>🔥</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Hot Solid</p>
+                <p style={{ ...typo.small, color: colors.warning }}>54C</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>{opt.text}</span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button onClick={() => { playSound('success'); nextPhase(); }} style={primaryButtonStyle}>
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Phase Change Hand Warmer Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Click the metal disc to trigger crystallization and release latent heat
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <WarmerVisualization />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              {warmerState === 'liquid' && (
+                <button
+                  onClick={activateWarmer}
+                  style={{
+                    ...primaryButtonStyle,
+                    background: `linear-gradient(135deg, #0ea5e9, #0284c7)`,
+                  }}
+                >
+                  Click Metal Disc
+                </button>
+              )}
+              {warmerState !== 'liquid' && (
+                <button
+                  onClick={resetWarmer}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Boil to Reset (Reusable)
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Key Physics</h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong>Latent Heat of Fusion:</strong> 264 kJ/kg released during crystallization.
+              <br />
+              <strong>Supercooling:</strong> Liquid below freezing point (54C) without crystals.
+              <br />
+              <strong>Nucleation:</strong> Metal disc provides seed for crystal formation.
             </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Within seconds, it's warm enough to hold. The liquid turns solid, and it stays hot for an hour.
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-orange-400 font-semibold">
-                Where does all that heat come from?
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Science
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Phase Change
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Latent Heat of Fusion</strong> - Energy stored/released during phase change without temperature change.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <span style={{ color: colors.accent }}>Crystallization (liquid to solid)</span>: Releases energy as molecules lock into ordered crystal structure.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <span style={{ color: '#3b82f6' }}>Melting (solid to liquid)</span>: Absorbs energy to break molecular bonds. This is why boiling resets the warmer.
+              </p>
+              <p>
+                <strong style={{ color: colors.warning }}>Supercooling</strong>: Without a nucleation site, the liquid can't "find" how to start crystallizing, even below its freezing point.
               </p>
             </div>
           </div>
-        </div>
-      </div>
 
-      <button
-        onClick={() => { onPhaseComplete?.(); }}
-        style={{ zIndex: 10 }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover Phase Change Energy
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-orange-400">*</span>
-          Interactive Lab
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-orange-400">*</span>
-          Real-World Examples
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-orange-400">*</span>
-          Knowledge Test
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          A reusable hand warmer contains sodium acetate solution. It can be
-          stored as a clear liquid at room temperature (20C). When you flex
-          the metal disc inside, it rapidly heats to 54C and turns solid.
-        </p>
-        <p className="text-lg text-orange-400 font-medium">
-          Where does the heat energy come from?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: "battery", text: "A hidden battery inside the pouch" },
-          { id: "chemical", text: "A chemical reaction that consumes the liquid" },
-          { id: "phase", text: "Energy released when liquid crystallizes into solid" },
-          { id: "friction", text: "Friction from flexing the disc" }
-        ].map((option) => (
-          <button
-            key={option.id}
-            onClick={() => {
-              setPrediction(option.id);
-              playSound("click");
-            }}
-            style={{ zIndex: 10 }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              prediction === option.id
-                ? option.id === "phase" ? "bg-emerald-600/40 border-2 border-emerald-400" : "bg-orange-600/40 border-2 border-orange-400"
-                : "bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent"
-            }`}
-          >
-            <span className="text-slate-200">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {prediction && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className={`font-semibold ${prediction === "phase" ? "text-emerald-400" : "text-orange-400"}`}>
-            {prediction === "phase"
-              ? "Correct! This is latent heat of fusion—energy stored in the liquid phase!"
-              : "Not quite—the energy actually comes from the phase change itself!"}
-          </p>
-          <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
-          >
-            Test Your Prediction
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Iron Oxidation Hand Warmer Lab</h2>
-      <p className="text-slate-400 mb-6 text-center max-w-md">
-        Adjust the parameters to control the exothermic reaction: Fe + O2 → Fe2O3 + heat
-      </p>
-
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl w-full">
-        {/* Controls Panel */}
-        <div className="bg-slate-800/50 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Reaction Parameters</h3>
-
-          {renderSlider("Iron Powder Amount", ironPowder, setIronPowder, 0, 100, "%", "#6b7280")}
-          {renderSlider("Salt Concentration (Catalyst)", saltConcentration, setSaltConcentration, 0, 100, "%", "#f59e0b")}
-          {renderSlider("Oxygen Availability", oxygenAvailability, setOxygenAvailability, 0, 100, "%", "#3b82f6")}
-          {renderSlider("Ambient Temperature", ambientTemp, setAmbientTemp, -10, 40, "C", "#22c55e")}
-
-          <div className="flex gap-2 mt-4">
-            <button
-              onClick={startChemicalReaction}
-              disabled={isReacting}
-              style={{ zIndex: 10 }}
-              className={`flex-1 py-3 rounded-lg font-bold transition-all ${
-                isReacting
-                  ? "bg-slate-600 text-slate-400 cursor-not-allowed"
-                  : "bg-orange-600 text-white hover:bg-orange-500"
-              }`}
-            >
-              {isReacting ? "Reacting..." : "Start Reaction"}
-            </button>
-            <button
-              onClick={resetChemicalWarmer}
-              style={{ zIndex: 10 }}
-              className="px-4 py-3 bg-slate-700 text-white rounded-lg font-bold hover:bg-slate-600"
-            >
-              Reset
-            </button>
-          </div>
-
-          {/* Progress bar */}
-          <div className="mt-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="text-slate-400">Reaction Progress</span>
-              <span className="text-orange-400 font-bold">{reactionProgress.toFixed(0)}%</span>
-            </div>
-            <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-300"
-                style={{ width: `${reactionProgress}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Visualization Panel */}
-        <div className="bg-slate-800/50 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Visualization</h3>
-
-          <div className="flex justify-around items-start mb-4">
-            {renderIronOxidationAnimation()}
-            {renderHeatOutputIndicator()}
-          </div>
-
-          {/* Temperature display */}
-          <div className="text-center mb-4">
-            <div className="text-3xl font-bold" style={{ color: getTempColor(chemicalTemp) }}>
-              {chemicalTemp.toFixed(1)}C
-            </div>
-            <div className="text-sm text-slate-400">Current Temperature</div>
-          </div>
-
-          {/* Temperature graph */}
-          <div className="flex justify-center">
-            {renderTemperatureGraph()}
-          </div>
-        </div>
-      </div>
-
-      {/* Physics explanation */}
-      <div className={`mt-6 p-4 rounded-xl max-w-xl w-full ${
-        isReacting ? "bg-orange-900/30 border border-orange-600" :
-        reactionProgress >= 100 ? "bg-emerald-900/30 border border-emerald-600" : "bg-blue-900/30 border border-blue-600"
-      }`}>
-        {!isReacting && reactionProgress === 0 && (
-          <>
-            <h3 className="font-bold text-blue-400 mb-2">Ready to React</h3>
-            <p className="text-sm text-slate-300">
-              Iron powder, salt (catalyst), and oxygen are the key ingredients. The salt speeds up
-              the oxidation reaction. More iron and oxygen means more heat!
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              Energy Calculation
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              For a 100g sodium acetate warmer:
             </p>
-          </>
-        )}
-        {isReacting && (
-          <>
-            <h3 className="font-bold text-orange-400 mb-2">Exothermic Reaction!</h3>
-            <p className="text-sm text-slate-300">
-              4Fe + 3O2 → 2Fe2O3 + heat. Iron is oxidizing (rusting) rapidly, releasing thermal energy.
-              The salt acts as a catalyst, not consumed in the reaction.
+            <p style={{ ...typo.h3, color: colors.textPrimary, fontFamily: 'monospace' }}>
+              E = m x Lf = 0.1 kg x 264 kJ/kg = 26.4 kJ
             </p>
-          </>
-        )}
-        {reactionProgress >= 100 && !isReacting && (
-          <>
-            <h3 className="font-bold text-emerald-400 mb-2">Reaction Complete</h3>
-            <p className="text-sm text-slate-300">
-              All the iron has been oxidized to rust (Fe2O3). This is why disposable hand warmers
-              cannot be reused—the chemical reaction is irreversible.
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              Enough to heat 100g of water by 63C, or keep hands warm for 30-60 minutes.
             </p>
-          </>
-        )}
-      </div>
-
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ zIndex: 10 }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
-      >
-        Learn the Science
-      </button>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">The Science of Exothermic Reactions</h2>
-
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 rounded-2xl p-6 border border-orange-600/30">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">Iron Oxidation (Disposable)</h3>
-          <p className="text-slate-300 text-sm mb-3">
-            Chemical warmers use iron powder, salt, and activated carbon. When exposed to air:
-          </p>
-          <div className="font-mono text-center text-lg text-orange-400 mb-2">
-            4Fe + 3O2 → 2Fe2O3 + heat
           </div>
-          <ul className="text-slate-400 text-sm space-y-1">
-            <li>- Salt acts as a catalyst (speeds reaction)</li>
-            <li>- Produces ~50C for 6-12 hours</li>
-            <li>- Irreversible (single use)</li>
-          </ul>
-        </div>
 
-        <div className="bg-gradient-to-br from-blue-900/40 to-cyan-900/40 rounded-2xl p-6 border border-blue-600/30">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">Phase Change (Reusable)</h3>
-          <p className="text-slate-300 text-sm mb-3">
-            Sodium acetate releases latent heat when it crystallizes from a supercooled liquid state:
-          </p>
-          <div className="font-mono text-center text-lg text-blue-400 mb-2">
-            Lf = 264 kJ/kg
-          </div>
-          <ul className="text-slate-400 text-sm space-y-1">
-            <li>- Nucleation triggers crystallization</li>
-            <li>- Produces 54C for 30-60 min</li>
-            <li>- Boil to reset and reuse</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 border border-purple-600/30 md:col-span-2">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">Key Physics Concepts</h3>
-          <div className="grid md:grid-cols-2 gap-4 text-sm">
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">Exothermic Reaction</p>
-              <p className="text-slate-400">Energy is released to surroundings (negative enthalpy change)</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">Catalyst Effect</p>
-              <p className="text-slate-400">Salt lowers activation energy, speeding the reaction</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">Supercooling</p>
-              <p className="text-slate-400">Liquid below its freezing point without crystallizing</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">Latent Heat</p>
-              <p className="text-slate-400">Energy released/absorbed during phase change</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {prediction === "phase" && (
-        <div className="mt-6 p-4 bg-emerald-900/30 rounded-xl border border-emerald-600 max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Phase change warmers release latent heat of fusion during crystallization.
-          </p>
-        </div>
-      )}
-
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ zIndex: 10 }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-      >
-        Ready for a Twist?
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Comparison Twist</h2>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          There are two types of hand warmers:
-        </p>
-        <ul className="space-y-2 text-slate-300">
-          <li><strong className="text-blue-400">Phase-change:</strong> Sodium acetate crystallization (reusable)</li>
-          <li><strong className="text-orange-400">Chemical:</strong> Iron oxidation/rusting (disposable)</li>
-        </ul>
-        <p className="text-lg text-amber-400 font-medium mt-4">
-          Which type provides heat for LONGER?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: "phase", text: "Phase-change—crystals release heat slowly" },
-          { id: "chemical", text: "Chemical—slow oxidation lasts hours" },
-          { id: "same", text: "Both last about the same time" },
-          { id: "depends", text: "Depends entirely on size" }
-        ].map((option) => (
           <button
-            key={option.id}
-            onClick={() => {
-              setTwistPrediction(option.id);
-              playSound("click");
-            }}
-            style={{ zIndex: 10 }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              twistPrediction === option.id
-                ? option.id === "chemical" ? "bg-emerald-600/40 border-2 border-emerald-400" : "bg-purple-600/40 border-2 border-purple-400"
-                : "bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent"
-            }`}
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            <span className="text-slate-200">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {twistPrediction && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className={`font-semibold ${twistPrediction === "chemical" ? "text-emerald-400" : "text-amber-400"}`}>
-            {twistPrediction === "chemical"
-              ? "Correct! Chemical warmers last much longer (6-12 hours vs 30-60 min)!"
-              : "Not quite—chemical warmers actually last much longer!"}
-          </p>
-          <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-          >
-            Compare Both Types
+            Explore the Comparison
           </button>
         </div>
-      )}
-    </div>
-  );
 
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Reusable vs Disposable Comparison</h2>
-      <p className="text-slate-400 mb-6">Compare phase-change crystallization vs iron oxidation!</p>
-
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => {
-            setWarmerType("phase");
-            resetTwist();
-          }}
-          style={{ zIndex: 10 }}
-          className={`px-6 py-3 rounded-lg font-medium transition-all ${
-            warmerType === "phase"
-              ? "bg-blue-600 text-white"
-              : "bg-slate-700 text-slate-300"
-          }`}
-        >
-          Phase-Change (Reusable)
-        </button>
-        <button
-          onClick={() => {
-            setWarmerType("chemical");
-            resetTwist();
-          }}
-          style={{ zIndex: 10 }}
-          className={`px-6 py-3 rounded-lg font-medium transition-all ${
-            warmerType === "chemical"
-              ? "bg-orange-600 text-white"
-              : "bg-slate-700 text-slate-300"
-          }`}
-        >
-          Chemical (Disposable)
-        </button>
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-        {renderComparisonVisualization()}
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Phase-change warmers - crystals release heat slowly' },
+      { id: 'b', text: 'Chemical (iron) warmers - slow oxidation lasts hours', correct: true },
+      { id: 'c', text: 'Both last about the same time' },
+    ];
 
-        <div className="flex gap-2 mt-4">
-          {twistState === "inactive" && (
-            <button
-              onClick={warmerType === "phase" ? activatePhaseWarmer : activateChemicalWarmer}
-              style={{ zIndex: 10 }}
-              className={`flex-1 py-3 rounded-lg font-bold ${
-                warmerType === "phase"
-                  ? "bg-blue-600 text-white hover:bg-blue-500"
-                  : "bg-orange-600 text-white hover:bg-orange-500"
-              }`}
-            >
-              {warmerType === "phase" ? "Click Disc (Crystallize)" : "Open Air Vent (Oxidize)"}
-            </button>
-          )}
-          {twistState !== "inactive" && (
-            <button
-              onClick={resetTwist}
-              style={{ zIndex: 10 }}
-              className="flex-1 py-3 bg-slate-600 text-white rounded-lg font-bold"
-            >
-              {warmerType === "phase" ? "Boil to Reset" : "Replace (Disposable)"}
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Two Types of Hand Warmers
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Which type of hand warmer provides heat for LONGER?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ textAlign: 'center', padding: '16px', background: colors.bgSecondary, borderRadius: '8px' }}>
+                <div style={{ fontSize: '36px', marginBottom: '8px' }}>💧→❄️</div>
+                <div style={{ ...typo.small, color: '#3b82f6', fontWeight: 600 }}>Phase-Change</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Sodium acetate crystallization</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: '16px', background: colors.bgSecondary, borderRadius: '8px' }}>
+                <div style={{ fontSize: '36px', marginBottom: '8px' }}>⚙️+💨</div>
+                <div style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>Chemical</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Iron oxidation (rusting)</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>{opt.text}</span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button onClick={() => { playSound('success'); nextPhase(); }} style={primaryButtonStyle}>
+              Compare Both Types
             </button>
           )}
         </div>
+
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      {/* Side-by-side comparison */}
-      <div className="grid grid-cols-2 gap-4 max-w-xl mb-6">
-        <div className={`p-4 rounded-xl border ${warmerType === 'phase' ? 'bg-blue-900/30 border-blue-600' : 'bg-slate-800/30 border-slate-600'}`}>
-          <h4 className="font-bold text-blue-400 text-sm mb-2">Phase-Change</h4>
-          <ul className="text-xs text-slate-300 space-y-1">
-            <li>- Heats quickly to 54C</li>
-            <li>- Duration: 30-60 min</li>
-            <li>- Reusable (boil to reset)</li>
-            <li>- Crystallization releases latent heat</li>
-          </ul>
-        </div>
-        <div className={`p-4 rounded-xl border ${warmerType === 'chemical' ? 'bg-orange-900/30 border-orange-600' : 'bg-slate-800/30 border-slate-600'}`}>
-          <h4 className="font-bold text-orange-400 text-sm mb-2">Chemical</h4>
-          <ul className="text-xs text-slate-300 space-y-1">
-            <li>- Heats slowly to ~50C</li>
-            <li>- Duration: 6-12 hours</li>
-            <li>- Single-use (disposable)</li>
-            <li>- Oxidation releases chemical energy</li>
-          </ul>
-        </div>
-      </div>
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        {renderProgressBar()}
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ zIndex: 10 }}
-        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-      >
-        See Explanation
-      </button>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Activation Mechanisms Compared</h2>
-
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-blue-900/40 to-cyan-900/40 rounded-2xl p-6 border border-blue-600/30">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">Phase-Change Activation</h3>
-          <div className="space-y-3 text-sm">
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">1. Supercooled State</p>
-              <p className="text-slate-400">Sodium acetate stays liquid below 54C (no crystal seeds)</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">2. Metal Disc Clicked</p>
-              <p className="text-slate-400">Creates nucleation site for crystal formation</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">3. Chain Reaction</p>
-              <p className="text-slate-400">Crystals spread rapidly, releasing 264 kJ/kg</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">4. Recharge</p>
-              <p className="text-slate-400">Boil to dissolve crystals, cool carefully</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 rounded-2xl p-6 border border-orange-600/30">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">Chemical Activation</h3>
-          <div className="space-y-3 text-sm">
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">1. Sealed Package</p>
-              <p className="text-slate-400">Iron, salt, carbon stored without oxygen</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">2. Air Exposure</p>
-              <p className="text-slate-400">Opening package lets oxygen reach iron</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">3. Oxidation</p>
-              <p className="text-slate-400">4Fe + 3O2 → 2Fe2O3 + heat (slow, sustained)</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-white">4. Depleted</p>
-              <p className="text-slate-400">All iron oxidized = no more heat = discard</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-900/40 to-teal-900/40 rounded-2xl p-6 border border-emerald-600/30 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Choose the Right One</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-slate-300">Quick warmth, short trips:</p>
-              <p className="text-blue-400 font-semibold">Phase-change (reusable)</p>
-            </div>
-            <div className="bg-slate-800/50 p-3 rounded-lg">
-              <p className="font-medium text-slate-300">All-day outdoor activity:</p>
-              <p className="text-orange-400 font-semibold">Chemical (disposable)</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {twistPrediction === "chemical" && (
-        <div className="mt-6 p-4 bg-emerald-900/30 rounded-xl border border-emerald-600 max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Chemical warmers last 6-12 hours because oxidation is a slow, sustained reaction.
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Iron Oxidation vs Phase Change
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare the two hand warmer technologies
           </p>
-        </div>
-      )}
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ zIndex: 10 }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold rounded-xl"
-      >
-        See Real-World Applications
-      </button>
-    </div>
-  );
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+            <button
+              onClick={() => { setWarmerType('phase'); resetTwist(); }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: warmerType === 'phase' ? '#3b82f6' : colors.bgCard,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Phase-Change (Reusable)
+            </button>
+            <button
+              onClick={() => { setWarmerType('chemical'); resetTwist(); }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: warmerType === 'chemical' ? colors.accent : colors.bgCard,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Chemical (Disposable)
+            </button>
+          </div>
 
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Phase Change Energy in the Real World</h2>
-
-      <div className="space-y-4 max-w-2xl w-full">
-        {applications.map((app, index) => (
-          <div
-            key={index}
-            className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              completedApps.has(index)
-                ? "bg-emerald-900/30 border-emerald-600"
-                : currentApp === index
-                ? "bg-blue-900/30 border-blue-600"
-                : "bg-slate-800/50 border-slate-700 hover:border-slate-600"
-            }`}
-            onClick={() => {
-              if (!completedApps.has(index)) {
-                setCurrentApp(index);
-                playSound("click");
-              }
-            }}
-            style={{ zIndex: 10 }}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-3xl">
-                {app.icon === 'glove' && <span role="img" aria-label="glove">&#129350;</span>}
-                {app.icon === 'building' && <span role="img" aria-label="building">&#127970;</span>}
-                {app.icon === 'package' && <span role="img" aria-label="package">&#128230;</span>}
-                {app.icon === 'satellite' && <span role="img" aria-label="satellite">&#128752;</span>}
-              </span>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-white">{app.title}</h3>
-                  {completedApps.has(index) && (
-                    <span className="text-emerald-400">&#10003;</span>
-                  )}
-                </div>
-                {(currentApp === index || completedApps.has(index)) && (
-                  <p className="text-slate-300 text-sm mt-2">{app.description}</p>
-                )}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {/* Visualization */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>
+                {warmerType === 'phase' ? '💧' : '⚙️'}
+              </div>
+              <div style={{ ...typo.h2, color: getTempColor(twistTemperature), marginBottom: '4px' }}>
+                {twistTemperature.toFixed(1)}C
+              </div>
+              <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px' }}>
+                Energy: {energyRemaining.toFixed(0)}%
+              </div>
+              <div style={{
+                height: '8px',
+                background: colors.border,
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${energyRemaining}%`,
+                  background: energyRemaining > 50 ? colors.success : energyRemaining > 20 ? colors.warning : colors.error,
+                  transition: 'width 0.1s',
+                }} />
               </div>
             </div>
 
-            {currentApp === index && !completedApps.has(index) && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(index);
-                  setCompletedApps(newCompleted);
-                  playSound("success");
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              {twistState === 'inactive' && (
+                <button
+                  onClick={() => {
+                    setTwistState('active');
+                    if (warmerType === 'phase') playCrystallizeSound();
+                    else playSound('click');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  {warmerType === 'phase' ? 'Click Disc' : 'Open Air Vent'}
+                </button>
+              )}
+              {twistState !== 'inactive' && (
+                <button
+                  onClick={resetTwist}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  {warmerType === 'phase' ? 'Boil to Reset' : 'Discard (Single-Use)'}
+                </button>
+              )}
+            </div>
+          </div>
 
-                  if (newCompleted.size < applications.length) {
-                    const nextIncomplete = applications.findIndex(
-                      (_, i) => !newCompleted.has(i)
-                    );
-                    setCurrentApp(nextIncomplete);
-                  }
+          {/* Comparison table */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '16px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              background: warmerType === 'phase' ? `#3b82f622` : colors.bgCard,
+              border: `1px solid ${warmerType === 'phase' ? '#3b82f6' : colors.border}`,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: '#3b82f6', fontWeight: 600, marginBottom: '8px' }}>Phase-Change</h4>
+              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '16px' }}>
+                <li>Heats to 54C quickly</li>
+                <li>Duration: 30-60 min</li>
+                <li>Reusable (boil to reset)</li>
+                <li>Latent heat release</li>
+              </ul>
+            </div>
+            <div style={{
+              background: warmerType === 'chemical' ? `${colors.accent}22` : colors.bgCard,
+              border: `1px solid ${warmerType === 'chemical' ? colors.accent : colors.border}`,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, fontWeight: 600, marginBottom: '8px' }}>Chemical</h4>
+              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '16px' }}>
+                <li>Heats to ~50C slowly</li>
+                <li>Duration: 6-12 hours</li>
+                <li>Single-use (disposable)</li>
+                <li>Chemical reaction energy</li>
+              </ul>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Difference
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why Chemical Warmers Last Longer
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚗️</span>
+                <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Iron Oxidation Reaction</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+                <code style={{ background: colors.bgSecondary, padding: '4px 8px', borderRadius: '4px' }}>
+                  4Fe + 3O2 → 2Fe2O3 + heat
+                </code>
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                The reaction rate is controlled by oxygen diffusion through the porous pouch. Slow, steady heat for 6-12 hours.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>❄️</span>
+                <h3 style={{ ...typo.h3, color: '#3b82f6', margin: 0 }}>Phase Change</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+                <code style={{ background: colors.bgSecondary, padding: '4px 8px', borderRadius: '4px' }}>
+                  Lf = 264 kJ/kg at 54C
+                </code>
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, margin: 0 }}>
+                All latent heat releases rapidly during crystallization. Intense heat but shorter duration (30-60 min).
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+                Choose the Right Warmer
+              </h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: '0 0 4px 0' }}>Quick warming, short trips:</p>
+                  <p style={{ ...typo.small, color: '#3b82f6', fontWeight: 600, margin: 0 }}>Phase-change (reusable)</p>
+                </div>
+                <div>
+                  <p style={{ ...typo.small, color: colors.textSecondary, margin: '0 0 4px 0' }}>All-day outdoor activity:</p>
+                  <p style={{ ...typo.small, color: colors.accent, fontWeight: 600, margin: 0 }}>Chemical (disposable)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
                 }}
-                style={{ zIndex: 10 }}
-                className="mt-3 w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500"
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
               >
-                Got It!
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Connection to Hand Warmer Physics:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand hand warmer thermodynamics!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review & Try Again
               </button>
             )}
           </div>
-        ))}
-      </div>
-
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
-          {applications.map((_, i) => (
-            <div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />
-          ))}
+          {renderNavDots()}
         </div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-
-      {completedApps.size === applications.length && (
-        <button
-          onClick={() => onPhaseComplete?.()}
-          style={{ zIndex: 10 }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
-        >
-          Take the Quiz
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Test Your Knowledge</h2>
-
-      {!testSubmitted ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="font-medium text-white mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => {
-                      setTestAnswers((prev) => ({ ...prev, [qIndex]: oIndex }));
-                      playSound("click");
-                    }}
-                    style={{ zIndex: 10 }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? "bg-orange-600 text-white"
-                        : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
-                    }`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {Object.keys(testAnswers).length === testQuestions.length && (
-            <button
-              onClick={handleTestSubmit}
-              style={{ zIndex: 10 }}
-              className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold text-lg"
-            >
-              Submit Answers
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{testScore >= 7 ? <span role="img" aria-label="celebration">&#127881;</span> : <span role="img" aria-label="books">&#128218;</span>}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">
-            {testScore} / {testQuestions.length}
-          </h3>
-          <p className="text-slate-300 mb-6">
-            {testScore >= 7
-              ? "Excellent! You understand hand warmer thermodynamics!"
-              : "Review the concepts and try again!"}
-          </p>
-
-          {testScore >= 7 ? (
-            <button
-              onClick={() => { onCorrectAnswer?.(); onPhaseComplete?.(); }}
-              style={{ zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl"
-            >
-              Claim Your Mastery!
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                setTestSubmitted(false);
-                setTestAnswers({});
-                onIncorrectAnswer?.();
-              }}
-              style={{ zIndex: 10 }}
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl"
-            >
-              Try Again
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="text-8xl mb-6">
-        <span role="img" aria-label="trophy">&#127942;</span>
-      </div>
-      <h2 className="text-3xl font-bold text-yellow-400 mb-4">Mastery Achieved!</h2>
-      <p className="text-xl text-slate-300 mb-6 max-w-md">
-        You've mastered the physics of hand warmers and exothermic reactions!
-      </p>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-md">
-        <h3 className="text-lg font-bold text-white mb-3">Key Concepts Mastered:</h3>
-        <ul className="text-slate-300 text-sm space-y-2 text-left">
-          <li>&#10003; Iron oxidation: 4Fe + 3O2 → 2Fe2O3 + heat</li>
-          <li>&#10003; Latent heat of fusion (264 kJ/kg for sodium acetate)</li>
-          <li>&#10003; Supercooling and nucleation</li>
-          <li>&#10003; Catalysts in chemical reactions</li>
-          <li>&#10003; Reusable vs disposable warmer mechanisms</li>
-        </ul>
-      </div>
-    </div>
-  );
-
-  // Real-world applications of hand warmer technology
-  const realWorldApps = [
-    {
-      icon: '🏕️',
-      title: 'Outdoor Recreation Products',
-      short: 'Camping & Hiking',
-      tagline: 'Portable Heat for Wilderness Adventures',
-      description: 'Hand warmer technology powers a vast array of outdoor recreation products designed to keep adventurers warm in extreme conditions. From pocket warmers for hunters waiting in cold blinds to heated insoles for mountaineers, exothermic reactions provide reliable, portable heat without batteries or electricity.',
-      connection: 'The iron oxidation and sodium acetate crystallization reactions you explored are the exact mechanisms used in camping and hiking gear. Understanding reaction kinetics helps manufacturers design products that activate quickly and maintain optimal temperature for extended periods.',
-      howItWorks: 'Disposable warmers use iron powder, salt, activated carbon, and vermiculite in breathable pouches. Air exposure triggers oxidation that generates steady heat for 8-12 hours. Reusable crystallization warmers provide intense heat bursts perfect for emergency warmth during backcountry adventures.',
-      stats: [
-        { value: '$450M', label: 'US outdoor warming market', icon: '📊' },
-        { value: '12 hrs', label: 'Typical heat duration', icon: '⏱️' },
-        { value: '-40°F', label: 'Effective in extreme cold', icon: '❄️' }
-      ],
-      examples: [
-        'Hand and toe warmers tucked into gloves and boots during winter hikes',
-        'Body warmers adhered to base layers for all-day warmth while skiing',
-        'Heated seat cushions for ice fishing and hunting in sub-zero conditions',
-        'Emergency warmers in survival kits for hypothermia prevention'
-      ],
-      companies: ['HotHands', 'Grabber', 'Zippo Outdoors', 'ThermaCELL', 'Heat Factory'],
-      futureImpact: 'Next-generation outdoor warmers are incorporating phase-change materials with higher energy density and rechargeable catalytic systems, enabling lighter, more sustainable heating solutions for extreme expeditions.',
-      color: '#22c55e'
-    },
-    {
-      icon: '🏥',
-      title: 'Medical Heat Therapy',
-      short: 'Healthcare',
-      tagline: 'Therapeutic Warmth for Pain Relief and Healing',
-      description: 'Medical heat therapy harnesses exothermic reactions to deliver controlled, therapeutic warmth for pain management, muscle relaxation, and improved circulation. From treating chronic back pain to warming IV fluids, hand warmer chemistry has transformed healthcare delivery.',
-      connection: 'The precise temperature control you observed in phase-change warmers is critical for medical applications. Sodium acetate crystallization provides consistent 54°C heat that is therapeutic without causing burns, while iron oxidation warmers offer longer-duration treatment options.',
-      howItWorks: 'Medical warming products use the same exothermic reactions as recreational warmers but with enhanced safety features and medical-grade materials. Air-activated wraps provide sustained low-level heat for 8+ hours, while instant heat packs deliver rapid warming for acute treatment.',
-      stats: [
-        { value: '$3.2B', label: 'Global heat therapy market', icon: '💰' },
-        { value: '40°C', label: 'Optimal therapeutic temp', icon: '🌡️' },
-        { value: '25%', label: 'Pain reduction reported', icon: '📉' }
-      ],
-      examples: [
-        'ThermaCare wraps for lower back pain use iron oxidation for 8-hour relief',
-        'Instant warmers in ambulances prevent hypothermia during patient transport',
-        'Post-surgical warming blankets accelerate recovery and reduce complications',
-        'Menstrual heat patches provide targeted abdominal pain relief'
-      ],
-      companies: ['ThermaCare', 'Sunbeam', 'Carex Health', 'Medela', 'Stryker'],
-      futureImpact: 'Smart medical warmers with embedded sensors are emerging, providing precise temperature feedback and automatic adjustment for optimal therapeutic effect while preventing tissue damage.',
-      color: '#3b82f6'
-    },
-    {
-      icon: '🍱',
-      title: 'Food Warming Technology',
-      short: 'Food Packaging',
-      tagline: 'Hot Meals Anywhere, Anytime',
-      description: 'Self-heating food packaging revolutionizes how we consume hot meals on-the-go. Using exothermic chemical reactions, these systems can heat beverages and prepared foods without any external power source, making them ideal for military rations, emergency supplies, and convenient consumer products.',
-      connection: 'The heat generation principles from iron oxidation and crystallization directly power self-heating food containers. The reaction rates and total energy output you studied determine how quickly food heats and how long it stays warm.',
-      howItWorks: 'Self-heating containers typically use calcium oxide (quickite) reacting with water or iron oxidation chambers separated from the food compartment. Activating the heater triggers an exothermic reaction that transfers heat through the container wall, warming the contents to serving temperature.',
-      stats: [
-        { value: '$890M', label: 'Self-heating food market', icon: '📈' },
-        { value: '15 min', label: 'Average heating time', icon: '⏰' },
-        { value: '70°C', label: 'Target serving temperature', icon: '🔥' }
-      ],
-      examples: [
-        'MRE (Meals Ready-to-Eat) flameless ration heaters for military field use',
-        'Self-heating coffee cans that warm with a button press for commuters',
-        'Emergency food kits with integrated heating for disaster preparedness',
-        'Self-warming baby bottles for convenient feeding on-the-go'
-      ],
-      companies: ['Heatgen', 'HotCan', 'Luxfer Magtech', 'Crown Holdings', 'Tempra Technology'],
-      futureImpact: 'Biodegradable exothermic heating elements and improved insulation materials are making self-heating packaging more sustainable, opening markets for everyday consumer food products.',
-      color: '#f97316'
-    },
-    {
-      icon: '🔋',
-      title: 'Battery Thermal Management',
-      short: 'Electronics',
-      tagline: 'Optimal Temperature for Peak Battery Performance',
-      description: 'Lithium-ion batteries in electric vehicles and electronics require precise temperature management for optimal performance and longevity. Hand warmer technology provides critical cold-weather heating solutions that keep batteries in their ideal operating range, preventing capacity loss and extending lifespan.',
-      connection: 'The exothermic reactions you explored address the same fundamental challenge in battery systems: generating controlled heat on demand. Phase-change materials store and release thermal energy to buffer temperature swings, while chemical warmers provide active heating in extreme cold.',
-      howItWorks: 'Battery thermal management systems use phase-change materials to absorb excess heat during charging/discharging and release it when temperatures drop. In extreme cold, resistive heating or exothermic chemical packs pre-warm battery cells to ensure reliable starting and optimal range.',
-      stats: [
-        { value: '40%', label: 'EV range loss in cold', icon: '📉' },
-        { value: '20-40°C', label: 'Optimal Li-ion temp range', icon: '🌡️' },
-        { value: '$8.5B', label: 'Battery thermal market 2028', icon: '💵' }
-      ],
-      examples: [
-        'Tesla battery packs use liquid cooling and heating for temperature regulation',
-        'Smartphone manufacturers integrate phase-change materials to manage thermal spikes',
-        'Drone batteries use chemical warmers for cold-weather operation reliability',
-        'Grid-scale battery storage facilities employ thermal management for efficiency'
-      ],
-      companies: ['Tesla', 'LG Energy Solution', 'CATL', 'Panasonic', 'BorgWarner'],
-      futureImpact: 'Solid-state batteries with wider temperature tolerances combined with advanced phase-change composites will reduce the energy penalty of thermal management, extending EV range and enabling operation in more extreme environments.',
-      color: '#8b5cf6'
+      );
     }
-  ];
 
-  // Main render
-  switch (phase) {
-    case 'hook':
-      return renderHook();
-    case 'predict':
-      return renderPredict();
-    case 'play':
-      return renderPlay();
-    case 'review':
-      return renderReview();
-    case 'twist_predict':
-      return renderTwistPredict();
-    case 'twist_play':
-      return renderTwistPlay();
-    case 'twist_review':
-      return renderTwistReview();
-    case 'transfer':
-      return renderTransfer();
-    case 'test':
-      return renderTest();
-    case 'mastery':
-      return renderMastery();
-    default:
-      return renderHook();
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
   }
-}
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Hand Warmer Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand the thermodynamics of phase change and exothermic reactions in hand warmer technology.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Latent heat of fusion (264 kJ/kg for sodium acetate)',
+              'Supercooling and nucleation phenomena',
+              'Iron oxidation reaction: 4Fe + 3O2 → 2Fe2O3',
+              'Salt as a catalyst in chemical reactions',
+              'Phase-change vs chemical warmer tradeoffs',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default HandWarmerRenderer;

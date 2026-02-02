@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
-// DRAG FORCE - Premium Design with 10-Phase Structure
+// DRAG FORCE - Premium Design with 10-Phase Learning Structure
+// Physics of aerodynamic drag, air resistance, and terminal velocity
 // ============================================================================
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -37,6 +38,222 @@ interface Props {
   onPhaseComplete?: (phase: string) => void;
 }
 
+// ============================================================================
+// REAL-WORLD APPLICATIONS DATA
+// ============================================================================
+
+const realWorldApps = [
+  {
+    icon: '🏎️',
+    title: 'Formula 1 Aerodynamics',
+    short: 'Racing vehicle design',
+    tagline: 'Engineering Speed Through Air Management',
+    description: 'Formula 1 cars are the ultimate expression of drag force engineering. Teams spend over $100 million annually on aerodynamic development, using wind tunnels and CFD simulations to shave milliseconds per lap. Every surface is designed to manage airflow for minimum drag and maximum downforce.',
+    connection: 'The drag equation F = ½ρv²CdA is the foundation of F1 aerodynamics. At 200+ mph, drag force can exceed 1,500 pounds. Engineers constantly trade drag reduction against downforce generation, optimizing Cd values while maintaining grip through corners.',
+    howItWorks: 'F1 cars use complex front and rear wings, bargeboards, and floor diffusers to channel airflow. The front wing creates a pressure curtain that directs air around the wheels (major drag sources). The floor generates 50% of downforce using ground effect. Drag Reduction System (DRS) opens a rear wing slot to reduce drag by 10-15% on straights.',
+    stats: [
+      { value: '0.7-1.0', label: 'F1 car Cd (with downforce)', icon: '💨' },
+      { value: '1,500+ lbs', label: 'Drag at top speed', icon: '⚡' },
+      { value: '$150M+', label: 'Annual aero R&D budget', icon: '💰' }
+    ],
+    examples: [
+      'Mercedes\' zero-sidepod design in 2022 minimized frontal area for drag reduction',
+      'DRS can add 10-15 km/h on straights by opening a slot in the rear wing',
+      'Vortex generators on the floor create low-pressure zones for suction',
+      'Teams test over 1,000 aerodynamic configurations per season in wind tunnels'
+    ],
+    companies: ['Red Bull Racing', 'Mercedes-AMG', 'Ferrari', 'McLaren', 'Aston Martin'],
+    futureImpact: 'Active aerodynamics with adjustable surfaces responding in real-time to conditions will become standard. Ground effect floors and tunnel testing will push Cd values lower while maintaining necessary downforce for cornering.',
+    color: '#ef4444'
+  },
+  {
+    icon: '🪂',
+    title: 'Parachute Engineering',
+    short: 'Controlled drag deployment',
+    tagline: 'Maximizing Air Resistance for Safe Descent',
+    description: 'Parachutes are precision-engineered maximum-drag devices, representing the opposite goal from vehicles. They harness air resistance to slow descent from terminal velocity speeds of 120+ mph to safe landing speeds of 10-15 mph. Modern designs balance stability, control, glide ratio, and reliable deployment under extreme conditions.',
+    connection: 'While vehicles minimize the drag equation F = ½ρv²CdA, parachutes maximize it. The massive canopy surface area (A) combined with a high drag coefficient (Cd ≈ 1.5) creates enough force to balance gravitational weight, achieving safe terminal velocities.',
+    howItWorks: 'When deployed, the canopy inflates and presents a large cross-sectional area to the airflow. Air molecules impact the fabric, creating enormous pressure drag. Ram-air parachutes use airfoil cells that inflate to create lift as well as drag, enabling forward flight and precision landings. Vents and brake toggles provide stability and steering control.',
+    stats: [
+      { value: '1.3-1.5', label: 'Typical parachute Cd', icon: '🎯' },
+      { value: '120→12 mph', label: 'Speed reduction', icon: '⬇️' },
+      { value: '99.97%', label: 'Modern reliability rate', icon: '✅' }
+    ],
+    examples: [
+      'Military round canopies (T-11) are 35 feet diameter for stable vertical descent',
+      'Sport ram-air canopies achieve 3:1 glide ratios for precision landing',
+      'Drogue chutes stabilize supersonic vehicles before main deployment',
+      'SpaceX Crew Dragon uses 4 main chutes with 116 ft combined diameter'
+    ],
+    companies: ['Airborne Systems', 'Performance Designs', 'Precision Aerodynamics', 'ParaGear', 'Sun Path Products'],
+    futureImpact: 'Smart parachutes with GPS guidance systems can land cargo within 50 meters of targets. Steerable cargo systems using autonomous navigation are revolutionizing military resupply and humanitarian aid delivery.',
+    color: '#22c55e'
+  },
+  {
+    icon: '🚴',
+    title: 'Cycling Aerodynamics',
+    short: 'Human-powered efficiency',
+    tagline: 'Defeating Air Resistance at Human Scale',
+    description: 'At racing speeds above 25 mph, over 90% of a cyclist\'s effort goes to overcoming air resistance. Professional cycling has become an aerodynamic arms race, with every piece of equipment optimized using wind tunnel testing. A 5% drag reduction can mean winning or losing the Tour de France.',
+    connection: 'The drag equation reveals why cycling is so sensitive to aerodynamics: drag force scales with v², so doubling speed quadruples the resistance. At 30 mph, a cyclist fights roughly 25 pounds of drag force - more than the weight of their bike.',
+    howItWorks: 'Cyclists minimize all three controllable drag factors: frontal area (A) through tucked positions, drag coefficient (Cd) through streamlined equipment, and even air density (ρ) by racing at altitude. Time trial positions can reduce Cd by 30% compared to upright riding. Drafting behind another rider reduces effective air velocity, cutting drag by 20-40%.',
+    stats: [
+      { value: '90%+', label: 'Effort fighting drag at 30mph', icon: '💪' },
+      { value: '0.88', label: 'Elite TT rider CdA (m²)', icon: '📐' },
+      { value: '20-40%', label: 'Draft energy savings', icon: '🔋' }
+    ],
+    examples: [
+      'Aero helmets with tail fairings reduce drag by 7% over standard helmets',
+      'Deep-section wheels (80mm+) smooth airflow but add crosswind sensitivity',
+      'Skinsuit fabric texture is optimized for boundary layer management',
+      'Team time trials exploit drafting to maintain speeds 2-3 mph higher than solo efforts'
+    ],
+    companies: ['Specialized', 'Trek', 'Pinarello', 'Cervélo', 'Canyon'],
+    futureImpact: 'Real-time CdA measurement using power meters and speed data allows riders to optimize position during races. New UCI regulations balance innovation against cost barriers to keep competition accessible.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '✈️',
+    title: 'Commercial Aviation Efficiency',
+    short: 'Fuel economy at 35,000 feet',
+    tagline: 'Billion-Dollar Drag Reduction',
+    description: 'Airlines spend over $200 billion annually on jet fuel. A 1% reduction in drag saves approximately $140 million per year industry-wide. Modern aircraft design obsessively minimizes drag through wing shape, surface smoothness, and innovative technologies like winglets and natural laminar flow.',
+    connection: 'At cruise speeds of 550 mph, the drag equation F = ½ρv²CdA produces forces exceeding 10,000 pounds on a 737. Every 1% drag reduction directly translates to 1% fuel savings. With 100,000+ flights daily worldwide, small improvements yield massive economic and environmental benefits.',
+    howItWorks: 'Aircraft drag comes from multiple sources: induced drag from lift generation (40%), parasitic drag from skin friction and form (55%), and wave drag near sonic speeds (5%). Winglets reduce induced drag by blocking wingtip vortices. Laminar flow sections maintain smooth airflow longer. Riblets (shark-skin textures) can reduce skin friction by 8%.',
+    stats: [
+      { value: '0.023-0.027', label: 'Modern airliner Cd', icon: '💨' },
+      { value: '$140M/year', label: 'Industry savings per 1% drag cut', icon: '💵' },
+      { value: '3-5%', label: 'Winglet fuel savings', icon: '🛫' }
+    ],
+    examples: [
+      'Boeing 787 uses 50% composite materials for smoother surfaces and 20% better efficiency',
+      'Split-tip winglets on 737 MAX save 1.8% fuel versus older designs',
+      'Shark-skin riblet coatings tested by Lufthansa showed 1% fuel reduction',
+      'Continuous descent approaches reduce drag by avoiding level-off segments'
+    ],
+    companies: ['Boeing', 'Airbus', 'Bombardier', 'Embraer', 'Aviation Partners'],
+    futureImpact: 'Hybrid-laminar flow control using suction to delay boundary layer transition could reduce fuel burn by 10%. Blended wing body designs promise 20%+ efficiency gains but require airport infrastructure changes.',
+    color: '#8b5cf6'
+  }
+];
+
+// ============================================================================
+// TEST QUESTIONS DATA - 10 Scenario-Based Questions
+// ============================================================================
+
+const testQuestions = [
+  {
+    scenario: 'A cyclist is riding at 20 mph and decides to increase speed to 40 mph. They notice it becomes dramatically harder to pedal.',
+    question: 'How much more power must the cyclist produce to maintain 40 mph compared to 20 mph?',
+    options: [
+      { id: 'a', label: 'Twice as much power (2x)' },
+      { id: 'b', label: 'Four times as much power (4x)' },
+      { id: 'c', label: 'Eight times as much power (8x)', correct: true },
+      { id: 'd', label: 'Sixteen times as much power (16x)' }
+    ],
+    explanation: 'Power to overcome drag scales with velocity cubed (P = Fd × v = ½ρv²CdA × v = ½ρv³CdA). Doubling speed means 2³ = 8 times the power required. This is why maintaining high speeds is so energy-intensive.'
+  },
+  {
+    scenario: 'A skydiver jumps from 15,000 feet. After the initial acceleration, they notice their speedometer stabilizes at 120 mph despite continuing to fall.',
+    question: 'Why does the skydiver stop accelerating even though gravity is still pulling them down?',
+    options: [
+      { id: 'a', label: 'They have reached maximum gravitational speed' },
+      { id: 'b', label: 'The air becomes too thick to fall faster' },
+      { id: 'c', label: 'Drag force has increased to equal their weight, resulting in zero net force', correct: true },
+      { id: 'd', label: 'Wind resistance creates an upward lift force' }
+    ],
+    explanation: 'As velocity increases, drag force (F = ½ρv²CdA) grows until it equals the gravitational force (weight). At this point, net force is zero (ΣF = 0), so acceleration is zero by Newton\'s second law. This constant velocity is called terminal velocity.'
+  },
+  {
+    scenario: 'Two identical cars are driving: one at sea level and one at 10,000 feet elevation in the mountains where air is 30% less dense.',
+    question: 'How does the drag force on the mountain car compare to the sea-level car at the same speed?',
+    options: [
+      { id: 'a', label: '30% less drag force', correct: true },
+      { id: 'b', label: '30% more drag force' },
+      { id: 'c', label: 'Same drag force - altitude doesn\'t matter' },
+      { id: 'd', label: '60% less drag force due to reduced air pressure' }
+    ],
+    explanation: 'Drag force is directly proportional to air density (ρ) in the equation F = ½ρv²CdA. If air density decreases by 30%, drag force decreases by 30%. This is why land speed records are often attempted at high altitude salt flats like Bonneville.'
+  },
+  {
+    scenario: 'A golf ball manufacturer creates a perfectly smooth ball to reduce friction. Surprisingly, it travels only half as far as a dimpled ball.',
+    question: 'Why do dimples make a golf ball travel farther despite adding surface roughness?',
+    options: [
+      { id: 'a', label: 'Dimples store compressed air that provides thrust' },
+      { id: 'b', label: 'Dimples reduce the ball\'s weight' },
+      { id: 'c', label: 'Dimples create turbulent boundary layer that delays flow separation and reduces pressure drag', correct: true },
+      { id: 'd', label: 'Dimples increase spin rate for more Magnus effect' }
+    ],
+    explanation: 'A smooth ball has laminar flow that separates early, creating a large turbulent wake and high pressure drag. Dimples trigger transition to a turbulent boundary layer that clings to the surface longer, reducing the wake size. This counterintuitively reduces overall drag by up to 50%.'
+  },
+  {
+    scenario: 'An engineer designs two spacecraft heat shields: one flat and one cone-shaped. Both have the same diameter base.',
+    question: 'Which heat shield shape experiences more drag during atmospheric re-entry, and why is this beneficial?',
+    options: [
+      { id: 'a', label: 'The flat shield has more drag, which is bad because it slows the vehicle too much' },
+      { id: 'b', label: 'The cone has more drag because it has more surface area' },
+      { id: 'c', label: 'The flat shield has more drag, which is beneficial for maximum deceleration and heating spread', correct: true },
+      { id: 'd', label: 'Both have equal drag since they have the same diameter' }
+    ],
+    explanation: 'The flat shield (Cd ≈ 1.2) has much higher drag than a cone (Cd ≈ 0.5). Higher drag is actually beneficial for re-entry: it maximizes deceleration in the upper atmosphere where the vehicle can radiate heat away, preventing the shield from overheating in denser air below.'
+  },
+  {
+    scenario: 'A truck driver notices fuel economy drops from 8 mpg to 6 mpg when driving with an empty flatbed versus hauling a streamlined cargo container.',
+    question: 'How does the empty flatbed create more drag than a container that adds weight and size?',
+    options: [
+      { id: 'a', label: 'The container\'s weight pushes the truck lower for better ground effect' },
+      { id: 'b', label: 'The empty flatbed creates turbulent separation and a large low-pressure wake behind the cab', correct: true },
+      { id: 'c', label: 'The container generates thrust as air flows around it' },
+      { id: 'd', label: 'Empty flatbeds attract more wind due to electromagnetic effects' }
+    ],
+    explanation: 'Without cargo, air separates violently at the back of the cab creating a massive turbulent wake with very low pressure. This pressure drag can be 50% of total truck drag. A container fills this gap, allowing air to flow smoothly off the back and significantly reducing the pressure differential.'
+  },
+  {
+    scenario: 'During the 2012 Olympics, US swimmers wore full-body suits that were later banned. The suits reduced drag by 5% compared to traditional swimwear.',
+    question: 'Why is a 5% drag reduction so significant in competitive swimming?',
+    options: [
+      { id: 'a', label: 'Swimming is very slow, so any reduction feels significant' },
+      { id: 'b', label: 'Water is 800x denser than air, so even small drag reductions save substantial energy', correct: true },
+      { id: 'c', label: 'The suits also reduced body weight' },
+      { id: 'd', label: '5% improvement is unusual in any sport' }
+    ],
+    explanation: 'Water density (ρ ≈ 1000 kg/m³) is about 800 times that of air (ρ ≈ 1.2 kg/m³). In the drag equation F = ½ρv²CdA, this means swimmers face enormous resistance. A 5% drag reduction translates to significant time savings when races are won by hundredths of seconds.'
+  },
+  {
+    scenario: 'A wildlife documentary shows a peregrine falcon diving at 240 mph to catch prey, making it the fastest animal on Earth.',
+    question: 'How does the falcon achieve such extreme speeds compared to other birds?',
+    options: [
+      { id: 'a', label: 'Falcons have more powerful muscles than other birds' },
+      { id: 'b', label: 'Falcons dive from higher altitudes where gravity is stronger' },
+      { id: 'c', label: 'Falcons tuck their wings to minimize frontal area and drag coefficient during the stoop', correct: true },
+      { id: 'd', label: 'Falcons have special feathers that eliminate air resistance' }
+    ],
+    explanation: 'During a stoop (hunting dive), falcons fold their wings tight against their body, reducing both frontal area (A) and drag coefficient (Cd) dramatically. This teardrop shape has Cd ≈ 0.04-0.08, among the lowest of any animal. Combined with gravity, this allows acceleration to speeds impossible in level flight.'
+  },
+  {
+    scenario: 'NASCAR teams noticed that cars drafting closely behind the leader can sometimes achieve higher top speeds than the leading car itself.',
+    question: 'What aerodynamic phenomenon allows a trailing car to be faster than the leader?',
+    options: [
+      { id: 'a', label: 'The trailing car\'s engine runs more efficiently in cleaner air' },
+      { id: 'b', label: 'The leading car creates a low-pressure wake that both reduces drag on the trailing car AND pulls the leader back', correct: true },
+      { id: 'c', label: 'The trailing car weighs less due to fuel consumption' },
+      { id: 'd', label: 'Track surface is smoother in the racing line' }
+    ],
+    explanation: 'The leader pushes through undisturbed air, creating a turbulent low-pressure wake. The trailing car sits in this zone with reduced relative air velocity and less drag. Additionally, the trailing car\'s high-pressure bow wave pushes forward on the leader\'s low-pressure wake, actually creating a small "push" effect that helps both cars.'
+  },
+  {
+    scenario: 'The Bloodhound LSR car attempting the land speed record uses both a jet engine and a rocket, yet most of its power at 1,000 mph goes to overcoming air resistance.',
+    question: 'At 1,000 mph, approximately how does drag force scale compared to a car driving at 100 mph (with the same Cd and A)?',
+    options: [
+      { id: 'a', label: '10 times the drag force' },
+      { id: 'b', label: '50 times the drag force' },
+      { id: 'c', label: '100 times the drag force', correct: true },
+      { id: 'd', label: '1,000 times the drag force' }
+    ],
+    explanation: 'Drag force scales with velocity squared: F = ½ρv²CdA. At 10 times the velocity (1,000 vs 100 mph), drag increases by 10² = 100 times. This is why land speed record cars need tens of thousands of horsepower - almost all of it just to push through the air.'
+  }
+];
+
 const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   const [phase, setPhase] = useState<Phase>('hook');
   const [isMobile, setIsMobile] = useState(false);
@@ -49,6 +266,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
+  const [expandedApp, setExpandedApp] = useState<number | null>(null);
 
   // Simulation states
   const [velocity, setVelocity] = useState(20);
@@ -77,25 +295,24 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
   // Premium Design System
   const colors = {
-    primary: '#3b82f6',       // blue-500 (air/fluid)
-    primaryDark: '#2563eb',   // blue-600
-    accent: '#f97316',        // orange-500
-    secondary: '#8b5cf6',     // violet-500
-    success: '#10b981',       // emerald-500
-    danger: '#ef4444',        // red-500
-    warning: '#f59e0b',       // amber-500
-    bgDark: '#020617',        // slate-950
-    bgCard: '#0f172a',        // slate-900
-    bgCardLight: '#1e293b',   // slate-800
-    textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
-    border: '#334155',        // slate-700
-    borderLight: '#475569',   // slate-600
-    // Theme-specific
-    dragForce: '#ef4444',     // red-500
-    velocity: '#22c55e',      // green-500
-    terminal: '#f59e0b',      // amber-500
+    primary: '#3b82f6',
+    primaryDark: '#2563eb',
+    accent: '#f97316',
+    secondary: '#8b5cf6',
+    success: '#10b981',
+    danger: '#ef4444',
+    warning: '#f59e0b',
+    bgDark: '#020617',
+    bgCard: '#0f172a',
+    bgCardLight: '#1e293b',
+    textPrimary: '#f8fafc',
+    textSecondary: '#94a3b8',
+    textMuted: '#64748b',
+    border: '#334155',
+    borderLight: '#475569',
+    dragForce: '#ef4444',
+    velocity: '#22c55e',
+    terminal: '#f59e0b',
   };
 
   const typo = {
@@ -207,12 +424,11 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
     const interval = setInterval(() => {
       setObjectY(prev => {
-        const mass = 5; // kg
-        const g = 9.8; // m/s²
+        const mass = 5;
+        const g = 9.8;
         const gravity = mass * g;
-        const airDensity = 1.2; // kg/m³
+        const airDensity = 1.2;
 
-        // Drag force: F_d = 0.5 * ρ * v² * C_d * A
         const dragForce = 0.5 * airDensity * currentVelocity * currentVelocity * dragCoefficient * surfaceArea;
         const netForce = gravity - dragForce;
         const acceleration = netForce / mass;
@@ -244,11 +460,11 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       setTerminalObjects(prev => prev.map(obj => {
         if (obj.y >= 320) return obj;
 
-        const mass = 70; // kg
+        const mass = 70;
         const g = 9.8;
         const gravity = mass * g;
         const airDensity = 1.2;
-        const area = obj.terminal > 50 ? 0.3 : 0.8; // tucked vs spread
+        const area = obj.terminal > 50 ? 0.3 : 0.8;
         const cd = obj.terminal > 50 ? 0.4 : 1.0;
 
         const dragForce = 0.5 * airDensity * obj.v * obj.v * cd * area;
@@ -284,8 +500,8 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
   const startTerminalSim = useCallback(() => {
     setTerminalObjects([
-      { y: 50, v: 0, terminal: 55, reached: false }, // spread eagle - lower terminal velocity
-      { y: 50, v: 0, terminal: 70, reached: false }  // tucked - higher terminal velocity
+      { y: 50, v: 0, terminal: 55, reached: false },
+      { y: 50, v: 0, terminal: 70, reached: false }
     ]);
     setShowTerminalSim(true);
   }, []);
@@ -316,113 +532,11 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     emit('test_answered', { question: questionIndex, answer: answerIndex });
   }, [testAnswers, emit]);
 
-  const questions = [
-    {
-      q: 'What happens to drag force when you double your speed?',
-      opts: [
-        { text: 'It doubles', correct: false },
-        { text: 'It quadruples (4x)', correct: true },
-        { text: 'It stays the same', correct: false },
-        { text: 'It halves', correct: false }
-      ],
-      exp: 'Drag force depends on v², so doubling velocity increases drag by 2² = 4 times.'
-    },
-    {
-      q: 'Which factor is NOT in the drag equation F = ½ρv²CdA?',
-      opts: [
-        { text: 'Air density (ρ)', correct: false },
-        { text: 'Cross-sectional area (A)', correct: false },
-        { text: 'Object mass', correct: true },
-        { text: 'Drag coefficient (Cd)', correct: false }
-      ],
-      exp: 'Mass does not appear in the drag equation. Drag depends on shape, area, velocity, and fluid density.'
-    },
-    {
-      q: 'A skydiver spreads their arms and legs. What happens?',
-      opts: [
-        { text: 'Falls faster due to more weight', correct: false },
-        { text: 'Falls slower due to increased drag', correct: true },
-        { text: 'No change in falling speed', correct: false },
-        { text: 'Falls faster due to less drag', correct: false }
-      ],
-      exp: 'Spreading out increases cross-sectional area A, which increases drag and slows the fall.'
-    },
-    {
-      q: 'At terminal velocity, what is true about forces?',
-      opts: [
-        { text: 'Gravity is greater than drag', correct: false },
-        { text: 'Drag is greater than gravity', correct: false },
-        { text: 'Drag equals gravity (net force = 0)', correct: true },
-        { text: 'There are no forces acting', correct: false }
-      ],
-      exp: 'Terminal velocity is reached when drag equals weight, so net force is zero and acceleration stops.'
-    },
-    {
-      q: 'Why do sports cars have low, streamlined shapes?',
-      opts: [
-        { text: 'To look faster', correct: false },
-        { text: 'To reduce drag coefficient and area', correct: true },
-        { text: 'To increase weight', correct: false },
-        { text: 'For more interior space', correct: false }
-      ],
-      exp: 'Streamlined shapes have lower drag coefficients, and lower profiles reduce frontal area.'
-    },
-    {
-      q: 'A parachute works by:',
-      opts: [
-        { text: 'Creating upward thrust', correct: false },
-        { text: 'Eliminating gravity', correct: false },
-        { text: 'Greatly increasing air resistance', correct: true },
-        { text: 'Making the person lighter', correct: false }
-      ],
-      exp: 'A parachute has a very large surface area and high drag coefficient, creating massive air resistance.'
-    },
-    {
-      q: 'If air density decreases (higher altitude), drag force:',
-      opts: [
-        { text: 'Increases', correct: false },
-        { text: 'Decreases', correct: true },
-        { text: 'Stays the same', correct: false },
-        { text: 'Becomes negative', correct: false }
-      ],
-      exp: 'Drag is directly proportional to air density ρ. Less dense air means less drag.'
-    },
-    {
-      q: 'Which shape has the lowest drag coefficient?',
-      opts: [
-        { text: 'Flat plate (perpendicular to flow)', correct: false },
-        { text: 'Sphere', correct: false },
-        { text: 'Streamlined teardrop', correct: true },
-        { text: 'Cube', correct: false }
-      ],
-      exp: 'Streamlined shapes allow air to flow smoothly around them with minimal turbulence.'
-    },
-    {
-      q: 'At 30 mph, a cyclist fights mostly against:',
-      opts: [
-        { text: 'Gravity', correct: false },
-        { text: 'Rolling resistance', correct: false },
-        { text: 'Air resistance (drag)', correct: true },
-        { text: 'Friction in pedals', correct: false }
-      ],
-      exp: 'At higher speeds, air resistance dominates because drag increases with v².'
-    },
-    {
-      q: 'Two objects with the same weight but different shapes fall. The one with more drag:',
-      opts: [
-        { text: 'Reaches terminal velocity faster', correct: true },
-        { text: 'Reaches terminal velocity slower', correct: false },
-        { text: 'Never reaches terminal velocity', correct: false },
-        { text: 'Falls at the same rate', correct: false }
-      ],
-      exp: 'More drag means the object doesn\'t need to go as fast before drag equals weight.'
-    }
-  ];
-
   const calculateScore = useCallback(() => {
     let score = 0;
     testAnswers.forEach((answer, index) => {
-      if (questions[index]?.opts[answer]?.correct) score++;
+      const options = testQuestions[index]?.options;
+      if (options && options[answer]?.correct) score++;
     });
     return score;
   }, [testAnswers]);
@@ -441,281 +555,6 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     emit('app_explored', { app: appIndex });
   }, [playSound, emit]);
 
-  const applications = [
-    {
-      title: 'Parachutes',
-      description: 'Parachutes maximize drag by using a large canopy (high A) with a high drag coefficient. This creates enough air resistance to slow a person from 200+ km/h to a safe 20 km/h landing speed.',
-      color: 'from-blue-600 to-indigo-600',
-      icon: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M50 10 Q20 10 15 40 L50 55 L85 40 Q80 10 50 10" fill="#ff6600" stroke="#cc5500" strokeWidth="2" />
-          <line x1="15" y1="40" x2="50" y2="80" stroke="#333" strokeWidth="2" />
-          <line x1="85" y1="40" x2="50" y2="80" stroke="#333" strokeWidth="2" />
-          <line x1="50" y1="55" x2="50" y2="80" stroke="#333" strokeWidth="2" />
-          <circle cx="50" cy="85" r="8" fill="#ffcc99" />
-          <rect x="45" y="90" width="10" height="5" fill="#3366cc" />
-        </svg>
-      )
-    },
-    {
-      title: 'Vehicle Aerodynamics',
-      description: 'Car designers spend millions reducing drag coefficients. Modern cars have Cd values around 0.25-0.35. A 10% reduction in drag can improve fuel efficiency by 5% at highway speeds.',
-      color: 'from-green-600 to-teal-600',
-      icon: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M10 60 L20 60 L25 45 L70 40 L90 50 L90 65 L10 65 Z" fill="#3366cc" />
-          <path d="M28 45 L65 42 L70 50 L30 52 Z" fill="#88ccff" />
-          <circle cx="25" cy="65" r="8" fill="#333" />
-          <circle cx="75" cy="65" r="8" fill="#333" />
-          <path d="M5 45 Q50 35 95 45" stroke="#00ff00" strokeWidth="2" strokeDasharray="3,3" fill="none" opacity="0.7" />
-        </svg>
-      )
-    },
-    {
-      title: 'Skydiving',
-      description: 'Skydivers control their speed by changing body position. Spread eagle: terminal velocity ~55 m/s. Head-down dive: terminal velocity ~70+ m/s. This is due to changes in both A and Cd.',
-      color: 'from-orange-600 to-red-600',
-      icon: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <ellipse cx="50" cy="50" rx="25" ry="12" fill="#ff6600" />
-          <circle cx="50" cy="35" r="10" fill="#ffcc99" />
-          <ellipse cx="50" cy="33" rx="12" ry="8" fill="#333" />
-          <line x1="25" y1="50" x2="5" y2="40" stroke="#ff6600" strokeWidth="6" strokeLinecap="round" />
-          <line x1="75" y1="50" x2="95" y2="40" stroke="#ff6600" strokeWidth="6" strokeLinecap="round" />
-          <line x1="42" y1="62" x2="30" y2="85" stroke="#333" strokeWidth="6" strokeLinecap="round" />
-          <line x1="58" y1="62" x2="70" y2="85" stroke="#333" strokeWidth="6" strokeLinecap="round" />
-        </svg>
-      )
-    },
-    {
-      title: 'Sports Equipment',
-      description: 'Golf balls have dimples to create turbulent boundary layers that reduce drag. Cyclists wear aero suits and helmets to minimize frontal area and drag coefficient.',
-      color: 'from-purple-600 to-pink-600',
-      icon: (
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <circle cx="50" cy="50" r="25" fill="white" stroke="#ccc" strokeWidth="2" />
-          <circle cx="42" cy="42" r="3" fill="#ddd" />
-          <circle cx="58" cy="42" r="3" fill="#ddd" />
-          <circle cx="50" cy="55" r="3" fill="#ddd" />
-          <circle cx="42" cy="58" r="3" fill="#ddd" />
-          <circle cx="58" cy="58" r="3" fill="#ddd" />
-          <circle cx="35" cy="50" r="3" fill="#ddd" />
-          <circle cx="65" cy="50" r="3" fill="#ddd" />
-        </svg>
-      )
-    }
-  ];
-
-  // Test questions with real-world scenarios for the Test phase
-  const testQuestions = [
-    {
-      scenario: 'A car is driving on a highway. The air around it creates resistance as the car pushes through.',
-      question: 'What primarily causes the drag force on the car?',
-      options: [
-        { id: 'a', label: 'The weight of the car pressing down on the road' },
-        { id: 'b', label: 'Air molecules colliding with and being deflected by the car surface', correct: true },
-        { id: 'c', label: 'Friction between the tires and the pavement' },
-        { id: 'd', label: 'The engine consuming fuel to maintain speed' }
-      ],
-      explanation: 'Drag force is caused by the interaction between a moving object and the fluid (air) it moves through. As the car travels, air molecules collide with its surface and must be pushed aside, creating pressure differences and friction that resist motion. This is fundamentally different from rolling friction or weight-related forces.'
-    },
-    {
-      scenario: 'A skydiver jumps from a plane and initially accelerates downward. After several seconds, they stop accelerating and fall at a constant speed.',
-      question: 'Why does the skydiver eventually stop accelerating and reach terminal velocity?',
-      options: [
-        { id: 'a', label: 'Gravity becomes weaker as they fall further from the plane' },
-        { id: 'b', label: 'The air becomes thicker closer to the ground' },
-        { id: 'c', label: 'Drag force increases with speed until it equals the gravitational force', correct: true },
-        { id: 'd', label: 'The skydiver runs out of potential energy' }
-      ],
-      explanation: 'As the skydiver accelerates, their velocity increases, causing drag force (proportional to v²) to grow rapidly. Eventually, drag equals the gravitational force (weight), resulting in zero net force and zero acceleration. This constant falling speed is called terminal velocity.'
-    },
-    {
-      scenario: 'A car traveling at 60 mph uses significantly more fuel per mile than when traveling at 30 mph, even though the distance covered is the same.',
-      question: 'Why does fuel efficiency decrease so dramatically at higher speeds?',
-      options: [
-        { id: 'a', label: 'The engine runs less efficiently at higher RPMs' },
-        { id: 'b', label: 'Drag force quadruples when speed doubles, requiring much more power to overcome', correct: true },
-        { id: 'c', label: 'Tire friction increases linearly with speed' },
-        { id: 'd', label: 'The car weighs more at higher speeds due to momentum' }
-      ],
-      explanation: 'Drag force depends on velocity squared (F = ½ρv²CdA). Doubling speed from 30 to 60 mph quadruples the drag force. Power required to overcome drag is even worse—it scales with v³ (force × velocity). This is why highway driving at high speeds dramatically reduces fuel economy.'
-    },
-    {
-      scenario: 'Engineers are designing two vehicles: a boxy delivery truck and a sleek sports car. Both have the same frontal area facing the wind.',
-      question: 'Why does the sports car experience much less drag than the truck at the same speed?',
-      options: [
-        { id: 'a', label: 'The sports car is lower to the ground where wind speeds are lower' },
-        { id: 'b', label: 'The sports car weighs less, so drag affects it less' },
-        { id: 'c', label: 'The streamlined shape has a lower drag coefficient, allowing air to flow smoothly around it', correct: true },
-        { id: 'd', label: 'The sports car engine generates thrust that cancels out drag' }
-      ],
-      explanation: 'The drag coefficient (Cd) measures how aerodynamically efficient a shape is. A streamlined teardrop shape (Cd ≈ 0.04) allows air to flow smoothly with minimal turbulence, while a flat plate perpendicular to flow (Cd ≈ 1.2) creates massive turbulence and pressure drag. Sports cars typically have Cd around 0.25-0.35, while boxy trucks can exceed 0.7.'
-    },
-    {
-      scenario: 'In professional cycling races, riders often form a tight group (peloton) rather than spreading out. The riders behind the leader use 20-40% less energy than the front rider.',
-      question: 'What explains the significant energy savings from drafting behind another cyclist?',
-      options: [
-        { id: 'a', label: 'The lead rider blocks the sun, keeping following riders cooler' },
-        { id: 'b', label: 'Following riders can coast on the wake of air pushed by the leader' },
-        { id: 'c', label: 'The lead rider creates a low-pressure wake zone with reduced air resistance for followers', correct: true },
-        { id: 'd', label: 'The psychological benefit of following reduces perceived effort' }
-      ],
-      explanation: 'The lead cyclist pushes through undisturbed air, creating a turbulent low-pressure zone behind them. Cyclists drafting in this zone encounter less air resistance because the effective velocity of air relative to them is reduced. This phenomenon is used in cycling, NASCAR, and even by migrating birds flying in V-formation.'
-    },
-    {
-      scenario: 'An engineer is studying fluid flow around a small sphere in slow-moving oil versus a large sphere in fast-moving air. They calculate the Reynolds number for each case.',
-      question: 'What does the Reynolds number tell the engineer about drag behavior?',
-      options: [
-        { id: 'a', label: 'The total amount of drag force in Newtons' },
-        { id: 'b', label: 'Whether the flow is laminar (smooth) or turbulent, which affects the drag coefficient', correct: true },
-        { id: 'c', label: 'The speed at which the object will reach terminal velocity' },
-        { id: 'd', label: 'The density of the fluid being used' }
-      ],
-      explanation: 'The Reynolds number (Re = ρvL/μ) is a dimensionless quantity that predicts flow patterns. Low Re (< 2000) indicates laminar flow with predictable, smooth streamlines. High Re (> 4000) indicates turbulent flow with chaotic eddies and vortices. This transition dramatically changes the drag coefficient and how drag scales with velocity.'
-    },
-    {
-      scenario: 'Surprisingly, a golf ball with hundreds of small dimples travels nearly twice as far as a smooth ball hit with the same force.',
-      question: 'How do dimples on a golf ball reduce drag and increase distance?',
-      options: [
-        { id: 'a', label: 'Dimples make the ball lighter, so it flies farther' },
-        { id: 'b', label: 'Dimples store air that provides additional thrust' },
-        { id: 'c', label: 'Dimples trip the boundary layer into turbulence, which delays flow separation and reduces pressure drag', correct: true },
-        { id: 'd', label: 'Dimples create small jets of air that propel the ball forward' }
-      ],
-      explanation: 'At golf ball speeds, smooth spheres have laminar boundary layers that separate early from the surface, creating a large turbulent wake and high pressure drag. Dimples trigger earlier transition to a turbulent boundary layer, which adheres to the surface longer, delays separation, and creates a smaller wake. This counterintuitively reduces overall drag despite increased surface friction.'
-    },
-    {
-      scenario: 'During landing approach, a commercial airplane extends its landing gear. Pilots notice the aircraft immediately slows down significantly even before applying brakes.',
-      question: 'Why does extending the landing gear cause such a dramatic increase in drag?',
-      options: [
-        { id: 'a', label: 'The landing gear adds weight, pulling the plane down faster' },
-        { id: 'b', label: 'The non-streamlined gear creates massive form drag by disrupting airflow and causing turbulence', correct: true },
-        { id: 'c', label: 'The landing gear acts as a brake by touching the air' },
-        { id: 'd', label: 'The gear absorbs heat from the engines, reducing their efficiency' }
-      ],
-      explanation: 'Landing gear are essentially bluff bodies—non-streamlined shapes that create enormous pressure drag. When extended, they disrupt the smooth airflow under the aircraft, creating turbulent wakes and large pressure differentials. This parasitic drag can account for up to 30% of total aircraft drag. Retractable gear was a major innovation in aviation for this reason.'
-    },
-    {
-      scenario: 'A submarine operates at different depths in the ocean. Engineers consider how drag forces change as the submarine dives from 100 meters to 1000 meters depth.',
-      question: 'How does diving deeper affect the drag force on the submarine traveling at the same speed?',
-      options: [
-        { id: 'a', label: 'Drag decreases because water pressure compresses the submarine smaller' },
-        { id: 'b', label: 'Drag stays essentially the same because water density changes very little with depth', correct: true },
-        { id: 'c', label: 'Drag increases dramatically due to higher water pressure at depth' },
-        { id: 'd', label: 'Drag decreases because deeper water has fewer currents' }
-      ],
-      explanation: 'Unlike gases, liquids are nearly incompressible. Water density increases only about 0.5% per 1000 meters of depth due to slight compression. Since drag force depends on fluid density (F = ½ρv²CdA), the drag on a submarine remains essentially constant regardless of depth. The higher pressure at depth does not directly affect drag—it affects hull stress instead.'
-    },
-    {
-      scenario: 'The Hyperloop transportation concept proposes moving passenger pods through tubes with most of the air removed, achieving speeds over 700 mph.',
-      question: 'Why is removing air from the tube essential for the Hyperloop to achieve such high speeds efficiently?',
-      options: [
-        { id: 'a', label: 'Removing air eliminates the need for wheels, reducing friction' },
-        { id: 'b', label: 'Vacuum tubes stay cooler, preventing overheating of the pod' },
-        { id: 'c', label: 'Reducing air density dramatically lowers drag force, which would otherwise be enormous at such speeds', correct: true },
-        { id: 'd', label: 'Without air, the pod can use solar panels more efficiently' }
-      ],
-      explanation: 'Drag force is directly proportional to air density (F = ½ρv²CdA). At 700+ mph, drag in normal atmosphere would be immense—the force scales with velocity squared. By reducing air pressure to about 1/1000th of atmospheric pressure, drag is reduced by the same factor. This makes high-speed travel energy-efficient and prevents the sonic boom issues that plague supersonic aircraft in normal atmosphere.'
-    }
-  ];
-
-  // Real-world applications of drag force principles
-  const realWorldApps = [
-    {
-      icon: '🚗',
-      title: 'Aerodynamic Vehicle Design',
-      short: 'Automotive drag reduction',
-      tagline: 'Engineering Fuel Efficiency Through Airflow',
-      description: 'Modern vehicles are sculpted in wind tunnels to minimize drag coefficients. Every curve, vent, and surface is optimized to reduce air resistance, directly improving fuel economy and performance at highway speeds.',
-      connection: 'The drag equation F = ½ρv²CdA is the foundation of automotive aerodynamics. Engineers work to minimize both the drag coefficient (Cd) through streamlined shapes and frontal area (A) through compact designs.',
-      howItWorks: 'Designers use computational fluid dynamics (CFD) and wind tunnel testing to visualize airflow around vehicles. They smooth body panels, add underbody covers, optimize mirror shapes, and design rear diffusers to reduce turbulent wake formation.',
-      stats: [
-        { value: '0.20-0.25', label: 'Best car Cd values', icon: '💨' },
-        { value: '5-10%', label: 'Fuel savings per 10% drag reduction', icon: '⛽' },
-        { value: '$50B+', label: 'Annual automotive aero R&D', icon: '📊' }
-      ],
-      examples: [
-        'Tesla Model S achieves Cd of 0.208, among the lowest for production cars',
-        'Active grille shutters close at highway speeds to reduce drag',
-        'Wheel designs now include aerodynamic covers to smooth airflow',
-        'Boat-tail rear designs reduce the low-pressure wake zone'
-      ],
-      companies: ['Tesla', 'Mercedes-Benz', 'Porsche', 'BMW', 'Lucid Motors'],
-      futureImpact: 'Electric vehicles are pushing aerodynamic boundaries further since drag directly impacts range. Active aerodynamic elements that adjust based on speed are becoming standard.',
-      color: colors.success
-    },
-    {
-      icon: '🪂',
-      title: 'Parachute Engineering',
-      short: 'Controlled drag deployment',
-      tagline: 'Maximizing Air Resistance for Safe Descent',
-      description: 'Parachutes are precision-engineered drag devices that harness air resistance to slow descent from terminal velocity speeds. Modern designs balance stability, control, and reliable deployment under extreme conditions.',
-      connection: 'While vehicles minimize drag, parachutes maximize it. The massive canopy surface area (A) and high drag coefficient (Cd) create enough force to balance gravitational weight, achieving safe terminal velocities.',
-      howItWorks: 'When deployed, the canopy inflates and presents a large cross-sectional area to the airflow. Air molecules impact the fabric, creating pressure drag. Vents and slots in the canopy provide stability and steering control.',
-      stats: [
-        { value: '~1.5', label: 'Typical parachute Cd', icon: '🎯' },
-        { value: '200→15 mph', label: 'Speed reduction', icon: '⬇️' },
-        { value: '99.97%', label: 'Modern reliability rate', icon: '✅' }
-      ],
-      examples: [
-        'Military paratroopers use round canopies for vertical descent stability',
-        'Sport skydivers use ram-air rectangular chutes for maneuverability',
-        'Drogue chutes slow supersonic vehicles before main chute deployment',
-        'Mars rovers used parachutes despite thin atmosphere requiring enormous sizes'
-      ],
-      companies: ['Airborne Systems', 'Safran Aerosystems', 'Zodiac Aerospace', 'Performance Designs'],
-      futureImpact: 'Advanced materials like ultra-high-molecular-weight polyethylene enable lighter, stronger canopies. Steerable cargo parachutes with GPS guidance can land supplies within meters of targets.',
-      color: colors.primary
-    },
-    {
-      icon: '🏊',
-      title: 'Competitive Swimming',
-      short: 'Hydrodynamic body positioning',
-      tagline: 'Minimizing Drag in Elite Aquatics',
-      description: 'Olympic swimmers shave milliseconds by reducing drag through body position, technique, and equipment. Water is 800x denser than air, making drag reduction critical for competitive performance.',
-      connection: 'The same drag equation applies in water with higher density (ρ). Swimmers minimize frontal area (A) by streamlining their bodies and reduce drag coefficient (Cd) through smooth, efficient strokes.',
-      howItWorks: 'Swimmers adopt streamlined positions with arms extended overhead and body horizontal. Tight-fitting suits reduce surface friction. Underwater dolphin kicks exploit the reduced wave drag below the surface.',
-      stats: [
-        { value: '800x', label: 'Water vs air density', icon: '💧' },
-        { value: '90%+', label: 'Effort fighting drag', icon: '💪' },
-        { value: '0.1 sec', label: 'Typical winning margins', icon: '⏱️' }
-      ],
-      examples: [
-        'Swimmers shave body hair to reduce surface friction drag',
-        'Tech suits compress the body for a more streamlined profile',
-        'Underwater phases after turns minimize wave drag at the surface',
-        'Head position changes can alter drag by 10% or more'
-      ],
-      companies: ['Speedo', 'Arena', 'TYR Sport', 'FINA (governing body)'],
-      futureImpact: 'Biomechanical analysis using AI and motion capture helps swimmers optimize stroke mechanics. Future suits may incorporate micro-textures inspired by sharkskin to reduce turbulent drag.',
-      color: colors.secondary
-    },
-    {
-      icon: '🌬️',
-      title: 'Wind Turbine Blades',
-      short: 'Aerodynamic energy capture',
-      tagline: 'Harnessing Wind Through Blade Design',
-      description: 'Wind turbine blades are airfoils designed to convert wind energy into rotation. Engineers carefully balance lift and drag forces to maximize energy capture while ensuring structural integrity in variable conditions.',
-      connection: 'While drag is usually undesirable, turbine blades use controlled drag and lift together. The blade shape creates pressure differences that generate lift, while minimizing parasitic drag that would waste energy.',
-      howItWorks: 'Blades are twisted along their length because tip speeds differ from root speeds. Airfoil profiles vary from thick near the hub (for strength) to thin at tips (for efficiency). Pitch control adjusts blade angle as wind speed changes.',
-      stats: [
-        { value: '100+ m', label: 'Modern blade length', icon: '📏' },
-        { value: '45-50%', label: 'Max efficiency (Betz limit: 59%)', icon: '⚡' },
-        { value: '200+ mph', label: 'Tip speeds achieved', icon: '🌀' }
-      ],
-      examples: [
-        'Serrated trailing edges reduce noise from turbulent vortices',
-        'Vortex generators on blade surfaces improve efficiency in variable winds',
-        'Blade icing detection prevents dangerous imbalances and drag increases',
-        'Offshore turbines use larger blades due to consistent wind conditions'
-      ],
-      companies: ['Vestas', 'Siemens Gamesa', 'GE Renewable Energy', 'Nordex', 'Enercon'],
-      futureImpact: 'Flexible blades that bend in high winds, recyclable composite materials, and AI-controlled pitch systems are advancing turbine efficiency while reducing costs toward grid parity.',
-      color: colors.terminal
-    }
-  ];
-
   const renderPhaseContent = () => {
     switch (phase) {
       // ========== HOOK PHASE ==========
@@ -731,178 +570,76 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               Drag Force
             </h1>
             <p className="text-lg md:text-xl text-slate-400 max-w-xl mb-8 leading-relaxed">
-              The invisible force that fights your motion through air
+              The invisible wall that fights every object moving through air
             </p>
 
             <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-6 max-w-2xl border border-slate-700/50 shadow-2xl shadow-sky-500/5 mb-8">
-              <div className="relative w-full max-w-md h-64 rounded-xl overflow-hidden mx-auto">
-                <svg viewBox="0 0 400 300" className="w-full h-full">
+              <div className="text-left mb-6">
+                <h2 className="text-xl font-bold text-cyan-400 mb-3">Think About This...</h2>
+                <p className="text-lg text-slate-300 leading-relaxed mb-4">
+                  A Formula 1 car produces over <span className="text-yellow-400 font-bold">1,000 horsepower</span>,
+                  yet at top speed, <span className="text-red-400 font-bold">90% of that power</span> goes
+                  to just pushing through the air.
+                </p>
+                <p className="text-lg text-slate-300 leading-relaxed mb-4">
+                  Meanwhile, a skydiver falling from 15,000 feet somehow
+                  <span className="text-green-400 font-bold"> stops accelerating</span> despite gravity
+                  constantly pulling them down.
+                </p>
+                <p className="text-xl text-cyan-300 font-medium">
+                  What invisible force is stealing that horsepower and stopping the skydiver?
+                </p>
+              </div>
+
+              <div className="relative w-full h-48 rounded-xl overflow-hidden bg-gradient-to-b from-sky-900/30 to-slate-900/50">
+                <svg viewBox="0 0 400 200" className="w-full h-full">
                   <defs>
-                    {/* Premium sky gradient with depth */}
-                    <linearGradient id="dragHookSkyBg" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.5" />
-                      <stop offset="25%" stopColor="#7ec8e3" stopOpacity="0.45" />
-                      <stop offset="50%" stopColor="#5ba3c6" stopOpacity="0.4" />
-                      <stop offset="75%" stopColor="#4a90a4" stopOpacity="0.35" />
-                      <stop offset="100%" stopColor="#3d7a8e" stopOpacity="0.3" />
+                    <linearGradient id="hookAirGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
+                      <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.6" />
+                      <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
                     </linearGradient>
-
-                    {/* Cloud gradient */}
-                    <radialGradient id="dragHookCloudGrad" cx="40%" cy="40%" r="60%">
-                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-                      <stop offset="50%" stopColor="#f0f9ff" stopOpacity="0.7" />
-                      <stop offset="100%" stopColor="#e0f2fe" stopOpacity="0.4" />
+                    <radialGradient id="hookCarGrad" cx="50%" cy="40%" r="50%">
+                      <stop offset="0%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#991b1b" />
                     </radialGradient>
-
-                    {/* Skydiver suit gradient */}
-                    <radialGradient id="dragHookSuitGrad" cx="35%" cy="35%" r="65%">
-                      <stop offset="0%" stopColor="#ff8844" />
-                      <stop offset="50%" stopColor="#ff6600" />
-                      <stop offset="100%" stopColor="#dd5500" />
-                    </radialGradient>
-
-                    {/* Skin tone gradient */}
-                    <radialGradient id="dragHookSkinGrad" cx="40%" cy="30%" r="60%">
-                      <stop offset="0%" stopColor="#ffdab3" />
-                      <stop offset="50%" stopColor="#ffcc99" />
-                      <stop offset="100%" stopColor="#e6b380" />
-                    </radialGradient>
-
-                    {/* Helmet gradient */}
-                    <radialGradient id="dragHookHelmetGrad" cx="35%" cy="30%" r="65%">
-                      <stop offset="0%" stopColor="#4b5563" />
-                      <stop offset="50%" stopColor="#374151" />
-                      <stop offset="100%" stopColor="#1f2937" />
-                    </radialGradient>
-
-                    {/* Air resistance arrow gradient (upward) */}
-                    <linearGradient id="dragHookAirGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-                      <stop offset="0%" stopColor="#4ade80" />
-                      <stop offset="50%" stopColor="#22c55e" />
-                      <stop offset="100%" stopColor="#16a34a" />
-                    </linearGradient>
-
-                    {/* Gravity arrow gradient (downward) */}
-                    <linearGradient id="dragHookGravityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#f87171" />
-                      <stop offset="50%" stopColor="#ef4444" />
-                      <stop offset="100%" stopColor="#dc2626" />
-                    </linearGradient>
-
-                    {/* Arrow glow filter */}
-                    <filter id="dragHookArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feGaussianBlur stdDeviation="3" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-
-                    {/* Skydiver glow filter */}
-                    <filter id="dragHookSkydiverGlow" x="-30%" y="-30%" width="160%" height="160%">
-                      <feGaussianBlur stdDeviation="2" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
                   </defs>
 
-                  {/* Premium sky background */}
-                  <rect x="0" y="0" width="400" height="300" fill="url(#dragHookSkyBg)" />
-
-                  {/* Premium clouds with gradient */}
-                  <ellipse cx="80" cy="40" rx="45" ry="22" fill="url(#dragHookCloudGrad)" />
-                  <ellipse cx="60" cy="45" rx="25" ry="15" fill="url(#dragHookCloudGrad)" />
-                  <ellipse cx="100" cy="48" rx="20" ry="12" fill="url(#dragHookCloudGrad)" />
-
-                  <ellipse cx="320" cy="80" rx="55" ry="28" fill="url(#dragHookCloudGrad)" />
-                  <ellipse cx="295" cy="85" rx="30" ry="18" fill="url(#dragHookCloudGrad)" />
-                  <ellipse cx="350" cy="88" rx="25" ry="15" fill="url(#dragHookCloudGrad)" />
-
-                  {/* Premium 3D skydiver */}
-                  <g transform="translate(200, 140)" filter="url(#dragHookSkydiverGlow)">
-                    {/* Shadow */}
-                    <ellipse cx="3" cy="3" rx="28" ry="16" fill="rgba(0,0,0,0.2)" />
-                    {/* Body */}
-                    <ellipse cx="0" cy="0" rx="28" ry="16" fill="url(#dragHookSuitGrad)" stroke="#cc5500" strokeWidth="1" />
-                    {/* Head with helmet */}
-                    <circle cx="0" cy="-22" r="14" fill="url(#dragHookHelmetGrad)" />
-                    <circle cx="0" cy="-21" r="9" fill="url(#dragHookSkinGrad)" />
-                    {/* Arms spread */}
-                    <line x1="-28" y1="-5" x2="-65" y2="-18" stroke="url(#dragHookSuitGrad)" strokeWidth="9" strokeLinecap="round" />
-                    <line x1="28" y1="-5" x2="65" y2="-18" stroke="url(#dragHookSuitGrad)" strokeWidth="9" strokeLinecap="round" />
-                    {/* Hands */}
-                    <circle cx="-68" cy="-20" r="5" fill="url(#dragHookSkinGrad)" />
-                    <circle cx="68" cy="-20" r="5" fill="url(#dragHookSkinGrad)" />
-                    {/* Legs */}
-                    <line x1="-12" y1="16" x2="-38" y2="45" stroke="#1f2937" strokeWidth="9" strokeLinecap="round" />
-                    <line x1="12" y1="16" x2="38" y2="45" stroke="#1f2937" strokeWidth="9" strokeLinecap="round" />
-                    {/* Feet */}
-                    <ellipse cx="-42" cy="50" rx="7" ry="4" fill="#1f2937" />
-                    <ellipse cx="42" cy="50" rx="7" ry="4" fill="#1f2937" />
-                  </g>
-
-                  {/* Air resistance arrow with glow */}
-                  <g filter="url(#dragHookArrowGlow)">
-                    <line x1="200" y1="110" x2="200" y2="75" stroke="url(#dragHookAirGrad)" strokeWidth="5" strokeLinecap="round" />
-                    <polygon points="200,68 194,80 206,80" fill="#22c55e" />
-                  </g>
-
-                  {/* Gravity arrow with glow and animation */}
-                  <g filter="url(#dragHookArrowGlow)">
-                    <line x1="200" y1="200" x2="200" y2="250" stroke="url(#dragHookGravityGrad)" strokeWidth="5" strokeLinecap="round">
-                      <animate attributeName="stroke-opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                  {/* Animated airflow lines */}
+                  {[40, 80, 120, 160].map((y, i) => (
+                    <line key={i} x1="0" y1={y} x2="400" y2={y} stroke="url(#hookAirGrad)" strokeWidth="2" strokeDasharray="20,10">
+                      <animate attributeName="stroke-dashoffset" from="0" to="-30" dur={`${0.5 + i * 0.1}s`} repeatCount="indefinite" />
                     </line>
-                    <polygon points="200,258 194,246 206,246" fill="#ef4444">
-                      <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                  ))}
+
+                  {/* Simplified race car */}
+                  <g transform="translate(180, 100)">
+                    <ellipse cx="0" cy="0" rx="50" ry="20" fill="url(#hookCarGrad)" />
+                    <ellipse cx="-30" cy="20" rx="12" ry="12" fill="#1f2937" />
+                    <ellipse cx="30" cy="20" rx="12" ry="12" fill="#1f2937" />
+                    <path d="M-20,-15 L0,-30 L25,-15" fill="#0ea5e9" opacity="0.8" />
+                  </g>
+
+                  {/* Drag force arrow */}
+                  <g>
+                    <line x1="280" y1="100" x2="350" y2="100" stroke="#ef4444" strokeWidth="4">
+                      <animate attributeName="stroke-opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
+                    </line>
+                    <polygon points="350,100 340,94 340,106" fill="#ef4444">
+                      <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
                     </polygon>
+                    <text x="315" y="85" fill="#ef4444" fontSize="14" fontWeight="bold" textAnchor="middle">DRAG</text>
                   </g>
                 </svg>
-
-                {/* Labels outside SVG using typo system */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    bottom: '8px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    fontSize: typo.body,
-                    color: colors.dragForce,
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Gravity
-                </div>
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    top: '45px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    fontSize: typo.body,
-                    color: colors.success,
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Air Resistance
-                </div>
               </div>
-              <p className="text-lg text-slate-300 mt-4 mb-2">
-                Ever wondered why a feather falls slowly but a rock plummets fast?
-              </p>
-              <p className="text-base text-cyan-400">
-                Drag force is the air&apos;s resistance to objects moving through it. It depends on speed, shape, and size!
-              </p>
             </div>
 
             <button
               onClick={() => goToPhase('predict')}
-              style={{ zIndex: 10, position: 'relative' }}
               className="group px-8 py-4 bg-gradient-to-r from-sky-600 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="flex items-center gap-2">
-                Explore Drag Force
+                Make a Prediction
                 <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -915,51 +652,64 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       case 'predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-            <h2 className="text-2xl font-bold text-sky-400 mb-6">Make Your Prediction</h2>
-            <p className="text-lg text-slate-200 mb-6 text-center max-w-lg">
-              An object is falling through air. If you <span className="text-yellow-400 font-bold">double its speed</span>, what happens to the drag force acting on it?
-            </p>
+            <h2 className="text-2xl font-bold text-sky-400 mb-2">Make Your Prediction</h2>
+            <p className="text-slate-400 mb-6 text-center">Test your intuition about air resistance</p>
+
+            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 p-6 rounded-xl mb-6 max-w-lg border border-slate-700/50">
+              <p className="text-lg text-slate-200 mb-4">
+                A car is driving on the highway at <span className="text-cyan-400 font-bold">30 mph</span>.
+                The driver accelerates to <span className="text-yellow-400 font-bold">60 mph</span> (doubling their speed).
+              </p>
+              <p className="text-xl text-cyan-300 text-center font-bold">
+                What happens to the drag force pushing against the car?
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
               {[
                 { id: 'A', text: 'Drag force doubles (2x)' },
                 { id: 'B', text: 'Drag force quadruples (4x)' },
                 { id: 'C', text: 'Drag force stays the same' },
-                { id: 'D', text: 'Drag force is cut in half' }
+                { id: 'D', text: 'Drag force increases by 50%' }
               ].map(option => (
                 <button
                   key={option.id}
                   onClick={() => handlePrediction(option.id)}
                   disabled={showPredictionFeedback}
-                  style={{ zIndex: 10, position: 'relative' }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showPredictionFeedback && option.id === 'B'
-                      ? 'bg-green-600 text-white'
+                      ? 'bg-green-600 text-white border-2 border-green-400'
                       : showPredictionFeedback && selectedPrediction === option.id
                       ? 'bg-red-600 text-white'
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
+                      : 'bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 hover:border-slate-500'
                   }`}
                 >
-                  <span className="font-bold">{option.id}.</span> {option.text}
+                  <span className="font-bold text-lg mr-2">{option.id}.</span> {option.text}
                 </button>
               ))}
             </div>
+
             {showPredictionFeedback && (
-              <div className="bg-slate-800 p-4 rounded-xl mb-4 max-w-md">
-                <p className={`font-bold ${selectedPrediction === 'B' ? 'text-green-400' : 'text-sky-400'}`}>
-                  {selectedPrediction === 'B' ? 'Correct!' : 'Not quite!'}
+              <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 p-6 rounded-xl max-w-md border border-slate-700/50">
+                <p className={`text-xl font-bold mb-3 ${selectedPrediction === 'B' ? 'text-green-400' : 'text-sky-400'}`}>
+                  {selectedPrediction === 'B' ? 'Exactly Right!' : 'Surprising, isn\'t it?'}
                 </p>
-                <p className="text-slate-300 mb-2">
+                <p className="text-slate-300 mb-3">
                   Drag force depends on velocity <span className="text-yellow-400 font-bold">squared</span>!
                 </p>
-                <p className="text-slate-400 text-sm">
-                  F_drag = ½ρv²CdA. Double the velocity means 2² = 4 times the drag!
-                </p>
+                <div className="bg-slate-900/50 p-3 rounded-lg mb-4">
+                  <p className="font-mono text-sky-400 text-center text-lg">
+                    F<sub>drag</sub> = ½ρ<span className="text-yellow-400">v²</span>C<sub>d</sub>A
+                  </p>
+                  <p className="text-slate-400 text-sm text-center mt-2">
+                    Double velocity = 2² = <span className="text-green-400 font-bold">4x the drag!</span>
+                  </p>
+                </div>
                 <button
                   onClick={() => goToPhase('play')}
-                  style={{ zIndex: 10, position: 'relative' }}
-                  className="mt-4 px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl"
+                  className="w-full px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-all"
                 >
-                  Try the Simulation
+                  Explore in the Simulator
                 </button>
               </div>
             )}
@@ -973,371 +723,123 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-            <h2 className="text-2xl font-bold text-sky-400 mb-4">Drag Force Simulator</h2>
-            <p className="text-slate-400 mb-4">Adjust parameters and see how drag force changes</p>
+            <h2 className="text-2xl font-bold text-sky-400 mb-2">Drag Force Laboratory</h2>
+            <p className="text-slate-400 mb-4">Experiment with the variables that affect drag</p>
 
-            <div className="relative w-full max-w-lg h-80 bg-gradient-to-b from-sky-400/20 to-sky-900/40 rounded-xl mb-4 overflow-hidden">
+            <div className="relative w-full max-w-lg h-80 bg-gradient-to-b from-sky-400/20 to-sky-900/40 rounded-xl mb-4 overflow-hidden border border-slate-700/50">
               <svg viewBox="0 0 400 400" className="w-full h-full">
                 <defs>
-                  {/* Premium sky gradient with depth */}
                   <linearGradient id="dragSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.5" />
-                    <stop offset="25%" stopColor="#5ba3c6" stopOpacity="0.45" />
                     <stop offset="50%" stopColor="#3d7a9e" stopOpacity="0.5" />
-                    <stop offset="75%" stopColor="#1e5a7a" stopOpacity="0.55" />
                     <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.7" />
                   </linearGradient>
-
-                  {/* Premium ground gradient */}
                   <linearGradient id="dragGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#4a7c44" />
-                    <stop offset="30%" stopColor="#3d6b38" />
-                    <stop offset="70%" stopColor="#2d5a27" />
                     <stop offset="100%" stopColor="#1e4a1a" />
                   </linearGradient>
-
-                  {/* 3D falling object gradient */}
                   <radialGradient id="dragObjectGrad" cx="35%" cy="35%" r="65%">
                     <stop offset="0%" stopColor="#ffaa44" />
-                    <stop offset="25%" stopColor="#ff8833" />
-                    <stop offset="50%" stopColor="#ff6600" />
-                    <stop offset="75%" stopColor="#dd5500" />
                     <stop offset="100%" stopColor="#aa4400" />
                   </radialGradient>
-
-                  {/* Object highlight for 3D effect */}
-                  <radialGradient id="dragObjectHighlight" cx="30%" cy="25%" r="40%">
-                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
-                    <stop offset="50%" stopColor="#ffdd99" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#ff8833" stopOpacity="0" />
-                  </radialGradient>
-
-                  {/* Air flow streamline gradient */}
-                  <linearGradient id="dragAirFlowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
-                    <stop offset="20%" stopColor="#38bdf8" stopOpacity="0.4" />
-                    <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.6" />
-                    <stop offset="80%" stopColor="#38bdf8" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
-                  </linearGradient>
-
-                  {/* Weight arrow gradient */}
-                  <linearGradient id="dragWeightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#f87171" />
-                    <stop offset="50%" stopColor="#ef4444" />
-                    <stop offset="100%" stopColor="#dc2626" />
-                  </linearGradient>
-
-                  {/* Drag arrow gradient */}
-                  <linearGradient id="dragForceGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-                    <stop offset="0%" stopColor="#4ade80" />
-                    <stop offset="50%" stopColor="#22c55e" />
-                    <stop offset="100%" stopColor="#16a34a" />
-                  </linearGradient>
-
-                  {/* Glow filter for arrows */}
-                  <filter id="dragArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="3" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  {/* Glow filter for object */}
-                  <filter id="dragObjectGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  {/* Terminal velocity indicator gradient */}
-                  <linearGradient id="dragTerminalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0" />
-                    <stop offset="20%" stopColor="#f59e0b" stopOpacity="0.8" />
-                    <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
-                    <stop offset="80%" stopColor="#f59e0b" stopOpacity="0.8" />
-                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-                  </linearGradient>
                 </defs>
 
-                {/* Premium sky background */}
                 <rect x="0" y="0" width="400" height="400" fill="url(#dragSkyGrad)" />
+                <rect x="0" y="360" width="400" height="40" fill="url(#dragGroundGrad)" />
 
-                {/* Air flow streamlines */}
+                {/* Air flow lines when simulating */}
                 {isSimulating && (
-                  <g opacity="0.7">
+                  <g opacity="0.6">
                     {[80, 140, 200, 260, 320].map((xPos, i) => (
-                      <g key={i}>
-                        <line
-                          x1={xPos}
-                          y1={objectY - 80}
-                          x2={xPos}
-                          y2={objectY + 30}
-                          stroke="url(#dragAirFlowGrad)"
-                          strokeWidth="2"
-                          strokeDasharray="8,4"
-                        >
-                          <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="0.5s" repeatCount="indefinite" />
-                        </line>
-                      </g>
+                      <line key={i} x1={xPos} y1={objectY - 60} x2={xPos} y2={objectY + 30}
+                        stroke="#38bdf8" strokeWidth="2" strokeDasharray="8,4">
+                        <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="0.5s" repeatCount="indefinite" />
+                      </line>
                     ))}
                   </g>
                 )}
 
-                {/* Premium ground with gradient */}
-                <rect x="0" y="360" width="400" height="40" fill="url(#dragGroundGrad)" />
-                <line x1="0" y1="360" x2="400" y2="360" stroke="#5a9a50" strokeWidth="2" />
-
-                {/* 3D Falling object with glow */}
-                <g transform={`translate(200, ${objectY})`} filter={isSimulating ? "url(#dragObjectGlow)" : undefined}>
-                  {/* Shadow */}
-                  <ellipse
-                    cx="3"
-                    cy="3"
-                    rx={15 + surfaceArea * 20}
-                    ry={10 + surfaceArea * 10}
-                    fill="rgba(0,0,0,0.3)"
-                  />
-                  {/* Main body with 3D gradient */}
-                  <ellipse
-                    cx="0"
-                    cy="0"
-                    rx={15 + surfaceArea * 20}
-                    ry={10 + surfaceArea * 10}
-                    fill="url(#dragObjectGrad)"
-                    stroke="#aa4400"
-                    strokeWidth="2"
-                  />
-                  {/* 3D highlight */}
-                  <ellipse
-                    cx={-5 - surfaceArea * 5}
-                    cy={-3 - surfaceArea * 3}
-                    rx={(15 + surfaceArea * 20) * 0.5}
-                    ry={(10 + surfaceArea * 10) * 0.4}
-                    fill="url(#dragObjectHighlight)"
-                  />
+                {/* Falling object */}
+                <g transform={`translate(200, ${objectY})`}>
+                  <ellipse cx="3" cy="3" rx={15 + surfaceArea * 20} ry={10 + surfaceArea * 10} fill="rgba(0,0,0,0.3)" />
+                  <ellipse cx="0" cy="0" rx={15 + surfaceArea * 20} ry={10 + surfaceArea * 10} fill="url(#dragObjectGrad)" stroke="#aa4400" strokeWidth="2" />
                 </g>
 
-                {/* Force vectors with glow effects */}
+                {/* Force vectors */}
                 {showVectors && objectY < 340 && (
                   <>
-                    {/* Weight arrow with glow */}
-                    <g filter="url(#dragArrowGlow)">
-                      <line
-                        x1="200"
-                        y1={objectY + 25}
-                        x2="200"
-                        y2={objectY + 25 + 40}
-                        stroke="url(#dragWeightGrad)"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                      />
-                      <polygon
-                        points={`200,${objectY + 72} 193,${objectY + 60} 207,${objectY + 60}`}
-                        fill="#ef4444"
-                      />
-                    </g>
+                    {/* Weight arrow */}
+                    <line x1="200" y1={objectY + 25} x2="200" y2={objectY + 65} stroke="#ef4444" strokeWidth="5" strokeLinecap="round" />
+                    <polygon points={`200,${objectY + 72} 193,${objectY + 60} 207,${objectY + 60}`} fill="#ef4444" />
 
-                    {/* Drag arrow with glow */}
+                    {/* Drag arrow */}
                     {currentDrag > 0 && (
-                      <g filter="url(#dragArrowGlow)">
-                        <line
-                          x1="200"
-                          y1={objectY - 20}
-                          x2="200"
-                          y2={objectY - 20 - Math.min(currentDrag / 10, 50)}
-                          stroke="url(#dragForceGrad)"
-                          strokeWidth="5"
-                          strokeLinecap="round"
-                        />
-                        <polygon
-                          points={`200,${objectY - 27 - Math.min(currentDrag / 10, 50)} 193,${objectY - 15 - Math.min(currentDrag / 10, 50)} 207,${objectY - 15 - Math.min(currentDrag / 10, 50)}`}
-                          fill="#22c55e"
-                        />
-                      </g>
-                    )}
-
-                    {/* Terminal velocity indicator line */}
-                    {Math.abs(currentDrag - 49) < 5 && currentDrag > 0 && (
-                      <g opacity="0.8">
-                        <line
-                          x1="50"
-                          y1={objectY}
-                          x2="150"
-                          y2={objectY}
-                          stroke="url(#dragTerminalGrad)"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                        />
-                        <line
-                          x1="250"
-                          y1={objectY}
-                          x2="350"
-                          y2={objectY}
-                          stroke="url(#dragTerminalGrad)"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                        />
-                      </g>
+                      <>
+                        <line x1="200" y1={objectY - 20} x2="200" y2={objectY - 20 - Math.min(currentDrag / 10, 50)}
+                          stroke="#22c55e" strokeWidth="5" strokeLinecap="round" />
+                        <polygon points={`200,${objectY - 27 - Math.min(currentDrag / 10, 50)} 193,${objectY - 15 - Math.min(currentDrag / 10, 50)} 207,${objectY - 15 - Math.min(currentDrag / 10, 50)}`}
+                          fill="#22c55e" />
+                      </>
                     )}
                   </>
                 )}
 
-                {/* Data panel background with glassmorphism effect */}
-                <rect x="10" y="10" width="160" height="110" fill="rgba(0,0,0,0.7)" rx="8" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                {/* Data panel */}
+                <rect x="10" y="10" width="160" height="110" fill="rgba(0,0,0,0.7)" rx="8" />
               </svg>
 
-              {/* Data panel labels outside SVG using typo system */}
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  top: '20px',
-                  left: '22px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px'
-                }}
-              >
-                <div style={{ fontSize: typo.small, color: colors.textPrimary }}>
-                  Speed: <span style={{ color: colors.velocity, fontWeight: 'bold' }}>{currentVelocity.toFixed(1)} m/s</span>
-                </div>
-                <div style={{ fontSize: typo.small, color: colors.textPrimary }}>
-                  Drag: <span style={{ color: colors.success, fontWeight: 'bold' }}>{currentDrag.toFixed(1)} N</span>
-                </div>
-                <div style={{ fontSize: typo.small, color: colors.textPrimary }}>
-                  Time: <span style={{ fontWeight: 'bold' }}>{timeElapsed.toFixed(1)}s</span>
-                </div>
-                <div style={{ fontSize: typo.label, color: colors.textMuted }}>
-                  Predicted: {calculatedDrag.toFixed(1)} N
-                </div>
+              {/* Data labels */}
+              <div className="absolute top-5 left-5 text-sm space-y-1">
+                <div className="text-white">Speed: <span className="text-green-400 font-bold">{currentVelocity.toFixed(1)} m/s</span></div>
+                <div className="text-white">Drag: <span className="text-emerald-400 font-bold">{currentDrag.toFixed(1)} N</span></div>
+                <div className="text-white">Time: <span className="font-bold">{timeElapsed.toFixed(1)}s</span></div>
+                <div className="text-slate-400 text-xs">Predicted: {calculatedDrag.toFixed(1)} N</div>
               </div>
 
-              {/* Force vector labels outside SVG */}
               {showVectors && objectY < 340 && (
                 <>
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: '52%',
-                      top: `${(objectY + 50) / 4 + 5}%`,
-                      fontSize: typo.label,
-                      color: colors.dragForce,
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    Weight
-                  </div>
+                  <div className="absolute text-xs font-bold text-red-400" style={{ left: '52%', top: `${(objectY + 50) / 4 + 5}%` }}>Weight</div>
                   {currentDrag > 0 && (
-                    <div
-                      className="absolute pointer-events-none"
-                      style={{
-                        left: '52%',
-                        top: `${(objectY - 35) / 4 + 5}%`,
-                        fontSize: typo.label,
-                        color: colors.success,
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      Drag
-                    </div>
-                  )}
-                  {Math.abs(currentDrag - 49) < 5 && currentDrag > 0 && (
-                    <div
-                      className="absolute pointer-events-none"
-                      style={{
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        top: `${(objectY - 25) / 4 + 5}%`,
-                        fontSize: typo.label,
-                        color: colors.terminal,
-                        fontWeight: 'bold',
-                        background: 'rgba(0,0,0,0.5)',
-                        padding: '2px 8px',
-                        borderRadius: '4px'
-                      }}
-                    >
-                      Terminal Velocity!
-                    </div>
+                    <div className="absolute text-xs font-bold text-green-400" style={{ left: '52%', top: `${(objectY - 35) / 4 + 5}%` }}>Drag</div>
                   )}
                 </>
               )}
             </div>
 
+            {/* Controls */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-lg mb-4">
               <div className="bg-slate-800 p-3 rounded-lg">
                 <label className="text-sm text-slate-400">Initial Velocity (m/s)</label>
-                <input
-                  type="range"
-                  min="5"
-                  max="50"
-                  value={velocity}
-                  onChange={(e) => setVelocity(Number(e.target.value))}
-                  className="w-full mt-1"
-                />
+                <input type="range" min="5" max="50" value={velocity} onChange={(e) => setVelocity(Number(e.target.value))} className="w-full mt-1" />
                 <span className="text-sky-400 font-bold">{velocity}</span>
               </div>
               <div className="bg-slate-800 p-3 rounded-lg">
                 <label className="text-sm text-slate-400">Surface Area (m²)</label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1.5"
-                  step="0.1"
-                  value={surfaceArea}
-                  onChange={(e) => setSurfaceArea(Number(e.target.value))}
-                  className="w-full mt-1"
-                />
+                <input type="range" min="0.1" max="1.5" step="0.1" value={surfaceArea} onChange={(e) => setSurfaceArea(Number(e.target.value))} className="w-full mt-1" />
                 <span className="text-sky-400 font-bold">{surfaceArea.toFixed(1)}</span>
               </div>
               <div className="bg-slate-800 p-3 rounded-lg">
                 <label className="text-sm text-slate-400">Drag Coefficient</label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1.5"
-                  step="0.1"
-                  value={dragCoefficient}
-                  onChange={(e) => setDragCoefficient(Number(e.target.value))}
-                  className="w-full mt-1"
-                />
+                <input type="range" min="0.1" max="1.5" step="0.1" value={dragCoefficient} onChange={(e) => setDragCoefficient(Number(e.target.value))} className="w-full mt-1" />
                 <span className="text-sky-400 font-bold">{dragCoefficient.toFixed(1)}</span>
               </div>
             </div>
 
             <div className="flex gap-3 mb-4">
-              <button
-                onClick={startSimulation}
-                disabled={isSimulating}
-                style={{ zIndex: 10, position: 'relative' }}
-                className="px-6 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 text-white font-bold rounded-xl"
-              >
+              <button onClick={startSimulation} disabled={isSimulating}
+                className="px-6 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 text-white font-bold rounded-xl">
                 {isSimulating ? 'Falling...' : 'Drop Object'}
               </button>
-              <button
-                onClick={resetSimulation}
-                style={{ zIndex: 10, position: 'relative' }}
-                className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded-xl"
-              >
+              <button onClick={resetSimulation} className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded-xl">
                 Reset
               </button>
               <label className="flex items-center gap-2 text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={showVectors}
-                  onChange={(e) => setShowVectors(e.target.checked)}
-                />
-                Show Forces
+                <input type="checkbox" checked={showVectors} onChange={(e) => setShowVectors(e.target.checked)} />
+                Forces
               </label>
             </div>
 
-            <button
-              onClick={() => goToPhase('review')}
-              style={{ zIndex: 10, position: 'relative' }}
-              className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl"
-            >
+            <button onClick={() => goToPhase('review')} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl">
               Review the Physics
             </button>
           </div>
@@ -1359,53 +861,49 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                 <div className="bg-slate-800/50 p-3 rounded-lg">
                   <span className="text-cyan-400 font-bold">ρ (rho)</span>
                   <p className="text-slate-300">Air density (kg/m³)</p>
-                  <p className="text-slate-500">~1.2 at sea level</p>
+                  <p className="text-slate-500">~1.2 at sea level, less at altitude</p>
+                </div>
+                <div className="bg-slate-800/50 p-3 rounded-lg border border-yellow-500/30">
+                  <span className="text-yellow-400 font-bold">v² (velocity squared)</span>
+                  <p className="text-slate-300">THE key factor!</p>
+                  <p className="text-slate-500">Double speed = 4x drag</p>
                 </div>
                 <div className="bg-slate-800/50 p-3 rounded-lg">
-                  <span className="text-yellow-400 font-bold">v²</span>
-                  <p className="text-slate-300">Velocity squared</p>
-                  <p className="text-slate-500">Most important factor!</p>
+                  <span className="text-green-400 font-bold">C<sub>d</sub> (drag coefficient)</span>
+                  <p className="text-slate-300">Shape efficiency</p>
+                  <p className="text-slate-500">Teardrop: 0.04, Cube: 1.05</p>
                 </div>
                 <div className="bg-slate-800/50 p-3 rounded-lg">
-                  <span className="text-green-400 font-bold">C<sub>d</sub></span>
-                  <p className="text-slate-300">Drag coefficient</p>
-                  <p className="text-slate-500">Shape-dependent (0.04 - 2.0)</p>
-                </div>
-                <div className="bg-slate-800/50 p-3 rounded-lg">
-                  <span className="text-purple-400 font-bold">A</span>
-                  <p className="text-slate-300">Cross-sectional area</p>
-                  <p className="text-slate-500">Frontal area facing flow</p>
+                  <span className="text-purple-400 font-bold">A (frontal area)</span>
+                  <p className="text-slate-300">Cross-section facing flow</p>
+                  <p className="text-slate-500">Bigger = more drag</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 p-4 rounded-xl max-w-lg mb-6 border border-yellow-500/30">
-              <h4 className="font-bold text-yellow-400 mb-2">Key Insight: The v² Effect</h4>
-              <p className="text-slate-300 text-sm">
-                Because drag depends on v², doubling speed quadruples drag. At highway speeds,
-                most of a car&apos;s fuel is spent fighting air resistance!
+              <h4 className="font-bold text-yellow-400 mb-2">The Power Problem</h4>
+              <p className="text-slate-300 text-sm mb-3">
+                Power to overcome drag scales with <span className="text-yellow-400">v³</span> (velocity cubed)!
               </p>
-              <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 <div className="bg-slate-800/50 p-2 rounded">
-                  <div className="text-slate-400">10 m/s</div>
-                  <div className="text-green-400 font-bold">1x drag</div>
+                  <div className="text-slate-400">30 mph</div>
+                  <div className="text-green-400 font-bold">1x power</div>
                 </div>
                 <div className="bg-slate-800/50 p-2 rounded">
-                  <div className="text-slate-400">20 m/s</div>
-                  <div className="text-green-400 font-bold">4x drag</div>
+                  <div className="text-slate-400">60 mph</div>
+                  <div className="text-yellow-400 font-bold">8x power</div>
                 </div>
                 <div className="bg-slate-800/50 p-2 rounded">
-                  <div className="text-slate-400">30 m/s</div>
-                  <div className="text-green-400 font-bold">9x drag</div>
+                  <div className="text-slate-400">90 mph</div>
+                  <div className="text-red-400 font-bold">27x power</div>
                 </div>
               </div>
             </div>
 
-            <button
-              onClick={() => goToPhase('twist_predict')}
-              style={{ zIndex: 10, position: 'relative' }}
-              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl"
-            >
+            <button onClick={() => goToPhase('twist_predict')}
+              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl">
               Ready for the Twist?
             </button>
           </div>
@@ -1415,55 +913,60 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       case 'twist_predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-            <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist: Terminal Velocity</h2>
-            <div className="bg-slate-800 p-4 rounded-xl mb-6 max-w-lg">
-              <p className="text-slate-200 text-center mb-4">
-                A skydiver jumps from a plane and falls faster and faster... but eventually they stop accelerating
-                and fall at a <span className="text-purple-400 font-bold">constant speed</span>.
+            <h2 className="text-2xl font-bold text-purple-400 mb-2">The Twist: Terminal Velocity</h2>
+            <p className="text-slate-400 mb-6">Something strange happens when objects fall...</p>
+
+            <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 p-6 rounded-xl mb-6 max-w-lg border border-purple-500/30">
+              <p className="text-slate-200 mb-4">
+                A skydiver jumps from 15,000 feet. They accelerate faster and faster...
+                but after about 12 seconds, their speedometer stops increasing. They fall the rest of the way at a
+                <span className="text-purple-400 font-bold"> constant 120 mph</span>.
               </p>
               <p className="text-xl text-cyan-300 text-center font-bold">
-                Why does a falling object eventually stop speeding up?
+                If gravity never stops pulling, why do they stop accelerating?
               </p>
             </div>
+
             <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
               {[
-                { id: 'A', text: 'Gravity decreases at lower altitudes' },
-                { id: 'B', text: 'The air gets thicker near the ground' },
-                { id: 'C', text: 'Drag force increases until it equals weight' },
-                { id: 'D', text: 'The person runs out of potential energy' }
+                { id: 'A', text: 'Gravity gets weaker as they fall' },
+                { id: 'B', text: 'Air pressure pushes up on them' },
+                { id: 'C', text: 'Drag force grows until it equals their weight' },
+                { id: 'D', text: 'They run out of gravitational potential energy' }
               ].map(option => (
                 <button
                   key={option.id}
                   onClick={() => handleTwistPrediction(option.id)}
                   disabled={showTwistFeedback}
-                  style={{ zIndex: 10, position: 'relative' }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showTwistFeedback && option.id === 'C'
-                      ? 'bg-green-600 text-white'
+                      ? 'bg-green-600 text-white border-2 border-green-400'
                       : showTwistFeedback && twistPrediction === option.id
                       ? 'bg-red-600 text-white'
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
+                      : 'bg-slate-700 hover:bg-slate-600 text-white border border-slate-600'
                   }`}
                 >
                   <span className="font-bold">{option.id}.</span> {option.text}
                 </button>
               ))}
             </div>
+
             {showTwistFeedback && (
-              <div className="bg-slate-800 p-4 rounded-xl max-w-md">
-                <p className={`font-bold ${twistPrediction === 'C' ? 'text-green-400' : 'text-purple-400'}`}>
-                  {twistPrediction === 'C' ? 'Exactly right!' : 'Good thinking, but not quite!'}
+              <div className="bg-gradient-to-br from-slate-800/90 to-slate-900/90 p-6 rounded-xl max-w-md border border-slate-700/50">
+                <p className={`text-xl font-bold mb-3 ${twistPrediction === 'C' ? 'text-green-400' : 'text-purple-400'}`}>
+                  {twistPrediction === 'C' ? 'Excellent reasoning!' : 'Great thinking!'}
                 </p>
-                <p className="text-slate-300">
-                  As speed increases, drag force (which depends on v²) grows until it equals the object&apos;s weight.
-                  At that point, net force = 0, so acceleration = 0. This is <span className="text-yellow-400">terminal velocity</span>.
+                <p className="text-slate-300 mb-3">
+                  As speed increases, drag force (proportional to v²) grows rapidly.
+                  Eventually, drag equals the skydiver&apos;s weight.
                 </p>
-                <button
-                  onClick={() => goToPhase('twist_play')}
-                  style={{ zIndex: 10, position: 'relative' }}
-                  className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl"
-                >
-                  See Terminal Velocity
+                <p className="text-slate-300 mb-4">
+                  When F<sub>drag</sub> = Weight, net force = 0, so acceleration = 0.
+                  This is <span className="text-yellow-400 font-bold">terminal velocity</span>.
+                </p>
+                <button onClick={() => goToPhase('twist_play')}
+                  className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl">
+                  See It In Action
                 </button>
               </div>
             )}
@@ -1474,277 +977,99 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       case 'twist_play':
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-            <h2 className="text-2xl font-bold text-purple-400 mb-4">Terminal Velocity Simulation</h2>
-            <p className="text-slate-400 mb-4">Watch two skydivers reach different terminal velocities based on body position</p>
+            <h2 className="text-2xl font-bold text-purple-400 mb-2">Terminal Velocity Race</h2>
+            <p className="text-slate-400 mb-4">Watch how body position affects falling speed</p>
 
-            <div className="relative w-full max-w-lg h-80 bg-gradient-to-b from-sky-400/20 to-sky-900/40 rounded-xl mb-4 overflow-hidden">
+            <div className="relative w-full max-w-lg h-80 bg-gradient-to-b from-sky-400/20 to-sky-900/40 rounded-xl mb-4 overflow-hidden border border-slate-700/50">
               <svg viewBox="0 0 400 400" className="w-full h-full">
                 <defs>
-                  {/* Premium sky gradient for terminal velocity sim */}
-                  <linearGradient id="dragTermSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <linearGradient id="termSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.5" />
-                    <stop offset="25%" stopColor="#5ba3c6" stopOpacity="0.45" />
-                    <stop offset="50%" stopColor="#3d7a9e" stopOpacity="0.5" />
-                    <stop offset="75%" stopColor="#1e5a7a" stopOpacity="0.55" />
                     <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.7" />
                   </linearGradient>
-
-                  {/* Premium ground gradient */}
-                  <linearGradient id="dragTermGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#4a7c44" />
-                    <stop offset="50%" stopColor="#3d6b38" />
-                    <stop offset="100%" stopColor="#2d5a27" />
-                  </linearGradient>
-
-                  {/* Skydiver suit gradient - spread eagle */}
-                  <radialGradient id="dragSuitSpreadGrad" cx="35%" cy="35%" r="65%">
+                  <radialGradient id="spreadGrad" cx="35%" cy="35%" r="65%">
                     <stop offset="0%" stopColor="#22c55e" />
-                    <stop offset="50%" stopColor="#16a34a" />
                     <stop offset="100%" stopColor="#15803d" />
                   </radialGradient>
-
-                  {/* Skydiver suit gradient - tucked */}
-                  <radialGradient id="dragSuitTuckedGrad" cx="35%" cy="35%" r="65%">
+                  <radialGradient id="tuckedGrad" cx="35%" cy="35%" r="65%">
                     <stop offset="0%" stopColor="#fb923c" />
-                    <stop offset="50%" stopColor="#f97316" />
                     <stop offset="100%" stopColor="#ea580c" />
                   </radialGradient>
-
-                  {/* Skin tone gradient */}
-                  <radialGradient id="dragSkinGrad" cx="40%" cy="30%" r="60%">
-                    <stop offset="0%" stopColor="#ffdab3" />
-                    <stop offset="50%" stopColor="#ffcc99" />
-                    <stop offset="100%" stopColor="#e6b380" />
-                  </radialGradient>
-
-                  {/* Helmet gradient */}
-                  <radialGradient id="dragHelmetGrad" cx="35%" cy="30%" r="65%">
-                    <stop offset="0%" stopColor="#4b5563" />
-                    <stop offset="50%" stopColor="#374151" />
-                    <stop offset="100%" stopColor="#1f2937" />
-                  </radialGradient>
-
-                  {/* Terminal velocity reached glow */}
-                  <filter id="dragTerminalGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  {/* Air flow around skydivers */}
-                  <linearGradient id="dragTermAirFlow" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
-                    <stop offset="30%" stopColor="#38bdf8" stopOpacity="0.3" />
-                    <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
-                  </linearGradient>
                 </defs>
 
-                {/* Premium sky background */}
-                <rect x="0" y="0" width="400" height="400" fill="url(#dragTermSkyGrad)" />
-
-                {/* Air flow streamlines when falling */}
-                {showTerminalSim && terminalObjects.length >= 2 && (
-                  <g opacity="0.5">
-                    {/* Streamlines around spread eagle */}
-                    {[80, 100, 140, 160].map((xPos, i) => (
-                      <line
-                        key={`spread-${i}`}
-                        x1={xPos}
-                        y1={terminalObjects[0].y - 60}
-                        x2={xPos}
-                        y2={terminalObjects[0].y + 40}
-                        stroke="url(#dragTermAirFlow)"
-                        strokeWidth="2"
-                        strokeDasharray="6,4"
-                      >
-                        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="0.4s" repeatCount="indefinite" />
-                      </line>
-                    ))}
-                    {/* Streamlines around tucked */}
-                    {[260, 275, 285, 300].map((xPos, i) => (
-                      <line
-                        key={`tucked-${i}`}
-                        x1={xPos}
-                        y1={terminalObjects[1].y - 60}
-                        x2={xPos}
-                        y2={terminalObjects[1].y + 40}
-                        stroke="url(#dragTermAirFlow)"
-                        strokeWidth="2"
-                        strokeDasharray="6,4"
-                      >
-                        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="0.3s" repeatCount="indefinite" />
-                      </line>
-                    ))}
-                  </g>
-                )}
-
-                {/* Premium ground */}
-                <rect x="0" y="360" width="400" height="40" fill="url(#dragTermGroundGrad)" />
-                <line x1="0" y1="360" x2="400" y2="360" stroke="#5a9a50" strokeWidth="2" />
+                <rect x="0" y="0" width="400" height="400" fill="url(#termSkyGrad)" />
+                <rect x="0" y="360" width="400" height="40" fill="#2d5a27" />
 
                 {terminalObjects.length >= 2 && (
                   <>
-                    {/* Spread eagle skydiver with premium graphics */}
-                    <g
-                      transform={`translate(120, ${terminalObjects[0].y})`}
-                      filter={terminalObjects[0].reached ? "url(#dragTerminalGlow)" : undefined}
-                    >
-                      {/* Body shadow */}
-                      <ellipse cx="3" cy="3" rx="25" ry="12" fill="rgba(0,0,0,0.3)" />
-                      {/* Body */}
-                      <ellipse cx="0" cy="0" rx="25" ry="12" fill="url(#dragSuitSpreadGrad)" stroke="#15803d" strokeWidth="1" />
-                      {/* Head with helmet */}
-                      <circle cx="0" cy="-15" r="10" fill="url(#dragHelmetGrad)" />
-                      <circle cx="0" cy="-14" r="6" fill="url(#dragSkinGrad)" />
-                      {/* Arms spread */}
-                      <line x1="-25" y1="0" x2="-48" y2="-8" stroke="url(#dragSuitSpreadGrad)" strokeWidth="6" strokeLinecap="round" />
-                      <line x1="25" y1="0" x2="48" y2="-8" stroke="url(#dragSuitSpreadGrad)" strokeWidth="6" strokeLinecap="round" />
-                      {/* Hands */}
-                      <circle cx="-50" cy="-9" r="4" fill="url(#dragSkinGrad)" />
-                      <circle cx="50" cy="-9" r="4" fill="url(#dragSkinGrad)" />
-                      {/* Legs spread */}
+                    {/* Spread eagle skydiver */}
+                    <g transform={`translate(120, ${terminalObjects[0].y})`}>
+                      <ellipse cx="0" cy="0" rx="25" ry="12" fill="url(#spreadGrad)" stroke="#15803d" strokeWidth="1" />
+                      <circle cx="0" cy="-15" r="10" fill="#374151" />
+                      <line x1="-25" y1="0" x2="-48" y2="-8" stroke="url(#spreadGrad)" strokeWidth="6" strokeLinecap="round" />
+                      <line x1="25" y1="0" x2="48" y2="-8" stroke="url(#spreadGrad)" strokeWidth="6" strokeLinecap="round" />
                       <line x1="-10" y1="12" x2="-25" y2="32" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
                       <line x1="10" y1="12" x2="25" y2="32" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
-                      {/* Feet */}
-                      <ellipse cx="-27" cy="35" rx="5" ry="3" fill="#1f2937" />
-                      <ellipse cx="27" cy="35" rx="5" ry="3" fill="#1f2937" />
                     </g>
 
-                    {/* Tucked skydiver with premium graphics */}
-                    <g
-                      transform={`translate(280, ${terminalObjects[1].y})`}
-                      filter={terminalObjects[1].reached ? "url(#dragTerminalGlow)" : undefined}
-                    >
-                      {/* Body shadow */}
-                      <ellipse cx="3" cy="3" rx="12" ry="22" fill="rgba(0,0,0,0.3)" />
-                      {/* Body - tucked position */}
-                      <ellipse cx="0" cy="0" rx="12" ry="22" fill="url(#dragSuitTuckedGrad)" stroke="#ea580c" strokeWidth="1" />
-                      {/* Head with helmet */}
-                      <circle cx="0" cy="-20" r="10" fill="url(#dragHelmetGrad)" />
-                      <circle cx="0" cy="-19" r="6" fill="url(#dragSkinGrad)" />
-                      {/* Arms tucked in */}
-                      <ellipse cx="-8" cy="0" rx="4" ry="8" fill="url(#dragSuitTuckedGrad)" />
-                      <ellipse cx="8" cy="0" rx="4" ry="8" fill="url(#dragSuitTuckedGrad)" />
-                      {/* Legs tucked */}
-                      <ellipse cx="0" cy="18" rx="10" ry="8" fill="#1f2937" />
+                    {/* Tucked skydiver */}
+                    <g transform={`translate(280, ${terminalObjects[1].y})`}>
+                      <ellipse cx="0" cy="0" rx="12" ry="22" fill="url(#tuckedGrad)" stroke="#ea580c" strokeWidth="1" />
+                      <circle cx="0" cy="-20" r="10" fill="#374151" />
                     </g>
                   </>
                 )}
               </svg>
 
-              {/* Labels outside SVG using typo system */}
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  top: '16px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  display: 'flex',
-                  gap: '80px'
-                }}
-              >
-                <div style={{ fontSize: typo.small, color: colors.success, fontWeight: 'bold', textAlign: 'center' }}>
-                  Spread Eagle
-                </div>
-                <div style={{ fontSize: typo.small, color: colors.accent, fontWeight: 'bold', textAlign: 'center' }}>
-                  Tucked
-                </div>
+              {/* Labels */}
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-16">
+                <div className="text-sm font-bold text-green-400 text-center">Spread Eagle</div>
+                <div className="text-sm font-bold text-orange-400 text-center">Tucked</div>
               </div>
 
-              {/* Velocity labels outside SVG */}
               {terminalObjects.length >= 2 && (
                 <>
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: '25%',
-                      transform: 'translateX(-50%)',
-                      top: `${(terminalObjects[0].y + 55) / 4 + 5}%`,
-                      fontSize: typo.small,
-                      color: terminalObjects[0].reached ? colors.terminal : colors.textPrimary,
-                      fontWeight: 'bold',
-                      textAlign: 'center',
-                      background: 'rgba(0,0,0,0.5)',
-                      padding: '2px 8px',
-                      borderRadius: '4px'
-                    }}
-                  >
+                  <div className="absolute left-[25%] transform -translate-x-1/2 bg-black/50 px-2 py-1 rounded text-sm font-bold"
+                    style={{ top: `${(terminalObjects[0].y + 55) / 4 + 5}%`, color: terminalObjects[0].reached ? colors.terminal : '#fff' }}>
                     {terminalObjects[0].v.toFixed(0)} m/s {terminalObjects[0].reached && '(Terminal!)'}
                   </div>
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: '75%',
-                      transform: 'translateX(-50%)',
-                      top: `${(terminalObjects[1].y + 55) / 4 + 5}%`,
-                      fontSize: typo.small,
-                      color: terminalObjects[1].reached ? colors.terminal : colors.textPrimary,
-                      fontWeight: 'bold',
-                      textAlign: 'center',
-                      background: 'rgba(0,0,0,0.5)',
-                      padding: '2px 8px',
-                      borderRadius: '4px'
-                    }}
-                  >
+                  <div className="absolute left-[75%] transform -translate-x-1/2 bg-black/50 px-2 py-1 rounded text-sm font-bold"
+                    style={{ top: `${(terminalObjects[1].y + 55) / 4 + 5}%`, color: terminalObjects[1].reached ? colors.terminal : '#fff' }}>
                     {terminalObjects[1].v.toFixed(0)} m/s {terminalObjects[1].reached && '(Terminal!)'}
                   </div>
                 </>
               )}
 
-              {/* Start prompt outside SVG */}
               {!showTerminalSim && (
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    fontSize: typo.bodyLarge,
-                    color: colors.textMuted,
-                    textAlign: 'center'
-                  }}
-                >
-                  Click &quot;Jump&quot; to start
+                <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                  Click &quot;Jump&quot; to start the race
                 </div>
               )}
             </div>
 
-            <div className="bg-slate-800 p-4 rounded-xl max-w-lg mb-4">
-              <p className="text-slate-300 text-sm">
-                <span className="text-green-400 font-bold">Spread eagle:</span> Large area, high drag → lower terminal velocity (~55 m/s)
+            <div className="bg-slate-800/80 p-4 rounded-xl max-w-lg mb-4 text-sm">
+              <p className="text-slate-300">
+                <span className="text-green-400 font-bold">Spread eagle:</span> Large area, high drag, lower terminal velocity (~55 m/s)
               </p>
-              <p className="text-slate-300 text-sm mt-1">
-                <span className="text-orange-400 font-bold">Tucked position:</span> Small area, low drag → higher terminal velocity (~70 m/s)
+              <p className="text-slate-300 mt-1">
+                <span className="text-orange-400 font-bold">Tucked:</span> Small area, low drag, higher terminal velocity (~70 m/s)
               </p>
             </div>
 
             <div className="flex gap-3 mb-4">
-              <button
-                onClick={startTerminalSim}
-                disabled={showTerminalSim}
-                style={{ zIndex: 10, position: 'relative' }}
-                className="px-6 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 text-white font-bold rounded-xl"
-              >
+              <button onClick={startTerminalSim} disabled={showTerminalSim}
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 text-white font-bold rounded-xl">
                 {showTerminalSim ? 'Falling...' : 'Jump!'}
               </button>
-              <button
-                onClick={resetTerminalSim}
-                style={{ zIndex: 10, position: 'relative' }}
-                className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded-xl"
-              >
+              <button onClick={resetTerminalSim}
+                className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded-xl">
                 Reset
               </button>
             </div>
 
-            <button
-              onClick={() => goToPhase('twist_review')}
-              style={{ zIndex: 10, position: 'relative' }}
-              className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl"
-            >
-              Understand Terminal Velocity
+            <button onClick={() => goToPhase('twist_review')}
+              className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl">
+              Deep Dive: Terminal Velocity
             </button>
           </div>
         );
@@ -1756,7 +1081,7 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
             <h2 className="text-2xl font-bold text-purple-400 mb-6">Understanding Terminal Velocity</h2>
 
             <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 p-6 rounded-xl max-w-lg mb-6 border border-purple-500/30">
-              <h3 className="text-lg font-bold text-pink-400 mb-4 text-center">When Drag Equals Weight</h3>
+              <h3 className="text-lg font-bold text-pink-400 mb-4 text-center">The Balance Point</h3>
 
               <div className="bg-slate-900 p-4 rounded-lg text-center mb-4">
                 <p className="text-slate-300 mb-2">At terminal velocity:</p>
@@ -1764,98 +1089,162 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               </div>
 
               <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg">
-                  <span className="text-2xl">1️⃣</span>
-                  <p className="text-slate-300">Object starts falling, speeds up due to gravity</p>
+                <div className="flex items-start gap-3 bg-slate-800/50 p-3 rounded-lg">
+                  <span className="text-lg font-bold text-cyan-400">1</span>
+                  <p className="text-slate-300">Object begins falling, gravity accelerates it downward</p>
                 </div>
-                <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg">
-                  <span className="text-2xl">2️⃣</span>
-                  <p className="text-slate-300">As speed increases, drag force grows (∝ v²)</p>
+                <div className="flex items-start gap-3 bg-slate-800/50 p-3 rounded-lg">
+                  <span className="text-lg font-bold text-cyan-400">2</span>
+                  <p className="text-slate-300">As velocity increases, drag force grows (F = ½ρv²CdA)</p>
                 </div>
-                <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg">
-                  <span className="text-2xl">3️⃣</span>
-                  <p className="text-slate-300">Eventually drag = weight, net force = 0</p>
+                <div className="flex items-start gap-3 bg-slate-800/50 p-3 rounded-lg">
+                  <span className="text-lg font-bold text-cyan-400">3</span>
+                  <p className="text-slate-300">Eventually drag equals weight: net force = 0</p>
                 </div>
-                <div className="flex items-center gap-3 bg-slate-800/50 p-3 rounded-lg">
-                  <span className="text-2xl">4️⃣</span>
-                  <p className="text-slate-300">Acceleration stops → constant velocity!</p>
+                <div className="flex items-start gap-3 bg-slate-800/50 p-3 rounded-lg border border-yellow-500/30">
+                  <span className="text-lg font-bold text-yellow-400">4</span>
+                  <p className="text-slate-300">No net force = no acceleration = <span className="text-yellow-400">constant velocity!</span></p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-800 p-4 rounded-xl max-w-lg mb-6">
+            <div className="bg-slate-800/80 p-4 rounded-xl max-w-lg mb-6">
               <h4 className="font-bold text-cyan-400 mb-2">Terminal Velocity Formula</h4>
               <div className="bg-slate-900 p-3 rounded text-center mb-2">
-                <span className="font-mono text-sky-400">v<sub>terminal</sub> = √(2mg / ρC<sub>d</sub>A)</span>
+                <span className="font-mono text-sky-400">v<sub>terminal</sub> = sqrt(2mg / ρC<sub>d</sub>A)</span>
               </div>
               <p className="text-slate-400 text-sm">
-                Heavier objects or smaller cross-sections = higher terminal velocity.
-                That&apos;s why a bowling ball falls faster than a beach ball!
+                Higher mass (m) or lower area (A) = faster terminal velocity. That&apos;s why a tucked
+                skydiver falls faster than one spread-eagle!
               </p>
             </div>
 
-            <button
-              onClick={() => goToPhase('transfer')}
-              style={{ zIndex: 10, position: 'relative' }}
-              className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold rounded-xl"
-            >
-              See Real-World Applications
+            <button onClick={() => goToPhase('transfer')}
+              className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold rounded-xl">
+              Real-World Applications
             </button>
           </div>
         );
 
       // ========== TRANSFER PHASE ==========
       case 'transfer':
+        const currentApp = realWorldApps[activeAppTab];
         return (
-          <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-            <h2 className="text-2xl font-bold text-green-400 mb-6">Real-World Applications</h2>
+          <div className="flex flex-col items-center min-h-[500px] p-6">
+            <h2 className="text-2xl font-bold text-green-400 mb-2">Real-World Applications</h2>
+            <p className="text-slate-400 mb-6">Drag force shapes technology across every industry</p>
 
-            <div className="flex gap-2 mb-4 flex-wrap justify-center">
-              {applications.map((app, index) => (
+            {/* App tabs */}
+            <div className="flex gap-2 mb-6 flex-wrap justify-center">
+              {realWorldApps.map((app, index) => (
                 <button
                   key={index}
-                  onClick={() => setActiveAppTab(index)}
-                  style={{ zIndex: 10, position: 'relative' }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  onClick={() => { setActiveAppTab(index); setExpandedApp(null); }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all text-sm ${
                     activeAppTab === index
-                      ? `bg-gradient-to-r ${app.color} text-white`
+                      ? 'text-white shadow-lg'
                       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
+                  style={activeAppTab === index ? { backgroundColor: app.color } : {}}
                 >
-                  {completedApps.has(index) && '✓ '}{app.title}
+                  <span className="mr-1">{app.icon}</span>
+                  {completedApps.has(index) && <span className="mr-1">&#10003;</span>}
+                  {app.short}
                 </button>
               ))}
             </div>
 
-            <div className={`bg-gradient-to-r ${applications[activeAppTab].color} p-1 rounded-xl w-full max-w-md`}>
-              <div className="bg-slate-900 p-4 rounded-lg">
-                <div className="w-24 h-24 mx-auto mb-4">
-                  {applications[activeAppTab].icon}
+            {/* App content card */}
+            <div className="w-full max-w-2xl rounded-2xl overflow-hidden border border-slate-700/50"
+              style={{ background: `linear-gradient(135deg, ${currentApp.color}22, ${currentApp.color}11)` }}>
+
+              <div className="p-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-5xl">{currentApp.icon}</span>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">{currentApp.title}</h3>
+                    <p className="text-slate-400">{currentApp.tagline}</p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{applications[activeAppTab].title}</h3>
-                <p className="text-slate-300">{applications[activeAppTab].description}</p>
+
+                <p className="text-slate-300 mb-4">{currentApp.description}</p>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {currentApp.stats.map((stat, i) => (
+                    <div key={i} className="bg-slate-900/50 p-3 rounded-lg text-center">
+                      <div className="text-2xl mb-1">{stat.icon}</div>
+                      <div className="text-lg font-bold" style={{ color: currentApp.color }}>{stat.value}</div>
+                      <div className="text-xs text-slate-400">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Expandable details */}
+                <button
+                  onClick={() => setExpandedApp(expandedApp === activeAppTab ? null : activeAppTab)}
+                  className="w-full py-2 text-sm text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
+                >
+                  {expandedApp === activeAppTab ? 'Show Less' : 'Show More Details'}
+                  <svg className={`w-4 h-4 transition-transform ${expandedApp === activeAppTab ? 'rotate-180' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {expandedApp === activeAppTab && (
+                  <div className="mt-4 space-y-4 border-t border-slate-700/50 pt-4">
+                    <div>
+                      <h4 className="font-bold text-cyan-400 mb-2">Physics Connection</h4>
+                      <p className="text-slate-300 text-sm">{currentApp.connection}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-cyan-400 mb-2">How It Works</h4>
+                      <p className="text-slate-300 text-sm">{currentApp.howItWorks}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-cyan-400 mb-2">Real Examples</h4>
+                      <ul className="text-slate-300 text-sm space-y-1">
+                        {currentApp.examples.map((ex, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-green-400">&#8226;</span>
+                            <span>{ex}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-cyan-400 mb-2">Key Companies</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {currentApp.companies.map((company, i) => (
+                          <span key={i} className="px-2 py-1 bg-slate-800 rounded text-xs text-slate-300">
+                            {company}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-cyan-400 mb-2">Future Impact</h4>
+                      <p className="text-slate-300 text-sm">{currentApp.futureImpact}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mark complete button */}
                 {!completedApps.has(activeAppTab) && (
-                  <button
-                    onClick={() => handleAppComplete(activeAppTab)}
-                    style={{ zIndex: 10, position: 'relative' }}
-                    className="mt-4 px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg"
-                  >
+                  <button onClick={() => handleAppComplete(activeAppTab)}
+                    className="w-full mt-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all">
                     Mark as Understood
                   </button>
                 )}
               </div>
             </div>
 
-            <p className="text-slate-400 mt-4">
-              Completed: {completedApps.size} / {applications.length}
-            </p>
+            <p className="text-slate-400 mt-4">Explored: {completedApps.size} / {realWorldApps.length}</p>
 
-            {completedApps.size >= 3 && (
-              <button
-                onClick={() => goToPhase('test')}
-                style={{ zIndex: 10, position: 'relative' }}
-                className="mt-4 px-8 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white font-bold rounded-xl"
-              >
+            {completedApps.size >= 2 && (
+              <button onClick={() => goToPhase('test')}
+                className="mt-4 px-8 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 text-white font-bold rounded-xl">
                 Take the Quiz
               </button>
             )}
@@ -1865,21 +1254,25 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       // ========== TEST PHASE ==========
       case 'test':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-            <h2 className="text-2xl font-bold text-sky-400 mb-6">Knowledge Check</h2>
+          <div className="flex flex-col items-center min-h-[500px] p-6">
+            <h2 className="text-2xl font-bold text-sky-400 mb-2">Knowledge Check</h2>
+            <p className="text-slate-400 mb-6">10 scenario-based questions to test your understanding</p>
 
-            <div className="w-full max-w-lg space-y-4 max-h-[500px] overflow-y-auto">
-              {questions.map((question, qIndex) => (
-                <div key={qIndex} className="bg-slate-800 p-4 rounded-xl">
-                  <p className="text-slate-200 mb-3 font-medium">{qIndex + 1}. {question.q}</p>
+            <div className="w-full max-w-2xl space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+              {testQuestions.map((q, qIndex) => (
+                <div key={qIndex} className="bg-slate-800/80 p-4 rounded-xl border border-slate-700/50">
+                  <div className="bg-slate-900/50 p-3 rounded-lg mb-3">
+                    <p className="text-slate-400 text-sm italic mb-2">{q.scenario}</p>
+                    <p className="text-slate-200 font-medium">{qIndex + 1}. {q.question}</p>
+                  </div>
+
                   <div className="grid grid-cols-1 gap-2">
-                    {question.opts.map((option, oIndex) => (
+                    {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
                         onClick={() => handleTestAnswer(qIndex, oIndex)}
                         disabled={showTestResults}
-                        style={{ zIndex: 10, position: 'relative' }}
-                        className={`p-2 rounded-lg text-sm text-left transition-all ${
+                        className={`p-3 rounded-lg text-sm text-left transition-all ${
                           showTestResults && option.correct
                             ? 'bg-green-600 text-white'
                             : showTestResults && testAnswers[qIndex] === oIndex && !option.correct
@@ -1889,42 +1282,38 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                             : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                         }`}
                       >
-                        {option.text}
+                        <span className="font-bold mr-2">{option.id.toUpperCase()}.</span>
+                        {option.label}
                       </button>
                     ))}
                   </div>
+
                   {showTestResults && (
-                    <p className="text-slate-400 text-sm mt-2 italic">{question.exp}</p>
+                    <div className="mt-3 p-3 bg-slate-900/50 rounded-lg border-l-4 border-cyan-500">
+                      <p className="text-slate-300 text-sm">{q.explanation}</p>
+                    </div>
                   )}
                 </div>
               ))}
             </div>
 
             {!showTestResults && testAnswers.every(a => a !== -1) && (
-              <button
-                onClick={handleSubmitTest}
-                style={{ zIndex: 10, position: 'relative' }}
-                className="mt-6 px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl"
-              >
+              <button onClick={handleSubmitTest}
+                className="mt-6 px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl">
                 Submit Answers
               </button>
             )}
 
             {showTestResults && (
               <div className="mt-6 text-center">
-                <p className="text-2xl font-bold text-sky-400">
-                  Score: {testScore} / 10
-                </p>
-                <p className={`text-lg ${testScore >= 7 ? 'text-green-400' : 'text-orange-400'}`}>
-                  {testScore >= 7 ? 'Excellent! You\'ve mastered drag force!' : 'Good effort! Review the material and try again.'}
+                <p className="text-3xl font-bold text-sky-400">Score: {testScore} / 10</p>
+                <p className={`text-lg mt-2 ${testScore >= 7 ? 'text-green-400' : 'text-orange-400'}`}>
+                  {testScore >= 7 ? 'Excellent! You\'ve mastered drag force!' : 'Good effort! Review and try again.'}
                 </p>
                 {testScore >= 7 && (
-                  <button
-                    onClick={() => goToPhase('mastery')}
-                    style={{ zIndex: 10, position: 'relative' }}
-                    className="mt-4 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold rounded-xl"
-                  >
-                    Claim Your Badge!
+                  <button onClick={() => goToPhase('mastery')}
+                    className="mt-4 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl">
+                    Claim Your Badge
                   </button>
                 )}
               </div>
@@ -1935,31 +1324,48 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       // ========== MASTERY PHASE ==========
       case 'mastery':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-            <div className="text-6xl mb-4">🪂</div>
-            <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-400 mb-4">
+          <div className="flex flex-col items-center justify-center min-h-[600px] p-6 text-center">
+            <div className="text-8xl mb-6 animate-bounce">&#127942;</div>
+
+            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent">
               Drag Force Master!
             </h2>
-            <div className="bg-gradient-to-r from-sky-600/20 to-cyan-600/20 border border-sky-500/50 p-6 rounded-xl max-w-md mb-6">
-              <p className="text-slate-200 mb-4">
-                Congratulations! You&apos;ve mastered the physics of drag force and air resistance!
+
+            <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 p-8 rounded-2xl max-w-lg mb-8">
+              <p className="text-xl text-slate-200 mb-6">
+                You&apos;ve conquered the physics of air resistance!
               </p>
-              <div className="text-left text-sm text-slate-300 space-y-2">
-                <p>✓ Drag equation: F = ½ρv²CdA</p>
-                <p>✓ Velocity squared effect on drag</p>
-                <p>✓ Terminal velocity concept</p>
-                <p>✓ Real-world aerodynamic applications</p>
+
+              <div className="text-left space-y-3 text-slate-300">
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400 text-xl">&#10003;</span>
+                  <span>The drag equation: F = ½ρv²CdA</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400 text-xl">&#10003;</span>
+                  <span>Velocity squared relationship - why speed is so costly</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400 text-xl">&#10003;</span>
+                  <span>Terminal velocity - when drag balances weight</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-green-400 text-xl">&#10003;</span>
+                  <span>Real applications: F1, parachutes, cycling, aviation</span>
+                </div>
               </div>
             </div>
-            <p className="text-cyan-400 font-medium mb-6">
-              Now you understand why skydivers can control their speed and why cars are designed to be streamlined!
-            </p>
-            <button
-              onClick={() => goToPhase('hook')}
-              style={{ zIndex: 10, position: 'relative' }}
-              className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl"
-            >
-              Start Over
+
+            <div className="bg-slate-800/50 p-4 rounded-xl max-w-lg mb-6">
+              <p className="text-cyan-400 font-medium">
+                From supersonic jets to falling raindrops, you now understand the invisible force
+                that shapes how everything moves through air!
+              </p>
+            </div>
+
+            <button onClick={() => goToPhase('hook')}
+              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-all">
+              Explore Again
             </button>
           </div>
         );
@@ -1971,13 +1377,12 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradients */}
+      {/* Background gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sky-600/3 rounded-full blur-3xl" />
 
-      {/* Premium progress bar */}
+      {/* Progress bar */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-sky-400">Drag Force</span>
@@ -1986,7 +1391,6 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                style={{ zIndex: 10, position: 'relative' }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-gradient-to-r from-sky-400 to-cyan-400 w-6 shadow-lg shadow-sky-500/50'

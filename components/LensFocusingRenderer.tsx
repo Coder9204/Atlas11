@@ -1,98 +1,173 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ============================================================================
-// LENS FOCUSING RENDERER - FOCAL LENGTH AND IMAGE FORMATION
-// Premium 10-phase educational game with complete structure
-// ============================================================================
+// -----------------------------------------------------------------------------
+// Lens Focusing - Complete 10-Phase Game
+// The thin lens equation: how lenses form images
+// -----------------------------------------------------------------------------
 
-// Phase type definition
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-// Phase order array with ALL 10 phases
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Lab',
-  review: 'Review',
-  twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
-  twist_review: 'Twist Review',
-  transfer: 'Transfer',
-  test: 'Test',
-  mastery: 'Mastery'
-};
-
-interface LensFocusingRendererProps {
-  width?: number;
-  height?: number;
-  onBack?: () => void;
-  metadata?: {
-    gamePhase?: string;
-    showPrediction?: boolean;
-    showQuiz?: boolean;
-  };
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-// Premium Design System
-const colors = {
-  background: '#0a0f1a',
-  cardBg: '#141e2c',
-  primary: '#60a5fa',
-  secondary: '#818cf8',
-  accent: '#f472b6',
-  success: '#34d399',
-  warning: '#fbbf24',
-  text: '#f1f5f9',
-  textSecondary: '#94a3b8',
-  border: '#1e3a5f',
-  gradientStart: '#1e3a8a',
-  gradientEnd: '#7c3aed',
+interface LensFocusingRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const typography = {
-  h1: { fontSize: '28px', fontWeight: '700', letterSpacing: '-0.02em' },
-  h2: { fontSize: '22px', fontWeight: '600', letterSpacing: '-0.01em' },
-  h3: { fontSize: '18px', fontWeight: '600' },
-  body: { fontSize: '16px', fontWeight: '400', lineHeight: '1.6' },
-  small: { fontSize: '14px', fontWeight: '400' },
-};
-
-const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
-const radius = { sm: 8, md: 12, lg: 16, xl: 24 };
-
-// ============================================================================
-// GAME CONTENT DATA
-// ============================================================================
-
-const predictions = {
-  initial: {
-    question: "You hold a magnifying glass between a candle and a wall. As you move the lens closer to or farther from the candle, at what point will you see the sharpest image on the wall?",
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A child uses a magnifying glass to focus sunlight onto a piece of paper. After holding it at different distances, they find one specific distance where the light forms the smallest, brightest spot.",
+    question: "Why does the light concentrate into a single bright point at this particular distance?",
     options: [
-      { id: 'a', text: 'When the lens is exactly halfway between candle and wall', icon: '↔️' },
-      { id: 'b', text: 'When the lens is at a specific distance that depends on its focal length', icon: '🎯' },
-      { id: 'c', text: 'Any distance works equally well', icon: '🤷' },
-      { id: 'd', text: 'The closer to the candle, the sharper the image', icon: '🔍' },
+      { id: 'a', label: "The glass absorbs light at other distances but releases it all at this point" },
+      { id: 'b', label: "The convex lens bends parallel light rays so they all converge at the focal point", correct: true },
+      { id: 'c', label: "The paper only reflects light when held at the right distance" },
+      { id: 'd', label: "Sunlight naturally concentrates itself when passing through any glass" }
     ],
-    correct: 'b',
-    explanation: "The thin lens equation (1/f = 1/d_object + 1/d_image) determines exactly where the focused image forms! Each lens has a fixed focal length that determines where objects at different distances form sharp images. This is why cameras need to 'focus' - they're adjusting to satisfy this equation."
+    explanation: "A convex lens has curved surfaces that bend (refract) light rays. Parallel rays from the distant sun are bent inward as they pass through, all converging at a single point called the focal point. This distance from the lens to the focal point is the focal length - a fixed property of each lens determined by its curvature and material."
   },
-  twist: {
-    question: "What happens when you place an object CLOSER to a convex lens than its focal length?",
+  {
+    scenario: "A jeweler examines a tiny diamond by holding a magnifying glass close to the gem. The diamond appears much larger and right-side up through the lens.",
+    question: "What optical condition allows the magnifying glass to create this enlarged, upright image?",
     options: [
-      { id: 'a', text: 'No image forms at all', icon: '❌' },
-      { id: 'b', text: 'A smaller, inverted image forms', icon: '🔽' },
-      { id: 'c', text: 'A larger, upright virtual image forms (magnification!)', icon: '🔍' },
-      { id: 'd', text: 'The image catches fire', icon: '🔥' },
+      { id: 'a', label: "The diamond must be placed beyond twice the focal length" },
+      { id: 'b', label: "The diamond is positioned closer to the lens than the focal length, creating a virtual magnified image", correct: true },
+      { id: 'c', label: "The lens flips the image twice so it appears right-side up" },
+      { id: 'd', label: "Only precious gems can be magnified this way due to their crystal structure" }
     ],
-    correct: 'c',
-    explanation: "When the object is inside the focal length, the lens can't form a real image - instead it creates a virtual, magnified, upright image on the same side as the object. This is exactly how magnifying glasses and reading glasses work! The math gives a negative image distance, indicating a virtual image."
+    explanation: "When an object is placed inside the focal length of a convex lens, the light rays diverge after passing through and cannot form a real image. Instead, your eye traces these diverging rays backward, perceiving a virtual image that appears larger and upright on the same side as the object. This is the fundamental principle behind all magnifying glasses."
+  },
+  {
+    scenario: "A photographer switches from taking a portrait of someone 3 meters away to photographing a mountain on the horizon. They hear the camera lens motor adjusting focus.",
+    question: "What physical change does the camera make to achieve sharp focus on objects at different distances?",
+    options: [
+      { id: 'a', label: "The camera changes the shape of the lens like the human eye does" },
+      { id: 'b', label: "The camera adjusts the distance between the lens and sensor to satisfy the thin lens equation", correct: true },
+      { id: 'c', label: "The camera adds or removes lens elements from the optical path" },
+      { id: 'd', label: "The camera rotates the lens to a different angle" }
+    ],
+    explanation: "The thin lens equation (1/f = 1/d_object + 1/d_image) dictates that for a fixed focal length, changing the object distance requires changing the image distance to maintain focus. Cameras move the lens closer to the sensor for distant objects and farther from the sensor for close objects. The portrait at 3m needs the lens farther out than the mountain at infinity."
+  },
+  {
+    scenario: "A 50-year-old architect who has always had perfect vision notices they must hold blueprints at arm's length to read them clearly. Their eye doctor prescribes +2.0 diopter reading glasses.",
+    question: "What age-related change causes presbyopia, and how do reading glasses correct it?",
+    options: [
+      { id: 'a', label: "The cornea becomes cloudy; glasses filter out scattered light" },
+      { id: 'b', label: "The eye's lens loses flexibility and cannot focus on near objects; converging glasses add the missing focusing power", correct: true },
+      { id: 'c', label: "The retina moves backward; glasses project the image farther into the eye" },
+      { id: 'd', label: "Eye muscles weaken; glasses magnify text so less muscle effort is needed" }
+    ],
+    explanation: "With age, the crystalline lens inside the eye becomes stiffer and cannot change shape as much. This reduces the eye's ability to add focusing power for near objects. Reading glasses with positive diopters (converging lenses) add external focusing power, compensating for what the aging lens can no longer provide. +2.0 diopters means a focal length of 0.5 meters."
+  },
+  {
+    scenario: "A wildlife photographer has two lenses: a 24mm wide-angle and a 400mm telephoto. From the same position, they photograph an elephant. The wide-angle shows the elephant small within a vast savanna, while the telephoto fills the frame with just the elephant's face.",
+    question: "How does focal length determine what portion of a scene the camera captures?",
+    options: [
+      { id: 'a', label: "Longer focal lengths physically zoom by moving the lens forward like a telescope" },
+      { id: 'b', label: "Shorter focal length = wider field of view and less magnification; longer focal length = narrower field and more magnification", correct: true },
+      { id: 'c', label: "Wide-angle lenses have larger glass elements that gather more of the scene" },
+      { id: 'd', label: "Focal length only affects brightness, not field of view" }
+    ],
+    explanation: "Focal length directly determines angular field of view. A short focal length lens bends light more sharply, projecting a wide scene onto the sensor (85 degrees for 24mm). A long focal length bends light gently, projecting a narrow slice of the scene (6 degrees for 400mm). The ratio of focal lengths (400/24 = 17x) roughly equals the magnification difference between the two views."
+  },
+  {
+    scenario: "An optician tests a lens and finds that when a candle is placed 30 cm from the lens, a sharp image forms on a screen 60 cm on the other side. They need to calculate the lens's focal length for the customer's prescription.",
+    question: "Using the thin lens equation (1/f = 1/d_o + 1/d_i), what is this lens's focal length?",
+    options: [
+      { id: 'a', label: "45 cm - the average of object and image distances" },
+      { id: 'b', label: "20 cm - calculated as 1/f = 1/30 + 1/60 gives f = 20 cm", correct: true },
+      { id: 'c', label: "90 cm - the sum of both distances" },
+      { id: 'd', label: "30 cm - equal to the object distance" }
+    ],
+    explanation: "Applying the thin lens equation: 1/f = 1/30 + 1/60 = 2/60 + 1/60 = 3/60 = 1/20, so f = 20 cm. This means parallel rays would focus at 20 cm from the lens. The equation works because the focal length is a harmonic mean relationship - it's always less than both the object and image distances for a real image formed by a converging lens."
+  },
+  {
+    scenario: "A microscope uses two converging lenses: an objective lens with f = 4mm positioned near the specimen, and an eyepiece with f = 25mm that the user looks through. The objective creates an intermediate image that the eyepiece then magnifies.",
+    question: "Why does using two lenses in series achieve much higher magnification than either lens alone?",
+    options: [
+      { id: 'a', label: "The lenses add their focal lengths together to create one super-powerful lens" },
+      { id: 'b', label: "The total magnification multiplies: the objective magnifies the specimen, then the eyepiece magnifies that already-enlarged image", correct: true },
+      { id: 'c', label: "Two lenses cancel each other's aberrations, making the image clearer but not larger" },
+      { id: 'd', label: "The second lens reverses the inversion from the first lens" }
+    ],
+    explanation: "In a compound microscope, magnifications multiply rather than add. If the objective creates a 40x magnified real image, and the eyepiece provides 10x magnification of that image, total magnification is 40 x 10 = 400x. This multiplicative effect is why microscopes can achieve magnifications impossible with a single lens - a 400x single lens would need an impractically short focal length."
+  },
+  {
+    scenario: "A telescope designer notices that stars at the edge of the field appear as small colored smears rather than white points. They add a second lens element made of a different type of glass to correct this problem.",
+    question: "What causes this color fringing (chromatic aberration), and how does an achromatic doublet correct it?",
+    options: [
+      { id: 'a', label: "The glass absorbs some colors; adding different glass absorbs complementary colors" },
+      { id: 'b', label: "Different wavelengths refract at different angles; a second lens with opposite dispersion cancels this spreading", correct: true },
+      { id: 'c', label: "Stars emit different colors from different parts; the second lens blocks the edge colors" },
+      { id: 'd', label: "Temperature differences in the glass cause color shifts; the second lens has opposite thermal properties" }
+    ],
+    explanation: "Glass bends blue light more than red light (dispersion), so a simple lens has different focal lengths for different colors - blue focuses closer than red, creating colored fringes. An achromatic doublet pairs a converging lens of crown glass with a diverging lens of flint glass. Flint glass has higher dispersion, so the diverging element cancels the color spreading while preserving most of the converging power."
+  },
+  {
+    scenario: "A smartphone camera can lock focus on a face in milliseconds, even as the person moves. The phone uses phase-detection autofocus pixels embedded directly in the image sensor.",
+    question: "How do phase-detection autofocus systems determine both the direction and amount of focus adjustment needed?",
+    options: [
+      { id: 'a', label: "They measure the brightness of the image and adjust until it's maximum" },
+      { id: 'b', label: "Paired pixels see light from opposite edges of the lens; the offset between their images indicates focus error direction and magnitude", correct: true },
+      { id: 'c', label: "They emit infrared light and measure the time for it to return from the subject" },
+      { id: 'd', label: "They compare the current image to stored photos of focused faces" }
+    ],
+    explanation: "Phase-detection AF uses pairs of masked pixels that each see only half the lens aperture. When in focus, both halves see the same image. When out of focus, the images from left and right lens halves are offset. The direction of offset indicates whether focus is front or back, and the amount of offset indicates how far. This allows single-shot focus correction instead of hunting back and forth."
+  },
+  {
+    scenario: "The Keck Observatory uses a laser to create an artificial 'star' in the upper atmosphere. A sensor measures how this point of light is distorted, and a deformable mirror with hundreds of actuators adjusts its shape 1000 times per second.",
+    question: "What fundamental focusing problem does adaptive optics solve, and how?",
+    options: [
+      { id: 'a', label: "It corrects lens manufacturing defects by measuring a reference star" },
+      { id: 'b', label: "It counteracts atmospheric turbulence that randomly bends light, by reshaping the mirror to cancel the distortions in real-time", correct: true },
+      { id: 'c', label: "It compensates for the Earth's rotation by continuously moving the telescope" },
+      { id: 'd', label: "It filters out light pollution from nearby cities" }
+    ],
+    explanation: "Earth's atmosphere has turbulent cells of varying temperature and density that bend light randomly, causing stars to twinkle and blur telescope images. Adaptive optics measures these distortions using a reference point source (laser guide star), then deforms a flexible mirror into a shape that exactly cancels the atmospheric aberrations. This happens hundreds of times per second, restoring near-space-quality images from ground-based telescopes."
   }
-};
+];
 
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '📷',
@@ -100,16 +175,16 @@ const realWorldApps = [
     short: 'Sharp photos in milliseconds',
     tagline: 'Finding focus at the speed of light',
     description: 'Modern cameras use the thin lens equation to calculate where to position lens elements for sharp focus. Phase detection and contrast detection autofocus systems measure image sharpness and drive motors to the exact position where the image plane coincides with the sensor.',
-    connection: 'The relationship 1/f = 1/do + 1/di tells cameras exactly where the image forms for any object distance. Autofocus systems solve this equation in reverse—given desired di (sensor position), they adjust lens position to achieve correct do.',
+    connection: 'The relationship 1/f = 1/do + 1/di tells cameras exactly where the image forms for any object distance. Autofocus systems solve this equation in reverse - given desired di (sensor position), they adjust lens position to achieve correct do.',
     howItWorks: 'Phase detection AF splits incoming light and compares the two halves to determine focus direction and distance. Contrast AF moves the lens and measures sharpness peaks. Hybrid systems combine both for speed and accuracy.',
     stats: [
       { value: '0.02s', label: 'AF speed', icon: '⚡' },
-      { value: '1000+ points', label: 'AF coverage', icon: '📈' },
-      { value: '$35B', label: 'Camera market', icon: '🚀' }
+      { value: '1000+', label: 'AF points', icon: '📈' },
+      { value: '$35B', label: 'Market size', icon: '💰' }
     ],
     examples: ['Smartphone portrait mode', 'DSLR action shooting', 'Mirrorless eye tracking', 'Security camera zoom'],
     companies: ['Sony', 'Canon', 'Nikon', 'Apple'],
-    futureImpact: 'Computational photography will combine focus stacking and AI to create images with infinite depth of field, transcending traditional lens limitations.',
+    futureImpact: 'Computational photography will combine focus stacking and AI to create images with infinite depth of field.',
     color: '#3B82F6'
   },
   {
@@ -117,17 +192,17 @@ const realWorldApps = [
     title: 'LASIK Eye Surgery',
     short: 'Reshaping corneas for perfect vision',
     tagline: 'Precision optics meets medicine',
-    description: 'LASIK surgery uses excimer lasers to reshape the cornea, changing its focal length. By removing microscopic amounts of tissue, surgeons correct myopia, hyperopia, and astigmatism—effectively creating a custom lens surface on the eye itself.',
+    description: 'LASIK surgery uses excimer lasers to reshape the cornea, changing its focal length. By removing microscopic amounts of tissue, surgeons correct myopia, hyperopia, and astigmatism - effectively creating a custom lens surface on the eye itself.',
     connection: 'The cornea and lens together form an optical system. LASIK changes the cornea\'s radius of curvature, adjusting its contribution to total eye power so images focus correctly on the retina.',
     howItWorks: 'Wavefront analysis maps the eye\'s optical aberrations. A femtosecond laser creates a corneal flap. An excimer laser ablates tissue in a pattern calculated to correct refractive errors. The flap is replaced and heals naturally.',
     stats: [
       { value: '96%', label: 'Success rate', icon: '⚡' },
-      { value: '0.25μm', label: 'Ablation precision', icon: '📈' },
-      { value: '$3.5B', label: 'Market size', icon: '🚀' }
+      { value: '0.25um', label: 'Precision', icon: '📈' },
+      { value: '$3.5B', label: 'Market size', icon: '💰' }
     ],
     examples: ['Myopia correction', 'Hyperopia treatment', 'Astigmatism surgery', 'Presbyopia solutions'],
     companies: ['Alcon', 'Johnson & Johnson Vision', 'ZEISS', 'Bausch + Lomb'],
-    futureImpact: 'Implantable lenses and corneal inlays will offer reversible vision correction, while gene therapy may eventually prevent refractive errors from developing.',
+    futureImpact: 'Implantable lenses and corneal inlays will offer reversible vision correction.',
     color: '#10B981'
   },
   {
@@ -137,11 +212,11 @@ const realWorldApps = [
     tagline: 'Magnification meets resolution',
     description: 'Microscope objectives are complex multi-element lenses designed to minimize aberrations while achieving high magnification. The numerical aperture and focal length determine both magnification and resolution limits.',
     connection: 'Microscope optics apply the thin lens equation at extreme ratios. Very short focal lengths create high magnification, while oil immersion increases numerical aperture to improve resolution beyond what air allows.',
-    howItWorks: 'Objectives contain 8-15 lens elements correcting for chromatic and spherical aberration. Immersion oil matches the refractive index of glass, increasing NA. Higher NA means better resolution: d = λ/(2NA).',
+    howItWorks: 'Objectives contain 8-15 lens elements correcting for chromatic and spherical aberration. Immersion oil matches the refractive index of glass, increasing NA. Higher NA means better resolution: d = wavelength/(2NA).',
     stats: [
       { value: '100x', label: 'Max magnification', icon: '⚡' },
-      { value: '200nm', label: 'Resolution limit', icon: '📈' },
-      { value: '$7.2B', label: 'Microscopy market', icon: '🚀' }
+      { value: '200nm', label: 'Resolution', icon: '📈' },
+      { value: '$7.2B', label: 'Market size', icon: '💰' }
     ],
     examples: ['Medical pathology', 'Semiconductor inspection', 'Cell biology research', 'Quality control'],
     companies: ['ZEISS', 'Olympus', 'Nikon', 'Leica'],
@@ -157,345 +232,59 @@ const realWorldApps = [
     connection: 'Cinema lenses have calibrated focus scales showing object distances. The thin lens equation relates these markings to actual lens element positions, enabling repeatable focus pulls.',
     howItWorks: 'Cine lenses have long focus throw (300+ degrees rotation) for precise control. Internal focusing minimizes breathing (focal length change with focus). Matched lens sets maintain consistent color and contrast.',
     stats: [
-      { value: '300°', label: 'Focus rotation', icon: '⚡' },
+      { value: '300deg', label: 'Focus throw', icon: '⚡' },
       { value: 'T1.3', label: 'Fast aperture', icon: '📈' },
-      { value: '$50K+', label: 'Lens set cost', icon: '🚀' }
+      { value: '$50K+', label: 'Lens set cost', icon: '💰' }
     ],
     examples: ['Feature film production', 'Television drama', 'Commercial advertising', 'Documentary filming'],
     companies: ['ARRI', 'Cooke', 'Panavision', 'Zeiss'],
-    futureImpact: 'Motorized smart lenses with metadata embedding will enable perfect focus tracking and post-production adjustment of depth of field.',
+    futureImpact: 'Motorized smart lenses with metadata embedding will enable perfect focus tracking and post-production adjustment.',
     color: '#F59E0B'
   }
 ];
 
-const realWorldApplications = [
-  {
-    id: 'glasses',
-    title: '👓 Eyeglasses',
-    subtitle: 'Correcting vision with focal lengths',
-    description: 'Nearsighted eyes focus images in front of the retina; farsighted eyes focus behind. Glasses add or subtract focusing power (measured in diopters = 1/focal length in meters) to shift the image onto the retina.',
-    formula: 'Power (diopters) = 1/f(meters), -2D glasses → f = -0.5m (diverging)',
-    realExample: 'A -3D prescription means a diverging lens with f = -33cm to correct nearsightedness.',
-    interactiveHint: 'Look at someone\'s glasses - if they look smaller, they\'re nearsighted (diverging lens)!'
-  },
-  {
-    id: 'camera',
-    title: '📷 Cameras',
-    subtitle: 'Focal length controls perspective',
-    description: 'Camera focal length determines field of view and magnification. 50mm is "normal" (similar to human vision). 24mm is wide-angle (captures more, stretches edges). 200mm is telephoto (magnifies, compresses depth).',
-    formula: 'Magnification = f / (f - d_object) for distant objects',
-    realExample: 'A 200mm lens makes the moon look 4x bigger than a 50mm lens - same moon, different perspective!',
-    interactiveHint: 'Compare phone camera vs zoom lens photos of the same scene - notice how depth changes.'
-  },
-  {
-    id: 'microscope',
-    title: '🔬 Microscopes',
-    subtitle: 'Two lenses for extreme magnification',
-    description: 'Microscopes use two converging lenses: objective (short f, creates real magnified image) and eyepiece (acts as magnifier for that image). Total magnification = M_objective × M_eyepiece. Short focal lengths give higher power.',
-    formula: 'M_total = (tube length / f_objective) × (25cm / f_eyepiece)',
-    realExample: 'A 100x oil immersion objective has f ≈ 1.6mm - nearly touching the sample!',
-    interactiveHint: 'In microscopy, shorter focal length = higher magnification = smaller working distance.'
-  },
-  {
-    id: 'telescope',
-    title: '🔭 Telescopes',
-    subtitle: 'Making distant objects appear closer',
-    description: 'Telescopes use a long focal length objective to gather light from distant objects and form a real image, then an eyepiece to magnify that image. Angular magnification = f_objective / f_eyepiece.',
-    formula: 'M = f_objective / f_eyepiece, Resolution ∝ aperture diameter',
-    realExample: 'The Hubble Space Telescope has a 57.6m focal length - that\'s why it can see galaxies billions of light-years away!',
-    interactiveHint: 'A telescope with 1000mm objective and 10mm eyepiece gives 100x magnification.'
-  }
-];
-
-const quizQuestions = [
-  {
-    question: "What is the thin lens equation?",
-    options: [
-      { text: "f = d_object × d_image", correct: false },
-      { text: "1/f = 1/d_object + 1/d_image", correct: true },
-      { text: "f = d_object + d_image", correct: false },
-      { text: "1/f = 1/d_object - 1/d_image", correct: false }
-    ],
-    explanation: "The thin lens equation 1/f = 1/d_o + 1/d_i relates focal length to object and image distances. It works for both converging and diverging lenses when using proper sign conventions."
-  },
-  {
-    question: "A convex (converging) lens has what kind of focal length?",
-    options: [
-      { text: "Negative", correct: false },
-      { text: "Zero", correct: false },
-      { text: "Positive", correct: true },
-      { text: "Undefined", correct: false }
-    ],
-    explanation: "Converging (convex) lenses have positive focal lengths. They focus parallel rays to a real focal point. Diverging (concave) lenses have negative focal lengths."
-  },
-  {
-    question: "When does a convex lens create a magnified, upright, virtual image?",
-    options: [
-      { text: "When the object is beyond 2f", correct: false },
-      { text: "When the object is between f and 2f", correct: false },
-      { text: "When the object is at exactly f", correct: false },
-      { text: "When the object is inside the focal length (d < f)", correct: true }
-    ],
-    explanation: "When an object is inside the focal length of a convex lens, the lens can't form a real image. Instead, it creates a virtual, magnified, upright image - this is the magnifying glass effect!"
-  },
-  {
-    question: "What happens when an object is placed at exactly the focal point of a convex lens?",
-    options: [
-      { text: "A tiny image forms at f", correct: false },
-      { text: "Light rays emerge parallel (image at infinity)", correct: true },
-      { text: "The image and object are the same size", correct: false },
-      { text: "No light passes through", correct: false }
-    ],
-    explanation: "When an object is at the focal point, rays emerge parallel (d_image → ∞). The lens equation gives 1/∞ = 1/f - 1/f = 0. This is how flashlights work - putting a bulb at f creates a parallel beam!"
-  },
-  {
-    question: "A lens with f = 50mm compared to f = 200mm will:",
-    options: [
-      { text: "Have a wider field of view and less magnification", correct: true },
-      { text: "Have a narrower field of view and more magnification", correct: false },
-      { text: "Be the same - focal length doesn't affect view", correct: false },
-      { text: "Always create smaller images", correct: false }
-    ],
-    explanation: "Shorter focal length = wider field of view, less magnification. Longer focal length = narrower field (telephoto), more magnification. That's why phone cameras (short f) capture wide scenes while zoom lenses (long f) magnify distant subjects."
-  },
-  {
-    question: "What unit measures optical power of lenses?",
-    options: [
-      { text: "Lumens", correct: false },
-      { text: "Watts", correct: false },
-      { text: "Diopters (1/meters)", correct: true },
-      { text: "Hertz", correct: false }
-    ],
-    explanation: "Diopters = 1/focal length in meters. A +2D lens has f = 0.5m and converges light. A -3D lens has f = -0.33m and diverges light. This is how eyeglass prescriptions work!"
-  },
-  {
-    question: "If magnification is negative, what does this indicate about the image?",
-    options: [
-      { text: "The image doesn't exist", correct: false },
-      { text: "The image is inverted (upside down)", correct: true },
-      { text: "The image is smaller", correct: false },
-      { text: "The lens is broken", correct: false }
-    ],
-    explanation: "Negative magnification means the image is inverted relative to the object. Real images formed by converging lenses have negative magnification (inverted). Virtual images have positive magnification (upright)."
-  },
-  {
-    question: "Why do microscope objectives have very short focal lengths?",
-    options: [
-      { text: "To save money on glass", correct: false },
-      { text: "Shorter f = higher magnification (M ∝ 1/f)", correct: true },
-      { text: "Longer f would be too heavy", correct: false },
-      { text: "It's just tradition", correct: false }
-    ],
-    explanation: "Magnification is inversely proportional to focal length. A 1mm focal length objective can achieve 250x magnification, while a 10mm objective gives only 25x. That's why high-power objectives are tiny and must be very close to samples."
-  },
-  {
-    question: "How do reading glasses (for farsightedness) work?",
-    options: [
-      { text: "They block UV light", correct: false },
-      { text: "They use converging lenses to add focusing power", correct: true },
-      { text: "They use diverging lenses to spread light", correct: false },
-      { text: "They make everything darker to reduce strain", correct: false }
-    ],
-    explanation: "Farsighted eyes can't focus on close objects (lens too weak). Reading glasses use converging lenses (positive diopters) to add extra focusing power, helping form the image on the retina."
-  },
-  {
-    question: "In the lens equation, what does a negative image distance (d_i) indicate?",
-    options: [
-      { text: "Calculation error", correct: false },
-      { text: "The image is on the same side as the object (virtual image)", correct: true },
-      { text: "The image is very far away", correct: false },
-      { text: "The lens is concave", correct: false }
-    ],
-    explanation: "A negative image distance means the image forms on the same side of the lens as the object - this is a virtual image. You can't project it on a screen; you see it by looking through the lens (like a magnifying glass)."
-  }
-];
-
-// Test questions with scenarios for Phase 9
-const testQuestions = [
-  // 1. Core concept - how convex lenses focus light (Easy)
-  {
-    scenario: "A child uses a magnifying glass to focus sunlight onto a piece of paper. After holding it at different distances, they find one specific distance where the light forms the smallest, brightest spot.",
-    question: "Why does the light concentrate into a single bright point at this particular distance?",
-    options: [
-      { id: 'a', label: "The glass absorbs light at other distances but releases it all at this point" },
-      { id: 'b', label: "The convex lens bends parallel light rays so they all converge at the focal point", correct: true },
-      { id: 'c', label: "The paper only reflects light when held at the right distance" },
-      { id: 'd', label: "Sunlight naturally concentrates itself when passing through any glass" }
-    ],
-    explanation: "A convex lens has curved surfaces that bend (refract) light rays. Parallel rays from the distant sun are bent inward as they pass through, all converging at a single point called the focal point. This distance from the lens to the focal point is the focal length - a fixed property of each lens determined by its curvature and material."
-  },
-  // 2. Magnifying glass operation (Easy-Medium)
-  {
-    scenario: "A jeweler examines a tiny diamond by holding a magnifying glass close to the gem. The diamond appears much larger and right-side up through the lens.",
-    question: "What optical condition allows the magnifying glass to create this enlarged, upright image?",
-    options: [
-      { id: 'a', label: "The diamond must be placed beyond twice the focal length" },
-      { id: 'b', label: "The diamond is positioned closer to the lens than the focal length, creating a virtual magnified image", correct: true },
-      { id: 'c', label: "The lens flips the image twice so it appears right-side up" },
-      { id: 'd', label: "Only precious gems can be magnified this way due to their crystal structure" }
-    ],
-    explanation: "When an object is placed inside the focal length of a convex lens, the light rays diverge after passing through and cannot form a real image. Instead, your eye traces these diverging rays backward, perceiving a virtual image that appears larger and upright on the same side as the object. This is the fundamental principle behind all magnifying glasses."
-  },
-  // 3. Camera focus mechanism (Medium)
-  {
-    scenario: "A photographer switches from taking a portrait of someone 3 meters away to photographing a mountain on the horizon. They hear the camera lens motor adjusting focus.",
-    question: "What physical change does the camera make to achieve sharp focus on objects at different distances?",
-    options: [
-      { id: 'a', label: "The camera changes the shape of the lens like the human eye does" },
-      { id: 'b', label: "The camera adjusts the distance between the lens and sensor to satisfy the thin lens equation", correct: true },
-      { id: 'c', label: "The camera adds or removes lens elements from the optical path" },
-      { id: 'd', label: "The camera rotates the lens to a different angle" }
-    ],
-    explanation: "The thin lens equation (1/f = 1/d_object + 1/d_image) dictates that for a fixed focal length, changing the object distance requires changing the image distance to maintain focus. Cameras move the lens closer to the sensor for distant objects and farther from the sensor for close objects. The portrait at 3m needs the lens farther out than the mountain at infinity."
-  },
-  // 4. Presbyopia and reading glasses (Medium)
-  {
-    scenario: "A 50-year-old architect who has always had perfect vision notices they must hold blueprints at arm's length to read them clearly. Their eye doctor prescribes +2.0 diopter reading glasses.",
-    question: "What age-related change causes presbyopia, and how do reading glasses correct it?",
-    options: [
-      { id: 'a', label: "The cornea becomes cloudy; glasses filter out scattered light" },
-      { id: 'b', label: "The eye's lens loses flexibility and cannot focus on near objects; converging glasses add the missing focusing power", correct: true },
-      { id: 'c', label: "The retina moves backward; glasses project the image farther into the eye" },
-      { id: 'd', label: "Eye muscles weaken; glasses magnify text so less muscle effort is needed" }
-    ],
-    explanation: "With age, the crystalline lens inside the eye becomes stiffer and cannot change shape as much. This reduces the eye's ability to add focusing power for near objects. Reading glasses with positive diopters (converging lenses) add external focusing power, compensating for what the aging lens can no longer provide. +2.0 diopters means a focal length of 0.5 meters."
-  },
-  // 5. Focal length and field of view (Medium-Hard)
-  {
-    scenario: "A wildlife photographer has two lenses: a 24mm wide-angle and a 400mm telephoto. From the same position, they photograph an elephant. The wide-angle shows the elephant small within a vast savanna, while the telephoto fills the frame with just the elephant's face.",
-    question: "How does focal length determine what portion of a scene the camera captures?",
-    options: [
-      { id: 'a', label: "Longer focal lengths physically zoom by moving the lens forward like a telescope" },
-      { id: 'b', label: "Shorter focal length = wider field of view and less magnification; longer focal length = narrower field and more magnification", correct: true },
-      { id: 'c', label: "Wide-angle lenses have larger glass elements that gather more of the scene" },
-      { id: 'd', label: "Focal length only affects brightness, not field of view" }
-    ],
-    explanation: "Focal length directly determines angular field of view. A short focal length lens bends light more sharply, projecting a wide scene onto the sensor (85° for 24mm). A long focal length bends light gently, projecting a narrow slice of the scene (6° for 400mm). The ratio of focal lengths (400/24 ≈ 17x) roughly equals the magnification difference between the two views."
-  },
-  // 6. Thin lens equation (Hard)
-  {
-    scenario: "An optician tests a lens and finds that when a candle is placed 30 cm from the lens, a sharp image forms on a screen 60 cm on the other side. They need to calculate the lens's focal length for the customer's prescription.",
-    question: "Using the thin lens equation (1/f = 1/d_o + 1/d_i), what is this lens's focal length?",
-    options: [
-      { id: 'a', label: "45 cm - the average of object and image distances" },
-      { id: 'b', label: "20 cm - calculated as 1/f = 1/30 + 1/60 gives f = 20 cm", correct: true },
-      { id: 'c', label: "90 cm - the sum of both distances" },
-      { id: 'd', label: "30 cm - equal to the object distance" }
-    ],
-    explanation: "Applying the thin lens equation: 1/f = 1/30 + 1/60 = 2/60 + 1/60 = 3/60 = 1/20, so f = 20 cm. This means parallel rays would focus at 20 cm from the lens. The equation works because the focal length is a harmonic mean relationship - it's always less than both the object and image distances for a real image formed by a converging lens."
-  },
-  // 7. Compound lens systems (Hard)
-  {
-    scenario: "A microscope uses two converging lenses: an objective lens with f = 4mm positioned near the specimen, and an eyepiece with f = 25mm that the user looks through. The objective creates an intermediate image that the eyepiece then magnifies.",
-    question: "Why does using two lenses in series achieve much higher magnification than either lens alone?",
-    options: [
-      { id: 'a', label: "The lenses add their focal lengths together to create one super-powerful lens" },
-      { id: 'b', label: "The total magnification multiplies: the objective magnifies the specimen, then the eyepiece magnifies that already-enlarged image", correct: true },
-      { id: 'c', label: "Two lenses cancel each other's aberrations, making the image clearer but not larger" },
-      { id: 'd', label: "The second lens reverses the inversion from the first lens" }
-    ],
-    explanation: "In a compound microscope, magnifications multiply rather than add. If the objective creates a 40x magnified real image, and the eyepiece provides 10x magnification of that image, total magnification is 40 × 10 = 400x. This multiplicative effect is why microscopes can achieve magnifications impossible with a single lens - a 400x single lens would need an impractically short focal length."
-  },
-  // 8. Aberration correction (Hard)
-  {
-    scenario: "A telescope designer notices that stars at the edge of the field appear as small colored smears rather than white points. They add a second lens element made of a different type of glass to correct this problem.",
-    question: "What causes this color fringing (chromatic aberration), and how does an achromatic doublet correct it?",
-    options: [
-      { id: 'a', label: "The glass absorbs some colors; adding different glass absorbs complementary colors" },
-      { id: 'b', label: "Different wavelengths refract at different angles; a second lens with opposite dispersion cancels this spreading", correct: true },
-      { id: 'c', label: "Stars emit different colors from different parts; the second lens blocks the edge colors" },
-      { id: 'd', label: "Temperature differences in the glass cause color shifts; the second lens has opposite thermal properties" }
-    ],
-    explanation: "Glass bends blue light more than red light (dispersion), so a simple lens has different focal lengths for different colors - blue focuses closer than red, creating colored fringes. An achromatic doublet pairs a converging lens of crown glass with a diverging lens of flint glass. Flint glass has higher dispersion, so the diverging element cancels the color spreading while preserving most of the converging power."
-  },
-  // 9. Autofocus technology (Hard)
-  {
-    scenario: "A smartphone camera can lock focus on a face in milliseconds, even as the person moves. The phone uses phase-detection autofocus pixels embedded directly in the image sensor.",
-    question: "How do phase-detection autofocus systems determine both the direction and amount of focus adjustment needed?",
-    options: [
-      { id: 'a', label: "They measure the brightness of the image and adjust until it's maximum" },
-      { id: 'b', label: "Paired pixels see light from opposite edges of the lens; the offset between their images indicates focus error direction and magnitude", correct: true },
-      { id: 'c', label: "They emit infrared light and measure the time for it to return from the subject" },
-      { id: 'd', label: "They compare the current image to stored photos of focused faces" }
-    ],
-    explanation: "Phase-detection AF uses pairs of masked pixels that each see only half the lens aperture. When in focus, both halves see the same image. When out of focus, the images from left and right lens halves are offset. The direction of offset indicates whether focus is front or back, and the amount of offset indicates how far. This allows single-shot focus correction instead of hunting back and forth."
-  },
-  // 10. Adaptive optics (Hard)
-  {
-    scenario: "The Keck Observatory uses a laser to create an artificial 'star' in the upper atmosphere. A sensor measures how this point of light is distorted, and a deformable mirror with hundreds of actuators adjusts its shape 1000 times per second.",
-    question: "What fundamental focusing problem does adaptive optics solve, and how?",
-    options: [
-      { id: 'a', label: "It corrects lens manufacturing defects by measuring a reference star" },
-      { id: 'b', label: "It counteracts atmospheric turbulence that randomly bends light, by reshaping the mirror to cancel the distortions in real-time", correct: true },
-      { id: 'c', label: "It compensates for the Earth's rotation by continuously moving the telescope" },
-      { id: 'd', label: "It filters out light pollution from nearby cities" }
-    ],
-    explanation: "Earth's atmosphere has turbulent cells of varying temperature and density that bend light randomly, causing stars to twinkle and blur telescope images. Adaptive optics measures these distortions using a reference point source (laser guide star), then deforms a flexible mirror into a shape that exactly cancels the atmospheric aberrations. This happens hundreds of times per second, restoring near-space-quality images from ground-based telescopes."
-  }
-];
-
-// ============================================================================
+// -----------------------------------------------------------------------------
 // MAIN COMPONENT
-// ============================================================================
+// -----------------------------------------------------------------------------
+const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
-  width = 800,
-  height = 600,
-  onBack,
-  metadata
-}) => {
-  // Core state - using Phase type with 'hook' as initial state
-  const [phase, setPhase] = useState<Phase>('hook');
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
 
-  // Sound function
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [score, setScore] = useState(0);
-  const [testScore, setTestScore] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showQuizFeedback, setShowQuizFeedback] = useState(false);
-  const [completedApps, setCompletedApps] = useState<string[]>([]);
-  const [currentAppIndex, setCurrentAppIndex] = useState(0);
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Interactive state for simulation
+  // Simulation state
   const [focalLength, setFocalLength] = useState(80);
   const [objectDistance, setObjectDistance] = useState(160);
-  const [showRays, setShowRays] = useState(true);
-  const [showFocalPoints, setShowFocalPoints] = useState(true);
-  const [lensType, setLensType] = useState<'converging' | 'diverging'>('converging');
   const [animationTime, setAnimationTime] = useState(0);
-
-  // Animation ref
   const animationRef = useRef<number>();
 
-  // Mobile detection
+  // Twist phase - inside focal length scenario
+  const [twistObjectDistance, setTwistObjectDistance] = useState(50);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -503,21 +292,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Animation loop
+  // Animation loop for light pulses
   useEffect(() => {
     const animate = () => {
       setAnimationTime(t => t + 0.02);
@@ -532,11 +307,11 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
   }, []);
 
   // Calculate image properties using thin lens equation
-  const calculateImage = useCallback(() => {
-    const f = lensType === 'converging' ? focalLength : -focalLength;
-    const d_o = objectDistance;
+  const calculateImage = useCallback((objDist: number, fLen: number) => {
+    const f = fLen;
+    const d_o = objDist;
 
-    // 1/f = 1/d_o + 1/d_i  →  d_i = (f × d_o) / (d_o - f)
+    // 1/f = 1/d_o + 1/d_i  ->  d_i = (f x d_o) / (d_o - f)
     const d_i = (f * d_o) / (d_o - f);
 
     // Magnification M = -d_i / d_o
@@ -550,1880 +325,1596 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
       magnification: M,
       isReal,
       isUpright,
-      imageHeight: Math.abs(M) * 40 // Object height is 40
+      imageHeight: Math.abs(M) * 40
     };
-  }, [focalLength, objectDistance, lensType]);
+  }, []);
 
-  const imageData = calculateImage();
+  const imageData = calculateImage(objectDistance, focalLength);
+  const twistImageData = calculateImage(twistObjectDistance, focalLength);
+
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#22d3ee', // Cyan for optics
+    accentGlow: 'rgba(34, 211, 238, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    lens: '#22d3ee',
+    ray: '#fbbf24',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
   // Phase navigation
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Magnifier',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
     playSound('transition');
-
-    setPhase(newPhase);
-    setSelectedPrediction(null);
-    setShowPredictionFeedback(false);
-
-    // Reset simulation for certain phases
-    if (newPhase === 'play') {
-      setFocalLength(80);
-      setObjectDistance(160);
-      setLensType('converging');
-    } else if (newPhase === 'twist_play') {
-      setFocalLength(80);
-      setObjectDistance(50); // Inside focal length for magnifying effect
-      setLensType('converging');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'lens-focusing',
+        gameTitle: 'Lens Focusing',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
     }
-  }, [playSound]);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-  // Prediction handling
-  const handlePredictionSelect = useCallback((optionId: string) => {
-    if (showPredictionFeedback) return;
-    setSelectedPrediction(optionId);
-  }, [showPredictionFeedback]);
-
-  const handlePredictionSubmit = useCallback(() => {
-    if (!selectedPrediction || showPredictionFeedback) return;
-    setShowPredictionFeedback(true);
-  }, [selectedPrediction, showPredictionFeedback]);
-
-  // Quiz handling
-  const handleAnswerSelect = useCallback((index: number) => {
-    if (showQuizFeedback) return;
-    setSelectedAnswer(index);
-  }, [showQuizFeedback]);
-
-  const handleAnswerSubmit = useCallback(() => {
-    if (selectedAnswer === null || showQuizFeedback) return;
-    setShowQuizFeedback(true);
-    if (quizQuestions[currentQuestion].options[selectedAnswer]?.correct) {
-      setTestScore(s => s + 1);
-    }
-  }, [selectedAnswer, showQuizFeedback, currentQuestion]);
-
-  const handleNextQuestion = useCallback(() => {
-    if (currentQuestion < quizQuestions.length - 1) {
-      setCurrentQuestion(q => q + 1);
-      setSelectedAnswer(null);
-      setShowQuizFeedback(false);
-    } else {
-      goToPhase('mastery');
-    }
-  }, [currentQuestion, goToPhase]);
-
-  // Application navigation with sequential unlock
-  const handleCompleteApp = useCallback((appId: string) => {
-    if (!completedApps.includes(appId)) {
-      setCompletedApps(prev => [...prev, appId]);
-    }
-
-    if (currentAppIndex < realWorldApplications.length - 1) {
-      setCurrentAppIndex(i => i + 1);
-    }
-  }, [completedApps, currentAppIndex]);
-
-  const canAccessQuiz = completedApps.length >= realWorldApplications.length;
-
-  // ============================================================================
-  // RENDER HELPERS
-  // ============================================================================
-
-  const renderButton = (
-    label: string,
-    onClickHandler: () => void,
-    variant: 'primary' | 'secondary' | 'success' = 'primary',
-    disabled = false
-  ) => {
-    const bgColor = variant === 'primary' ? colors.primary
-      : variant === 'success' ? colors.success
-      : 'transparent';
-    const borderColor = variant === 'secondary' ? colors.primary : 'transparent';
-
-    return (
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          if (!disabled) onClickHandler();
-        }}
-        disabled={disabled}
-        style={{
-          padding: `${spacing.sm}px ${spacing.lg}px`,
-          fontSize: typography.body.fontSize,
-          fontWeight: '600',
-          color: variant === 'secondary' ? colors.primary : colors.text,
-          background: bgColor,
-          border: `2px solid ${borderColor}`,
-          borderRadius: radius.md,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.5 : 1,
-          transition: 'all 0.2s ease',
-          zIndex: 10,
-          position: 'relative' as const,
-        }}
-      >
-        {label}
-      </button>
-    );
-  };
-
-  const renderProgressBar = () => {
+  const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
-    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
-    return (
-      <div style={{ marginBottom: spacing.lg }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: spacing.xs,
-          fontSize: typography.small.fontSize,
-          color: colors.textSecondary,
-        }}>
-          <span>Progress</span>
-          <span>{Math.round(progress)}%</span>
-        </div>
-        <div style={{
-          height: 8,
-          background: colors.border,
-          borderRadius: radius.sm,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})`,
-            borderRadius: radius.sm,
-            transition: 'width 0.5s ease',
-          }} />
-        </div>
-      </div>
-    );
-  };
+  // Lens Visualization SVG Component
+  const LensVisualization = ({ objDist, fLen, showVirtual = false }: { objDist: number; fLen: number; showVirtual?: boolean }) => {
+    const width = isMobile ? 340 : 520;
+    const height = isMobile ? 280 : 320;
+    const centerX = width / 2;
+    const centerY = height / 2;
 
-  // ============================================================================
-  // LENS VISUALIZATION
-  // ============================================================================
-
-  const renderLensSimulation = () => {
-    const simWidth = isMobile ? width - 40 : 580;
-    const simHeight = 340;
-    const centerX = simWidth / 2;
-    const centerY = simHeight / 2;
-
-    // Scale factor to fit simulation
     const scale = 1.5;
-    const objectX = centerX - objectDistance * scale / 2;
+    const objectX = centerX - objDist * scale / 2;
     const objectHeight = 40;
     const lensX = centerX;
 
-    // Effective focal length for display
-    const f = lensType === 'converging' ? focalLength : -focalLength;
-    const focalX_left = lensX - Math.abs(focalLength) * scale / 2;
-    const focalX_right = lensX + Math.abs(focalLength) * scale / 2;
+    const imgData = calculateImage(objDist, fLen);
+    const imageX = lensX + imgData.imageDistance * scale / 2;
+    const focalX_left = lensX - fLen * scale / 2;
+    const focalX_right = lensX + fLen * scale / 2;
 
-    // Image position
-    const imageX = lensX + imageData.imageDistance * scale / 2;
-    const imageY = centerY;
-
-    // For virtual images, extend rays backward
-    const isVirtual = !imageData.isReal;
+    const isVirtual = !imgData.isReal;
 
     return (
-      <div style={{
-        background: 'linear-gradient(180deg, #1a1a2e 0%, #0a0a1a 100%)',
-        borderRadius: radius.lg,
-        padding: spacing.lg,
-        marginBottom: spacing.lg,
-      }}>
-        <svg width={simWidth} height={simHeight} style={{ display: 'block', margin: '0 auto' }}>
-          <defs>
-            {/* === LENS GRADIENTS === */}
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.1"/>
+            <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.5"/>
+            <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.1"/>
+          </linearGradient>
+          <linearGradient id="objectGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e"/>
+            <stop offset="100%" stopColor="#4ade80"/>
+          </linearGradient>
+          <linearGradient id="imageGradReal" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#ec4899"/>
+            <stop offset="100%" stopColor="#f472b6"/>
+          </linearGradient>
+          <linearGradient id="imageGradVirtual" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#a855f7"/>
+            <stop offset="100%" stopColor="#c084fc"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Premium glass gradient for convex lens - realistic 3D effect */}
-            <linearGradient id="lensGlassGradConvex" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.1"/>
-              <stop offset="15%" stopColor="#22d3ee" stopOpacity="0.25"/>
-              <stop offset="35%" stopColor="#67e8f9" stopOpacity="0.45"/>
-              <stop offset="50%" stopColor="#a5f3fc" stopOpacity="0.6"/>
-              <stop offset="65%" stopColor="#67e8f9" stopOpacity="0.45"/>
-              <stop offset="85%" stopColor="#22d3ee" stopOpacity="0.25"/>
-              <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.1"/>
-            </linearGradient>
+        {/* Title */}
+        <text x={width/2} y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          {showVirtual ? 'Object Inside Focal Length' : 'Thin Lens Ray Diagram'}
+        </text>
 
-            {/* Lens edge highlight for 3D effect */}
-            <linearGradient id="lensEdgeHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#06b6d4"/>
-              <stop offset="50%" stopColor="#22d3ee"/>
-              <stop offset="100%" stopColor="#06b6d4"/>
-            </linearGradient>
+        {/* Optical axis */}
+        <line x1={20} y1={centerY} x2={width - 20} y2={centerY} stroke="#334155" strokeWidth={1} strokeDasharray="8,4"/>
 
-            {/* Concave lens gradient */}
-            <linearGradient id="lensGlassGradConcave" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.4"/>
-              <stop offset="20%" stopColor="#67e8f9" stopOpacity="0.2"/>
-              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.08"/>
-              <stop offset="80%" stopColor="#67e8f9" stopOpacity="0.2"/>
-              <stop offset="100%" stopColor="#a5f3fc" stopOpacity="0.4"/>
-            </linearGradient>
+        {/* Focal points */}
+        <circle cx={focalX_left} cy={centerY} r={6} fill="#fbbf24" filter="url(#glow)"/>
+        <text x={focalX_left} y={centerY + 18} textAnchor="middle" fill="#fbbf24" fontSize="10">F</text>
+        <circle cx={focalX_right} cy={centerY} r={6} fill="#fbbf24" filter="url(#glow)"/>
+        <text x={focalX_right} y={centerY + 18} textAnchor="middle" fill="#fbbf24" fontSize="10">F'</text>
 
-            {/* === FOCAL POINT GRADIENTS === */}
-            <radialGradient id="lensFocalGrad" cx="50%" cy="50%">
-              <stop offset="0%" stopColor="#fef08a"/>
-              <stop offset="50%" stopColor="#fbbf24"/>
-              <stop offset="100%" stopColor="#f59e0b"/>
-            </radialGradient>
+        {/* 2F points */}
+        <circle cx={focalX_left - fLen * scale / 2} cy={centerY} r={4} fill="#a78bfa" opacity={0.7}/>
+        <text x={focalX_left - fLen * scale / 2} y={centerY + 16} textAnchor="middle" fill="#a78bfa" fontSize="9">2F</text>
+        <circle cx={focalX_right + fLen * scale / 2} cy={centerY} r={4} fill="#a78bfa" opacity={0.7}/>
+        <text x={focalX_right + fLen * scale / 2} y={centerY + 16} textAnchor="middle" fill="#a78bfa" fontSize="9">2F'</text>
 
-            <radialGradient id="lens2FGrad" cx="50%" cy="50%">
-              <stop offset="0%" stopColor="#c4b5fd"/>
-              <stop offset="50%" stopColor="#a78bfa"/>
-              <stop offset="100%" stopColor="#8b5cf6"/>
-            </radialGradient>
+        {/* Lens */}
+        <ellipse cx={lensX} cy={centerY} rx={12} ry={90} fill="url(#lensGrad)" stroke={colors.lens} strokeWidth={2}/>
 
-            {/* === OBJECT/IMAGE GRADIENTS === */}
-            <linearGradient id="lensObjectGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e"/>
-              <stop offset="50%" stopColor="#4ade80"/>
-              <stop offset="100%" stopColor="#86efac"/>
-            </linearGradient>
+        {/* Object */}
+        <line x1={objectX} y1={centerY} x2={objectX} y2={centerY - objectHeight} stroke="url(#objectGrad)" strokeWidth={4} strokeLinecap="round"/>
+        <polygon
+          points={`${objectX},${centerY - objectHeight - 10} ${objectX - 8},${centerY - objectHeight + 2} ${objectX + 8},${centerY - objectHeight + 2}`}
+          fill="#4ade80"
+        />
+        <circle cx={objectX} cy={centerY} r={3} fill="#22c55e"/>
 
-            <linearGradient id="lensImageGradReal" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#ec4899"/>
-              <stop offset="50%" stopColor="#f472b6"/>
-              <stop offset="100%" stopColor="#f9a8d4"/>
-            </linearGradient>
-
-            <linearGradient id="lensImageGradVirtual" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#a855f7"/>
-              <stop offset="50%" stopColor="#c084fc"/>
-              <stop offset="100%" stopColor="#d8b4fe"/>
-            </linearGradient>
-
-            {/* === LIGHT RAY GRADIENTS === */}
-            <linearGradient id="lensRay1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fef08a"/>
-              <stop offset="100%" stopColor="#fbbf24"/>
-            </linearGradient>
-
-            <linearGradient id="lensRay2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f9a8d4"/>
-              <stop offset="100%" stopColor="#f472b6"/>
-            </linearGradient>
-
-            <linearGradient id="lensRay3Grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#c4b5fd"/>
-              <stop offset="100%" stopColor="#a78bfa"/>
-            </linearGradient>
-
-            {/* === GLOW FILTERS === */}
-            <filter id="lensGlowYellow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood floodColor="#fbbf24" floodOpacity="0.6"/>
-              <feComposite in2="blur" operator="in"/>
-              <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            <filter id="lensGlowPink" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood floodColor="#f472b6" floodOpacity="0.6"/>
-              <feComposite in2="blur" operator="in"/>
-              <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            <filter id="lensGlowPurple" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feFlood floodColor="#a78bfa" floodOpacity="0.6"/>
-              <feComposite in2="blur" operator="in"/>
-              <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            <filter id="lensGlowCyan" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur"/>
-              <feFlood floodColor="#22d3ee" floodOpacity="0.5"/>
-              <feComposite in2="blur" operator="in"/>
-              <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            <filter id="lensFocalGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="5" result="blur"/>
-              <feFlood floodColor="#fbbf24" floodOpacity="0.8"/>
-              <feComposite in2="blur" operator="in"/>
-              <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            <filter id="lensConvergenceGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="8" result="blur"/>
-              <feFlood floodColor="#f472b6" floodOpacity="0.7"/>
-              <feComposite in2="blur" operator="in"/>
-              <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            <filter id="lensShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.3"/>
-            </filter>
-
-            {/* Light pulse gradient */}
-            <radialGradient id="lensPulseGrad" cx="50%" cy="50%">
-              <stop offset="0%" stopColor="#fef9c3"/>
-              <stop offset="50%" stopColor="#fde047"/>
-              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0"/>
-            </radialGradient>
-          </defs>
-
-          {/* Background gradient */}
-          <rect width={simWidth} height={simHeight} fill="url(#lensBgGrad)" rx={8}/>
-
-          {/* Optical axis with subtle glow */}
+        {/* Ray 1: Parallel to axis, then through F' */}
+        <line x1={objectX} y1={centerY - objectHeight} x2={lensX} y2={centerY - objectHeight} stroke="#fbbf24" strokeWidth={2}/>
+        {imgData.isReal ? (
           <line
-            x1={20}
-            y1={centerY}
-            x2={simWidth - 20}
-            y2={centerY}
-            stroke="#334155"
-            strokeWidth={1}
-            strokeDasharray="8,4"
+            x1={lensX}
+            y1={centerY - objectHeight}
+            x2={Math.min(width - 20, imageX)}
+            y2={centerY + imgData.imageHeight}
+            stroke="#fbbf24"
+            strokeWidth={2}
           />
-          <line
-            x1={20}
-            y1={centerY}
-            x2={simWidth - 20}
-            y2={centerY}
-            stroke="#475569"
-            strokeWidth={0.5}
-          />
-
-          {/* Focal points with premium styling */}
-          {showFocalPoints && (
-            <>
-              {/* Left focal point (F) with glow */}
-              <g filter="url(#lensFocalGlow)">
-                <circle cx={focalX_left} cy={centerY} r={7} fill="url(#lensFocalGrad)"/>
-                <circle cx={focalX_left} cy={centerY} r={3} fill="#fef9c3"/>
-              </g>
-
-              {/* Right focal point (F') with glow */}
-              <g filter="url(#lensFocalGlow)">
-                <circle cx={focalX_right} cy={centerY} r={7} fill="url(#lensFocalGrad)"/>
-                <circle cx={focalX_right} cy={centerY} r={3} fill="#fef9c3"/>
-              </g>
-
-              {/* 2F points with subtle styling */}
-              <g opacity={0.7}>
-                <circle cx={focalX_left - Math.abs(focalLength) * scale / 2} cy={centerY}
-                        r={5} fill="url(#lens2FGrad)"/>
-                <circle cx={focalX_right + Math.abs(focalLength) * scale / 2} cy={centerY}
-                        r={5} fill="url(#lens2FGrad)"/>
-              </g>
-            </>
-          )}
-
-          {/* Premium 3D Lens */}
-          <g filter="url(#lensGlowCyan)">
-            {lensType === 'converging' ? (
-              // Convex lens with 3D glass effect
-              <g>
-                {/* Outer glow/halo */}
-                <ellipse
-                  cx={lensX}
-                  cy={centerY}
-                  rx={18}
-                  ry={105}
-                  fill="none"
-                  stroke="#22d3ee"
-                  strokeWidth={1}
-                  opacity={0.3}
-                />
-                {/* Main lens body */}
-                <ellipse
-                  cx={lensX}
-                  cy={centerY}
-                  rx={15}
-                  ry={100}
-                  fill="url(#lensGlassGradConvex)"
-                  stroke="url(#lensEdgeHighlight)"
-                  strokeWidth={2}
-                />
-                {/* Center highlight line for 3D effect */}
-                <ellipse
-                  cx={lensX}
-                  cy={centerY}
-                  rx={2}
-                  ry={85}
-                  fill="rgba(255,255,255,0.25)"
-                />
-                {/* Edge reflection */}
-                <ellipse
-                  cx={lensX - 8}
-                  cy={centerY}
-                  rx={1}
-                  ry={75}
-                  fill="rgba(255,255,255,0.15)"
-                />
-              </g>
-            ) : (
-              // Concave lens with 3D effect (narrower in middle)
-              <g>
-                <path
-                  d={`M ${lensX - 10} ${centerY - 100}
-                      Q ${lensX + 18} ${centerY} ${lensX - 10} ${centerY + 100}
-                      L ${lensX + 10} ${centerY + 100}
-                      Q ${lensX - 18} ${centerY} ${lensX + 10} ${centerY - 100}
-                      Z`}
-                  fill="url(#lensGlassGradConcave)"
-                  stroke="url(#lensEdgeHighlight)"
-                  strokeWidth={2}
-                />
-                {/* Edge highlights */}
-                <path
-                  d={`M ${lensX - 8} ${centerY - 90}
-                      Q ${lensX + 12} ${centerY} ${lensX - 8} ${centerY + 90}`}
-                  fill="none"
-                  stroke="rgba(255,255,255,0.2)"
-                  strokeWidth={1}
-                />
-              </g>
-            )}
-          </g>
-
-          {/* Object (premium arrow) */}
-          <g filter="url(#lensShadow)">
+        ) : (
+          <>
             <line
-              x1={objectX}
-              y1={centerY}
-              x2={objectX}
-              y2={centerY - objectHeight}
-              stroke="url(#lensObjectGrad)"
-              strokeWidth={4}
-              strokeLinecap="round"
+              x1={lensX}
+              y1={centerY - objectHeight}
+              x2={width - 20}
+              y2={centerY - objectHeight + (width - 20 - lensX) * (objectHeight / fLen)}
+              stroke="#fbbf24"
+              strokeWidth={2}
             />
-            <polygon
-              points={`${objectX},${centerY - objectHeight - 12} ${objectX - 10},${centerY - objectHeight + 4} ${objectX + 10},${centerY - objectHeight + 4}`}
-              fill="url(#lensObjectGrad)"
+            <line
+              x1={lensX}
+              y1={centerY - objectHeight}
+              x2={Math.max(20, imageX)}
+              y2={centerY - imgData.imageHeight}
+              stroke="#fbbf24"
+              strokeWidth={1.5}
+              strokeDasharray="6,4"
+              opacity={0.6}
             />
-            {/* Base indicator */}
-            <circle cx={objectX} cy={centerY} r={4} fill="#22c55e"/>
-          </g>
-
-          {/* Principal rays with glow effects */}
-          {showRays && (
-            <g>
-              {/* Ray 1: Parallel to axis, through F' (Yellow) */}
-              <g filter="url(#lensGlowYellow)">
-                <line
-                  x1={objectX}
-                  y1={centerY - objectHeight}
-                  x2={lensX}
-                  y2={centerY - objectHeight}
-                  stroke="url(#lensRay1Grad)"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                />
-              </g>
-              {lensType === 'converging' && imageData.isReal && (
-                <g filter="url(#lensGlowYellow)">
-                  <line
-                    x1={lensX}
-                    y1={centerY - objectHeight}
-                    x2={Math.min(simWidth - 20, imageX)}
-                    y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                    stroke="url(#lensRay1Grad)"
-                    strokeWidth={2.5}
-                    strokeLinecap="round"
-                  />
-                </g>
-              )}
-              {(lensType === 'diverging' || !imageData.isReal) && (
-                <>
-                  {/* Diverging ray or virtual image backward extension */}
-                  <g filter="url(#lensGlowYellow)">
-                    <line
-                      x1={lensX}
-                      y1={centerY - objectHeight}
-                      x2={simWidth - 20}
-                      y2={centerY - objectHeight + (simWidth - 20 - lensX) * (objectHeight / Math.abs(focalLength))}
-                      stroke="url(#lensRay1Grad)"
-                      strokeWidth={2.5}
-                      strokeLinecap="round"
-                    />
-                  </g>
-                  {/* Dashed backward extension for virtual image */}
-                  <line
-                    x1={lensX}
-                    y1={centerY - objectHeight}
-                    x2={Math.max(20, imageX)}
-                    y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                    stroke="#fbbf24"
-                    strokeWidth={1.5}
-                    strokeDasharray="6,4"
-                    opacity={0.6}
-                  />
-                </>
-              )}
-
-              {/* Ray 2: Through center of lens (undeviated) - Pink */}
-              <g filter="url(#lensGlowPink)">
-                <line
-                  x1={objectX}
-                  y1={centerY - objectHeight}
-                  x2={lensX}
-                  y2={centerY}
-                  stroke="url(#lensRay2Grad)"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                />
-                <line
-                  x1={lensX}
-                  y1={centerY}
-                  x2={imageData.isReal ? Math.min(simWidth - 20, imageX) : simWidth - 20}
-                  y2={imageData.isReal
-                    ? centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)
-                    : centerY + (simWidth - 20 - lensX) * objectHeight / objectDistance}
-                  stroke="url(#lensRay2Grad)"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                />
-              </g>
-              {isVirtual && (
-                <line
-                  x1={lensX}
-                  y1={centerY}
-                  x2={Math.max(20, imageX)}
-                  y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                  stroke="#f472b6"
-                  strokeWidth={1.5}
-                  strokeDasharray="6,4"
-                  opacity={0.6}
-                />
-              )}
-
-              {/* Ray 3: Through F, emerges parallel - Purple */}
-              {lensType === 'converging' && (
-                <g filter="url(#lensGlowPurple)">
-                  <line
-                    x1={objectX}
-                    y1={centerY - objectHeight}
-                    x2={lensX}
-                    y2={centerY - objectHeight * (objectDistance - focalLength) / objectDistance}
-                    stroke="url(#lensRay3Grad)"
-                    strokeWidth={2.5}
-                    strokeLinecap="round"
-                  />
-                  <line
-                    x1={lensX}
-                    y1={centerY - objectHeight * (objectDistance - focalLength) / objectDistance}
-                    x2={simWidth - 20}
-                    y2={centerY - objectHeight * (objectDistance - focalLength) / objectDistance}
-                    stroke="url(#lensRay3Grad)"
-                    strokeWidth={2.5}
-                    strokeLinecap="round"
-                  />
-                </g>
-              )}
-            </g>
-          )}
-
-          {/* Convergence glow at image point */}
-          {imageData.isReal && imageData.imageDistance > 0 && imageData.imageDistance < 350 && showRays && (
-            <g filter="url(#lensConvergenceGlow)">
-              <circle
-                cx={Math.max(20, Math.min(simWidth - 20, imageX))}
-                cy={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                r={8}
-                fill="#f472b6"
-                opacity={0.8}
-              />
-            </g>
-          )}
-
-          {/* Image (premium styling) */}
-          {imageData.imageDistance > -200 && imageData.imageDistance < 400 && (
-            <g opacity={isVirtual ? 0.7 : 1} filter={isVirtual ? undefined : "url(#lensShadow)"}>
-              <line
-                x1={Math.max(20, Math.min(simWidth - 20, imageX))}
-                y1={centerY}
-                x2={Math.max(20, Math.min(simWidth - 20, imageX))}
-                y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                stroke={isVirtual ? "url(#lensImageGradVirtual)" : "url(#lensImageGradReal)"}
-                strokeWidth={4}
-                strokeLinecap="round"
-                strokeDasharray={isVirtual ? "6,4" : "none"}
-              />
-              <polygon
-                points={`${Math.max(20, Math.min(simWidth - 20, imageX))},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? -12 : 12)} ${Math.max(20, Math.min(simWidth - 20, imageX)) - 10},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? 4 : -4)} ${Math.max(20, Math.min(simWidth - 20, imageX)) + 10},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? 4 : -4)}`}
-                fill={isVirtual ? "url(#lensImageGradVirtual)" : "url(#lensImageGradReal)"}
-                opacity={isVirtual ? 0.7 : 1}
-              />
-              {/* Base indicator */}
-              <circle
-                cx={Math.max(20, Math.min(simWidth - 20, imageX))}
-                cy={centerY}
-                r={4}
-                fill={isVirtual ? "#a855f7" : "#ec4899"}
-                opacity={isVirtual ? 0.7 : 1}
-              />
-            </g>
-          )}
-
-          {/* Animated light pulses with premium gradient */}
-          {showRays && [0, 1, 2].map(i => {
-            const t = (animationTime * 0.4 + i * 0.33) % 1;
-            const x = objectX + (lensX - objectX) * t;
-            const y = (centerY - objectHeight);
-            if (t > 0.95) return null;
-            return (
-              <g key={`pulse-${i}`}>
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={6}
-                  fill="url(#lensPulseGrad)"
-                  opacity={(1 - t) * 0.8}
-                />
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={3}
-                  fill="#fef9c3"
-                  opacity={1 - t}
-                />
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Labels moved outside SVG using typo system for better readability */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: spacing.sm,
-          padding: `0 ${spacing.md}px`,
-        }}>
-          {/* Object label */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-          }}>
-            <div style={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #22c55e, #4ade80)',
-            }}/>
-            <span style={{ fontSize: typo.small, color: colors.success, fontWeight: 600 }}>Object</span>
-          </div>
-
-          {/* Lens type label */}
-          <div style={{
-            padding: `${spacing.xs}px ${spacing.sm}px`,
-            background: 'rgba(34, 211, 238, 0.15)',
-            borderRadius: radius.sm,
-            border: '1px solid rgba(34, 211, 238, 0.3)',
-          }}>
-            <span style={{ fontSize: typo.small, color: '#22d3ee', fontWeight: 600 }}>
-              {lensType === 'converging' ? 'Convex Lens' : 'Concave Lens'}
-            </span>
-          </div>
-
-          {/* Image label */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing.xs,
-          }}>
-            <div style={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              background: isVirtual
-                ? 'linear-gradient(135deg, #a855f7, #c084fc)'
-                : 'linear-gradient(135deg, #ec4899, #f472b6)',
-            }}/>
-            <span style={{
-              fontSize: typo.small,
-              color: isVirtual ? '#a855f7' : '#ec4899',
-              fontWeight: 600
-            }}>
-              {isVirtual ? 'Virtual Image' : 'Real Image'}
-            </span>
-          </div>
-        </div>
-
-        {/* Focal point labels outside SVG */}
-        {showFocalPoints && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: spacing.lg,
-            marginTop: spacing.sm,
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.xs,
-            }}>
-              <div style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #fbbf24, #fde047)',
-                boxShadow: '0 0 6px rgba(251, 191, 36, 0.6)',
-              }}/>
-              <span style={{ fontSize: typo.label, color: colors.warning, fontWeight: 500 }}>F, F' (Focal Points)</span>
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.xs,
-            }}>
-              <div style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #a78bfa, #c4b5fd)',
-              }}/>
-              <span style={{ fontSize: typo.label, color: colors.secondary, fontWeight: 500 }}>2F, 2F'</span>
-            </div>
-          </div>
+          </>
         )}
 
-        {/* Image properties display */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: spacing.sm,
-          marginTop: spacing.md,
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05))',
-            border: '1px solid rgba(251, 191, 36, 0.2)',
-            padding: spacing.sm,
-            borderRadius: radius.md,
-            textAlign: 'center',
-          }}>
-            <div style={{ color: colors.warning, fontSize: typo.label, fontWeight: 500, marginBottom: 2 }}>
-              Focal Length
-            </div>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: '700', color: colors.text }}>
-              {focalLength}px
-            </div>
-          </div>
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))',
-            border: '1px solid rgba(34, 197, 94, 0.2)',
-            padding: spacing.sm,
-            borderRadius: radius.md,
-            textAlign: 'center',
-          }}>
-            <div style={{ color: colors.success, fontSize: typo.label, fontWeight: 500, marginBottom: 2 }}>
-              Image Distance
-            </div>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: '700', color: colors.text }}>
-              {imageData.imageDistance.toFixed(0)}px
-            </div>
-          </div>
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(244, 114, 182, 0.05))',
-            border: '1px solid rgba(244, 114, 182, 0.2)',
-            padding: spacing.sm,
-            borderRadius: radius.md,
-            textAlign: 'center',
-          }}>
-            <div style={{ color: colors.accent, fontSize: typo.label, fontWeight: 500, marginBottom: 2 }}>
-              Magnification
-            </div>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: '700', color: colors.text }}>
-              {imageData.magnification.toFixed(2)}x
-            </div>
-          </div>
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(129, 140, 248, 0.05))',
-            border: '1px solid rgba(129, 140, 248, 0.2)',
-            padding: spacing.sm,
-            borderRadius: radius.md,
-            textAlign: 'center',
-          }}>
-            <div style={{ color: colors.secondary, fontSize: typo.label, fontWeight: 500, marginBottom: 2 }}>
-              Image Type
-            </div>
-            <div style={{ fontSize: typo.body, fontWeight: '600', color: colors.text }}>
-              {imageData.isReal ? 'Real' : 'Virtual'}, {imageData.isUpright ? 'Upright' : 'Inverted'}
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* Ray 2: Through center (undeviated) */}
+        <line
+          x1={objectX}
+          y1={centerY - objectHeight}
+          x2={lensX}
+          y2={centerY}
+          stroke="#f472b6"
+          strokeWidth={2}
+        />
+        <line
+          x1={lensX}
+          y1={centerY}
+          x2={imgData.isReal ? Math.min(width - 20, imageX) : width - 20}
+          y2={imgData.isReal
+            ? centerY + imgData.imageHeight
+            : centerY + (width - 20 - lensX) * objectHeight / objDist}
+          stroke="#f472b6"
+          strokeWidth={2}
+        />
+        {isVirtual && (
+          <line
+            x1={lensX}
+            y1={centerY}
+            x2={Math.max(20, imageX)}
+            y2={centerY - imgData.imageHeight}
+            stroke="#f472b6"
+            strokeWidth={1.5}
+            strokeDasharray="6,4"
+            opacity={0.6}
+          />
+        )}
+
+        {/* Ray 3: Through F, emerges parallel */}
+        {objDist > fLen && (
+          <>
+            <line
+              x1={objectX}
+              y1={centerY - objectHeight}
+              x2={lensX}
+              y2={centerY - objectHeight * (objDist - fLen) / objDist}
+              stroke="#a78bfa"
+              strokeWidth={2}
+            />
+            <line
+              x1={lensX}
+              y1={centerY - objectHeight * (objDist - fLen) / objDist}
+              x2={width - 20}
+              y2={centerY - objectHeight * (objDist - fLen) / objDist}
+              stroke="#a78bfa"
+              strokeWidth={2}
+            />
+          </>
+        )}
+
+        {/* Image */}
+        {imgData.imageDistance > -200 && imgData.imageDistance < 300 && (
+          <g opacity={isVirtual ? 0.8 : 1}>
+            <line
+              x1={Math.max(20, Math.min(width - 20, imageX))}
+              y1={centerY}
+              x2={Math.max(20, Math.min(width - 20, imageX))}
+              y2={isVirtual ? centerY - imgData.imageHeight : centerY + imgData.imageHeight}
+              stroke={isVirtual ? "url(#imageGradVirtual)" : "url(#imageGradReal)"}
+              strokeWidth={4}
+              strokeLinecap="round"
+              strokeDasharray={isVirtual ? "6,4" : "none"}
+            />
+            <polygon
+              points={`${Math.max(20, Math.min(width - 20, imageX))},${isVirtual ? centerY - imgData.imageHeight - 10 : centerY + imgData.imageHeight + 10} ${Math.max(20, Math.min(width - 20, imageX)) - 8},${isVirtual ? centerY - imgData.imageHeight + 2 : centerY + imgData.imageHeight - 2} ${Math.max(20, Math.min(width - 20, imageX)) + 8},${isVirtual ? centerY - imgData.imageHeight + 2 : centerY + imgData.imageHeight - 2}`}
+              fill={isVirtual ? "#c084fc" : "#f472b6"}
+              opacity={isVirtual ? 0.8 : 1}
+            />
+            <circle
+              cx={Math.max(20, Math.min(width - 20, imageX))}
+              cy={centerY}
+              r={3}
+              fill={isVirtual ? "#a855f7" : "#ec4899"}
+            />
+          </g>
+        )}
+
+        {/* Light pulses */}
+        {[0, 1, 2].map(i => {
+          const t = (animationTime * 0.4 + i * 0.33) % 1;
+          const x = objectX + (lensX - objectX) * t;
+          const y = centerY - objectHeight;
+          if (t > 0.95) return null;
+          return (
+            <circle
+              key={`pulse-${i}`}
+              cx={x}
+              cy={y}
+              r={4}
+              fill="#fef08a"
+              opacity={(1 - t) * 0.8}
+            />
+          );
+        })}
+
+        {/* Info box */}
+        <g transform={`translate(${width - 110}, 35)`}>
+          <rect x="0" y="0" width="100" height="70" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1"/>
+          <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">Image Distance</text>
+          <text x="50" y="35" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="700">
+            {imgData.imageDistance.toFixed(0)} px
+          </text>
+          <text x="50" y="52" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+            {imgData.isReal ? 'Real' : 'Virtual'}, {imgData.isUpright ? 'Upright' : 'Inverted'}
+          </text>
+          <text x="50" y="65" textAnchor="middle" fill={colors.success} fontSize="10">
+            M = {imgData.magnification.toFixed(2)}x
+          </text>
+        </g>
+      </svg>
     );
   };
 
-  const renderControls = () => (
+  // Progress bar component
+  const renderProgressBar = () => (
     <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-      gap: spacing.md,
-      marginBottom: spacing.lg,
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
     }}>
       <div style={{
-        background: colors.cardBg,
-        padding: spacing.md,
-        borderRadius: radius.md,
-        border: `1px solid ${colors.warning}`,
-      }}>
-        <label style={{
-          color: colors.warning,
-          fontSize: typography.small.fontSize,
-          display: 'block',
-          marginBottom: 8
-        }}>
-          Focal Length (f): {focalLength}px
-        </label>
-        <input
-          type="range"
-          min={40}
-          max={150}
-          value={focalLength}
-          onChange={(e) => setFocalLength(Number(e.target.value))}
-          style={{ width: '100%' }}
-        />
-      </div>
-
-      <div style={{
-        background: colors.cardBg,
-        padding: spacing.md,
-        borderRadius: radius.md,
-        border: `1px solid ${colors.success}`,
-      }}>
-        <label style={{
-          color: colors.success,
-          fontSize: typography.small.fontSize,
-          display: 'block',
-          marginBottom: 8
-        }}>
-          Object Distance: {objectDistance}px
-          {objectDistance < focalLength && lensType === 'converging' &&
-            <span style={{ color: colors.accent, marginLeft: 8 }}>← Inside f!</span>
-          }
-        </label>
-        <input
-          type="range"
-          min={30}
-          max={250}
-          value={objectDistance}
-          onChange={(e) => setObjectDistance(Number(e.target.value))}
-          style={{ width: '100%' }}
-        />
-      </div>
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderQuickButtons = () => (
+  // Navigation dots
+  const renderNavDots = () => (
     <div style={{
       display: 'flex',
-      flexWrap: 'wrap',
-      gap: spacing.sm,
-      marginBottom: spacing.lg,
       justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
     }}>
-      <button
-        onClick={() => setObjectDistance(focalLength * 2.5)}
-        style={{
-          padding: `${spacing.xs}px ${spacing.md}px`,
-          background: colors.cardBg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radius.sm,
-          color: colors.text,
-          fontSize: typography.small.fontSize,
-          cursor: 'pointer',
-          zIndex: 10,
-        }}
-      >
-        d &gt; 2f (small image)
-      </button>
-      <button
-        onClick={() => setObjectDistance(focalLength * 1.5)}
-        style={{
-          padding: `${spacing.xs}px ${spacing.md}px`,
-          background: colors.cardBg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radius.sm,
-          color: colors.text,
-          fontSize: typography.small.fontSize,
-          cursor: 'pointer',
-          zIndex: 10,
-        }}
-      >
-        f &lt; d &lt; 2f (large image)
-      </button>
-      <button
-        onClick={() => setObjectDistance(focalLength * 0.6)}
-        style={{
-          padding: `${spacing.xs}px ${spacing.md}px`,
-          background: colors.accent,
-          border: `1px solid ${colors.accent}`,
-          borderRadius: radius.sm,
-          color: colors.text,
-          fontSize: typography.small.fontSize,
-          cursor: 'pointer',
-          zIndex: 10,
-        }}
-      >
-        d &lt; f (magnifier!)
-      </button>
-      <button
-        onClick={() => setShowRays(!showRays)}
-        style={{
-          padding: `${spacing.xs}px ${spacing.md}px`,
-          background: showRays ? colors.primary : colors.cardBg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radius.sm,
-          color: colors.text,
-          fontSize: typography.small.fontSize,
-          cursor: 'pointer',
-          zIndex: 10,
-        }}
-      >
-        {showRays ? 'Rays On' : 'Rays Off'}
-      </button>
-      <button
-        onClick={() => setLensType(lensType === 'converging' ? 'diverging' : 'converging')}
-        style={{
-          padding: `${spacing.xs}px ${spacing.md}px`,
-          background: lensType === 'diverging' ? colors.secondary : colors.cardBg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radius.sm,
-          color: colors.text,
-          fontSize: typography.small.fontSize,
-          cursor: 'pointer',
-          zIndex: 10,
-        }}
-      >
-        {lensType === 'converging' ? 'Convex' : 'Concave'}
-      </button>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
     </div>
   );
 
-  // ============================================================================
-  // PHASE RENDERERS - ALL 10 PHASES
-  // ============================================================================
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0891b2)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-  // PHASE 1: HOOK - Welcome page explaining lens focusing and refraction
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
-      </div>
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
-        The Magic of Lenses
-      </h1>
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover how one elegant equation governs where images form through refraction
-      </p>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🔍📸
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-      {/* Premium card with graphic */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-3xl" />
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Lens Focusing
+        </h1>
 
-        <div className="relative">
-          <div className="text-3xl font-mono text-cyan-300 mb-6">
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "How does a <span style={{ color: colors.accent }}>curved piece of glass</span> create images? From camera lenses to your own eyes, the <span style={{ color: colors.ray }}>thin lens equation</span> governs it all."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <div style={{ fontSize: '24px', color: colors.accent, marginBottom: '12px', fontFamily: 'monospace' }}>
             1/f = 1/d<sub>o</sub> + 1/d<sub>i</sub>
           </div>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "This one equation determines where every image forms - from microscopes revealing cells to telescopes showing distant galaxies."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Geometric Optics
+          </p>
+        </div>
 
-          <div className="mt-8 space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Focus the sun, read tiny text, capture photographs
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Lens Physics
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'When the lens is exactly halfway between candle and wall' },
+      { id: 'b', text: 'When the lens is at a specific distance determined by its focal length', correct: true },
+      { id: 'c', text: 'Any distance works equally well for focusing' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
             </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              A simple curved piece of glass bends light through refraction, creating images that can be larger, smaller, real, or virtual!
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-cyan-400 font-semibold">
-                The thin lens equation - key to all optics
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            You hold a magnifying glass between a candle and a wall. At what position will you see the sharpest image?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>🕯️</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Candle</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>---</div>
+              <div style={{
+                background: colors.accent + '33',
+                padding: '20px 30px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.accent}`,
+              }}>
+                <div style={{ fontSize: '32px' }}>🔍</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Lens at ?</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>---</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>📋</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Wall/Screen</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE - Interactive Lens Simulator
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Lens Optics Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust focal length and object distance to see how images form.
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <LensVisualization objDist={objectDistance} fLen={focalLength} />
+            </div>
+
+            {/* Focal length slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Focal Length (f)</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{focalLength} px</span>
+              </div>
+              <input
+                type="range"
+                min="40"
+                max="120"
+                value={focalLength}
+                onChange={(e) => setFocalLength(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Object distance slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Object Distance (d_o)</span>
+                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>
+                  {objectDistance} px
+                  {objectDistance < focalLength && <span style={{ color: colors.warning, marginLeft: '8px' }}>(Inside f!)</span>}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="30"
+                max="250"
+                value={objectDistance}
+                onChange={(e) => setObjectDistance(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Quick preset buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginBottom: '20px' }}>
+              <button
+                onClick={() => setObjectDistance(focalLength * 2.5)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.border}`,
+                  background: colors.bgSecondary,
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                }}
+              >
+                d &gt; 2f (small image)
+              </button>
+              <button
+                onClick={() => setObjectDistance(focalLength * 1.5)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.border}`,
+                  background: colors.bgSecondary,
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                }}
+              >
+                f &lt; d &lt; 2f (large image)
+              </button>
+              <button
+                onClick={() => setObjectDistance(focalLength * 0.6)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.warning}`,
+                  background: colors.warning + '22',
+                  color: colors.warning,
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                }}
+              >
+                d &lt; f (magnifier!)
+              </button>
+            </div>
+
+            {/* Stats display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{imageData.imageDistance.toFixed(0)} px</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Image Distance</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>{imageData.magnification.toFixed(2)}x</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Magnification</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: imageData.isReal ? '#f472b6' : '#a855f7' }}>
+                  {imageData.isReal ? 'Real' : 'Virtual'}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>
+                  {imageData.isUpright ? 'Upright' : 'Inverted'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Discovery prompt */}
+          {objectDistance < focalLength && (
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                The object is inside the focal length - notice the virtual, upright, magnified image!
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Thin Lens Equation
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              fontSize: '28px',
+              color: colors.accent,
+              textAlign: 'center',
+              marginBottom: '20px',
+              fontFamily: 'monospace',
+            }}>
+              1/f = 1/d<sub>o</sub> + 1/d<sub>i</sub>
+            </div>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>f = focal length:</strong> The distance from the lens where parallel rays converge. Determined by lens curvature and material.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>d<sub>o</sub> = object distance:</strong> How far the object is from the lens.
+              </p>
+              <p>
+                <strong style={{ color: colors.textPrimary }}>d<sub>i</sub> = image distance:</strong> Where the image forms. Positive = real image (opposite side), negative = virtual image (same side).
               </p>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Premium CTA button */}
-      <button
-        onClick={(e) => { e.preventDefault(); goToPhase('predict'); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
-        style={{ zIndex: 10 }}
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover Lens Physics
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">*</span>
-          Focal Length
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">*</span>
-          Magnification
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">*</span>
-          Real vs Virtual
-        </div>
-      </div>
-    </div>
-  );
-
-  // PHASE 2: PREDICT - Prediction question about convex lens behavior
-  const renderPredict = () => {
-    const pred = predictions.initial;
-
-    return (
-      <div>
-        <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
-          Make Your Prediction
-        </h2>
-        <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
-          {pred.question}
-        </p>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          gap: spacing.md,
-          marginBottom: spacing.lg,
-        }}>
-          {pred.options.map((opt) => (
-            <div
-              key={opt.id}
-              onClick={() => handlePredictionSelect(opt.id)}
-              style={{
-                padding: spacing.lg,
-                background: selectedPrediction === opt.id
-                  ? `linear-gradient(135deg, ${colors.primary}33, ${colors.secondary}33)`
-                  : colors.cardBg,
-                border: `2px solid ${selectedPrediction === opt.id ? colors.primary : colors.border}`,
-                borderRadius: radius.lg,
-                cursor: showPredictionFeedback ? 'default' : 'pointer',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <div style={{ fontSize: '32px', marginBottom: spacing.sm }}>{opt.icon}</div>
-              <p style={{ color: colors.text, margin: 0 }}>{opt.text}</p>
-            </div>
-          ))}
-        </div>
-
-        {showPredictionFeedback && (
           <div style={{
-            padding: spacing.lg,
-            background: selectedPrediction === pred.correct
-              ? `${colors.success}22`
-              : `${colors.warning}22`,
-            border: `1px solid ${selectedPrediction === pred.correct ? colors.success : colors.warning}`,
-            borderRadius: radius.lg,
-            marginBottom: spacing.lg,
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
           }}>
-            <h3 style={{
-              color: selectedPrediction === pred.correct ? colors.success : colors.warning,
-              marginBottom: spacing.sm,
-            }}>
-              {selectedPrediction === pred.correct ? 'Perfect!' : 'Let\'s see why!'}
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: Image Location Depends on Object Position
             </h3>
-            <p style={{ color: colors.text, margin: 0 }}>{pred.explanation}</p>
-          </div>
-        )}
-
-        <div style={{ textAlign: 'center' }}>
-          {!showPredictionFeedback ? (
-            renderButton('Lock In Prediction', handlePredictionSubmit, 'primary', !selectedPrediction)
-          ) : (
-            renderButton('See It In Action', () => goToPhase('play'))
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // PHASE 3: PLAY - Interactive lens simulation with adjustable focal length
-  const renderPlay = () => (
-    <div>
-      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-        Lens Optics Lab
-      </h2>
-      <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
-        Explore how object distance affects where the image forms. Adjust the sliders and watch the rays!
-      </p>
-
-      {renderLensSimulation()}
-      {renderControls()}
-      {renderQuickButtons()}
-
-      <div style={{
-        background: `${colors.primary}22`,
-        padding: spacing.lg,
-        borderRadius: radius.lg,
-        marginBottom: spacing.lg,
-      }}>
-        <h3 style={{ color: colors.primary, marginBottom: spacing.sm }}>Key Observations</h3>
-        <ul style={{ color: colors.text, margin: 0, paddingLeft: 20 }}>
-          <li>Object beyond 2f: smaller, inverted real image</li>
-          <li>Object between f and 2f: larger, inverted real image</li>
-          <li>Object at f: rays emerge parallel (image at infinity)</li>
-          <li>Object inside f: larger, upright virtual image</li>
-        </ul>
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        {renderButton('I Understand This', () => goToPhase('review'))}
-      </div>
-    </div>
-  );
-
-  // PHASE 4: REVIEW - Explain 1/f = 1/do + 1/di and magnification
-  const renderReview = () => (
-    <div>
-      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
-        The Thin Lens Equation
-      </h2>
-
-      <div style={{
-        background: colors.cardBg,
-        padding: spacing.xl,
-        borderRadius: radius.lg,
-        marginBottom: spacing.lg,
-      }}>
-        <h3 style={{ color: colors.primary, marginBottom: spacing.md }}>The Mathematics</h3>
-
-        <div style={{
-          textAlign: 'center',
-          padding: spacing.lg,
-          background: colors.background,
-          borderRadius: radius.md,
-          marginBottom: spacing.lg,
-        }}>
-          <div style={{ fontSize: '28px', color: colors.primary, fontFamily: 'monospace' }}>
-            1/f = 1/d_o + 1/d_i
-          </div>
-          <p style={{ color: colors.textSecondary, margin: `${spacing.sm}px 0 0` }}>
-            f = focal length, d_o = object distance, d_i = image distance
-          </p>
-        </div>
-
-        <div style={{
-          textAlign: 'center',
-          padding: spacing.md,
-          background: colors.background,
-          borderRadius: radius.md,
-          marginBottom: spacing.lg,
-        }}>
-          <div style={{ fontSize: '24px', color: colors.accent, fontFamily: 'monospace' }}>
-            M = -d_i / d_o = h_i / h_o
-          </div>
-          <p style={{ color: colors.textSecondary, margin: `${spacing.sm}px 0 0` }}>
-            Magnification: positive = upright, negative = inverted
-          </p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-          gap: spacing.md,
-        }}>
-          <div style={{
-            background: colors.background,
-            padding: spacing.md,
-            borderRadius: radius.md,
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>d_o &gt; 2f</div>
-            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-              Smaller, inverted<br/>real image
-            </p>
-          </div>
-          <div style={{
-            background: colors.background,
-            padding: spacing.md,
-            borderRadius: radius.md,
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>f &lt; d_o &lt; 2f</div>
-            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-              Larger, inverted<br/>real image
-            </p>
-          </div>
-          <div style={{
-            background: colors.background,
-            padding: spacing.md,
-            borderRadius: radius.md,
-            textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>d_o &lt; f</div>
-            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-              Larger, upright<br/>virtual image
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        {renderButton('What\'s the Twist?', () => goToPhase('twist_predict'))}
-      </div>
-    </div>
-  );
-
-  // PHASE 5: TWIST_PREDICT - Scenario about diverging (concave) lenses
-  const renderTwistPredict = () => {
-    const pred = predictions.twist;
-
-    return (
-      <div>
-        <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
-          The Magnifying Effect
-        </h2>
-        <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
-          {pred.question}
-        </p>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          gap: spacing.md,
-          marginBottom: spacing.lg,
-        }}>
-          {pred.options.map((opt) => (
-            <div
-              key={opt.id}
-              onClick={() => handlePredictionSelect(opt.id)}
-              style={{
-                padding: spacing.lg,
-                background: selectedPrediction === opt.id
-                  ? `linear-gradient(135deg, ${colors.primary}33, ${colors.secondary}33)`
-                  : colors.cardBg,
-                border: `2px solid ${selectedPrediction === opt.id ? colors.primary : colors.border}`,
-                borderRadius: radius.lg,
-                cursor: showPredictionFeedback ? 'default' : 'pointer',
-                transition: 'all 0.3s ease',
-              }}
-            >
-              <div style={{ fontSize: '32px', marginBottom: spacing.sm }}>{opt.icon}</div>
-              <p style={{ color: colors.text, margin: 0 }}>{opt.text}</p>
-            </div>
-          ))}
-        </div>
-
-        {showPredictionFeedback && (
-          <div style={{
-            padding: spacing.lg,
-            background: selectedPrediction === pred.correct
-              ? `${colors.success}22`
-              : `${colors.warning}22`,
-            border: `1px solid ${selectedPrediction === pred.correct ? colors.success : colors.warning}`,
-            borderRadius: radius.lg,
-            marginBottom: spacing.lg,
-          }}>
-            <h3 style={{
-              color: selectedPrediction === pred.correct ? colors.success : colors.warning,
-              marginBottom: spacing.sm,
-            }}>
-              {selectedPrediction === pred.correct ? 'Excellent!' : 'Interesting guess!'}
-            </h3>
-            <p style={{ color: colors.text, margin: 0 }}>{pred.explanation}</p>
-          </div>
-        )}
-
-        <div style={{ textAlign: 'center' }}>
-          {!showPredictionFeedback ? (
-            renderButton('Lock In Prediction', handlePredictionSubmit, 'primary', !selectedPrediction)
-          ) : (
-            renderButton('Try the Magnifier', () => goToPhase('twist_play'))
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // PHASE 6: TWIST_PLAY - Interactive comparison of convex vs concave lenses
-  const renderTwistPlay = () => (
-    <div>
-      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-        Magnifying Glass Lab
-      </h2>
-      <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
-        Move the object inside the focal length and watch the magic! Compare convex vs concave lenses.
-      </p>
-
-      {renderLensSimulation()}
-      {renderControls()}
-      {renderQuickButtons()}
-
-      <div style={{
-        background: `${colors.accent}22`,
-        padding: spacing.lg,
-        borderRadius: radius.lg,
-        marginBottom: spacing.lg,
-      }}>
-        <h3 style={{ color: colors.accent, marginBottom: spacing.sm }}>Magnifying Glass Physics</h3>
-        <p style={{ color: colors.text, margin: 0 }}>
-          When d {"<"} f, the lens equation gives a <strong>negative</strong> image distance,
-          meaning the image is on the same side as the object - a virtual image! This virtual
-          image is larger and upright, which is why magnifying glasses work. The closer to f,
-          the larger the magnification (but harder to see clearly).
-        </p>
-      </div>
-
-      <div style={{
-        background: `${colors.secondary}22`,
-        padding: spacing.lg,
-        borderRadius: radius.lg,
-        marginBottom: spacing.lg,
-      }}>
-        <h3 style={{ color: colors.secondary, marginBottom: spacing.sm }}>Concave (Diverging) Lenses</h3>
-        <p style={{ color: colors.text, margin: 0 }}>
-          Toggle to "Concave" mode and notice: diverging lenses ALWAYS produce virtual, upright,
-          smaller images regardless of object position. They spread light rays apart rather than
-          focusing them. This is why nearsighted people use concave lenses - to diverge light
-          before it enters the eye.
-        </p>
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        {renderButton('I Understand This', () => goToPhase('twist_review'))}
-      </div>
-    </div>
-  );
-
-  // PHASE 7: TWIST_REVIEW - Explain virtual vs real images
-  const renderTwistReview = () => (
-    <div>
-      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
-        Real vs Virtual Images
-      </h2>
-
-      <div style={{
-        background: colors.cardBg,
-        padding: spacing.xl,
-        borderRadius: radius.lg,
-        marginBottom: spacing.lg,
-      }}>
-        <h3 style={{ color: colors.accent, marginBottom: spacing.md }}>Image Types</h3>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          gap: spacing.lg,
-        }}>
-          <div style={{
-            background: colors.background,
-            padding: spacing.md,
-            borderRadius: radius.md,
-          }}>
-            <h4 style={{ color: colors.success, marginBottom: spacing.sm }}>Real Image (d &gt; f)</h4>
-            <ul style={{ color: colors.textSecondary, margin: 0, paddingLeft: 20 }}>
-              <li>Forms on opposite side of lens</li>
-              <li>Can be projected on screen</li>
-              <li>Inverted (upside down)</li>
-              <li>Positive d_i in equation</li>
-              <li>Example: Camera, projector</li>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li><strong>Object beyond 2f:</strong> Smaller, inverted, real image between f and 2f</li>
+              <li><strong>Object at 2f:</strong> Same size, inverted, real image at 2f</li>
+              <li><strong>Object between f and 2f:</strong> Larger, inverted, real image beyond 2f</li>
+              <li><strong>Object at f:</strong> Rays emerge parallel - image at infinity!</li>
+              <li style={{ color: colors.warning }}><strong>Object inside f:</strong> Larger, upright, VIRTUAL image</li>
             </ul>
           </div>
+
           <div style={{
-            background: colors.background,
-            padding: spacing.md,
-            borderRadius: radius.md,
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: spacing.sm }}>Virtual Image (d &lt; f)</h4>
-            <ul style={{ color: colors.textSecondary, margin: 0, paddingLeft: 20 }}>
-              <li>Forms on same side as object</li>
-              <li>Cannot be projected</li>
-              <li>Upright and magnified</li>
-              <li>Negative d_i in equation</li>
-              <li>Example: Magnifying glass</li>
-            </ul>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              Magnification: M = -d<sub>i</sub>/d<sub>o</sub>
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              The ratio of image size to object size. Negative M means inverted. When |M| &gt; 1, the image is magnified. When |M| &lt; 1, the image is reduced.
+            </p>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover the Magnifier Effect
+          </button>
         </div>
 
-        <div style={{
-          marginTop: spacing.lg,
-          padding: spacing.md,
-          background: colors.background,
-          borderRadius: radius.md,
-          textAlign: 'center',
-        }}>
-          <code style={{ color: colors.primary, fontSize: typography.h3.fontSize }}>
-            M = -d_i/d_o  |  M &gt; 0 (upright), M &lt; 0 (inverted)
-          </code>
-        </div>
-
-        <div style={{
-          marginTop: spacing.lg,
-          padding: spacing.md,
-          background: `${colors.warning}22`,
-          borderRadius: radius.md,
-        }}>
-          <h4 style={{ color: colors.warning, marginBottom: spacing.sm }}>Sign Conventions</h4>
-          <ul style={{ color: colors.text, margin: 0, paddingLeft: 20 }}>
-            <li>Converging lens: f &gt; 0 (positive focal length)</li>
-            <li>Diverging lens: f &lt; 0 (negative focal length)</li>
-            <li>Real image: d_i &gt; 0 (forms on opposite side)</li>
-            <li>Virtual image: d_i &lt; 0 (forms on same side)</li>
-          </ul>
-        </div>
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div style={{ textAlign: 'center' }}>
-        {renderButton('See Real Applications', () => goToPhase('transfer'))}
-      </div>
-    </div>
-  );
-
-  // PHASE 8: TRANSFER - 4 real-world applications
-  const renderTransfer = () => {
-    const currentApp = realWorldApplications[currentAppIndex];
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'No image forms at all - the lens cannot focus' },
+      { id: 'b', text: 'A smaller, inverted real image forms on the other side' },
+      { id: 'c', text: 'A larger, upright virtual image forms - the magnifying glass effect!', correct: true },
+    ];
 
     return (
-      <div>
-        <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-          Lenses in the Real World
-        </h2>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        {/* App navigation dots */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: spacing.sm,
-          marginBottom: spacing.lg,
-        }}>
-          {realWorldApplications.map((app, index) => {
-            const isCompleted = completedApps.includes(app.id);
-            const isCurrent = index === currentAppIndex;
-            const isLocked = index > 0 && !completedApps.includes(realWorldApplications[index - 1].id);
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Object Inside Focal Length
+            </p>
+          </div>
 
-            return (
-              <div
-                key={app.id}
-                onClick={() => {
-                  if (!isLocked) {
-                    setCurrentAppIndex(index);
-                  }
-                }}
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What happens when you place an object CLOSER to a convex lens than its focal length?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              Think about using a magnifying glass to examine a small insect...
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+              <div style={{ fontSize: '48px' }}>🐜</div>
+              <div style={{ color: colors.accent, fontSize: '24px' }}>&lt;-- f --&gt;</div>
+              <div style={{ fontSize: '48px' }}>🔍</div>
+              <div style={{ color: colors.textMuted, fontSize: '24px' }}>👁️</div>
+            </div>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
+              Object is INSIDE the focal length
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: isCurrent ? colors.primary : isCompleted ? colors.success : colors.cardBg,
-                  border: `2px solid ${isCurrent ? colors.primary : isCompleted ? colors.success : colors.border}`,
-                  cursor: isLocked ? 'not-allowed' : 'pointer',
-                  opacity: isLocked ? 0.4 : 1,
-                  transition: 'all 0.3s ease',
-                  fontSize: '16px',
-                  color: colors.text,
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
                 }}
               >
-                {isLocked ? 'X' : isCompleted ? 'V' : index + 1}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Current application card */}
-        <div style={{
-          background: colors.cardBg,
-          borderRadius: radius.lg,
-          padding: spacing.xl,
-          marginBottom: spacing.lg,
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: spacing.md, textAlign: 'center' }}>
-            {currentApp.title.split(' ')[0]}
-          </div>
-          <h3 style={{ ...typography.h3, color: colors.primary, marginBottom: spacing.xs, textAlign: 'center' }}>
-            {currentApp.title.substring(currentApp.title.indexOf(' ') + 1)}
-          </h3>
-          <p style={{ color: colors.secondary, textAlign: 'center', marginBottom: spacing.lg }}>
-            {currentApp.subtitle}
-          </p>
-
-          <p style={{ ...typography.body, color: colors.text, marginBottom: spacing.lg }}>
-            {currentApp.description}
-          </p>
-
-          <div style={{
-            background: colors.background,
-            padding: spacing.md,
-            borderRadius: radius.md,
-            marginBottom: spacing.md,
-          }}>
-            <div style={{ color: colors.textSecondary, fontSize: typography.small.fontSize, marginBottom: 4 }}>
-              Key Formula:
-            </div>
-            <code style={{ color: colors.primary }}>{currentApp.formula}</code>
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
           </div>
 
-          <div style={{
-            background: `${colors.success}22`,
-            padding: spacing.md,
-            borderRadius: radius.md,
-            marginBottom: spacing.md,
-          }}>
-            <div style={{ color: colors.success, marginBottom: 4 }}>Real Example:</div>
-            <p style={{ color: colors.text, margin: 0 }}>{currentApp.realExample}</p>
-          </div>
-
-          <div style={{
-            background: `${colors.accent}22`,
-            padding: spacing.md,
-            borderRadius: radius.md,
-          }}>
-            <div style={{ color: colors.accent, marginBottom: 4 }}>Try This:</div>
-            <p style={{ color: colors.text, margin: 0 }}>{currentApp.interactiveHint}</p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.md, flexWrap: 'wrap' }}>
-          {!completedApps.includes(currentApp.id) ? (
-            renderButton('Got It!', () => handleCompleteApp(currentApp.id), 'success')
-          ) : currentAppIndex < realWorldApplications.length - 1 ? (
-            renderButton('Next Application', () => setCurrentAppIndex(i => i + 1))
-          ) : null}
-
-          {canAccessQuiz && (
-            renderButton('Take the Quiz', () => {
-              setCurrentQuestion(0);
-              setSelectedAnswer(null);
-              setShowQuizFeedback(false);
-              setTestScore(0);
-              goToPhase('test');
-            }, 'success')
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See the Magnifier Effect
+            </button>
           )}
         </div>
 
-        {!canAccessQuiz && (
-          <p style={{
-            textAlign: 'center',
-            color: colors.textSecondary,
-            marginTop: spacing.md,
-            fontSize: typography.small.fontSize,
-          }}>
-            Complete all {realWorldApplications.length} applications to unlock the quiz
-            ({completedApps.length}/{realWorldApplications.length} completed)
-          </p>
-        )}
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // PHASE 9: TEST - 10 multiple choice questions
-  const renderTest = () => {
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            The Magnifying Glass Effect
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Place the object inside the focal length and observe the virtual image
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <LensVisualization objDist={twistObjectDistance} fLen={focalLength} showVirtual={true} />
+            </div>
+
+            {/* Object distance slider (constrained to inside f) */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Object Distance (inside focal length)</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistObjectDistance} px (f = {focalLength} px)</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max={focalLength - 5}
+                value={twistObjectDistance}
+                onChange={(e) => setTwistObjectDistance(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Close to lens</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Near focal point</span>
+              </div>
+            </div>
+
+            {/* Comparison stats */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: '#a855f7' }}>
+                  Virtual
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Image Type</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>
+                  Upright
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Orientation</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>
+                  {Math.abs(twistImageData.magnification).toFixed(1)}x
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Magnification</div>
+              </div>
+            </div>
+          </div>
+
+          {twistObjectDistance < focalLength * 0.5 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Notice: Moving the object closer to the lens increases magnification! This is how magnifying glasses work.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Virtual Images
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real vs Virtual Images
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid #f472b6`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📽️</span>
+                <h3 style={{ ...typo.h3, color: '#f472b6', margin: 0 }}>Real Images</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Light rays actually converge at the image point. Can be projected onto a screen. Form when object is beyond focal length. Always inverted.
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
+                Examples: Camera sensors, projectors, movie screens
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid #a855f7`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔮</span>
+                <h3 style={{ ...typo.h3, color: '#a855f7', margin: 0 }}>Virtual Images</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Light rays appear to diverge from the image point but never actually pass through it. Cannot be projected - only seen by looking through the lens. Always upright.
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
+                Examples: Magnifying glasses, bathroom mirrors, eyeglasses
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.warning}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.warning}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>The Math Tells the Story</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                When d<sub>i</sub> comes out <strong>negative</strong> from the thin lens equation, it means the image is virtual - on the same side as the object. When M is <strong>positive</strong>, the image is upright.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Lens Physics Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand lens focusing and image formation!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
     const question = testQuestions[currentQuestion];
 
     return (
-      <div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: spacing.lg,
-        }}>
-          <span style={{ color: colors.textSecondary }}>
-            Question {currentQuestion + 1} of {testQuestions.length}
-          </span>
-          <span style={{ color: colors.success, fontWeight: '600' }}>
-            Score: {testScore}/{currentQuestion + (showQuizFeedback ? 1 : 0)}
-          </span>
-        </div>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        <div style={{
-          background: colors.cardBg,
-          padding: spacing.xl,
-          borderRadius: radius.lg,
-          marginBottom: spacing.lg,
-        }}>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
           {/* Scenario */}
           <div style={{
-            background: `${colors.primary}15`,
-            padding: spacing.md,
-            borderRadius: radius.md,
-            marginBottom: spacing.lg,
-            borderLeft: `4px solid ${colors.primary}`,
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
           }}>
-            <p style={{ color: colors.textSecondary, margin: 0, fontStyle: 'italic' }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
               {question.scenario}
             </p>
           </div>
 
-          <h3 style={{ ...typography.h3, color: colors.text, marginBottom: spacing.lg }}>
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
             {question.question}
           </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-            {question.options.map((option, index) => {
-              const isSelected = selectedAnswer === index;
-              const isCorrect = option.correct === true;
-              const showResult = showQuizFeedback;
-
-              let bgColor = colors.background;
-              let borderColor = colors.border;
-
-              if (showResult) {
-                if (isCorrect) {
-                  bgColor = `${colors.success}33`;
-                  borderColor = colors.success;
-                } else if (isSelected && !isCorrect) {
-                  bgColor = `${colors.warning}33`;
-                  borderColor = colors.warning;
-                }
-              } else if (isSelected) {
-                bgColor = `${colors.primary}33`;
-                borderColor = colors.primary;
-              }
-
-              return (
-                <div
-                  key={option.id}
-                  onClick={() => !showQuizFeedback && handleAnswerSelect(index)}
-                  style={{
-                    padding: spacing.md,
-                    background: bgColor,
-                    border: `2px solid ${borderColor}`,
-                    borderRadius: radius.md,
-                    cursor: showQuizFeedback ? 'default' : 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <span style={{ color: colors.primary, fontWeight: '600', marginRight: spacing.sm }}>
-                    {option.id.toUpperCase()}.
-                  </span>
-                  <span style={{ color: colors.text }}>{option.label}</span>
-                  {showResult && isCorrect && <span style={{ marginLeft: 8, color: colors.success }}>Correct</span>}
-                  {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8, color: colors.warning }}>X</span>}
-                </div>
-              );
-            })}
-          </div>
-
-          {showQuizFeedback && (
-            <div style={{
-              marginTop: spacing.lg,
-              padding: spacing.md,
-              background: `${colors.primary}22`,
-              borderRadius: radius.md,
-            }}>
-              <p style={{ color: colors.text, margin: 0 }}>{question.explanation}</p>
-            </div>
-          )}
-        </div>
-
-        <div style={{ textAlign: 'center' }}>
-          {!showQuizFeedback ? (
-            renderButton('Submit Answer', handleAnswerSubmit, 'primary', selectedAnswer === null)
-          ) : (
-            renderButton(
-              currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results',
-              handleNextQuestion
-            )
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // PHASE 10: MASTERY - Congratulations page
-  const renderMastery = () => {
-    const percentage = Math.round((testScore / testQuestions.length) * 100);
-    const passed = percentage >= 70;
-
-    return (
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '72px', marginBottom: spacing.lg }}>
-          {passed ? '***' : '**'}
-        </div>
-        <h2 style={{ ...typography.h1, color: colors.text, marginBottom: spacing.md }}>
-          {passed ? 'Congratulations! Lens Master!' : 'Keep Learning!'}
-        </h2>
-
-        <div style={{
-          background: colors.cardBg,
-          padding: spacing.xl,
-          borderRadius: radius.lg,
-          marginBottom: spacing.lg,
-          maxWidth: 400,
-          margin: '0 auto',
-        }}>
-          <div style={{
-            fontSize: '48px',
-            fontWeight: '700',
-            color: passed ? colors.success : colors.warning,
-            marginBottom: spacing.sm,
-          }}>
-            {percentage}%
-          </div>
-          <p style={{ color: colors.textSecondary, marginBottom: spacing.md }}>
-            {testScore} out of {testQuestions.length} correct
-          </p>
-
-          <div style={{
-            height: 8,
-            background: colors.border,
-            borderRadius: radius.sm,
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              height: '100%',
-              width: `${percentage}%`,
-              background: passed ? colors.success : colors.warning,
-              borderRadius: radius.sm,
-              transition: 'width 1s ease',
-            }} />
-          </div>
-        </div>
-
-        <div style={{
-          background: `linear-gradient(135deg, ${colors.gradientStart}, ${colors.gradientEnd})`,
-          padding: spacing.lg,
-          borderRadius: radius.lg,
-          marginBottom: spacing.xl,
-          maxWidth: 500,
-          margin: '0 auto 24px',
-        }}>
-          <h3 style={{ color: colors.text, marginBottom: spacing.sm }}>Key Takeaways</h3>
-          <ul style={{ color: colors.textSecondary, textAlign: 'left', margin: 0, paddingLeft: 20 }}>
-            <li>Thin lens equation: 1/f = 1/d_o + 1/d_i</li>
-            <li>Converging lenses have positive focal length</li>
-            <li>Object inside f creates virtual, magnified, upright image</li>
-            <li>Negative d_i indicates virtual image</li>
-            <li>Magnification M = -d_i/d_o</li>
-          </ul>
-        </div>
-
-        <div style={{ display: 'flex', gap: spacing.md, justifyContent: 'center', flexWrap: 'wrap' }}>
-          {!passed && renderButton('Try Again', () => {
-            setCurrentQuestion(0);
-            setSelectedAnswer(null);
-            setShowQuizFeedback(false);
-            setTestScore(0);
-            goToPhase('test');
-          })}
-          {renderButton('Restart Journey', () => {
-            setCompletedApps([]);
-            setCurrentAppIndex(0);
-            setSelectedPrediction(null);
-            setShowPredictionFeedback(false);
-            goToPhase('hook');
-          }, 'secondary')}
-          {onBack && renderButton('Return to Dashboard', onBack, 'secondary')}
-        </div>
-      </div>
-    );
-  };
-
-  // ============================================================================
-  // MAIN RENDER - Switch statement with ALL 10 phases
-  // ============================================================================
-
-  const renderPhaseContent = () => {
-    switch (phase) {
-      case 'hook':
-        return renderHook();
-      case 'predict':
-        return renderPredict();
-      case 'play':
-        return renderPlay();
-      case 'review':
-        return renderReview();
-      case 'twist_predict':
-        return renderTwistPredict();
-      case 'twist_play':
-        return renderTwistPlay();
-      case 'twist_review':
-        return renderTwistReview();
-      case 'transfer':
-        return renderTransfer();
-      case 'test':
-        return renderTest();
-      case 'mastery':
-        return renderMastery();
-      default:
-        return renderHook();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Lens Focusing</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                key={p}
-                onClick={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
-              />
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-        <div className="max-w-4xl mx-auto px-4">
-          {renderPhaseContent()}
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* CSS Animation */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-      `}</style>
-    </div>
-  );
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Lens Focusing Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand the fundamental optics that power cameras, microscopes, and human vision.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Takeaways:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'The thin lens equation: 1/f = 1/d_o + 1/d_i',
+              'Real images form when object is beyond f',
+              'Virtual images form when object is inside f',
+              'Magnification = -d_i / d_o',
+              'Focal length determines lens power',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default LensFocusingRenderer;

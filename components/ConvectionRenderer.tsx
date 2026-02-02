@@ -3,32 +3,32 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
-// CONVECTION RENDERER - GOLD STANDARD IMPLEMENTATION
+// CONVECTION RENDERER - PREMIUM 10-PHASE PHYSICS GAME
 // Physics: Heat transfer through fluid motion (Q = hAΔT)
 // Hot fluid rises (less dense), cold fluid sinks (more dense) - creating circulation
 // ============================================================================
 
-// Phase type for 10-phase structure
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
-// Phase order array
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-// Phase labels for display
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Play',
+  play: 'Lab',
   review: 'Review',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Play',
+  twist_play: 'Twist Lab',
   twist_review: 'Twist Review',
   transfer: 'Transfer',
   test: 'Test',
   mastery: 'Mastery'
 };
 
-// Game event types for analytics and state management
 type GameEventType =
   | 'phase_started'
   | 'prediction_made'
@@ -52,7 +52,27 @@ type GameEventType =
   | 'animation_completed'
   | 'user_interaction';
 
-// Test question interface with scenarios and explanations
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
+
+interface ConvectionRendererProps {
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
+  onGameEvent?: (event: GameEvent) => void;
+  onComplete?: () => void;
+}
+
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  temp: number;
+  vx: number;
+  vy: number;
+}
+
 interface TestQuestion {
   scenario: string;
   question: string;
@@ -60,7 +80,6 @@ interface TestQuestion {
   explanation: string;
 }
 
-// Transfer application interface for real-world connections
 interface TransferApp {
   icon: string;
   title: string;
@@ -76,325 +95,237 @@ interface TransferApp {
   color: string;
 }
 
-// Props interface
-interface ConvectionRendererProps {
-  gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
-  onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-}
+// ═══════════════════════════════════════════════════════════════════════════
+// TRANSFER APPLICATIONS (4 Real-World Applications)
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Particle interface for simulation
-interface Particle {
-  id: number;
-  x: number;
-  y: number;
-  temp: number;
-  vx: number;
-  vy: number;
-}
-
-const realWorldApps = [
-  {
-    icon: '🏠',
-    title: 'Home Heating & Cooling',
-    short: 'HVAC system design',
-    tagline: 'Harnessing air circulation for comfort',
-    description: 'HVAC systems are designed around convection principles. Hot air rises, cold air sinks - understanding this allows engineers to optimally place vents, returns, and ductwork.',
-    connection: 'Natural convection creates stratification (hot air at ceiling, cold at floor). Forced convection from fans mixes air for even temperatures. The convection coefficient h determines heat transfer rate.',
-    howItWorks: 'Warm air from heating vents rises and spreads across the ceiling. As it cools, it sinks along walls. Return vents near the floor capture cool air to be reheated. Ceiling fans enhance mixing.',
-    stats: [
-      { value: '40%', label: 'Home energy for HVAC', icon: '⚡' },
-      { value: '5-25 W/m²K', label: 'Natural convection h', icon: '📊' },
-      { value: '10-200 W/m²K', label: 'Forced convection h', icon: '💨' }
-    ],
-    examples: ['Central air systems', 'Radiant floor heating', 'Ceiling fans', 'Passive house design'],
-    companies: ['Carrier', 'Trane', 'Lennox', 'Daikin'],
-    futureImpact: 'Smart HVAC systems use AI to optimize airflow patterns based on occupancy and weather, improving comfort while reducing energy use by 20-40%.',
-    color: '#3B82F6'
-  },
-  {
-    icon: '🖥️',
-    title: 'Electronics Cooling',
-    short: 'Managing heat in devices',
-    tagline: 'Keeping chips cool through convection',
-    description: 'Every electronic device relies on convection to remove waste heat. From passive laptop vents to active server cooling, convection carries heat from hot components to the environment.',
-    connection: 'Heat sinks increase surface area for convection. Fans boost the convection coefficient by creating forced convection. Heat pipes use convective phase change for even faster heat transport.',
-    howItWorks: 'Heat conducts from chip to heatsink fins. Air flows over fins, absorbing heat through convection. Fans increase airflow velocity, dramatically improving the heat transfer coefficient.',
-    stats: [
-      { value: '150W', label: 'Desktop CPU TDP', icon: '🔥' },
-      { value: '100x', label: 'Fan vs passive cooling', icon: '📈' },
-      { value: '10-30°C', label: 'Typical temp rise', icon: '🌡️' }
-    ],
-    examples: ['Computer heatsinks', 'Laptop cooling', 'Data center HVAC', 'LED lighting'],
-    companies: ['Noctua', 'Corsair', 'Intel', 'NVIDIA'],
-    futureImpact: 'Liquid cooling and immersion cooling are pushing the boundaries as chip power densities exceed what air convection can handle.',
-    color: '#EF4444'
-  },
-  {
-    icon: '🌍',
-    title: 'Atmospheric Circulation',
-    short: 'Global weather patterns',
-    tagline: 'Earth\'s convection drives weather',
-    description: 'Global atmospheric circulation is convection on a planetary scale. Solar heating at the equator creates rising air that flows toward the poles, descending to complete convection cells.',
-    connection: 'Hot air rises at the equator (low pressure), flows poleward at altitude, cools and sinks at ~30° latitude (high pressure), and returns along the surface as trade winds.',
-    howItWorks: 'Three convection cells per hemisphere (Hadley, Ferrel, Polar) drive global wind patterns. The Coriolis effect deflects these flows, creating trade winds, westerlies, and polar easterlies.',
-    stats: [
-      { value: '30°', label: 'Hadley cell extent', icon: '🌐' },
-      { value: '10 km', label: 'Troposphere height', icon: '⬆️' },
-      { value: '15 m/s', label: 'Typical wind speeds', icon: '💨' }
-    ],
-    examples: ['Trade winds', 'Monsoons', 'Jet streams', 'Sea breezes'],
-    companies: ['NOAA', 'ECMWF', 'Met Office', 'Weather Underground'],
-    futureImpact: 'Climate change is altering convection patterns, potentially shifting monsoons, intensifying storms, and changing agricultural regions worldwide.',
-    color: '#10B981'
-  },
-  {
-    icon: '🍳',
-    title: 'Cooking & Food Processing',
-    short: 'Heat transfer in the kitchen',
-    tagline: 'Convection ovens cook faster and more evenly',
-    description: 'Convection ovens use fans to circulate hot air, dramatically improving heat transfer to food. This cooks food faster and more evenly than relying on natural convection alone.',
-    connection: 'Natural convection in a standard oven has h ≈ 5-10 W/m²K. Forced convection from a fan increases this to 20-50 W/m²K, reducing cooking time by 25% or more.',
-    howItWorks: 'A fan circulates hot air around food, constantly replacing the cooler air layer at the food surface with hot air. This increases the temperature gradient and heat transfer rate.',
-    stats: [
-      { value: '25%', label: 'Faster cooking', icon: '⏱️' },
-      { value: '25°F', label: 'Lower temp needed', icon: '🌡️' },
-      { value: '5x', label: 'Better browning', icon: '🥐' }
-    ],
-    examples: ['Convection ovens', 'Air fryers', 'Commercial kitchens', 'Food dehydrators'],
-    companies: ['Viking', 'Wolf', 'Breville', 'Cuisinart'],
-    futureImpact: 'Smart ovens with variable fan speed and moisture injection are enabling precise control over cooking processes for restaurant-quality results at home.',
-    color: '#F59E0B'
-  }
-];
-
-// ============================================================================
-// COMPREHENSIVE TEST QUESTIONS (10 questions with scenarios)
-// ============================================================================
-const testQuestions: TestQuestion[] = [
-  {
-    scenario: "You're boiling water for pasta and notice bubbles forming at the bottom of the pot and rising to the surface.",
-    question: "Why do the heated bubbles rise instead of staying at the bottom?",
-    options: [
-      { text: "The bubbles are pushed up by steam pressure", correct: false },
-      { text: "Heated fluid expands and becomes less dense than surrounding cold fluid", correct: true },
-      { text: "Gravity pulls cold water down, pushing hot water up", correct: false },
-      { text: "Bubbles are attracted to the air at the surface", correct: false }
-    ],
-    explanation: "When fluid is heated, it expands and becomes less dense. Since density = mass/volume, the expanded hot fluid weighs less per unit volume than the surrounding cold fluid, so buoyancy forces push it upward. This density-driven movement is the foundation of convection."
-  },
-  {
-    scenario: "An architect is designing a passive solar home and places radiators near the floor instead of near the ceiling.",
-    question: "Why is this radiator placement more effective for heating the room?",
-    options: [
-      { text: "Heat radiates better from lower positions", correct: false },
-      { text: "Hot air rises from the radiator, creating circulation throughout the room", correct: true },
-      { text: "Cold air is lighter and stays at the bottom", correct: false },
-      { text: "The floor absorbs and re-radiates heat better", correct: false }
-    ],
-    explanation: "Placing radiators near the floor takes advantage of natural convection. Hot air from the radiator rises, displacing cooler air at the top, which sinks down to be heated. This creates a continuous circulation pattern that warms the entire room efficiently."
-  },
-  {
-    scenario: "A meteorologist explains that sea breezes blow from ocean to land during the day but reverse direction at night.",
-    question: "What causes this daily reversal of wind direction?",
-    options: [
-      { text: "The Earth's rotation changes the wind pattern", correct: false },
-      { text: "Tides push air back and forth with the water", correct: false },
-      { text: "Land heats/cools faster than water, creating reversing convection patterns", correct: true },
-      { text: "Barometric pressure changes between day and night", correct: false }
-    ],
-    explanation: "Land heats up faster than water during the day, so air rises over land and cooler sea air flows in (sea breeze). At night, land cools faster, so warmer air over the ocean rises and land air flows seaward (land breeze). This is convection on a regional scale!"
-  },
-  {
-    scenario: "A CPU in a gaming computer reaches 90C and throttles performance. The owner adds a fan to the heatsink.",
-    question: "Why does adding a fan dramatically improve cooling even though air temperature is the same?",
-    options: [
-      { text: "The fan creates colder air by compressing it", correct: false },
-      { text: "Forced convection removes heat much faster than natural convection", correct: true },
-      { text: "The fan blocks heat radiation from other components", correct: false },
-      { text: "Moving air has less heat capacity than still air", correct: false }
-    ],
-    explanation: "This is forced convection vs natural convection. A fan dramatically increases the convective heat transfer coefficient (h in Q=hADT) by constantly bringing fresh cool air to the heatsink surface and removing heated air. Forced convection can be 5-50x more effective than natural convection."
-  },
-  {
-    scenario: "A chef compares cooking times: a regular oven takes 60 minutes to roast chicken, but a convection oven takes only 45 minutes.",
-    question: "What makes convection ovens cook faster at the same temperature?",
-    options: [
-      { text: "Convection ovens have stronger heating elements", correct: false },
-      { text: "A fan circulates hot air, improving heat transfer to the food", correct: true },
-      { text: "Convection ovens use microwave energy in addition to heat", correct: false },
-      { text: "The food cooks from inside out in convection ovens", correct: false }
-    ],
-    explanation: "In a regular oven, a layer of cooler air surrounds the food (boundary layer), slowing heat transfer. The convection oven's fan continuously blows away this boundary layer and brings fresh hot air to the food surface, dramatically increasing the heat transfer rate."
-  },
-  {
-    scenario: "Oceanographers discover that the deep ocean circulates in a 'conveyor belt' pattern taking 1,000 years for water to complete one cycle.",
-    question: "What primarily drives this global thermohaline circulation?",
-    options: [
-      { text: "Wind pushing surface water around the globe", correct: false },
-      { text: "The moon's gravitational pull creating currents", correct: false },
-      { text: "Temperature and salinity differences creating density variations", correct: true },
-      { text: "Underwater volcanic activity heating the ocean floor", correct: false }
-    ],
-    explanation: "Thermohaline circulation is convection on a planetary scale. Near the poles, cold salty water (very dense) sinks to the ocean floor. Near the equator, warm water is less dense and stays at the surface. This density difference drives a slow but massive global circulation that affects climate worldwide."
-  },
-  {
-    scenario: "A person feels cooler standing in front of a fan even though a thermometer shows the air temperature is 30C (86F) both with and without the fan.",
-    question: "Why does the fan provide a cooling sensation without actually cooling the air?",
-    options: [
-      { text: "The fan creates a placebo psychological effect", correct: false },
-      { text: "Moving air removes the warm boundary layer around skin and speeds evaporation", correct: true },
-      { text: "The fan motor absorbs heat from the air", correct: false },
-      { text: "Wind chill only affects thermometers differently than skin", correct: false }
-    ],
-    explanation: "The fan provides two cooling mechanisms: 1) It removes the warm, humid air layer that builds up next to your skin, replacing it with fresher room air, and 2) It speeds up sweat evaporation, which absorbs heat from your body. Your body is actually cooled - the room air isn't."
-  },
-  {
-    scenario: "A geologist studies volcanic activity and notes that Earth's mantle slowly circulates despite being mostly solid rock.",
-    question: "How can solid rock exhibit convection over millions of years?",
-    options: [
-      { text: "The rock melts completely due to core heat", correct: false },
-      { text: "Rock under extreme pressure behaves as a very viscous fluid over long timescales", correct: true },
-      { text: "Earthquakes shake the rock into motion", correct: false },
-      { text: "Underground rivers of magma carry the rock along", correct: false }
-    ],
-    explanation: "Mantle convection demonstrates that convection can occur in materials we think of as solid! Under immense pressure and heat, rock flows like an extremely viscous fluid over millions of years. Hot rock from near the core slowly rises, while cooler rock near the surface sinks - driving plate tectonics!"
-  },
-  {
-    scenario: "Engineers design data center cooling systems. They discover that hot aisles and cold aisles improve efficiency by 30%.",
-    question: "Why does separating hot and cold airflow improve cooling efficiency?",
-    options: [
-      { text: "It prevents hot air from being recirculated to server intakes", correct: true },
-      { text: "Cold aisles trap cold air better due to higher density", correct: false },
-      { text: "Hot aisles radiate heat to the ceiling more efficiently", correct: false },
-      { text: "The temperature difference creates stronger natural convection", correct: false }
-    ],
-    explanation: "Without separation, hot exhaust air can mix with and warm the intake air, reducing cooling efficiency. Hot/cold aisle containment ensures servers always intake the coldest available air and exhaust into a dedicated hot collection system. This is optimized forced convection design."
-  },
-  {
-    scenario: "A physics student calculates that doubling the temperature difference between a heater and the room should double the convective heat transfer.",
-    question: "What other factors significantly affect the convective heat transfer rate Q = hADT?",
-    options: [
-      { text: "Only the color of the surfaces involved", correct: false },
-      { text: "The surface area (A) and the convection coefficient (h) which depends on fluid velocity", correct: true },
-      { text: "Only the specific heat capacity of the fluid", correct: false },
-      { text: "The thermal radiation from nearby objects", correct: false }
-    ],
-    explanation: "The convective heat transfer equation Q = hADT shows three key factors: temperature difference (DT), surface area (A), and the heat transfer coefficient (h). The coefficient h depends heavily on fluid properties and velocity - this is why fans (forced convection) dramatically increase h compared to still air (natural convection)."
-  }
-];
-
-// ============================================================================
-// TRANSFER APPLICATIONS (4 real-world applications)
-// ============================================================================
 const transferApps: TransferApp[] = [
   {
     icon: "🌤",
-    title: "Weather Patterns",
+    title: "Weather & Climate Systems",
     short: "Weather",
-    tagline: "Convection drives global climate",
-    description: "Atmospheric convection creates weather patterns from local thunderstorms to global wind systems. When the sun heats the Earth's surface unevenly, it triggers massive convection cells that circulate air around the planet.",
+    tagline: "Convection drives global atmospheric circulation",
+    description: "Atmospheric convection is the engine behind weather - from gentle breezes to violent thunderstorms. When the sun heats Earth's surface unevenly, it triggers massive convection cells that circulate air and create our weather patterns.",
     connection: "The same physics that makes hot water rise in your pot creates thunderstorms, trade winds, and monsoons. Temperature differences drive air circulation on scales from meters to thousands of kilometers.",
-    howItWorks: "Warm air rises from heated surfaces, cools as it ascends, then sinks elsewhere. This creates circulation cells. Hadley cells near the equator, Ferrel cells at mid-latitudes, and Polar cells drive global wind patterns.",
+    howItWorks: "Warm air near heated surfaces expands, becomes less dense, and rises - forming updrafts. As it ascends, it cools, becomes denser, and eventually sinks. This creates convection cells that can span from local thermals to global Hadley cells spanning 30 degrees of latitude.",
     stats: [
-      { value: "3", label: "Major cell types" },
+      { value: "3 cells", label: "Per hemisphere" },
       { value: "15 km", label: "Thunderstorm height" },
-      { value: "100+ km/h", label: "Jet stream speeds" },
-      { value: "1000s km", label: "Cell widths" }
+      { value: "300 km/h", label: "Jet stream speed" },
+      { value: "10^18 W", label: "Solar heating" }
     ],
     examples: [
-      "Thunderstorms from strong surface heating",
-      "Sea breezes from land-water temperature differences",
+      "Thunderstorms from strong daytime heating over land",
+      "Sea breezes from land-ocean temperature differences",
       "Trade winds from Hadley cell circulation",
-      "Monsoons from seasonal heating changes"
+      "Monsoons from seasonal continental heating"
     ],
-    companies: ["NOAA", "NASA", "Met Office", "ECMWF"],
-    futureImpact: "Climate change is altering convection patterns globally, potentially shifting storm tracks and monsoon patterns that billions depend on for water.",
+    companies: ["NOAA", "NASA", "European Centre for Medium-Range Weather Forecasts", "UK Met Office"],
+    futureImpact: "Climate change is intensifying convection patterns - stronger storms, shifting monsoons, and altered precipitation could affect billions who depend on predictable weather for agriculture and water.",
     color: "#3b82f6"
   },
   {
     icon: "🌊",
-    title: "Ocean Currents",
+    title: "Ocean Thermohaline Circulation",
     short: "Oceans",
     tagline: "The global ocean conveyor belt",
-    description: "Thermohaline circulation moves water around the globe in a 1,000-year cycle. Cold, salty water sinks at the poles while warm water rises at the equator, driving a planetary-scale conveyor belt.",
-    connection: "Ocean convection is driven by density differences from temperature (thermo) and salinity (haline). Just like in a pot of boiling water, denser fluid sinks and less dense fluid rises.",
-    howItWorks: "In polar regions, water cools and becomes saltier (sea ice formation leaves salt behind). This dense water sinks to the ocean floor and flows toward the equator. Warm surface water flows poleward to replace it.",
+    description: "Thermohaline circulation moves water around the entire planet in a 1,000-year cycle. This 'global conveyor belt' transports heat, nutrients, and carbon dioxide, regulating Earth's climate and supporting marine ecosystems.",
+    connection: "Ocean convection is driven by density differences from temperature (thermo) and salinity (haline). Cold, salty water is dense and sinks; warm, fresh water rises - the same buoyancy-driven flow as a heated pot.",
+    howItWorks: "Near the poles, surface water cools and becomes saltier as sea ice forms (leaving salt behind). This ultra-dense water sinks to the ocean floor (downwelling) and flows toward the equator. Warm surface water flows poleward to replace it, completing a global loop.",
     stats: [
       { value: "1000 yr", label: "Full cycle time" },
       { value: "30 Sv", label: "Gulf Stream flow" },
-      { value: "5C", label: "Europe warming" },
+      { value: "5°C", label: "Europe warming" },
       { value: "4 km", label: "Deep water depth" }
     ],
     examples: [
-      "Gulf Stream warming Western Europe",
-      "Antarctic Bottom Water formation",
-      "El Nino/La Nina oscillations",
-      "Deep water oxygen transport"
+      "Gulf Stream warming Western Europe by 5°C",
+      "Antarctic Bottom Water formation in Weddell Sea",
+      "North Atlantic Deep Water driving the conveyor",
+      "Upwelling zones creating rich fishing grounds"
     ],
-    companies: ["NOAA", "Woods Hole", "Scripps", "CSIRO"],
-    futureImpact: "Melting ice sheets add fresh water that could slow thermohaline circulation by 25-50%, dramatically affecting global climate patterns.",
+    companies: ["Woods Hole Oceanographic Institution", "Scripps Institution", "NOAA Ocean Service", "CSIRO Oceans"],
+    futureImpact: "Melting ice sheets add fresh water that could slow thermohaline circulation by 25-50% this century, potentially disrupting the Gulf Stream and dramatically cooling Europe while warming tropics.",
     color: "#06b6d4"
   },
   {
-    icon: "🏠",
-    title: "Heating Systems",
-    short: "HVAC",
-    tagline: "Comfort through convection",
-    description: "Modern heating and cooling systems use both natural and forced convection to distribute conditioned air throughout buildings. Understanding convection helps engineers design efficient, comfortable spaces.",
-    connection: "Radiators work by natural convection - hot surfaces heat nearby air which rises. Forced-air systems use fans to dramatically increase heat transfer rates, reaching every corner of a building.",
-    howItWorks: "Natural convection: hot radiator heats air, warm air rises, cool air flows in from below. Forced convection: fans push conditioned air through ducts, mixing room air for uniform temperature.",
+    icon: "🖥️",
+    title: "Electronics & Data Center Cooling",
+    short: "Computing",
+    tagline: "Keeping chips cool in the AI age",
+    description: "Every electronic device relies on convection to survive. A modern GPU generates 300+ watts in a chip smaller than a postage stamp - without convective cooling, it would melt in seconds. Data centers use convection engineering to cool millions of servers.",
+    connection: "Heat sinks exploit convection by increasing surface area. Fans create forced convection, boosting the heat transfer coefficient (h) by 10-50x. The same Q = hAΔT physics determines whether your laptop throttles or your server farm overheats.",
+    howItWorks: "Heat conducts from chip to heatsink base, spreads through fins. Natural convection: warm air rises from fins, drawing cool air from below. Forced convection: fans push air across fins at high velocity, dramatically increasing heat transfer rate.",
     stats: [
-      { value: "40%", label: "Building energy for HVAC" },
-      { value: "5-10x", label: "Forced vs natural" },
-      { value: "20-30%", label: "Smart system savings" },
-      { value: "68F", label: "Optimal temp" }
+      { value: "300+ W", label: "GPU TDP (H100)" },
+      { value: "40-60%", label: "Data center for cooling" },
+      { value: "1 MW", label: "Per server rack" },
+      { value: "PUE 1.1", label: "Best efficiency" }
     ],
     examples: [
-      "Baseboard radiators under windows",
-      "Ceiling fans for air circulation",
-      "Central air conditioning systems",
-      "Underfloor radiant heating"
+      "CPU heatsinks with optimized fin geometry",
+      "Hot aisle/cold aisle data center layouts",
+      "Liquid cooling loops for high-performance GPUs",
+      "Immersion cooling in dielectric fluid"
     ],
-    companies: ["Carrier", "Trane", "Honeywell", "Lennox"],
-    futureImpact: "Smart HVAC with AI-optimized airflow can reduce energy use 20-30% while improving comfort through better understanding of convection dynamics.",
-    color: "#22c55e"
+    companies: ["Noctua", "NVIDIA", "Google Data Centers", "Microsoft Azure"],
+    futureImpact: "AI training clusters now require megawatts of cooling. Liquid and immersion cooling are becoming standard as air convection reaches its limits. Waste heat recovery could heat entire neighborhoods.",
+    color: "#ef4444"
   },
   {
     icon: "🌋",
-    title: "Mantle Convection",
+    title: "Mantle Convection & Plate Tectonics",
     short: "Geology",
-    tagline: "Plate tectonics powered by heat",
-    description: "Earth's mantle convects over millions of years, driving plate tectonics. Hot rock from near the core rises slowly, while cooler rock near the surface sinks, moving continents and creating earthquakes.",
-    connection: "Even 'solid' rock flows like an extremely viscous fluid over geological timescales. The same density-driven convection that moves water moves rock - just billions of times slower.",
-    howItWorks: "Heat from Earth's core and radioactive decay warms the lower mantle. This hot rock expands, becomes less dense, and slowly rises. At the surface it cools, becomes denser, and sinks back down.",
+    tagline: "Convection powers continental drift",
+    description: "Earth's solid mantle actually flows like an extremely viscous fluid over millions of years. Convection in the mantle drives plate tectonics - moving continents, creating earthquakes, and building mountains.",
+    connection: "Even 'solid' rock behaves as a fluid under extreme pressure and heat over geological timescales. Hot rock near the core expands, rises slowly, cools near the surface, and sinks - the same density-driven flow as your boiling water, just 10 billion times slower.",
+    howItWorks: "Heat from Earth's core (radioactive decay + primordial heat) warms the lower mantle to ~4000°C. This hot rock expands, becomes less dense, and rises as mantle plumes. At the surface it cools, becomes denser, and sinks at subduction zones. This 100+ million year cycle moves tectonic plates at ~2-10 cm/year.",
     stats: [
-      { value: "1-10 cm/yr", label: "Plate speeds" },
-      { value: "3000 km", label: "Mantle depth" },
-      { value: "4000C", label: "Core temperature" },
-      { value: "100M+ yr", label: "Convection cycle" }
+      { value: "2-10 cm/yr", label: "Plate speed" },
+      { value: "2900 km", label: "Mantle thickness" },
+      { value: "4000°C", label: "Core boundary" },
+      { value: "10^21 Pa·s", label: "Mantle viscosity" }
     ],
     examples: [
       "Mid-ocean ridges where hot rock rises",
-      "Subduction zones where cool rock sinks",
-      "Hotspot volcanism from mantle plumes",
-      "Continental drift over millions of years"
+      "Subduction zones where cool plates sink",
+      "Hawaiian hotspot from a mantle plume",
+      "Himalayan orogeny from plate collision"
     ],
-    companies: ["USGS", "Caltech", "MIT", "ETH Zurich"],
-    futureImpact: "Understanding mantle convection helps predict volcanic activity, earthquake zones, and mineral deposit locations formed by ancient convection patterns.",
-    color: "#ef4444"
+    companies: ["USGS", "Caltech Seismological Lab", "ETH Zurich", "GFZ Potsdam"],
+    futureImpact: "Understanding mantle convection helps predict volcanic eruptions, locate geothermal energy sources, and find mineral deposits formed by ancient circulation. It also explains why earthquakes cluster at plate boundaries.",
+    color: "#f59e0b"
   }
 ];
 
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════
+// TEST QUESTIONS (10 Scenario-Based Questions)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const testQuestions: TestQuestion[] = [
+  {
+    scenario: "You're boiling pasta and notice the water circulating - rising in the center and sinking along the edges of the pot.",
+    question: "What physical property change causes the hot water at the bottom to rise?",
+    options: [
+      { text: "Hot water becomes chemically lighter", correct: false },
+      { text: "Hot water expands and becomes less dense than surrounding cold water", correct: true },
+      { text: "Steam bubbles carry the water molecules upward", correct: false },
+      { text: "Heat energy pushes the water up like a jet", correct: false }
+    ],
+    explanation: "When water is heated, it expands (thermal expansion). The same mass now occupies more volume, so density = mass/volume decreases. Less dense fluid experiences buoyancy forces and rises, while denser cold fluid sinks to replace it. This density-driven flow is the foundation of all convection."
+  },
+  {
+    scenario: "An architect designs a home with radiators placed near the floor under windows.",
+    question: "Why is this radiator placement more effective than ceiling-mounted heaters?",
+    options: [
+      { text: "Heat radiates better from low positions", correct: false },
+      { text: "Hot air rises from the radiator, creating circulation that warms the entire room", correct: true },
+      { text: "Cold air is lighter and naturally stays at floor level", correct: false },
+      { text: "Windows conduct heat better at lower heights", correct: false }
+    ],
+    explanation: "Placing heaters low takes advantage of natural convection. Hot air rises from the radiator, displaces cooler air at the ceiling, which then sinks down the opposite wall to be reheated. This creates a convection cell that circulates warmth throughout the room. Ceiling heaters would trap hot air at the top with no circulation."
+  },
+  {
+    scenario: "A coastal town experiences predictable winds: sea breeze during the day (ocean to land) and land breeze at night (land to ocean).",
+    question: "What causes this daily wind reversal?",
+    options: [
+      { text: "Earth's rotation changes direction of wind", correct: false },
+      { text: "Tides push air along with water movement", correct: false },
+      { text: "Land heats and cools faster than water, reversing the convection pattern", correct: true },
+      { text: "Atmospheric pressure is always higher over oceans", correct: false }
+    ],
+    explanation: "Land has lower heat capacity than water - it heats quickly by day and cools quickly at night. During the day, hot air over land rises, creating low pressure; cooler air from the sea flows in (sea breeze). At night, land cools faster, so air rises over the still-warm ocean, and cooler land air flows seaward (land breeze). This is convection on a regional scale!"
+  },
+  {
+    scenario: "A data center engineer discovers that servers at the end of a row are overheating while those at the start stay cool.",
+    question: "What convection principle explains this problem?",
+    options: [
+      { text: "Air pressure decreases along the row", correct: false },
+      { text: "The air gets progressively heated as it passes each server, reducing ΔT", correct: true },
+      { text: "Servers at the end generate more heat", correct: false },
+      { text: "Convection currents reverse direction mid-row", correct: false }
+    ],
+    explanation: "Heat transfer rate Q = hAΔT depends on temperature difference. As air flows down the row, each server heats it. By the end, the air is nearly as hot as the server exhaust, so ΔT ≈ 0 and heat transfer drops dramatically. The solution is hot aisle/cold aisle layout with dedicated exhaust paths to maintain high ΔT for all servers."
+  },
+  {
+    scenario: "A chef notices that a convection oven cooks food 25% faster than a regular oven at the same temperature setting.",
+    question: "What makes convection ovens more efficient without increasing air temperature?",
+    options: [
+      { text: "Convection ovens have more powerful heating elements", correct: false },
+      { text: "The fan increases air velocity, raising the heat transfer coefficient (h)", correct: true },
+      { text: "Circulating air has higher heat capacity than still air", correct: false },
+      { text: "The fan creates pressure that forces heat into food", correct: false }
+    ],
+    explanation: "In Q = hAΔT, the heat transfer coefficient (h) depends strongly on fluid velocity. A convection oven's fan creates forced convection, which can increase h by 2-5x compared to natural convection in a regular oven. The fan also continuously removes the cool boundary layer around the food, maintaining maximum ΔT at the food surface."
+  },
+  {
+    scenario: "Oceanographers track a water mass that sinks in the North Atlantic, flows along the ocean floor, and doesn't return to the surface for 1,000 years.",
+    question: "What property makes this North Atlantic water sink so deeply?",
+    options: [
+      { text: "It's pushed down by surface winds", correct: false },
+      { text: "Cold temperatures make it denser than underlying water", correct: false },
+      { text: "It's both cold AND salty, making it extremely dense", correct: true },
+      { text: "Ice formation pushes it downward mechanically", correct: false }
+    ],
+    explanation: "Thermohaline circulation depends on both temperature (thermo) and salinity (haline). In the North Atlantic, water cools AND becomes saltier as ice forms (sea ice is fresh; salt is left behind). This creates the densest water in the ocean, which sinks to the bottom and drives the global conveyor belt circulation."
+  },
+  {
+    scenario: "A person feels noticeably cooler standing in front of a fan, even though a thermometer shows the air temperature is unchanged at 30°C.",
+    question: "Why does the fan provide cooling sensation without changing air temperature?",
+    options: [
+      { text: "Moving air has less thermal energy than still air", correct: false },
+      { text: "The fan removes the warm boundary layer and speeds sweat evaporation", correct: true },
+      { text: "Air velocity creates a wind chill that thermometers can't detect", correct: false },
+      { text: "The fan motor absorbs heat from the surrounding air", correct: false }
+    ],
+    explanation: "Your body heats a thin layer of air next to your skin. In still air, this warm boundary layer acts as insulation. A fan blows away this layer (increasing h in Q = hAΔT) and brings fresh 30°C air to your skin. It also speeds sweat evaporation, which removes latent heat. Your body actually loses more heat - the room temperature doesn't change, but your body temperature regulation improves."
+  },
+  {
+    scenario: "Geologists observe that the mantle rock beneath Hawaii is hotter than surrounding mantle, creating a 'hotspot' that has built a chain of volcanic islands.",
+    question: "What convection feature creates stationary hotspots as plates move overhead?",
+    options: [
+      { text: "Volcanic eruptions heat the surrounding mantle rock", correct: false },
+      { text: "A mantle plume - a column of hot rock rising from near the core", correct: true },
+      { text: "Friction from plate movement heats the mantle locally", correct: false },
+      { text: "Radioactive minerals concentrate beneath volcanic islands", correct: false }
+    ],
+    explanation: "Mantle plumes are part of the mantle convection system - narrow columns of hot, buoyant rock rising from the core-mantle boundary. As the plume rises and reaches the surface, it partially melts to create volcanic islands. The plume stays relatively stationary while the plate moves overhead, creating island chains like Hawaii that record millions of years of plate motion."
+  },
+  {
+    scenario: "A building uses a solar chimney - a tall black-painted tower that heats up in sunlight, causing air to rise and draw fresh air through the building.",
+    question: "According to convection principles, how could you increase the chimney's ventilation rate?",
+    options: [
+      { text: "Paint the chimney white to reflect more heat", correct: false },
+      { text: "Make the chimney shorter to reduce air resistance", correct: false },
+      { text: "Increase the chimney height to create greater buoyancy-driven pressure", correct: true },
+      { text: "Add a cap to trap hot air at the top", correct: false }
+    ],
+    explanation: "Natural convection strength depends on the height of the convection column and temperature difference. A taller chimney creates a longer column of hot, less-dense air, generating greater buoyancy-driven pressure difference between the chimney base and top. This 'stack effect' increases airflow velocity and ventilation rate proportionally to the square root of height."
+  },
+  {
+    scenario: "Climate scientists model a 'snowball Earth' scenario where ice covers the entire planet. They predict that even if volcanic CO2 eventually warms the atmosphere, recovery would be sudden rather than gradual.",
+    question: "What convection-related feedback makes the recovery non-linear?",
+    options: [
+      { text: "Volcanic convection would suddenly intensify", correct: false },
+      { text: "Once ice melts, dark ocean absorbs more heat, accelerating warming", correct: true },
+      { text: "Atmospheric convection only works above freezing temperatures", correct: false },
+      { text: "Ocean convection would reverse direction abruptly", correct: false }
+    ],
+    explanation: "Ice reflects most sunlight (high albedo), keeping Earth cold. But once warming begins to melt ice, darker ocean water absorbs much more solar energy, further increasing temperature - a positive feedback. This accelerates convection in atmosphere and ocean, distributing heat faster. The transition would be rapid, not gradual, because feedback loops amplify the initial warming exponentially."
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
-// ============================================================================
+// ═══════════════════════════════════════════════════════════════════════════
+
 const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   gamePhase,
   onPhaseComplete,
-  onGameEvent
+  onGameEvent,
+  onComplete
 }) => {
-  // Internal phase state - starts at 'hook'
+  // Phase state
   const [phase, setPhase] = useState<Phase>('hook');
 
   // Sync with external gamePhase prop
@@ -425,6 +356,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showFlowLines, setShowFlowLines] = useState(true);
   const [fanSpeed, setFanSpeed] = useState(0);
+  const [simRunning, setSimRunning] = useState(true);
 
   // Initialize responsive detection
   useEffect(() => {
@@ -434,7 +366,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Premium Design System
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DESIGN SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const colors = {
     primary: '#f97316',       // orange-500 (heat)
     primaryDark: '#ea580c',   // orange-600
@@ -451,7 +386,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     textMuted: '#64748b',     // slate-500
     border: '#334155',        // slate-700
     borderLight: '#475569',   // slate-600
-    // Theme-specific
     hotParticle: '#ef4444',   // red-500
     coldParticle: '#3b82f6',  // blue-500
     flowLine: '#a78bfa',      // violet-400
@@ -470,7 +404,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  // Initialize audio context
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUDIO SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -482,8 +419,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     };
   }, []);
 
-  // Sound effect helper
-  const playSound = useCallback((type: 'bubble' | 'whoosh' | 'success' | 'click') => {
+  const playSound = useCallback((type: 'bubble' | 'whoosh' | 'success' | 'click' | 'ding') => {
     if (!audioContextRef.current) return;
 
     const ctx = audioContextRef.current;
@@ -527,12 +463,22 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         oscillator.start(ctx.currentTime);
         oscillator.stop(ctx.currentTime + 0.05);
         break;
+      case 'ding':
+        oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.12, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.4);
+        break;
     }
 
     onGameEvent?.({ type: 'sound_played', data: { soundType: type } });
   }, [onGameEvent]);
 
-  // Navigation helper
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NAVIGATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const goToPhase = useCallback((nextPhase: Phase) => {
     playSound('click');
     setPhase(nextPhase);
@@ -540,10 +486,16 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     onGameEvent?.({ type: 'phase_started', data: { phase: nextPhase, phaseLabel: phaseLabels[nextPhase] } });
   }, [onPhaseComplete, onGameEvent, playSound]);
 
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PARTICLE SIMULATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
   // Initialize particles
   useEffect(() => {
     const initialParticles: Particle[] = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 35; i++) {
       initialParticles.push({
         id: i,
         x: 40 + Math.random() * 220,
@@ -558,7 +510,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
 
   // Particle animation
   useEffect(() => {
-    if (!isHeating || particles.length === 0) return;
+    if (!simRunning || particles.length === 0) return;
 
     const interval = setInterval(() => {
       setParticles(prev => prev.map(p => {
@@ -568,37 +520,41 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         let newVx = p.vx;
         let newVy = p.vy;
 
-        // Heat from bottom
-        if (p.y > 200) {
-          newTemp = Math.min(1, p.temp + 0.02 * (heatIntensity / 50));
+        // Heat from bottom when heating is on
+        if (isHeating && p.y > 200) {
+          newTemp = Math.min(1, p.temp + 0.025 * (heatIntensity / 50));
         }
         // Cool at top
         if (p.y < 60) {
-          newTemp = Math.max(0, p.temp - 0.015);
+          newTemp = Math.max(0, p.temp - 0.018);
         }
+        // Gradual cooling elsewhere
+        newTemp = newTemp * 0.998;
 
         // Buoyancy force (hot rises, cold sinks)
-        const buoyancy = (newTemp - 0.5) * -0.8 * (heatIntensity / 50);
+        const buoyancy = (newTemp - 0.5) * -0.9 * (heatIntensity / 50);
         newVy += buoyancy;
 
-        // Fan force (forced convection)
+        // Fan force (forced convection) - horizontal push
         if (fanSpeed > 0) {
-          newVx += fanSpeed * 0.01;
+          newVx += fanSpeed * 0.012;
+          // Also create some vertical turbulence
+          newVy += (Math.random() - 0.5) * fanSpeed * 0.005;
         }
 
         // Drag
-        newVx *= 0.95;
-        newVy *= 0.95;
+        newVx *= 0.94;
+        newVy *= 0.94;
 
         // Random turbulence
-        newVx += (Math.random() - 0.5) * 0.2;
-        newVy += (Math.random() - 0.5) * 0.2;
+        newVx += (Math.random() - 0.5) * 0.25;
+        newVy += (Math.random() - 0.5) * 0.25;
 
         // Update position
         newX += newVx;
         newY += newVy;
 
-        // Boundary conditions
+        // Boundary conditions with bounce
         if (newX < 40) { newX = 40; newVx *= -0.5; }
         if (newX > 260) { newX = 260; newVx *= -0.5; }
         if (newY < 40) { newY = 40; newVy *= -0.5; }
@@ -609,9 +565,20 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     }, 50);
 
     return () => clearInterval(interval);
-  }, [isHeating, heatIntensity, fanSpeed, particles.length]);
+  }, [simRunning, isHeating, heatIntensity, fanSpeed, particles.length]);
 
-  // Handle test answer
+  // Get particle color based on temperature
+  const getParticleColor = (temp: number): string => {
+    const r = Math.floor(temp * 255);
+    const b = Math.floor((1 - temp) * 255);
+    const g = Math.floor(temp * 80 + (1 - temp) * 50);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TEST HANDLING
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const handleTestAnswer = useCallback((optionIndex: number) => {
     if (testAnswers[testIndex] !== null) return;
 
@@ -635,28 +602,48 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     }});
   }, [testIndex, testAnswers, testScore, onGameEvent, playSound]);
 
-  // Get particle color based on temperature
-  const getParticleColor = (temp: number) => {
-    const r = Math.floor(temp * 255);
-    const b = Math.floor((1 - temp) * 255);
-    const g = Math.floor(temp * 100);
-    return `rgb(${r}, ${g}, ${b})`;
-  };
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RENDER HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // Get current phase index
-  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const renderProgressBar = () => (
+    <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+      <div
+        className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-500"
+        style={{ width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%` }}
+      />
+    </div>
+  );
 
-  // ============================================================================
-  // RENDER HELPER FUNCTIONS
-  // ============================================================================
+  const renderNavDots = () => (
+    <div className="flex gap-1.5">
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          className={`h-2 rounded-full transition-all duration-300 ${
+            phase === p
+              ? 'bg-gradient-to-r from-orange-400 to-red-400 w-6 shadow-lg shadow-orange-500/50'
+              : currentPhaseIndex > i
+              ? 'bg-emerald-500 w-2'
+              : 'bg-slate-600 w-2 hover:bg-slate-500'
+          }`}
+          title={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-  // Render convection tank visualization - Premium quality
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONVECTION TANK VISUALIZATION
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderConvectionTank = (): React.ReactNode => {
     return (
       <div className="relative">
         <svg viewBox="0 0 300 260" className="w-full h-56">
           <defs>
-            {/* Premium temperature gradient */}
+            {/* Temperature gradient */}
             <linearGradient id="convTempGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#ef4444" />
               <stop offset="30%" stopColor="#f97316" />
@@ -664,7 +651,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               <stop offset="100%" stopColor="#1e40af" />
             </linearGradient>
 
-            {/* Fluid gradient based on temperature zones */}
+            {/* Fluid gradient */}
             <linearGradient id="convFluidGradient" x1="0%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
               <stop offset="25%" stopColor="#f97316" stopOpacity="0.25" />
@@ -673,10 +660,11 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               <stop offset="100%" stopColor="#1e40af" stopOpacity="0.35" />
             </linearGradient>
 
-            {/* Heat source glow gradient */}
-            <linearGradient id="convHeatGlow" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#ff6b35" stopOpacity={0.3 + heatIntensity * 0.007} />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            {/* Heat source gradient */}
+            <linearGradient id="convHeatSource" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={`rgb(${Math.floor(180 + heatIntensity * 0.75)}, ${Math.floor(80 + heatIntensity * 0.4)}, 30)`} />
+              <stop offset="50%" stopColor={`rgb(${Math.floor(220 + heatIntensity * 0.35)}, ${Math.floor(50 + heatIntensity * 0.3)}, 10)`} />
+              <stop offset="100%" stopColor="#7c2d12" />
             </linearGradient>
 
             {/* Tank metallic gradient */}
@@ -686,13 +674,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               <stop offset="50%" stopColor="#94a3b8" />
               <stop offset="85%" stopColor="#64748b" />
               <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
-
-            {/* Heat source gradient */}
-            <linearGradient id="convHeatSource" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={`rgb(${Math.floor(180 + heatIntensity * 0.75)}, ${Math.floor(80 + heatIntensity * 0.4)}, 30)`} />
-              <stop offset="50%" stopColor={`rgb(${Math.floor(220 + heatIntensity * 0.35)}, ${Math.floor(50 + heatIntensity * 0.3)}, 10)`} />
-              <stop offset="100%" stopColor="#7c2d12" />
             </linearGradient>
 
             {/* Glow filters */}
@@ -706,12 +687,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
 
-            <filter id="convFlowGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            {/* Flow arrow markers with glow */}
+            {/* Flow arrow markers */}
             <marker id="convArrowDown" markerWidth="10" markerHeight="8" refX="5" refY="4" orient="auto">
               <path d="M0,0 L10,4 L0,8 L2,4 z" fill="#60a5fa" />
             </marker>
@@ -726,11 +702,29 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             </marker>
           </defs>
 
-          {/* Background with subtle gradient */}
+          {/* Background */}
           <rect x="0" y="0" width="300" height="260" fill="#0f172a" rx="16" />
-          <rect x="0" y="0" width="300" height="260" fill="url(#convHeatGlow)" rx="16" opacity={isHeating ? 1 : 0.3} />
 
-          {/* Tank outer frame with metallic look */}
+          {/* Heat glow from bottom */}
+          {isHeating && (
+            <ellipse
+              cx="150"
+              cy="230"
+              rx={100 + heatIntensity * 0.5}
+              ry={50 + heatIntensity * 0.3}
+              fill={`rgba(239, 68, 68, ${0.15 + heatIntensity * 0.003})`}
+              filter="url(#convHeatGlowFilter)"
+            >
+              <animate
+                attributeName="ry"
+                values={`${45 + heatIntensity * 0.3};${55 + heatIntensity * 0.3};${45 + heatIntensity * 0.3}`}
+                dur="2s"
+                repeatCount="indefinite"
+              />
+            </ellipse>
+          )}
+
+          {/* Tank outer frame */}
           <rect x="28" y="28" width="244" height="184" fill="none" stroke="url(#convTankEdge)" strokeWidth="4" rx="8" />
 
           {/* Tank interior */}
@@ -739,26 +733,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
           {/* Fluid with temperature gradient */}
           <rect x="35" y="35" width="230" height="170" fill="url(#convFluidGradient)" rx="4" />
 
-          {/* Heat glow from bottom */}
-          {isHeating && (
-            <ellipse
-              cx="150"
-              cy="210"
-              rx={100 + heatIntensity * 0.5}
-              ry={40 + heatIntensity * 0.3}
-              fill={`rgba(239, 68, 68, ${0.1 + heatIntensity * 0.003})`}
-              filter="url(#convHeatGlowFilter)"
-            >
-              <animate
-                attributeName="ry"
-                values={`${35 + heatIntensity * 0.3};${45 + heatIntensity * 0.3};${35 + heatIntensity * 0.3}`}
-                dur="2s"
-                repeatCount="indefinite"
-              />
-            </ellipse>
-          )}
-
-          {/* Heat source with premium gradient */}
+          {/* Heat source */}
           <rect
             x="35"
             y="210"
@@ -769,30 +744,30 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             filter={isHeating ? "url(#convHeatGlowFilter)" : undefined}
           />
 
-          {/* Heat source glowing coils */}
+          {/* Heat source coils */}
           {isHeating && [0, 1, 2, 3].map(i => (
             <g key={`coil-${i}`}>
               <line
                 x1={55 + i * 55}
-                y1="213"
+                y1="214"
                 x2={85 + i * 55}
-                y2="213"
+                y2="214"
                 stroke={`rgba(255, ${180 + heatIntensity * 0.7}, 100, ${0.6 + heatIntensity * 0.004})`}
                 strokeWidth="3"
                 strokeLinecap="round"
               >
                 <animate
-                  attributeName="stroke"
-                  values={`rgba(255, ${180 + heatIntensity * 0.7}, 100, ${0.6 + heatIntensity * 0.004});rgba(255, ${220 + heatIntensity * 0.3}, 150, ${0.8 + heatIntensity * 0.002});rgba(255, ${180 + heatIntensity * 0.7}, 100, ${0.6 + heatIntensity * 0.004})`}
+                  attributeName="opacity"
+                  values="0.6;1;0.6"
                   dur="0.8s"
                   repeatCount="indefinite"
                 />
               </line>
               <line
                 x1={55 + i * 55}
-                y1="221"
+                y1="222"
                 x2={85 + i * 55}
-                y2="221"
+                y2="222"
                 stroke={`rgba(255, ${150 + heatIntensity * 0.5}, 80, ${0.5 + heatIntensity * 0.003})`}
                 strokeWidth="2"
                 strokeLinecap="round"
@@ -800,7 +775,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             </g>
           ))}
 
-          {/* Rising heat waves with animation */}
+          {/* Rising heat waves */}
           {isHeating && [0, 1, 2, 3, 4, 5].map(i => (
             <path
               key={`wave-${i}`}
@@ -812,22 +787,16 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             >
               <animate
                 attributeName="d"
-                values={`M${50 + i * 40},205 Q${55 + i * 40},${190 - heatIntensity * 0.2} ${60 + i * 40},205;M${50 + i * 40},205 Q${55 + i * 40},${175 - heatIntensity * 0.3} ${60 + i * 40},205;M${50 + i * 40},205 Q${55 + i * 40},${190 - heatIntensity * 0.2} ${60 + i * 40},205`}
-                dur={`${0.8 + i * 0.1}s`}
-                repeatCount="indefinite"
-              />
-              <animate
-                attributeName="opacity"
-                values="0.4;0.7;0.4"
+                values={`M${50 + i * 40},205 Q${55 + i * 40},${190 - heatIntensity * 0.2} ${60 + i * 40},205;M${50 + i * 40},205 Q${55 + i * 40},${170 - heatIntensity * 0.3} ${60 + i * 40},205;M${50 + i * 40},205 Q${55 + i * 40},${190 - heatIntensity * 0.2} ${60 + i * 40},205`}
                 dur={`${0.8 + i * 0.1}s`}
                 repeatCount="indefinite"
               />
             </path>
           ))}
 
-          {/* Convection current flow arrows - premium animated */}
+          {/* Convection flow arrows */}
           {showFlowLines && (
-            <g filter="url(#convFlowGlow)">
+            <g opacity="0.7">
               {/* Left side - cold sinking */}
               <path
                 d="M55,60 C55,80 55,160 55,180"
@@ -836,7 +805,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 fill="none"
                 strokeLinecap="round"
                 markerEnd="url(#convArrowDown)"
-                opacity="0.7"
               >
                 <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
               </path>
@@ -849,7 +817,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 fill="none"
                 strokeLinecap="round"
                 markerEnd="url(#convArrowRight)"
-                opacity="0.7"
               >
                 <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
               </path>
@@ -862,7 +829,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 fill="none"
                 strokeLinecap="round"
                 markerEnd="url(#convArrowUp)"
-                opacity="0.7"
               >
                 <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
               </path>
@@ -875,7 +841,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 fill="none"
                 strokeLinecap="round"
                 markerEnd="url(#convArrowLeft)"
-                opacity="0.7"
               >
                 <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
               </path>
@@ -904,10 +869,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             </g>
           )}
 
-          {/* Particles with glow effect */}
+          {/* Particles */}
           {particles.map(p => (
             <g key={p.id} filter="url(#convParticleGlow)">
-              {/* Particle glow halo */}
+              {/* Particle glow */}
               <circle
                 cx={p.x}
                 cy={p.y}
@@ -923,16 +888,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 fill={getParticleColor(p.temp)}
                 stroke={p.temp > 0.6 ? 'rgba(255,255,255,0.3)' : 'rgba(100,150,255,0.3)'}
                 strokeWidth="1"
-              >
-                {isHeating && (
-                  <animate
-                    attributeName="r"
-                    values={`${4 + p.temp};${6 + p.temp * 2};${4 + p.temp}`}
-                    dur={`${1.5 - p.temp * 0.5}s`}
-                    repeatCount="indefinite"
-                  />
-                )}
-              </circle>
+              />
               {/* Hot particle inner glow */}
               {p.temp > 0.7 && (
                 <circle
@@ -952,14 +908,14 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             </g>
           ))}
 
-          {/* Fan indicator for forced convection - premium design */}
+          {/* Fan indicator for forced convection */}
           {fanSpeed > 0 && (
             <g transform="translate(8, 100)">
               {/* Fan housing */}
               <rect x="0" y="0" width="22" height="50" fill="#334155" rx="4" stroke="#475569" strokeWidth="1" />
               <rect x="2" y="2" width="18" height="46" fill="#1e293b" rx="3" />
 
-              {/* Fan motor housing */}
+              {/* Fan motor */}
               <circle cx="11" cy="25" r="12" fill="#475569" stroke="#64748b" strokeWidth="1" />
               <circle cx="11" cy="25" r="9" fill="#22c55e" opacity={0.3 + fanSpeed * 0.007}>
                 <animate
@@ -971,30 +927,28 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               </circle>
 
               {/* Fan blades */}
-              <g>
-                {[0, 90, 180, 270].map(angle => (
-                  <line
-                    key={angle}
-                    x1="11"
-                    y1="18"
-                    x2="11"
-                    y2="32"
-                    stroke="#22c55e"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    transform={`rotate(${angle} 11 25)`}
-                  >
-                    <animateTransform
-                      attributeName="transform"
-                      type="rotate"
-                      from={`${angle} 11 25`}
-                      to={`${angle + 360} 11 25`}
-                      dur={`${Math.max(0.1, 1 - fanSpeed * 0.009)}s`}
-                      repeatCount="indefinite"
-                    />
-                  </line>
-                ))}
-              </g>
+              {[0, 90, 180, 270].map(angle => (
+                <line
+                  key={angle}
+                  x1="11"
+                  y1="18"
+                  x2="11"
+                  y2="32"
+                  stroke="#22c55e"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  transform={`rotate(${angle} 11 25)`}
+                >
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from={`${angle} 11 25`}
+                    to={`${angle + 360} 11 25`}
+                    dur={`${Math.max(0.1, 1 - fanSpeed * 0.009)}s`}
+                    repeatCount="indefinite"
+                  />
+                </line>
+              ))}
 
               {/* Air flow indicators */}
               {[0, 1, 2].map(i => (
@@ -1020,28 +974,29 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
           {/* Temperature legend bar */}
           <g transform="translate(272, 45)">
             <rect x="0" y="0" width="10" height="60" fill="url(#convTempGradient)" rx="3" stroke="#475569" strokeWidth="1" />
-            <rect x="0" y="0" width="10" height="60" fill="none" rx="3" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            <text x="5" y="-4" textAnchor="middle" fill="#ef4444" fontSize="8">Hot</text>
+            <text x="5" y="72" textAnchor="middle" fill="#3b82f6" fontSize="8">Cold</text>
           </g>
         </svg>
 
-        {/* Labels moved outside SVG using typo system */}
+        {/* Labels */}
         <div className="flex justify-between items-center mt-2 px-2">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-gradient-to-b from-red-500 to-orange-500" />
-            <span style={{ fontSize: typo.small }} className="text-red-400 font-medium">Hot</span>
+            <span style={{ fontSize: typo.small }} className="text-red-400 font-medium">Hot rises</span>
           </div>
           <span style={{ fontSize: typo.small }} className="text-orange-400 font-semibold">
-            Heat Source: {heatIntensity}%
+            Heat: {heatIntensity}%
           </span>
           <div className="flex items-center gap-2">
-            <span style={{ fontSize: typo.small }} className="text-blue-400 font-medium">Cold</span>
+            <span style={{ fontSize: typo.small }} className="text-blue-400 font-medium">Cold sinks</span>
             <div className="w-3 h-3 rounded-full bg-gradient-to-b from-blue-500 to-blue-700" />
           </div>
         </div>
         {fanSpeed > 0 && (
           <div className="text-center mt-1">
             <span style={{ fontSize: typo.label }} className="text-green-400 font-medium">
-              Fan: {fanSpeed}% (Forced Convection)
+              Fan: {fanSpeed}% (Forced Convection Mode)
             </span>
           </div>
         )}
@@ -1049,28 +1004,28 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     );
   };
 
-  // ============================================================================
-  // PHASE RENDERS
-  // ============================================================================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 1: HOOK - Engaging introduction
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // Hook phase - Welcome page explaining convection heat transfer
   const renderHook = (): React.ReactNode => (
     <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
+      {/* Badge */}
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
         <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-orange-400 tracking-wide">HEAT TRANSFER</span>
+        <span className="text-sm font-medium text-orange-400 tracking-wide">HEAT TRANSFER PHYSICS</span>
       </div>
 
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-red-200 bg-clip-text text-transparent">
+      {/* Title */}
+      <h1 style={{ fontSize: typo.title }} className="font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-red-200 bg-clip-text text-transparent">
         The Rising Heat Mystery
       </h1>
-      <p className="text-lg md:text-xl text-slate-400 max-w-xl mb-8 leading-relaxed">
-        Why does hot water rise while cold water sinks? Discover the physics of convection - heat transfer through flowing fluids.
+      <p style={{ fontSize: typo.bodyLarge }} className="text-slate-400 max-w-xl mb-8 leading-relaxed">
+        Have you ever wondered why hot air rises and cold air sinks? This simple phenomenon drives
+        everything from a boiling pot to global weather patterns.
       </p>
 
-      {/* Premium card */}
+      {/* Animated illustration */}
       <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-6 max-w-2xl border border-slate-700/50 shadow-2xl shadow-orange-500/5 mb-8">
         <svg viewBox="0 0 280 180" className="w-full h-40 mx-auto">
           {/* Pot */}
@@ -1078,7 +1033,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
           <rect x="60" y="80" width="160" height="70" fill="#475569" rx="5" />
           <ellipse cx="140" cy="80" rx="80" ry="15" fill="#64748b" />
 
-          {/* Water */}
+          {/* Water with gradient */}
           <ellipse cx="140" cy="85" rx="70" ry="12" fill="#3b82f6" opacity="0.6" />
 
           {/* Rising bubbles */}
@@ -1091,12 +1046,12 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               fill="white"
               opacity="0.7"
             >
-              <animate attributeName="cy" values="140;80;140" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
-              <animate attributeName="opacity" values="0.7;0.3;0.7" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
+              <animate attributeName="cy" values="140;75;140" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.7;0.2;0.7" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
             </circle>
           ))}
 
-          {/* Steam */}
+          {/* Steam wisps */}
           <path d="M100,60 Q110,40 100,20" stroke="#94a3b8" strokeWidth="2" fill="none" opacity="0.5">
             <animate attributeName="d" values="M100,60 Q110,40 100,20;M100,60 Q90,35 100,10;M100,60 Q110,40 100,20" dur="2s" repeatCount="indefinite" />
           </path>
@@ -1108,14 +1063,17 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
           </path>
 
           {/* Flame */}
-          <path d="M100,165 Q120,150 140,165 Q160,150 180,165" fill="#ef4444" />
+          <path d="M100,165 Q120,150 140,165 Q160,150 180,165" fill="#ef4444">
+            <animate attributeName="d" values="M100,165 Q120,150 140,165 Q160,150 180,165;M100,165 Q120,145 140,165 Q160,145 180,165;M100,165 Q120,150 140,165 Q160,150 180,165" dur="0.5s" repeatCount="indefinite" />
+          </path>
           <path d="M110,168 Q130,158 150,168 Q170,158 170,168" fill="#f59e0b" />
         </svg>
 
         <p className="text-lg text-slate-300 mt-4">
-          Convection is the transfer of heat through the <span className="text-purple-400 font-semibold">movement of fluids</span>.
-          When you heat water from below, the hot water expands, becomes less dense, and rises.
-          This creates a continuous circulation that efficiently transfers heat throughout the fluid.
+          <span className="text-orange-400 font-semibold">Convection</span> is heat transfer through the
+          <span className="text-purple-400 font-semibold"> movement of fluids</span>. When you heat water
+          from below, the hot water expands, becomes less dense, and <span className="text-red-400">rises</span>.
+          Cooler, denser water <span className="text-blue-400">sinks</span> to replace it - creating a continuous circulation.
         </p>
       </div>
 
@@ -1124,24 +1082,23 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
           <div className="text-2xl mb-2">🔥</div>
           <h3 className="font-semibold text-orange-400 mb-1">Heat Rises</h3>
-          <p className="text-sm text-slate-400">Hot fluid expands and becomes less dense</p>
+          <p className="text-sm text-slate-400">Hot fluid expands, becomes less dense</p>
         </div>
         <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
           <div className="text-2xl mb-2">❄️</div>
           <h3 className="font-semibold text-blue-400 mb-1">Cold Sinks</h3>
-          <p className="text-sm text-slate-400">Cold fluid contracts and becomes more dense</p>
+          <p className="text-sm text-slate-400">Cold fluid contracts, becomes more dense</p>
         </div>
         <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
           <div className="text-2xl mb-2">🔄</div>
           <h3 className="font-semibold text-purple-400 mb-1">Circulation</h3>
-          <p className="text-sm text-slate-400">Creates continuous convection cells</p>
+          <p className="text-sm text-slate-400">Creates convection cells that transfer heat</p>
         </div>
       </div>
 
-      {/* Premium CTA button */}
+      {/* CTA button */}
       <button
         onClick={() => goToPhase('predict')}
-        style={{ zIndex: 10 }}
         className="group relative px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-2">
@@ -1151,28 +1108,33 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
           </svg>
         </span>
       </button>
-      <p className="mt-6 text-sm text-slate-500">Heat transfer by fluid motion - Q = hADT</p>
+
+      <p className="mt-6 text-sm text-slate-500">The physics formula: Q = hAΔT</p>
     </div>
   );
 
-  // Predict phase - Prediction question about how heat rises in a fluid
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 2: PREDICT - User makes a prediction
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderPredict = (): React.ReactNode => (
     <div className="space-y-6">
       <div className="text-center space-y-3">
-        <h2 className="text-xl font-bold text-white">Make Your Prediction</h2>
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">Make Your Prediction</h2>
         <p className="text-slate-400">
-          When you heat water from the bottom, hot water rises to the top.
+          When you heat water from below, the hot water rises to the top while cold water sinks.
         </p>
       </div>
 
+      {/* Visual diagram */}
       <div className="bg-blue-900/30 rounded-xl p-4 border border-blue-500/30">
         <svg viewBox="0 0 200 100" className="w-full h-24 mx-auto">
           <rect x="40" y="20" width="120" height="60" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="2" rx="5" />
           <rect x="45" y="60" width="110" height="15" fill="#ef4444" opacity="0.4" />
-          <text x="100" y="70" textAnchor="middle" fill="#fca5a5" fontSize="8">HOT</text>
+          <text x="100" y="70" textAnchor="middle" fill="#fca5a5" fontSize="8">HOT ZONE</text>
           <rect x="45" y="25" width="110" height="30" fill="#3b82f6" opacity="0.3" />
-          <text x="100" y="42" textAnchor="middle" fill="#93c5fd" fontSize="8">COLD</text>
-          <path d="M100,75 L100,35" stroke="#ef4444" strokeWidth="3" markerEnd="url(#predArrow)" />
+          <text x="100" y="42" textAnchor="middle" fill="#93c5fd" fontSize="8">COLD ZONE</text>
+          <path d="M100,70 L100,35" stroke="#ef4444" strokeWidth="3" markerEnd="url(#predArrow)" />
           <defs>
             <marker id="predArrow" markerWidth="8" markerHeight="6" refX="4" refY="3" orient="auto">
               <path d="M0,6 L4,0 L8,6 z" fill="#ef4444" />
@@ -1180,16 +1142,17 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
           </defs>
         </svg>
         <p className="text-center text-sm text-blue-300 font-medium mt-2">
-          Why does hot water rise?
+          Why does hot water rise while cold water sinks?
         </p>
       </div>
 
+      {/* Options */}
       <div className="grid grid-cols-1 gap-3">
         {[
-          { id: 'A', text: 'Heat makes water lighter in color so it floats', desc: 'Visual property change' },
+          { id: 'A', text: 'Heat makes water molecules lighter in weight', desc: 'Mass change theory' },
           { id: 'B', text: 'Hot water expands and becomes less dense than cold water', desc: 'Density-driven buoyancy' },
-          { id: 'C', text: 'Hot molecules move faster and push themselves upward', desc: 'Kinetic energy effect' },
-          { id: 'D', text: 'Steam bubbles carry the water up', desc: 'Bubble lift mechanism' }
+          { id: 'C', text: 'Fast-moving hot molecules push themselves upward', desc: 'Kinetic momentum theory' },
+          { id: 'D', text: 'Steam bubbles lift the hot water up like balloons', desc: 'Bubble lift mechanism' }
         ].map((option) => (
           <button
             key={option.id}
@@ -1198,7 +1161,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               playSound('click');
               onGameEvent?.({ type: 'prediction_made', data: { prediction: option.id } });
             }}
-            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl border-2 text-left transition-all ${
               prediction === option.id
                 ? 'border-orange-500 bg-orange-500/20'
@@ -1223,7 +1185,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
       {prediction && (
         <button
           onClick={() => goToPhase('play')}
-          style={{ zIndex: 10 }}
           className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold text-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
         >
           Test Your Prediction
@@ -1232,18 +1193,23 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     </div>
   );
 
-  // Play phase - Interactive simulation showing convection cells with temperature control
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 3: PLAY - Interactive simulation
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderPlay = (): React.ReactNode => (
     <div className="space-y-4">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-white">Convection Cell Lab</h2>
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">Convection Cell Lab</h2>
         <p className="text-slate-400">Watch how temperature differences drive fluid circulation</p>
       </div>
 
+      {/* Simulation */}
       <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-4">
         {renderConvectionTank()}
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="bg-red-900/30 rounded-lg p-3 border border-red-500/30">
           <p className="text-sm text-slate-400">Heat Power</p>
@@ -1259,6 +1225,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         </div>
       </div>
 
+      {/* Controls */}
       <div className="space-y-3">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -1284,7 +1251,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               setIsHeating(!isHeating);
               playSound('click');
             }}
-            style={{ zIndex: 10 }}
             className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
               isHeating
                 ? 'bg-red-500 text-white'
@@ -1298,10 +1264,9 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               setShowFlowLines(!showFlowLines);
               playSound('click');
             }}
-            style={{ zIndex: 10 }}
             className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
               showFlowLines
-                ? 'bg-blue-500 text-white'
+                ? 'bg-purple-500 text-white'
                 : 'bg-slate-700 text-slate-300'
             }`}
           >
@@ -1310,20 +1275,20 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         </div>
       </div>
 
+      {/* Explanation */}
       <div className="bg-orange-900/20 rounded-xl p-4 border border-orange-500/30">
         <h4 className="font-semibold text-orange-400 mb-2">The Convection Cycle:</h4>
         <ol className="text-sm text-slate-300 space-y-1">
           <li>1. <span className="text-red-400 font-medium">Bottom heats</span> - fluid expands - density decreases</li>
-          <li>2. <span className="text-orange-400 font-medium">Hot fluid rises</span> (buoyancy force)</li>
+          <li>2. <span className="text-orange-400 font-medium">Hot fluid rises</span> (buoyancy force pushes less dense fluid up)</li>
           <li>3. <span className="text-blue-400 font-medium">Top cools</span> - fluid contracts - density increases</li>
-          <li>4. <span className="text-cyan-400 font-medium">Cold fluid sinks</span> - returns to bottom</li>
+          <li>4. <span className="text-cyan-400 font-medium">Cold fluid sinks</span> (gravity pulls denser fluid down)</li>
           <li>5. <span className="text-purple-400 font-medium">Cycle repeats</span> - continuous circulation!</li>
         </ol>
       </div>
 
       <button
         onClick={() => goToPhase('review')}
-        style={{ zIndex: 10 }}
         className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold text-lg shadow-lg"
       >
         Review the Concepts
@@ -1331,60 +1296,65 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     </div>
   );
 
-  // Review phase - Explain density-driven convection cycles
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 4: REVIEW - Debrief explaining the physics
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderReview = (): React.ReactNode => (
     <div className="space-y-6">
       <div className="text-center space-y-3">
-        <h2 className="text-xl font-bold text-white">Understanding Convection</h2>
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">Understanding Convection</h2>
         <p className="text-slate-400">
           {prediction === 'B'
-            ? "Your prediction was correct! Density differences drive convection."
-            : "The answer was B - hot fluid expands and becomes less dense, so it rises!"}
+            ? "Excellent! Your prediction was correct - density differences drive convection."
+            : "The answer was B - hot fluid expands and becomes less dense, so it rises due to buoyancy!"}
         </p>
       </div>
 
+      {/* Main concepts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-gradient-to-br from-orange-900/30 to-red-900/30 rounded-xl p-4 border border-orange-500/30">
-          <h4 className="font-semibold text-orange-400 mb-2">Density-Driven Convection</h4>
+          <h4 className="font-semibold text-orange-400 mb-2">Density-Driven Flow</h4>
           <ul className="text-sm text-slate-300 space-y-1">
-            <li>- Heating causes fluid to expand</li>
-            <li>- Expanded fluid has lower density (mass/volume)</li>
-            <li>- Buoyancy force pushes less dense fluid upward</li>
-            <li>- Cooling causes fluid to contract</li>
-            <li>- Denser fluid sinks due to gravity</li>
-            <li>- This creates self-sustaining circulation</li>
+            <li>- Heating causes thermal expansion</li>
+            <li>- Same mass, larger volume = lower density</li>
+            <li>- Buoyancy: less dense fluid rises</li>
+            <li>- Cooling causes contraction</li>
+            <li>- Same mass, smaller volume = higher density</li>
+            <li>- Gravity: denser fluid sinks</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 rounded-xl p-4 border border-blue-500/30">
-          <h4 className="font-semibold text-blue-400 mb-2">Three Heat Transfer Types</h4>
+          <h4 className="font-semibold text-blue-400 mb-2">Three Types of Heat Transfer</h4>
           <ul className="text-sm text-slate-300 space-y-1">
-            <li>- <strong>Conduction:</strong> Through direct contact (solids)</li>
-            <li>- <strong>Convection:</strong> Through fluid movement</li>
-            <li>- <strong>Radiation:</strong> Through electromagnetic waves</li>
-            <li>- Convection is often the most efficient in fluids!</li>
+            <li>- <strong>Conduction:</strong> Direct contact (solids)</li>
+            <li>- <strong>Convection:</strong> Fluid movement (liquids/gases)</li>
+            <li>- <strong>Radiation:</strong> EM waves (no medium needed)</li>
+            <li>- Convection is often most efficient in fluids!</li>
           </ul>
         </div>
       </div>
 
+      {/* Physics formula */}
       <div className="bg-purple-900/20 rounded-xl p-4 border border-purple-500/30">
-        <h4 className="font-semibold text-purple-400 mb-2">The Physics</h4>
-        <div className="bg-slate-800/50 rounded-lg p-3 border border-purple-500/20 mb-3">
-          <p className="text-center font-mono text-lg text-purple-300">Q = h x A x DT</p>
-          <p className="text-center text-sm text-slate-400 mt-1">
-            Heat transfer = coefficient x area x temperature difference
+        <h4 className="font-semibold text-purple-400 mb-2">The Physics Formula</h4>
+        <div className="bg-slate-800/50 rounded-lg p-4 border border-purple-500/20 mb-3">
+          <p className="text-center font-mono text-2xl text-purple-300">Q = h × A × ΔT</p>
+          <p className="text-center text-sm text-slate-400 mt-2">
+            Heat transfer rate = coefficient × area × temperature difference
           </p>
         </div>
         <ul className="text-sm text-slate-300 space-y-1">
+          <li>- <strong>Q</strong> = heat transfer rate (Watts)</li>
           <li>- <strong>h</strong> = convective heat transfer coefficient (depends on fluid velocity)</li>
           <li>- <strong>A</strong> = surface area for heat transfer</li>
-          <li>- <strong>DT</strong> = temperature difference between surface and fluid</li>
+          <li>- <strong>ΔT</strong> = temperature difference between surface and fluid</li>
         </ul>
       </div>
 
       <button
         onClick={() => goToPhase('twist_predict')}
-        style={{ zIndex: 10 }}
         className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold text-lg shadow-lg"
       >
         Ready for a Twist?
@@ -1392,17 +1362,21 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     </div>
   );
 
-  // Twist predict phase - New scenario: natural vs forced convection
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 5: TWIST_PREDICT - Second prediction with new variable
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderTwistPredict = (): React.ReactNode => (
     <div className="space-y-6">
       <div className="text-center space-y-3">
-        <h2 className="text-xl font-bold text-white">The Fan Paradox</h2>
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">The Fan Paradox</h2>
         <p className="text-slate-400 max-w-lg mx-auto">
-          A fan blows air at you on a hot day. The air temperature is 30C (86F) -
+          A fan blows air at you on a hot day. The air temperature is 30°C (86°F) -
           <span className="text-amber-400 font-medium"> the same temperature with or without the fan</span>.
         </p>
       </div>
 
+      {/* Visual */}
       <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-6 border border-purple-500/30">
         <svg viewBox="0 0 200 100" className="w-full h-24 mx-auto">
           {/* Fan */}
@@ -1430,16 +1404,17 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
           <rect x="163" y="52" width="14" height="25" fill="#3b82f6" rx="3" />
         </svg>
         <p className="text-center text-lg font-medium text-white mt-4">
-          Why does the fan make you feel cooler if the air isn't any colder?
+          If the air temperature is the same, why does the fan make you feel cooler?
         </p>
       </div>
 
+      {/* Options */}
       <div className="grid grid-cols-1 gap-3">
         {[
-          { id: 'A', text: 'The fan actually does cool the air a little bit', desc: 'Temperature reduction' },
-          { id: 'B', text: 'The fan creates a psychological placebo effect', desc: 'Mind over matter' },
-          { id: 'C', text: 'Moving air speeds up evaporation and convection from your skin', desc: 'Forced convection effect' },
-          { id: 'D', text: 'The fan blocks heat radiation from reaching you', desc: 'Radiation shielding' }
+          { id: 'A', text: 'The fan actually does cool the air temperature slightly', desc: 'Temperature reduction' },
+          { id: 'B', text: 'It is purely a psychological placebo effect', desc: 'Mind over matter' },
+          { id: 'C', text: 'Moving air increases heat transfer and evaporation from your skin', desc: 'Forced convection effect' },
+          { id: 'D', text: 'The fan blocks thermal radiation from reaching you', desc: 'Radiation shielding' }
         ].map((option) => (
           <button
             key={option.id}
@@ -1448,7 +1423,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               playSound('click');
               onGameEvent?.({ type: 'prediction_made', data: { twist: true, prediction: option.id } });
             }}
-            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl border-2 text-left transition-all ${
               twistPrediction === option.id
                 ? 'border-purple-500 bg-purple-500/20'
@@ -1473,7 +1447,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
       {twistPrediction && (
         <button
           onClick={() => goToPhase('twist_play')}
-          style={{ zIndex: 10 }}
           className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold text-lg shadow-lg"
         >
           Discover Forced Convection
@@ -1482,18 +1455,23 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     </div>
   );
 
-  // Twist play phase - Interactive comparison of natural and forced convection
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 6: TWIST_PLAY - Second interactive experiment
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderTwistPlay = (): React.ReactNode => (
     <div className="space-y-4">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-white">Forced Convection Lab</h2>
-        <p className="text-slate-400">Add a fan to dramatically increase heat transfer</p>
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">Forced Convection Lab</h2>
+        <p className="text-slate-400">Add a fan to dramatically increase heat transfer rate</p>
       </div>
 
+      {/* Simulation */}
       <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl p-4">
         {renderConvectionTank()}
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-2 gap-3 text-center">
         <div className="bg-purple-900/30 rounded-lg p-3 border border-purple-500/30">
           <p className="text-sm text-slate-400">Fan Speed</p>
@@ -1505,6 +1483,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         </div>
       </div>
 
+      {/* Controls */}
       <div className="space-y-3">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -1517,9 +1496,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             max="100"
             value={fanSpeed}
             onChange={(e) => {
-              setFanSpeed(Number(e.target.value));
-              if (Number(e.target.value) > 0) playSound('whoosh');
-              onGameEvent?.({ type: 'fan_speed_changed', data: { value: Number(e.target.value) } });
+              const newSpeed = Number(e.target.value);
+              setFanSpeed(newSpeed);
+              if (newSpeed > 0 && fanSpeed === 0) playSound('whoosh');
+              onGameEvent?.({ type: 'fan_speed_changed', data: { value: newSpeed } });
             }}
             className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
           />
@@ -1541,36 +1521,36 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
         </div>
       </div>
 
+      {/* Comparison */}
       <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-xl p-4 border border-purple-500/30">
         <h4 className="font-semibold text-purple-400 mb-3">Natural vs Forced Convection:</h4>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600">
-            <p className="text-orange-400 font-semibold text-sm mb-1">Natural</p>
+            <p className="text-orange-400 font-semibold text-sm mb-1">Natural Convection</p>
             <ul className="text-xs text-slate-300 space-y-1">
-              <li>- Driven by buoyancy</li>
-              <li>- Slower heat transfer</li>
-              <li>- No energy input</li>
-              <li>- Ex: Room heating</li>
+              <li>- Driven by buoyancy alone</li>
+              <li>- h = 5-25 W/m²K</li>
+              <li>- No energy input needed</li>
+              <li>- Ex: Room radiator</li>
             </ul>
           </div>
           <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600">
-            <p className="text-purple-400 font-semibold text-sm mb-1">Forced</p>
+            <p className="text-purple-400 font-semibold text-sm mb-1">Forced Convection</p>
             <ul className="text-xs text-slate-300 space-y-1">
               <li>- Driven by fans/pumps</li>
-              <li>- Much faster transfer</li>
-              <li>- Requires energy</li>
-              <li>- Ex: CPU cooling</li>
+              <li>- h = 25-250 W/m²K</li>
+              <li>- Requires energy input</li>
+              <li>- Ex: CPU cooler</li>
             </ul>
           </div>
         </div>
         <p className="text-sm text-center text-purple-300 mt-3 font-medium">
-          Forced convection can be 5-50x more efficient!
+          Forced convection can be 5-50x more efficient than natural!
         </p>
       </div>
 
       <button
         onClick={() => goToPhase('twist_review')}
-        style={{ zIndex: 10 }}
         className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold text-lg shadow-lg"
       >
         Review the Discovery
@@ -1578,57 +1558,68 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     </div>
   );
 
-  // Twist review phase - Explain factors affecting convection rate
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 7: TWIST_REVIEW - Deep explanation
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderTwistReview = (): React.ReactNode => (
     <div className="space-y-6">
       <div className="text-center space-y-3">
-        <h2 className="text-xl font-bold text-white">The Forced Convection Discovery</h2>
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">The Forced Convection Discovery</h2>
         <p className="text-slate-400">
           {twistPrediction === 'C'
-            ? "You got it! Moving air enhances convection and evaporation."
+            ? "You got it! Moving air increases heat transfer without changing air temperature."
             : "The answer was C - the fan speeds up heat and moisture removal from your skin!"}
         </p>
       </div>
 
+      {/* Main explanation */}
       <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 rounded-xl p-6 border border-purple-500/30">
         <h3 className="font-semibold text-purple-400 mb-4">Why Fans Cool You (Without Cooling Air)</h3>
         <div className="space-y-3 text-slate-300">
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
-            <p><strong className="text-purple-300">Removes warm boundary layer:</strong> Still air next to your skin gets warm. Moving air constantly replaces it with fresher room-temperature air.</p>
+            <p><strong className="text-purple-300">Removes warm boundary layer:</strong> Still air next to your skin heats up and insulates you. Moving air constantly replaces this warm layer with fresh room-temperature air.</p>
           </div>
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
-            <p><strong className="text-purple-300">Speeds evaporation:</strong> Sweat evaporates faster in moving air, absorbing heat from your body (latent heat of vaporization).</p>
+            <p><strong className="text-purple-300">Speeds evaporation:</strong> Sweat evaporates faster in moving air, and evaporation absorbs heat from your body (latent heat of vaporization = 2.4 MJ/kg).</p>
           </div>
           <div className="flex items-start gap-3">
             <span className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
-            <p><strong className="text-purple-300">Increases h value:</strong> The heat transfer coefficient (h in Q=hADT) increases dramatically with air velocity.</p>
+            <p><strong className="text-purple-300">Increases h value:</strong> The heat transfer coefficient (h in Q = hAΔT) depends on fluid velocity. Faster air = higher h = faster heat transfer at the same ΔT.</p>
           </div>
         </div>
       </div>
 
+      {/* Key insight */}
       <div className="bg-green-900/20 rounded-xl p-4 border border-green-500/30">
         <h4 className="font-semibold text-green-400 mb-2">Key Insight</h4>
         <p className="text-slate-300">
-          Forced convection doesn't change the <em className="text-green-300">temperature</em> of the air - it increases the <em className="text-green-300">rate</em> of heat transfer. This is why fans are useless in empty rooms but feel wonderful when you're in them!
+          Forced convection doesn't change the <em className="text-green-300">temperature</em> of the cooling medium -
+          it increases the <em className="text-green-300">rate</em> of heat transfer. This is why:
         </p>
+        <ul className="text-sm text-slate-400 mt-2 space-y-1">
+          <li>- Fans cool people but not empty rooms</li>
+          <li>- CPU heatsinks need fans despite same air temperature</li>
+          <li>- Convection ovens cook faster at lower temperatures</li>
+        </ul>
       </div>
 
+      {/* Factors affecting h */}
       <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-600">
-        <h4 className="font-semibold text-white mb-2">Factors Affecting Convection Rate</h4>
+        <h4 className="font-semibold text-white mb-2">Factors Affecting Heat Transfer Coefficient (h)</h4>
         <ul className="text-sm text-slate-300 space-y-1">
-          <li>- <strong>Fluid velocity:</strong> Faster flow = higher h coefficient</li>
-          <li>- <strong>Temperature difference:</strong> Larger DT = more heat transfer</li>
-          <li>- <strong>Surface area:</strong> More area = more transfer (heatsink fins)</li>
-          <li>- <strong>Fluid properties:</strong> Thermal conductivity, viscosity</li>
-          <li>- <strong>Surface geometry:</strong> Smooth vs rough, orientation</li>
+          <li>- <strong>Fluid velocity:</strong> Faster flow = higher h (most important!)</li>
+          <li>- <strong>Fluid properties:</strong> Thermal conductivity, viscosity, density</li>
+          <li>- <strong>Flow pattern:</strong> Turbulent flow has higher h than laminar</li>
+          <li>- <strong>Surface geometry:</strong> Fins, roughness, orientation</li>
+          <li>- <strong>Temperature:</strong> Some fluids have temperature-dependent h</li>
         </ul>
       </div>
 
       <button
         onClick={() => goToPhase('transfer')}
-        style={{ zIndex: 10 }}
         className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold text-lg shadow-lg"
       >
         See Real-World Applications
@@ -1636,15 +1627,18 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     </div>
   );
 
-  // Transfer phase - 4 real-world applications
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 8: TRANSFER - 4 Real-world applications
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderTransfer = (): React.ReactNode => {
     const app = transferApps[selectedApp];
 
     return (
       <div className="space-y-4">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-white">Convection in Action</h2>
-          <p className="text-slate-400">From your home to the entire planet</p>
+          <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">Convection in the Real World</h2>
+          <p className="text-slate-400">From kitchen to planet - convection is everywhere</p>
         </div>
 
         {/* App selector */}
@@ -1657,24 +1651,19 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 playSound('click');
                 onGameEvent?.({ type: 'transfer_app_viewed', data: { app: a.title } });
               }}
-              style={{ zIndex: 10 }}
               className={`flex-shrink-0 px-4 py-2 rounded-full font-medium transition-all ${
                 selectedApp === i
                   ? 'text-white shadow-lg'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
+              style={selectedApp === i ? { backgroundColor: a.color } : {}}
             >
-              <span
-                className={selectedApp === i ? '' : 'opacity-70'}
-                style={selectedApp === i ? { backgroundColor: a.color, padding: '8px 16px', borderRadius: '9999px' } : {}}
-              >
-                {a.icon} {a.short}
-              </span>
+              {a.icon} {a.short}
             </button>
           ))}
         </div>
 
-        {/* Selected app details */}
+        {/* App details card */}
         <div className="bg-slate-800/50 rounded-xl border border-slate-600 overflow-hidden">
           <div className="p-4 text-white" style={{ backgroundColor: app.color }}>
             <div className="flex items-center gap-3">
@@ -1699,6 +1688,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               <p className="text-sm text-slate-300">{app.howItWorks}</p>
             </div>
 
+            {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {app.stats.map((stat, i) => (
                 <div key={i} className="bg-slate-900/50 rounded-lg p-2 text-center">
@@ -1708,6 +1698,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               ))}
             </div>
 
+            {/* Examples */}
             <div>
               <h4 className="font-semibold text-white mb-2">Examples:</h4>
               <ul className="text-sm text-slate-400 space-y-1">
@@ -1716,12 +1707,26 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 ))}
               </ul>
             </div>
+
+            {/* Companies */}
+            <div className="flex flex-wrap gap-2">
+              {app.companies.map((company, i) => (
+                <span key={i} className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
+                  {company}
+                </span>
+              ))}
+            </div>
+
+            {/* Future impact */}
+            <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-lg p-3 border border-purple-500/20">
+              <h4 className="font-semibold text-purple-400 mb-1">Future Impact</h4>
+              <p className="text-sm text-slate-300">{app.futureImpact}</p>
+            </div>
           </div>
         </div>
 
         <button
           onClick={() => goToPhase('test')}
-          style={{ zIndex: 10 }}
           className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold text-lg shadow-lg"
         >
           Test Your Knowledge
@@ -1730,7 +1735,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     );
   };
 
-  // Test phase - 10 multiple choice questions
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 9: TEST - 10 Scenario-based questions
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderTest = (): React.ReactNode => {
     const question = testQuestions[testIndex];
     const answered = testAnswers[testIndex] !== null;
@@ -1789,7 +1797,6 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                   key={i}
                   onClick={() => !answered && handleTestAnswer(i)}
                   disabled={answered}
-                  style={{ zIndex: 10 }}
                   className={`w-full p-3 rounded-lg border-2 text-left transition-all ${bgColor} ${borderColor}`}
                 >
                   <div className="flex items-center gap-3">
@@ -1826,17 +1833,17 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
                 playSound('click');
               } else {
                 onGameEvent?.({ type: 'test_completed', data: { score: testScore, total: testQuestions.length } });
+                playSound('success');
                 goToPhase('mastery');
               }
             }}
-            style={{ zIndex: 10 }}
             className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold text-lg shadow-lg"
           >
             {testIndex < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
           </button>
         )}
 
-        {/* Score indicator */}
+        {/* Score */}
         <div className="text-center text-sm text-slate-400">
           Current Score: {testScore} / {testIndex + (answered ? 1 : 0)}
         </div>
@@ -1844,76 +1851,100 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     );
   };
 
-  // Mastery phase - Congratulations page
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 10: MASTERY - Completion celebration
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderMastery = (): React.ReactNode => {
     const percentage = Math.round((testScore / testQuestions.length) * 100);
     const passed = percentage >= 70;
 
+    // Trigger completion callback
+    useEffect(() => {
+      if (passed) {
+        onGameEvent?.({ type: 'mastery_achieved', data: { score: testScore, percentage } });
+        onComplete?.();
+      }
+    }, [passed]);
+
     return (
       <div className="space-y-6">
         <div className="text-center space-y-4">
+          {/* Achievement icon */}
           <div className="text-6xl">
             {passed ? '🔥' : '📚'}
           </div>
+
           <h2 className="text-2xl font-bold text-white">
-            {passed ? 'Congratulations! Convection Mastered!' : 'Keep Learning!'}
+            {passed ? 'Convection Mastered!' : 'Keep Learning!'}
           </h2>
-          <div className="inline-block bg-gradient-to-r from-orange-500 to-red-500 text-white text-3xl font-bold px-6 py-3 rounded-xl">
+
+          {/* Score display */}
+          <div className={`inline-block text-white text-3xl font-bold px-6 py-3 rounded-xl ${
+            passed
+              ? 'bg-gradient-to-r from-orange-500 to-red-500'
+              : 'bg-gradient-to-r from-slate-600 to-slate-700'
+          }`}>
             {testScore} / {testQuestions.length} ({percentage}%)
           </div>
         </div>
 
+        {/* Success message */}
         {passed && (
           <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 rounded-xl p-6 border border-green-500/30">
-            <h3 className="font-semibold text-green-400 mb-4 text-center">You've Mastered Convection!</h3>
-            <p className="text-slate-300 text-center mb-4">
-              You now understand how heat transfers through moving fluids, from boiling water to global weather patterns.
+            <h3 className="font-semibold text-green-400 mb-4 text-center">Congratulations!</h3>
+            <p className="text-slate-300 text-center">
+              You now understand how heat transfers through moving fluids - from boiling water
+              to global weather patterns to cooling your computer!
             </p>
           </div>
         )}
 
+        {/* Key concepts mastered */}
         <div className="bg-gradient-to-br from-orange-900/20 to-red-900/20 rounded-xl p-6 border border-orange-500/30">
           <h3 className="font-semibold text-orange-400 mb-4">Key Concepts Mastered</h3>
           <ul className="space-y-2 text-slate-300">
             <li className="flex items-start gap-2">
               <span className="text-green-400">✓</span>
-              <span>Hot fluid rises because it expands and becomes less dense</span>
+              <span>Hot fluid rises because it expands and becomes less dense (buoyancy)</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-400">✓</span>
-              <span>Convection cells create continuous circulation patterns</span>
+              <span>Convection cells create continuous circulation patterns that transfer heat</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-400">✓</span>
-              <span>Forced convection (fans/pumps) is 5-50x more efficient than natural</span>
+              <span>Forced convection (fans/pumps) increases h by 5-50x vs natural convection</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-400">✓</span>
-              <span>Q = hADT governs convective heat transfer rate</span>
+              <span>Q = hAΔT governs all convective heat transfer rates</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-400">✓</span>
-              <span>Convection drives weather, ocean currents, and plate tectonics</span>
+              <span>Convection drives weather, ocean currents, plate tectonics, and cooling systems</span>
             </li>
           </ul>
         </div>
 
+        {/* Formula summary */}
         <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-600">
-          <h3 className="font-semibold text-white mb-3">The Physics Formula</h3>
+          <h3 className="font-semibold text-white mb-3">The Master Formula</h3>
           <div className="bg-slate-900/50 rounded-lg p-4 text-center">
-            <p className="text-2xl font-mono text-orange-400 mb-2">Q = h x A x DT</p>
+            <p className="text-2xl font-mono text-orange-400 mb-2">Q = h × A × ΔT</p>
             <p className="text-sm text-slate-400">
-              Heat rate = coefficient x area x temp difference
+              Heat rate = coefficient × area × temperature difference
             </p>
           </div>
           <div className="mt-4 text-sm text-slate-400 space-y-1">
-            <p>- h increases with fluid velocity (forced &gt; natural convection)</p>
-            <p>- Large surface areas (fins, heatsinks) increase heat transfer</p>
-            <p>- Greater DT means faster heat transfer</p>
+            <p>- h increases with fluid velocity (forced convection beats natural)</p>
+            <p>- Larger surface area (fins, heatsinks) = more heat transfer</p>
+            <p>- Greater temperature difference = faster heat flow</p>
           </div>
         </div>
 
-        {!passed && (
+        {/* Action buttons */}
+        {!passed ? (
           <button
             onClick={() => {
               setTestIndex(0);
@@ -1922,21 +1953,17 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               setShowExplanation(false);
               goToPhase('test');
             }}
-            style={{ zIndex: 10 }}
             className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold text-lg shadow-lg"
           >
             Try Again
           </button>
-        )}
-
-        {passed && (
-          <div className="text-center">
-            <p className="text-green-400 font-semibold mb-4">
-              You've completed the Convection module!
+        ) : (
+          <div className="text-center space-y-4">
+            <p className="text-green-400 font-semibold">
+              You have completed the Convection module!
             </p>
             <button
               onClick={() => goToPhase('hook')}
-              style={{ zIndex: 10 }}
               className="px-6 py-3 bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-600 transition-all"
             >
               Review Again
@@ -1947,9 +1974,10 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     );
   };
 
-  // ============================================================================
+  // ═══════════════════════════════════════════════════════════════════════════
   // MAIN RENDER
-  // ============================================================================
+  // ═══════════════════════════════════════════════════════════════════════════
+
   const renderPhase = (): React.ReactNode => {
     switch (phase) {
       case 'hook': return renderHook();
@@ -1968,36 +1996,22 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradients */}
+      {/* Background gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-600/3 rounded-full blur-3xl" />
 
-      {/* Premium progress bar */}
+      {/* Header with progress */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-orange-400">Convection</span>
-          <div className="flex gap-1.5">
-            {phaseOrder.map((p, i) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-gradient-to-r from-orange-400 to-red-400 w-6 shadow-lg shadow-orange-500/50'
-                    : currentPhaseIndex > i
-                    ? 'bg-emerald-500 w-2'
-                    : 'bg-slate-600 w-2 hover:bg-slate-500'
-                }`}
-              />
-            ))}
-          </div>
+          {renderNavDots()}
           <span className="text-sm text-slate-400 font-medium">Phase {currentPhaseIndex + 1}/10</span>
         </div>
       </div>
 
+      {/* Main content */}
       <div className={`relative z-10 pt-16 pb-8 max-w-2xl mx-auto ${isMobile ? 'px-4' : 'px-6'}`}>
         {renderPhase()}
       </div>

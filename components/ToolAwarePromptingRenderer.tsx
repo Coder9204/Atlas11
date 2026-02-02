@@ -1,95 +1,286 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+'use client';
 
-interface ToolAwarePromptingRendererProps {
-  gamePhase?: string;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// -----------------------------------------------------------------------------
+// Tool-Aware Prompting - Complete 10-Phase Game
+// How to prevent LLM hallucinations with explicit tool documentation
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+interface ToolAwarePromptingRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
 
-const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#f59e0b',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  tool: '#3b82f6',
-  confidence: '#8b5cf6',
-  hallucination: '#ef4444',
-  documented: '#10b981',
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
-  gamePhase,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
-  // Phase management
-  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Introduction',
-    predict: 'Prediction',
-    play: 'Experiment',
-    review: 'Review',
-    twist_predict: 'Twist Prediction',
-    twist_play: 'Twist Experiment',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
-    mastery: 'Mastery',
-  };
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A developer asks Claude to run their custom deployment script. Claude responds with 'deploy --fast --production' but the actual script only accepts '--environment staging' or '--environment production'.",
+    question: "Why did Claude hallucinate the '--fast' flag?",
+    options: [
+      { id: 'a', label: "Claude is being creative to help the user" },
+      { id: 'b', label: "Claude pattern-matched from similar CLI tools in training data without knowing this specific tool", correct: true },
+      { id: 'c', label: "The '--fast' flag exists but is hidden" },
+      { id: 'd', label: "Claude prefers shorter commands" }
+    ],
+    explanation: "LLMs pattern-match from similar tools seen during training. Without explicit documentation of your specific tool, Claude will generate plausible-looking but potentially incorrect flags based on what similar tools use."
+  },
+  {
+    scenario: "An engineer instructs Claude: 'Before running any unfamiliar command, first run it with --help to understand its options.' Claude then successfully uses the correct flags for a custom build tool.",
+    question: "What made this approach effective?",
+    options: [
+      { id: 'a', label: "Claude memorized the tool from a previous session" },
+      { id: 'b', label: "Claude queried the actual tool documentation instead of guessing from training data", correct: true },
+      { id: 'c', label: "The --help flag is required for all commands" },
+      { id: 'd', label: "Claude already knew the tool" }
+    ],
+    explanation: "By instructing Claude to run --help first, you ensure it queries the actual tool's documentation rather than relying on pattern matching. This grounds Claude's knowledge in the real tool interface."
+  },
+  {
+    scenario: "A team adds a CLAUDE.md file to their repository with documented commands: 'migrate --dry-run' for testing and 'migrate --execute' for production. Claude now consistently uses these exact flags.",
+    question: "What role does CLAUDE.md serve?",
+    options: [
+      { id: 'a', label: "It replaces the tool's built-in help" },
+      { id: 'b', label: "It provides persistent, repo-specific context that Claude references automatically", correct: true },
+      { id: 'c', label: "It speeds up command execution" },
+      { id: 'd', label: "It's required for Claude to work" }
+    ],
+    explanation: "CLAUDE.md is a special file that Claude reads automatically when working in a repository. It provides persistent, version-controlled documentation that doesn't need to be repeated in every conversation."
+  },
+  {
+    scenario: "Claude generates a database migration command 'db migrate --force' that skips safety confirmations. The actual tool requires '--no-confirm' for this behavior, and '--force' causes a full database reset.",
+    question: "Why is this hallucinated flag particularly dangerous?",
+    options: [
+      { id: 'a', label: "It takes longer to execute" },
+      { id: 'b', label: "A wrong flag might execute with unexpected destructive behavior instead of failing", correct: true },
+      { id: 'c', label: "It uses more memory" },
+      { id: 'd', label: "It produces no output" }
+    ],
+    explanation: "Partially correct or plausible-looking commands are more dangerous than obviously wrong ones because they may execute successfully but with unintended consequences. Here, '--force' might be a valid flag but with a completely different meaning."
+  },
+  {
+    scenario: "A CI/CD pipeline uses a custom 'release' script. Without documentation, Claude suggests 'release --prod --fast'. With CLAUDE.md documenting the tool, Claude uses 'release --environment production --tag v1.2.3'.",
+    question: "What changed between the two scenarios?",
+    options: [
+      { id: 'a', label: "Claude learned from errors" },
+      { id: 'b', label: "Explicit documentation constrained Claude to valid options, eliminating guesswork", correct: true },
+      { id: 'c', label: "The tool was updated" },
+      { id: 'd', label: "Claude used a different model" }
+    ],
+    explanation: "Tool-aware prompting provides explicit documentation that constrains Claude's responses to valid options. Instead of guessing from patterns, Claude references the documented interface."
+  },
+  {
+    scenario: "A developer frequently uses 'npm run test' but their project uses 'pnpm test:all'. Claude keeps suggesting npm commands despite being told about pnpm.",
+    question: "What's the most reliable solution?",
+    options: [
+      { id: 'a', label: "Repeatedly correct Claude in each conversation" },
+      { id: 'b', label: "Add project-specific commands to CLAUDE.md for persistent context", correct: true },
+      { id: 'c', label: "Use npm instead" },
+      { id: 'd', label: "Wait for Claude to learn" }
+    ],
+    explanation: "Session-based corrections don't persist. CLAUDE.md provides persistent documentation that Claude references automatically in every session, ensuring consistent correct behavior."
+  },
+  {
+    scenario: "Claude is asked to use a proprietary API testing tool. It generates plausible-looking commands with common flags like '--verbose' and '--timeout' that the tool doesn't support.",
+    question: "Which tools are most prone to hallucination?",
+    options: [
+      { id: 'a', label: "Well-documented standard tools like git and npm" },
+      { id: 'b', label: "Custom, internal, or project-specific tools that aren't in training data", correct: true },
+      { id: 'c', label: "Tools with many flags" },
+      { id: 'd', label: "Tools that run quickly" }
+    ],
+    explanation: "Claude has extensive training data on standard tools but knows nothing about your custom or internal tools. These are prime candidates for hallucinated flags and syntax."
+  },
+  {
+    scenario: "A CLAUDE.md file contains: '## Build Commands\n- build --output dist/ # compile to dist folder\n- build --watch # hot reload mode'. Claude now uses exactly these patterns.",
+    question: "What makes this documentation effective?",
+    options: [
+      { id: 'a', label: "It uses markdown formatting" },
+      { id: 'b', label: "It provides exact command syntax, flags, and explains their purpose", correct: true },
+      { id: 'c', label: "It's short" },
+      { id: 'd', label: "It's in a special file" }
+    ],
+    explanation: "Effective tool documentation includes: exact command names, available flags, required arguments, and brief explanations of what each option does. This gives Claude complete information to construct correct commands."
+  },
+  {
+    scenario: "After adding tool documentation, a team notices their Claude interactions have 95% command accuracy instead of the previous 60%. Development velocity increases significantly.",
+    question: "What's the primary benefit of tool-aware prompting?",
+    options: [
+      { id: 'a', label: "Faster command execution" },
+      { id: 'b', label: "Replacing guesswork with verified command syntax, reducing errors and debugging time", correct: true },
+      { id: 'c', label: "Smaller code size" },
+      { id: 'd', label: "Better network performance" }
+    ],
+    explanation: "Tool-aware prompting dramatically reduces debugging time by preventing incorrect commands from being generated in the first place. Teams spend less time fixing hallucinated flags and more time on actual development."
+  },
+  {
+    scenario: "A developer's CLAUDE.md includes: '## Dangerous Commands\nWARNING: db:reset destroys all data. Always use db:migrate instead for schema changes.'",
+    question: "Why include warnings in CLAUDE.md?",
+    options: [
+      { id: 'a', label: "To make the file longer" },
+      { id: 'b', label: "To prevent Claude from suggesting destructive commands and guide it toward safe alternatives", correct: true },
+      { id: 'c', label: "To test if Claude reads the file" },
+      { id: 'd', label: "It's required syntax" }
+    ],
+    explanation: "Including warnings and gotchas in CLAUDE.md helps Claude avoid suggesting dangerous operations and guides it toward safe alternatives. This is especially important for commands with irreversible consequences."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
+const realWorldApps = [
+  {
+    icon: '🔧',
+    title: 'Custom CLI Tools',
+    short: 'Internal tools need explicit documentation',
+    tagline: 'Prevent hallucinated flags on proprietary commands',
+    description: 'Internal and custom CLI tools are prime candidates for hallucination because Claude has never seen them in training data. Without documentation, Claude pattern-matches from similar tools, often incorrectly.',
+    connection: 'Tool-aware prompting provides explicit documentation that constrains Claude to valid options. Instead of guessing that your deploy script uses --fast, Claude knows it uses --environment production.',
+    howItWorks: 'Document each custom tool in CLAUDE.md with: command name, available flags and their meanings, required vs optional arguments, example invocations, and common error messages. Tell Claude to run --help when encountering unfamiliar tools.',
+    stats: [
+      { value: '95%', label: 'Accuracy with docs', icon: '📈' },
+      { value: '60%', label: 'Accuracy without', icon: '📉' },
+      { value: '3x', label: 'Faster debugging', icon: '⚡' }
+    ],
+    examples: ['Deploy scripts', 'Build systems', 'Test runners', 'Database tools'],
+    companies: ['Every software team', 'Startups', 'Enterprises', 'Open source'],
+    futureImpact: 'As AI coding assistants become ubiquitous, well-documented tooling will be essential for team productivity and code quality.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🗄️',
+    title: 'Database Migrations',
+    short: 'Migration flags have real consequences',
+    tagline: 'Document --dry-run vs --execute to prevent data loss',
+    description: 'Database migration tools have subtle flag differences that matter enormously. Hallucinated flags might skip safety checks, run migrations in wrong order, or modify production data unexpectedly.',
+    connection: 'Understanding tool-aware prompting is critical here because a wrong flag could mean lost data. Documenting --dry-run, --execute, --rollback explicitly prevents dangerous mistakes.',
+    howItWorks: 'Include migration command documentation with clear warnings: which commands are safe (dry-run, status), which require confirmation (migrate, seed), and which are destructive (reset, drop). Add environment-specific notes.',
+    stats: [
+      { value: '0', label: 'Tolerance for errors', icon: '🎯' },
+      { value: '100%', label: 'Need for accuracy', icon: '✅' },
+      { value: '$M+', label: 'Cost of data loss', icon: '💰' }
+    ],
+    examples: ['Rails migrations', 'Prisma migrate', 'Flyway', 'Liquibase'],
+    companies: ['Stripe', 'Shopify', 'GitHub', 'Every database-backed app'],
+    futureImpact: 'AI-assisted database operations will require rigorous documentation standards to prevent catastrophic errors.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🚀',
+    title: 'CI/CD Pipelines',
+    short: 'Build and deploy commands need precision',
+    tagline: 'Document environment targets and deployment flows',
+    description: 'CI/CD commands often have project-specific configurations, environment names, and deployment targets. Hallucinated commands might deploy to wrong environments or skip critical build steps.',
+    connection: 'Tool-aware prompting ensures Claude knows your specific pipeline: staging vs prod environment names, required build flags, deployment verification steps, and rollback procedures.',
+    howItWorks: 'Document your pipeline in CLAUDE.md: environment names (staging, production, canary), required environment variables, build targets and their purposes, deployment verification commands, and emergency rollback procedures.',
+    stats: [
+      { value: '5 min', label: 'Deploy time', icon: '⏱️' },
+      { value: '99.9%', label: 'Uptime goal', icon: '🎯' },
+      { value: '< 1 hr', label: 'Rollback target', icon: '↩️' }
+    ],
+    examples: ['GitHub Actions', 'CircleCI', 'Jenkins', 'GitLab CI'],
+    companies: ['Netflix', 'Amazon', 'Google', 'Microsoft'],
+    futureImpact: 'AI-assisted DevOps will rely on documented pipelines to safely automate increasingly complex deployment workflows.',
+    color: '#10B981'
+  },
+  {
+    icon: '🧪',
+    title: 'API Testing Tools',
+    short: 'Testing tools have varied syntax',
+    tagline: 'Document authentication and endpoint patterns',
+    description: 'API testing tools like httpie, curl alternatives, and custom clients have varied syntax for authentication, headers, and payloads. Claude may mix up syntax between different tools.',
+    connection: 'Tool-aware prompting documents your specific testing tool: authentication header format, base URL configuration, common endpoint patterns, and response parsing.',
+    howItWorks: 'Include API testing documentation with: authentication methods (bearer tokens, API keys, OAuth), base URL setup, example requests for common endpoints, expected response formats, and error handling patterns.',
+    stats: [
+      { value: '100s', label: 'API endpoints', icon: '🔌' },
+      { value: '< 200ms', label: 'Response target', icon: '⚡' },
+      { value: '99.99%', label: 'Availability', icon: '✅' }
+    ],
+    examples: ['httpie', 'Postman CLI', 'curl', 'Custom API clients'],
+    companies: ['Twilio', 'Stripe API', 'AWS CLI', 'GCP gcloud'],
+    futureImpact: 'As APIs proliferate, documented testing workflows will be essential for AI-assisted API integration and debugging.',
+    color: '#F59E0B'
+  }
+];
+
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
   const getInitialPhase = (): Phase => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
       return gamePhase as Phase;
     }
     return 'hook';
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
-      setPhase(gamePhase as Phase);
-    }
-  }, [gamePhase]);
-
-  const isNavigating = useRef(false);
-  const lastClickRef = useRef(0);
-
-  const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (isNavigating.current) return;
-    lastClickRef.current = now;
-    isNavigating.current = true;
-    setPhase(p);
-    setTimeout(() => { isNavigating.current = false; }, 400);
-  }, []);
-
-  const goNext = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[currentIndex + 1]);
-    }
-  }, [phase, goToPhase]);
-
-  const goBack = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phaseOrder[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
-
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Responsive detection
+  // Simulation state
+  const [promptMode, setPromptMode] = useState<'naive' | 'tool_aware'>('naive');
+  const [showHelp, setShowHelp] = useState(false);
+  const [hasClaudemd, setHasClaudemd] = useState(false);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -97,35 +288,7 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Simulation state
-  const [promptMode, setPromptMode] = useState<'naive' | 'tool_aware'>('naive');
-  const [showHelp, setShowHelp] = useState(false);
-  const [hasClaudemd, setHasClaudemd] = useState(false);
-
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [testScore, setTestScore] = useState(0);
-
-  // Calculate metrics based on approach
+  // Calculate metrics based on settings
   const calculateMetrics = useCallback(() => {
     let confidenceLevel = 30;
     let hallucinationRisk = 80;
@@ -156,11 +319,12 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     };
   }, [promptMode, showHelp, hasClaudemd]);
 
+  // Command examples
   const naiveCommands = [
     { cmd: 'deploy --fast --prod', status: 'hallucinated', note: 'No --fast flag exists' },
     { cmd: 'test run --all-files', status: 'hallucinated', note: 'Syntax is test --all' },
     { cmd: 'build -o ./dist', status: 'partial', note: 'Flag exists but path format wrong' },
-    { cmd: 'lint check src/', status: 'hallucinated', note: 'Command is lint-check, not lint check' },
+    { cmd: 'lint check src/', status: 'hallucinated', note: 'Command is lint-check' },
   ];
 
   const toolAwareCommands = [
@@ -170,1102 +334,805 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
     { cmd: 'lint-check src/', status: 'correct', note: 'Tool name from docs' },
   ];
 
-  const predictions = [
-    { id: 'same', label: 'The LLM will figure out the right commands from context' },
-    { id: 'hallucinate', label: 'Without tool docs, the LLM will hallucinate flags and commands' },
-    { id: 'ask', label: 'The LLM will ask for help when unsure about commands' },
-    { id: 'refuse', label: 'The LLM will refuse to run commands it does not know' },
-  ];
-
-  const twistPredictions = [
-    { id: 'memory', label: 'The LLM remembers commands across sessions automatically' },
-    { id: 'claudemd', label: 'A repo-local CLAUDE.md file provides persistent command documentation' },
-    { id: 'learns', label: 'The LLM learns commands from errors and improves over time' },
-    { id: 'unnecessary', label: 'Documentation is unnecessary once the LLM runs --help once' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'Custom CLI Tools',
-      description: 'Internal tools with non-standard interfaces are prime candidates for hallucination.',
-      question: 'How do you help Claude use your custom CLI correctly?',
-      answer: 'Document each tool in CLAUDE.md with: command name, available flags, required arguments, example invocations, and common error messages. Explicitly tell Claude to run --help before assuming flags.',
-    },
-    {
-      title: 'Database Migrations',
-      description: 'Database migration tools have subtle flag differences that matter enormously.',
-      question: 'Why is tool awareness critical for migrations?',
-      answer: 'Migration commands like --dry-run vs --execute have real consequences. Hallucinated flags might skip safety checks or modify production data. Document exact commands and warn about destructive operations.',
-    },
-    {
-      title: 'CI/CD Pipeline Commands',
-      description: 'Build and deploy commands often have project-specific configurations.',
-      question: 'How should CI/CD commands be documented for Claude?',
-      answer: 'Include: environment names (staging, prod), required env vars, build targets, deployment verification steps, and rollback commands. Show the full pipeline sequence with dependencies between steps.',
-    },
-    {
-      title: 'API Testing Tools',
-      description: 'API testing tools like httpie, curl alternatives, and custom clients have varied syntax.',
-      question: 'What makes API tool documentation effective?',
-      answer: 'Document: authentication methods (header format, token location), base URL configuration, common endpoints with example payloads, and response parsing. Include working examples that can be copy-pasted.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'Why do LLMs hallucinate CLI flags?',
-      options: [
-        { text: 'They are trying to be creative', correct: false },
-        { text: 'They pattern-match from similar tools in training data without knowing your specific tool', correct: true },
-        { text: 'CLI flags are too complex for LLMs', correct: false },
-        { text: 'They prefer longer commands', correct: false },
-      ],
-    },
-    {
-      question: 'What is the purpose of instructing Claude to run --help first?',
-      options: [
-        { text: 'To slow down execution for safety', correct: false },
-        { text: 'To query actual tool documentation instead of guessing', correct: true },
-        { text: 'To generate more output', correct: false },
-        { text: '--help is required for all commands', correct: false },
-      ],
-    },
-    {
-      question: 'A CLAUDE.md file in a repository provides:',
-      options: [
-        { text: 'Automatic code generation', correct: false },
-        { text: 'Persistent, repo-specific context that Claude can reference', correct: true },
-        { text: 'Security scanning', correct: false },
-        { text: 'Version control history', correct: false },
-      ],
-    },
-    {
-      question: 'The command confidence meter measures:',
-      options: [
-        { text: 'How fast commands execute', correct: false },
-        { text: 'How likely Claude is to use correct syntax based on available documentation', correct: true },
-        { text: 'CPU usage during execution', correct: false },
-        { text: 'Network latency', correct: false },
-      ],
-    },
-    {
-      question: 'Tool-aware prompting reduces hallucination by:',
-      options: [
-        { text: 'Removing all CLI commands from responses', correct: false },
-        { text: 'Providing explicit documentation that constrains valid options', correct: true },
-        { text: 'Using simpler commands only', correct: false },
-        { text: 'Running commands in a sandbox', correct: false },
-      ],
-    },
-    {
-      question: 'Why might a partially correct command be dangerous?',
-      options: [
-        { text: 'Partial commands always fail safely', correct: false },
-        { text: 'A wrong flag might execute with unexpected behavior instead of erroring', correct: true },
-        { text: 'Partial commands use more memory', correct: false },
-        { text: 'They are slower to execute', correct: false },
-      ],
-    },
-    {
-      question: 'The auto-suggest for run help first appears when:',
-      options: [
-        { text: 'Every command is executed', correct: false },
-        { text: 'Claude encounters an undocumented tool or uncertain syntax', correct: true },
-        { text: 'The user requests it', correct: false },
-        { text: 'Commands fail', correct: false },
-      ],
-    },
-    {
-      question: 'What should CLAUDE.md include for a custom deploy script?',
-      options: [
-        { text: 'Just the script name', correct: false },
-        { text: 'Full flag list, environment options, example invocations, and warnings', correct: true },
-        { text: 'Only the help text', correct: false },
-        { text: 'Source code of the script', correct: false },
-      ],
-    },
-    {
-      question: 'Tool awareness is especially important for:',
-      options: [
-        { text: 'Standard Unix commands like ls and cd', correct: false },
-        { text: 'Custom, internal, or project-specific tools', correct: true },
-        { text: 'Commands that start with sudo', correct: false },
-        { text: 'Commands with no flags', correct: false },
-      ],
-    },
-    {
-      question: 'The primary benefit of explicit tool documentation is:',
-      options: [
-        { text: 'Faster command execution', correct: false },
-        { text: 'Replacing guesswork with verified command syntax', correct: true },
-        { text: 'Reducing code size', correct: false },
-        { text: 'Improving network performance', correct: false },
-      ],
-    },
-  ];
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
+  // Design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#F59E0B',
+    accentGlow: 'rgba(245, 158, 11, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    tool: '#3B82F6',
+    confidence: '#8B5CF6',
   };
 
-  const submitTest = () => {
-    let score = 0;
-    testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
-    if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
   };
 
-  const renderVisualization = (interactive: boolean) => {
-    const width = 700;
-    const height = 550;
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'CLAUDE.md',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'tool-aware-prompting',
+        gameTitle: 'Tool-Aware Prompting',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Tool-Aware Visualization SVG Component
+  const ToolAwareVisualization = ({ interactive = false }: { interactive?: boolean }) => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 400 : 480;
     const metrics = calculateMetrics();
     const commands = promptMode === 'naive' ? naiveCommands : toolAwareCommands;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ borderRadius: '12px', maxWidth: '750px' }}
-        >
-          {/* === COMPREHENSIVE DEFS SECTION === */}
-          <defs>
-            {/* Premium lab background gradient with depth */}
-            <linearGradient id="tapLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#030712" />
-              <stop offset="25%" stopColor="#0a0f1a" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="75%" stopColor="#0a0f1a" />
-              <stop offset="100%" stopColor="#030712" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="tapBrainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+          <linearGradient id="tapSuccessGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#34d399" />
+          </linearGradient>
+          <linearGradient id="tapErrorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#f87171" />
+          </linearGradient>
+          <linearGradient id="tapGaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+          <filter id="tapGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* AI Brain gradient - purple to cyan spectrum */}
-            <linearGradient id="tapAiBrainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="25%" stopColor="#8b5cf6" />
-              <stop offset="50%" stopColor="#6366f1" />
-              <stop offset="75%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#06b6d4" />
-            </linearGradient>
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          {promptMode === 'naive' ? 'Naive Prompting (No Tool Docs)' : 'Tool-Aware Prompting (Documented)'}
+        </text>
 
-            {/* Tool icon metallic gradient */}
-            <linearGradient id="tapToolMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="20%" stopColor="#475569" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="80%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
+        {/* AI Brain - Left side */}
+        <g transform={`translate(${width * 0.2}, 90)`}>
+          <circle cx="0" cy="0" r="40" fill="url(#tapBrainGrad)" filter="url(#tapGlow)">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="0" cy="0" r="30" fill={colors.bgSecondary} stroke="url(#tapBrainGrad)" strokeWidth="2" />
+          {/* Neural nodes */}
+          {[...Array(5)].map((_, i) => {
+            const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+            return (
+              <circle
+                key={i}
+                cx={Math.cos(angle) * 18}
+                cy={Math.sin(angle) * 18}
+                r="4"
+                fill="#a855f7"
+              >
+                <animate attributeName="opacity" values="0.3;1;0.3" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
+              </circle>
+            );
+          })}
+          <text x="0" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="10">Claude AI</text>
+        </g>
 
-            {/* Success gradient - verified commands */}
-            <linearGradient id="tapSuccessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#34d399" />
-              <stop offset="25%" stopColor="#10b981" />
-              <stop offset="50%" stopColor="#059669" />
-              <stop offset="75%" stopColor="#047857" />
-              <stop offset="100%" stopColor="#065f46" />
-            </linearGradient>
-
-            {/* Error gradient - hallucinated commands */}
-            <linearGradient id="tapErrorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="25%" stopColor="#f87171" />
-              <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="75%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#b91c1c" />
-            </linearGradient>
-
-            {/* Warning gradient - partial matches */}
-            <linearGradient id="tapWarningGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fde047" />
-              <stop offset="25%" stopColor="#facc15" />
-              <stop offset="50%" stopColor="#f59e0b" />
-              <stop offset="75%" stopColor="#d97706" />
-              <stop offset="100%" stopColor="#b45309" />
-            </linearGradient>
-
-            {/* Confidence gauge gradient */}
-            <linearGradient id="tapGaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="30%" stopColor="#f59e0b" />
-              <stop offset="60%" stopColor="#eab308" />
-              <stop offset="100%" stopColor="#10b981" />
-            </linearGradient>
-
-            {/* CLAUDE.md document gradient */}
-            <linearGradient id="tapDocGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fef3c7" />
-              <stop offset="20%" stopColor="#fde68a" />
-              <stop offset="50%" stopColor="#fcd34d" />
-              <stop offset="80%" stopColor="#fbbf24" />
-              <stop offset="100%" stopColor="#f59e0b" />
-            </linearGradient>
-
-            {/* Terminal screen gradient */}
-            <linearGradient id="tapTerminalBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
-
-            {/* AI processing core radial gradient */}
-            <radialGradient id="tapAiCoreGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#a855f7" stopOpacity="1" />
-              <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.8" />
-              <stop offset="60%" stopColor="#6366f1" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Tool selection glow */}
-            <radialGradient id="tapToolSelectGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
-              <stop offset="40%" stopColor="#06b6d4" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#0891b2" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Data flow particle glow */}
-            <radialGradient id="tapDataGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
-              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Hallucination warning glow */}
-            <radialGradient id="tapHallucinationGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
-              <stop offset="40%" stopColor="#f87171" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Verified output glow */}
-            <radialGradient id="tapVerifiedGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#6ee7b7" stopOpacity="1" />
-              <stop offset="40%" stopColor="#34d399" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-            </radialGradient>
-
-            {/* AI processing glow filter */}
-            <filter id="tapAiGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Tool icon glow filter */}
-            <filter id="tapToolGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Data particle glow filter */}
-            <filter id="tapDataParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Status indicator glow */}
-            <filter id="tapStatusGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Terminal text glow */}
-            <filter id="tapTerminalGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Subtle grid pattern */}
-            <pattern id="tapLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
-              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-            </pattern>
-          </defs>
-
-          {/* === BACKGROUND === */}
-          <rect width={width} height={height} fill="url(#tapLabBg)" />
-          <rect width={width} height={height} fill="url(#tapLabGrid)" />
-
-          {/* === TITLE SECTION === */}
-          <text x={width/2} y={28} fill="#f8fafc" fontSize={16} textAnchor="middle" fontWeight="bold">
-            Tool-Aware Prompting Analyzer
+        {/* Documentation Box - Center top */}
+        <g transform={`translate(${width * 0.5}, 60)`}>
+          <rect x="-60" y="0" width="120" height="70" rx="8" fill={colors.bgSecondary} stroke={promptMode === 'tool_aware' ? colors.success : colors.border} strokeWidth={promptMode === 'tool_aware' ? 2 : 1} />
+          <text x="0" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+            {promptMode === 'tool_aware' ? 'CLAUDE.md' : 'No Documentation'}
           </text>
-          <text x={width/2} y={48} fill={promptMode === 'naive' ? '#f87171' : '#34d399'} fontSize={12} textAnchor="middle" fontWeight="600">
-            {promptMode === 'naive' ? 'Naive Mode: No Tool Documentation' : 'Tool-Aware Mode: Verified Commands'}
-          </text>
-
-          {/* === AI PROCESSING VISUALIZATION === */}
-          <g transform="translate(350, 140)">
-            {/* AI Brain core with animated glow */}
-            <circle cx={0} cy={0} r={55} fill="url(#tapAiCoreGlow)" filter="url(#tapAiGlow)">
-              <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
-            </circle>
-            <circle cx={0} cy={0} r={40} fill="#1e293b" stroke="url(#tapAiBrainGradient)" strokeWidth={3} />
-            <circle cx={0} cy={0} r={35} fill="#0f172a" />
-
-            {/* Neural network nodes inside brain */}
-            {[...Array(6)].map((_, i) => {
-              const angle = (i / 6) * Math.PI * 2;
-              const x = Math.cos(angle) * 20;
-              const y = Math.sin(angle) * 20;
-              return (
-                <circle key={i} cx={x} cy={y} r={4} fill="url(#tapAiBrainGradient)">
-                  <animate attributeName="opacity" values="0.3;1;0.3" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
-                </circle>
-              );
-            })}
-            <circle cx={0} cy={0} r={6} fill="#a855f7">
-              <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite" />
-            </circle>
-
-            {/* AI label */}
-            <text x={0} y={60} fill="#94a3b8" fontSize={10} textAnchor="middle" fontWeight="bold">
-              Claude AI
-            </text>
-            <text x={0} y={72} fill="#64748b" fontSize={8} textAnchor="middle">
-              Processing
-            </text>
-          </g>
-
-          {/* === TOOL INPUT SECTION (Left) === */}
-          <g transform="translate(60, 100)">
-            {/* Tool documentation box */}
-            <rect x={0} y={0} width={160} height={120} rx={8} fill="url(#tapTerminalBg)" stroke="#334155" strokeWidth={1.5} />
-            <rect x={0} y={0} width={160} height={20} rx={8} fill="#1e293b" />
-            <rect x={0} y={12} width={160} height={8} fill="#1e293b" />
-
-            {/* Window controls */}
-            <circle cx={15} cy={10} r={4} fill="#ef4444" />
-            <circle cx={28} cy={10} r={4} fill="#f59e0b" />
-            <circle cx={41} cy={10} r={4} fill="#10b981" />
-
-            <text x={80} y={14} fill="#64748b" fontSize={8} textAnchor="middle" fontWeight="600">
-              {promptMode === 'tool_aware' ? 'CLAUDE.md' : 'No Docs'}
-            </text>
-
-            {/* Document content or empty state */}
-            {promptMode === 'tool_aware' ? (
-              <g>
-                <text x={10} y={38} fill="#22d3ee" fontSize={8} fontFamily="monospace" filter="url(#tapTerminalGlow)">
-                  ## Commands
-                </text>
-                <text x={10} y={52} fill="#94a3b8" fontSize={7} fontFamily="monospace">
-                  deploy --env [staging|prod]
-                </text>
-                <text x={10} y={64} fill="#94a3b8" fontSize={7} fontFamily="monospace">
-                  test --all | --watch
-                </text>
-                <text x={10} y={76} fill="#94a3b8" fontSize={7} fontFamily="monospace">
-                  build --output dist/
-                </text>
-                <text x={10} y={88} fill="#94a3b8" fontSize={7} fontFamily="monospace">
-                  lint-check src/
-                </text>
-                {/* Document glow indicator */}
-                <rect x={-5} y={-5} width={170} height={130} rx={10} fill="none" stroke="url(#tapSuccessGradient)" strokeWidth={2} strokeOpacity={0.5}>
-                  <animate attributeName="stroke-opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
-                </rect>
-              </g>
-            ) : (
-              <g>
-                <text x={80} y={55} fill="#64748b" fontSize={9} textAnchor="middle">
-                  No documentation
-                </text>
-                <text x={80} y={70} fill="#475569" fontSize={8} textAnchor="middle">
-                  Claude will guess
-                </text>
-                <circle cx={80} cy={90} r={12} fill="url(#tapHallucinationGlow)" opacity={0.5}>
-                  <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.5s" repeatCount="indefinite" />
-                </circle>
-                <text x={80} y={94} fill="#f87171" fontSize={8} textAnchor="middle">?</text>
-              </g>
-            )}
-
-            {/* Label */}
-            <text x={80} y={135} fill="#94a3b8" fontSize={9} textAnchor="middle" fontWeight="bold">
-              Tool Documentation
-            </text>
-          </g>
-
-          {/* === DATA FLOW ARROWS === */}
-          {/* Input arrow from docs to AI */}
-          <g>
-            <line x1={230} y1={150} x2={290} y2={140} stroke={promptMode === 'tool_aware' ? '#22d3ee' : '#f87171'} strokeWidth={2} strokeOpacity={0.6} strokeDasharray="6 4">
-              <animate attributeName="stroke-dashoffset" values="0;-20" dur="1s" repeatCount="indefinite" />
-            </line>
-            {/* Data particles flowing */}
-            {[...Array(3)].map((_, i) => (
-              <circle key={i} r={3} fill={promptMode === 'tool_aware' ? 'url(#tapDataGlow)' : 'url(#tapHallucinationGlow)'} filter="url(#tapDataParticleGlow)">
-                <animateMotion dur={`${1.2 + i * 0.3}s`} repeatCount="indefinite">
-                  <mpath href="#tapFlowPath1" />
-                </animateMotion>
-              </circle>
-            ))}
-            <path id="tapFlowPath1" d="M 230 150 Q 260 145 290 140" fill="none" stroke="none" />
-          </g>
-
-          {/* Output arrow from AI to terminal */}
-          <g>
-            <line x1={410} y1={140} x2={470} y2={130} stroke={promptMode === 'tool_aware' ? '#34d399' : '#f87171'} strokeWidth={2} strokeOpacity={0.6} strokeDasharray="6 4">
-              <animate attributeName="stroke-dashoffset" values="0;-20" dur="1s" repeatCount="indefinite" />
-            </line>
-            {[...Array(3)].map((_, i) => (
-              <circle key={i} r={3} fill={promptMode === 'tool_aware' ? 'url(#tapVerifiedGlow)' : 'url(#tapHallucinationGlow)'} filter="url(#tapDataParticleGlow)">
-                <animateMotion dur={`${1.2 + i * 0.3}s`} repeatCount="indefinite">
-                  <mpath href="#tapFlowPath2" />
-                </animateMotion>
-              </circle>
-            ))}
-            <path id="tapFlowPath2" d="M 410 140 Q 440 135 470 130" fill="none" stroke="none" />
-          </g>
-
-          {/* === COMMAND OUTPUT SECTION (Right) === */}
-          <g transform="translate(480, 80)">
-            {/* Terminal window */}
-            <rect x={0} y={0} width={200} height={145} rx={8} fill="url(#tapTerminalBg)" stroke="#334155" strokeWidth={1.5} />
-            <rect x={0} y={0} width={200} height={20} rx={8} fill="#1e293b" />
-            <rect x={0} y={12} width={200} height={8} fill="#1e293b" />
-
-            {/* Window controls */}
-            <circle cx={15} cy={10} r={4} fill="#ef4444" />
-            <circle cx={28} cy={10} r={4} fill="#f59e0b" />
-            <circle cx={41} cy={10} r={4} fill="#10b981" />
-
-            <text x={100} y={14} fill="#64748b" fontSize={8} textAnchor="middle" fontWeight="600">
-              Generated Commands
-            </text>
-
-            {/* Command entries with status indicators */}
-            {commands.slice(0, 4).map((cmd, i) => (
-              <g key={i} transform={`translate(8, ${28 + i * 28})`}>
-                {/* Status indicator with glow */}
-                <circle
-                  cx={8}
-                  cy={8}
-                  r={6}
-                  fill={
-                    cmd.status === 'correct' ? 'url(#tapSuccessGradient)' :
-                    cmd.status === 'partial' ? 'url(#tapWarningGradient)' :
-                    'url(#tapErrorGradient)'
-                  }
-                  filter="url(#tapStatusGlow)"
-                >
-                  <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
-                </circle>
-                {/* Checkmark or X */}
-                <text x={8} y={12} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">
-                  {cmd.status === 'correct' ? '\u2713' : cmd.status === 'partial' ? '~' : '\u2717'}
-                </text>
-                {/* Command text */}
-                <text x={22} y={7} fill="#e2e8f0" fontSize={7} fontFamily="monospace">
-                  $ {cmd.cmd.substring(0, 24)}{cmd.cmd.length > 24 ? '...' : ''}
-                </text>
-                <text x={22} y={18} fill="#64748b" fontSize={6}>
-                  {cmd.note.substring(0, 30)}{cmd.note.length > 30 ? '...' : ''}
-                </text>
-              </g>
-            ))}
-
-            {/* Terminal glow based on mode */}
-            <rect x={-3} y={-3} width={206} height={151} rx={10} fill="none"
-              stroke={promptMode === 'tool_aware' ? 'url(#tapSuccessGradient)' : 'url(#tapErrorGradient)'}
-              strokeWidth={2} strokeOpacity={0.4}>
-              <animate attributeName="stroke-opacity" values="0.2;0.5;0.2" dur="2s" repeatCount="indefinite" />
-            </rect>
-          </g>
-
-          {/* === CONFIDENCE GAUGE === */}
-          <g transform={`translate(${width/2}, 285)`}>
-            {/* Gauge background arc */}
-            <path
-              d="M -100 0 A 100 100 0 0 1 100 0"
-              fill="none"
-              stroke="#1e293b"
-              strokeWidth={18}
-            />
-            {/* Gradient arc showing level */}
-            <path
-              d="M -100 0 A 100 100 0 0 1 100 0"
-              fill="none"
-              stroke="url(#tapGaugeGradient)"
-              strokeWidth={16}
-              strokeLinecap="round"
-              strokeDasharray={`${Math.PI * 100 * metrics.confidenceLevel / 100} ${Math.PI * 100}`}
-            />
-            {/* Gauge tick marks */}
-            {[0, 25, 50, 75, 100].map((tick) => {
-              const angle = Math.PI * (1 - tick / 100);
-              const x1 = Math.cos(angle) * 85;
-              const y1 = -Math.sin(angle) * 85;
-              const x2 = Math.cos(angle) * 95;
-              const y2 = -Math.sin(angle) * 95;
-              return (
-                <line key={tick} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#475569" strokeWidth={2} />
-              );
-            })}
-            {/* Center display */}
-            <circle cx={0} cy={0} r={45} fill="#0f172a" stroke="#334155" strokeWidth={2} />
-            <text x={0} y={-8} fill="#f8fafc" fontSize={28} textAnchor="middle" fontWeight="bold">
-              {metrics.confidenceLevel}%
-            </text>
-            <text x={0} y={12} fill="#94a3b8" fontSize={10} textAnchor="middle">
-              Confidence
-            </text>
-            {/* Animated needle */}
-            <line
-              x1={0}
-              y1={0}
-              x2={Math.cos(Math.PI * (1 - metrics.confidenceLevel / 100)) * 75}
-              y2={-Math.sin(Math.PI * (1 - metrics.confidenceLevel / 100)) * 75}
-              stroke={metrics.confidenceLevel > 70 ? '#10b981' : metrics.confidenceLevel > 40 ? '#f59e0b' : '#ef4444'}
-              strokeWidth={3}
-              strokeLinecap="round"
-            />
-            <circle cx={0} cy={0} r={8} fill="#1e293b" stroke="#475569" strokeWidth={2} />
-          </g>
-
-          {/* === METRICS PANELS === */}
-          {/* Hallucination Risk Panel */}
-          <g transform="translate(100, 380)">
-            <rect x={0} y={0} width={200} height={70} rx={10} fill="#0f172a" stroke="#334155" strokeWidth={1} />
-            <text x={100} y={20} fill="#f87171" fontSize={10} textAnchor="middle" fontWeight="bold">
-              Hallucination Risk
-            </text>
-            {/* Progress bar background */}
-            <rect x={20} y={32} width={160} height={12} rx={6} fill="#1e293b" />
-            {/* Progress bar fill */}
-            <rect x={20} y={32} width={160 * metrics.hallucinationRisk / 100} height={12} rx={6}
-              fill="url(#tapErrorGradient)">
-              <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
-            </rect>
-            <text x={100} y={58} fill="#f8fafc" fontSize={14} textAnchor="middle" fontWeight="bold">
-              {metrics.hallucinationRisk}%
-            </text>
-          </g>
-
-          {/* Command Accuracy Panel */}
-          <g transform="translate(400, 380)">
-            <rect x={0} y={0} width={200} height={70} rx={10} fill="#0f172a" stroke="#334155" strokeWidth={1} />
-            <text x={100} y={20} fill="#34d399" fontSize={10} textAnchor="middle" fontWeight="bold">
-              Command Accuracy
-            </text>
-            {/* Progress bar background */}
-            <rect x={20} y={32} width={160} height={12} rx={6} fill="#1e293b" />
-            {/* Progress bar fill */}
-            <rect x={20} y={32} width={160 * metrics.commandAccuracy / 100} height={12} rx={6}
-              fill="url(#tapSuccessGradient)">
-              <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
-            </rect>
-            <text x={100} y={58} fill="#f8fafc" fontSize={14} textAnchor="middle" fontWeight="bold">
-              {metrics.commandAccuracy}%
-            </text>
-          </g>
-
-          {/* === DOCUMENTATION SOURCE INDICATORS === */}
-          <g transform="translate(100, 470)">
-            {/* --help indicator */}
-            <g transform="translate(0, 0)">
-              <rect x={0} y={0} width={180} height={35} rx={8} fill="#0f172a" stroke={showHelp ? '#22d3ee' : '#334155'} strokeWidth={showHelp ? 2 : 1} />
-              <circle cx={25} cy={17} r={10} fill={showHelp ? 'url(#tapToolSelectGlow)' : '#1e293b'} filter={showHelp ? 'url(#tapToolGlow)' : undefined}>
-                {showHelp && <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />}
-              </circle>
-              <text x={25} y={21} fill={showHelp ? '#22d3ee' : '#64748b'} fontSize={10} textAnchor="middle" fontWeight="bold">?</text>
-              <text x={105} y={21} fill="#e2e8f0" fontSize={10} textAnchor="middle">
-                --help queries {showHelp ? 'ON' : 'OFF'}
-              </text>
-            </g>
-          </g>
-
-          <g transform="translate(420, 470)">
-            {/* CLAUDE.md indicator */}
-            <g transform="translate(0, 0)">
-              <rect x={0} y={0} width={180} height={35} rx={8} fill="#0f172a" stroke={hasClaudemd ? '#f59e0b' : '#334155'} strokeWidth={hasClaudemd ? 2 : 1} />
-              <rect x={15} y={7} width={20} height={22} rx={3} fill={hasClaudemd ? 'url(#tapDocGradient)' : '#1e293b'} filter={hasClaudemd ? 'url(#tapToolGlow)' : undefined}>
-                {hasClaudemd && <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite" />}
-              </rect>
-              {hasClaudemd && (
-                <>
-                  <line x1={18} y1={13} x2={32} y2={13} stroke="#78350f" strokeWidth={1} />
-                  <line x1={18} y1={17} x2={28} y2={17} stroke="#78350f" strokeWidth={1} />
-                  <line x1={18} y1={21} x2={30} y2={21} stroke="#78350f" strokeWidth={1} />
-                </>
-              )}
-              <text x={105} y={21} fill="#e2e8f0" fontSize={10} textAnchor="middle">
-                CLAUDE.md {hasClaudemd ? 'Present' : 'Missing'}
-              </text>
-            </g>
-          </g>
-
-          {/* === AUTO-SUGGEST HINT === */}
-          {promptMode === 'naive' && !showHelp && (
-            <g transform={`translate(${width/2}, 530)`}>
-              <rect x={-180} y={-12} width={360} height={24} rx={8} fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" strokeWidth={1} strokeOpacity={0.5}>
-                <animate attributeName="stroke-opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
-              </rect>
-              <text x={0} y={4} fill="#f59e0b" fontSize={10} textAnchor="middle" fontWeight="600">
-                Tip: Add &quot;run tool --help first&quot; to your prompt for better accuracy
-              </text>
-            </g>
+          {promptMode === 'tool_aware' ? (
+            <>
+              <text x="-50" y="32" fill={colors.success} fontSize="8" fontFamily="monospace">## Commands</text>
+              <text x="-50" y="44" fill={colors.textSecondary} fontSize="7" fontFamily="monospace">deploy --env prod</text>
+              <text x="-50" y="56" fill={colors.textSecondary} fontSize="7" fontFamily="monospace">test --all</text>
+            </>
+          ) : (
+            <>
+              <text x="0" y="40" textAnchor="middle" fill={colors.textMuted} fontSize="10">?</text>
+              <text x="0" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="8">Claude guesses</text>
+            </>
           )}
-        </svg>
+        </g>
 
-        {interactive && (
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
-            <button
-              onClick={() => setPromptMode('naive')}
-              style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: promptMode === 'naive' ? `2px solid ${colors.hallucination}` : '1px solid rgba(255,255,255,0.2)',
-                background: promptMode === 'naive' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                color: colors.hallucination,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Naive Prompt
-            </button>
-            <button
-              onClick={() => setPromptMode('tool_aware')}
-              style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: promptMode === 'tool_aware' ? `2px solid ${colors.documented}` : '1px solid rgba(255,255,255,0.2)',
-                background: promptMode === 'tool_aware' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
-                color: colors.documented,
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Tool-Aware
-            </button>
-          </div>
-        )}
-      </div>
+        {/* Command Output Terminal - Right side */}
+        <g transform={`translate(${width * 0.65}, 150)`}>
+          <rect x="0" y="0" width={width * 0.32} height="120" rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+          <rect x="0" y="0" width={width * 0.32} height="18" rx="8" fill={colors.border} />
+          <rect x="0" y="10" width={width * 0.32} height="8" fill={colors.border} />
+          <circle cx="10" cy="9" r="3" fill="#ef4444" />
+          <circle cx="20" cy="9" r="3" fill="#f59e0b" />
+          <circle cx="30" cy="9" r="3" fill="#10b981" />
+          <text x={width * 0.16} y="12" textAnchor="middle" fill={colors.textMuted} fontSize="7">Commands</text>
+
+          {commands.map((cmd, i) => (
+            <g key={i} transform={`translate(8, ${25 + i * 23})`}>
+              <circle
+                cx="6"
+                cy="6"
+                r="5"
+                fill={cmd.status === 'correct' ? colors.success : cmd.status === 'partial' ? colors.warning : colors.error}
+              />
+              <text x="6" y="9" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">
+                {cmd.status === 'correct' ? '\u2713' : cmd.status === 'partial' ? '~' : '\u2717'}
+              </text>
+              <text x="16" y="5" fill={colors.textSecondary} fontSize="7" fontFamily="monospace">
+                $ {cmd.cmd.substring(0, 18)}{cmd.cmd.length > 18 ? '...' : ''}
+              </text>
+              <text x="16" y="15" fill={colors.textMuted} fontSize="6">
+                {cmd.note.substring(0, 22)}
+              </text>
+            </g>
+          ))}
+        </g>
+
+        {/* Confidence Gauge */}
+        <g transform={`translate(${width/2}, 320)`}>
+          {/* Background arc */}
+          <path
+            d="M -70 0 A 70 70 0 0 1 70 0"
+            fill="none"
+            stroke={colors.border}
+            strokeWidth="12"
+          />
+          {/* Colored arc */}
+          <path
+            d="M -70 0 A 70 70 0 0 1 70 0"
+            fill="none"
+            stroke="url(#tapGaugeGrad)"
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeDasharray={`${Math.PI * 70 * metrics.confidenceLevel / 100} ${Math.PI * 70}`}
+          />
+          {/* Center display */}
+          <circle cx="0" cy="0" r="35" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
+          <text x="0" y="-5" textAnchor="middle" fill={colors.textPrimary} fontSize="20" fontWeight="bold">
+            {metrics.confidenceLevel}%
+          </text>
+          <text x="0" y="12" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+            Confidence
+          </text>
+          {/* Needle */}
+          <line
+            x1="0"
+            y1="0"
+            x2={Math.cos(Math.PI * (1 - metrics.confidenceLevel / 100)) * 55}
+            y2={-Math.sin(Math.PI * (1 - metrics.confidenceLevel / 100)) * 55}
+            stroke={metrics.confidenceLevel > 70 ? colors.success : metrics.confidenceLevel > 40 ? colors.warning : colors.error}
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <circle cx="0" cy="0" r="5" fill={colors.bgPrimary} />
+        </g>
+
+        {/* Metrics bars */}
+        <g transform={`translate(${width * 0.1}, 380)`}>
+          {/* Hallucination Risk */}
+          <rect x="0" y="0" width={width * 0.35} height="40" rx="6" fill={colors.bgSecondary} />
+          <text x={width * 0.175} y="13" textAnchor="middle" fill={colors.error} fontSize="9" fontWeight="600">
+            Hallucination Risk
+          </text>
+          <rect x="10" y="20" width={width * 0.35 - 20} height="10" rx="4" fill={colors.border} />
+          <rect x="10" y="20" width={(width * 0.35 - 20) * metrics.hallucinationRisk / 100} height="10" rx="4" fill={colors.error} />
+          <text x={width * 0.175} y="38" textAnchor="middle" fill={colors.textPrimary} fontSize="10" fontWeight="bold">
+            {metrics.hallucinationRisk}%
+          </text>
+        </g>
+
+        <g transform={`translate(${width * 0.55}, 380)`}>
+          {/* Command Accuracy */}
+          <rect x="0" y="0" width={width * 0.35} height="40" rx="6" fill={colors.bgSecondary} />
+          <text x={width * 0.175} y="13" textAnchor="middle" fill={colors.success} fontSize="9" fontWeight="600">
+            Command Accuracy
+          </text>
+          <rect x="10" y="20" width={width * 0.35 - 20} height="10" rx="4" fill={colors.border} />
+          <rect x="10" y="20" width={(width * 0.35 - 20) * metrics.commandAccuracy / 100} height="10" rx="4" fill={colors.success} />
+          <text x={width * 0.175} y="38" textAnchor="middle" fill={colors.textPrimary} fontSize="10" fontWeight="bold">
+            {metrics.commandAccuracy}%
+          </text>
+        </g>
+
+        {/* Feature indicators */}
+        <g transform={`translate(${width * 0.25}, 440)`}>
+          <rect x="-35" y="0" width="70" height="25" rx="5" fill={colors.bgSecondary} stroke={showHelp ? colors.tool : colors.border} strokeWidth={showHelp ? 2 : 1} />
+          <text x="0" y="16" textAnchor="middle" fill={showHelp ? colors.tool : colors.textMuted} fontSize="8">
+            --help: {showHelp ? 'ON' : 'OFF'}
+          </text>
+        </g>
+
+        <g transform={`translate(${width * 0.75}, 440)`}>
+          <rect x="-45" y="0" width="90" height="25" rx="5" fill={colors.bgSecondary} stroke={hasClaudemd ? colors.warning : colors.border} strokeWidth={hasClaudemd ? 2 : 1} />
+          <text x="0" y="16" textAnchor="middle" fill={hasClaudemd ? colors.warning : colors.textMuted} fontSize="8">
+            CLAUDE.md: {hasClaudemd ? 'Yes' : 'No'}
+          </text>
+        </g>
+      </svg>
     );
   };
 
-  const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <div>
-        <label style={{
-          color: colors.textSecondary,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          cursor: 'pointer',
-          marginBottom: '12px',
-        }}>
-          <input
-            type="checkbox"
-            checked={showHelp}
-            onChange={(e) => setShowHelp(e.target.checked)}
-            style={{ width: '20px', height: '20px' }}
-          />
-          Instruct to run --help before unknown commands
-        </label>
-
-        <label style={{
-          color: colors.textSecondary,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          cursor: 'pointer',
-        }}>
-          <input
-            type="checkbox"
-            checked={hasClaudemd}
-            onChange={(e) => setHasClaudemd(e.target.checked)}
-            style={{ width: '20px', height: '20px' }}
-          />
-          Include repo-local CLAUDE.md with tool docs
-        </label>
-      </div>
-
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
       <div style={{
-        background: 'rgba(245, 158, 11, 0.2)',
-        padding: '12px',
-        borderRadius: '8px',
-        borderLeft: `3px solid ${colors.accent}`,
-      }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          {promptMode === 'naive'
-            ? 'Without tool documentation, Claude pattern-matches from similar tools and often guesses wrong flags.'
-            : 'Tool-aware prompting provides explicit documentation, dramatically reducing hallucinated commands.'}
-        </div>
-      </div>
-
-      {hasClaudemd && (
-        <div style={{
-          background: colors.bgCard,
-          padding: '12px',
-          borderRadius: '8px',
-          fontFamily: 'monospace',
-          fontSize: '11px',
-        }}>
-          <div style={{ color: colors.success, marginBottom: '8px' }}>CLAUDE.md example:</div>
-          <div style={{ color: colors.textSecondary }}>
-            ## Project Commands<br/>
-            <br/>
-            ### Deploy<br/>
-            deploy --environment [staging|prod]<br/>
-            deploy --environment staging --dry-run<br/>
-            <br/>
-            ### Testing<br/>
-            test --all  (run all tests)<br/>
-            test --watch  (watch mode)
-          </div>
-        </div>
-      )}
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderProgressBar = () => (
+  // Navigation dots
+  const renderNavDots = () => (
     <div style={{
       display: 'flex',
       justifyContent: 'center',
       gap: '8px',
-      padding: '16px',
-      flexWrap: 'wrap',
+      padding: '16px 0',
     }}>
-      {phaseOrder.map((p, index) => (
-        <div
+      {phaseOrder.map((p, i) => (
+        <button
           key={p}
           onClick={() => goToPhase(p)}
           style={{
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            background: phase === p ? colors.accent : phaseOrder.indexOf(phase) > index ? colors.success : 'rgba(255,255,255,0.2)',
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-            color: phase === p || phaseOrder.indexOf(phase) > index ? 'white' : colors.textMuted,
-            fontWeight: 'bold',
-            transition: 'all 0.2s ease',
+            transition: 'all 0.3s ease',
           }}
-          title={phaseLabels[p]}
-        >
-          {index + 1}
-        </div>
+          aria-label={phaseLabels[p]}
+        />
       ))}
     </div>
   );
 
-  const renderBottomBar = () => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    const isFirst = currentIndex === 0;
-    const isLast = currentIndex === phaseOrder.length - 1;
-
-    return (
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: '16px 24px',
-        background: colors.bgDark,
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1000,
-      }}>
-        <button
-          onClick={goBack}
-          disabled={isFirst}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.textMuted}`,
-            background: 'transparent',
-            color: isFirst ? colors.textMuted : colors.textPrimary,
-            cursor: isFirst ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          Back
-        </button>
-        <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
-          {phaseLabels[phase]}
-        </span>
-        <button
-          onClick={goNext}
-          disabled={isLast}
-          style={{
-            padding: '12px 24px',
-            borderRadius: '8px',
-            border: 'none',
-            background: isLast ? 'rgba(255,255,255,0.1)' : colors.accent,
-            color: isLast ? colors.textMuted : 'white',
-            cursor: isLast ? 'not-allowed' : 'pointer',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          Next
-        </button>
-      </div>
-    );
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
+
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Tool-Aware Prompting
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Will the agent know your custom commands?
-            </p>
-          </div>
 
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Claude Code can run shell commands, but it does not automatically know your
-                custom tools. Without explicit documentation, it will hallucinate flags
-                based on similar tools from training data.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Toggle between naive and tool-aware prompting to see the difference in command accuracy!
-              </p>
-            </div>
-          </div>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🔧🤖
         </div>
-        {renderBottomBar()}
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Tool-Aware Prompting
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Does Claude <span style={{ color: colors.error }}>guess</span> your custom commands or <span style={{ color: colors.success }}>know</span> them? The difference is between hallucinated flags and correct execution."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "When Claude encounters your custom deploy script, it pattern-matches from similar tools in its training data. Without explicit documentation, it will confidently generate plausible-looking but incorrect commands."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - AI Tool Integration Best Practices
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Tool-Aware Prompting
+        </button>
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+    const options = [
+      { id: 'a', text: 'Claude will figure out the right commands from context clues' },
+      { id: 'b', text: 'Without tool docs, Claude will hallucinate flags based on similar tools', correct: true },
+      { id: 'c', text: 'Claude will ask for help when unsure about commands' },
+    ];
 
-          <div style={{ padding: '16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What happens when Claude encounters a custom tool without documentation?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
           </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What happens when Claude encounters your custom CLI tool for the first time?
+          </h2>
+
+          {/* Visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <ToolAwareVisualization />
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
-  // PLAY PHASE
+  // PLAY PHASE - Interactive Tool-Aware Simulator
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Compare Approaches</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Toggle features and watch command accuracy change
-            </p>
-          </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Tool-Aware Prompting Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Toggle settings to see how documentation affects command accuracy.
+          </p>
 
+          {/* Main visualization */}
           <div style={{
             background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Start with naive prompting - note the hallucinated commands</li>
-              <li>Enable --help instructions - see confidence increase</li>
-              <li>Add CLAUDE.md - watch accuracy approach 100%</li>
-              <li>Compare the generated command quality</li>
-            </ul>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <ToolAwareVisualization interactive />
+            </div>
+
+            {/* Mode toggle */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '20px' }}>
+              <button
+                onClick={() => { setPromptMode('naive'); playSound('click'); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: `2px solid ${promptMode === 'naive' ? colors.error : colors.border}`,
+                  background: promptMode === 'naive' ? `${colors.error}22` : 'transparent',
+                  color: promptMode === 'naive' ? colors.error : colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Naive Prompt
+              </button>
+              <button
+                onClick={() => { setPromptMode('tool_aware'); playSound('click'); }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: `2px solid ${promptMode === 'tool_aware' ? colors.success : colors.border}`,
+                  background: promptMode === 'tool_aware' ? `${colors.success}22` : 'transparent',
+                  color: promptMode === 'tool_aware' ? colors.success : colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Tool-Aware
+              </button>
+            </div>
+
+            {/* Feature toggles */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                color: colors.textSecondary,
+              }}>
+                <input
+                  type="checkbox"
+                  checked={showHelp}
+                  onChange={(e) => setShowHelp(e.target.checked)}
+                  style={{ width: '20px', height: '20px' }}
+                />
+                Instruct Claude to run --help before unknown commands
+              </label>
+
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                color: colors.textSecondary,
+              }}>
+                <input
+                  type="checkbox"
+                  checked={hasClaudemd}
+                  onChange={(e) => setHasClaudemd(e.target.checked)}
+                  style={{ width: '20px', height: '20px' }}
+                />
+                Include CLAUDE.md with tool documentation
+              </label>
+            </div>
+
+            {/* Info box */}
+            <div style={{
+              background: `${colors.accent}22`,
+              padding: '16px',
+              borderRadius: '8px',
+              marginTop: '20px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {promptMode === 'naive'
+                  ? 'Without documentation, Claude pattern-matches from similar tools and often guesses wrong flags.'
+                  : 'Tool-aware prompting provides explicit documentation, dramatically reducing hallucinated commands.'}
+              </p>
+            </div>
           </div>
+
+          {/* Discovery prompt */}
+          {calculateMetrics().commandAccuracy >= 80 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Excellent! With full documentation, command accuracy reaches {calculateMetrics().commandAccuracy}%!
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Principle
+          </button>
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // REVIEW PHASE
   if (phase === 'review') {
-    const wasCorrect = prediction === 'hallucinate';
-
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Without tool documentation, Claude will hallucinate flags and syntax based on
-              similar tools from training. It does not ask for help - it confidently produces
-              plausible-looking but incorrect commands.
-            </p>
-          </div>
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why LLMs Hallucinate Commands
+          </h2>
 
           <div style={{
             background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Why Hallucination Happens</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Pattern Matching:</strong> Claude has
-                seen thousands of CLI tools. When it sees your custom deploy script, it
-                pattern-matches to similar tools like kubectl, docker, or npm.
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Pattern Matching from Training</strong>
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Confident Completion:</strong> LLMs are
-                trained to produce complete, confident responses. Saying &quot;I do not know this flag&quot;
-                is not the typical training signal.
+              <p style={{ marginBottom: '16px' }}>
+                Claude has seen thousands of CLI tools during training. When it encounters your custom deploy script, it <span style={{ color: colors.error }}>pattern-matches</span> to similar tools like kubectl, docker, or npm - generating plausible but potentially incorrect flags.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Confident Completion</strong>
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>No Self-Verification:</strong> Without
-                explicit instruction to run --help first, Claude has no way to verify its guess
-                against actual tool documentation.
+                LLMs are trained to produce complete, confident responses. Saying "I don't know this flag" is not the typical training signal - so Claude will <span style={{ color: colors.error }}>confidently generate</span> what seems right.
               </p>
             </div>
           </div>
+
+          <div style={{
+            background: `${colors.success}11`,
+            border: `1px solid ${colors.success}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              The Solution: Explicit Documentation
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              Tool-aware prompting works by:
+            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li>Providing explicit documentation that constrains valid options</li>
+              <li>Instructing Claude to run --help before assuming flags</li>
+              <li>Using CLAUDE.md for persistent, repo-specific context</li>
+            </ul>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover CLAUDE.md
+          </button>
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Claude remembers commands across sessions automatically' },
+      { id: 'b', text: 'A CLAUDE.md file provides persistent, version-controlled tool documentation', correct: true },
+      { id: 'c', text: 'Claude learns from errors and improves over time' },
+    ];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              How do you maintain tool documentation across sessions?
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Persistent Documentation
             </p>
           </div>
 
-          {renderVisualization(false)}
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            How do you maintain tool documentation across sessions without repeating yourself?
+          </h2>
 
-          <div style={{ padding: '16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What is the best way to ensure Claude knows your tools consistently?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Every new conversation starts fresh. Claude doesn't remember your custom commands from yesterday's session...
+            </p>
+            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
+              Session 1: "Use deploy --environment prod"<br/>
+              Session 2: "Use deploy --environment prod" (again?)<br/>
+              Session 3: ... (repetitive!)
             </div>
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See CLAUDE.md in Action
+            </button>
+          )}
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1273,155 +1140,333 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>CLAUDE.md Pattern</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Repository-local documentation for persistent tool awareness
-            </p>
-          </div>
 
-          {renderVisualization(true)}
-          {renderControls()}
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            CLAUDE.md: Persistent Tool Documentation
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            A special file that Claude reads automatically in your repository
+          </p>
 
           <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Insight:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              CLAUDE.md lives in your repository and is automatically loaded. It provides
-              consistent context across all sessions without repeating yourself. Include
-              all custom commands, flags, and common workflows.
-            </p>
+            {/* CLAUDE.md example */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              fontFamily: 'monospace',
+              fontSize: '12px',
+              marginBottom: '20px',
+            }}>
+              <div style={{ color: colors.success, marginBottom: '8px' }}>CLAUDE.md</div>
+              <div style={{ color: colors.textSecondary }}>
+                <span style={{ color: colors.accent }}>## Project Commands</span><br/><br/>
+                <span style={{ color: colors.textMuted }}>### Deploy</span><br/>
+                deploy --environment [staging|prod]<br/>
+                deploy --environment staging --dry-run<br/><br/>
+                <span style={{ color: colors.textMuted }}>### Testing</span><br/>
+                test --all  (run all tests)<br/>
+                test --watch  (watch mode)<br/><br/>
+                <span style={{ color: colors.error }}>### Dangerous Commands</span><br/>
+                WARNING: db:reset destroys all data!<br/>
+                Use db:migrate for safe schema changes.
+              </div>
+            </div>
+
+            {/* Benefits */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+              }}>
+                <h4 style={{ color: colors.success, marginBottom: '8px', fontSize: '14px' }}>Persistent</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  Automatically loaded in every session - no repetition needed
+                </p>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+              }}>
+                <h4 style={{ color: colors.tool, marginBottom: '8px', fontSize: '14px' }}>Version Controlled</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  Evolves with your project in git
+                </p>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+              }}>
+                <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: '14px' }}>Team Shared</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  Everyone on the team benefits from the same docs
+                </p>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+              }}>
+                <h4 style={{ color: colors.confidence, marginBottom: '8px', fontSize: '14px' }}>Contextual</h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  Project-specific commands, not generic patterns
+                </p>
+              </div>
+            </div>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Best Practices
+          </button>
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TWIST REVIEW PHASE
   if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'claudemd';
-
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              A CLAUDE.md file in your repository provides persistent, version-controlled
-              documentation that Claude reads automatically. No need to repeat tool docs
-              in every conversation.
-            </p>
-          </div>
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>CLAUDE.md Best Practices</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Tool Reference:</strong> Document all
-                custom scripts with full flag lists and example invocations.
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            CLAUDE.md Best Practices
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📋</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Complete Command Reference</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Document all custom scripts with: command name, available flags, required vs optional arguments, and working examples that can be copy-pasted.
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Workflow Patterns:</strong> Include
-                common multi-step workflows (build then test then deploy) with exact commands.
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔄</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Workflow Patterns</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Include common multi-step workflows (build then test then deploy) with exact commands and dependencies between steps.
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Gotchas and Warnings:</strong> Note
-                dangerous commands, required environment variables, and common mistakes.
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>warning</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Warnings and Gotchas</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Note dangerous commands, required environment variables, common mistakes, and safe alternatives for destructive operations.
               </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Version Control:</strong> CLAUDE.md
-                evolves with your project. Update it when tools change.
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>sync</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Keep It Updated</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                CLAUDE.md should evolve with your project. When tools change, update the docs. Outdated documentation can be worse than none.
               </p>
             </div>
           </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    check
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
           </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
             </div>
-          ))}
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Tool-Aware Prompting Helps:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
         </div>
-        {renderBottomBar()}
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1429,125 +1474,214 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
+      const passed = testScore >= 7;
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
           {renderProgressBar()}
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
+              fontSize: '80px',
+              marginBottom: '24px',
             }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+              {passed ? 'trophy' : 'book'}
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand tool-aware prompting and CLAUDE.md!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
           </div>
-          {renderBottomBar()}
+          {renderNavDots()}
         </div>
       );
     }
 
-    const currentQ = testQuestions[currentTestQuestion];
+    const question = testQuestions[currentQuestion];
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button
-                  key={oIndex}
-                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {opt.text}
-                </button>
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Previous
-            </button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
               <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: colors.accent,
-                  color: 'white',
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
                   cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
                 }}
               >
                 Next
               </button>
             ) : (
               <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
                   color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
                 }}
               >
                 Submit Test
@@ -1555,6 +1689,8 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
             )}
           </div>
         </div>
+
+        {renderNavDots()}
       </div>
     );
   }
@@ -1562,29 +1698,88 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
         {renderProgressBar()}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Achievement</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              You understand tool-aware prompting for Claude Code
-            </p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>LLMs hallucinate CLI flags without explicit documentation</li>
-              <li>Instruct Claude to run --help before unknown tools</li>
-              <li>CLAUDE.md provides persistent, repo-local context</li>
-              <li>Document custom tools with flags, examples, and warnings</li>
-              <li>Command confidence correlates with documentation quality</li>
-            </ul>
-          </div>
-          {renderVisualization(true)}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          trophy
         </div>
-        {renderBottomBar()}
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Tool-Aware Prompting Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how to prevent LLM hallucinations with explicit tool documentation.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'LLMs pattern-match from training, hallucinating unfamiliar tools',
+              'Instruct Claude to run --help before unknown commands',
+              'CLAUDE.md provides persistent, repo-local documentation',
+              'Document custom tools with flags, examples, and warnings',
+              'Tool-aware prompting dramatically improves accuracy',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>check</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
     );
   }

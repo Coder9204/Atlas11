@@ -1,186 +1,306 @@
+'use client';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-// ─────────────────────────────────────────────────────────────
-// HeliumBalloonCarRenderer – Teach acceleration fields & buoyancy
-// ─────────────────────────────────────────────────────────────
+// ============================================================================
+// HELIUM BALLOON CAR RENDERER - PREMIUM PHYSICS GAME
+// Acceleration Fields & Buoyancy: Why helium balloons move forward in cars
+// ============================================================================
 // Physics: In accelerating car, helium balloon moves FORWARD!
-// Air is denser than helium → pushed backward by inertia
-// Creates pressure gradient → balloon "rises" toward lower pressure
-// Demonstrates equivalence principle: acceleration ≈ gravity field
+// Air is denser than helium -> pushed backward by inertia
+// Creates pressure gradient -> balloon "rises" toward lower pressure
+// Demonstrates equivalence principle: acceleration = gravity field
+
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Insight',
+  'transfer': 'Apply',
+  'test': 'Test',
+  'mastery': 'Mastery'
+};
+
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
 
 interface HeliumBalloonCarRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  onComplete?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase?: string) => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
-
-const phaseOrder: Phase[] = [
-  'hook',
-  'predict',
-  'play',
-  'review',
-  'twist_predict',
-  'twist_play',
-  'twist_review',
-  'transfer',
-  'test',
-  'mastery',
+// ============================================================================
+// REAL-WORLD APPLICATIONS DATA
+// ============================================================================
+const applications = [
+  {
+    id: 'weather_balloons',
+    icon: '🎈',
+    title: 'Weather Balloons',
+    subtitle: 'Meteorology',
+    color: '#06B6D4',
+    description: 'Weather balloons (radiosondes) exploit the same buoyancy physics demonstrated by helium balloons in cars. Filled with helium or hydrogen, these balloons rise through the atmosphere at controlled rates.',
+    physics: 'Weather balloons demonstrate buoyancy in a compressible fluid. As the balloon ascends, atmospheric pressure decreases, causing expansion. The same pressure gradient physics that pushes a helium balloon forward in an accelerating car causes weather balloons to rise.',
+    insight: 'Over 900 weather balloons are launched globally twice daily, reaching altitudes of 35 km before bursting.',
+    stats: [
+      { value: '35 km', label: 'Max Altitude' },
+      { value: '900+', label: 'Daily Launches' },
+      { value: '2 hrs', label: 'Flight Duration' },
+    ],
+  },
+  {
+    id: 'airships',
+    icon: '🚁',
+    title: 'Airships & Blimps',
+    subtitle: 'Lighter-than-Air Flight',
+    color: '#8B5CF6',
+    description: 'Modern airships leverage helium buoyancy for extended loiter times that fixed-wing aircraft cannot match. Ballonets adjust buoyancy by changing the helium-to-air ratio.',
+    physics: 'Airships demonstrate controlled buoyancy in air. The same physics that makes a helium balloon lean forward in an accelerating car allows airships to achieve stable hovering without thrust.',
+    insight: 'Electric-powered airships promise zero-emission cargo transport for remote regions without runway infrastructure.',
+    stats: [
+      { value: '24+ hrs', label: 'Endurance' },
+      { value: '3,000 m', label: 'Altitude' },
+      { value: '75 mph', label: 'Speed' },
+    ],
+  },
+  {
+    id: 'accelerometers',
+    icon: '📱',
+    title: 'Accelerometer Physics',
+    subtitle: 'Inertial Sensors',
+    color: '#F59E0B',
+    description: 'Accelerometers in smartphones detect acceleration using the same physics as the helium balloon. MEMS accelerometers use proof masses that respond to effective gravity fields.',
+    physics: 'The helium balloon demonstrates Einstein\'s equivalence principle: acceleration is indistinguishable from gravity. Accelerometers exploit this by measuring how proof masses respond to effective gravity fields.',
+    insight: 'Your smartphone contains accelerometers that can detect orientation, count steps, and trigger airbags in milliseconds.',
+    stats: [
+      { value: '0.001 g', label: 'Resolution' },
+      { value: '10,000 g', label: 'Shock Survival' },
+      { value: '< $1', label: 'Sensor Cost' },
+    ],
+  },
+  {
+    id: 'centrifuges',
+    icon: '🔬',
+    title: 'Centrifuge Separation',
+    subtitle: 'Laboratory Science',
+    color: '#10B981',
+    description: 'Centrifuges create artificial gravity fields through rotation, separating substances by density. Blood components, DNA, and chemical mixtures separate because denser materials move outward.',
+    physics: 'In a centrifuge, the rotational acceleration creates a radial pressure gradient. Just like a helium balloon moves forward in an accelerating car, less dense components move toward the center of rotation.',
+    insight: 'Medical centrifuges can generate forces up to 100,000 times gravity, enabling molecular-level separation.',
+    stats: [
+      { value: '100,000 g', label: 'Max Force' },
+      { value: '15 min', label: 'Blood Separation' },
+      { value: '99.9%', label: 'Purity' },
+    ],
+  },
 ];
 
-function isValidPhase(p: string): p is Phase {
-  return phaseOrder.includes(p as Phase);
-}
+// ============================================================================
+// TEST QUESTIONS (10 questions)
+// ============================================================================
+const testQuestions = [
+  {
+    question: 'When a car accelerates forward, which way does a helium balloon move?',
+    options: [
+      { text: 'Backward (like everything else)', correct: false },
+      { text: 'Forward (opposite to everything else)', correct: true },
+      { text: 'Stays perfectly still', correct: false },
+      { text: 'Moves side to side', correct: false },
+    ],
+    explanation: 'The balloon moves forward because helium is less dense than air. Air is pushed backward, creating a pressure gradient that pushes the balloon forward.',
+  },
+  {
+    question: 'Why does the helium balloon behave opposite to a heavy pendulum?',
+    options: [
+      { text: 'Helium is magnetic', correct: false },
+      { text: 'The string is different', correct: false },
+      { text: 'Helium is less dense than surrounding air', correct: true },
+      { text: 'The balloon has more surface area', correct: false },
+    ],
+    explanation: 'Helium\'s low density (0.18 kg/m3) compared to air (1.2 kg/m3) causes it to respond opposite to dense objects.',
+  },
+  {
+    question: 'What creates the forward force on the balloon during acceleration?',
+    options: [
+      { text: 'Wind from outside', correct: false },
+      { text: 'Air pressure gradient inside the car', correct: true },
+      { text: 'Static electricity', correct: false },
+      { text: 'The car\'s heating system', correct: false },
+    ],
+    explanation: 'Acceleration creates a pressure gradient with high pressure at the back and low pressure at the front. The balloon moves toward the low pressure region.',
+  },
+  {
+    question: 'What physics principle explains why acceleration affects objects like gravity?',
+    options: [
+      { text: 'Newton\'s First Law', correct: false },
+      { text: 'Conservation of Energy', correct: false },
+      { text: 'Einstein\'s Equivalence Principle', correct: true },
+      { text: 'Hooke\'s Law', correct: false },
+    ],
+    explanation: 'Einstein\'s Equivalence Principle states that acceleration is locally indistinguishable from gravity.',
+  },
+  {
+    question: 'What happens to the balloon when the car brakes (decelerates)?',
+    options: [
+      { text: 'Moves forward even faster', correct: false },
+      { text: 'Moves backward', correct: true },
+      { text: 'Stays perfectly still', correct: false },
+      { text: 'Pops from pressure', correct: false },
+    ],
+    explanation: 'During braking, the pressure gradient reverses. High pressure at front, low at back, so the balloon tilts backward.',
+  },
+  {
+    question: 'In the car\'s reference frame, what pseudo-force do objects experience during forward acceleration?',
+    options: [
+      { text: 'A forward force', correct: false },
+      { text: 'A backward force', correct: true },
+      { text: 'An upward force', correct: false },
+      { text: 'No force', correct: false },
+    ],
+    explanation: 'In the accelerating reference frame, objects experience a pseudo-force opposite to the acceleration direction.',
+  },
+  {
+    question: 'If you put a bubble in a bottle of water and accelerate forward, which way does the bubble go?',
+    options: [
+      { text: 'Backward (with inertia)', correct: false },
+      { text: 'Forward (like the helium balloon)', correct: true },
+      { text: 'Straight up', correct: false },
+      { text: 'Straight down', correct: false },
+    ],
+    explanation: 'Air bubbles in water behave exactly like helium in air - both are less dense than their surroundings.',
+  },
+  {
+    question: 'Why doesn\'t this balloon effect happen when the car moves at constant speed?',
+    options: [
+      { text: 'Air stops moving', correct: false },
+      { text: 'No acceleration means no pressure gradient', correct: true },
+      { text: 'The balloon pops', correct: false },
+      { text: 'Friction stops it', correct: false },
+    ],
+    explanation: 'Constant velocity means zero acceleration. No acceleration means no pressure gradient forms inside the car.',
+  },
+  {
+    question: 'How is the balloon in a car similar to a balloon in an elevator accelerating upward?',
+    options: [
+      { text: 'Both pop from pressure', correct: false },
+      { text: 'Both rise relative to the floor', correct: false },
+      { text: 'Both experience enhanced effective gravity making balloon rise more', correct: true },
+      { text: 'They behave completely differently', correct: false },
+    ],
+    explanation: 'Both situations create an enhanced effective gravity field, increasing the buoyant force on the balloon.',
+  },
+  {
+    question: 'What would happen to the helium balloon in a car turning left?',
+    options: [
+      { text: 'Moves left (into the turn)', correct: true },
+      { text: 'Moves right (away from turn)', correct: false },
+      { text: 'Stays centered', correct: false },
+      { text: 'Moves backward', correct: false },
+    ],
+    explanation: 'During a left turn, the centripetal acceleration points left. The balloon moves toward the center of the turn (left).',
+  },
+];
 
-// Slider component for consistent styling
-interface SliderProps {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
-  onChange: (value: number) => void;
-  color?: string;
-}
-
-const Slider: React.FC<SliderProps> = ({ label, value, min, max, step, unit, onChange, color = '#3b82f6' }) => (
-  <div style={{ marginBottom: '1rem', width: '100%' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-      <label style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 500 }}>{label}</label>
-      <span style={{ fontSize: '0.85rem', color: color, fontWeight: 600 }}>{value.toFixed(1)} {unit}</span>
-    </div>
-    <input
-      type="range"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onChange={(e) => onChange(parseFloat(e.target.value))}
-      style={{
-        width: '100%',
-        height: '8px',
-        borderRadius: '4px',
-        background: `linear-gradient(to right, ${color} 0%, ${color} ${((value - min) / (max - min)) * 100}%, #475569 ${((value - min) / (max - min)) * 100}%, #475569 100%)`,
-        appearance: 'none',
-        cursor: 'pointer',
-        outline: 'none',
-      }}
-    />
-  </div>
-);
-
-// Premium sound system
-const playGameSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    const sounds = {
-      click: { freq: 600, duration: 0.08, type: 'sine' as OscillatorType, vol: 0.15 },
-      success: { freq: 880, duration: 0.15, type: 'sine' as OscillatorType, vol: 0.2 },
-      failure: { freq: 220, duration: 0.2, type: 'triangle' as OscillatorType, vol: 0.15 },
-      transition: { freq: 440, duration: 0.12, type: 'sine' as OscillatorType, vol: 0.15 },
-      complete: { freq: 660, duration: 0.25, type: 'sine' as OscillatorType, vol: 0.2 },
-    };
-
-    const s = sounds[type];
-    oscillator.frequency.value = s.freq;
-    oscillator.type = s.type;
-    gainNode.gain.setValueAtTime(s.vol, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + s.duration);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + s.duration);
-  } catch {}
-};
-
-const playSound = (frequency: number, duration: number, type: OscillatorType = 'sine', volume = 0.3) => {
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    oscillator.frequency.value = frequency;
-    oscillator.type = type;
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
-  } catch {}
-};
-
-// ─────────────────────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────────────────────
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 export default function HeliumBalloonCarRenderer({
-  phase,
+  onComplete,
+  onGameEvent,
+  gamePhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer
 }: HeliumBalloonCarRendererProps) {
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistResult, setShowTwistResult] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<Record<number, number>>({});
-  const [testSubmitted, setTestSubmitted] = useState(false);
+  // Core state
+  const [phase, setPhase] = useState<Phase>('hook');
+  const [prediction, setPrediction] = useState<number | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
+  const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
+  const [testIndex, setTestIndex] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
   // Simulation state
   const [carState, setCarState] = useState<'stopped' | 'accelerating' | 'braking' | 'constant'>('stopped');
-  const [balloonAngle, setBalloonAngle] = useState(0); // degrees from vertical
+  const [balloonAngle, setBalloonAngle] = useState(0);
   const [pendulumAngle, setPendulumAngle] = useState(0);
-  const [carPosition, setCarPosition] = useState(50);
   const [hasAccelerated, setHasAccelerated] = useState(false);
-
-  // Interactive play phase parameters
-  const [carAcceleration, setCarAcceleration] = useState(5); // m/s^2 (0-15)
-  const [balloonBuoyancy, setBalloonBuoyancy] = useState(0.8); // relative buoyancy (0.1-2.0)
-  const [airDensity, setAirDensity] = useState(1.2); // kg/m^3 (0.5-2.0)
+  const [carAcceleration, setCarAcceleration] = useState(5);
+  const [balloonBuoyancy, setBalloonBuoyancy] = useState(0.8);
   const [showForceVectors, setShowForceVectors] = useState(true);
   const [showPressureGradient, setShowPressureGradient] = useState(true);
-  const [animationTime, setAnimationTime] = useState(0);
 
-  // Twist state - compare with heavy pendulum
+  // Twist state
   const [twistCarState, setTwistCarState] = useState<'stopped' | 'accelerating'>('stopped');
   const [twistBalloonAngle, setTwistBalloonAngle] = useState(0);
   const [twistPendulumAngle, setTwistPendulumAngle] = useState(0);
-
-  // Twist play phase extended state
   const [twistMode, setTwistMode] = useState<'accelerate' | 'brake' | 'turn_left' | 'turn_right'>('accelerate');
-  const [showWaterBucket, setShowWaterBucket] = useState(false);
-  const [showWeightComparison, setShowWeightComparison] = useState(false);
-  const [twistAnimationTime, setTwistAnimationTime] = useState(0);
-  const [bucketAngle, setBucketAngle] = useState(0);
-  const [weightAngle, setWeightAngle] = useState(0);
 
+  // Animation refs
+  const animationRef = useRef<number | null>(null);
+  const navigationLockRef = useRef(false);
+
+  // Responsive detection
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
+  // ============================================================================
+  // DESIGN SYSTEM
+  // ============================================================================
+  const colors = {
+    primary: '#a855f7',       // purple-500
+    primaryDark: '#9333ea',   // purple-600
+    accent: '#3b82f6',        // blue-500
+    secondary: '#06b6d4',     // cyan-500
+    success: '#10b981',       // emerald-500
+    danger: '#ef4444',        // red-500
+    warning: '#f59e0b',       // amber-500
+    bgDark: '#020617',        // slate-950
+    bgCard: '#0f172a',        // slate-900
+    bgCardLight: '#1e293b',   // slate-800
+    textPrimary: '#f8fafc',   // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b',     // slate-500
+    border: '#334155',        // slate-700
+    borderLight: '#475569',   // slate-600
+    balloon: '#a855f7',
+    pendulum: '#ef4444',
+  };
+
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -194,468 +314,337 @@ export default function HeliumBalloonCarRenderer({
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  const goToPhase = (newPhase: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
+  // ============================================================================
+  // SOUND SYSTEM
+  // ============================================================================
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete' = 'click') => {
+    if (typeof window === 'undefined') return;
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
 
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not available */ }
+  }, []);
+
+  // ============================================================================
+  // EVENT SYSTEM
+  // ============================================================================
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, data });
+    }
+  }, [onGameEvent]);
+
+  // ============================================================================
+  // NAVIGATION
+  // ============================================================================
+  const goToPhase = useCallback((newPhase: Phase) => {
     if (navigationLockRef.current) return;
     navigationLockRef.current = true;
     setTimeout(() => { navigationLockRef.current = false; }, 400);
 
-    onPhaseComplete?.();
-    playGameSound('transition');
-  };
+    playSound('transition');
+    setPhase(newPhase);
+    emitEvent('phase_change', { from: phase, to: newPhase });
+    if (onPhaseComplete) onPhaseComplete(newPhase);
+  }, [phase, playSound, onPhaseComplete, emitEvent]);
 
-  // Accelerate the car - uses interactive parameters
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [phase, goToPhase, onComplete]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // Sync with external phase control
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase, phase]);
+
+  // Cleanup animation
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  // ============================================================================
+  // SIMULATION FUNCTIONS
+  // ============================================================================
   const accelerateCar = useCallback(() => {
     if (carState !== 'stopped') return;
     setCarState('accelerating');
     setHasAccelerated(true);
-
-    playGameSound('transition');
+    playSound('transition');
 
     let angle = 0;
-    let pos = carPosition;
-    let time = 0;
-
-    // Calculate max angle based on acceleration and buoyancy
-    // Higher acceleration = more tilt, higher buoyancy = more responsive
     const maxAngle = Math.min(carAcceleration * balloonBuoyancy * 3, 45);
-    // Air density affects how quickly the pressure gradient forms
-    const angleIncrement = (carAcceleration / 5) * (airDensity / 1.2) * 1.5;
+    const angleIncrement = (carAcceleration / 5) * 1.5;
 
-    const interval = setInterval(() => {
-      time += 40;
-      setAnimationTime(time);
-
-      // Balloon tilts FORWARD (positive angle)
+    const animate = () => {
       angle = Math.min(angle + angleIncrement, maxAngle);
       setBalloonAngle(angle);
-
-      // Pendulum tilts BACKWARD (negative angle) - not affected by buoyancy
       setPendulumAngle(-angle / balloonBuoyancy);
 
-      // Car moves - speed based on acceleration
-      pos += carAcceleration * 0.4;
-      setCarPosition(Math.min(pos, 350));
-
-      if (angle >= maxAngle) {
+      if (angle < maxAngle) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
         setTimeout(() => {
-          // Return to neutral
           setCarState('constant');
           let returnAngle = angle;
-          const returnInterval = setInterval(() => {
+          const returnAnimate = () => {
             returnAngle *= 0.9;
             setBalloonAngle(returnAngle);
             setPendulumAngle(-returnAngle / balloonBuoyancy);
-            if (Math.abs(returnAngle) < 0.5) {
+            if (Math.abs(returnAngle) > 0.5) {
+              animationRef.current = requestAnimationFrame(returnAnimate);
+            } else {
               setBalloonAngle(0);
               setPendulumAngle(0);
-              setAnimationTime(0);
-              clearInterval(returnInterval);
             }
-          }, 50);
+          };
+          animationRef.current = requestAnimationFrame(returnAnimate);
         }, 500);
-        clearInterval(interval);
       }
-    }, 40);
-  }, [carState, carPosition, carAcceleration, balloonBuoyancy, airDensity]);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+  }, [carState, carAcceleration, balloonBuoyancy, playSound]);
 
   const brakeCar = useCallback(() => {
     if (carState !== 'constant') return;
     setCarState('braking');
-
-    playGameSound('click');
+    playSound('click');
 
     let angle = 0;
-    let time = 0;
     const maxAngle = Math.min(carAcceleration * balloonBuoyancy * 2.5, 35);
-    const angleIncrement = (carAcceleration / 5) * (airDensity / 1.2) * 1.5;
+    const angleIncrement = (carAcceleration / 5) * 1.5;
 
-    const interval = setInterval(() => {
-      time += 40;
-      setAnimationTime(time);
-
-      // Balloon tilts BACKWARD during braking
+    const animate = () => {
       angle = Math.min(angle + angleIncrement, maxAngle);
       setBalloonAngle(-angle);
       setPendulumAngle(angle / balloonBuoyancy);
 
-      if (angle >= maxAngle) {
+      if (angle < maxAngle) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
         setTimeout(() => {
           setCarState('stopped');
           let returnAngle = angle;
-          const returnInterval = setInterval(() => {
+          const returnAnimate = () => {
             returnAngle *= 0.9;
             setBalloonAngle(-returnAngle);
             setPendulumAngle(returnAngle / balloonBuoyancy);
-            if (Math.abs(returnAngle) < 0.5) {
+            if (Math.abs(returnAngle) > 0.5) {
+              animationRef.current = requestAnimationFrame(returnAnimate);
+            } else {
               setBalloonAngle(0);
               setPendulumAngle(0);
-              setAnimationTime(0);
-              clearInterval(returnInterval);
             }
-          }, 50);
+          };
+          animationRef.current = requestAnimationFrame(returnAnimate);
         }, 500);
-        clearInterval(interval);
       }
-    }, 40);
-  }, [carState, carAcceleration, balloonBuoyancy, airDensity]);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+  }, [carState, carAcceleration, balloonBuoyancy, playSound]);
 
-  const resetSimulation = () => {
+  const resetSimulation = useCallback(() => {
     setCarState('stopped');
     setBalloonAngle(0);
     setPendulumAngle(0);
-    setCarPosition(50);
     setHasAccelerated(false);
-  };
+  }, []);
 
-  // Twist simulation with extended modes
   const runTwistSimulation = useCallback(() => {
     if (twistCarState !== 'stopped') return;
     setTwistCarState('accelerating');
-
-    playGameSound('transition');
+    playSound('transition');
 
     let angle = 0;
-    let bucketAng = 0;
-    let weightAng = 0;
-    let time = 0;
-
-    const interval = setInterval(() => {
-      time += 40;
-      setTwistAnimationTime(time);
+    const animate = () => {
       angle = Math.min(angle + 1.5, 25);
-      bucketAng = Math.min(bucketAng + 1.2, 20);
-      weightAng = Math.min(weightAng + 1.8, 30);
 
-      // Direction depends on mode
       switch (twistMode) {
         case 'accelerate':
-          // Balloon forward, pendulum backward
           setTwistBalloonAngle(angle);
           setTwistPendulumAngle(-angle);
-          setBucketAngle(-bucketAng); // Bucket leans backward
-          setWeightAngle(-weightAng); // Weight swings backward
           break;
         case 'brake':
-          // Balloon backward, pendulum forward
           setTwistBalloonAngle(-angle);
           setTwistPendulumAngle(angle);
-          setBucketAngle(bucketAng);
-          setWeightAngle(weightAng);
           break;
         case 'turn_left':
-          // Balloon left (into turn), pendulum right (away from turn)
           setTwistBalloonAngle(-angle * 0.8);
           setTwistPendulumAngle(angle * 0.8);
-          setBucketAngle(bucketAng);
-          setWeightAngle(weightAng);
           break;
         case 'turn_right':
-          // Balloon right (into turn), pendulum left
           setTwistBalloonAngle(angle * 0.8);
           setTwistPendulumAngle(-angle * 0.8);
-          setBucketAngle(-bucketAng);
-          setWeightAngle(-weightAng);
           break;
       }
 
-      if (angle >= 25) {
-        clearInterval(interval);
+      if (angle < 25) {
+        animationRef.current = requestAnimationFrame(animate);
       }
-    }, 40);
-  }, [twistCarState, twistMode]);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+  }, [twistCarState, twistMode, playSound]);
 
   const resetTwist = useCallback(() => {
     setTwistCarState('stopped');
     setTwistBalloonAngle(0);
     setTwistPendulumAngle(0);
-    setBucketAngle(0);
-    setWeightAngle(0);
-    setTwistAnimationTime(0);
   }, []);
 
-  const handlePrediction = (choice: string) => {
-    setPrediction(choice);
-    playGameSound('click');
-  };
+  // ============================================================================
+  // PROGRESS BAR COMPONENT
+  // ============================================================================
+  const renderProgressBar = (current: number, total: number, color: string = colors.primary) => (
+    <div style={{
+      width: '100%',
+      height: '8px',
+      background: colors.bgCardLight,
+      borderRadius: '4px',
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${(current / total) * 100}%`,
+        background: `linear-gradient(90deg, ${color}, ${color}88)`,
+        borderRadius: '4px',
+        transition: 'width 0.3s ease-out',
+        boxShadow: `0 0 8px ${color}40`,
+      }} />
+    </div>
+  );
 
-  const handleTwistPrediction = (choice: string) => {
-    setTwistPrediction(choice);
-    playGameSound('click');
-  };
+  // ============================================================================
+  // NAV DOTS COMPONENT
+  // ============================================================================
+  const renderNavDots = () => (
+    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            height: '8px',
+            width: phase === p ? '24px' : '8px',
+            borderRadius: '4px',
+            background: phase === p
+              ? `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`
+              : phaseOrder.indexOf(phase) > i
+                ? colors.success
+                : colors.border,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.3s',
+            boxShadow: phase === p ? `0 0 8px ${colors.primary}40` : 'none',
+          }}
+          title={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-  const handleTestAnswer = (q: number, a: number) => {
-    if (!testSubmitted) {
-      setTestAnswers(prev => ({ ...prev, [q]: a }));
-      playGameSound('click');
-    }
-  };
-
-  const submitTest = () => {
-    setTestSubmitted(true);
-    const score = testQuestions.reduce((acc, q, i) => {
-      if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
-        return acc + 1;
-      }
-      return acc;
-    }, 0);
-    if (score >= 7) {
-      onCorrectAnswer?.();
-      playGameSound('success');
-    } else {
-      onIncorrectAnswer?.();
-      playGameSound('failure');
-    }
-  };
-
-  const testQuestions = [
-    {
-      question: "When a car accelerates forward, which way does a helium balloon move?",
-      options: [
-        { text: "Backward (like everything else)", correct: false },
-        { text: "Forward (opposite to everything else)", correct: true },
-        { text: "Stays perfectly still", correct: false },
-        { text: "Moves side to side", correct: false }
-      ],
-    },
-    {
-      question: "Why does the helium balloon behave opposite to a heavy pendulum?",
-      options: [
-        { text: "Helium is magnetic", correct: false },
-        { text: "The string is different", correct: false },
-        { text: "Helium is less dense than surrounding air", correct: true },
-        { text: "The balloon has more surface area", correct: false }
-      ],
-    },
-    {
-      question: "What creates the forward force on the balloon during acceleration?",
-      options: [
-        { text: "Wind from outside", correct: false },
-        { text: "Air pressure gradient inside the car", correct: true },
-        { text: "Static electricity", correct: false },
-        { text: "The car's heater", correct: false }
-      ],
-    },
-    {
-      question: "What physics principle explains why acceleration affects objects like gravity?",
-      options: [
-        { text: "Newton's First Law", correct: false },
-        { text: "Conservation of Energy", correct: false },
-        { text: "Einstein's Equivalence Principle", correct: true },
-        { text: "Hooke's Law", correct: false }
-      ],
-    },
-    {
-      question: "What happens to the balloon when the car brakes (decelerates)?",
-      options: [
-        { text: "Moves forward even faster", correct: false },
-        { text: "Moves backward", correct: true },
-        { text: "Stays perfectly still", correct: false },
-        { text: "Pops", correct: false }
-      ],
-    },
-    {
-      question: "In the car's reference frame, what 'pseudo-force' do objects experience during forward acceleration?",
-      options: [
-        { text: "A forward force", correct: false },
-        { text: "A backward force", correct: true },
-        { text: "An upward force", correct: false },
-        { text: "No force", correct: false }
-      ],
-    },
-    {
-      question: "If you put a bubble in a bottle of water and accelerate forward, which way does the bubble go?",
-      options: [
-        { text: "Backward (with inertia)", correct: false },
-        { text: "Forward (like the helium balloon)", correct: true },
-        { text: "Straight up", correct: false },
-        { text: "Straight down", correct: false }
-      ],
-    },
-    {
-      question: "Why doesn't this balloon effect happen when the car moves at constant speed?",
-      options: [
-        { text: "Air stops moving", correct: false },
-        { text: "No acceleration means no pressure gradient", correct: true },
-        { text: "The balloon pops", correct: false },
-        { text: "Friction stops it", correct: false }
-      ],
-    },
-    {
-      question: "How is the balloon in a car similar to a balloon in an elevator accelerating upward?",
-      options: [
-        { text: "Both pop from pressure", correct: false },
-        { text: "Both rise relative to the car/elevator", correct: false },
-        { text: "Both experience enhanced 'gravity' making balloon rise more", correct: true },
-        { text: "They behave completely differently", correct: false }
-      ],
-    },
-    {
-      question: "What would happen to the helium balloon in a car that's turning left?",
-      options: [
-        { text: "Moves left (into the turn)", correct: true },
-        { text: "Moves right (away from turn)", correct: false },
-        { text: "Stays centered", correct: false },
-        { text: "Moves backward", correct: false }
-      ],
-    }
-  ];
-
-  const applications = [
-    {
-      title: "Aircraft Fuel Gauges",
-      description: "Accurate readings during maneuvers",
-      detail: "Aircraft fuel systems account for acceleration effects. During climbs, dives, and turns, fuel sloshes and sensors must compensate for pseudo-gravity to give accurate readings.",
-      icon: "✈️"
-    },
-    {
-      title: "Submarine Buoyancy",
-      description: "Neutral buoyancy during maneuvers",
-      detail: "Submarines must carefully manage buoyancy. During acceleration, denser water redistributes, affecting the sub's trim. Ballast systems compensate for these dynamic effects.",
-      icon: "🚢"
-    },
-    {
-      title: "Centrifuges",
-      description: "Separating by density",
-      detail: "Medical and industrial centrifuges use extreme acceleration to separate substances by density. Blood components, DNA, and chemical mixtures separate because denser materials move outward.",
-      icon: "🔬"
-    },
-    {
-      title: "Hot Air Balloons",
-      description: "Buoyancy in the atmosphere",
-      detail: "Hot air balloons rise because heated air is less dense than cool air. They experience acceleration effects too - tilting during horizontal wind changes just like our helium balloon.",
-      icon: "🎈"
-    }
-  ];
-
-  // Premium SVG defs for all phases - centralized for consistency
-  const renderPremiumDefs = () => (
+  // ============================================================================
+  // SVG DEFS
+  // ============================================================================
+  const renderSvgDefs = () => (
     <defs>
-      {/* === CAR BODY GRADIENTS === */}
+      {/* Car gradients */}
       <linearGradient id="hbcCarBody" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#64748b" />
-        <stop offset="25%" stopColor="#475569" />
-        <stop offset="50%" stopColor="#3b4a5c" />
-        <stop offset="75%" stopColor="#334155" />
-        <stop offset="100%" stopColor="#1e293b" />
-      </linearGradient>
-
-      <linearGradient id="hbcCarRoof" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#475569" />
-        <stop offset="30%" stopColor="#334155" />
-        <stop offset="70%" stopColor="#2d3a4a" />
-        <stop offset="100%" stopColor="#1e293b" />
-      </linearGradient>
-
-      <linearGradient id="hbcCarBodyBlue" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#60a5fa" />
-        <stop offset="25%" stopColor="#3b82f6" />
-        <stop offset="50%" stopColor="#2563eb" />
-        <stop offset="75%" stopColor="#1d4ed8" />
+        <stop offset="50%" stopColor="#3b82f6" />
         <stop offset="100%" stopColor="#1e40af" />
       </linearGradient>
-
-      <linearGradient id="hbcCarRoofBlue" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#3b82f6" />
-        <stop offset="30%" stopColor="#2563eb" />
-        <stop offset="70%" stopColor="#1d4ed8" />
-        <stop offset="100%" stopColor="#1e40af" />
+      <linearGradient id="hbcCarRoof" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#334155" />
+        <stop offset="100%" stopColor="#1e293b" />
       </linearGradient>
-
-      {/* === WINDOW GRADIENTS === */}
       <linearGradient id="hbcWindowGlass" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
-        <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.8" />
-        <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.7" />
         <stop offset="100%" stopColor="#2563eb" stopOpacity="0.6" />
       </linearGradient>
 
-      <radialGradient id="hbcWindowShine" cx="20%" cy="20%" r="80%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
-        <stop offset="50%" stopColor="#ffffff" stopOpacity="0.1" />
-        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-      </radialGradient>
-
-      {/* === BALLOON GRADIENTS === */}
+      {/* Balloon gradient */}
       <radialGradient id="hbcBalloonGloss" cx="30%" cy="25%" r="70%">
-        <stop offset="0%" stopColor="#e879f9" stopOpacity="1" />
-        <stop offset="20%" stopColor="#d946ef" stopOpacity="0.95" />
-        <stop offset="50%" stopColor="#a855f7" stopOpacity="0.9" />
-        <stop offset="80%" stopColor="#9333ea" stopOpacity="0.85" />
-        <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.8" />
+        <stop offset="0%" stopColor="#e879f9" />
+        <stop offset="50%" stopColor="#a855f7" />
+        <stop offset="100%" stopColor="#7c3aed" />
       </radialGradient>
-
       <radialGradient id="hbcBalloonHighlight" cx="25%" cy="20%" r="50%">
         <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
-        <stop offset="40%" stopColor="#ffffff" stopOpacity="0.2" />
         <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
       </radialGradient>
 
-      {/* === PENDULUM/WEIGHT GRADIENTS === */}
+      {/* Pendulum gradient */}
       <radialGradient id="hbcWeightGradient" cx="35%" cy="30%" r="65%">
         <stop offset="0%" stopColor="#f87171" />
-        <stop offset="30%" stopColor="#ef4444" />
-        <stop offset="60%" stopColor="#dc2626" />
+        <stop offset="50%" stopColor="#ef4444" />
         <stop offset="100%" stopColor="#b91c1c" />
       </radialGradient>
 
-      {/* === WHEEL GRADIENTS === */}
+      {/* Wheel gradients */}
       <radialGradient id="hbcWheelTire" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stopColor="#374151" />
-        <stop offset="60%" stopColor="#1f2937" />
         <stop offset="100%" stopColor="#111827" />
       </radialGradient>
-
       <radialGradient id="hbcWheelHub" cx="40%" cy="40%" r="60%">
         <stop offset="0%" stopColor="#d1d5db" />
-        <stop offset="40%" stopColor="#9ca3af" />
         <stop offset="100%" stopColor="#6b7280" />
       </radialGradient>
 
-      {/* === PRESSURE GRADIENT === */}
-      <linearGradient id="hbcPressureGradAccel" x1="100%" y1="0%" x2="0%" y2="0%">
-        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
-        <stop offset="30%" stopColor="#f97316" stopOpacity="0.4" />
+      {/* Pressure gradients */}
+      <linearGradient id="hbcPressureAccel" x1="100%" y1="0%" x2="0%" y2="0%">
+        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
         <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.3" />
-        <stop offset="70%" stopColor="#84cc16" stopOpacity="0.4" />
-        <stop offset="100%" stopColor="#22c55e" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#22c55e" stopOpacity="0.5" />
+      </linearGradient>
+      <linearGradient id="hbcPressureBrake" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
+        <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#22c55e" stopOpacity="0.5" />
       </linearGradient>
 
-      <linearGradient id="hbcPressureGradBrake" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
-        <stop offset="30%" stopColor="#f97316" stopOpacity="0.4" />
-        <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.3" />
-        <stop offset="70%" stopColor="#84cc16" stopOpacity="0.4" />
-        <stop offset="100%" stopColor="#22c55e" stopOpacity="0.6" />
-      </linearGradient>
-
-      {/* === ROAD GRADIENT === */}
+      {/* Road gradient */}
       <linearGradient id="hbcRoadSurface" x1="0%" y1="0%" x2="0%" y2="100%">
         <stop offset="0%" stopColor="#475569" />
-        <stop offset="50%" stopColor="#334155" />
         <stop offset="100%" stopColor="#1e293b" />
       </linearGradient>
 
-      {/* === WATER/BUBBLE GRADIENTS === */}
-      <linearGradient id="hbcWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
-        <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.95" />
-        <stop offset="70%" stopColor="#2563eb" stopOpacity="0.95" />
-        <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.9" />
-      </linearGradient>
-
-      <radialGradient id="hbcBubbleGloss" cx="30%" cy="25%" r="70%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-        <stop offset="30%" stopColor="#f0f9ff" stopOpacity="0.95" />
-        <stop offset="60%" stopColor="#e0f2fe" stopOpacity="0.9" />
-        <stop offset="100%" stopColor="#bae6fd" stopOpacity="0.8" />
-      </radialGradient>
-
-      {/* === GLOW FILTERS === */}
-      <filter id="hbcBalloonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      {/* Glow filters */}
+      <filter id="hbcGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feGaussianBlur stdDeviation="3" result="blur" />
         <feMerge>
           <feMergeNode in="blur" />
@@ -663,1936 +652,1323 @@ export default function HeliumBalloonCarRenderer({
         </feMerge>
       </filter>
 
-      <filter id="hbcAccelGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="2" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-
-      <filter id="hbcWeightGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="2" result="blur" />
-        <feMerge>
-          <feMergeNode in="blur" />
-          <feMergeNode in="SourceGraphic" />
-        </feMerge>
-      </filter>
-
-      <filter id="hbcWindowReflection" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="1" result="blur" />
-        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-      </filter>
-
-      {/* === ARROW MARKERS === */}
+      {/* Arrow markers */}
       <marker id="hbcArrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
         <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
       </marker>
       <marker id="hbcArrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
         <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
       </marker>
-      <marker id="hbcArrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-        <polygon points="0 0, 10 3.5, 0 7" fill="#a855f7" />
-      </marker>
-      <marker id="hbcArrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-        <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
-      </marker>
-      <marker id="hbcArrowYellow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-        <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
-      </marker>
-
-      {/* === MOTION BLUR === */}
-      <filter id="hbcMotionBlur" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="2,0" />
-      </filter>
     </defs>
   );
 
-  // ─────────────────────────────────────────────────────────────
-  // Real-World Applications Data
-  // ─────────────────────────────────────────────────────────────
-  const realWorldApps = [
-    {
-      icon: '🎈',
-      title: 'Weather Balloons',
-      short: 'Meteorology',
-      tagline: 'Probing the atmosphere through buoyancy-driven ascent',
-      description: 'Weather balloons (radiosondes) exploit the same buoyancy physics demonstrated by helium balloons in cars. Filled with helium or hydrogen, these balloons rise through the atmosphere at controlled rates, carrying instrument packages that measure temperature, humidity, pressure, and wind speed at various altitudes. Over 900 weather balloons are launched globally twice daily, providing critical data for weather forecasting, climate research, and aviation safety.',
-      connection: 'Weather balloons demonstrate buoyancy in a compressible fluid (air). As the balloon ascends, atmospheric pressure decreases, causing the balloon to expand according to the ideal gas law. The same pressure gradient physics that pushes a helium balloon forward in an accelerating car causes weather balloons to rise - less dense gas "floats" toward lower pressure regions.',
-      howItWorks: 'A latex or synthetic balloon is filled with lifting gas (helium/hydrogen) until it achieves positive buoyancy of approximately 300-500 grams free lift. The attached radiosonde transmits data via radio to ground stations. As altitude increases, the balloon expands from ~1 meter diameter at launch to ~6-8 meters at burst altitude (typically 30-35 km). Parachutes ensure safe instrument recovery.',
-      stats: [
-        { value: '35 km', label: 'Maximum Altitude' },
-        { value: '900+', label: 'Daily Global Launches' },
-        { value: '2 hrs', label: 'Typical Flight Duration' }
-      ],
-      examples: [
-        'National Weather Service launches radiosondes from 92 stations across the US twice daily',
-        'Hurricane hunter aircraft deploy dropsondes that fall through storm systems measuring wind shear',
-        'Ozonesonde balloons measure ozone layer depletion at stratospheric altitudes',
-        'Research balloons carry cosmic ray detectors and astronomical instruments above 99% of atmosphere'
-      ],
-      companies: [
-        'Vaisala',
-        'GRAW Radiosondes',
-        'Lockheed Martin',
-        'InterMet Systems',
-        'Meisei Electric'
-      ],
-      futureImpact: 'Next-generation smart radiosondes will feature improved sensors, longer battery life, and GPS-enabled tracking. Biodegradable balloon materials are being developed to reduce environmental impact. Unmanned stratospheric platforms may eventually supplement traditional balloon networks for continuous upper-atmosphere monitoring.',
-      color: '#06B6D4'
-    },
-    {
-      icon: '🚁',
-      title: 'Airships and Blimps',
-      short: 'Advertising & Surveillance',
-      tagline: 'Sustained flight through lighter-than-air engineering',
-      description: 'Modern airships and blimps leverage helium buoyancy for extended loiter times that fixed-wing aircraft cannot match. These lighter-than-air vehicles maintain altitude by balancing buoyant lift against weight, using propulsion only for directional control. Applications range from advertising and broadcast coverage to military surveillance, cargo transport, and telecommunications relay platforms.',
-      connection: 'Airships demonstrate neutral and controlled buoyancy in air. The same physics that makes a helium balloon lean forward in an accelerating car - pressure gradients in fluid media - allows airships to achieve stable hovering. Ballonets (internal air bladders) adjust buoyancy by changing the helium-to-air ratio, enabling altitude control without propulsive thrust.',
-      howItWorks: 'The envelope contains helium lifting gas plus internal ballonets filled with air. To descend, air is pumped into ballonets, compressing helium and reducing buoyancy. To ascend, air is vented, allowing helium to expand. Vectoring propellers provide thrust and directional control. Semi-rigid designs use internal frameworks for shape, while blimps rely solely on gas pressure.',
-      stats: [
-        { value: '24+ hrs', label: 'Endurance Time' },
-        { value: '3,000 m', label: 'Operating Altitude' },
-        { value: '75 mph', label: 'Cruise Speed' }
-      ],
-      examples: [
-        'Goodyear blimps provide aerial coverage for major sporting events with stabilized cameras',
-        'JLENS aerostat systems provided radar surveillance for critical infrastructure protection',
-        'Hybrid Air Vehicles developing cargo airships for remote region logistics',
-        'Stratospheric airships proposed as persistent telecommunications platforms for rural coverage'
-      ],
-      companies: [
-        'Lockheed Martin',
-        'Hybrid Air Vehicles',
-        'Aeros Corporation',
-        'Flying Whales'
-      ],
-      futureImpact: 'Electric-powered airships promise zero-emission cargo transport for remote regions without runway infrastructure. High-altitude pseudo-satellites (HAPS) using buoyancy will provide persistent surveillance and 5G coverage. Solar-powered stratospheric airships could remain aloft for months, serving as alternatives to traditional satellites.',
-      color: '#8B5CF6'
-    },
-    {
-      icon: '📱',
-      title: 'Accelerometer Physics',
-      short: 'Inertial Sensors',
-      tagline: 'Detecting motion through effective gravity fields',
-      description: 'Accelerometers in smartphones, vehicles, and aerospace systems detect acceleration using the same physics demonstrated by the helium balloon. Instead of a buoyant balloon, MEMS accelerometers use tiny proof masses suspended by microscopic springs. When acceleration occurs, inertial effects create relative displacement between the proof mass and the housing - exactly like a pendulum swinging backward in an accelerating car.',
-      connection: 'The helium balloon experiment demonstrates Einstein\'s equivalence principle: acceleration is indistinguishable from gravity. Accelerometers exploit this by measuring how proof masses respond to effective gravity fields. Just as the balloon responds opposite to a pendulum (due to buoyancy), some accelerometers use fluid-damped designs where the sensing element behaves similarly to a bubble level.',
-      howItWorks: 'MEMS accelerometers use microfabricated silicon proof masses suspended by spring structures. Acceleration causes relative displacement between the mass and housing, measured capacitively or piezoelectrically. Differential capacitor plates detect sub-nanometer movements. Signal processing converts displacement to acceleration. Multiple axes are combined for 3D motion sensing.',
-      stats: [
-        { value: '0.001 g', label: 'Resolution' },
-        { value: '10,000 g', label: 'Survivable Shock' },
-        { value: '< $1', label: 'Consumer Sensor Cost' }
-      ],
-      examples: [
-        'Smartphone accelerometers detect orientation for screen rotation and step counting',
-        'Automotive sensors trigger airbag deployment within 15-30 milliseconds of impact',
-        'Inertial navigation systems guide aircraft and missiles using accelerometer integration',
-        'Seismometers use precision accelerometers to detect sub-micron ground motion'
-      ],
-      companies: [
-        'STMicroelectronics',
-        'Bosch Sensortec',
-        'Analog Devices',
-        'TDK InvenSense',
-        'Honeywell Aerospace'
-      ],
-      futureImpact: 'Quantum accelerometers using cold atom interferometry promise navigation without GPS. Neuromorphic sensors will enable always-on motion detection with microwatt power consumption. Integration with AI will allow predictive motion analysis for health monitoring, autonomous vehicles, and augmented reality applications.',
-      color: '#F59E0B'
-    },
-    {
-      icon: '🔬',
-      title: 'Buoyancy Research',
-      short: 'Fluid Dynamics',
-      tagline: 'Understanding convection and stratification in fluid systems',
-      description: 'The helium balloon in a car demonstrates fundamental buoyancy physics that researchers study across scales from microfluidics to oceanography. Buoyancy-driven flows govern everything from magma convection in Earth\'s mantle to mixing in industrial reactors. Understanding how density differences create pressure gradients and drive fluid motion is essential for climate modeling, chemical engineering, and materials science.',
-      connection: 'The pressure gradient that pushes a helium balloon forward in an accelerating car is mathematically identical to the hydrostatic pressure gradient in any gravitational field. Researchers use this equivalence principle to study buoyancy effects: accelerating reference frames simulate different gravity conditions, while density stratification experiments reveal how buoyancy drives natural convection.',
-      howItWorks: 'Researchers create density gradients using temperature, salinity, or suspended particles. Optical techniques (schlieren, shadowgraph, PIV) visualize buoyancy-driven flows. Rotating platforms create artificial gravity fields for centrifugal buoyancy studies. Microgravity experiments on ISS isolate surface tension effects by eliminating buoyancy. Numerical simulations model turbulent buoyancy flows.',
-      stats: [
-        { value: '10^-6', label: 'Grashof Number Range Start' },
-        { value: '10^12', label: 'Grashof Number Range End' },
-        { value: '40%', label: 'Heat Transfer via Convection' }
-      ],
-      examples: [
-        'Ocean thermal energy conversion exploits temperature-driven buoyancy differences',
-        'Crystal growth furnaces control buoyancy convection for semiconductor purity',
-        'Building HVAC systems design natural ventilation using thermal buoyancy',
-        'Volcanologists study magma chamber dynamics through buoyancy-driven plume models'
-      ],
-      companies: [
-        'Schlumberger',
-        'ANSYS Fluent',
-        'National Center for Atmospheric Research',
-        'Woods Hole Oceanographic Institution'
-      ],
-      futureImpact: 'Advanced CFD simulations will enable precise prediction of buoyancy-driven mixing in industrial processes. Microgravity manufacturing on space stations will produce materials impossible under Earth\'s buoyancy-dominated conditions. Climate models incorporating improved ocean buoyancy dynamics will better predict sea level rise and thermohaline circulation changes.',
-      color: '#10B981'
-    }
-  ];
+  // ============================================================================
+  // PHASE: HOOK
+  // ============================================================================
+  const renderHook = () => (
+    <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-12 text-center">
+      {/* Premium badge */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
+        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+        <span className="text-sm font-medium text-purple-400 tracking-wide">PHYSICS MYSTERY</span>
+      </div>
 
-  const renderPhase = () => {
-    switch (phase) {
-      // ───────────────────────────────────────────────────
-      // HOOK
-      // ───────────────────────────────────────────────────
-      case 'hook':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '0.5rem', color: '#e2e8f0', fontWeight: 700 }}>
-              The Backward Balloon
+      {/* Main title */}
+      <h1 style={{ fontSize: typo.title }} className="font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-blue-200 bg-clip-text text-transparent">
+        The Backward Balloon
+      </h1>
+
+      <p style={{ fontSize: typo.bodyLarge }} className="text-slate-400 max-w-lg mb-10">
+        Everything slides backward when a car accelerates... but does the helium balloon follow the same rule?
+      </p>
+
+      {/* Visual */}
+      <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl mb-10">
+        <svg viewBox="0 0 400 180" style={{ width: '100%' }}>
+          {renderSvgDefs()}
+
+          {/* Road */}
+          <rect x="0" y="150" width="400" height="30" fill="url(#hbcRoadSurface)" />
+          <line x1="0" y1="165" x2="400" y2="165" stroke="#fbbf24" strokeWidth="2" strokeDasharray="20,15" />
+
+          {/* Car */}
+          <rect x="100" y="85" width="200" height="60" fill="url(#hbcCarBody)" rx="10" />
+          <rect x="120" y="55" width="160" height="45" fill="url(#hbcCarRoof)" rx="8" />
+          <rect x="130" y="62" width="60" height="32" fill="url(#hbcWindowGlass)" rx="4" />
+          <rect x="200" y="62" width="70" height="32" fill="url(#hbcWindowGlass)" rx="4" />
+
+          {/* Wheels */}
+          <circle cx="150" cy="145" r="20" fill="url(#hbcWheelTire)" />
+          <circle cx="150" cy="145" r="8" fill="url(#hbcWheelHub)" />
+          <circle cx="250" cy="145" r="20" fill="url(#hbcWheelTire)" />
+          <circle cx="250" cy="145" r="8" fill="url(#hbcWheelHub)" />
+
+          {/* Balloon */}
+          <line x1="170" y1="95" x2="160" y2="65" stroke="#d8b4fe" strokeWidth="1.5" />
+          <ellipse cx="160" cy="45" rx="20" ry="22" fill="url(#hbcBalloonGloss)" filter="url(#hbcGlow)" />
+          <ellipse cx="153" cy="37" rx="7" ry="8" fill="url(#hbcBalloonHighlight)" />
+          <text x="160" y="50" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">He</text>
+
+          {/* Pendulum */}
+          <line x1="240" y1="75" x2="255" y2="95" stroke="#94a3b8" strokeWidth="2" />
+          <circle cx="258" cy="100" r="10" fill="url(#hbcWeightGradient)" />
+
+          {/* Question mark */}
+          <text x="160" y="18" textAnchor="middle" fill="#fbbf24" fontSize="24" fontWeight="bold">
+            ?
+            <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+          </text>
+
+          {/* Arrow */}
+          <path d="M 320,105 L 360,105" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
+            <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+          </path>
+        </svg>
+
+        <div className="flex justify-around mt-4">
+          <span style={{ fontSize: typo.small, color: colors.balloon, fontWeight: 600 }}>Balloon</span>
+          <span style={{ fontSize: typo.small, color: colors.pendulum, fontWeight: 600 }}>Weight</span>
+        </div>
+        <p style={{ fontSize: typo.body, color: colors.success, fontWeight: 600, marginTop: '8px' }}>
+          ACCELERATE
+        </p>
+      </div>
+
+      {/* CTA */}
+      <button
+        onClick={() => goToPhase('predict')}
+        className="group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ zIndex: 10 }}
+      >
+        <span className="relative z-10 flex items-center gap-3">
+          Make Your Prediction
+          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </span>
+      </button>
+    </div>
+  );
+
+  // ============================================================================
+  // PHASE: PREDICT
+  // ============================================================================
+  const renderPredict = () => {
+    const predictions = [
+      { id: 0, label: 'Backward (like a hanging pendulum)', icon: '⬅️', description: 'Inertia pushes it back' },
+      { id: 1, label: 'Forward (opposite to a pendulum)', icon: '➡️', description: 'Something different happens' },
+      { id: 2, label: 'Stays straight up', icon: '⬆️', description: 'Unaffected by acceleration' },
+    ];
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
+        <div className="max-w-xl w-full">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <span className="text-xs font-bold text-purple-400 tracking-widest uppercase mb-2 block">
+              YOUR PREDICTION
+            </span>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2">
+              Which way does the balloon tilt?
             </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
-              Everything slides backward when a car accelerates... but what about a helium balloon?
+            <p className="text-slate-400">
+              When the car accelerates <strong className="text-emerald-400">forward</strong>, what happens to the helium balloon?
             </p>
-
-            <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              {renderPremiumDefs()}
-
-              {/* Road surface with gradient */}
-              <rect x="0" y="215" width="400" height="35" fill="url(#hbcRoadSurface)" />
-              <line x1="0" y1="232" x2="400" y2="232" stroke="#fbbf24" strokeWidth="2" strokeDasharray="20,15" />
-
-              {/* Car body with 3D gradient */}
-              <rect x="80" y="130" width="240" height="80" fill="url(#hbcCarBody)" rx="12" />
-              {/* Car body shine */}
-              <rect x="80" y="130" width="240" height="15" fill="url(#hbcWindowShine)" rx="12" opacity="0.3" />
-
-              {/* Car roof/cabin with gradient */}
-              <rect x="100" y="100" width="200" height="50" fill="url(#hbcCarRoof)" rx="10" />
-
-              {/* Windows with glass effect */}
-              <rect x="115" y="108" width="70" height="35" fill="url(#hbcWindowGlass)" rx="6" filter="url(#hbcWindowReflection)" />
-              <rect x="115" y="108" width="70" height="12" fill="url(#hbcWindowShine)" rx="6" opacity="0.4" />
-              <rect x="195" y="108" width="90" height="35" fill="url(#hbcWindowGlass)" rx="6" filter="url(#hbcWindowReflection)" />
-              <rect x="195" y="108" width="90" height="12" fill="url(#hbcWindowShine)" rx="6" opacity="0.4" />
-
-              {/* Wheels with premium gradients */}
-              <circle cx="130" cy="210" r="25" fill="url(#hbcWheelTire)" />
-              <circle cx="130" cy="210" r="12" fill="url(#hbcWheelHub)" />
-              <circle cx="130" cy="210" r="4" fill="#374151" />
-              <circle cx="270" cy="210" r="25" fill="url(#hbcWheelTire)" />
-              <circle cx="270" cy="210" r="12" fill="url(#hbcWheelHub)" />
-              <circle cx="270" cy="210" r="4" fill="#374151" />
-
-              {/* Pendulum (heavy ball) with gradient */}
-              <line x1="250" y1="115" x2="270" y2="145" stroke="#94a3b8" strokeWidth="2" />
-              <circle cx="270" cy="150" r="10" fill="url(#hbcWeightGradient)" filter="url(#hbcWeightGlow)" />
-
-              {/* Helium balloon with glossy gradient */}
-              <line x1="170" y1="140" x2="150" y2="115" stroke="#d8b4fe" strokeWidth="1.5" />
-              <ellipse cx="150" cy="92" rx="22" ry="25" fill="url(#hbcBalloonGloss)" filter="url(#hbcBalloonGlow)" />
-              <ellipse cx="143" cy="82" rx="8" ry="10" fill="url(#hbcBalloonHighlight)" />
-              <text x="150" y="97" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
-
-              {/* Direction arrow with glow */}
-              <g filter="url(#hbcAccelGlow)">
-                <path d="M 335,170 L 375,170" fill="none" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
-                  <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
-                </path>
-              </g>
-
-              {/* Question mark with glow */}
-              <text x="150" y="60" textAnchor="middle" fill="#fbbf24" fontSize="28" fontWeight="bold" filter="url(#hbcAccelGlow)">
-                ?
-                <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
-              </text>
-
-              {/* Labels outside SVG handled by text elements */}
-            </svg>
-
-            {/* Labels moved outside SVG using typo system */}
-            <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
-              <span style={{ fontSize: typo.small, color: '#a855f7', fontWeight: 600 }}>Balloon</span>
-              <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>Heavy Weight</span>
-            </div>
-            <p style={{ fontSize: typo.body, color: '#22c55e', fontWeight: 600, marginBottom: '1rem' }}>
-              ACCELERATE →
-            </p>
-
-            <button
-              onClick={() => goToPhase('predict')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)',
-                zIndex: 10,
-                position: 'relative' as const
-              }}
-            >
-              Make Your Prediction
-            </button>
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // PREDICT
-      // ───────────────────────────────────────────────────
-      case 'predict':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#e2e8f0', fontWeight: 700 }}>
-              Make Your Prediction
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
-              A helium balloon is tied to the floor of a car. When the car
-              <strong style={{ color: '#22c55e' }}> accelerates forward</strong>, which way does the balloon tilt?
-            </p>
-
-            <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
-              {renderPremiumDefs()}
-
-              {/* Car interior with premium gradient */}
-              <rect x="50" y="40" width="300" height="85" fill="url(#hbcCarRoof)" rx="10" />
-              {/* Interior ceiling highlight */}
-              <rect x="50" y="40" width="300" height="8" fill="url(#hbcWindowShine)" rx="10" opacity="0.2" />
-
-              {/* Floor with gradient */}
-              <rect x="50" y="115" width="300" height="15" fill="url(#hbcCarBody)" rx="3" />
-
-              {/* Balloon with glossy effect */}
-              <line x1="200" y1="115" x2="200" y2="72" stroke="#d8b4fe" strokeWidth="1.5" />
-              <ellipse cx="200" cy="52" rx="20" ry="23" fill="url(#hbcBalloonGloss)" filter="url(#hbcBalloonGlow)" />
-              <ellipse cx="193" cy="43" rx="7" ry="9" fill="url(#hbcBalloonHighlight)" />
-              <text x="200" y="57" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
-
-              {/* Question marks showing uncertainty */}
-              <text x="145" y="80" fill="#fbbf24" fontSize="16" fontWeight="bold" opacity="0.7">?</text>
-              <text x="250" y="80" fill="#fbbf24" fontSize="16" fontWeight="bold" opacity="0.7">?</text>
-
-              {/* Acceleration arrow with glow */}
-              <g filter="url(#hbcAccelGlow)">
-                <path d="M 355,80 L 390,80" fill="none" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
-                  <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
-                </path>
-              </g>
-            </svg>
-
-            {/* Direction labels outside SVG */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 400, marginBottom: '1.5rem', padding: '0 50px' }}>
-              <span style={{ fontSize: typo.small, color: '#94a3b8' }}>← BACK</span>
-              <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600 }}>FRONT →</span>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
-              {[
-                { id: 'a', text: 'Backward (like a hanging pendulum)' },
-                { id: 'b', text: 'Forward (opposite to a pendulum)' },
-                { id: 'c', text: 'Stays straight up (unaffected)' }
-              ].map(opt => (
-                <button
-                  key={opt.id}
-                  onClick={() => handlePrediction(opt.id)}
-                  style={{
-                    padding: '1rem',
-                    background: prediction === opt.id ? '#3b82f6' : 'white',
-                    color: prediction === opt.id ? 'white' : '#1e293b',
-                    border: `2px solid ${prediction === opt.id ? '#3b82f6' : '#e2e8f0'}`,
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                    transition: 'all 0.2s',
-                    zIndex: 10,
-                    position: 'relative' as const
-                  }}
-                >
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-
-            {prediction && (
+          {/* Options */}
+          <div className="flex flex-col gap-3 mb-8">
+            {predictions.map((p) => (
               <button
-                onClick={() => goToPhase('play')}
-                style={{
-                  marginTop: '1.5rem',
-                  padding: '1rem 2.5rem',
-                  fontSize: '1.1rem',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative' as const
-                }}
-              >
-                Test It!
-              </button>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // PLAY - Enhanced with interactive sliders
-      // ───────────────────────────────────────────────────
-      case 'play':
-        // Calculate balloon size based on buoyancy
-        const balloonSize = 14 + (balloonBuoyancy - 0.8) * 10;
-        // Calculate pressure gradient intensity
-        const pressureIntensity = (carState === 'accelerating' || carState === 'braking')
-          ? Math.min(carAcceleration * airDensity / 6, 1) : 0;
-        // Force vector magnitudes
-        const buoyancyForce = carAcceleration * balloonBuoyancy * airDensity;
-        const inertiaForce = carAcceleration * (1 / balloonBuoyancy);
-
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#e2e8f0' }}>
-              Balloon vs Pendulum Simulator
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center' }}>
-              Adjust parameters and watch the physics in action
-            </p>
-
-            {/* Interactive Sliders Panel */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
-              gap: '1rem',
-              width: '100%',
-              maxWidth: 600,
-              marginBottom: '1rem',
-              padding: '1rem',
-              background: 'rgba(30, 41, 59, 0.6)',
-              borderRadius: 12,
-              border: '1px solid rgba(71, 85, 105, 0.5)'
-            }}>
-              <Slider
-                label="Car Acceleration"
-                value={carAcceleration}
-                min={1}
-                max={15}
-                step={0.5}
-                unit="m/s²"
-                onChange={setCarAcceleration}
-                color="#22c55e"
-              />
-              <Slider
-                label="Balloon Buoyancy"
-                value={balloonBuoyancy}
-                min={0.2}
-                max={2.0}
-                step={0.1}
-                unit="x"
-                onChange={setBalloonBuoyancy}
-                color="#a855f7"
-              />
-              <Slider
-                label="Air Density"
-                value={airDensity}
-                min={0.5}
-                max={2.0}
-                step={0.1}
-                unit="kg/m³"
-                onChange={setAirDensity}
-                color="#3b82f6"
-              />
-            </div>
-
-            {/* Toggle buttons for visualization options */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button
-                onClick={() => setShowForceVectors(!showForceVectors)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: showForceVectors ? 'rgba(34, 197, 94, 0.2)' : 'rgba(71, 85, 105, 0.3)',
-                  color: showForceVectors ? '#22c55e' : '#94a3b8',
-                  border: `1px solid ${showForceVectors ? '#22c55e' : '#475569'}`,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
-              >
-                {showForceVectors ? '✓' : '○'} Force Vectors
-              </button>
-              <button
-                onClick={() => setShowPressureGradient(!showPressureGradient)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: showPressureGradient ? 'rgba(59, 130, 246, 0.2)' : 'rgba(71, 85, 105, 0.3)',
-                  color: showPressureGradient ? '#3b82f6' : '#94a3b8',
-                  border: `1px solid ${showPressureGradient ? '#3b82f6' : '#475569'}`,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
-              >
-                {showPressureGradient ? '✓' : '○'} Pressure Gradient
-              </button>
-            </div>
-
-            <svg viewBox="0 0 450 280" style={{ width: '100%', maxWidth: 500, marginBottom: '1rem' }}>
-              {renderPremiumDefs()}
-              {/* Dynamic pressure gradient based on current state */}
-              <defs>
-                <linearGradient id="hbcPressureDynamic" x1={carState === 'braking' ? '0%' : '100%'} y1="0%" x2={carState === 'braking' ? '100%' : '0%'} y2="0%">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity={pressureIntensity * 0.7} />
-                  <stop offset="25%" stopColor="#f97316" stopOpacity={pressureIntensity * 0.5} />
-                  <stop offset="50%" stopColor="#fbbf24" stopOpacity={pressureIntensity * 0.3} />
-                  <stop offset="75%" stopColor="#84cc16" stopOpacity={pressureIntensity * 0.5} />
-                  <stop offset="100%" stopColor="#22c55e" stopOpacity={pressureIntensity * 0.7} />
-                </linearGradient>
-              </defs>
-
-              {/* Road with premium gradient */}
-              <rect x="0" y="230" width="450" height="50" fill="url(#hbcRoadSurface)" />
-              <line x1="0" y1="255" x2="450" y2="255" stroke="#fbbf24" strokeWidth="3" strokeDasharray="20,15" />
-
-              {/* Car body - animated position */}
-              <g transform={`translate(${Math.min(carPosition, 200)}, 0)`}>
-                {/* Car shell with 3D gradient */}
-                <rect x="30" y="140" width="200" height="70" fill="url(#hbcCarBodyBlue)" rx="12" />
-                {/* Body highlight */}
-                <rect x="30" y="140" width="200" height="12" fill="url(#hbcWindowShine)" rx="12" opacity="0.3" />
-
-                {/* Car roof with gradient */}
-                <rect x="50" y="105" width="160" height="50" fill="url(#hbcCarRoofBlue)" rx="10" />
-
-                {/* Windows with glass effect */}
-                <rect x="60" y="112" width="60" height="38" fill="url(#hbcWindowGlass)" rx="6" filter="url(#hbcWindowReflection)" />
-                <rect x="60" y="112" width="60" height="12" fill="url(#hbcWindowShine)" rx="6" opacity="0.4" />
-                <rect x="130" y="112" width="70" height="38" fill="url(#hbcWindowGlass)" rx="6" filter="url(#hbcWindowReflection)" />
-                <rect x="130" y="112" width="70" height="12" fill="url(#hbcWindowShine)" rx="6" opacity="0.4" />
-
-                {/* Pressure gradient overlay inside car */}
-                {showPressureGradient && (carState === 'accelerating' || carState === 'braking') && (
-                  <rect
-                    x="55" y="107"
-                    width="150" height="48"
-                    fill="url(#hbcPressureDynamic)"
-                    rx="6"
-                  >
-                    <animate attributeName="opacity" values="0.8;1;0.8" dur="0.8s" repeatCount="indefinite" />
-                  </rect>
-                )}
-
-                {/* Interior ceiling line */}
-                <line x1="55" y1="110" x2="205" y2="110" stroke="#1e40af" strokeWidth="2" />
-
-                {/* Helium Balloon - dynamic size and tilt with premium gradient */}
-                <g transform={`rotate(${balloonAngle}, 100, 150)`}>
-                  <line x1="100" y1="150" x2="100" y2={150 - 25 - balloonSize} stroke="#d8b4fe" strokeWidth="1.5" />
-                  <ellipse
-                    cx="100"
-                    cy={150 - 30 - balloonSize}
-                    rx={balloonSize}
-                    ry={balloonSize * 1.15}
-                    fill="url(#hbcBalloonGloss)"
-                    filter="url(#hbcBalloonGlow)"
-                  >
-                    {/* Pulsing animation when accelerating */}
-                    {(carState === 'accelerating' || carState === 'braking') && (
-                      <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
-                    )}
-                  </ellipse>
-                  {/* Balloon highlight */}
-                  <ellipse
-                    cx={100 - balloonSize * 0.25}
-                    cy={150 - 35 - balloonSize}
-                    rx={balloonSize * 0.4}
-                    ry={balloonSize * 0.5}
-                    fill="url(#hbcBalloonHighlight)"
-                  />
-                  <text x="100" y={150 - 27 - balloonSize} textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
-
-                  {/* Force vectors on balloon with glow */}
-                  {showForceVectors && (carState === 'accelerating' || carState === 'braking') && (
-                    <g filter="url(#hbcAccelGlow)">
-                      {/* Buoyancy force - forward during acceleration */}
-                      <line
-                        x1="100"
-                        y1={150 - 30 - balloonSize}
-                        x2={100 + (carState === 'accelerating' ? buoyancyForce * 2 : -buoyancyForce * 2)}
-                        y2={150 - 30 - balloonSize}
-                        stroke="#22c55e"
-                        strokeWidth="3"
-                        markerEnd="url(#hbcArrowGreen)"
-                      />
-                    </g>
-                  )}
-                </g>
-
-                {/* Pendulum - tilts opposite direction with premium gradient */}
-                <g transform={`rotate(${pendulumAngle}, 160, 110)`}>
-                  <line x1="160" y1="110" x2="160" y2="143" stroke="#94a3b8" strokeWidth="2.5" />
-                  <circle cx="160" cy="150" r="12" fill="url(#hbcWeightGradient)" filter="url(#hbcWeightGlow)" />
-
-                  {/* Force vectors on pendulum */}
-                  {showForceVectors && (carState === 'accelerating' || carState === 'braking') && (
-                    <g filter="url(#hbcAccelGlow)">
-                      {/* Inertia force - backward during acceleration */}
-                      <line
-                        x1="160"
-                        y1="150"
-                        x2={160 + (carState === 'accelerating' ? -inertiaForce * 1.5 : inertiaForce * 1.5)}
-                        y2="150"
-                        stroke="#ef4444"
-                        strokeWidth="3"
-                        markerEnd="url(#hbcArrowRed)"
-                      />
-                    </g>
-                  )}
-                </g>
-
-                {/* Wheels with premium gradients and rotation animation */}
-                <g>
-                  <circle cx="75" cy="210" r="22" fill="url(#hbcWheelTire)" />
-                  <circle cx="75" cy="210" r="10" fill="url(#hbcWheelHub)" />
-                  <circle cx="75" cy="210" r="3" fill="#374151" />
-                  {carState !== 'stopped' && (
-                    <g>
-                      <line x1="75" y1="195" x2="75" y2="225" stroke="#d1d5db" strokeWidth="2">
-                        <animateTransform attributeName="transform" type="rotate" from="0 75 210" to="360 75 210" dur="0.4s" repeatCount="indefinite" />
-                      </line>
-                      <line x1="60" y1="210" x2="90" y2="210" stroke="#d1d5db" strokeWidth="2">
-                        <animateTransform attributeName="transform" type="rotate" from="0 75 210" to="360 75 210" dur="0.4s" repeatCount="indefinite" />
-                      </line>
-                    </g>
-                  )}
-                </g>
-                <g>
-                  <circle cx="185" cy="210" r="22" fill="url(#hbcWheelTire)" />
-                  <circle cx="185" cy="210" r="10" fill="url(#hbcWheelHub)" />
-                  <circle cx="185" cy="210" r="3" fill="#374151" />
-                  {carState !== 'stopped' && (
-                    <g>
-                      <line x1="185" y1="195" x2="185" y2="225" stroke="#d1d5db" strokeWidth="2">
-                        <animateTransform attributeName="transform" type="rotate" from="0 185 210" to="360 185 210" dur="0.4s" repeatCount="indefinite" />
-                      </line>
-                      <line x1="170" y1="210" x2="200" y2="210" stroke="#d1d5db" strokeWidth="2">
-                        <animateTransform attributeName="transform" type="rotate" from="0 185 210" to="360 185 210" dur="0.4s" repeatCount="indefinite" />
-                      </line>
-                    </g>
-                  )}
-                </g>
-
-                {/* Direction indicator arrow with glow */}
-                {carState === 'accelerating' && (
-                  <g filter="url(#hbcAccelGlow)">
-                    <path d="M 230,140 L 265,140" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
-                      <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
-                    </path>
-                  </g>
-                )}
-                {carState === 'braking' && (
-                  <g filter="url(#hbcAccelGlow)">
-                    <path d="M 30,140 L -5,140" stroke="#ef4444" strokeWidth="4" markerEnd="url(#hbcArrowRed)">
-                      <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
-                    </path>
-                  </g>
-                )}
-              </g>
-
-              {/* Result highlight */}
-              {hasAccelerated && carState !== 'accelerating' && carState !== 'braking' && (
-                <g>
-                  <rect x="100" y="40" width="250" height="30" fill="rgba(34, 197, 94, 0.1)" rx="6" />
-                  <text x="225" y="60" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
-                    Balloon: {balloonAngle > 0 ? 'FORWARD' : 'BACKWARD'} | Pendulum: {pendulumAngle > 0 ? 'FORWARD' : 'BACKWARD'}
-                  </text>
-                </g>
-              )}
-
-              {/* Physics info box */}
-              <g transform="translate(320, 75)">
-                <rect x="0" y="0" width="120" height="80" fill="rgba(30, 41, 59, 0.8)" rx="8" stroke="#475569" />
-                <text x="60" y="18" textAnchor="middle" fill="#e2e8f0" fontSize="9" fontWeight="bold">Live Physics</text>
-                <text x="10" y="35" fill="#94a3b8" fontSize="8">Accel: {carAcceleration.toFixed(1)} m/s²</text>
-                <text x="10" y="48" fill="#a855f7" fontSize="8">Buoyancy: {balloonBuoyancy.toFixed(1)}x</text>
-                <text x="10" y="61" fill="#3b82f6" fontSize="8">Air: {airDensity.toFixed(1)} kg/m³</text>
-                <text x="10" y="74" fill="#22c55e" fontSize="8">Tilt: {Math.abs(balloonAngle).toFixed(1)}°</text>
-              </g>
-            </svg>
-
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button
-                onClick={accelerateCar}
-                disabled={carState !== 'stopped'}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: carState !== 'stopped'
-                    ? '#475569'
-                    : 'linear-gradient(135deg, #22c55e, #16a34a)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 10,
-                  cursor: carState !== 'stopped' ? 'not-allowed' : 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
-              >
-                Accelerate
-              </button>
-
-              {carState === 'constant' && (
-                <button
-                  onClick={brakeCar}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  Brake
-                </button>
-              )}
-
-              {(carState === 'stopped' && hasAccelerated) && (
-                <button
-                  onClick={resetSimulation}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: 'linear-gradient(135deg, #64748b, #475569)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-
-            {hasAccelerated && carState === 'stopped' && (
-              <button
+                key={p.id}
                 onClick={() => {
-                  setShowResult(true);
-                  if (prediction === 'b') {
-                    onCorrectAnswer?.();
-                  } else {
-                    onIncorrectAnswer?.();
-                  }
+                  setPrediction(p.id);
+                  playSound('click');
                 }}
-                style={{
-                  padding: '1rem 2rem',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
+                style={{ zIndex: 10 }}
+                className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-200 border-2 ${
+                  prediction === p.id
+                    ? 'border-purple-500 bg-purple-500/10'
+                    : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
+                }`}
               >
-                See Results
+                <span className="text-3xl">{p.icon}</span>
+                <div>
+                  <div className={`font-semibold ${prediction === p.id ? 'text-purple-400' : 'text-white'}`}>
+                    {p.label}
+                  </div>
+                  <div className="text-sm text-slate-400">{p.description}</div>
+                </div>
               </button>
-            )}
-
-            {showResult && (
-              <div style={{
-                marginTop: '1rem',
-                padding: '1.25rem',
-                background: prediction === 'b' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)',
-                borderRadius: 12,
-                textAlign: 'center',
-                maxWidth: 450,
-                border: `1px solid ${prediction === 'b' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(251, 191, 36, 0.3)'}`
-              }}>
-                <p style={{ fontWeight: 600, color: prediction === 'b' ? '#22c55e' : '#fbbf24', fontSize: '1.1rem' }}>
-                  {prediction === 'b' ? 'Correct!' : 'Surprising, right?'}
-                </p>
-                <p style={{ color: '#e2e8f0', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  The balloon moves <strong style={{ color: '#22c55e' }}>forward</strong> - opposite to the pendulum!
-                  This happens because helium is less dense than air. When air is pushed
-                  backward during acceleration, the balloon moves to fill the low-pressure
-                  region at the front.
-                </p>
-                <button
-                  onClick={() => goToPhase('review')}
-                  style={{
-                    marginTop: '1rem',
-                    padding: '0.75rem 2rem',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  Learn the Physics
-                </button>
-              </div>
-            )}
+            ))}
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // REVIEW
-      // ───────────────────────────────────────────────────
-      case 'review':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#e2e8f0', fontWeight: 700 }}>
-              The Physics: Buoyancy in Acceleration
-            </h2>
-
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(30, 64, 175, 0.2))',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem',
-              border: '1px solid rgba(59, 130, 246, 0.3)'
-            }}>
-              <h3 style={{ color: '#60a5fa', marginBottom: '0.75rem', fontSize: typo.bodyLarge }}>Why It Happens</h3>
-
-              <svg viewBox="0 0 300 150" style={{ width: '100%', marginBottom: '1rem' }}>
-                {renderPremiumDefs()}
-                {/* Additional local defs for review arrows */}
-                <defs>
-                  <marker id="hbcReviewBlueArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                    <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" />
-                  </marker>
-                  <marker id="hbcReviewGreenArrow" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
-                    <polygon points="8 0, 0 3, 8 6" fill="#22c55e" />
-                  </marker>
-                </defs>
-
-                {/* Car interior box with gradient */}
-                <rect x="30" y="20" width="240" height="110" fill="url(#hbcCarRoof)" rx="8" />
-
-                {/* Pressure gradient visualization */}
-                <rect x="35" y="25" width="230" height="100" fill="url(#hbcPressureGradAccel)" rx="6">
-                  <animate attributeName="opacity" values="0.7;0.9;0.7" dur="2s" repeatCount="indefinite" />
-                </rect>
-
-                {/* Air molecules moving backward with animation */}
-                {[0, 1, 2].map(i => (
-                  <g key={i}>
-                    <circle cx={200 - i * 40} cy={75 + (i % 2) * 20} r="7" fill="#60a5fa" opacity="0.7">
-                      <animate attributeName="cx" values={`${200 - i * 40};${210 - i * 40};${200 - i * 40}`} dur="1.5s" repeatCount="indefinite" />
-                    </circle>
-                    <path
-                      d={`M ${180 - i * 40},${75 + (i % 2) * 20} L ${215 - i * 40},${75 + (i % 2) * 20}`}
-                      fill="none"
-                      stroke="#3b82f6"
-                      strokeWidth="2"
-                      markerEnd="url(#hbcReviewBlueArrow)"
-                      opacity="0.8"
-                    />
-                  </g>
-                ))}
-
-                {/* Balloon moving forward with premium gradient */}
-                <ellipse cx="80" cy="75" rx="22" ry="25" fill="url(#hbcBalloonGloss)" filter="url(#hbcBalloonGlow)" />
-                <ellipse cx="73" cy="65" rx="8" ry="10" fill="url(#hbcBalloonHighlight)" />
-                <text x="80" y="80" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">He</text>
-                <g filter="url(#hbcAccelGlow)">
-                  <path d="M 55,75 L 30,75" fill="none" stroke="#22c55e" strokeWidth="3" markerEnd="url(#hbcReviewGreenArrow)" />
-                </g>
-              </svg>
-
-              {/* Labels moved outside SVG */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', padding: '0 35px' }}>
-                <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600 }}>LOW P</span>
-                <span style={{ fontSize: typo.small, color: '#94a3b8' }}>← Balloon | Air →</span>
-                <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>HIGH P</span>
-              </div>
-
-              <div style={{ fontSize: '0.9rem', color: '#1e293b' }}>
-                <ol style={{ paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                  <li>Car accelerates forward</li>
-                  <li>Air (denser) has inertia → pushed backward</li>
-                  <li>Creates pressure gradient: High (back) → Low (front)</li>
-                  <li>Balloon (less dense) moves toward low pressure</li>
-                </ol>
-              </div>
-            </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #fefce8, #fef9c3)',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#ca8a04', marginBottom: '0.75rem' }}>The Equivalence Principle</h3>
-
-              <p style={{ fontSize: '0.9rem', color: '#1e293b', marginBottom: '1rem' }}>
-                Einstein realized that <strong>acceleration is indistinguishable from gravity</strong>
-                in a closed system:
-              </p>
-
-              <div style={{
-                background: 'white',
-                padding: '0.75rem',
-                borderRadius: 8,
-                textAlign: 'center'
-              }}>
-                <p style={{ fontWeight: 'bold', color: '#ca8a04' }}>
-                  Forward acceleration = "Gravity" pointing backward
-                </p>
-                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>
-                  Balloon "rises" against this pseudo-gravity → moves forward!
-                </p>
-              </div>
-            </div>
-
+          {/* Navigation */}
+          <div className="flex gap-3">
             <button
-              onClick={() => goToPhase('twist_predict')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                zIndex: 10,
-                position: 'relative' as const
-              }}
+              onClick={goBack}
+              style={{ zIndex: 10 }}
+              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
-              Try a Twist!
+              Back
+            </button>
+            <button
+              onClick={() => {
+                if (prediction !== null) {
+                  emitEvent('prediction_made', { prediction });
+                  goToPhase('play');
+                }
+              }}
+              disabled={prediction === null}
+              style={{ zIndex: 10 }}
+              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
+                prediction !== null
+                  ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
+                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+              }`}
+            >
+              Test It!
             </button>
           </div>
-        );
+        </div>
+      </div>
+    );
+  };
 
-      // ───────────────────────────────────────────────────
-      // TWIST PREDICT
-      // ───────────────────────────────────────────────────
-      case 'twist_predict':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#e2e8f0', fontWeight: 700 }}>
-              Bubble in Water
+  // ============================================================================
+  // PHASE: PLAY
+  // ============================================================================
+  const renderPlay = () => {
+    const pressureIntensity = (carState === 'accelerating' || carState === 'braking') ? 0.8 : 0;
+
+    return (
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="max-w-2xl w-full">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <span className="text-xs font-bold text-purple-400 tracking-widest uppercase mb-2 block">
+              SIMULATION LAB
+            </span>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-1">
+              Balloon vs Pendulum
             </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
-              Now imagine a <strong style={{ color: '#60a5fa' }}>sealed bottle of water with an air bubble inside</strong>.
-              When the car accelerates forward, which way does the bubble move?
+            <p className="text-slate-400">
+              Watch how they behave differently during acceleration
             </p>
+          </div>
 
-            <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
-              {renderPremiumDefs()}
+          {/* Controls */}
+          <div className={`grid gap-4 mb-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
+              <div className="flex justify-between mb-2">
+                <span className="text-sm font-semibold text-emerald-400">Car Acceleration</span>
+                <span className="text-lg font-bold text-white">{carAcceleration.toFixed(1)} m/s2</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="15"
+                step="0.5"
+                value={carAcceleration}
+                onChange={(e) => setCarAcceleration(Number(e.target.value))}
+                className="w-full accent-emerald-500"
+              />
+            </div>
+            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
+              <div className="flex justify-between mb-2">
+                <span className="text-sm font-semibold text-purple-400">Balloon Buoyancy</span>
+                <span className="text-lg font-bold text-white">{balloonBuoyancy.toFixed(1)}x</span>
+              </div>
+              <input
+                type="range"
+                min="0.2"
+                max="2.0"
+                step="0.1"
+                value={balloonBuoyancy}
+                onChange={(e) => setBalloonBuoyancy(Number(e.target.value))}
+                className="w-full accent-purple-500"
+              />
+            </div>
+          </div>
 
-              {/* Car interior with gradient */}
-              <rect x="50" y="30" width="300" height="85" fill="url(#hbcCarRoof)" rx="10" />
-              <rect x="50" y="30" width="300" height="8" fill="url(#hbcWindowShine)" rx="10" opacity="0.2" />
+          {/* Toggle buttons */}
+          <div className="flex gap-3 justify-center mb-4 flex-wrap">
+            <button
+              onClick={() => setShowForceVectors(!showForceVectors)}
+              style={{ zIndex: 10 }}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                showForceVectors
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50'
+                  : 'bg-slate-800/50 text-slate-400 border border-slate-700'
+              }`}
+            >
+              {showForceVectors ? '+ ' : '- '}Force Vectors
+            </button>
+            <button
+              onClick={() => setShowPressureGradient(!showPressureGradient)}
+              style={{ zIndex: 10 }}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                showPressureGradient
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+                  : 'bg-slate-800/50 text-slate-400 border border-slate-700'
+              }`}
+            >
+              {showPressureGradient ? '+ ' : '- '}Pressure Gradient
+            </button>
+          </div>
 
-              {/* Water bottle with premium gradient */}
-              <rect x="165" y="42" width="70" height="60" fill="url(#hbcWaterGradient)" rx="8" />
-              {/* Bottle cap */}
-              <rect x="182" y="32" width="36" height="15" fill="url(#hbcWheelHub)" rx="4" />
-              {/* Bottle shine */}
-              <rect x="168" y="42" width="8" height="55" fill="url(#hbcWindowShine)" rx="4" opacity="0.3" />
+          {/* Visualization */}
+          <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-4">
+            <svg viewBox="0 0 450 250" style={{ width: '100%' }}>
+              {renderSvgDefs()}
 
-              {/* Air bubble with glossy effect */}
-              <ellipse cx="200" cy="68" rx="12" ry="10" fill="url(#hbcBubbleGloss)" filter="url(#hbcBalloonGlow)">
-                <animate attributeName="cy" values="68;65;68" dur="2s" repeatCount="indefinite" />
-              </ellipse>
+              {/* Road */}
+              <rect x="0" y="210" width="450" height="40" fill="url(#hbcRoadSurface)" />
+              <line x1="0" y1="230" x2="450" y2="230" stroke="#fbbf24" strokeWidth="2" strokeDasharray="20,15" />
 
-              {/* Question marks with glow */}
-              <text x="140" y="75" fill="#fbbf24" fontSize="22" fontWeight="bold" filter="url(#hbcAccelGlow)">
-                ?
-                <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
-              </text>
-              <text x="260" y="75" fill="#fbbf24" fontSize="22" fontWeight="bold" filter="url(#hbcAccelGlow)">
-                ?
-                <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" begin="0.5s" />
-              </text>
+              {/* Car body */}
+              <rect x="75" y="130" width="200" height="70" fill="url(#hbcCarBody)" rx="12" />
+              <rect x="95" y="95" width="160" height="50" fill="url(#hbcCarRoof)" rx="10" />
 
-              {/* Direction arrow with glow */}
-              <g filter="url(#hbcAccelGlow)">
-                <path d="M 355,70 L 390,70" fill="none" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
-                  <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+              {/* Windows */}
+              <rect x="105" y="102" width="60" height="38" fill="url(#hbcWindowGlass)" rx="5" />
+              <rect x="175" y="102" width="70" height="38" fill="url(#hbcWindowGlass)" rx="5" />
+
+              {/* Pressure gradient overlay */}
+              {showPressureGradient && (carState === 'accelerating' || carState === 'braking') && (
+                <rect
+                  x="100" y="97"
+                  width="150" height="48"
+                  fill={carState === 'accelerating' ? 'url(#hbcPressureAccel)' : 'url(#hbcPressureBrake)'}
+                  rx="5"
+                >
+                  <animate attributeName="opacity" values="0.6;0.9;0.6" dur="1s" repeatCount="indefinite" />
+                </rect>
+              )}
+
+              {/* Balloon with tilt */}
+              <g transform={`rotate(${balloonAngle}, 145, 140)`}>
+                <line x1="145" y1="140" x2="145" y2="100" stroke="#d8b4fe" strokeWidth="1.5" />
+                <ellipse cx="145" cy="80" rx="18" ry="22" fill="url(#hbcBalloonGloss)" filter="url(#hbcGlow)">
+                  {(carState === 'accelerating' || carState === 'braking') && (
+                    <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
+                  )}
+                </ellipse>
+                <ellipse cx="139" cy="72" rx="6" ry="8" fill="url(#hbcBalloonHighlight)" />
+                <text x="145" y="85" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
+
+                {/* Force vector */}
+                {showForceVectors && (carState === 'accelerating' || carState === 'braking') && (
+                  <line
+                    x1="145" y1="80"
+                    x2={145 + (carState === 'accelerating' ? 35 : -35)} y2="80"
+                    stroke={carState === 'accelerating' ? '#22c55e' : '#ef4444'}
+                    strokeWidth="3"
+                    markerEnd={carState === 'accelerating' ? 'url(#hbcArrowGreen)' : 'url(#hbcArrowRed)'}
+                  />
+                )}
+              </g>
+
+              {/* Pendulum with tilt */}
+              <g transform={`rotate(${pendulumAngle}, 210, 100)`}>
+                <line x1="210" y1="100" x2="210" y2="135" stroke="#94a3b8" strokeWidth="2.5" />
+                <circle cx="210" cy="145" r="12" fill="url(#hbcWeightGradient)" />
+
+                {/* Force vector */}
+                {showForceVectors && (carState === 'accelerating' || carState === 'braking') && (
+                  <line
+                    x1="210" y1="145"
+                    x2={210 + (carState === 'accelerating' ? -30 : 30)} y2="145"
+                    stroke={carState === 'accelerating' ? '#ef4444' : '#22c55e'}
+                    strokeWidth="3"
+                    markerEnd={carState === 'accelerating' ? 'url(#hbcArrowRed)' : 'url(#hbcArrowGreen)'}
+                  />
+                )}
+              </g>
+
+              {/* Wheels */}
+              <circle cx="125" cy="200" r="20" fill="url(#hbcWheelTire)" />
+              <circle cx="125" cy="200" r="8" fill="url(#hbcWheelHub)" />
+              <circle cx="225" cy="200" r="20" fill="url(#hbcWheelTire)" />
+              <circle cx="225" cy="200" r="8" fill="url(#hbcWheelHub)" />
+
+              {/* Direction arrow */}
+              {carState === 'accelerating' && (
+                <path d="M 290,140 L 330,140" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)" filter="url(#hbcGlow)">
+                  <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
                 </path>
+              )}
+              {carState === 'braking' && (
+                <path d="M 75,140 L 35,140" stroke="#ef4444" strokeWidth="4" markerEnd="url(#hbcArrowRed)" filter="url(#hbcGlow)">
+                  <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
+                </path>
+              )}
+
+              {/* Info box */}
+              <g transform="translate(320, 80)">
+                <rect x="0" y="0" width="120" height="85" fill="rgba(15, 23, 42, 0.9)" rx="8" stroke="#334155" />
+                <text x="60" y="18" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">Live Physics</text>
+                <text x="10" y="35" fill="#94a3b8" fontSize="9">Accel: {carAcceleration.toFixed(1)} m/s2</text>
+                <text x="10" y="50" fill="#a855f7" fontSize="9">Buoyancy: {balloonBuoyancy.toFixed(1)}x</text>
+                <text x="10" y="65" fill="#22c55e" fontSize="9">Balloon: {balloonAngle > 0 ? '+' : ''}{balloonAngle.toFixed(0)}deg</text>
+                <text x="10" y="80" fill="#ef4444" fontSize="9">Weight: {pendulumAngle > 0 ? '+' : ''}{pendulumAngle.toFixed(0)}deg</text>
               </g>
             </svg>
+          </div>
 
-            {/* Labels outside SVG */}
-            <p style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600, marginBottom: '1.5rem' }}>
-              ACCELERATE →
-            </p>
+          {/* Labels */}
+          <div className="flex justify-around mb-4">
+            <span style={{ fontSize: typo.small, color: colors.balloon, fontWeight: 600 }}>
+              Balloon: {balloonAngle > 0 ? 'FORWARD' : balloonAngle < 0 ? 'BACKWARD' : 'NEUTRAL'}
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.pendulum, fontWeight: 600 }}>
+              Weight: {pendulumAngle > 0 ? 'FORWARD' : pendulumAngle < 0 ? 'BACKWARD' : 'NEUTRAL'}
+            </span>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
-              {[
-                { id: 'a', text: 'Bubble moves backward (with inertia)' },
-                { id: 'b', text: 'Bubble moves forward (like helium balloon)' },
-                { id: 'c', text: 'Bubble stays in place' }
-              ].map(opt => (
-                <button
-                  key={opt.id}
-                  onClick={() => handleTwistPrediction(opt.id)}
-                  style={{
-                    padding: '1rem',
-                    background: twistPrediction === opt.id ? '#f59e0b' : 'white',
-                    color: twistPrediction === opt.id ? 'white' : '#1e293b',
-                    border: `2px solid ${twistPrediction === opt.id ? '#f59e0b' : '#e2e8f0'}`,
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                    zIndex: 10,
-                    position: 'relative' as const
-                  }}
-                >
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-
-            {twistPrediction && (
+          {/* Action buttons */}
+          <div className="flex gap-3 justify-center mb-4 flex-wrap">
+            <button
+              onClick={accelerateCar}
+              disabled={carState !== 'stopped'}
+              style={{ zIndex: 10 }}
+              className={`px-8 py-3 rounded-xl font-semibold transition-all ${
+                carState !== 'stopped'
+                  ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                  : 'bg-emerald-500 text-white hover:bg-emerald-400'
+              }`}
+            >
+              Accelerate
+            </button>
+            {carState === 'constant' && (
               <button
-                onClick={() => goToPhase('twist_play')}
-                style={{
-                  marginTop: '1.5rem',
-                  padding: '1rem 2.5rem',
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative' as const
-                }}
+                onClick={brakeCar}
+                style={{ zIndex: 10 }}
+                className="px-8 py-3 rounded-xl font-semibold bg-red-500 text-white hover:bg-red-400 transition-all"
               >
-                Test It!
+                Brake
               </button>
             )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // TWIST PLAY - Enhanced with comparisons
-      // ───────────────────────────────────────────────────
-      case 'twist_play':
-        const getModeLabel = () => {
-          switch (twistMode) {
-            case 'accelerate': return 'ACCELERATING FORWARD';
-            case 'brake': return 'BRAKING';
-            case 'turn_left': return 'TURNING LEFT';
-            case 'turn_right': return 'TURNING RIGHT';
-          }
-        };
-
-        const getModeColor = () => {
-          switch (twistMode) {
-            case 'accelerate': return '#22c55e';
-            case 'brake': return '#ef4444';
-            case 'turn_left': return '#3b82f6';
-            case 'turn_right': return '#f59e0b';
-          }
-        };
-
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#e2e8f0' }}>
-              Extended Comparison Lab
-            </h2>
-            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center' }}>
-              Compare balloon behavior with other objects in different scenarios
-            </p>
-
-            {/* Mode selector buttons */}
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem',
-              marginBottom: '1rem',
-              flexWrap: 'wrap',
-              justifyContent: 'center'
-            }}>
-              {(['accelerate', 'brake', 'turn_left', 'turn_right'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => {
-                    setTwistMode(mode);
-                    resetTwist();
-                    playGameSound('click');
-                  }}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: twistMode === mode
-                      ? mode === 'accelerate' ? 'rgba(34, 197, 94, 0.2)'
-                      : mode === 'brake' ? 'rgba(239, 68, 68, 0.2)'
-                      : mode === 'turn_left' ? 'rgba(59, 130, 246, 0.2)'
-                      : 'rgba(245, 158, 11, 0.2)'
-                      : 'rgba(71, 85, 105, 0.3)',
-                    color: twistMode === mode
-                      ? mode === 'accelerate' ? '#22c55e'
-                      : mode === 'brake' ? '#ef4444'
-                      : mode === 'turn_left' ? '#3b82f6'
-                      : '#f59e0b'
-                      : '#94a3b8',
-                    border: `1px solid ${twistMode === mode
-                      ? mode === 'accelerate' ? '#22c55e'
-                      : mode === 'brake' ? '#ef4444'
-                      : mode === 'turn_left' ? '#3b82f6'
-                      : '#f59e0b'
-                      : '#475569'}`,
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: 500,
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  {mode === 'accelerate' && 'Accelerate'}
-                  {mode === 'brake' && 'Brake'}
-                  {mode === 'turn_left' && 'Turn Left'}
-                  {mode === 'turn_right' && 'Turn Right'}
-                </button>
-              ))}
-            </div>
-
-            {/* Comparison toggle buttons */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {carState === 'stopped' && hasAccelerated && (
               <button
-                onClick={() => setShowWaterBucket(!showWaterBucket)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: showWaterBucket ? 'rgba(59, 130, 246, 0.2)' : 'rgba(71, 85, 105, 0.3)',
-                  color: showWaterBucket ? '#3b82f6' : '#94a3b8',
-                  border: `1px solid ${showWaterBucket ? '#3b82f6' : '#475569'}`,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
-              >
-                {showWaterBucket ? '✓' : '○'} Water Bucket
-              </button>
-              <button
-                onClick={() => setShowWeightComparison(!showWeightComparison)}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: showWeightComparison ? 'rgba(239, 68, 68, 0.2)' : 'rgba(71, 85, 105, 0.3)',
-                  color: showWeightComparison ? '#ef4444' : '#94a3b8',
-                  border: `1px solid ${showWeightComparison ? '#ef4444' : '#475569'}`,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: 500,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
-              >
-                {showWeightComparison ? '✓' : '○'} Heavy Weight
-              </button>
-            </div>
-
-            <svg viewBox="0 0 500 320" style={{ width: '100%', maxWidth: 550, marginBottom: '1rem' }}>
-              {renderPremiumDefs()}
-
-              {/* Car interior - top view for turning */}
-              {(twistMode === 'turn_left' || twistMode === 'turn_right') ? (
-                // Top-down view for turning
-                <g transform="translate(50, 50)">
-                  <rect x="0" y="0" width="400" height="180" fill="url(#hbcCarRoof)" rx="12" stroke="#475569" />
-
-                  {/* Car outline from top with gradient */}
-                  <rect x="150" y="50" width="100" height="120" fill="url(#hbcCarBodyBlue)" rx="10" stroke="#3b82f6" />
-                  {/* Car shine */}
-                  <rect x="150" y="50" width="100" height="15" fill="url(#hbcWindowShine)" rx="10" opacity="0.3" />
-
-                  {/* Balloon from top - moves into turn with premium gradient */}
-                  <circle
-                    cx={200 + (twistMode === 'turn_left' ? -twistBalloonAngle : twistBalloonAngle)}
-                    cy={90}
-                    r="20"
-                    fill="url(#hbcBalloonGloss)"
-                    filter="url(#hbcBalloonGlow)"
-                  >
-                    {twistCarState === 'accelerating' && (
-                      <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
-                    )}
-                  </circle>
-                  <text
-                    x={200 + (twistMode === 'turn_left' ? -twistBalloonAngle : twistBalloonAngle)}
-                    y="94"
-                    textAnchor="middle"
-                    fill="white"
-                    fontSize="10"
-                    fontWeight="bold"
-                  >
-                    He
-                  </text>
-
-                  {/* Heavy pendulum from top - swings away from turn with gradient */}
-                  <circle
-                    cx={200 + (twistMode === 'turn_left' ? twistPendulumAngle * 0.8 : -twistPendulumAngle * 0.8)}
-                    cy={140}
-                    r="14"
-                    fill="url(#hbcWeightGradient)"
-                    filter="url(#hbcWeightGlow)"
-                  />
-
-                  {/* Turn direction indicator with glow */}
-                  <g transform={`translate(${twistMode === 'turn_left' ? 50 : 350}, 110)`} filter="url(#hbcAccelGlow)">
-                    <path
-                      d={twistMode === 'turn_left'
-                        ? "M 0,0 A 30,30 0 0,0 -25,-25"
-                        : "M 0,0 A 30,30 0 0,1 25,-25"}
-                      fill="none"
-                      stroke={getModeColor()}
-                      strokeWidth="3"
-                    >
-                      <animate attributeName="opacity" values="1;0.6;1" dur="1s" repeatCount="indefinite" />
-                    </path>
-                  </g>
-                </g>
-              ) : (
-                // Side view for accelerate/brake
-                <g transform="translate(25, 45)">
-                  <rect x="0" y="0" width="450" height="160" fill="url(#hbcCarRoof)" rx="12" stroke="#475569" />
-
-                  {/* Sections */}
-                  {/* Left: Helium balloon */}
-                  <g transform="translate(30, 15)">
-                    <rect x="10" y="22" width="80" height="90" fill="rgba(30, 64, 175, 0.4)" rx="8" />
-
-                    <g transform={`rotate(${twistBalloonAngle}, 50, 100)`}>
-                      <line x1="50" y1="100" x2="50" y2="58" stroke="#d8b4fe" strokeWidth="1.5" />
-                      <ellipse cx="50" cy="42" rx="18" ry="20" fill="url(#hbcBalloonGloss)" filter="url(#hbcBalloonGlow)">
-                        {twistCarState === 'accelerating' && (
-                          <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
-                        )}
-                      </ellipse>
-                      <ellipse cx="45" cy="35" rx="6" ry="8" fill="url(#hbcBalloonHighlight)" />
-                      <text x="50" y="47" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
-                    </g>
-                  </g>
-
-                  {/* Middle: Water bottle with bubble */}
-                  <g transform="translate(150, 15)">
-                    <rect x="15" y="25" width="70" height="85" fill="url(#hbcWaterGradient)" rx="8" />
-                    <rect x="30" y="18" width="40" height="12" fill="url(#hbcWheelHub)" rx="4" />
-                    {/* Bottle shine */}
-                    <rect x="18" y="25" width="8" height="80" fill="url(#hbcWindowShine)" rx="4" opacity="0.3" />
-
-                    {/* Bubble moves same direction as balloon with glossy effect */}
-                    <ellipse
-                      cx={50 + twistBalloonAngle * 0.7}
-                      cy={60}
-                      rx="15"
-                      ry="13"
-                      fill="url(#hbcBubbleGloss)"
-                      filter="url(#hbcBalloonGlow)"
-                    >
-                      {twistCarState === 'accelerating' && (
-                        <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
-                      )}
-                    </ellipse>
-                  </g>
-
-                  {/* Water bucket on string (optional) with premium styling */}
-                  {showWaterBucket && (
-                    <g transform="translate(270, 15)">
-                      <g transform={`rotate(${bucketAngle}, 40, 25)`}>
-                        <line x1="40" y1="25" x2="40" y2="75" stroke="#d1d5db" strokeWidth="2" />
-                        {/* Bucket shape with gradient */}
-                        <path d="M 23,75 L 23,102 L 57,102 L 57,75 Z" fill="url(#hbcWheelHub)" />
-                        <path d="M 23,75 L 23,78 L 57,78 L 57,75 Z" fill="#9ca3af" />
-                        {/* Water inside with gradient - sloshes opposite to bucket tilt */}
-                        <path
-                          d={`M 26,${80 - bucketAngle * 0.3} L 54,${80 + bucketAngle * 0.3} L 54,99 L 26,99 Z`}
-                          fill="url(#hbcWaterGradient)"
-                        >
-                          {twistCarState === 'accelerating' && (
-                            <animate attributeName="opacity" values="0.8;1;0.8" dur="0.5s" repeatCount="indefinite" />
-                          )}
-                        </path>
-                      </g>
-                    </g>
-                  )}
-
-                  {/* Heavy weight pendulum (optional) with premium gradient */}
-                  {showWeightComparison && (
-                    <g transform={`translate(${showWaterBucket ? 370 : 300}, 15)`}>
-                      <g transform={`rotate(${weightAngle}, 40, 25)`}>
-                        <line x1="40" y1="25" x2="40" y2="78" stroke="#94a3b8" strokeWidth="2.5" />
-                        <circle cx="40" cy="90" r="16" fill="url(#hbcWeightGradient)" filter="url(#hbcWeightGlow)" />
-                        <text x="40" y="94" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">5kg</text>
-                      </g>
-                    </g>
-                  )}
-                </g>
-              )}
-
-              {/* Direction indicator with glow */}
-              <g transform="translate(175, 240)">
-                {twistMode === 'accelerate' && (
-                  <g filter="url(#hbcAccelGlow)">
-                    <path d="M 0,15 L 85,15" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
-                      {twistCarState === 'accelerating' && (
-                        <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
-                      )}
-                    </path>
-                  </g>
-                )}
-                {twistMode === 'brake' && (
-                  <g filter="url(#hbcAccelGlow)">
-                    <path d="M 85,15 L 0,15" stroke="#ef4444" strokeWidth="4" markerEnd="url(#hbcArrowRed)">
-                      {twistCarState === 'accelerating' && (
-                        <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
-                      )}
-                    </path>
-                  </g>
-                )}
-              </g>
-
-              {/* Result message with glow effect */}
-              {twistCarState === 'accelerating' && Math.abs(twistBalloonAngle) > 20 && (
-                <g>
-                  <rect x="125" y="270" width="250" height="35" fill="rgba(34, 197, 94, 0.2)" rx="10" stroke="rgba(34, 197, 94, 0.4)" strokeWidth="1.5">
-                    <animate attributeName="opacity" values="0.8;1;0.8" dur="1s" repeatCount="indefinite" />
-                  </rect>
-                </g>
-              )}
-
-              {/* Physics explanation box with enhanced styling */}
-              <g transform="translate(350, 240)">
-                <rect x="0" y="0" width="140" height="70" fill="rgba(15, 23, 42, 0.95)" rx="10" stroke="#334155" />
-                <rect x="0" y="0" width="140" height="18" fill="rgba(59, 130, 246, 0.2)" rx="10" />
-              </g>
-            </svg>
-
-            {/* Labels moved outside SVG */}
-            <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: 550, marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <span style={{ fontSize: typo.small, color: '#a855f7', fontWeight: 600 }}>Balloon: {twistBalloonAngle > 0 ? 'Forward' : twistBalloonAngle < 0 ? 'Backward' : 'Neutral'}</span>
-              <span style={{ fontSize: typo.small, color: '#60a5fa', fontWeight: 600 }}>Bubble: {twistBalloonAngle > 0 ? 'Forward' : twistBalloonAngle < 0 ? 'Backward' : 'Neutral'}</span>
-              {showWaterBucket && <span style={{ fontSize: typo.small, color: '#94a3b8', fontWeight: 600 }}>Bucket: {bucketAngle > 0 ? 'Forward' : bucketAngle < 0 ? 'Backward' : 'Neutral'}</span>}
-              {showWeightComparison && <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>Weight: {weightAngle > 0 ? 'Forward' : weightAngle < 0 ? 'Backward' : 'Neutral'}</span>}
-            </div>
-            <p style={{ fontSize: typo.body, color: getModeColor(), fontWeight: 600, marginBottom: '0.5rem' }}>
-              {twistMode === 'accelerate' ? 'ACCELERATE →' : twistMode === 'brake' ? '← BRAKING' : twistMode === 'turn_left' ? '← TURNING LEFT' : 'TURNING RIGHT →'}
-            </p>
-
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button
-                onClick={runTwistSimulation}
-                disabled={twistCarState !== 'stopped'}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: twistCarState !== 'stopped'
-                    ? '#475569'
-                    : `linear-gradient(135deg, ${getModeColor()}, ${getModeColor()}dd)`,
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 10,
-                  cursor: twistCarState !== 'stopped' ? 'not-allowed' : 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
-              >
-                {twistMode === 'accelerate' && 'Accelerate'}
-                {twistMode === 'brake' && 'Brake'}
-                {twistMode === 'turn_left' && 'Turn Left'}
-                {twistMode === 'turn_right' && 'Turn Right'}
-              </button>
-
-              <button
-                onClick={resetTwist}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: 'linear-gradient(135deg, #64748b, #475569)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 10,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
+                onClick={resetSimulation}
+                style={{ zIndex: 10 }}
+                className="px-8 py-3 rounded-xl font-semibold bg-slate-600 text-white hover:bg-slate-500 transition-all"
               >
                 Reset
               </button>
-            </div>
-
-            {twistCarState === 'accelerating' && Math.abs(twistBalloonAngle) > 20 && (
-              <button
-                onClick={() => {
-                  setShowTwistResult(true);
-                  if (twistPrediction === 'b') {
-                    onCorrectAnswer?.();
-                  } else {
-                    onIncorrectAnswer?.();
-                  }
-                }}
-                style={{
-                  padding: '1rem 2rem',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
-              >
-                See Results
-              </button>
-            )}
-
-            {showTwistResult && (
-              <div style={{
-                marginTop: '1rem',
-                padding: '1.25rem',
-                background: twistPrediction === 'b' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(251, 191, 36, 0.15)',
-                borderRadius: 12,
-                textAlign: 'center',
-                maxWidth: 450,
-                border: `1px solid ${twistPrediction === 'b' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(251, 191, 36, 0.3)'}`
-              }}>
-                <p style={{ fontWeight: 600, color: twistPrediction === 'b' ? '#22c55e' : '#fbbf24', fontSize: '1.1rem' }}>
-                  {twistPrediction === 'b' ? 'Correct!' : 'Same physics everywhere!'}
-                </p>
-                <p style={{ color: '#e2e8f0', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                  The bubble moves the <strong style={{ color: '#22c55e' }}>same direction as the balloon</strong> - both are less dense than their surroundings.
-                  Heavy objects (weight, water bucket) swing the opposite way due to inertia.
-                  {twistMode.includes('turn') && ' In turns, the balloon moves INTO the turn while weights swing OUT!'}
-                </p>
-                <button
-                  onClick={() => goToPhase('twist_review')}
-                  style={{
-                    marginTop: '1rem',
-                    padding: '0.75rem 2rem',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 10,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  Understand Why
-                </button>
-              </div>
             )}
           </div>
-        );
 
-      // ───────────────────────────────────────────────────
-      // TWIST REVIEW
-      // ───────────────────────────────────────────────────
-      case 'twist_review':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
-              The Universal Principle
-            </h2>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #fefce8, #fef9c3)',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#ca8a04', marginBottom: '0.75rem' }}>Relative Density is Key</h3>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <div style={{ background: 'white', padding: '0.75rem', borderRadius: 8, textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>🎈</div>
-                  <p style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '0.9rem' }}>Helium in Air</p>
-                  <p style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    ρ<sub>He</sub> = 0.18 kg/m³
-                    <br />
-                    ρ<sub>air</sub> = 1.2 kg/m³
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: '#22c55e', marginTop: '0.25rem' }}>
-                    He is 7× lighter
-                  </p>
-                </div>
-
-                <div style={{ background: 'white', padding: '0.75rem', borderRadius: 8, textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>💧</div>
-                  <p style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '0.9rem' }}>Air in Water</p>
-                  <p style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    ρ<sub>air</sub> = 1.2 kg/m³
-                    <br />
-                    ρ<sub>water</sub> = 1000 kg/m³
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: '#22c55e', marginTop: '0.25rem' }}>
-                    Air is 830× lighter
-                  </p>
-                </div>
-              </div>
-
-              <div style={{
-                background: 'white',
-                padding: '1rem',
-                borderRadius: 8,
-                textAlign: 'center'
-              }}>
-                <p style={{ fontWeight: 'bold', color: '#ca8a04', marginBottom: '0.5rem' }}>
-                  The Rule:
-                </p>
-                <p style={{ color: '#1e293b', fontSize: '0.9rem' }}>
-                  In any acceleration, <strong>less dense objects move opposite</strong> to the
-                  direction of pseudo-force (they "rise" against the effective gravity).
-                </p>
-              </div>
-            </div>
-
-            <div style={{
-              background: '#f0fdf4',
-              borderRadius: 12,
-              padding: '1rem',
-              maxWidth: 500,
-              marginBottom: '1.5rem'
-            }}>
-              <h4 style={{ color: '#166534', marginBottom: '0.5rem' }}>More Examples</h4>
-              <ul style={{ color: '#1e293b', fontSize: '0.9rem', paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                <li><strong>Turning car:</strong> Balloon moves INTO the turn</li>
-                <li><strong>Elevator going up:</strong> Balloon rises faster relative to car</li>
-                <li><strong>Airplane takeoff:</strong> Balloon tilts toward cockpit</li>
-              </ul>
-            </div>
-
+          {/* Navigation */}
+          <div className="flex gap-3">
             <button
-              onClick={() => goToPhase('transfer')}
-              style={{
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                zIndex: 10,
-                position: 'relative' as const
-              }}
+              onClick={goBack}
+              style={{ zIndex: 10 }}
+              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
             >
-              See Real Applications
+              Back
             </button>
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // TRANSFER
-      // ───────────────────────────────────────────────────
-      case 'transfer':
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
-              Buoyancy Effects in Action
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center' }}>
-              Explore each application to unlock the test
-            </p>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-              gap: '1rem',
-              width: '100%',
-              maxWidth: 600,
-              marginBottom: '1.5rem'
-            }}>
-              {applications.map((app, index) => (
-                <div
-                  key={index}
-                  onClick={() => {
-                    setCompletedApps(prev => new Set([...prev, index]));
-                    playGameSound('click');
-                  }}
-                  style={{
-                    background: completedApps.has(index)
-                      ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)'
-                      : 'white',
-                    borderRadius: 12,
-                    padding: '1rem',
-                    cursor: 'pointer',
-                    border: `2px solid ${completedApps.has(index) ? '#22c55e' : '#e2e8f0'}`,
-                    transition: 'all 0.2s',
-                    zIndex: 10,
-                    position: 'relative' as const
-                  }}
-                >
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{app.icon}</div>
-                  <h3 style={{ color: '#1e293b', fontSize: '1rem', marginBottom: '0.25rem' }}>
-                    {app.title}
-                    {completedApps.has(index) && ' '}
-                  </h3>
-                  <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                    {app.description}
-                  </p>
-                  {completedApps.has(index) && (
-                    <p style={{ color: '#1e293b', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                      {app.detail}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1rem' }}>
-              {completedApps.size} / {applications.length} applications explored
-            </p>
-
-            {completedApps.size >= applications.length && (
-              <button
-                onClick={() => goToPhase('test')}
-                style={{
-                  padding: '1rem 2.5rem',
-                  fontSize: '1.1rem',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative' as const
-                }}
-              >
-                Take the Test
-              </button>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // TEST
-      // ───────────────────────────────────────────────────
-      case 'test':
-        const score = testQuestions.reduce((acc, q, i) => {
-          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
-            return acc + 1;
-          }
-          return acc;
-        }, 0);
-
-        return (
-          <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
-              Acceleration Buoyancy Mastery Test
-            </h2>
-
-            <div style={{ width: '100%', maxWidth: 600 }}>
-              {testQuestions.map((tq, qi) => {
-                const isCorrect = tq.options[testAnswers[qi]]?.correct;
-                return (
-                <div
-                  key={qi}
-                  style={{
-                    background: 'white',
-                    borderRadius: 12,
-                    padding: '1rem',
-                    marginBottom: '1rem',
-                    border: `2px solid ${
-                      testSubmitted
-                        ? isCorrect
-                          ? '#22c55e'
-                          : testAnswers[qi] !== undefined
-                          ? '#ef4444'
-                          : '#e2e8f0'
-                        : '#e2e8f0'
-                    }`
-                  }}
-                >
-                  <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.75rem' }}>
-                    {qi + 1}. {tq.question}
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {tq.options.map((opt, oi) => (
-                      <button
-                        key={oi}
-                        onClick={() => handleTestAnswer(qi, oi)}
-                        disabled={testSubmitted}
-                        style={{
-                          padding: '0.6rem 1rem',
-                          textAlign: 'left',
-                          background: testSubmitted
-                            ? opt.correct
-                              ? '#dcfce7'
-                              : testAnswers[qi] === oi
-                              ? '#fee2e2'
-                              : '#f8fafc'
-                            : testAnswers[qi] === oi
-                            ? '#dbeafe'
-                            : '#f8fafc',
-                          color: '#1e293b',
-                          border: `1px solid ${
-                            testSubmitted
-                              ? opt.correct
-                                ? '#22c55e'
-                                : testAnswers[qi] === oi
-                                ? '#ef4444'
-                                : '#e2e8f0'
-                              : testAnswers[qi] === oi
-                              ? '#3b82f6'
-                              : '#e2e8f0'
-                          }`,
-                          borderRadius: 8,
-                          cursor: testSubmitted ? 'default' : 'pointer',
-                          fontSize: '0.9rem',
-                          zIndex: 10,
-                          position: 'relative' as const
-                        }}
-                      >
-                        {opt.text}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )})}
-            </div>
-
-            {!testSubmitted ? (
-              <button
-                onClick={submitTest}
-                disabled={Object.keys(testAnswers).length < testQuestions.length}
-                style={{
-                  padding: '1rem 2.5rem',
-                  fontSize: '1.1rem',
-                  background: Object.keys(testAnswers).length < testQuestions.length
-                    ? '#94a3b8'
-                    : 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  cursor: Object.keys(testAnswers).length < testQuestions.length ? 'not-allowed' : 'pointer',
-                  fontWeight: 600,
-                  zIndex: 10,
-                  position: 'relative' as const
-                }}
-              >
-                Submit Test ({Object.keys(testAnswers).length}/{testQuestions.length})
-              </button>
-            ) : (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: score >= 7 ? '#22c55e' : '#f59e0b',
-                  marginBottom: '1rem'
-                }}>
-                  Score: {score}/{testQuestions.length} ({Math.round(score / testQuestions.length * 100)}%)
-                </p>
-
-                <button
-                  onClick={() => goToPhase('mastery')}
-                  style={{
-                    padding: '1rem 2.5rem',
-                    fontSize: '1.1rem',
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 12,
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    zIndex: 10,
-                    position: 'relative' as const
-                  }}
-                >
-                  Complete Journey
-                </button>
-              </div>
-            )}
-          </div>
-        );
-
-      // ───────────────────────────────────────────────────
-      // MASTERY
-      // ───────────────────────────────────────────────────
-      case 'mastery':
-        const finalScore = testQuestions.reduce((acc, q, i) => {
-          if (testAnswers[i] !== undefined && q.options[testAnswers[i]]?.correct) {
-            return acc + 1;
-          }
-          return acc;
-        }, 0);
-
-        return (
-          <div className="flex flex-col items-center" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎈🚗🎉</div>
-            <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#1e293b' }}>
-              Acceleration Buoyancy Master!
-            </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', maxWidth: 400 }}>
-              You now understand why helium balloons seem to defy physics
-              and how acceleration creates effective gravity fields!
-            </p>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-              borderRadius: 16,
-              padding: '1.5rem',
-              maxWidth: 400,
-              marginBottom: '1.5rem'
-            }}>
-              <h3 style={{ color: '#1d4ed8', marginBottom: '1rem' }}>Your Achievements</h3>
-
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1rem' }}>
-                <div>
-                  <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1e293b' }}>
-                    {finalScore}/{testQuestions.length}
-                  </p>
-                  <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Test Score</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1e293b' }}>4</p>
-                  <p style={{ fontSize: '0.85rem', color: '#64748b' }}>Applications</p>
-                </div>
-              </div>
-
-              <div style={{
-                background: 'white',
-                borderRadius: 10,
-                padding: '1rem',
-                textAlign: 'left'
-              }}>
-                <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.5rem' }}>
-                  Key Takeaways:
-                </p>
-                <ul style={{ color: '#64748b', fontSize: '0.85rem', paddingLeft: '1.25rem', lineHeight: 1.8 }}>
-                  <li>Acceleration creates pressure gradients</li>
-                  <li>Less dense objects move toward low pressure</li>
-                  <li>Equivalence principle: acceleration ≈ gravity</li>
-                  <li>Same rule: balloon in air = bubble in water</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Confetti */}
-            <svg viewBox="0 0 300 100" style={{ width: '100%', maxWidth: 300 }}>
-              {[...Array(20)].map((_, i) => (
-                <circle
-                  key={i}
-                  cx={Math.random() * 300}
-                  cy={Math.random() * 100}
-                  r={3 + Math.random() * 4}
-                  fill={['#3b82f6', '#a855f7', '#22c55e', '#f59e0b', '#ef4444'][i % 5]}
-                >
-                  <animate
-                    attributeName="cy"
-                    values={`${Math.random() * 30};${70 + Math.random() * 30}`}
-                    dur={`${1 + Math.random()}s`}
-                    repeatCount="indefinite"
-                  />
-                  <animate
-                    attributeName="opacity"
-                    values="1;0"
-                    dur={`${1 + Math.random()}s`}
-                    repeatCount="indefinite"
-                  />
-                </circle>
-              ))}
-            </svg>
-
             <button
               onClick={() => {
-                onPhaseComplete?.();
-                playGameSound('complete');
+                if (prediction === 1) {
+                  onCorrectAnswer?.();
+                } else {
+                  onIncorrectAnswer?.();
+                }
+                goNext();
               }}
-              style={{
-                marginTop: '1rem',
-                padding: '1rem 2.5rem',
-                fontSize: '1.1rem',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 12,
-                cursor: 'pointer',
-                fontWeight: 600,
-                zIndex: 10,
-                position: 'relative' as const
-              }}
+              disabled={!hasAccelerated}
+              style={{ zIndex: 10 }}
+              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
+                hasAccelerated
+                  ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
+                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+              }`}
             >
-              Complete Lesson
+              See Why This Happens
             </button>
           </div>
-        );
-
-      default:
-        return null;
-    }
+        </div>
+      </div>
+    );
   };
 
-  const currentIndex = phaseOrder.indexOf(phase);
+  // ============================================================================
+  // PHASE: REVIEW
+  // ============================================================================
+  const renderReview = () => {
+    const userWasRight = prediction === 1;
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+    return (
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="max-w-xl w-full">
+          {/* Result */}
+          <div className="text-center mb-8">
+            <div className="text-6xl mb-4">{userWasRight ? 'Correct!' : 'Surprising!'}</div>
+            <h2 className={`text-2xl font-bold mb-2 ${userWasRight ? 'text-emerald-400' : 'text-purple-400'}`}>
+              {userWasRight ? 'You predicted correctly!' : 'The balloon moves FORWARD!'}
+            </h2>
+            <p className="text-slate-400">Let&apos;s understand why this happens</p>
+          </div>
 
-      {/* Ambient glow effects */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+          {/* Core Concept */}
+          <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-6">
+            <h3 className="text-xl font-bold text-white mb-4">The Physics: Buoyancy in Acceleration</h3>
 
-      {/* Fixed header with phase navigation */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
-                <span className="text-lg">🎈</span>
+            <div className="bg-slate-900/60 rounded-lg p-4 text-center mb-4">
+              <p className="text-xl font-bold text-purple-400 mb-1">Pressure Gradient Effect</p>
+              <p className="text-lg font-mono text-slate-300">
+                High Pressure (back) - Low Pressure (front)
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                <div className="font-semibold text-blue-400 mb-1">1. Car accelerates forward</div>
+                <div className="text-sm text-slate-300">Newton&apos;s laws apply to everything inside</div>
               </div>
-              <div>
-                <h1 className="text-sm font-semibold text-white">Helium Balloon Car</h1>
-                <p className="text-xs text-slate-400">Acceleration Buoyancy</p>
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                <div className="font-semibold text-purple-400 mb-1">2. Air (denser) has inertia</div>
+                <div className="text-sm text-slate-300">Air molecules get pushed toward the back of the car</div>
+              </div>
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3">
+                <div className="font-semibold text-emerald-400 mb-1">3. Pressure gradient forms</div>
+                <div className="text-sm text-slate-300">Higher pressure at back, lower at front</div>
+              </div>
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+                <div className="font-semibold text-amber-400 mb-1">4. Balloon rises toward low pressure</div>
+                <div className="text-sm text-slate-300">Just like a balloon rises against gravity in air!</div>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              {phaseOrder.map((p, i) => (
+          </div>
+
+          {/* Einstein's Insight */}
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
+            <p className="font-semibold text-amber-400 mb-2">Einstein&apos;s Equivalence Principle</p>
+            <p className="text-slate-300 text-sm">
+              Acceleration is indistinguishable from gravity. Forward acceleration creates a backward &quot;pseudo-gravity&quot; - and the balloon rises against it!
+            </p>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-3">
+            <button
+              onClick={goBack}
+              style={{ zIndex: 10 }}
+              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={goNext}
+              style={{ zIndex: 10 }}
+              className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25 transition-all"
+            >
+              Try a Twist
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // PHASE: TWIST PREDICT
+  // ============================================================================
+  const renderTwistPredict = () => {
+    const twistOptions = [
+      { id: 0, label: 'Backward (with inertia)', icon: '⬅️', description: 'Like a regular object' },
+      { id: 1, label: 'Forward (like helium balloon)', icon: '➡️', description: 'Same physics applies' },
+      { id: 2, label: 'Stays in place', icon: '⏺️', description: 'Water prevents movement' },
+    ];
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
+        <div className="max-w-xl w-full">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <span className="text-xs font-bold text-amber-400 tracking-widest uppercase mb-2 block">
+              TWIST SCENARIO
+            </span>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2">
+              Bubble in Water
+            </h2>
+            <p className="text-slate-400">
+              A sealed bottle of water has an air bubble inside. When the car accelerates forward, which way does the bubble move?
+            </p>
+          </div>
+
+          {/* Options */}
+          <div className="flex flex-col gap-3 mb-8">
+            {twistOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  setTwistPrediction(opt.id);
+                  playSound('click');
+                }}
+                style={{ zIndex: 10 }}
+                className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-200 border-2 ${
+                  twistPrediction === opt.id
+                    ? 'border-amber-500 bg-amber-500/10'
+                    : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
+                }`}
+              >
+                <span className="text-3xl">{opt.icon}</span>
+                <div>
+                  <div className={`font-semibold ${twistPrediction === opt.id ? 'text-amber-400' : 'text-white'}`}>
+                    {opt.label}
+                  </div>
+                  <div className="text-sm text-slate-400">{opt.description}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-3">
+            <button
+              onClick={goBack}
+              style={{ zIndex: 10 }}
+              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => {
+                if (twistPrediction !== null) {
+                  emitEvent('twist_prediction_made', { prediction: twistPrediction });
+                  goToPhase('twist_play');
+                }
+              }}
+              disabled={twistPrediction === null}
+              style={{ zIndex: 10 }}
+              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
+                twistPrediction !== null
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25'
+                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+              }`}
+            >
+              Test It
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // PHASE: TWIST PLAY
+  // ============================================================================
+  const renderTwistPlay = () => {
+    const getModeColor = () => {
+      switch (twistMode) {
+        case 'accelerate': return '#22c55e';
+        case 'brake': return '#ef4444';
+        case 'turn_left': return '#3b82f6';
+        case 'turn_right': return '#f59e0b';
+      }
+    };
+
+    return (
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="max-w-2xl w-full">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <span className="text-xs font-bold text-amber-400 tracking-widest uppercase mb-2 block">
+              EXTENDED LAB
+            </span>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">
+              Compare Different Scenarios
+            </h2>
+          </div>
+
+          {/* Mode selector */}
+          <div className="flex gap-2 justify-center mb-4 flex-wrap">
+            {(['accelerate', 'brake', 'turn_left', 'turn_right'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => {
+                  setTwistMode(mode);
+                  resetTwist();
+                  playSound('click');
+                }}
+                style={{ zIndex: 10 }}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all border ${
+                  twistMode === mode
+                    ? 'bg-opacity-20 border-opacity-50'
+                    : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:bg-slate-700/50'
+                }`}
+                style={{
+                  background: twistMode === mode ? `${mode === 'accelerate' ? '#22c55e' : mode === 'brake' ? '#ef4444' : mode === 'turn_left' ? '#3b82f6' : '#f59e0b'}20` : undefined,
+                  color: twistMode === mode ? getModeColor() : undefined,
+                  borderColor: twistMode === mode ? getModeColor() : undefined,
+                  zIndex: 10,
+                }}
+              >
+                {mode === 'accelerate' && 'Accelerate'}
+                {mode === 'brake' && 'Brake'}
+                {mode === 'turn_left' && 'Turn Left'}
+                {mode === 'turn_right' && 'Turn Right'}
+              </button>
+            ))}
+          </div>
+
+          {/* Visualization */}
+          <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-4">
+            <svg viewBox="0 0 450 200" style={{ width: '100%' }}>
+              {renderSvgDefs()}
+
+              {/* Car interior */}
+              <rect x="25" y="20" width="400" height="140" fill="url(#hbcCarRoof)" rx="12" stroke="#475569" />
+
+              {/* Balloon section */}
+              <g transform="translate(60, 30)">
+                <rect x="0" y="0" width="100" height="100" fill="rgba(30, 64, 175, 0.3)" rx="8" />
+                <text x="50" y="115" textAnchor="middle" fill="#a855f7" fontSize="10" fontWeight="600">Balloon</text>
+
+                <g transform={`rotate(${twistBalloonAngle}, 50, 80)`}>
+                  <line x1="50" y1="80" x2="50" y2="45" stroke="#d8b4fe" strokeWidth="1.5" />
+                  <ellipse cx="50" cy="30" rx="16" ry="18" fill="url(#hbcBalloonGloss)" filter="url(#hbcGlow)" />
+                  <text x="50" y="35" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">He</text>
+                </g>
+              </g>
+
+              {/* Bubble in water section */}
+              <g transform="translate(175, 30)">
+                <rect x="0" y="0" width="100" height="100" fill="rgba(59, 130, 246, 0.4)" rx="8" />
+                <text x="50" y="115" textAnchor="middle" fill="#60a5fa" fontSize="10" fontWeight="600">Bubble</text>
+
+                <ellipse
+                  cx={50 + twistBalloonAngle * 0.7}
+                  cy="50"
+                  rx="14" ry="12"
+                  fill="rgba(255,255,255,0.9)"
+                  stroke="rgba(255,255,255,0.5)"
+                  strokeWidth="2"
+                />
+              </g>
+
+              {/* Pendulum section */}
+              <g transform="translate(290, 30)">
+                <rect x="0" y="0" width="100" height="100" fill="rgba(239, 68, 68, 0.2)" rx="8" />
+                <text x="50" y="115" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="600">Weight</text>
+
+                <g transform={`rotate(${twistPendulumAngle}, 50, 20)`}>
+                  <line x1="50" y1="20" x2="50" y2="60" stroke="#94a3b8" strokeWidth="2" />
+                  <circle cx="50" cy="70" r="14" fill="url(#hbcWeightGradient)" />
+                </g>
+              </g>
+
+              {/* Direction indicator */}
+              <g transform="translate(175, 165)">
+                <text
+                  x="50" y="15"
+                  textAnchor="middle"
+                  fill={getModeColor()}
+                  fontSize="12"
+                  fontWeight="bold"
+                >
+                  {twistMode === 'accelerate' && 'ACCELERATE -->'}
+                  {twistMode === 'brake' && '<-- BRAKING'}
+                  {twistMode === 'turn_left' && '<-- TURNING LEFT'}
+                  {twistMode === 'turn_right' && 'TURNING RIGHT -->'}
+                </text>
+              </g>
+            </svg>
+          </div>
+
+          {/* Status labels */}
+          <div className="flex justify-around mb-4 flex-wrap gap-2">
+            <span style={{ fontSize: typo.small, color: colors.balloon, fontWeight: 600 }}>
+              Balloon: {twistBalloonAngle > 0 ? 'Forward' : twistBalloonAngle < 0 ? 'Backward' : 'Neutral'}
+            </span>
+            <span style={{ fontSize: typo.small, color: '#60a5fa', fontWeight: 600 }}>
+              Bubble: {twistBalloonAngle > 0 ? 'Forward' : twistBalloonAngle < 0 ? 'Backward' : 'Neutral'}
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.pendulum, fontWeight: 600 }}>
+              Weight: {twistPendulumAngle > 0 ? 'Forward' : twistPendulumAngle < 0 ? 'Backward' : 'Neutral'}
+            </span>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-3 justify-center mb-6">
+            <button
+              onClick={runTwistSimulation}
+              disabled={twistCarState !== 'stopped'}
+              style={{
+                zIndex: 10,
+                background: twistCarState !== 'stopped' ? '#475569' : `linear-gradient(135deg, ${getModeColor()}, ${getModeColor()}cc)`,
+              }}
+              className="px-8 py-3 rounded-xl font-semibold text-white transition-all"
+            >
+              Run Simulation
+            </button>
+            <button
+              onClick={resetTwist}
+              style={{ zIndex: 10 }}
+              className="px-8 py-3 rounded-xl font-semibold bg-slate-600 text-white hover:bg-slate-500 transition-all"
+            >
+              Reset
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-3">
+            <button
+              onClick={goBack}
+              style={{ zIndex: 10 }}
+              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => {
+                if (twistPrediction === 1) {
+                  onCorrectAnswer?.();
+                } else {
+                  onIncorrectAnswer?.();
+                }
+                goNext();
+              }}
+              disabled={twistCarState === 'stopped' && !hasAccelerated}
+              style={{ zIndex: 10 }}
+              className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25 transition-all"
+            >
+              See the Insight
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // PHASE: TWIST REVIEW
+  // ============================================================================
+  const renderTwistReview = () => {
+    const userWasRight = twistPrediction === 1;
+
+    return (
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="max-w-xl w-full">
+          {/* Result */}
+          <div className="text-center mb-8">
+            <div className="text-6xl mb-4">{userWasRight ? 'Exactly!' : 'Same Physics!'}</div>
+            <h2 className={`text-2xl font-bold mb-2 ${userWasRight ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {userWasRight ? 'You got it!' : 'The bubble moves forward too!'}
+            </h2>
+          </div>
+
+          {/* Core Insight */}
+          <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-6">
+            <h3 className="text-xl font-bold text-white mb-4">Relative Density is Key</h3>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 text-center">
+                <div className="text-2xl mb-2">Helium in Air</div>
+                <div className="text-slate-400 text-sm">
+                  He: 0.18 kg/m3<br />
+                  Air: 1.2 kg/m3
+                </div>
+                <div className="text-emerald-400 text-xs mt-2 font-semibold">7x lighter</div>
+              </div>
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center">
+                <div className="text-2xl mb-2">Air in Water</div>
+                <div className="text-slate-400 text-sm">
+                  Air: 1.2 kg/m3<br />
+                  Water: 1000 kg/m3
+                </div>
+                <div className="text-emerald-400 text-xs mt-2 font-semibold">830x lighter</div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/60 rounded-lg p-4 text-center">
+              <p className="text-amber-400 font-semibold mb-2">The Universal Rule</p>
+              <p className="text-slate-300 text-sm">
+                In any acceleration field, less dense objects move opposite to the pseudo-force direction - they &quot;rise&quot; against the effective gravity.
+              </p>
+            </div>
+          </div>
+
+          {/* More examples */}
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-6">
+            <p className="font-semibold text-emerald-400 mb-2">More Examples</p>
+            <ul className="text-slate-300 text-sm space-y-1">
+              <li>Turning car: Balloon moves INTO the turn</li>
+              <li>Elevator accelerating up: Enhanced buoyancy</li>
+              <li>Airplane takeoff: Balloon tilts toward cockpit</li>
+            </ul>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-3">
+            <button
+              onClick={goBack}
+              style={{ zIndex: 10 }}
+              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={goNext}
+              style={{ zIndex: 10 }}
+              className="flex-1 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all"
+            >
+              Real World Applications
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // PHASE: TRANSFER (4 Real-World Applications)
+  // ============================================================================
+  const renderTransfer = () => {
+    const app = applications[activeApp];
+    const allRead = completedApps.size >= applications.length;
+
+    return (
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="max-w-2xl w-full">
+          {/* Progress indicator */}
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <span className="text-sm text-slate-400">
+              {completedApps.size} of {applications.length} applications explored
+            </span>
+            <div className="flex gap-1.5">
+              {applications.map((_, idx) => (
                 <div
-                  key={p}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    i === currentIndex
-                      ? 'w-6 bg-gradient-to-r from-purple-400 to-blue-400'
-                      : i < currentIndex
-                      ? 'w-2 bg-purple-500'
-                      : 'w-2 bg-slate-700'
+                  key={idx}
+                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                    completedApps.has(idx) ? 'bg-emerald-500' : idx === activeApp ? 'bg-purple-500' : 'bg-slate-700'
                   }`}
                 />
               ))}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main content area */}
-      <div className="relative z-10 pt-20 pb-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 md:p-8">
-            {renderPhase()}
+          {/* Progress bar */}
+          <div className="mb-4">
+            {renderProgressBar(completedApps.size, applications.length, colors.success)}
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex gap-2 mb-4 flex-wrap justify-center">
+            {applications.map((a, i) => {
+              const isCompleted = completedApps.has(i);
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => setActiveApp(i)}
+                  style={{
+                    zIndex: 10,
+                    background: activeApp === i ? a.color : undefined,
+                  }}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                    activeApp === i
+                      ? 'text-white'
+                      : isCompleted
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'
+                  }`}
+                >
+                  {isCompleted ? '+ ' : ''}{a.icon} {a.title}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Content */}
+          <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-6">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-4">
+              <div
+                className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl"
+                style={{ background: `${app.color}20` }}
+              >
+                {app.icon}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{app.title}</h2>
+                <p className="text-sm font-medium" style={{ color: app.color }}>{app.subtitle}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="text-slate-300 mb-4 leading-relaxed">{app.description}</p>
+
+            {/* Physics Connection */}
+            <div
+              className="rounded-lg p-4 mb-4 border"
+              style={{ background: `${app.color}10`, borderColor: `${app.color}30` }}
+            >
+              <p className="font-semibold mb-1" style={{ color: app.color }}>Physics Connection</p>
+              <p className="text-sm text-slate-300">{app.physics}</p>
+            </div>
+
+            {/* Insight */}
+            <div className="bg-slate-900/60 rounded-lg p-4 mb-4 border border-slate-700/50">
+              <p className="font-semibold text-white mb-1">Key Insight</p>
+              <p className="text-sm text-slate-400">{app.insight}</p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {app.stats.map((stat, i) => (
+                <div key={i} className="bg-slate-900/60 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold" style={{ color: app.color }}>{stat.value}</div>
+                  <div className="text-xs text-slate-400">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Mark as Read Button */}
+            {!completedApps.has(activeApp) ? (
+              <button
+                onClick={() => {
+                  const newCompleted = new Set(completedApps);
+                  newCompleted.add(activeApp);
+                  setCompletedApps(newCompleted);
+                  emitEvent('app_explored', { app: app.id });
+                  playSound('complete');
+                  if (activeApp < applications.length - 1) {
+                    setTimeout(() => setActiveApp(activeApp + 1), 300);
+                  }
+                }}
+                style={{ zIndex: 10 }}
+                className="w-full py-3 rounded-lg font-semibold bg-emerald-500 text-white hover:bg-emerald-400 transition-colors"
+              >
+                Mark &quot;{app.title}&quot; as Read
+              </button>
+            ) : (
+              <div className="w-full py-3 rounded-lg font-semibold text-center bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                Completed
+              </div>
+            )}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-3">
+            <button
+              onClick={goBack}
+              style={{ zIndex: 10 }}
+              className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => goToPhase('test')}
+              disabled={!allRead}
+              style={{ zIndex: 10 }}
+              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
+                allRead
+                  ? 'bg-gradient-to-r from-purple-500 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
+                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+              }`}
+            >
+              Take the Quiz
+            </button>
           </div>
         </div>
       </div>
+    );
+  };
+
+  // ============================================================================
+  // PHASE: TEST (10 Questions)
+  // ============================================================================
+  const renderTest = () => {
+    const q = testQuestions[testIndex];
+    const totalCorrect = testAnswers.reduce((sum, ans, i) =>
+      sum + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
+
+    if (testSubmitted) {
+      const passed = totalCorrect >= 7;
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8">
+          <div className="text-center max-w-md">
+            <div className="text-7xl mb-4">{passed ? 'Excellent!' : 'Keep Learning!'}</div>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {passed ? 'Outstanding Performance!' : 'Good Effort!'}
+            </h2>
+            <div className={`text-6xl font-bold mb-4 ${passed ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {totalCorrect}/10
+            </div>
+            <p className="text-slate-400 mb-8">
+              {passed ? 'You\'ve mastered acceleration buoyancy!' : 'Review the concepts and try again.'}
+            </p>
+            <button
+              onClick={() => {
+                if (passed) {
+                  setTestScore(totalCorrect);
+                  goToPhase('mastery');
+                } else {
+                  goToPhase('review');
+                }
+              }}
+              style={{ zIndex: 10 }}
+              className={`px-8 py-4 rounded-xl font-semibold text-lg ${
+                passed
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
+                  : 'bg-gradient-to-r from-purple-500 to-blue-600 text-white'
+              }`}
+            >
+              {passed ? 'Complete!' : 'Review Material'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center px-6 py-8">
+        <div className="max-w-xl w-full">
+          {/* Question Header */}
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-xs font-bold text-purple-400 tracking-widest uppercase">
+              QUESTION {testIndex + 1} OF 10
+            </span>
+            <div className="flex gap-1">
+              {testQuestions.map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full ${
+                    testAnswers[i] !== null
+                      ? testQuestions[i].options[testAnswers[i] as number]?.correct ? 'bg-emerald-500' : 'bg-red-500'
+                      : i === testIndex ? 'bg-purple-500' : 'bg-slate-700'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mb-6">
+            {renderProgressBar(testIndex + 1, testQuestions.length)}
+          </div>
+
+          {/* Question */}
+          <h2 className="text-xl font-semibold text-white mb-6 leading-relaxed">
+            {q.question}
+          </h2>
+
+          {/* Options */}
+          <div className="flex flex-col gap-3 mb-6">
+            {q.options.map((opt, i) => {
+              const isSelected = testAnswers[testIndex] === i;
+              const isCorrect = opt.correct;
+              const showResult = testAnswers[testIndex] !== null;
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (testAnswers[testIndex] === null) {
+                      const newAnswers = [...testAnswers];
+                      newAnswers[testIndex] = i;
+                      setTestAnswers(newAnswers);
+                      emitEvent('test_answered', { questionIndex: testIndex, correct: opt.correct });
+                      playSound(opt.correct ? 'success' : 'failure');
+                    }
+                  }}
+                  style={{ zIndex: 10 }}
+                  className={`p-4 rounded-xl text-left transition-all border-2 ${
+                    showResult
+                      ? isCorrect
+                        ? 'bg-emerald-500/10 border-emerald-500'
+                        : isSelected
+                          ? 'bg-red-500/10 border-red-500'
+                          : 'bg-slate-800/50 border-slate-700'
+                      : isSelected
+                        ? 'bg-purple-500/10 border-purple-500'
+                        : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/50'
+                  }`}
+                >
+                  <span className={`font-bold mr-3 ${
+                    showResult
+                      ? isCorrect ? 'text-emerald-400' : isSelected ? 'text-red-400' : 'text-slate-500'
+                      : 'text-purple-400'
+                  }`}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  <span className="text-white">{opt.text}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Explanation */}
+          {testAnswers[testIndex] !== null && (
+            <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6">
+              <p className="font-semibold text-white mb-1">Explanation</p>
+              <p className="text-sm text-slate-400">{q.explanation}</p>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="flex justify-between">
+            {testIndex > 0 ? (
+              <button
+                onClick={() => setTestIndex(testIndex - 1)}
+                style={{ zIndex: 10 }}
+                className="px-6 py-3 rounded-xl font-semibold text-slate-400 border border-slate-700 hover:bg-slate-800 transition-colors"
+              >
+                Previous
+              </button>
+            ) : <div />}
+            {testAnswers[testIndex] !== null && (
+              testIndex < testQuestions.length - 1 ? (
+                <button
+                  onClick={() => setTestIndex(testIndex + 1)}
+                  style={{ zIndex: 10 }}
+                  className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-blue-600 text-white"
+                >
+                  Next Question
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(true);
+                    emitEvent('test_completed', { score: totalCorrect });
+                  }}
+                  style={{ zIndex: 10 }}
+                  className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+                >
+                  See Results
+                </button>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // PHASE: MASTERY
+  // ============================================================================
+  const renderMastery = () => (
+    <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-12 text-center">
+      <div className="max-w-md">
+        {/* Trophy */}
+        <div className="w-28 h-28 rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center mx-auto mb-8 text-6xl">
+          Trophy
+        </div>
+
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-white mb-3">
+          Congratulations!
+        </h1>
+        <h2 className="text-xl font-semibold text-purple-400 mb-4">
+          Acceleration Buoyancy Master
+        </h2>
+
+        <p className="text-lg text-slate-400 mb-8 leading-relaxed">
+          You now understand why helium balloons move forward in accelerating cars, and how this demonstrates Einstein&apos;s equivalence principle!
+        </p>
+
+        {/* Score */}
+        <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50 mb-6">
+          <div className="text-sm text-slate-400 mb-1">Quiz Score</div>
+          <div className="text-3xl font-bold text-emerald-400">{testScore}/10</div>
+        </div>
+
+        {/* Achievements */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          {[
+            { icon: 'Balloon', label: 'Buoyancy' },
+            { icon: 'Physics', label: 'Pressure' },
+            { icon: 'Einstein', label: 'Equivalence' },
+          ].map((achievement, i) => (
+            <div key={i} className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
+              <div className="text-2xl mb-2">{achievement.icon}</div>
+              <div className="text-xs text-slate-400">{achievement.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Key Formula */}
+        <div className="bg-slate-800/60 rounded-xl p-6 border border-slate-700/50 mb-8">
+          <p className="text-xs font-bold text-purple-400 tracking-widest uppercase mb-3">
+            KEY PRINCIPLE MASTERED
+          </p>
+          <p className="text-xl font-bold text-white">
+            Acceleration = Effective Gravity Field
+          </p>
+          <p className="text-sm text-slate-400 mt-2">
+            Less dense objects &quot;rise&quot; against pseudo-gravity
+          </p>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={() => {
+            emitEvent('mastery_achieved', { game: 'helium_balloon_car', score: testScore });
+            playSound('complete');
+            if (onComplete) onComplete();
+          }}
+          style={{ zIndex: 10 }}
+          className="px-8 py-4 rounded-xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
+        >
+          Complete Lesson
+        </button>
+      </div>
+    </div>
+  );
+
+  // ============================================================================
+  // PHASE ROUTER
+  // ============================================================================
+  const renderPhase = () => {
+    switch (phase) {
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
+      default: return renderHook();
+    }
+  };
+
+  // ============================================================================
+  // MAIN RENDER
+  // ============================================================================
+  return (
+    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+      {/* Premium background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-lg">
+              Balloon
+            </div>
+            <div>
+              <span className="text-sm font-semibold text-white/80 tracking-wide">Helium Balloon Car</span>
+              <p className="text-xs text-slate-400">Acceleration Buoyancy</p>
+            </div>
+          </div>
+          {renderNavDots()}
+          <span className="text-sm font-medium text-purple-400">{phaseLabels[phase]}</span>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="relative pt-20 pb-12">{renderPhase()}</div>
     </div>
   );
 }

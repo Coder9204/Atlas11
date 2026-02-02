@@ -1,38 +1,314 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-interface ESDProtectionRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+// ─────────────────────────────────────────────────────────────────────────────
+// ESD Protection - Complete 10-Phase Game
+// Teaching electrostatic discharge protection in electronic circuits
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  accent: '#f59e0b',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  spark: '#fde047',
-  diode: '#22c55e',
-  circuit: '#60a5fa',
-  human: '#f97316',
+interface ESDProtectionRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
-  // Responsive detection
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    scenario: "A technician touches a USB port on a laptop after walking across a carpeted floor on a dry winter day. The laptop continues working normally despite the audible 'snap' of static discharge.",
+    question: "What protected the laptop's USB controller from the thousands of volts discharged?",
+    options: [
+      { id: 'a', label: "The plastic USB connector housing acted as an insulator" },
+      { id: 'b', label: "On-chip ESD protection diodes clamped the voltage and diverted current to ground", correct: true },
+      { id: 'c', label: "The voltage was too brief to cause any real damage" },
+      { id: 'd', label: "Modern chips are naturally immune to static electricity" }
+    ],
+    explanation: "Every I/O pin on modern ICs has built-in ESD protection structures, typically dual diodes that clamp voltage to within safe limits. When voltage exceeds Vdd or drops below ground, these diodes conduct, routing the dangerous current safely through the power rails rather than through sensitive transistor gates."
+  },
+  {
+    scenario: "An engineer measures a 15,000V static discharge from touching a device, but the chip's datasheet rates it for only 2,000V HBM ESD protection.",
+    question: "Why might the chip still survive this event?",
+    options: [
+      { id: 'a', label: "Datasheets always understate true protection levels" },
+      { id: 'b', label: "External TVS diodes and board-level protection absorbed most of the energy before it reached the chip", correct: true },
+      { id: 'c', label: "15,000V discharges don't actually carry enough current to cause damage" },
+      { id: 'd', label: "The measurement equipment was probably wrong" }
+    ],
+    explanation: "Real-world ESD protection uses multiple defense layers. External TVS (Transient Voltage Suppressor) diodes at the board edge clamp the initial surge, ferrite beads add impedance to slow the rise time, and series resistors limit peak current. By the time the pulse reaches the IC, it's significantly attenuated. The chip's internal protection handles any remaining energy."
+  },
+  {
+    scenario: "A semiconductor company is designing a chip for 10 Gbps data transmission. Their ESD engineer warns that the traditional protection approach will 'kill signal integrity.'",
+    question: "What specific problem does ESD protection cause for high-speed signals?",
+    options: [
+      { id: 'a', label: "ESD protection generates electromagnetic interference" },
+      { id: 'b', label: "Protection diodes add parasitic capacitance that distorts fast signal edges", correct: true },
+      { id: 'c', label: "High-speed signals are blocked by ESD diodes" },
+      { id: 'd', label: "Protection circuits consume too much power at high frequencies" }
+    ],
+    explanation: "ESD protection diodes are essentially PN junctions with inherent capacitance. At 10 Gbps, bit periods are only 100 picoseconds, and even 0.5pF of capacitance significantly rounds signal edges and creates inter-symbol interference. Engineers must balance protection robustness against capacitance, often using smaller diodes with lower capacitance and accepting reduced ESD ratings for high-speed pins."
+  },
+  {
+    scenario: "A failure analysis reveals that a chip died from ESD damage to its gate oxide layer, even though it had ESD protection diodes that tested functional after the event.",
+    question: "How can ESD damage occur despite working protection circuits?",
+    options: [
+      { id: 'a', label: "The protection activated too slowly, allowing the voltage spike to reach internal circuits first", correct: true },
+      { id: 'b', label: "Gate oxide is outside the protection zone" },
+      { id: 'c', label: "ESD protection only works for positive voltages" },
+      { id: 'd', label: "The diodes were placed on the wrong chip layer" }
+    ],
+    explanation: "ESD events have rise times under 1 nanosecond. If the protection device has too much inductance from poor layout or long metal routing, the voltage at the protected circuit can overshoot the clamping voltage before protection fully activates. This 'turn-on time' issue is critical for protecting ultra-thin gate oxides that can break down in picoseconds at high voltages."
+  },
+  {
+    scenario: "An automotive ECU must survive 15kV ESD per ISO 10605 standards, but the MCU inside is only rated for 4kV HBM.",
+    question: "How do automotive designers bridge this 11kV gap?",
+    options: [
+      { id: 'a', label: "They use thicker PCB substrates to absorb the energy" },
+      { id: 'b', label: "Multi-stage external protection with TVS arrays, spark gaps, and filtering absorbs most energy before it reaches the IC", correct: true },
+      { id: 'c', label: "They request custom automotive-grade chips rated for 15kV" },
+      { id: 'd', label: "Automotive standards are just guidelines, not requirements" }
+    ],
+    explanation: "Automotive ESD protection is a system design problem. Engineers place high-power TVS diodes rated for 15kV+ at connector pins, add common-mode chokes and ferrite beads to slow pulse rise times, use spark gaps for extreme voltages, and include series resistance to limit current. Each stage absorbs energy and slows the pulse, reducing what the IC must handle to within its ratings."
+  },
+  {
+    scenario: "During wafer testing, 3% of chips fail ESD qualification even though they come from the same manufacturing lot as passing chips.",
+    question: "What most likely causes this ESD performance variation?",
+    options: [
+      { id: 'a', label: "Random cosmic ray damage during testing" },
+      { id: 'b', label: "Process variations affecting protection structure dimensions, doping levels, and contact resistance", correct: true },
+      { id: 'c', label: "Operator error in the test setup" },
+      { id: 'd', label: "Temperature variations in the test environment" }
+    ],
+    explanation: "ESD protection relies on precise semiconductor structures. Variations in dopant diffusion depth affect diode breakdown voltage. Silicide sheet resistance changes impact current-carrying capability. Metal line width variations alter thermal dissipation. Even a 5% variation in protection device size can mean the difference between 2kV and 4kV ESD withstand capability."
+  },
+  {
+    scenario: "A chip designer proposes using larger ESD protection structures to improve robustness from 2kV to 8kV HBM. The design manager rejects this immediately.",
+    question: "Why would larger, more robust ESD protection be rejected?",
+    options: [
+      { id: 'a', label: "Larger structures are more expensive to manufacture" },
+      { id: 'b', label: "Larger structures increase die area, add parasitic capacitance, and may not fit within the I/O pitch requirements", correct: true },
+      { id: 'c', label: "ESD testing equipment can't measure above 4kV" },
+      { id: 'd', label: "Customers don't need more than 2kV protection" }
+    ],
+    explanation: "Die area directly impacts chip cost. In advanced nodes, every square micrometer costs money. I/O pitch is fixed by package requirements, limiting how much space is available for protection. Higher capacitance degrades signal integrity on fast interfaces. Doubling ESD protection often requires 4x the area (protecting against I^2*t energy), which simply may not be affordable or physically possible."
+  },
+  {
+    scenario: "A new engineer asks why ESD testing uses strange models like 'Human Body Model' (HBM) with 100pF and 1.5k ohms, rather than just testing with actual static discharge.",
+    question: "Why do ESD standards use these specific circuit models?",
+    options: [
+      { id: 'a', label: "Human bodies vary too much, so a standard model ensures repeatable testing" },
+      { id: 'b', label: "The models simulate different real-world discharge sources with standardized, repeatable pulse characteristics", correct: true },
+      { id: 'c', label: "Real static discharges are too dangerous for lab testing" },
+      { id: 'd', label: "These values were chosen arbitrarily by standards committees" }
+    ],
+    explanation: "HBM (100pF, 1.5k ohms) models a charged person touching a grounded device. CDM (Charged Device Model) simulates a charged IC discharging through one pin. MM (Machine Model, 200pF, 0 ohms) represents a charged metal tool. Each has different energy, rise time, and current profiles. Standardized models allow comparing chips from different vendors under identical, repeatable test conditions."
+  },
+  {
+    scenario: "A company's reliability data shows that 0.1% of their products fail in the field from ESD, despite all chips passing 2kV HBM qualification testing.",
+    question: "What explains failures in the field when chips passed lab testing?",
+    options: [
+      { id: 'a', label: "Lab tests are performed at lower temperatures than field conditions" },
+      { id: 'b', label: "Real-world ESD events may differ from test models, and field conditions include repeated stress, humidity effects, and higher voltages than rated", correct: true },
+      { id: 'c', label: "Customers are intentionally damaging products" },
+      { id: 'd', label: "Shipping damages the ESD protection structures" }
+    ],
+    explanation: "Lab testing uses single pulses under controlled conditions. Field environments include multiple ESD events over time (cumulative degradation), humidity-temperature cycling that stresses oxide layers, contact discharges (more severe than air discharge), and voltages often exceeding test levels. The 2kV spec represents a minimum survival threshold, not a guarantee against all real-world scenarios."
+  },
+  {
+    scenario: "A chip has ESD protection that triggers at 5.5V, but its power supply (Vdd) is 3.3V and the I/O signals swing from 0 to 3.3V during normal operation.",
+    question: "Why is the trigger voltage set higher than the operating voltage?",
+    options: [
+      { id: 'a', label: "To save power by keeping protection circuits off during normal operation" },
+      { id: 'b', label: "The protection must not interfere with normal I/O signals while still clamping dangerous ESD voltages", correct: true },
+      { id: 'c', label: "Lower trigger voltages would damage the protection circuits" },
+      { id: 'd', label: "This allows the chip to be used with 5V systems" }
+    ],
+    explanation: "The protection window must be carefully designed. Trigger voltage must exceed maximum normal operating voltage (including Vdd tolerance, overshoot, and noise margin) to avoid false triggering during operation. But it must be low enough to clamp ESD before voltage exceeds the gate oxide breakdown threshold (often 6-8V for modern processes). This leaves only a narrow design window for protection activation."
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '📱',
+    title: 'Consumer Electronics & Smartphones',
+    short: 'Every touchscreen tap matters',
+    tagline: 'Protecting billions of devices from human static discharge',
+    description: 'Your smartphone contains dozens of chips, each with hundreds of I/O pins, all protected by ESD structures. Every time you touch the screen, plug in a charger, or insert headphones, static discharge threatens the internal electronics. Modern phones must survive 8kV+ contact discharge and 15kV+ air discharge per IEC 61000-4-2 standards, yet remain thin, fast, and power-efficient.',
+    connection: 'The ESD protection principles we explored directly apply to every chip in your phone. The touch controller has protection on all 200+ sensor lines. The USB-C port uses high-speed TVS diodes that add less than 0.5pF capacitance while surviving 15kV surges. The power management IC protects against discharge during battery connection.',
+    howItWorks: 'Smartphone protection is a layered defense. At the connector level, specialized TVS arrays handle the initial surge. The PCB includes designed impedance discontinuities that reflect high-frequency energy. EMI filters add series impedance. Finally, on-chip ESD structures clamp any remaining energy. For high-speed interfaces like USB 3.2 or Thunderbolt, designers use silicon-controlled rectifiers (SCRs) that provide high protection with minimal capacitance.',
+    stats: [
+      { value: '8kV+', label: 'Contact ESD Rating', icon: '⚡' },
+      { value: '<0.5pF', label: 'Protection Capacitance', icon: '📉' },
+      { value: '1.5B+', label: 'Smartphones/Year Protected', icon: '📱' }
+    ],
+    examples: [
+      'iPhone Lightning/USB-C port protection using multi-stage TVS arrays',
+      'Samsung Galaxy touchscreen ESD-hardened sensor interfaces',
+      'Apple AirPods charging case contact protection',
+      'Tablet stylus charging port ESD immunity'
+    ],
+    companies: ['Apple', 'Samsung', 'Qualcomm', 'NXP', 'Littelfuse'],
+    futureImpact: 'As phones adopt faster USB4 (40 Gbps) and wireless charging above 50W, ESD protection must handle higher power levels with even lower capacitance. 3D packaging with stacked chips creates new challenges as ESD must be routed through multiple die layers. Foldable phones introduce mechanical stress that can degrade protection structures over time.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏭',
+    title: 'Semiconductor Manufacturing',
+    short: 'Where chips are most vulnerable',
+    tagline: 'Protecting $100M wafers from invisible threats',
+    description: 'During semiconductor manufacturing, chips have no protection. Gate oxides just a few atoms thick are directly exposed. A single ESD event can destroy thousands of chips on a wafer worth over $100 million at advanced nodes. Fab workers can generate 35,000V walking across floors. Manufacturing tools with moving parts create triboelectric charging. Even the process gases can carry charge.',
+    connection: 'Before the ESD protection structures we studied are built, chips are defenseless. Everything we learned about how ESD damages gate oxides and junctions applies with maximum severity here. Fabs implement the most extreme ESD control measures on Earth to prevent the damage that on-chip protection would normally prevent.',
+    howItWorks: 'Semiconductor fabs use comprehensive ESD control programs. All personnel wear conductive garments with woven carbon fibers connected to grounded wrist straps. Flooring is ESD-dissipative (10^6 to 10^9 ohms/square). Workstations have ionizing bars that neutralize charges on ungrounded items. Process tools include charge neutralization in every chamber. FOUPs (wafer carriers) are made from static-dissipative polymers. Real-time monitoring systems track charge levels across the fab.',
+    stats: [
+      { value: '<100V', label: 'Allowed Charge Level', icon: '⚡' },
+      { value: '35,000V', label: 'Possible Human Charge', icon: '🧍' },
+      { value: '$5B+', label: 'Annual ESD Damage Cost', icon: '💰' }
+    ],
+    examples: [
+      'TSMC 3nm fab with 100,000+ ionizers monitoring charge in real-time',
+      'Intel photolithography tools with in-situ charge neutralization',
+      'Samsung DRAM lines with automated wafer handling to minimize human contact',
+      'ASML EUV scanners with charged particle elimination systems'
+    ],
+    companies: ['TSMC', 'Samsung Foundry', 'Intel', 'ASML', 'Applied Materials'],
+    futureImpact: 'At 2nm nodes and beyond, gate oxides are only 3-5 atoms thick, making them vulnerable to voltages as low as 2-3V. Future fabs will use AI-based charge prediction, automated handling robots for zero human contact, and novel charge-dissipating materials. Process steps themselves may need to include charge neutralization as an inherent part of the chemistry.',
+    color: '#6366F1'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive Electronics',
+    short: 'Safety-critical reliability',
+    tagline: 'When a chip failure can mean a crash',
+    description: 'Modern vehicles contain over 100 electronic control units (ECUs) managing everything from engine timing to autonomous driving sensors. These systems face extreme ESD challenges: dry air charging from HVAC, static from fabric seats, discharge through door handles, and lightning-induced surges through the antenna. ISO 10605 requires survival of 15kV+ discharge because failure modes must never affect vehicle safety.',
+    connection: 'Automotive ESD builds on all the concepts we explored but at extreme levels. The protection voltage windows, response times, and multi-stage approaches we discussed are pushed to their limits. Automotive qualification requires not just survival but guaranteed continued operation after repeated ESD stress.',
+    howItWorks: 'Automotive ESD protection is system-level engineering. Entry points like OBD-II ports use massive TVS diodes rated for ±30kV with 5kA surge current. Door handle sensors have spark gaps that arc over at extreme voltages. CAN bus and LIN transceivers include specialized clamping matched to protocol voltages. ADAS sensors (cameras, radar, LiDAR) use shielded housings with internal TVS protection. All protection must function from -40C to +150C.',
+    stats: [
+      { value: '15kV+', label: 'ISO 10605 Requirement', icon: '⚡' },
+      { value: '-40 to 150C', label: 'Operating Range', icon: '🌡️' },
+      { value: '15+ yrs', label: 'Required Lifetime', icon: '📅' }
+    ],
+    examples: [
+      'Tesla Model 3 touchscreen surviving Nevada desert static conditions',
+      'BMW iDrive controller with conductive surface grounding',
+      'Bosch ESP system with redundant ESD protection for brake-by-wire safety',
+      'NVIDIA DRIVE platform with reinforced protection for autonomous computing'
+    ],
+    companies: ['Bosch', 'NXP', 'Infineon', 'Texas Instruments', 'ON Semiconductor'],
+    futureImpact: 'Electric vehicles present new ESD challenges with 800V battery systems and DC fast charging. V2X (vehicle-to-everything) communication adds more exposed RF interfaces. Level 4/5 autonomy requires ESD immunity for hundreds of sensors with zero tolerance for corruption. Future protection must handle EMI from high-power motors while maintaining sub-nanosecond response.',
+    color: '#10B981'
+  },
+  {
+    icon: '✈️',
+    title: 'Aerospace & Defense',
+    short: 'The ultimate ESD environment',
+    tagline: 'When lightning strikes at 40,000 feet',
+    description: 'Aircraft electronics face the most extreme ESD environment imaginable. Lightning strikes deliver 200,000 amps in microseconds. Cosmic rays at altitude cause single-event upsets. P-static from ice and precipitation charges the airframe to 100,000V+. Composite fuselages don\'t conduct charge like aluminum, requiring dedicated charge paths. Every avionics system must survive direct lightning attachment while maintaining safety-critical operation.',
+    connection: 'Aerospace ESD protection scales up everything we learned by 1000x. The same clamping principles apply, but with massive TVS arrays, spark gaps, and shielded enclosures. The physics of voltage clamping and current routing we explored becomes a matter of life and death at these power levels.',
+    howItWorks: 'Aircraft lightning protection uses zoning. Zone 1 areas (nose cone, wing tips, tail) receive direct strikes and use thick aluminum or copper mesh embedded in composites. Zone 2 areas get swept strokes and need continuous conductive paths. Zone 3 areas are shielded enclosures. Avionics boxes have multi-stage protection: external spark gaps fire first at 500V+, primary TVS arrays clamp to tens of volts, and internal protection handles residual. All power and signal lines use filtered circular connectors with integrated TVS.',
+    stats: [
+      { value: '200kA', label: 'Lightning Peak Current', icon: '⚡' },
+      { value: 'DO-160G', label: 'Test Standard', icon: '📋' },
+      { value: '10^-9', label: 'Failure Rate Requirement', icon: '🎯' }
+    ],
+    examples: [
+      'Boeing 787 composite fuselage with copper mesh lightning strike zones',
+      'F-35 avionics with radiation-hardened processors and lightning protection',
+      'SpaceX Dragon spacecraft ESD-safe assembly and launch protection',
+      'GPS satellite ESD protection for 15+ year mission life in radiation environment'
+    ],
+    companies: ['Boeing', 'Airbus', 'Lockheed Martin', 'Collins Aerospace', 'Honeywell'],
+    futureImpact: 'More-electric and all-electric aircraft with high-voltage systems (800V+) create new lightning attachment risks. Composite structures continue to challenge traditional protection approaches. Urban air mobility (flying taxis) will need certified lightning protection with lower weight budget. Space-based systems face increasingly harsh radiation environments that degrade protection over time.',
+    color: '#F59E0B'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Simulation state
+  const [esdVoltage, setEsdVoltage] = useState(4000); // Volts
+  const [hasProtection, setHasProtection] = useState(true);
+  const [isDischarging, setIsDischarging] = useState(false);
+  const [animationFrame, setAnimationFrame] = useState(0);
+  const [chipDamage, setChipDamage] = useState(0);
+  const [dischargeCount, setDischargeCount] = useState(0);
+
+  // Twist phase state
+  const [responseTime, setResponseTime] = useState(0.5); // nanoseconds
+  const [signalFrequency, setSignalFrequency] = useState(1); // GHz
+  const [protectionCapacitance, setProtectionCapacitance] = useState(1); // pF
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -40,1453 +316,1865 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Simulation state
-  const [esdVoltage, setEsdVoltage] = useState(2000); // Volts
-  const [hasProtection, setHasProtection] = useState(true);
-  const [dischargePath, setDischargePath] = useState<'chip' | 'diode' | null>(null);
-  const [animationTime, setAnimationTime] = useState(0);
-  const [isDischarging, setIsDischarging] = useState(false);
-  const [chipDamage, setChipDamage] = useState(0);
-  const [responseTime, setResponseTime] = useState(1); // nanoseconds
-
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [testScore, setTestScore] = useState(0);
-
   // Animation loop
   useEffect(() => {
-    if (!isDischarging) return;
-
-    const interval = setInterval(() => {
-      setAnimationTime(prev => {
-        const next = prev + 1;
-        if (next > 30) {
-          setIsDischarging(false);
-          return 0;
-        }
-        return next;
-      });
+    const timer = setInterval(() => {
+      setAnimationFrame(f => f + 1);
     }, 50);
+    return () => clearInterval(timer);
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [isDischarging]);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#F59E0B', // Amber for ESD/lightning theme
+    accentGlow: 'rgba(245, 158, 11, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    spark: '#FBBF24',
+    diode: '#22C55E',
+    circuit: '#3B82F6',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
 
-  const triggerDischarge = useCallback(() => {
-    setIsDischarging(true);
-    setAnimationTime(0);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-    if (hasProtection) {
-      setDischargePath('diode');
-      // Protection clamps voltage, minimal damage
-      setChipDamage(prev => Math.min(prev + 1, 100));
-    } else {
-      setDischargePath('chip');
-      // Direct ESD hit causes significant damage
-      const damage = Math.min((esdVoltage / 100), 50);
-      setChipDamage(prev => Math.min(prev + damage, 100));
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Speed Lab',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, []);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [hasProtection, esdVoltage]);
+  }, [phase, goToPhase]);
 
-  const resetSimulation = () => {
-    setChipDamage(0);
-    setDischargePath(null);
-    setAnimationTime(0);
-    setIsDischarging(false);
-  };
+  // Trigger ESD discharge
+  const triggerDischarge = useCallback(() => {
+    if (isDischarging) return;
+    setIsDischarging(true);
+    setDischargeCount(c => c + 1);
 
-  const predictions = [
-    { id: 'nothing', label: 'Nothing - chips are immune to static electricity' },
-    { id: 'damage', label: 'The static shock instantly destroys internal circuits' },
-    { id: 'protection', label: 'Special protection circuits safely divert the energy' },
-    { id: 'reset', label: 'The chip just resets and continues working' },
-  ];
-
-  const twistPredictions = [
-    { id: 'slow', label: 'ESD protection can be slow since static is rare' },
-    { id: 'fast', label: 'ESD circuits must activate in nanoseconds to be effective' },
-    { id: 'manual', label: 'Protection requires manual activation by the user' },
-    { id: 'always', label: 'Protection circuits are always conducting' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'USB Port Protection',
-      description: 'Every USB port has ESD diodes to handle static from cable insertion. They must protect data lines while allowing high-speed signals.',
-      icon: '🔌',
-    },
-    {
-      title: 'Touchscreen Controllers',
-      description: 'Your finger touching the screen can discharge thousands of volts. The touch IC has robust ESD protection on every input line.',
-      icon: '📱',
-    },
-    {
-      title: 'Automotive ECUs',
-      description: 'Car electronics face harsh ESD from door handles, ignition, and dry air. ISO 10605 requires survival of 15kV+ discharges.',
-      icon: '🚗',
-    },
-    {
-      title: 'Industrial Sensors',
-      description: 'Factory sensors near motors and welding face extreme ESD. Multi-stage protection with TVS diodes and spark gaps is common.',
-      icon: '🏭',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'What is ESD (Electrostatic Discharge)?',
-      options: [
-        { text: 'A slow buildup of electrical charge over time', correct: false },
-        { text: 'A sudden flow of electricity between charged objects', correct: true },
-        { text: 'A type of battery discharge', correct: false },
-        { text: 'Electromagnetic interference', correct: false },
-      ],
-    },
-    {
-      question: 'What voltage can a typical human body discharge?',
-      options: [
-        { text: '10-50 volts', correct: false },
-        { text: '100-500 volts', correct: false },
-        { text: '2,000-15,000+ volts', correct: true },
-        { text: 'Less than 5 volts', correct: false },
-      ],
-    },
-    {
-      question: 'What is the Human Body Model (HBM) in ESD testing?',
-      options: [
-        { text: 'A model of how humans interact with devices', correct: false },
-        { text: 'A standardized ESD test simulating human discharge', correct: true },
-        { text: 'A thermal model of body temperature effects', correct: false },
-        { text: 'A mechanical stress model', correct: false },
-      ],
-    },
-    {
-      question: 'How do clamping diodes protect circuits?',
-      options: [
-        { text: 'They block all current from entering', correct: false },
-        { text: 'They provide a low-resistance path to ground when voltage exceeds threshold', correct: true },
-        { text: 'They store the ESD energy in a capacitor', correct: false },
-        { text: 'They reflect the ESD back to the source', correct: false },
-      ],
-    },
-    {
-      question: 'Why must ESD protection circuits respond in nanoseconds?',
-      options: [
-        { text: 'For user interface responsiveness', correct: false },
-        { text: 'ESD events have extremely fast rise times (< 1ns)', correct: true },
-        { text: 'To save battery power', correct: false },
-        { text: 'To meet USB speed requirements', correct: false },
-      ],
-    },
-    {
-      question: 'What is a TVS (Transient Voltage Suppressor) diode?',
-      options: [
-        { text: 'A standard signal diode', correct: false },
-        { text: 'A specialized diode designed to absorb voltage transients', correct: true },
-        { text: 'A type of LED', correct: false },
-        { text: 'A power supply regulator', correct: false },
-      ],
-    },
-    {
-      question: 'Why is ESD protection challenging for high-speed interfaces?',
-      options: [
-        { text: 'High-speed signals are too fast to protect', correct: false },
-        { text: 'Protection capacitance can distort fast signals', correct: true },
-        { text: 'High-speed interfaces are immune to ESD', correct: false },
-        { text: 'The wires are too thin', correct: false },
-      ],
-    },
-    {
-      question: 'What happens to a chip without ESD protection during discharge?',
-      options: [
-        { text: 'It safely absorbs the energy', correct: false },
-        { text: 'Gate oxide breakdown and junction damage can occur', correct: true },
-        { text: 'It converts the energy to light', correct: false },
-        { text: 'Nothing, modern chips are inherently protected', correct: false },
-      ],
-    },
-    {
-      question: 'Where are ESD protection structures typically located on a chip?',
-      options: [
-        { text: 'In the center of the die', correct: false },
-        { text: 'At every I/O pad around the chip perimeter', correct: true },
-        { text: 'Only on power pins', correct: false },
-        { text: 'In a separate protection chip', correct: false },
-      ],
-    },
-    {
-      question: 'What is the typical clamping voltage of on-chip ESD protection?',
-      options: [
-        { text: 'Equal to the ESD voltage (thousands of volts)', correct: false },
-        { text: 'Just above the supply voltage (a few volts)', correct: true },
-        { text: 'Zero volts', correct: false },
-        { text: 'Negative voltage', correct: false },
-      ],
-    },
-  ];
-
-  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[questionIndex] = optionIndex;
-    setTestAnswers(newAnswers);
-  };
-
-  const submitTest = () => {
-    let score = 0;
-    testQuestions.forEach((q, i) => {
-      if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
-        score++;
+    // Calculate damage
+    setTimeout(() => {
+      if (!hasProtection) {
+        // Direct hit causes massive damage
+        const damage = Math.min((esdVoltage / 200), 40);
+        setChipDamage(prev => Math.min(prev + damage, 100));
+      } else {
+        // Protection clamps voltage, minimal damage (slight wear)
+        setChipDamage(prev => Math.min(prev + 0.5, 100));
       }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
-    else if (onIncorrectAnswer) onIncorrectAnswer();
-  };
+      setIsDischarging(false);
+    }, 800);
+  }, [isDischarging, hasProtection, esdVoltage]);
 
-  const renderVisualization = (showTiming: boolean = false) => {
-    const width = 400;
-    const height = 280;
+  // Calculate metrics for twist phase
+  const calculateSignalIntegrity = useCallback(() => {
+    // Higher capacitance = more signal degradation at high frequencies
+    const signalLoss = (protectionCapacitance * signalFrequency) / 10; // 0-100%
+    const eyeOpening = Math.max(0, 100 - signalLoss * 20);
 
-    // Spark animation
-    const sparkIntensity = isDischarging ? Math.max(0, 1 - animationTime / 15) : 0;
+    // Faster response time = better protection
+    const protectionEffective = responseTime < 1; // Must be under 1ns
 
-    // Clamping voltage calculation (for display)
-    const clampingVoltage = hasProtection ? 5.5 : esdVoltage;
-    const clampingEfficiency = hasProtection ? ((esdVoltage - clampingVoltage) / esdVoltage * 100).toFixed(0) : 0;
+    // Trade-off calculation
+    const robustness = protectionCapacitance * 20; // Larger cap = more robust
+
+    return {
+      signalLoss: Math.min(signalLoss * 10, 100),
+      eyeOpening,
+      protectionEffective,
+      robustness: Math.min(robustness, 100),
+      trade_off_score: (eyeOpening * robustness) / 100
+    };
+  }, [protectionCapacitance, signalFrequency, responseTime]);
+
+  const metrics = calculateSignalIntegrity();
+
+  // ESD Visualization Component
+  const ESDVisualization = ({ showTiming = false }: { showTiming?: boolean }) => {
+    const width = isMobile ? 340 : 500;
+    const height = isMobile ? 280 : 350;
+
+    // Animation for discharge
+    const sparkOpacity = isDischarging ? (1 - (animationFrame % 16) / 16) : 0;
+    const flowOffset = (animationFrame * 3) % 40;
+
+    // Clamping voltage when protection is active
+    const clampVoltage = hasProtection ? 5.5 : esdVoltage;
+    const clampEfficiency = hasProtection ? ((esdVoltage - 5.5) / esdVoltage * 100).toFixed(0) : 0;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '500px' }}
-        >
-          <defs>
-            {/* === PREMIUM GRADIENTS === */}
+      <svg width={width} height={height} viewBox="0 0 500 350" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          {/* Spark gradient */}
+          <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fef08a" />
+            <stop offset="50%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#f97316" />
+          </linearGradient>
 
-            {/* ESD Spark gradient - electric yellow to orange */}
-            <linearGradient id="esdSparkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fef08a" />
-              <stop offset="25%" stopColor="#fde047" />
-              <stop offset="50%" stopColor="#facc15" />
-              <stop offset="75%" stopColor="#fb923c" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
+          {/* Human skin gradient */}
+          <radialGradient id="humanGrad" cx="40%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#fdba74" />
+            <stop offset="60%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#ea580c" />
+          </radialGradient>
 
-            {/* Human skin gradient */}
-            <radialGradient id="esdHumanGrad" cx="40%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#fdba74" />
-              <stop offset="30%" stopColor="#fb923c" />
-              <stop offset="60%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ea580c" />
-            </radialGradient>
+          {/* Diode gradient */}
+          <linearGradient id="diodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#86efac" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#15803d" />
+          </linearGradient>
 
-            {/* Diode gradient - green semiconductor */}
-            <linearGradient id="esdDiodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#86efac" />
-              <stop offset="25%" stopColor="#4ade80" />
-              <stop offset="50%" stopColor="#22c55e" />
-              <stop offset="75%" stopColor="#16a34a" />
-              <stop offset="100%" stopColor="#15803d" />
-            </linearGradient>
+          {/* Circuit trace gradient */}
+          <linearGradient id="circuitGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#60a5fa" />
+          </linearGradient>
 
-            {/* Diode active glow gradient */}
-            <radialGradient id="esdDiodeGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
-              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.6" />
-              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
-            </radialGradient>
+          {/* Chip gradient */}
+          <linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#3730a3" stopOpacity="0.4" />
+          </linearGradient>
 
-            {/* Circuit trace gradient - metallic blue */}
-            <linearGradient id="esdCircuitGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#38bdf8" />
-              <stop offset="25%" stopColor="#60a5fa" />
-              <stop offset="50%" stopColor="#3b82f6" />
-              <stop offset="75%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#38bdf8" />
-            </linearGradient>
+          {/* Damage gradient */}
+          <radialGradient id="damageGrad" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.3" />
+          </radialGradient>
 
-            {/* Chip silicon gradient */}
-            <linearGradient id="esdChipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
-              <stop offset="30%" stopColor="#4f46e5" stopOpacity="0.3" />
-              <stop offset="70%" stopColor="#4338ca" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#3730a3" stopOpacity="0.4" />
-            </linearGradient>
+          {/* Glow filters */}
+          <filter id="sparkGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
 
-            {/* Chip border gradient */}
-            <linearGradient id="esdChipBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#818cf8" />
-              <stop offset="50%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#4f46e5" />
-            </linearGradient>
+          <filter id="diodeGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* VDD power rail gradient - red */}
-            <linearGradient id="esdVddGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="50%" stopColor="#f87171" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
+        {/* Background grid */}
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" opacity="0.3" />
+        </pattern>
+        <rect width="500" height="350" fill="url(#grid)" />
 
-            {/* GND power rail gradient - dark gray */}
-            <linearGradient id="esdGndGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6b7280" />
-              <stop offset="50%" stopColor="#4b5563" />
-              <stop offset="100%" stopColor="#374151" />
-            </linearGradient>
+        {/* Labels */}
+        <text x="250" y="25" fill={colors.textSecondary} fontSize="14" textAnchor="middle" fontWeight="600">
+          ESD Protection Circuit
+        </text>
 
-            {/* Damage overlay gradient */}
-            <radialGradient id="esdDamageGrad" cx="50%" cy="50%" r="60%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#dc2626" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.2" />
-            </radialGradient>
+        {/* Human finger */}
+        <g transform="translate(40, 80)">
+          <ellipse cx="30" cy="45" rx="25" ry="45" fill="url(#humanGrad)" />
+          <ellipse cx="25" cy="35" rx="10" ry="20" fill="#fdba74" opacity="0.4" />
+          <text x="30" y="110" fill={colors.textMuted} fontSize="11" textAnchor="middle">Human</text>
+          <text x="30" y="122" fill={colors.spark} fontSize="10" textAnchor="middle">{esdVoltage}V</text>
+        </g>
 
-            {/* Current flow particle gradient */}
-            <radialGradient id="esdCurrentGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
-              <stop offset="40%" stopColor="#fde047" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#facc15" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Card background gradient */}
-            <linearGradient id="esdCardBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
-              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
-            </linearGradient>
-
-            {/* === GLOW FILTERS === */}
-
-            {/* Spark glow filter - intense */}
-            <filter id="esdSparkGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="blur1" />
-              <feGaussianBlur stdDeviation="3" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur1" />
-                <feMergeNode in="blur2" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Diode glow filter */}
-            <filter id="esdDiodeGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Chip glow filter */}
-            <filter id="esdChipGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Current flow glow */}
-            <filter id="esdCurrentGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Damage pulse filter */}
-            <filter id="esdDamageGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Subtle grid pattern */}
-            <pattern id="esdGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
-            </pattern>
-          </defs>
-
-          {/* Background grid */}
-          <rect width={width} height={height} fill="url(#esdGridPattern)" />
-
-          {/* Human finger/hand with premium gradient */}
-          <g transform="translate(35, 55)">
-            {/* Finger shadow */}
-            <ellipse cx="32" cy="42" rx="22" ry="38" fill="#000" opacity="0.3" />
-            {/* Finger body */}
-            <ellipse cx="30" cy="40" rx="20" ry="35" fill="url(#esdHumanGrad)" />
-            {/* Finger highlight */}
-            <ellipse cx="25" cy="30" rx="8" ry="15" fill="#fdba74" opacity="0.5" />
-            {/* Fingernail hint */}
-            <ellipse cx="30" cy="12" rx="10" ry="8" fill="#fef3c7" opacity="0.3" />
+        {/* Lightning bolt - ESD discharge */}
+        {isDischarging && (
+          <g filter="url(#sparkGlow)">
+            <path
+              d={`M 95 125 L 115 115 L 105 125 L 135 110 L 120 125 L 155 105 L 140 120 L ${hasProtection ? '175 135' : '220 160'}`}
+              fill="none"
+              stroke="url(#sparkGrad)"
+              strokeWidth={4 + sparkOpacity * 4}
+              opacity={sparkOpacity}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Spark particles */}
+            {[0, 1, 2, 3, 4].map(i => (
+              <circle
+                key={i}
+                cx={100 + i * 20 + Math.sin(animationFrame + i) * 5}
+                cy={120 + Math.cos(animationFrame + i) * 8}
+                r={2 + Math.random()}
+                fill="#fef08a"
+                opacity={sparkOpacity * 0.7}
+              />
+            ))}
           </g>
+        )}
 
-          {/* ESD discharge path - lightning bolt */}
-          {sparkIntensity > 0 && (
-            <g filter="url(#esdSparkGlow)">
-              {/* Main lightning bolt path */}
-              <path
-                d={`M 85 95 L 110 88 L 100 100 L 130 92 L 118 105 L 150 95 L 138 110 L ${hasProtection ? '175 130' : '200 155'}`}
-                fill="none"
-                stroke="url(#esdSparkGrad)"
-                strokeWidth={3 + sparkIntensity * 5}
-                opacity={sparkIntensity}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              {/* Secondary branch */}
-              <path
-                d={`M 130 92 L 145 105 L 135 112`}
-                fill="none"
-                stroke="url(#esdSparkGrad)"
-                strokeWidth={2 + sparkIntensity * 2}
-                opacity={sparkIntensity * 0.7}
-                strokeLinecap="round"
-              />
-              {/* Spark particles */}
-              {Array.from({ length: 12 }, (_, i) => {
-                const t = (animationTime + i * 2.5) % 20;
-                const baseX = 85 + t * 5;
-                const baseY = 95 + Math.sin(t * 0.5 + i) * 15;
-                const size = 2 + Math.sin(animationTime * 0.3 + i) * 1.5;
-                return (
-                  <circle
-                    key={i}
-                    cx={baseX + Math.sin(i * 1.2) * 12}
-                    cy={baseY + Math.cos(i * 0.8 + t) * 10}
-                    r={size}
-                    fill="url(#esdCurrentGrad)"
-                    opacity={sparkIntensity * (0.5 + Math.sin(i) * 0.3)}
-                    filter="url(#esdCurrentGlow)"
-                  />
-                );
-              })}
-            </g>
-          )}
+        {/* I/O Pin */}
+        <g>
+          <rect x="160" y="125" width="60" height="16" rx="3" fill="url(#circuitGrad)" />
+          <text x="190" y="158" fill={colors.textMuted} fontSize="10" textAnchor="middle">I/O Pin</text>
+        </g>
 
-          {/* I/O Pin with gradient */}
+        {/* ESD Protection diodes (when enabled) */}
+        {hasProtection && (
           <g>
-            <rect x="165" y="115" width="50" height="12" rx="2" fill="url(#esdCircuitGrad)" />
-            {/* Pin highlight */}
-            <rect x="165" y="115" width="50" height="4" rx="1" fill="#93c5fd" opacity="0.4" />
-          </g>
+            {/* VDD Rail */}
+            <line x1="160" y1="70" x2="280" y2="70" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+            <text x="290" y="74" fill="#ef4444" fontSize="10">VDD</text>
 
-          {/* ESD Protection diodes (if enabled) */}
-          {hasProtection && (
-            <g>
-              {/* VDD Rail */}
-              <line x1="165" y1="70" x2="235" y2="70" stroke="url(#esdVddGrad)" strokeWidth="3" strokeLinecap="round" />
+            {/* Upper diode to VDD */}
+            <g filter={isDischarging ? "url(#diodeGlow)" : undefined}>
+              <polygon points="190,120 210,90 170,90" fill="url(#diodeGrad)" />
+              <rect x="168" y="87" width="44" height="5" rx="1" fill="url(#diodeGrad)" />
+              <line x1="190" y1="87" x2="190" y2="70" stroke="url(#diodeGrad)" strokeWidth="3" />
 
-              {/* Upper diode to VDD */}
-              <g filter={isDischarging && dischargePath === 'diode' ? "url(#esdDiodeGlowFilter)" : undefined}>
-                {/* Diode body */}
-                <polygon points="190,108 205,85 175,85" fill="url(#esdDiodeGrad)" />
-                {/* Diode cathode bar */}
-                <rect x="173" y="83" width="34" height="4" rx="1" fill="url(#esdDiodeGrad)" />
-                {/* Connection to VDD */}
-                <line x1="190" y1="83" x2="190" y2="70" stroke="url(#esdDiodeGrad)" strokeWidth="3" strokeLinecap="round" />
-                {/* Active glow when discharging */}
-                {isDischarging && dischargePath === 'diode' && (
-                  <ellipse cx="190" cy="95" rx="20" ry="15" fill="url(#esdDiodeGlow)" opacity={0.5 + Math.sin(animationTime * 0.5) * 0.3} />
-                )}
-              </g>
-
-              {/* Lower diode to GND */}
-              <g filter={isDischarging && dischargePath === 'diode' ? "url(#esdDiodeGlowFilter)" : undefined}>
-                {/* Diode body (inverted) */}
-                <polygon points="190,140 175,163 205,163" fill="url(#esdDiodeGrad)" />
-                {/* Diode anode bar */}
-                <rect x="173" y="161" width="34" height="4" rx="1" fill="url(#esdDiodeGrad)" />
-                {/* Connection to GND */}
-                <line x1="190" y1="165" x2="190" y2="182" stroke="url(#esdDiodeGrad)" strokeWidth="3" strokeLinecap="round" />
-                {/* Active glow when discharging */}
-                {isDischarging && dischargePath === 'diode' && (
-                  <ellipse cx="190" cy="153" rx="20" ry="15" fill="url(#esdDiodeGlow)" opacity={0.5 + Math.sin(animationTime * 0.5 + 1) * 0.3} />
-                )}
-              </g>
-
-              {/* GND Rail */}
-              <line x1="165" y1="182" x2="235" y2="182" stroke="url(#esdGndGrad)" strokeWidth="3" strokeLinecap="round" />
-              {/* GND symbol */}
-              <g transform="translate(190, 188)">
-                <line x1="-15" y1="0" x2="15" y2="0" stroke="url(#esdGndGrad)" strokeWidth="3" />
-                <line x1="-10" y1="5" x2="10" y2="5" stroke="url(#esdGndGrad)" strokeWidth="2" />
-                <line x1="-5" y1="10" x2="5" y2="10" stroke="url(#esdGndGrad)" strokeWidth="1.5" />
-              </g>
-
-              {/* Clamping voltage indicator */}
-              {isDischarging && dischargePath === 'diode' && (
-                <g transform="translate(140, 120)">
-                  <rect x="-25" y="-12" width="50" height="24" rx="4" fill="url(#esdCardBgGrad)" stroke="#22c55e" strokeWidth="1" opacity="0.9" />
-                </g>
-              )}
-
-              {/* Current flow animation particles */}
-              {isDischarging && dischargePath === 'diode' && (
-                <g filter="url(#esdCurrentGlow)">
-                  {/* Upper path current */}
-                  {[0, 1, 2].map((i) => {
-                    const progress = ((animationTime * 3 + i * 10) % 30) / 30;
-                    const y = 108 - progress * 38;
+              {/* Current flow animation when discharging */}
+              {isDischarging && (
+                <g>
+                  {[0, 1, 2].map(i => {
+                    const progress = ((flowOffset + i * 13) % 40) / 40;
                     return (
                       <circle
                         key={`up-${i}`}
                         cx={190}
-                        cy={y}
-                        r={4}
-                        fill="url(#esdCurrentGrad)"
-                        opacity={0.9 - progress * 0.3}
+                        cy={120 - progress * 50}
+                        r={3}
+                        fill="#fef08a"
+                        opacity={0.8}
                       />
                     );
                   })}
-                  {/* Lower path current */}
-                  {[0, 1, 2].map((i) => {
-                    const progress = ((animationTime * 3 + i * 10) % 30) / 30;
-                    const y = 140 + progress * 42;
+                </g>
+              )}
+            </g>
+
+            {/* Lower diode to GND */}
+            <g filter={isDischarging ? "url(#diodeGlow)" : undefined}>
+              <polygon points="190,148 170,178 210,178" fill="url(#diodeGrad)" />
+              <rect x="168" y="176" width="44" height="5" rx="1" fill="url(#diodeGrad)" />
+              <line x1="190" y1="181" x2="190" y2="200" stroke="url(#diodeGrad)" strokeWidth="3" />
+
+              {/* Current flow animation when discharging */}
+              {isDischarging && (
+                <g>
+                  {[0, 1, 2].map(i => {
+                    const progress = ((flowOffset + i * 13) % 40) / 40;
                     return (
                       <circle
                         key={`down-${i}`}
                         cx={190}
-                        cy={y}
-                        r={4}
-                        fill="url(#esdCurrentGrad)"
-                        opacity={0.9 - progress * 0.3}
+                        cy={148 + progress * 52}
+                        r={3}
+                        fill="#fef08a"
+                        opacity={0.8}
                       />
                     );
                   })}
                 </g>
               )}
             </g>
-          )}
 
-          {/* Wire from pin to chip */}
-          <line x1="215" y1="121" x2="245" y2="130" stroke="url(#esdCircuitGrad)" strokeWidth="2" strokeLinecap="round" />
+            {/* GND Rail */}
+            <line x1="160" y1="200" x2="280" y2="200" stroke="#6b7280" strokeWidth="3" strokeLinecap="round" />
+            <text x="290" y="204" fill="#6b7280" fontSize="10">GND</text>
 
-          {/* Internal chip circuitry with premium styling */}
-          <g filter="url(#esdChipGlow)">
-            {/* Chip body */}
-            <rect x="245" y="95" width="110" height="85" rx="6" fill="url(#esdChipGrad)" stroke="url(#esdChipBorderGrad)" strokeWidth="2" />
-            {/* Chip internal pattern */}
-            <g opacity="0.3">
-              <rect x="255" y="105" width="30" height="20" rx="2" fill="#6366f1" />
-              <rect x="290" y="105" width="25" height="20" rx="2" fill="#6366f1" />
-              <rect x="320" y="105" width="25" height="20" rx="2" fill="#6366f1" />
-              <rect x="255" y="130" width="40" height="15" rx="2" fill="#6366f1" />
-              <rect x="300" y="130" width="45" height="15" rx="2" fill="#6366f1" />
-              <rect x="255" y="150" width="90" height="20" rx="2" fill="#6366f1" />
+            {/* Ground symbol */}
+            <g transform="translate(190, 210)">
+              <line x1="-12" y1="0" x2="12" y2="0" stroke="#6b7280" strokeWidth="2" />
+              <line x1="-8" y1="5" x2="8" y2="5" stroke="#6b7280" strokeWidth="2" />
+              <line x1="-4" y1="10" x2="4" y2="10" stroke="#6b7280" strokeWidth="2" />
             </g>
-            {/* Chip pins (left side) */}
-            {[105, 120, 135, 150, 165].map((y) => (
-              <rect key={y} x="238" y={y} width="10" height="4" rx="1" fill="url(#esdCircuitGrad)" />
-            ))}
-            {/* Chip pins (right side) */}
-            {[105, 120, 135, 150, 165].map((y) => (
-              <rect key={y} x="352" y={y} width="10" height="4" rx="1" fill="url(#esdCircuitGrad)" />
-            ))}
+
+            {/* Clamping indicator */}
+            {isDischarging && (
+              <g>
+                <rect x="120" y="100" width="50" height="24" rx="4" fill={colors.bgSecondary} stroke={colors.diode} strokeWidth="1" />
+                <text x="145" y="115" fill={colors.diode} fontSize="10" textAnchor="middle" fontWeight="600">
+                  {clampVoltage}V
+                </text>
+              </g>
+            )}
+          </g>
+        )}
+
+        {/* Wire to chip */}
+        <line x1="220" y1="133" x2="270" y2="150" stroke="url(#circuitGrad)" strokeWidth="2" />
+
+        {/* Internal chip */}
+        <g>
+          <rect x="270" y="100" width="140" height="110" rx="8" fill="url(#chipGrad)" stroke="#6366f1" strokeWidth="2" />
+
+          {/* Chip internal pattern */}
+          <g opacity="0.3">
+            <rect x="280" y="110" width="35" height="25" rx="2" fill="#6366f1" />
+            <rect x="320" y="110" width="40" height="25" rx="2" fill="#6366f1" />
+            <rect x="365" y="110" width="35" height="25" rx="2" fill="#6366f1" />
+            <rect x="280" y="140" width="55" height="20" rx="2" fill="#6366f1" />
+            <rect x="340" y="140" width="60" height="20" rx="2" fill="#6366f1" />
+            <rect x="280" y="165" width="120" height="35" rx="2" fill="#6366f1" />
           </g>
 
-          {/* Damage indicator overlay */}
+          {/* Chip pins */}
+          {[110, 130, 150, 170, 190].map(y => (
+            <rect key={`left-${y}`} x="262" y={y} width="12" height="6" rx="1" fill="url(#circuitGrad)" />
+          ))}
+          {[110, 130, 150, 170, 190].map(y => (
+            <rect key={`right-${y}`} x="406" y={y} width="12" height="6" rx="1" fill="url(#circuitGrad)" />
+          ))}
+
+          {/* Chip label */}
+          <text x="340" y="230" fill={colors.textMuted} fontSize="11" textAnchor="middle">Internal Circuitry</text>
+
+          {/* Damage overlay */}
           {chipDamage > 0 && (
-            <g filter={chipDamage > 50 ? "url(#esdDamageGlow)" : undefined}>
+            <g>
               <rect
-                x="245"
-                y="95"
-                width="110"
-                height="85"
-                rx="6"
-                fill="url(#esdDamageGrad)"
+                x="270"
+                y="100"
+                width="140"
+                height="110"
+                rx="8"
+                fill="url(#damageGrad)"
                 opacity={chipDamage / 150}
               />
-              {/* Damage cracks when severely damaged */}
-              {chipDamage > 60 && (
-                <g stroke="#ef4444" strokeWidth="1.5" opacity={0.7}>
-                  <path d="M 260 100 L 275 120 L 265 135 L 280 155" fill="none" />
-                  <path d="M 330 100 L 315 125 L 325 145 L 310 170" fill="none" />
+              {chipDamage > 50 && (
+                <g stroke="#ef4444" strokeWidth="2" opacity="0.7">
+                  <path d="M 285 105 L 305 130 L 290 150 L 310 180" fill="none" />
+                  <path d="M 390 105 L 370 135 L 385 160 L 365 195" fill="none" />
                 </g>
               )}
             </g>
           )}
 
-          {/* Direct ESD hit animation (when no protection) */}
-          {isDischarging && dischargePath === 'chip' && (
-            <g filter="url(#esdSparkGlow)">
-              {/* Impact flash */}
+          {/* Direct ESD hit animation (no protection) */}
+          {isDischarging && !hasProtection && (
+            <g filter="url(#sparkGlow)">
               <ellipse
-                cx="265"
-                cy="138"
-                rx={15 + animationTime}
-                ry={10 + animationTime * 0.7}
-                fill="url(#esdSparkGrad)"
-                opacity={sparkIntensity * 0.8}
+                cx="290"
+                cy="155"
+                rx={15 + (animationFrame % 8) * 2}
+                ry={10 + (animationFrame % 8)}
+                fill="url(#sparkGrad)"
+                opacity={sparkOpacity * 0.8}
               />
-              {/* Scattered damage particles */}
-              {Array.from({ length: 8 }, (_, i) => {
-                const angle = (i / 8) * Math.PI * 2;
-                const dist = 10 + animationTime * 2;
+              {/* Damage sparks */}
+              {[0, 1, 2, 3, 4, 5].map(i => {
+                const angle = (i / 6) * Math.PI * 2;
+                const dist = 15 + (animationFrame % 8) * 2;
                 return (
                   <circle
                     key={i}
-                    cx={265 + Math.cos(angle) * dist}
-                    cy={138 + Math.sin(angle) * dist * 0.6}
-                    r={3}
+                    cx={290 + Math.cos(angle) * dist}
+                    cy={155 + Math.sin(angle) * dist * 0.6}
+                    r={2}
                     fill="#ef4444"
-                    opacity={sparkIntensity * 0.6}
+                    opacity={sparkOpacity * 0.6}
                   />
                 );
               })}
             </g>
           )}
-        </svg>
+        </g>
 
-        {/* Labels and status indicators outside SVG */}
-        <div style={{
-          display: 'flex',
-          gap: typo.elementGap,
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          width: '100%',
-          maxWidth: '500px'
-        }}>
-          {/* Human label */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            background: colors.bgCard,
-            borderRadius: '8px',
-            padding: typo.cardPadding,
-            minWidth: isMobile ? '80px' : '90px',
-            flex: '1'
-          }}>
-            <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Human Touch</span>
-            <span style={{ color: colors.human, fontSize: typo.body, fontWeight: 'bold' }}>{esdVoltage}V</span>
-          </div>
+        {/* Timing info for twist phase */}
+        {showTiming && (
+          <g>
+            <rect x="20" y="260" width="200" height="70" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
+            <text x="30" y="280" fill={colors.textMuted} fontSize="10">Response Time:</text>
+            <text x="160" y="280" fill={responseTime < 1 ? colors.success : colors.error} fontSize="10" fontWeight="600">
+              {responseTime}ns
+            </text>
+            <text x="30" y="300" fill={colors.textMuted} fontSize="10">ESD Rise Time:</text>
+            <text x="160" y="300" fill={colors.spark} fontSize="10" fontWeight="600">0.7ns</text>
+            <text x="30" y="320" fill={colors.textMuted} fontSize="10">Status:</text>
+            <text x="160" y="320" fill={responseTime < 1 ? colors.success : colors.error} fontSize="10" fontWeight="600">
+              {responseTime < 1 ? 'PROTECTED' : 'TOO SLOW'}
+            </text>
+          </g>
+        )}
 
-          {/* Protection status */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            background: colors.bgCard,
-            borderRadius: '8px',
-            padding: typo.cardPadding,
-            minWidth: isMobile ? '80px' : '90px',
-            flex: '1',
-            borderLeft: `3px solid ${hasProtection ? colors.success : colors.error}`
-          }}>
-            <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Protection</span>
-            <span style={{
-              color: hasProtection ? colors.success : colors.error,
-              fontSize: typo.body,
-              fontWeight: 'bold'
-            }}>
-              {hasProtection ? 'ENABLED' : 'DISABLED'}
-            </span>
-          </div>
+        {/* Status indicators */}
+        <g transform={`translate(${showTiming ? 280 : 20}, 260)`}>
+          <rect x="0" y="0" width={showTiming ? 200 : 460} height="70" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
 
-          {/* Clamping voltage (when protection enabled) */}
-          {hasProtection && (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              background: colors.bgCard,
-              borderRadius: '8px',
-              padding: typo.cardPadding,
-              minWidth: isMobile ? '80px' : '90px',
-              flex: '1',
-              borderLeft: `3px solid ${colors.diode}`
-            }}>
-              <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Clamped To</span>
-              <span style={{ color: colors.diode, fontSize: typo.body, fontWeight: 'bold' }}>{clampingVoltage}V</span>
-              <span style={{ color: colors.textMuted, fontSize: typo.label }}>{clampingEfficiency}% blocked</span>
-            </div>
+          {!showTiming && (
+            <>
+              <text x="15" y="22" fill={colors.textMuted} fontSize="10">Protection:</text>
+              <text x="90" y="22" fill={hasProtection ? colors.success : colors.error} fontSize="11" fontWeight="700">
+                {hasProtection ? 'ENABLED' : 'DISABLED'}
+              </text>
+
+              <text x="15" y="42" fill={colors.textMuted} fontSize="10">Clamped To:</text>
+              <text x="90" y="42" fill={colors.diode} fontSize="11" fontWeight="700">
+                {hasProtection ? `${clampVoltage}V (${clampEfficiency}% blocked)` : `${esdVoltage}V (0% blocked)`}
+              </text>
+
+              <text x="15" y="62" fill={colors.textMuted} fontSize="10">Chip Damage:</text>
+              <text x="90" y="62" fill={chipDamage > 50 ? colors.error : chipDamage > 20 ? colors.warning : colors.success} fontSize="11" fontWeight="700">
+                {chipDamage.toFixed(0)}%
+              </text>
+
+              {/* Chip health bar */}
+              <rect x="250" y="20" width="180" height="12" rx="6" fill="#1f2937" />
+              <rect
+                x="250"
+                y="20"
+                width={(180 * (100 - chipDamage)) / 100}
+                height="12"
+                rx="6"
+                fill={chipDamage > 50 ? colors.error : chipDamage > 20 ? colors.warning : colors.success}
+              />
+              <text x="340" y="31" fill="white" fontSize="9" textAnchor="middle" fontWeight="600">
+                {(100 - chipDamage).toFixed(0)}% Health
+              </text>
+
+              <text x="250" y="55" fill={colors.textMuted} fontSize="10">Discharges: {dischargeCount}</text>
+            </>
           )}
 
-          {/* Response time (for twist phase) */}
           {showTiming && (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              background: colors.bgCard,
-              borderRadius: '8px',
-              padding: typo.cardPadding,
-              minWidth: isMobile ? '80px' : '90px',
-              flex: '1',
-              borderLeft: `3px solid ${colors.warning}`
-            }}>
-              <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Response</span>
-              <span style={{ color: colors.warning, fontSize: typo.body, fontWeight: 'bold' }}>{responseTime}ns</span>
-            </div>
-          )}
+            <>
+              <text x="15" y="22" fill={colors.textMuted} fontSize="10">Capacitance:</text>
+              <text x="110" y="22" fill={colors.accent} fontSize="11" fontWeight="700">{protectionCapacitance}pF</text>
 
-          {/* Chip damage */}
-          {chipDamage > 0 && (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              background: colors.bgCard,
-              borderRadius: '8px',
-              padding: typo.cardPadding,
-              minWidth: isMobile ? '80px' : '90px',
-              flex: '1',
-              borderLeft: `3px solid ${colors.error}`
-            }}>
-              <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Chip Damage</span>
-              <span style={{ color: colors.error, fontSize: typo.body, fontWeight: 'bold' }}>{chipDamage.toFixed(0)}%</span>
-            </div>
+              <text x="15" y="42" fill={colors.textMuted} fontSize="10">Signal Loss:</text>
+              <text x="110" y="42" fill={metrics.signalLoss > 30 ? colors.error : colors.success} fontSize="11" fontWeight="700">
+                {metrics.signalLoss.toFixed(0)}%
+              </text>
+
+              <text x="15" y="62" fill={colors.textMuted} fontSize="10">Robustness:</text>
+              <text x="110" y="62" fill={metrics.robustness > 60 ? colors.success : colors.warning} fontSize="11" fontWeight="700">
+                {metrics.robustness.toFixed(0)}%
+              </text>
+            </>
           )}
-        </div>
-      </div>
+        </g>
+      </svg>
     );
   };
 
-  const buttonStyle: React.CSSProperties = {
-    padding: '12px 24px',
-    fontSize: '16px',
-    fontWeight: 600,
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    WebkitTapHighlightColor: 'transparent',
-  };
-
-  const primaryButtonStyle: React.CSSProperties = {
-    ...buttonStyle,
-    background: `linear-gradient(135deg, ${colors.accent}, #d97706)`,
-    color: 'white',
-  };
-
-  const secondaryButtonStyle: React.CSSProperties = {
-    ...buttonStyle,
-    background: 'rgba(51, 65, 85, 0.8)',
-    color: colors.textPrimary,
-    border: `1px solid ${colors.accent}`,
-  };
-
-  const renderHook = () => (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚡</div>
-      <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '16px' }}>
-        How Does a Chip Survive a Static Shock?
-      </h1>
-      <p style={{ color: colors.textSecondary, fontSize: '16px', marginBottom: '24px', maxWidth: '500px', margin: '0 auto 24px' }}>
-        You can build up 15,000 volts just walking across carpet. Yet your phone survives your touch every time. How?
-      </p>
-      <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-        <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Invisible Shield</h3>
-        <p style={{ color: colors.textMuted, fontSize: '14px' }}>
-          Every chip has protection circuits that can absorb thousands of volts in nanoseconds. Without them, static electricity would destroy electronics instantly.
-        </p>
-      </div>
-      {renderVisualization()}
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={primaryButtonStyle}
-      >
-        Explore ESD Protection
-      </button>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderPredict = () => (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '20px' }}>
-        Make Your Prediction
-      </h2>
-      <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-        <p style={{ color: colors.textSecondary, textAlign: 'center' }}>
-          When you touch a chip's I/O pin with 2,000+ volts of static charge, what happens?
-        </p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {predictions.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => setPrediction(p.id)}
-            style={{
-              ...secondaryButtonStyle,
-              background: prediction === p.id
-                ? (p.id === 'protection' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)')
-                : 'rgba(51, 65, 85, 0.5)',
-              borderColor: prediction === p.id ? (p.id === 'protection' ? colors.success : colors.error) : 'transparent',
-              textAlign: 'left',
-            }}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-      {prediction && (
-        <div style={{ marginTop: '20px', padding: '16px', background: prediction === 'protection' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(251, 191, 36, 0.2)', borderRadius: '12px' }}>
-          <p style={{ color: prediction === 'protection' ? colors.success : colors.warning }}>
-            {prediction === 'protection'
-              ? 'Correct! ESD protection diodes clamp the voltage and divert current safely to ground or power rails.'
-              : 'Not quite. Without protection, ESD would cause damage - but modern chips have built-in protection circuits at every pin.'}
-          </p>
-        </div>
-      )}
-      {prediction && (
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
         <button
-          onClick={() => onPhaseComplete?.()}
-          style={{ ...primaryButtonStyle, marginTop: '20px', width: '100%' }}
-        >
-          See It In Action
-        </button>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '8px' }}>
-        ESD Discharge Simulator
-      </h2>
-      <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>
-        Toggle protection and trigger ESD events to see the difference
-      </p>
-
-      {renderVisualization()}
-
-      <div style={{ marginTop: '20px' }}>
-        <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-          ESD Voltage: {esdVoltage}V
-        </label>
-        <input
-          type="range"
-          min="500"
-          max="15000"
-          step="500"
-          value={esdVoltage}
-          onChange={(e) => setEsdVoltage(Number(e.target.value))}
-          style={{ width: '100%' }}
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
         />
-      </div>
-
-      <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
-        <button
-          onClick={() => setHasProtection(!hasProtection)}
-          style={{
-            ...secondaryButtonStyle,
-            flex: 1,
-            background: hasProtection ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)',
-            borderColor: hasProtection ? colors.success : colors.error,
-          }}
-        >
-          Protection: {hasProtection ? 'ON' : 'OFF'}
-        </button>
-        <button
-          onClick={triggerDischarge}
-          disabled={isDischarging}
-          style={{
-            ...primaryButtonStyle,
-            flex: 1,
-            opacity: isDischarging ? 0.5 : 1,
-          }}
-        >
-          {isDischarging ? 'Discharging...' : 'Trigger ESD'}
-        </button>
-      </div>
-
-      <div style={{ marginTop: '16px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
-        <button onClick={resetSimulation} style={secondaryButtonStyle}>
-          Reset Damage
-        </button>
-      </div>
-
-      <div style={{ marginTop: '20px', background: colors.bgCard, borderRadius: '8px', padding: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: colors.textMuted }}>Chip Health:</span>
-          <span style={{ color: chipDamage > 50 ? colors.error : chipDamage > 20 ? colors.warning : colors.success, fontWeight: 'bold' }}>
-            {(100 - chipDamage).toFixed(0)}%
-          </span>
-        </div>
-        <div style={{ marginTop: '8px', height: '8px', background: '#1f2937', borderRadius: '4px' }}>
-          <div
-            style={{
-              height: '100%',
-              width: `${100 - chipDamage}%`,
-              background: chipDamage > 50 ? colors.error : chipDamage > 20 ? colors.warning : colors.success,
-              borderRadius: '4px',
-              transition: 'width 0.3s ease',
-            }}
-          />
-        </div>
-      </div>
-
-      {chipDamage > 80 && (
-        <div style={{ marginTop: '16px', background: 'rgba(239, 68, 68, 0.2)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-          <p style={{ color: colors.error, margin: 0 }}>
-            Critical damage! Without ESD protection, the chip would be destroyed.
-          </p>
-        </div>
-      )}
-
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ ...primaryButtonStyle, marginTop: '20px', width: '100%' }}
-      >
-        Continue to Review
-      </button>
+      ))}
     </div>
   );
 
-  const renderReview = () => (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '20px' }}>
-        Understanding ESD Protection
-      </h2>
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-      <div style={{ background: 'linear-gradient(135deg, #22c55e, #10b981)', borderRadius: '12px', padding: '20px', marginBottom: '20px', textAlign: 'center' }}>
-        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginBottom: '8px' }}>Human Body Model (HBM)</div>
-        <div style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>
-          2kV - 15kV+
-        </div>
-        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px', marginTop: '8px' }}>
-          Typical static discharge from human touch
-        </div>
-      </div>
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {[
-          { icon: '🛡️', title: 'Clamping Diodes', desc: 'Pairs of diodes to VDD and GND create a voltage clamp window' },
-          { icon: '⚡', title: 'Fast Response', desc: 'Protection must activate in nanoseconds before damage occurs' },
-          { icon: '📍', title: 'Every Pin', desc: 'Protection structures exist at every I/O pad on the chip' },
-          { icon: '🔄', title: 'Energy Routing', desc: 'ESD current is safely routed through power rails, not circuits' },
-        ].map((item, i) => (
-          <div key={i} style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-            <div style={{ fontSize: '24px' }}>{item.icon}</div>
-            <div>
-              <h3 style={{ color: colors.textPrimary, margin: '0 0 4px' }}>{item.title}</h3>
-              <p style={{ color: colors.textMuted, margin: 0, fontSize: '14px' }}>{item.desc}</p>
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          <span style={{ filter: 'drop-shadow(0 0 10px #fbbf24)' }}>&#9889;</span>
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          How Does Your Phone Survive Your Touch?
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          Walking across carpet can charge your body to <span style={{ color: colors.spark }}>15,000 volts</span>.
+          Yet every time you touch your phone, tablet, or laptop, the electronics inside survive.
+          How do tiny circuits withstand lightning-bolt voltages from your fingertips?
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '16px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ ...typo.h2, color: colors.spark }}>15,000V</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Human static</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ ...typo.h2, color: colors.diode }}>5V</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Chip survives</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ ...typo.h2, color: colors.circuit }}>0.7ns</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Time to clamp</div>
             </div>
           </div>
-        ))}
-      </div>
-
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ ...primaryButtonStyle, marginTop: '24px', width: '100%' }}
-      >
-        Discover the Speed Challenge
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ color: colors.accent, textAlign: 'center', marginBottom: '8px' }}>
-        The Speed Twist
-      </h2>
-      <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '20px' }}>
-        How fast must ESD protection respond?
-      </p>
-
-      <div style={{ background: 'rgba(168, 85, 247, 0.1)', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
-        <p style={{ color: colors.textSecondary, textAlign: 'center' }}>
-          An ESD event rises from 0V to thousands of volts in under a nanosecond. What does this mean for protection circuits?
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {twistPredictions.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => setTwistPrediction(p.id)}
-            style={{
-              ...secondaryButtonStyle,
-              background: twistPrediction === p.id
-                ? (p.id === 'fast' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)')
-                : 'rgba(51, 65, 85, 0.5)',
-              borderColor: twistPrediction === p.id ? (p.id === 'fast' ? colors.success : colors.error) : 'transparent',
-              textAlign: 'left',
-            }}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      {twistPrediction && (
-        <div style={{ marginTop: '20px', padding: '16px', background: twistPrediction === 'fast' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(251, 191, 36, 0.2)', borderRadius: '12px' }}>
-          <p style={{ color: twistPrediction === 'fast' ? colors.success : colors.warning }}>
-            {twistPrediction === 'fast'
-              ? 'Correct! ESD rises in < 1ns, so protection must respond faster than that or the voltage spike reaches internal circuits first.'
-              : 'ESD events are incredibly fast - protection circuits must be even faster, responding in sub-nanosecond timescales.'}
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            The secret lies in invisible protection circuits built into every chip,
+            standing guard at every I/O pin, ready to absorb thousands of volts in nanoseconds.
           </p>
         </div>
-      )}
 
-      {twistPrediction && (
         <button
-          onClick={() => onPhaseComplete?.()}
-          style={{ ...primaryButtonStyle, marginTop: '20px', width: '100%' }}
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
         >
-          Explore Response Time
+          Discover ESD Protection &#8594;
         </button>
-      )}
-    </div>
-  );
 
-  const renderTwistPlay = () => (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '8px' }}>
-        Response Time Explorer
-      </h2>
-      <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>
-        ESD protection must balance speed and signal integrity
-      </p>
-
-      {renderVisualization(true)}
-
-      <div style={{ marginTop: '20px' }}>
-        <label style={{ color: colors.textSecondary, fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-          Response Time: {responseTime}ns
-        </label>
-        <input
-          type="range"
-          min="0.1"
-          max="10"
-          step="0.1"
-          value={responseTime}
-          onChange={(e) => setResponseTime(Number(e.target.value))}
-          style={{ width: '100%' }}
-        />
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-          <div style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '4px' }}>ESD Rise Time</div>
-          <div style={{ color: colors.spark, fontSize: '20px', fontWeight: 'bold' }}>0.7ns</div>
-          <div style={{ color: colors.textMuted, fontSize: '10px' }}>Typical HBM</div>
-        </div>
-        <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-          <div style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '4px' }}>Protection Status</div>
-          <div style={{ color: responseTime < 1 ? colors.success : colors.error, fontSize: '14px', fontWeight: 'bold' }}>
-            {responseTime < 1 ? 'PROTECTED' : 'TOO SLOW'}
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Nothing happens - modern chips are naturally immune to static electricity' },
+      { id: 'b', text: 'Special protection circuits instantly clamp the voltage and route current safely to ground' },
+      { id: 'c', text: 'The voltage is too brief to cause damage, so it passes harmlessly through' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
           </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            When you touch a chip's I/O pin with 4,000+ volts of static charge built up on your body, what happens to the chip?
+          </h2>
+
+          {/* Scenario illustration */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '40px', marginBottom: '8px' }}>&#128400;</div>
+                <div style={{ color: colors.spark, fontWeight: 600 }}>You (+4000V)</div>
+              </div>
+              <div style={{ fontSize: '32px', color: colors.spark }}>&#9889;&#8594;</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '40px', marginBottom: '8px' }}>&#128187;</div>
+                <div style={{ color: colors.circuit, fontWeight: 600 }}>Chip (3.3V max)</div>
+              </div>
+            </div>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
+              That's 1,200x more voltage than the chip is designed to handle!
+            </p>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction &#8594;
+            </button>
+          )}
         </div>
+
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div style={{ marginTop: '16px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', padding: '12px' }}>
-        <p style={{ color: colors.textSecondary, fontSize: '14px', textAlign: 'center', margin: 0 }}>
-          <strong style={{ color: colors.warning }}>Trade-off:</strong> Faster protection requires larger structures with more capacitance, which can affect high-speed signal integrity.
-        </p>
-      </div>
+  // PLAY PHASE - Interactive ESD Lab
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ ...primaryButtonStyle, marginTop: '24px', width: '100%' }}
-      >
-        Continue
-      </button>
-    </div>
-  );
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            ESD Discharge Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Toggle protection and trigger ESD events to see how protection circuits save chips
+          </p>
 
-  const renderTwistReview = () => (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '20px' }}>
-        The ESD Design Challenge
-      </h2>
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <ESDVisualization />
+            </div>
 
-      <div style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', borderRadius: '12px', padding: '20px', marginBottom: '20px', textAlign: 'center' }}>
-        <div style={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>
-          Fast Enough, But Not Too Big
-        </div>
-        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', marginTop: '8px' }}>
-          ESD structures add capacitance that can slow down signals
-        </div>
-      </div>
+            {/* Protection toggle */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '16px',
+              marginBottom: '24px',
+              padding: '16px',
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+            }}>
+              <span style={{ ...typo.body, color: colors.textSecondary }}>ESD Protection:</span>
+              <button
+                onClick={() => setHasProtection(!hasProtection)}
+                style={{
+                  width: '80px',
+                  height: '40px',
+                  borderRadius: '20px',
+                  border: 'none',
+                  background: hasProtection ? colors.success : colors.error,
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background 0.3s',
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  position: 'absolute',
+                  top: '4px',
+                  left: hasProtection ? '44px' : '4px',
+                  transition: 'left 0.3s',
+                }} />
+              </button>
+              <span style={{
+                ...typo.body,
+                color: hasProtection ? colors.success : colors.error,
+                fontWeight: 600,
+                minWidth: '80px'
+              }}>
+                {hasProtection ? 'ENABLED' : 'DISABLED'}
+              </span>
+            </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-        <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-          <div style={{ fontSize: '28px', marginBottom: '8px' }}>🐇</div>
-          <div style={{ color: colors.success, fontWeight: 'bold' }}>Fast Response</div>
-          <div style={{ color: colors.textMuted, fontSize: '12px' }}>Big diodes, high capacitance</div>
-        </div>
-        <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-          <div style={{ fontSize: '28px', marginBottom: '8px' }}>📶</div>
-          <div style={{ color: colors.circuit, fontWeight: 'bold' }}>Signal Quality</div>
-          <div style={{ color: colors.textMuted, fontSize: '12px' }}>Small diodes, low capacitance</div>
-        </div>
-      </div>
+            {/* ESD voltage slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>ESD Voltage (Human Body Model)</span>
+                <span style={{ ...typo.small, color: colors.spark, fontWeight: 600 }}>{esdVoltage}V</span>
+              </div>
+              <input
+                type="range"
+                min="1000"
+                max="15000"
+                step="500"
+                value={esdVoltage}
+                onChange={(e) => setEsdVoltage(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Light touch</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Carpet walk</span>
+              </div>
+            </div>
 
-      <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
-        <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Design Solutions</h3>
-        <ul style={{ color: colors.textSecondary, margin: 0, paddingLeft: '20px', fontSize: '14px' }}>
-          <li>Multi-stage protection: fast primary + robust secondary</li>
-          <li>Silicon-controlled rectifiers (SCRs) for high current capability</li>
-          <li>Low-capacitance TVS diodes for high-speed interfaces</li>
-          <li>Careful layout to minimize parasitic inductance</li>
-        </ul>
-      </div>
+            {/* Trigger button */}
+            <button
+              onClick={triggerDischarge}
+              disabled={isDischarging}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: isDischarging
+                  ? colors.border
+                  : `linear-gradient(135deg, ${colors.spark}, #ea580c)`,
+                color: 'white',
+                fontSize: '18px',
+                fontWeight: 700,
+                cursor: isDischarging ? 'not-allowed' : 'pointer',
+                boxShadow: isDischarging ? 'none' : `0 4px 20px rgba(251, 191, 36, 0.4)`,
+              }}
+            >
+              {isDischarging ? 'Discharging...' : '&#9889; Trigger ESD Discharge'}
+            </button>
+          </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ ...primaryButtonStyle, marginTop: '24px', width: '100%' }}
-      >
-        See Real Applications
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '8px' }}>
-        Real-World Applications
-      </h2>
-      <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '20px' }}>
-        Explore all 4 applications to continue
-      </p>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-        {transferApplications.map((app, i) => (
-          <div
-            key={i}
-            onClick={() => setTransferCompleted(prev => new Set([...prev, i]))}
-            style={{
-              background: transferCompleted.has(i) ? 'rgba(16, 185, 129, 0.2)' : colors.bgCard,
+          {/* Observation prompts */}
+          {!hasProtection && chipDamage > 20 && (
+            <div style={{
+              background: `${colors.error}22`,
+              border: `1px solid ${colors.error}`,
               borderRadius: '12px',
               padding: '16px',
-              cursor: 'pointer',
-              border: transferCompleted.has(i) ? `2px solid ${colors.success}` : '2px solid transparent',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            <div style={{ fontSize: '32px', textAlign: 'center', marginBottom: '8px' }}>{app.icon}</div>
-            <h3 style={{ color: colors.textPrimary, fontSize: '14px', textAlign: 'center', margin: '0 0 8px' }}>
-              {app.title}
-            </h3>
-            <p style={{ color: colors.textMuted, fontSize: '11px', textAlign: 'center', margin: 0 }}>
-              {app.description}
-            </p>
-            {transferCompleted.has(i) && (
-              <div style={{ color: colors.success, textAlign: 'center', marginTop: '8px', fontSize: '12px' }}>
-                Explored
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                Without protection, the full {esdVoltage}V hits the chip! Gate oxide is breaking down.
+              </p>
+            </div>
+          )}
 
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <p style={{ color: colors.textMuted }}>
-          Progress: {transferCompleted.size}/4 applications
-        </p>
-      </div>
+          {hasProtection && dischargeCount > 0 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Protection clamped {esdVoltage}V down to 5.5V! The chip sees only safe voltage levels.
+              </p>
+            </div>
+          )}
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        disabled={transferCompleted.size < 4}
-        style={{
-          ...primaryButtonStyle,
-          marginTop: '20px',
-          width: '100%',
-          opacity: transferCompleted.size < 4 ? 0.5 : 1,
-          cursor: transferCompleted.size < 4 ? 'not-allowed' : 'pointer',
-        }}
-      >
-        {transferCompleted.size < 4 ? `Explore ${4 - transferCompleted.size} more` : 'Take the Test'}
-      </button>
-    </div>
-  );
-
-  const renderTest = () => (
-    <div style={{ padding: '20px' }}>
-      <h2 style={{ color: colors.textPrimary, textAlign: 'center', marginBottom: '20px' }}>
-        Knowledge Check
-      </h2>
-
-      {!testSubmitted ? (
-        <>
-          <div style={{ marginBottom: '20px' }}>
-            {testQuestions.map((q, qIndex) => (
-              <div key={qIndex} style={{ marginBottom: '24px', background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
-                <p style={{ color: colors.textPrimary, fontWeight: 'bold', marginBottom: '12px' }}>
-                  {qIndex + 1}. {q.question}
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {q.options.map((opt, oIndex) => (
-                    <button
-                      key={oIndex}
-                      onClick={() => handleTestAnswer(qIndex, oIndex)}
-                      style={{
-                        ...secondaryButtonStyle,
-                        background: testAnswers[qIndex] === oIndex ? 'rgba(245, 158, 11, 0.3)' : 'rgba(51, 65, 85, 0.5)',
-                        borderColor: testAnswers[qIndex] === oIndex ? colors.accent : 'transparent',
-                        textAlign: 'left',
-                        fontSize: '14px',
-                        padding: '10px 16px',
-                      }}
-                    >
-                      {opt.text}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
+          {/* Reset button */}
           <button
-            onClick={submitTest}
-            disabled={testAnswers.includes(null)}
+            onClick={() => { setChipDamage(0); setDischargeCount(0); }}
             style={{
-              ...primaryButtonStyle,
               width: '100%',
-              opacity: testAnswers.includes(null) ? 0.5 : 1,
-              cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+              padding: '12px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              marginBottom: '24px',
             }}
           >
-            Submit Answers
+            Reset Simulation
           </button>
-        </>
-      ) : (
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-            {testScore >= 7 ? '🎉' : '📚'}
-          </div>
-          <h3 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '8px' }}>
-            Score: {testScore}/10
-          </h3>
-          <p style={{ color: testScore >= 7 ? colors.success : colors.warning, marginBottom: '24px' }}>
-            {testScore >= 7 ? 'Excellent! You understand ESD protection!' : 'Review the concepts and try again.'}
-          </p>
-
-          <div style={{ textAlign: 'left', marginBottom: '24px' }}>
-            {testQuestions.map((q, i) => (
-              <div key={i} style={{
-                padding: '12px',
-                marginBottom: '8px',
-                borderRadius: '8px',
-                background: testAnswers[i] !== null && q.options[testAnswers[i]!].correct
-                  ? 'rgba(16, 185, 129, 0.2)'
-                  : 'rgba(239, 68, 68, 0.2)'
-              }}>
-                <p style={{ color: colors.textPrimary, fontSize: '14px', margin: '0 0 4px' }}>
-                  {i + 1}. {q.question}
-                </p>
-                <p style={{ color: colors.textMuted, fontSize: '12px', margin: 0 }}>
-                  Correct: {q.options.find(o => o.correct)?.text}
-                </p>
-              </div>
-            ))}
-          </div>
 
           <button
-            onClick={() => onPhaseComplete?.()}
+            onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            {testScore >= 7 ? 'Complete!' : 'Continue Anyway'}
+            Understand the Physics &#8594;
           </button>
         </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div style={{ padding: '20px', textAlign: 'center' }}>
-      <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
-      <h1 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '16px' }}>
-        ESD Protection Master!
-      </h1>
-      <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-        You now understand how chips survive the invisible threat of static electricity.
-      </p>
-
-      <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '24px', textAlign: 'left' }}>
-        <h3 style={{ color: colors.accent, marginBottom: '16px' }}>Key Takeaways</h3>
-        <ul style={{ color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
-          <li style={{ marginBottom: '8px' }}>ESD can reach 2,000-15,000+ volts from human touch</li>
-          <li style={{ marginBottom: '8px' }}>Clamping diodes route current safely to power rails</li>
-          <li style={{ marginBottom: '8px' }}>Protection must respond in sub-nanosecond timescales</li>
-          <li style={{ marginBottom: '8px' }}>Every I/O pin has dedicated protection structures</li>
-          <li>Design trade-off: protection strength vs. signal speed</li>
-        </ul>
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '12px', padding: '16px' }}>
-        <p style={{ color: 'white', margin: 0, fontWeight: 'bold' }}>
-          Score: {testScore}/10
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            How ESD Protection Works
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
+              The Clamping Diode Strategy
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              At every I/O pin, two diodes stand guard:
+            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, paddingLeft: '20px' }}>
+              <li style={{ marginBottom: '8px' }}><strong style={{ color: colors.diode }}>Upper diode to VDD:</strong> Clamps positive spikes above VDD + 0.7V</li>
+              <li style={{ marginBottom: '8px' }}><strong style={{ color: colors.diode }}>Lower diode to GND:</strong> Clamps negative spikes below GND - 0.7V</li>
+              <li style={{ marginBottom: '8px' }}>Together they create a "voltage window" that protects internal circuits</li>
+              <li>Current is safely routed through power rails, not through transistor gates</li>
+            </ul>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '16px' }}>
+              The Human Body Model (HBM)
+            </h3>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              textAlign: 'center',
+              marginBottom: '16px',
+            }}>
+              <code style={{ fontSize: '18px', color: colors.textPrimary }}>100pF capacitor + 1.5k&#937; resistor</code>
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              This circuit models a charged human touching a grounded device. The capacitance represents body charge storage,
+              the resistance represents skin and body resistance. ESD standards like JEDEC and IEC use this model to
+              test chip robustness with repeatable, standardized pulses.
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              The protection diodes don't block ESD - they <strong>redirect</strong> it. When voltage exceeds the safe window,
+              diodes turn on and shunt current through the power rails (designed to handle high current)
+              instead of through the fragile transistor gates (which would be destroyed by just 6-8V).
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore the Speed Challenge &#8594;
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Protection can respond whenever convenient - static discharge is slow enough' },
+      { id: 'b', text: 'Protection must activate in nanoseconds or less, faster than the ESD rise time' },
+      { id: 'c', text: 'Speed doesn\'t matter - the protection is always conducting' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Response Time
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            ESD voltage rises from 0V to 4,000V in less than 1 nanosecond (0.000000001 seconds). How fast must the protection circuit respond?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ ...typo.h2, color: colors.spark, marginBottom: '8px' }}>
+              0.7 nanoseconds
+            </div>
+            <div style={{ ...typo.small, color: colors.textMuted }}>
+              Typical HBM ESD rise time (10% to 90%)
+            </div>
+            <div style={{ marginTop: '12px', ...typo.small, color: colors.textSecondary }}>
+              That's 1.4 billion events per second speed!
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Explore the Trade-off &#8594;
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Protection vs Signal Integrity Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Find the balance between protection robustness and high-speed signal quality
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <ESDVisualization showTiming={true} />
+            </div>
+
+            {/* Response time slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Protection Response Time</span>
+                <span style={{
+                  ...typo.small,
+                  color: responseTime < 1 ? colors.success : colors.error,
+                  fontWeight: 600
+                }}>
+                  {responseTime}ns
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="5"
+                step="0.1"
+                value={responseTime}
+                onChange={(e) => setResponseTime(parseFloat(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.success }}>Fast (safe)</span>
+                <span style={{ ...typo.small, color: colors.error }}>Slow (dangerous)</span>
+              </div>
+            </div>
+
+            {/* Protection capacitance slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Protection Capacitance</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                  {protectionCapacitance}pF
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="5"
+                step="0.1"
+                value={protectionCapacitance}
+                onChange={(e) => setProtectionCapacitance(parseFloat(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.circuit }}>Low cap (good signal)</span>
+                <span style={{ ...typo.small, color: colors.warning }}>High cap (robust)</span>
+              </div>
+            </div>
+
+            {/* Signal frequency slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Signal Frequency</span>
+                <span style={{ ...typo.small, color: colors.circuit, fontWeight: 600 }}>
+                  {signalFrequency} GHz
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="10"
+                step="0.1"
+                value={signalFrequency}
+                onChange={(e) => setSignalFrequency(parseFloat(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>USB 2.0</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>USB 3.2 / PCIe</span>
+              </div>
+            </div>
+
+            {/* Trade-off metrics */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: metrics.eyeOpening > 60 ? colors.success : colors.error }}>
+                  {metrics.eyeOpening.toFixed(0)}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Eye Opening</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: metrics.robustness > 60 ? colors.success : colors.warning }}>
+                  {metrics.robustness.toFixed(0)}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>ESD Robustness</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: metrics.trade_off_score > 50 ? colors.accent : colors.error }}>
+                  {metrics.trade_off_score.toFixed(0)}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Balance Score</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Insight card */}
+          <div style={{
+            background: `${colors.circuit}22`,
+            border: `1px solid ${colors.circuit}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.circuit }}>The Core Trade-off:</strong> Larger protection structures
+              are more robust but add capacitance that degrades high-speed signals. At 10 GHz,
+              even 0.5pF causes significant signal distortion!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Design Challenge &#8594;
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Advanced ESD Engineering
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>&#9889;</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Silicon-Controlled Rectifiers (SCRs)</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                For high-speed pins, SCRs provide superior protection with lower capacitance than simple diodes.
+                They're normally off (no capacitance impact) but snap on at trigger voltage and can handle
+                massive current. The trade-off: more complex design and potential latch-up risk.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>&#128200;</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Multi-Stage Protection</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Real systems use layered defense: external TVS diodes at connectors absorb the initial surge,
+                series resistors limit peak current, and on-chip structures handle residual energy.
+                Each stage reduces what the next must handle, enabling smaller on-chip structures.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>&#127919;</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Design Window Optimization</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>The challenge:</strong> Protection must trigger above normal operating voltage (3.3V + margin)
+                but below gate oxide breakdown (6-8V). That's only a 2-3V window! Engineers spend months
+                optimizing trigger voltages, clamp ratios, and layout to hit this narrow target while
+                minimizing capacitance and meeting area constraints.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications &#8594;
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    &#10003;
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.short}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Connection to ESD Protection:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.circuit, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '16px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                Real Examples:
+              </h4>
+              <ul style={{ ...typo.small, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+                {app.examples.map((ex, i) => (
+                  <li key={i} style={{ marginBottom: '4px' }}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '4px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test &#8594;
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '&#127881;' : '&#128218;'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You\'ve mastered ESD Protection Engineering!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson &#8594;
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review &amp; Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                &#8592; Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next &#8594;
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          &#127942;
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          ESD Protection Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how tiny protection circuits save billions of devices from the invisible threat of static electricity every single day.
         </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'How clamping diodes protect internal circuits',
+              'The Human Body Model (HBM) and ESD testing',
+              'Sub-nanosecond response time requirements',
+              'Protection vs signal integrity trade-offs',
+              'Multi-stage protection system design',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>&#10003;</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <div style={{ color: 'white', fontWeight: 600, marginBottom: '8px' }}>
+            Final Score: {testScore}/10
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
+            You're now equipped to understand how every electronic device you touch is protected from the static electricity your body generates.
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const realWorldApps = [
-    {
-      icon: '🏭',
-      title: 'Electronics Manufacturing',
-      short: 'Assembly Lines',
-      tagline: 'Protecting components from human touch on the production floor',
-      description: 'Electronics manufacturing facilities handle millions of sensitive components daily, from microprocessors to memory chips. A single uncontrolled ESD event during assembly can destroy expensive ICs, cause latent defects that fail in the field, or result in costly product recalls. ESD protection is a critical quality control measure that spans the entire production process.',
-      connection: 'The same ESD protection principles we explored apply here at industrial scale. Workers become walking capacitors charged to thousands of volts, and every component touch is a potential discharge event. Grounding systems, ionizers, and protective packaging all work together to prevent the voltage spikes that would overwhelm on-chip protection.',
-      howItWorks: 'Manufacturing floors use a multi-layered ESD control strategy. Workers wear grounded wrist straps and heel straps connected to the facility ground. ESD-safe flooring and workstation mats provide continuous paths to ground. Ionizers neutralize charge on ungrounded items. Components travel in conductive or static-dissipative packaging. Humidity control above 40% RH reduces charge generation. Real-time monitoring systems alert operators to grounding failures.',
-      stats: [
-        { value: '$5B+', label: 'Annual ESD Damage' },
-        { value: '<100V', label: 'Damage Threshold for Some ICs' },
-        { value: '99.9%', label: 'Required Yield Target' }
-      ],
-      examples: [
-        'PCB assembly lines with grounded conveyor systems and ionizing bars',
-        'Semiconductor packaging facilities with full-body grounding suits',
-        'Smartphone assembly where workers handle exposed flex circuits',
-        'Automotive ECU production requiring zero-defect quality standards'
-      ],
-      companies: [
-        'Foxconn',
-        'Jabil',
-        'Flex Ltd',
-        'Celestica',
-        'Sanmina'
-      ],
-      futureImpact: 'As components shrink to 3nm and below, ESD sensitivity increases dramatically. Future factories will use AI-powered monitoring systems, automated handling robots to minimize human contact, and novel materials with self-dissipating properties to maintain yield as device vulnerability grows.',
-      color: '#F59E0B'
-    },
-    {
-      icon: '💾',
-      title: 'Semiconductor Fabs',
-      short: 'Chip Production',
-      tagline: 'Ultra-clean environments where a single spark means disaster',
-      description: 'Semiconductor fabrication facilities represent the most extreme ESD-sensitive environments on Earth. Here, transistors with gate oxides only a few atoms thick are manufactured on wafers worth millions of dollars. A single ESD event can destroy thousands of chips in an instant or create invisible defects that cause failures months later in customer devices.',
-      connection: 'The on-chip ESD protection structures we simulated are actually built during fab processing, but during manufacturing, those structures dont exist yet. Bare wafers and in-process chips have no protection whatsoever, making them vulnerable to even tiny static charges that would be harmless to finished products.',
-      howItWorks: 'Fabs implement the most stringent ESD protocols in any industry. Cleanroom suits include conductive fibers woven throughout. All wafer handling equipment is grounded and ionized. FOUP (Front Opening Unified Pod) carriers are made from static-dissipative materials. Process tools have built-in charge neutralization. Gate oxide integrity testing catches ESD damage early. Even the air handling systems use ionization to neutralize airborne particles.',
-      stats: [
-        { value: '<10V', label: 'Gate Oxide Breakdown' },
-        { value: '$100M+', label: 'Cost Per Wafer Lot' },
-        { value: '1000+', label: 'ESD Monitors Per Fab' }
-      ],
-      examples: [
-        'Wafer probing stations with grounded chuck and ionized enclosures',
-        'Photolithography tools where charge can attract killer particles',
-        'Ion implantation systems with inherent charging from the beam',
-        'Wafer transport robots with continuous ground monitoring'
-      ],
-      companies: [
-        'TSMC',
-        'Samsung Foundry',
-        'Intel',
-        'GlobalFoundries',
-        'ASML'
-      ],
-      futureImpact: 'As EUV lithography and 2nm nodes become standard, new materials like high-k dielectrics and nanosheets increase ESD vulnerability. Fabs are developing real-time charge sensing at the wafer level and exploring plasma-based neutralization to protect these incredibly delicate structures.',
-      color: '#6366F1'
-    },
-    {
-      icon: '🖥️',
-      title: 'Data Centers',
-      short: 'Server Protection',
-      tagline: 'Keeping the cloud running through industrial-scale ESD management',
-      description: 'Data centers house millions of servers processing the worlds digital information. Technicians frequently access equipment for maintenance, upgrades, and repairs in environments where low humidity, raised floors, and constant movement create ideal conditions for static charge buildup. ESD damage to a single server can cause data loss, service outages, and cascade failures.',
-      connection: 'Every server contains the same types of chips we explored with ESD protection diodes. But data center scale means thousands of potential discharge events daily. The protection philosophy shifts from protecting individual chips to creating ESD-safe zones where equipment can be safely serviced without risk.',
-      howItWorks: 'Data centers implement zoned ESD protection. Hot aisles and cold aisles use static-dissipative flooring. Technicians must ground themselves at entry points using wrist straps or floor mats. Server rails and rack frames are bonded to facility ground. Humidity is maintained above 45% where possible. Hot-swappable components like drives and memory have gold-plated contacts that resist ESD damage. All packaging and transport containers are ESD-safe.',
-      stats: [
-        { value: '99.999%', label: 'Uptime Requirement' },
-        { value: '$9K/min', label: 'Outage Cost (Large DCs)' },
-        { value: '10K+', label: 'Service Events/Year' }
-      ],
-      examples: [
-        'Hot-swap drive replacement in running storage arrays',
-        'Memory DIMM upgrades requiring direct PCB contact',
-        'Network card installation in high-availability clusters',
-        'GPU replacement in AI training server racks'
-      ],
-      companies: [
-        'Google Cloud',
-        'Amazon AWS',
-        'Microsoft Azure',
-        'Meta',
-        'Equinix'
-      ],
-      futureImpact: 'Liquid cooling and immersion cooling reduce static from airflow but introduce new grounding challenges. Robotic maintenance systems will minimize human-equipment contact. AI diagnostics will detect ESD-induced latent failures before they cause outages.',
-      color: '#10B981'
-    },
-    {
-      icon: '✈️',
-      title: 'Aerospace and Aviation',
-      short: 'Aircraft Electronics',
-      tagline: 'Mission-critical systems that must survive lightning and cosmic rays',
-      description: 'Aircraft electronics face the most demanding ESD environment imaginable. At altitude, low humidity and dry air maximize static generation. Composite airframes dont conduct charge like metal ones. And the ultimate ESD event, a lightning strike delivering 200,000+ amps, occurs regularly. Every avionic system must survive these threats while maintaining safety-critical operation.',
-      connection: 'The ESD protection concepts scale up dramatically for aerospace. While we explored protecting chips from human-body discharge of a few thousand volts, aircraft systems must handle direct lightning attachment, P-static (precipitation static) from ice and rain, and charge accumulation from engine exhaust. Multi-stage protection with massive current-handling capability is essential.',
-      howItWorks: 'Aircraft use layered ESD protection starting with the airframe. Lightning strike zones are designed with conductive pathways to route current safely around the fuselage. Internal bonding networks connect all equipment to a common ground plane. Avionic boxes have external TVS diodes and spark gaps rated for lightning-induced transients. Internal circuits use the same on-chip ESD structures we explored, but with higher robustness ratings. Fiber optic connections eliminate some ESD paths entirely.',
-      stats: [
-        { value: '200kA', label: 'Lightning Current Peak' },
-        { value: '1-2/yr', label: 'Strikes Per Aircraft' },
-        { value: 'DO-160G', label: 'Aviation ESD Standard' }
-      ],
-      examples: [
-        'Flight computers with MIL-spec ESD protection on all interfaces',
-        'Fuel system electronics that must never create ignition sources',
-        'Composite radomes with embedded lightning diverter strips',
-        'Satellite avionics hardened against space charging and cosmic rays'
-      ],
-      companies: [
-        'Boeing',
-        'Airbus',
-        'Lockheed Martin',
-        'Honeywell Aerospace',
-        'Collins Aerospace'
-      ],
-      futureImpact: 'More-electric aircraft with higher power systems create new ESD challenges. Carbon nanotube composites may provide better charge dissipation than current materials. Solid-state power distribution will require revolutionary protection approaches for the all-electric aviation future.',
-      color: '#3B82F6'
-    }
-  ];
-
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, #1e293b 100%)`,
-      color: colors.textPrimary,
-    }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        {renderPhase()}
-      </div>
-    </div>
-  );
+  return null;
 };
 
 export default ESDProtectionRenderer;

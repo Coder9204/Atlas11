@@ -1,187 +1,300 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+// -----------------------------------------------------------------------------
+// Pascal's Law - Complete 10-Phase Game
+// Force multiplication through pressure transmission in hydraulic systems
+// F1/A1 = F2/A2 = P (Pressure is constant in confined fluid)
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface PascalLawRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete' | 'hydraulic') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' },
+      hydraulic: { freq: 150, duration: 0.3, type: 'sawtooth' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A mechanic uses a hydraulic car lift with a small piston (5 cm^2) and a large piston (500 cm^2). They need to lift a 2,000 kg car.",
+    question: "How much force must the mechanic apply to the small piston to lift the car?",
+    options: [
+      { id: 'a', label: "19,600 N - the full weight of the car" },
+      { id: 'b', label: "196 N - the weight divided by 100", correct: true },
+      { id: 'c', label: "1,960 N - the weight divided by 10" },
+      { id: 'd', label: "9,800 N - half the weight of the car" }
+    ],
+    explanation: "The mechanical advantage is A2/A1 = 500/5 = 100. The car's weight is ~19,600 N (2000 kg x 9.8 m/s^2). Required force = 19,600 / 100 = 196 N. This is Pascal's Law in action!"
+  },
+  {
+    scenario: "A car's brake system has a master cylinder with a 2 cm^2 piston connected to four brake calipers, each with a 20 cm^2 piston.",
+    question: "If the driver applies 100 N of force to the brake pedal, what is the total braking force at all four wheels?",
+    options: [
+      { id: 'a', label: "100 N - force is conserved" },
+      { id: 'b', label: "1,000 N - 10x multiplication total" },
+      { id: 'c', label: "4,000 N - each wheel gets 1,000 N independently", correct: true },
+      { id: 'd', label: "250 N - force is split between four wheels" }
+    ],
+    explanation: "Each caliper receives the full pressure from the master cylinder. Force multiplication = 20/2 = 10x at EACH wheel. Four wheels x 1,000 N = 4,000 N total. Pressure transmits equally to all connected cylinders!"
+  },
+  {
+    scenario: "An aircraft hydraulic system operates at 3,000 PSI to control the ailerons. The actuator piston has an area of 10 square inches.",
+    question: "What force can this actuator produce?",
+    options: [
+      { id: 'a', label: "300 pounds" },
+      { id: 'b', label: "3,000 pounds" },
+      { id: 'c', label: "30,000 pounds", correct: true },
+      { id: 'd', label: "300,000 pounds" }
+    ],
+    explanation: "Force = Pressure x Area. F = 3,000 PSI x 10 sq.in = 30,000 pounds. This is why aircraft can use small actuators powered by pilot inputs to move huge control surfaces against massive aerodynamic forces."
+  },
+  {
+    scenario: "An engineer is designing a hydraulic press that needs to exert 1,000,000 N of force. The pump can only provide 5,000 N of input force.",
+    question: "What area ratio is needed between the output and input pistons?",
+    options: [
+      { id: 'a', label: "50:1" },
+      { id: 'b', label: "100:1" },
+      { id: 'c', label: "200:1", correct: true },
+      { id: 'd', label: "500:1" }
+    ],
+    explanation: "Required multiplication = Output Force / Input Force = 1,000,000 / 5,000 = 200. Since F2/F1 = A2/A1, you need the output piston to have 200x the area of the input piston."
+  },
+  {
+    scenario: "A hydraulic jack multiplies force by 25x. A mechanic uses it to lift a 5,000 lb car by 18 inches.",
+    question: "How far must the mechanic push the jack handle (total distance over multiple strokes)?",
+    options: [
+      { id: 'a', label: "0.72 inches (18/25)" },
+      { id: 'b', label: "18 inches (same as lift height)" },
+      { id: 'c', label: "37.5 feet (18 x 25)", correct: true },
+      { id: 'd', label: "4.5 feet (18 x 3)" }
+    ],
+    explanation: "Conservation of energy: Work In = Work Out. If force is multiplied 25x, distance must be divided by 25... wait, that's backwards! Distance IN must be 25x the distance OUT. So 18 inches x 25 = 450 inches = 37.5 feet (over many strokes)."
+  },
+  {
+    scenario: "An excavator hydraulic cylinder is used to lift heavy loads. The cylinder has a bore of 6 inches and the system operates at 2,500 PSI.",
+    question: "What is the lifting force of this cylinder?",
+    options: [
+      { id: 'a', label: "About 15,000 pounds" },
+      { id: 'b', label: "About 70,000 pounds", correct: true },
+      { id: 'c', label: "About 150,000 pounds" },
+      { id: 'd', label: "About 350,000 pounds" }
+    ],
+    explanation: "Piston area = pi x r^2 = 3.14 x 3^2 = 28.27 sq.in. Force = Pressure x Area = 2,500 x 28.27 = 70,686 pounds. This is why construction equipment can lift massive loads with relatively compact cylinders."
+  },
+  {
+    scenario: "A technician notices air bubbles in the brake fluid after servicing the brakes. The driver reports the brake pedal feels 'spongy'.",
+    question: "Why do air bubbles cause problems in hydraulic brake systems?",
+    options: [
+      { id: 'a', label: "Air increases the viscosity of brake fluid" },
+      { id: 'b', label: "Air is compressible, absorbing pedal force instead of transmitting pressure", correct: true },
+      { id: 'c', label: "Air chemically reacts with brake fluid" },
+      { id: 'd', label: "Air blocks the brake lines" }
+    ],
+    explanation: "Pascal's Law requires an incompressible fluid. Air compresses when pressure is applied, absorbing energy instead of transmitting it. This creates a 'spongy' pedal feel and reduces braking effectiveness. Always bleed brakes to remove air!"
+  },
+  {
+    scenario: "Two hydraulic systems have the same input force and output piston area. System A uses a 2 cm^2 input piston, System B uses a 4 cm^2 input piston.",
+    question: "How do the output forces compare?",
+    options: [
+      { id: 'a', label: "System A produces 2x the output force", correct: true },
+      { id: 'b', label: "System B produces 2x the output force" },
+      { id: 'c', label: "Both systems produce the same output force" },
+      { id: 'd', label: "System A produces 4x the output force" }
+    ],
+    explanation: "Mechanical advantage = Output Area / Input Area. With the same output area, a smaller input area creates higher pressure (P = F/A) and thus more output force. System A's 2 cm^2 input creates 2x the pressure of System B's 4 cm^2 input."
+  },
+  {
+    scenario: "A submarine's hydraulic hatch system must operate at 1000 meters depth where external water pressure is about 100 atmospheres (1500 PSI).",
+    question: "Why don't submarines use the surrounding seawater directly as hydraulic fluid?",
+    options: [
+      { id: 'a', label: "Seawater doesn't follow Pascal's Law" },
+      { id: 'b', label: "Seawater is too dense for hydraulic systems" },
+      { id: 'c', label: "Specialized hydraulic oil provides lubrication, corrosion protection, and consistent properties", correct: true },
+      { id: 'd', label: "Seawater would freeze in the hydraulic lines" }
+    ],
+    explanation: "While seawater would transmit pressure per Pascal's Law, hydraulic oil provides lubrication for moving parts, prevents corrosion, maintains consistent viscosity across temperatures, and doesn't contain particulates that could damage precision seals."
+  },
+  {
+    scenario: "Pascal demonstrated his principle with a famous barrel experiment: a 10-meter tall narrow tube attached to a sealed barrel filled with water.",
+    question: "What happened when the tube was filled with just 1 liter of water?",
+    options: [
+      { id: 'a', label: "Nothing - 1 liter is too small to affect the barrel" },
+      { id: 'b', label: "The barrel burst due to the enormous pressure at the bottom", correct: true },
+      { id: 'c', label: "Water flowed back up the tube" },
+      { id: 'd', label: "The barrel floated due to buoyancy" }
+    ],
+    explanation: "Pascal showed that pressure depends on height, not volume. A 10m water column creates ~1 atmosphere (14.7 PSI) of pressure. Acting on the large barrel area, this created thousands of pounds of force - enough to burst the barrel from just 1 kg of water!"
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '🚗',
-    title: 'Hydraulic Brakes',
-    short: 'Cars multiply pedal force to stop safely',
-    tagline: 'Pascal\'s Law saves lives daily',
-    description: 'When you press the brake pedal, Pascal\'s Law multiplies your foot force through hydraulic fluid to push brake pads against rotors with hundreds of pounds of force, safely stopping tons of vehicle.',
-    connection: 'The brake master cylinder has a small piston that creates pressure transmitted equally throughout the brake lines. Larger wheel cylinders multiply this force at each wheel.',
-    howItWorks: 'Brake fluid is incompressible, transmitting pressure instantly. The ratio of master to slave cylinder areas determines force multiplication, typically 4:1 to 10:1 for each wheel.',
+    title: 'Automotive Brakes',
+    short: 'How you stop a 2-ton car with your foot',
+    tagline: 'Multiplying human force for vehicle safety',
+    description: 'Modern car brakes use Pascal\'s Law to multiply pedal force 10-20x at each wheel. A 50 lb push becomes over 1,000 lbs of clamping force per wheel, enabling safe stops from highway speeds.',
+    connection: 'The master cylinder (small piston) creates pressure that transmits equally to all brake calipers (large pistons). Each wheel gets the full multiplied force independently - not split between them!',
+    howItWorks: 'When you press the brake pedal, it pushes on the master cylinder piston. The resulting pressure travels through brake lines to wheel cylinders or calipers. ABS systems modulate this pressure rapidly to prevent wheel lockup.',
     stats: [
-      { value: '1,000+', label: 'lbs braking force', icon: '🛑' },
-      { value: '4:1', label: 'force multiplication', icon: '⚡' },
-      { value: '$40B', label: 'brake market', icon: '📈' }
+      { value: '10-20x', label: 'Force multiplication', icon: '💪' },
+      { value: '1000+ PSI', label: 'Line pressure', icon: '⚡' },
+      { value: '$45B', label: 'Global market', icon: '💰' }
     ],
-    examples: ['Passenger car brakes', 'Truck air-over-hydraulic brakes', 'Motorcycle disc brakes', 'ABS anti-lock systems'],
+    examples: ['Disc brakes with calipers', 'Drum brakes with wheel cylinders', 'ABS systems', 'Power brake boosters'],
     companies: ['Brembo', 'Bosch', 'Continental', 'Akebono'],
-    futureImpact: 'Brake-by-wire and regenerative braking in EVs still use hydraulic backup systems, maintaining Pascal\'s Law as a safety foundation.',
+    futureImpact: 'Electric vehicles use regenerative braking but maintain hydraulic systems as backup. Brake-by-wire technology provides electronic control with hydraulic actuation for fail-safe operation.',
     color: '#EF4444'
   },
   {
     icon: '🏗️',
     title: 'Construction Equipment',
-    short: 'Excavators lift tons with fluid power',
-    tagline: 'Moving mountains with pressure',
-    description: 'Excavators, cranes, and bulldozers use hydraulic systems to lift enormous loads. Pumps create pressure that acts on large cylinder areas, generating hundreds of thousands of pounds of force.',
-    connection: 'A small pump creating 3,000 PSI acts on large cylinder pistons to generate massive forces. The area ratio determines the mechanical advantage of the entire system.',
-    howItWorks: 'Engine-driven pumps pressurize hydraulic oil to 3,000-5,000 PSI. Control valves direct flow to cylinders and motors. Force equals pressure times piston area.',
+    short: 'Moving mountains with fluid power',
+    tagline: 'Turning diesel power into massive forces',
+    description: 'Excavators, backhoes, and bulldozers use hydraulic systems operating at 3,000-5,000 PSI to generate enormous forces. A single excavator can lift 50+ tons with precise control.',
+    connection: 'Hydraulic pumps create high pressure that acts on large cylinder pistons. The combination of high pressure and large piston area generates forces measured in tens of thousands of pounds.',
+    howItWorks: 'Engine-driven pumps pressurize hydraulic oil. Control valves direct flow to cylinders and motors. Proportional valves provide smooth, precise control. Return oil flows back to the tank through filters.',
     stats: [
-      { value: '200+', label: 'ton lift capacity', icon: '🏗️' },
-      { value: '5,000', label: 'PSI pressure', icon: '⚡' },
-      { value: '$50B', label: 'equipment market', icon: '📈' }
+      { value: '50+ tons', label: 'Lift capacity', icon: '🏋️' },
+      { value: '5000 PSI', label: 'System pressure', icon: '⚡' },
+      { value: '$180B', label: 'Equipment market', icon: '💰' }
     ],
-    examples: ['Excavator arms', 'Crane booms', 'Backhoe buckets', 'Dump truck beds'],
-    companies: ['Caterpillar', 'John Deere', 'Komatsu', 'Volvo CE'],
-    futureImpact: 'Electrification of construction equipment maintains hydraulic systems for force generation while using electric motors for pump power.',
+    examples: ['Excavator arms and buckets', 'Crane booms and hoists', 'Bulldozer blades', 'Concrete pump booms'],
+    companies: ['Caterpillar', 'Komatsu', 'John Deere', 'Liebherr'],
+    futureImpact: 'Hybrid hydraulic systems capture energy during lowering operations, improving fuel efficiency by 25-40%. Fully electric excavators maintain hydraulic actuation for high-force requirements.',
     color: '#F59E0B'
   },
   {
     icon: '✈️',
     title: 'Aircraft Flight Controls',
-    short: 'Hydraulics move flight surfaces precisely',
-    tagline: 'Pressure at 35,000 feet',
-    description: 'Aircraft hydraulic systems power flight control surfaces, landing gear, and brakes. Pilots need only small control inputs because hydraulics multiply force thousands of times.',
-    connection: 'At 3,000 PSI, small servo valves control huge actuators that can move ailerons, elevators, and rudders against massive aerodynamic loads.',
-    howItWorks: 'Multiple redundant hydraulic systems ensure safety. Engine-driven and electric pumps maintain pressure. Fly-by-wire systems translate pilot inputs to hydraulic actuator commands.',
+    short: 'Controlling tons of metal at 600 mph',
+    tagline: 'Making massive control surfaces feel light',
+    description: 'Aircraft hydraulic systems operate at 3,000 PSI to move flight control surfaces against enormous aerodynamic loads. A 747\'s hydraulic system contains 2,400+ gallons of fluid.',
+    connection: 'Pilot inputs to the control column are translated to small valve movements. These direct high-pressure fluid to actuators that move ailerons, elevators, and rudders with precise, instantaneous response.',
+    howItWorks: 'Multiple independent hydraulic systems provide redundancy for safety. Engine-driven and electric pumps maintain pressure. Fly-by-wire computers translate pilot inputs into actuator commands.',
     stats: [
-      { value: '3,000', label: 'PSI typical pressure', icon: '⚡' },
-      { value: '3x', label: 'redundant systems', icon: '🔧' },
-      { value: '$7B', label: 'aerospace hydraulics', icon: '📈' }
+      { value: '3000 PSI', label: 'System pressure', icon: '⚡' },
+      { value: '3x', label: 'Redundant systems', icon: '🛡️' },
+      { value: '$7B', label: 'Market size', icon: '💰' }
     ],
-    examples: ['Boeing 777 flight controls', 'Airbus A350 systems', 'Landing gear retraction', 'Thrust reverser actuation'],
-    companies: ['Parker Hannifin', 'Moog', 'Eaton', 'Safran'],
-    futureImpact: 'More electric aircraft are replacing some hydraulics with electromechanical actuators, but hydraulics remain critical for high-force applications.',
+    examples: ['Aileron and elevator control', 'Landing gear operation', 'Thrust reverser actuation', 'Cargo door systems'],
+    companies: ['Parker Aerospace', 'Moog', 'Eaton', 'Collins Aerospace'],
+    futureImpact: 'More Electric Aircraft designs replace some hydraulics with electro-hydrostatic actuators, combining electric power with hydraulic actuation for weight savings while maintaining force capability.',
     color: '#3B82F6'
   },
   {
-    icon: '🏋️',
-    title: 'Hydraulic Lifts',
-    short: 'Car lifts raise vehicles effortlessly',
-    tagline: 'Heavy lifting made simple',
-    description: 'Automotive service lifts use hydraulic cylinders to raise entire vehicles for repair. A small electric pump creates pressure that supports thousands of pounds with ease.',
-    connection: 'The large diameter lifting cylinder multiplies the pump pressure into massive upward force, allowing one person to lift a 5,000 lb vehicle.',
-    howItWorks: 'Pumps fill cylinders from a reservoir. Check valves prevent backflow for safety. Lowering releases fluid through control valves. Multiple cylinders provide stability.',
+    icon: '🔧',
+    title: 'Hydraulic Press & Manufacturing',
+    short: 'Shaping metal with millions of pounds',
+    tagline: 'Industrial force multiplication at scale',
+    description: 'Hydraulic presses generate forces up to 75,000 tons for forging, stamping, and forming operations. They shape everything from car body panels to aircraft landing gear.',
+    connection: 'Large diameter cylinders operating at high pressure create enormous forces. The ability to precisely control force, speed, and position makes hydraulic presses essential for modern manufacturing.',
+    howItWorks: 'High-pressure pumps (up to 10,000 PSI) feed large-bore cylinders. Servo valves provide precise control. Modern systems use closed-loop feedback to maintain exact force profiles throughout each operation.',
     stats: [
-      { value: '10,000', label: 'lb lift capacity', icon: '🏋️' },
-      { value: '150', label: 'PSI working pressure', icon: '⚡' },
-      { value: '$2B', label: 'lift market', icon: '📈' }
+      { value: '75,000 tons', label: 'Max press force', icon: '🏋️' },
+      { value: '10,000 PSI', label: 'Operating pressure', icon: '⚡' },
+      { value: '$12B', label: 'Press market', icon: '💰' }
     ],
-    examples: ['Two-post car lifts', 'Scissor lifts', 'Alignment racks', 'Motorcycle lifts'],
-    companies: ['Rotary Lift', 'BendPak', 'Challenger', 'Snap-on'],
-    futureImpact: 'Smart lifts with integrated diagnostics and safety sensors enhance the fundamental hydraulic lifting principle for modern repair shops.',
+    examples: ['Automotive stamping', 'Aircraft forging', 'Composite layup', 'Metal extrusion'],
+    companies: ['Schuler', 'Komatsu', 'AIDA', 'Enerpac'],
+    futureImpact: 'Servo-hydraulic systems combine the force of hydraulics with the precision of servo control. Industry 4.0 integration enables predictive maintenance through real-time monitoring of hydraulic parameters.',
     color: '#10B981'
   }
 ];
 
-// ============================================================================
-// PASCAL'S LAW - GOLD STANDARD RENDERER
-// ============================================================================
-// Physics: F₁/A₁ = F₂/A₂ = P (Pressure is constant in confined fluid)
-// Force multiplication through area ratio: F₂ = F₁ × (A₂/A₁)
-// Conservation of energy: Work = Force × Distance remains constant
-// ============================================================================
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const PascalLawRenderer: React.FC<PascalLawRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'force_applied'
-  | 'pressure_calculated'
-  | 'output_force_calculated'
-  | 'parameter_adjusted'
-  | 'work_demonstrated'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
-interface TestQuestion {
-  scenario: string;
-  question: string;
-  options: { text: string; correct: boolean }[];
-  explanation: string;
-}
-
-interface TransferApp {
-  icon: string;
-  title: string;
-  short: string;
-  tagline: string;
-  description: string;
-  connection: string;
-  howItWorks: string;
-  stats: string[];
-  examples: string[];
-  companies: string[];
-  futureImpact: string;
-  color: string;
-}
-
-interface Props {
-  onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  gamePhase?: string;
-  onPhaseComplete?: (phase: string) => void;
-}
-
-const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
-  // Core game state
-  const [phase, setPhase] = useState<Phase>('hook');
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<number | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [testScore, setTestScore] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
-  const [expandedApp, setExpandedApp] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Pascal's Law simulation states
-  const [inputForce, setInputForce] = useState(100); // Newtons
-  const [smallPistonArea, setSmallPistonArea] = useState(1); // cm²
-  const [largePistonArea, setLargePistonArea] = useState(10); // cm²
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [animationProgress, setAnimationProgress] = useState(0);
-  const [showPressureWaves, setShowPressureWaves] = useState(true);
-
-  // Brake system simulation
-  const [brakePedalForce, setBrakePedalForce] = useState(0);
-  const [brakeAnimating, setBrakeAnimating] = useState(false);
-
-  // Audio ref
-  const audioContextRef = useRef<AudioContext | null>(null);
-
-  // Physics calculations
-  const pressure = inputForce / smallPistonArea; // N/cm² (Pascal)
-  const outputForce = pressure * largePistonArea; // N
-  const mechanicalAdvantage = largePistonArea / smallPistonArea;
-  const inputDistance = 10; // cm (reference push distance)
-  const outputDistance = inputDistance * (smallPistonArea / largePistonArea);
-  const workIn = inputForce * inputDistance;
-  const workOut = outputForce * outputDistance;
-
-  const phaseNames: Record<Phase, string> = {
-    hook: 'Hook',
-    predict: 'Predict',
-    play: 'Explore',
-    review: 'Review',
-    twist_predict: 'Twist Predict',
-    twist_play: 'Twist Explore',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
-    mastery: 'Mastery'
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
   };
 
-  // Responsive handling
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Simulation state - Hydraulic system
+  const [inputForce, setInputForce] = useState(100); // Newtons
+  const [smallPistonArea, setSmallPistonArea] = useState(2); // cm^2
+  const [largePistonArea, setLargePistonArea] = useState(20); // cm^2
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animationProgress, setAnimationProgress] = useState(0);
+
+  // Twist phase - Brake system simulation
+  const [brakePedalForce, setBrakePedalForce] = useState(0);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Physics calculations
+  const pressure = inputForce / smallPistonArea; // N/cm^2
+  const outputForce = pressure * largePistonArea; // N
+  const mechanicalAdvantage = largePistonArea / smallPistonArea;
+  const inputDistance = 10; // cm reference
+  const outputDistance = inputDistance * (smallPistonArea / largePistonArea);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -189,1882 +302,1586 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
   // Animation loop
   useEffect(() => {
-    if (!isAnimating) return;
-    const interval = setInterval(() => {
-      setAnimationProgress(prev => {
-        if (prev >= 100) {
-          setIsAnimating(false);
-          return 0;
-        }
-        return prev + 2;
-      });
-    }, 30);
-    return () => clearInterval(interval);
+    let timer: NodeJS.Timeout;
+    if (isAnimating) {
+      timer = setInterval(() => {
+        setAnimationProgress(prev => {
+          if (prev >= 100) {
+            setIsAnimating(false);
+            return 100;
+          }
+          return prev + 2;
+        });
+      }, 30);
+    }
+    return () => clearInterval(timer);
   }, [isAnimating]);
 
-  // Phase change events
-  useEffect(() => {
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', data: { phase, phaseName: phaseNames[phase] } });
-    }
-  }, [phase, onGameEvent]);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#10B981', // Emerald for hydraulics
+    accentGlow: 'rgba(16, 185, 129, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    fluid: '#EF4444',
+    piston: '#64748B',
+  };
 
-  // Web Audio API sound system
-  const playSound = useCallback((type: 'correct' | 'incorrect' | 'transition' | 'complete' | 'hydraulic' | 'pressure') => {
-    try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-      switch (type) {
-        case 'correct':
-          oscillator.frequency.setValueAtTime(523.25, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-          oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
-          gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.3);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.3);
-          break;
-        case 'incorrect':
-          oscillator.frequency.setValueAtTime(220, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(180, ctx.currentTime + 0.15);
-          gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.3);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.3);
-          break;
-        case 'transition':
-          oscillator.frequency.setValueAtTime(440, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(550, ctx.currentTime + 0.05);
-          gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.1);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.1);
-          break;
-        case 'complete':
-          oscillator.frequency.setValueAtTime(523.25, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.15);
-          oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.3);
-          oscillator.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.45);
-          gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.6);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.6);
-          break;
-        case 'hydraulic':
-          oscillator.type = 'sawtooth';
-          oscillator.frequency.setValueAtTime(80, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(60, ctx.currentTime + 0.3);
-          gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.4);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.4);
-          break;
-        case 'pressure':
-          oscillator.type = 'sine';
-          oscillator.frequency.setValueAtTime(200, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(400, ctx.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.2);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.2);
-          break;
-      }
-    } catch {
-      // Audio not available
-    }
-  }, []);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Challenge',
+    twist_play: 'Brake System',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  const goToPhase = useCallback((newPhase: Phase) => {
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
     playSound('transition');
-    setPhase(newPhase);
-    const currentIndex = phaseOrder.indexOf(newPhase);
-    if (onPhaseComplete && currentIndex > 0) {
-      onPhaseComplete(phaseOrder[currentIndex - 1]);
-    }
-  }, [playSound, onPhaseComplete]);
-
-  const handlePrediction = useCallback((index: number) => {
-    setSelectedPrediction(index);
-    setShowPredictionFeedback(true);
-    playSound(index === 1 ? 'correct' : 'incorrect');
+    setPhase(p);
     if (onGameEvent) {
-      onGameEvent({ type: 'prediction_made', data: { prediction: index, correct: index === 1 } });
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'pascal-law',
+        gameTitle: "Pascal's Law",
+        details: { phase: p },
+        timestamp: Date.now()
+      });
     }
-  }, [playSound, onGameEvent]);
-
-  const handleTwistPrediction = useCallback((index: number) => {
-    setTwistPrediction(index);
-    setShowTwistFeedback(true);
-    playSound(index === 2 ? 'correct' : 'incorrect');
-    if (onGameEvent) {
-      onGameEvent({ type: 'prediction_made', data: { prediction: index, correct: index === 2, twist: true } });
-    }
-  }, [playSound, onGameEvent]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-    if (onGameEvent) {
-      onGameEvent({ type: 'test_answered', data: { questionIndex, answerIndex } });
-    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
   }, [onGameEvent]);
 
-  const handleAppComplete = useCallback((appIndex: number) => {
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-    if (onGameEvent) {
-      onGameEvent({ type: 'app_explored', data: { appIndex, appTitle: transferApps[appIndex].title } });
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [playSound, onGameEvent]);
+  }, [phase, goToPhase, phaseOrder]);
 
+  // Start animation
   const startAnimation = useCallback(() => {
     setAnimationProgress(0);
     setIsAnimating(true);
     playSound('hydraulic');
-    if (onGameEvent) {
-      onGameEvent({ type: 'simulation_started', data: { inputForce, smallPistonArea, largePistonArea } });
-    }
-  }, [playSound, onGameEvent, inputForce, smallPistonArea, largePistonArea]);
+  }, []);
 
-  // ============================================================================
-  // TEST QUESTIONS - 10 scenario-based questions with explanations
-  // ============================================================================
-  const testQuestions: TestQuestion[] = [
-    {
-      scenario: "An automotive technician is setting up a car lift in a new garage. The lift uses a hydraulic system with a small piston (5 cm²) and a large piston (500 cm²).",
-      question: "If the technician applies 200 N of force to the small piston, what force is exerted on the car?",
-      options: [
-        { text: "200 N - pressure doesn't multiply", correct: false },
-        { text: "2,000 N - 10× multiplication", correct: false },
-        { text: "20,000 N - 100× multiplication", correct: true },
-        { text: "100,000 N - 500× multiplication", correct: false }
-      ],
-      explanation: "Force multiplication = Area ratio = 500/5 = 100×. Output force = 200 N × 100 = 20,000 N. This is Pascal's Law: F₂ = F₁ × (A₂/A₁)."
-    },
-    {
-      scenario: "A hydraulic brake system in a car has a master cylinder with a 1 cm² piston that connects to brake calipers each with 10 cm² pistons.",
-      question: "When the driver applies 50 N to the brake pedal mechanism, what happens at each wheel?",
-      options: [
-        { text: "Each wheel gets 5 N of braking force", correct: false },
-        { text: "Each wheel gets 50 N of braking force", correct: false },
-        { text: "Each wheel gets 500 N of braking force", correct: true },
-        { text: "Total 500 N is split between all wheels", correct: false }
-      ],
-      explanation: "Pascal's Law transmits pressure equally throughout the fluid. Each brake caliper experiences the same 50 N/cm² pressure, producing 500 N at each 10 cm² piston independently."
-    },
-    {
-      scenario: "An engineer is designing a hydraulic press for a manufacturing plant. The press needs to apply 1,000,000 N of force, but the pump can only provide 1,000 N.",
-      question: "What area ratio is needed between the pistons?",
-      options: [
-        { text: "10:1 (output 10× larger)", correct: false },
-        { text: "100:1 (output 100× larger)", correct: false },
-        { text: "1000:1 (output 1000× larger)", correct: true },
-        { text: "10000:1 (output 10000× larger)", correct: false }
-      ],
-      explanation: "Required multiplication = 1,000,000 ÷ 1,000 = 1,000×. Since F₂/F₁ = A₂/A₁, we need the output piston to be 1000× the area of the input piston."
-    },
-    {
-      scenario: "A mechanic is using a hydraulic jack that multiplies force by 25×. They need to lift a 2500 kg car (24,500 N weight) by 30 cm.",
-      question: "How far must they push the jack handle to lift the car 30 cm?",
-      options: [
-        { text: "1.2 cm (30 ÷ 25)", correct: false },
-        { text: "30 cm (same distance)", correct: false },
-        { text: "7.5 meters (30 × 25)", correct: true },
-        { text: "75 cm (30 × 2.5)", correct: false }
-      ],
-      explanation: "Conservation of energy: Work In = Work Out. If force is multiplied 25×, distance must be divided by 25. To lift 30 cm, you push 30 × 25 = 750 cm = 7.5 meters (over many pump strokes)."
-    },
-    {
-      scenario: "A submarine's hydraulic system uses sea water at 1000 m depth to assist hatch operations. The external pressure is approximately 100 atmospheres.",
-      question: "Why is the hydraulic fluid in this system kept separate from the sea water?",
-      options: [
-        { text: "Sea water would freeze the hydraulic system", correct: false },
-        { text: "Incompressible oil maintains precise force transmission; water has impurities", correct: true },
-        { text: "Pascal's Law only works with oil, not water", correct: false },
-        { text: "Sea water pressure would reverse the hydraulic flow", correct: false }
-      ],
-      explanation: "While Pascal's Law works with any liquid, hydraulic oil is preferred because it's incompressible, lubricates components, doesn't corrode metal, and maintains consistent properties. Sea water impurities could damage precision seals."
-    },
-    {
-      scenario: "An excavator operator notices the hydraulic arm is moving slower than usual despite full lever input. A technician finds tiny air bubbles in the hydraulic fluid.",
-      question: "Why do air bubbles cause problems in hydraulic systems?",
-      options: [
-        { text: "Air bubbles increase fluid density", correct: false },
-        { text: "Air is compressible, absorbing energy instead of transmitting pressure instantly", correct: true },
-        { text: "Air bubbles make the fluid flow faster", correct: false },
-        { text: "Bubbles block the flow but don't affect force", correct: false }
-      ],
-      explanation: "Pascal's Law requires an incompressible fluid. Air bubbles compress when pressure is applied, absorbing energy and creating a 'spongy' response. This is why brake systems must be bled of air to work properly."
-    },
-    {
-      scenario: "A dental chair uses hydraulics to smoothly raise and lower patients. The chair supports 100 kg (980 N) with a 50 cm² piston activated by a foot pump with a 2 cm² piston.",
-      question: "What force does the dentist apply per pump stroke?",
-      options: [
-        { text: "980 N (same as patient weight)", correct: false },
-        { text: "196 N (÷5)", correct: false },
-        { text: "39.2 N (÷25)", correct: true },
-        { text: "4.9 N (÷200)", correct: false }
-      ],
-      explanation: "Mechanical advantage = 50/2 = 25×. The dentist needs to apply 980 ÷ 25 = 39.2 N per pump. This is why foot pumps feel easy to push even when supporting heavy loads."
-    },
-    {
-      scenario: "A firefighter uses a hydraulic rescue tool (Jaws of Life) to cut through a car door. The tool provides 10,000 kg of cutting force from a hand-held pump.",
-      question: "What makes hydraulic rescue tools more practical than mechanical alternatives?",
-      options: [
-        { text: "Hydraulics are lighter than mechanical systems", correct: false },
-        { text: "Force can be transmitted through flexible hoses and multiplied at the tool head", correct: true },
-        { text: "Hydraulic fluid is stronger than steel", correct: false },
-        { text: "Mechanical cutters don't work on metal", correct: false }
-      ],
-      explanation: "Pascal's Law allows force multiplication through flexible hoses that bend around obstacles. A rescuer with a small pump can generate enormous force at the cutting head, directed wherever needed."
-    },
-    {
-      scenario: "An aircraft uses hydraulic systems to move control surfaces. During flight at 10,000 meters, the outside temperature is -50°C.",
-      question: "Why do aircraft hydraulic systems use specialized synthetic fluids?",
-      options: [
-        { text: "Standard hydraulic oil would boil at high altitude", correct: false },
-        { text: "Synthetic fluids maintain consistent viscosity across extreme temperature ranges", correct: true },
-        { text: "Synthetic fluids are less flammable than water", correct: false },
-        { text: "Regular oil would expand and overflow at altitude", correct: false }
-      ],
-      explanation: "Pascal's Law requires the fluid to remain liquid and incompressible. Standard oil becomes too thick at -50°C to flow properly. Aviation hydraulic fluids are formulated to work from -65°C to +135°C."
-    },
-    {
-      scenario: "A scientist replicates Pascal's famous barrel experiment: a 10-meter tall narrow tube (1 cm²) is attached to a sealed barrel (1000 cm² base). Water is poured into the tube.",
-      question: "What happens when the tube is filled with just 1 liter of water?",
-      options: [
-        { text: "Nothing - 1 liter is too little to affect the barrel", correct: false },
-        { text: "The barrel experiences 1000× the tube's pressure and may burst", correct: true },
-        { text: "Water flows back up the tube due to pressure", correct: false },
-        { text: "The barrel floats due to buoyancy", correct: false }
-      ],
-      explanation: "Pascal demonstrated that pressure = ρgh, independent of container width. A 10m water column creates ~1 atmosphere of pressure (100,000 Pa) over the barrel's entire 1000 cm² base - about 10,000 N of force from just 1 kg of water!"
-    }
-  ];
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-  const calculateScore = () => {
-    return testAnswers.reduce((score, answer, index) => {
-      const correctIndex = testQuestions[index].options.findIndex(o => o.correct);
-      return score + (answer === correctIndex ? 1 : 0);
-    }, 0);
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #059669)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  // ============================================================================
-  // TRANSFER APPLICATIONS - 4 comprehensive real-world applications
-  // ============================================================================
-  const transferApps: TransferApp[] = [
-    {
-      icon: "🚗",
-      title: "Car Brakes",
-      short: "Car Brakes",
-      tagline: "From brakes to suspension: hydraulics keep you safe on the road",
-      description: "Modern vehicles rely on Pascal's Law for critical safety systems. Hydraulic brakes multiply pedal force to stop multi-ton vehicles, power steering makes maneuvering effortless, and active suspension systems provide comfort while maintaining control.",
-      connection: "Pascal's Law enables small pedal forces to create massive braking forces at all wheels simultaneously, ensuring proportional and predictable stopping power in any condition.",
-      howItWorks: "When you press the brake pedal, a master cylinder (small piston) pressurizes brake fluid. This pressure travels through lines to wheel cylinders/calipers (large pistons), multiplying your force 10-15× at each wheel. ABS systems modulate this pressure thousands of times per second to prevent wheel lockup.",
-      stats: [
-        "Brake force multiplication: 10-15× at each wheel",
-        "ABS modulation speed: up to 25 times per second",
-        "Power steering assistance: reduces effort by 80%",
-        "Average brake line pressure: 1000-2000 PSI"
-      ],
-      examples: [
-        "Disc brakes: Calipers squeeze rotors with 1000+ lbs of force",
-        "Power steering: Makes parallel parking effortless",
-        "Convertible tops: Hydraulic cylinders raise/lower the roof",
-        "Clutch systems: Smooth engagement in manual transmissions"
-      ],
-      companies: ["Bosch", "Brembo", "Continental", "ZF Friedrichshafen"],
-      futureImpact: "Electric vehicles are transitioning to brake-by-wire with hydraulic backup, while active suspension systems use rapid hydraulic adjustments to provide both sports car handling and luxury ride comfort.",
-      color: "from-red-600 to-orange-600"
-    },
-    {
-      icon: "🏗️",
-      title: "Hydraulic Lifts",
-      short: "Hydraulic Lifts",
-      tagline: "Moving mountains with the physics of pressure",
-      description: "Excavators, bulldozers, cranes, and loaders all depend on hydraulic systems to transform small control inputs into tremendous forces. A single operator can precisely control machinery capable of lifting dozens of tons.",
-      connection: "Pascal's Law allows compact cylinders to generate forces measured in tons while maintaining precise control through proportional valves and feedback systems.",
-      howItWorks: "Hydraulic pumps driven by diesel engines pressurize oil to 3000-5000 PSI. This pressure is directed by control valves to cylinders of various sizes. Large boom cylinders provide lifting force, while smaller stick and bucket cylinders enable precise digging movements.",
-      stats: [
-        "Excavator bucket force: 15,000-50,000 lbs",
-        "Crane lifting capacity: up to 1,200 tons",
-        "System pressure: 3,000-5,000 PSI typical",
-        "Cylinder stroke speed: 0.1 to 3 feet per second"
-      ],
-      examples: [
-        "Excavator boom: Single cylinder lifts entire arm assembly",
-        "Bulldozer blade: Hydraulics angle, tilt, and raise the blade",
-        "Concrete pump boom: 50m reach with precise placement",
-        "Pile driver: Hydraulic hammers drive foundation piles"
-      ],
-      companies: ["Caterpillar", "Komatsu", "John Deere", "Liebherr"],
-      futureImpact: "Hybrid hydraulic systems recover energy during lowering operations, improving fuel efficiency by 25-40%. Autonomous excavators use precise hydraulic control for consistent grading accuracy within millimeters.",
-      color: "from-yellow-600 to-amber-600"
-    },
-    {
-      icon: "🔧",
-      title: "Hydraulic Press",
-      short: "Hydraulic Press",
-      tagline: "Millions of pounds of force shaping the modern world",
-      description: "Hydraulic presses shape everything from car body panels to smartphone cases. Injection molding machines use hydraulic pressure to force molten plastic into precision molds. Metal forming operations rely on controlled hydraulic force for consistent quality.",
-      connection: "Pascal's Law enables generating enormous forces (millions of pounds) from relatively compact systems, with precise control over speed, position, and force throughout the forming operation.",
-      howItWorks: "High-pressure hydraulic pumps (often 10,000+ PSI) feed large cylinders. Servo valves provide precise control of pressure and flow rate. Modern systems use closed-loop feedback to maintain exact force or position profiles during forming operations.",
-      stats: [
-        "Forging press force: up to 200,000 tons",
-        "Injection molding pressure: 10,000-30,000 PSI",
-        "Stamping press cycles: 30-60 per minute",
-        "Position accuracy: ±0.001 inches"
-      ],
-      examples: [
-        "Car body stamping: Shapes entire roof panels in one stroke",
-        "Forging: Creates aircraft landing gear from solid metal",
-        "Injection molding: Produces billions of plastic parts daily",
-        "Metal extrusion: Creates aluminum profiles for construction"
-      ],
-      companies: ["Bosch Rexroth", "Danfoss", "Enerpac", "Schuler Group"],
-      futureImpact: "Industry 4.0 integration enables predictive maintenance through hydraulic system monitoring. Hybrid electric-hydraulic systems reduce energy consumption by 50% while maintaining the force capabilities only hydraulics can provide.",
-      color: "from-purple-600 to-pink-600"
-    },
-    {
-      icon: "✈️",
-      title: "Aircraft Controls",
-      short: "Aircraft Controls",
-      tagline: "Turning pilot inputs into precise control at 600 mph",
-      description: "Aircraft use hydraulic systems to move flight control surfaces (ailerons, elevators, rudder), deploy landing gear, activate thrust reversers, and operate cargo doors. The Boeing 747 has over 2,400 gallons of hydraulic fluid flowing through miles of tubing.",
-      connection: "Pascal's Law enables lightweight actuators to move massive control surfaces against aerodynamic forces that can exceed 50,000 lbs, while providing the precise response pilots need for safe flight.",
-      howItWorks: "Engine-driven pumps maintain 3,000 PSI pressure in three independent hydraulic systems for redundancy. Fly-by-wire computers translate pilot stick movements into precise actuator commands. Accumulators store pressurized fluid for emergency power.",
-      stats: [
-        "System pressure: 3,000-5,000 PSI",
-        "B747 hydraulic fluid capacity: 2,400 gallons",
-        "Actuator response time: <50 milliseconds",
-        "Control surface force: up to 50,000 lbs"
-      ],
-      examples: [
-        "Landing gear: Hydraulic retraction in under 10 seconds",
-        "Thrust reversers: Redirect jet exhaust for braking",
-        "Spoilers/speedbrakes: Deploy in milliseconds",
-        "Cargo door operation: Safe handling of tons of freight"
-      ],
-      companies: ["Parker Aerospace", "Moog Inc.", "Eaton", "Collins Aerospace"],
-      futureImpact: "More-electric aircraft are supplementing hydraulics with electro-hydrostatic actuators (EHAs) that combine the power of hydraulics with the efficiency of electric systems, reducing weight and maintenance while maintaining redundancy.",
-      color: "from-blue-600 to-cyan-600"
-    }
-  ];
+  // Hydraulic System Visualization
+  const HydraulicVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 320;
+    const progress = animationProgress / 100;
+    const ratio = Math.min(largePistonArea / smallPistonArea, 20);
 
-  // ============================================================================
-  // SVG VISUALIZATIONS - Premium Graphics with Gradients & Filters
-  // ============================================================================
-  const renderHydraulicSystem = (size: number = 400, showLabels: boolean = true) => {
-    const pistonProgress = animationProgress / 100;
-    const smallPistonY = 120 - pistonProgress * 30;
-    const largePistonY = 120 - pistonProgress * (30 * smallPistonArea / largePistonArea);
-    const ratio = Math.min(largePistonArea / smallPistonArea, 50);
-    const largeWidth = Math.min(40 + ratio * 1.5, 100);
+    // Piston movements
+    const smallPistonY = 80 - progress * 40;
+    const largePistonY = 80 - progress * (40 / ratio);
 
     return (
-      <div className="flex flex-col items-center">
-        <svg
-          width={size}
-          height={size * 0.65}
-          viewBox="0 0 400 260"
-          className="overflow-visible mx-auto"
-        >
-          <defs>
-            {/* Premium hydraulic fluid gradient with depth - 5 color stops */}
-            <linearGradient id="pascalFluidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.9" />
-              <stop offset="20%" stopColor="#ef4444" stopOpacity="0.95" />
-              <stop offset="50%" stopColor="#dc2626" />
-              <stop offset="80%" stopColor="#b91c1c" />
-              <stop offset="100%" stopColor="#7f1d1d" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="fluidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </linearGradient>
+          <linearGradient id="pistonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#e2e8f0" />
+            <stop offset="50%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+          <linearGradient id="cylinderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+          <filter id="glowFilter">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Fluid surface highlight for 3D depth */}
-            <linearGradient id="pascalFluidSurface" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fef2f2" stopOpacity="0.4" />
-              <stop offset="30%" stopColor="#fecaca" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-            </linearGradient>
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Hydraulic Force Multiplication
+        </text>
 
-            {/* Premium metallic piston gradient with 3D effect - 6 color stops */}
-            <linearGradient id="pascalPistonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#cbd5e1" />
-              <stop offset="15%" stopColor="#f1f5f9" />
-              <stop offset="30%" stopColor="#e2e8f0" />
-              <stop offset="50%" stopColor="#94a3b8" />
-              <stop offset="70%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
+        {/* Container/Reservoir */}
+        <rect x="40" y="140" width={width - 80} height="80" fill="url(#fluidGrad)" rx="8" />
 
-            {/* Cylinder wall gradient - 5 stops for brushed metal */}
-            <linearGradient id="pascalCylinderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="20%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="80%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
+        {/* Container border */}
+        <rect x="35" y="135" width={width - 70} height="90" fill="none" stroke={colors.border} strokeWidth="4" rx="10" />
 
-            {/* Container wall gradient - 4 stops */}
-            <linearGradient id="pascalContainerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="30%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
-            </linearGradient>
+        {/* Small Piston Cylinder */}
+        <rect x="60" y="60" width="60" height="85" fill="url(#cylinderGrad)" stroke={colors.border} strokeWidth="2" rx="4" />
 
-            {/* Load/weight gradient - 4 stops */}
-            <linearGradient id="pascalLoadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fcd34d" />
-              <stop offset="30%" stopColor="#f59e0b" />
-              <stop offset="70%" stopColor="#d97706" />
-              <stop offset="100%" stopColor="#b45309" />
-            </linearGradient>
+        {/* Small Piston */}
+        <rect x="65" y={smallPistonY} width="50" height="50" fill="url(#pistonGrad)" stroke="#475569" strokeWidth="2" rx="4" />
 
-            {/* Pressure wave glow gradient */}
-            <radialGradient id="pascalPressureGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-            </radialGradient>
+        {/* Input Force Arrow */}
+        <g filter="url(#glowFilter)">
+          <line x1="90" y1={smallPistonY - 30} x2="90" y2={smallPistonY - 5} stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
+          <polygon points={`85,${smallPistonY - 5} 95,${smallPistonY - 5} 90,${smallPistonY}`} fill="#22c55e" />
+        </g>
 
-            {/* Input force arrow gradient */}
-            <linearGradient id="pascalInputForceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#4ade80" />
-              <stop offset="50%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#16a34a" />
-            </linearGradient>
+        {/* Large Piston Cylinder */}
+        <rect x={width - 140} y="60" width="80" height="85" fill="url(#cylinderGrad)" stroke={colors.border} strokeWidth="2" rx="4" />
 
-            {/* Output force arrow gradient */}
-            <linearGradient id="pascalOutputForceGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#dc2626" />
-            </linearGradient>
+        {/* Large Piston */}
+        <rect x={width - 135} y={largePistonY} width="70" height="50" fill="url(#pistonGrad)" stroke="#475569" strokeWidth="2" rx="4" />
 
-            {/* Glow filter for arrows - feGaussianBlur + feMerge pattern */}
-            <filter id="pascalArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        {/* Weight on Large Piston */}
+        <rect x={width - 130} y={largePistonY - 30} width="60" height="25" fill="#f59e0b" stroke="#d97706" strokeWidth="2" rx="4" />
+        <text x={width - 100} y={largePistonY - 12} textAnchor="middle" fill="#78350f" fontSize="11" fontWeight="bold">LOAD</text>
 
-            {/* Pressure wave glow filter */}
-            <filter id="pascalWaveGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        {/* Output Force Arrow */}
+        <g filter="url(#glowFilter)">
+          <line x1={width - 100} y1={largePistonY + 60} x2={width - 100} y2={largePistonY + 55} stroke="#ef4444" strokeWidth="4" strokeLinecap="round" />
+          <polygon points={`${width - 105},${largePistonY + 55} ${width - 95},${largePistonY + 55} ${width - 100},${largePistonY + 50}`} fill="#ef4444" />
+        </g>
 
-            {/* Inner shadow for depth */}
-            <filter id="pascalInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-
-            {/* Arrow markers with gradient fills */}
-            <marker id="pascalArrowDown" markerWidth="12" markerHeight="12" refX="6" refY="10" orient="auto">
-              <path d="M1,0 L6,10 L11,0 L6,3 Z" fill="url(#pascalInputForceGrad)" />
-            </marker>
-            <marker id="pascalArrowUp" markerWidth="12" markerHeight="12" refX="6" refY="2" orient="auto">
-              <path d="M1,12 L6,2 L11,12 L6,9 Z" fill="url(#pascalOutputForceGrad)" />
-            </marker>
-            <marker id="pascalArrowRight" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
-              <path d="M0,0 L10,5 L0,10 L3,5 Z" fill="#fcd34d" />
-            </marker>
-          </defs>
-
-          {/* Container/reservoir with premium fluid */}
-          <rect x="50" y="160" width="300" height="80" fill="url(#pascalFluidGrad)" rx="5" />
-          {/* Fluid surface highlight for 3D depth */}
-          <rect x="50" y="160" width="300" height="25" fill="url(#pascalFluidSurface)" rx="5" />
-
-          {/* Pressure wave visualization with premium glow */}
-          {showPressureWaves && isAnimating && (
-            <g filter="url(#pascalWaveGlow)">
-              <circle cx="90" cy="195" r={15 + animationProgress * 0.5} fill="none" stroke="url(#pascalPressureGlow)" strokeWidth="3" opacity={Math.max(0, 1 - animationProgress / 80)}>
-                <animate attributeName="r" from="15" to="100" dur="1s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="0.8" to="0" dur="1s" repeatCount="indefinite" />
-              </circle>
-              <circle cx="90" cy="195" r={35 + animationProgress * 0.5} fill="none" stroke="#fcd34d" strokeWidth="2" opacity={Math.max(0, 0.5 - animationProgress / 100)}>
-                <animate attributeName="r" from="35" to="120" dur="1s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="0.5" to="0" dur="1s" repeatCount="indefinite" />
-              </circle>
-              <circle cx="90" cy="195" r={55 + animationProgress * 0.5} fill="none" stroke="#f59e0b" strokeWidth="1" opacity={Math.max(0, 0.3 - animationProgress / 100)}>
-                <animate attributeName="r" from="55" to="140" dur="1s" repeatCount="indefinite" />
-                <animate attributeName="opacity" from="0.3" to="0" dur="1s" repeatCount="indefinite" />
-              </circle>
-            </g>
-          )}
-
-          {/* Container border with 3D effect */}
-          <rect x="45" y="155" width="310" height="90" fill="none" stroke="url(#pascalContainerGrad)" strokeWidth="6" rx="8" />
-          <rect x="47" y="157" width="306" height="86" fill="none" stroke="#1e293b" strokeWidth="2" rx="7" opacity="0.5" />
-
-          {/* Small piston cylinder with depth */}
-          <rect x="65" y="90" width="50" height="75" fill="url(#pascalCylinderGrad)" stroke="#475569" strokeWidth="2" rx="3" />
-          {/* Cylinder inner shadow */}
-          <rect x="68" y="93" width="44" height="69" fill="#0f172a" opacity="0.3" rx="2" />
-
-          {/* Small piston with 3D metallic effect */}
-          <rect
-            x="68"
-            y={smallPistonY}
-            width="44"
-            height="55"
-            fill="url(#pascalPistonGrad)"
-            stroke="#475569"
-            strokeWidth="1"
-            rx="3"
-          />
-          {/* Piston top highlight */}
-          <rect
-            x="70"
-            y={smallPistonY + 2}
-            width="40"
-            height="8"
-            fill="#f1f5f9"
-            opacity="0.4"
-            rx="2"
-          />
-          {/* Piston bottom shadow */}
-          <rect
-            x="70"
-            y={smallPistonY + 45}
-            width="40"
-            height="8"
-            fill="#1e293b"
-            opacity="0.5"
-            rx="2"
-          />
-
-          {/* Input force arrow with glow */}
-          <g filter="url(#pascalArrowGlow)">
-            <line
-              x1="90"
-              y1={smallPistonY - 40}
-              x2="90"
-              y2={smallPistonY - 8}
-              stroke="url(#pascalInputForceGrad)"
-              strokeWidth="5"
-              strokeLinecap="round"
-              markerEnd="url(#pascalArrowDown)"
-            />
-          </g>
-
-          {/* Large piston cylinder with depth */}
-          <rect
-            x={350 - largeWidth - 10}
-            y="70"
-            width={largeWidth + 10}
-            height="95"
-            fill="url(#pascalCylinderGrad)"
-            stroke="#475569"
-            strokeWidth="2"
-            rx="3"
-          />
-          {/* Cylinder inner shadow */}
-          <rect
-            x={350 - largeWidth - 7}
-            y="73"
-            width={largeWidth + 4}
-            height="89"
-            fill="#0f172a"
-            opacity="0.3"
-            rx="2"
-          />
-
-          {/* Large piston with 3D metallic effect */}
-          <rect
-            x={350 - largeWidth - 7}
-            y={largePistonY}
-            width={largeWidth + 4}
-            height="55"
-            fill="url(#pascalPistonGrad)"
-            stroke="#475569"
-            strokeWidth="1"
-            rx="3"
-          />
-          {/* Piston top highlight */}
-          <rect
-            x={350 - largeWidth - 4}
-            y={largePistonY + 2}
-            width={largeWidth - 2}
-            height="8"
-            fill="#f1f5f9"
-            opacity="0.4"
-            rx="2"
-          />
-          {/* Piston bottom shadow */}
-          <rect
-            x={350 - largeWidth - 4}
-            y={largePistonY + 45}
-            width={largeWidth - 2}
-            height="8"
-            fill="#1e293b"
-            opacity="0.5"
-            rx="2"
-          />
-
-          {/* Weight/load on large piston with premium gradient */}
-          <rect
-            x={350 - largeWidth - 2}
-            y={largePistonY - 35}
-            width={largeWidth - 6}
-            height="32"
-            fill="url(#pascalLoadGrad)"
-            stroke="#92400e"
-            strokeWidth="2"
-            rx="5"
-          />
-          {/* Load highlight */}
-          <rect
-            x={350 - largeWidth}
-            y={largePistonY - 33}
-            width={largeWidth - 10}
-            height="6"
-            fill="#fef3c7"
-            opacity="0.5"
-            rx="3"
-          />
-          <text
-            x={350 - largeWidth/2 - 5}
-            y={largePistonY - 14}
-            textAnchor="middle"
-            fill="#78350f"
-            fontSize="11"
-            fontWeight="bold"
-          >
-            LOAD
-          </text>
-
-          {/* Output force arrow with glow */}
-          <g filter="url(#pascalArrowGlow)">
-            <line
-              x1={350 - largeWidth/2 - 5}
-              y1={largePistonY + 75}
-              x2={350 - largeWidth/2 - 5}
-              y2={largePistonY + 48}
-              stroke="url(#pascalOutputForceGrad)"
-              strokeWidth="5"
-              strokeLinecap="round"
-              markerEnd="url(#pascalArrowUp)"
-            />
-          </g>
-
-          {/* Pressure transmission arrows with animation */}
-          <g opacity="0.9">
-            <line x1="125" y1="200" x2="165" y2="200" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" markerEnd="url(#pascalArrowRight)">
-              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />}
+        {/* Pressure arrows in fluid */}
+        {isAnimating && (
+          <g opacity={0.8}>
+            <line x1="130" y1="180" x2="170" y2="180" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round">
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="0.5s" repeatCount="indefinite" />
             </line>
-            <line x1="185" y1="200" x2="225" y2="200" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" markerEnd="url(#pascalArrowRight)">
-              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" begin="0.15s" />}
+            <polygon points="170,176 180,180 170,184" fill="#fcd34d">
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="0.5s" repeatCount="indefinite" />
+            </polygon>
+            <line x1="200" y1="180" x2="240" y2="180" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round">
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="0.5s" repeatCount="indefinite" begin="0.15s" />
             </line>
-            <line x1="245" y1="200" x2="285" y2="200" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" markerEnd="url(#pascalArrowRight)">
-              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" begin="0.3s" />}
+            <polygon points="240,176 250,180 240,184" fill="#fcd34d">
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="0.5s" repeatCount="indefinite" begin="0.15s" />
+            </polygon>
+            <line x1="270" y1="180" x2="310" y2="180" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round">
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="0.5s" repeatCount="indefinite" begin="0.3s" />
             </line>
+            <polygon points="310,176 320,180 310,184" fill="#fcd34d">
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="0.5s" repeatCount="indefinite" begin="0.3s" />
+            </polygon>
           </g>
-
-          {/* Pressure indicator box with glow */}
-          <rect x="155" y="172" width="90" height="24" fill="#1e293b" stroke="#fcd34d" strokeWidth="2" rx="6" opacity="0.95" />
-          <rect x="157" y="174" width="86" height="20" fill="#0f172a" opacity="0.5" rx="5" />
-        </svg>
-
-        {/* External labels using typo system for responsive typography */}
-        {showLabels && (
-          <div className="w-full flex justify-between items-start px-4 mt-2" style={{ maxWidth: size }}>
-            {/* Left side - Input */}
-            <div className="flex flex-col items-center text-center" style={{ width: '30%' }}>
-              <span style={{ fontSize: typo.body, fontWeight: 'bold', color: '#22c55e' }}>
-                F₁ = {inputForce} N
-              </span>
-              <span style={{ fontSize: typo.small, color: '#94a3b8' }}>
-                A₁ = {smallPistonArea} cm²
-              </span>
-            </div>
-
-            {/* Center - Pressure */}
-            <div className="flex flex-col items-center text-center" style={{ width: '40%' }}>
-              <span style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: '#fcd34d' }}>
-                P = {pressure.toFixed(0)} N/cm²
-              </span>
-              <span style={{ fontSize: typo.label, color: '#64748b' }}>
-                Pressure (constant)
-              </span>
-            </div>
-
-            {/* Right side - Output */}
-            <div className="flex flex-col items-center text-center" style={{ width: '30%' }}>
-              <span style={{ fontSize: typo.body, fontWeight: 'bold', color: '#ef4444' }}>
-                F₂ = {outputForce.toFixed(0)} N
-              </span>
-              <span style={{ fontSize: typo.small, color: '#94a3b8' }}>
-                A₂ = {largePistonArea} cm²
-              </span>
-            </div>
-          </div>
         )}
-      </div>
+
+        {/* Pressure display */}
+        <rect x={width/2 - 50} y="155" width="100" height="30" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" rx="6" />
+        <text x={width/2} y="175" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="600">
+          P = {pressure.toFixed(0)} N/cm^2
+        </text>
+
+        {/* Labels */}
+        <text x="90" y={height - 15} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+          A1 = {smallPistonArea} cm^2
+        </text>
+        <text x={width - 100} y={height - 15} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+          A2 = {largePistonArea} cm^2
+        </text>
+      </svg>
     );
   };
 
-  const renderWorkConservation = () => {
-    const ratio = mechanicalAdvantage;
-    const outputDist = outputDistance;
-
-    return (
-      <div className="flex flex-col items-center">
-        <svg width={isMobile ? 320 : 420} height={170} viewBox="0 0 420 170" className="mx-auto">
-          <defs>
-            {/* Premium cylinder gradient */}
-            <linearGradient id="pascalWorkCylinderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="20%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="80%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            {/* Premium piston gradient */}
-            <linearGradient id="pascalWorkPistonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#e2e8f0" />
-              <stop offset="20%" stopColor="#cbd5e1" />
-              <stop offset="50%" stopColor="#94a3b8" />
-              <stop offset="80%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
-
-            {/* Connection pipe gradient */}
-            <linearGradient id="pascalWorkPipeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="30%" stopColor="#ef4444" />
-              <stop offset="70%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#b91c1c" />
-            </linearGradient>
-
-            {/* Work box gradient */}
-            <linearGradient id="pascalWorkBoxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e1b4b" />
-              <stop offset="50%" stopColor="#312e81" />
-              <stop offset="100%" stopColor="#1e1b4b" />
-            </linearGradient>
-
-            {/* Arrow glow filter */}
-            <filter id="pascalWorkArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Arrow markers */}
-            <marker id="pascalWorkArrowGreenDown" markerWidth="10" markerHeight="10" refX="5" refY="8" orient="auto">
-              <path d="M0,0 L5,10 L10,0 L5,3 Z" fill="#22c55e" />
-            </marker>
-            <marker id="pascalWorkArrowRedDown" markerWidth="10" markerHeight="10" refX="5" refY="8" orient="auto">
-              <path d="M0,0 L5,10 L10,0 L5,3 Z" fill="#ef4444" />
-            </marker>
-          </defs>
-
-          {/* Input side cylinder */}
-          <rect x="40" y="30" width="60" height="130" fill="url(#pascalWorkCylinderGrad)" stroke="#475569" strokeWidth="2" rx="3" />
-          <rect x="42" y="32" width="56" height="126" fill="#0f172a" opacity="0.3" rx="2" />
-
-          {/* Input piston */}
-          <rect x="45" y="50" width="50" height="35" fill="url(#pascalWorkPistonGrad)" stroke="#64748b" strokeWidth="1" rx="2" />
-          <rect x="47" y="52" width="46" height="6" fill="#f1f5f9" opacity="0.4" rx="1" />
-
-          {/* Input distance arrow with glow */}
-          <g filter="url(#pascalWorkArrowGlow)">
-            <line x1="70" y1="95" x2="70" y2="148" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" markerEnd="url(#pascalWorkArrowGreenDown)" />
-          </g>
-
-          {/* Connection pipe with premium gradient */}
-          <rect x="100" y="92" width="180" height="16" fill="url(#pascalWorkPipeGrad)" rx="8" />
-          <rect x="102" y="94" width="176" height="4" fill="#fecaca" opacity="0.3" rx="2" />
-
-          {/* Work conservation box with premium styling */}
-          <rect x="140" y="45" width="140" height="42" fill="url(#pascalWorkBoxGrad)" stroke="#a855f7" strokeWidth="2" rx="8" />
-          <rect x="142" y="47" width="136" height="8" fill="#a855f7" opacity="0.2" rx="4" />
-
-          {/* Output side cylinder */}
-          <rect x="280" y="30" width="100" height="130" fill="url(#pascalWorkCylinderGrad)" stroke="#475569" strokeWidth="2" rx="3" />
-          <rect x="282" y="32" width="96" height="126" fill="#0f172a" opacity="0.3" rx="2" />
-
-          {/* Output piston */}
-          <rect x="285" y="95" width="90" height="35" fill="url(#pascalWorkPistonGrad)" stroke="#64748b" strokeWidth="1" rx="2" />
-          <rect x="287" y="97" width="86" height="6" fill="#f1f5f9" opacity="0.4" rx="1" />
-
-          {/* Output distance arrow with glow */}
-          <g filter="url(#pascalWorkArrowGlow)">
-            <line x1="330" y1="140" x2="330" y2={140 + Math.max(15, 50/ratio)} stroke="#ef4444" strokeWidth="4" strokeLinecap="round" markerEnd="url(#pascalWorkArrowRedDown)" />
-          </g>
-        </svg>
-
-        {/* External labels using typo system */}
-        <div className="w-full flex justify-between items-start px-2 mt-1" style={{ maxWidth: isMobile ? 320 : 420 }}>
-          {/* Input side labels */}
-          <div className="flex flex-col items-center text-center" style={{ width: '25%' }}>
-            <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#22c55e' }}>
-              F₁ = {inputForce} N
-            </span>
-            <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#22c55e' }}>
-              d₁ = {inputDistance} cm
-            </span>
-          </div>
-
-          {/* Center - Work conservation */}
-          <div className="flex flex-col items-center text-center" style={{ width: '50%' }}>
-            <span style={{ fontSize: typo.body, fontWeight: 'bold', color: '#a855f7' }}>
-              Work In = Work Out
-            </span>
-            <span style={{ fontSize: typo.small, color: '#c084fc' }}>
-              {inputForce} x {inputDistance} = {outputForce.toFixed(0)} x {outputDist.toFixed(1)}
-            </span>
-          </div>
-
-          {/* Output side labels */}
-          <div className="flex flex-col items-center text-center" style={{ width: '25%' }}>
-            <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#ef4444' }}>
-              F₂ = {outputForce.toFixed(0)} N
-            </span>
-            <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#ef4444' }}>
-              d₂ = {outputDist.toFixed(1)} cm
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderBrakeSystem = () => {
-    const pedalProgress = brakePedalForce / 100;
+  // Brake System Visualization
+  const BrakeSystemVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 260 : 300;
+    const pedalProgress = brakePedalForce / 200;
     const caliperClamp = pedalProgress * 15;
-    const masterCylinderArea = 2; // cm²
-    const caliperArea = 20; // cm²
-    const brakeForce = (brakePedalForce * caliperArea / masterCylinderArea);
+    const masterArea = 2;
+    const caliperArea = 20;
+    const brakeForce = brakePedalForce > 0 ? (brakePedalForce * caliperArea / masterArea) : 0;
 
     return (
-      <div className="flex flex-col items-center">
-        <svg width={isMobile ? 340 : 450} height={220} viewBox="0 0 450 220" className="mx-auto">
-          <defs>
-            {/* Premium brake fluid gradient - 5 color stops */}
-            <linearGradient id="pascalBrakeFluidGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />
-              <stop offset="25%" stopColor="#ef4444" />
-              <stop offset="50%" stopColor="#dc2626" />
-              <stop offset="75%" stopColor="#b91c1c" />
-              <stop offset="100%" stopColor="#991b1b" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="brakeFluidGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </linearGradient>
+          <radialGradient id="rotorGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="70%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#334155" />
+          </radialGradient>
+          <linearGradient id="caliperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+        </defs>
 
-            {/* Premium rotor gradient - 6 color stops for metallic effect */}
-            <radialGradient id="pascalRotorGrad" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="20%" stopColor="#64748b" />
-              <stop offset="40%" stopColor="#475569" />
-              <stop offset="60%" stopColor="#64748b" />
-              <stop offset="80%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
-            </radialGradient>
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Brake System Force Multiplication
+        </text>
 
-            {/* Brake caliper gradient */}
-            <linearGradient id="pascalCaliperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="30%" stopColor="#ef4444" />
-              <stop offset="70%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#b91c1c" />
-            </linearGradient>
+        {/* Brake Pedal */}
+        <g transform={`translate(30, ${60 + pedalProgress * 30})`}>
+          <rect x="0" y="0" width="50" height="15" fill="#64748b" rx="3" stroke="#475569" strokeWidth="1" />
+          <rect x="45" y="-40" width="8" height="50" fill="#64748b" stroke="#475569" strokeWidth="1" rx="1" />
+          <text x="25" y="30" textAnchor="middle" fill={colors.textMuted} fontSize="10">Pedal</text>
+        </g>
 
-            {/* Pedal metallic gradient */}
-            <linearGradient id="pascalPedalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="30%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
-            </linearGradient>
+        {/* Master Cylinder */}
+        <rect x="95" y="75" width="50" height="35" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="4" />
+        <rect x="100" y={82 + pedalProgress * 8} width="18" height="18" fill="#94a3b8" stroke="#64748b" strokeWidth="1" rx="2" />
+        <text x="120" y="130" textAnchor="middle" fill={colors.textMuted} fontSize="10">Master</text>
+        <text x="120" y="142" textAnchor="middle" fill={colors.textMuted} fontSize="9">2 cm^2</text>
 
-            {/* Master cylinder gradient */}
-            <linearGradient id="pascalMasterCylGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="20%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#334155" />
-              <stop offset="80%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
+        {/* Brake Lines */}
+        <path d="M145,92 L180,92 L180,60 L260,60" fill="none" stroke="url(#brakeFluidGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M145,92 L180,92 L180,140 L260,140" fill="none" stroke="url(#brakeFluidGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
 
-            {/* Pressure glow filter */}
-            <filter id="pascalBrakePressureGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Rotor shine filter */}
-            <filter id="pascalRotorShine" x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation="1" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-
-          {/* Brake Pedal with premium metallic look */}
-          <g transform={`translate(30, ${80 + pedalProgress * 30})`}>
-            <rect x="0" y="0" width="50" height="15" fill="url(#pascalPedalGrad)" rx="3" stroke="#475569" strokeWidth="1" />
-            <rect x="2" y="2" width="46" height="4" fill="#cbd5e1" opacity="0.3" rx="2" />
-            <rect x="45" y="-40" width="8" height="50" fill="url(#pascalPedalGrad)" stroke="#334155" strokeWidth="1" rx="1" />
+        {/* Pressure indicator */}
+        {brakePedalForce > 0 && (
+          <g>
+            <rect x="170" y="85" width="60" height="24" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" rx="6" />
+            <text x="200" y="101" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
+              {(brakePedalForce / masterArea).toFixed(0)} N/cm^2
+            </text>
           </g>
-
-          {/* Master Cylinder with premium styling */}
-          <rect x="90" y="75" width="60" height="40" fill="url(#pascalMasterCylGrad)" stroke="#475569" strokeWidth="2" rx="4" />
-          <rect x="92" y="77" width="56" height="36" fill="#0f172a" opacity="0.3" rx="3" />
-
-          {/* Master cylinder piston */}
-          <rect x="95" y={85 + pedalProgress * 10} width="20" height="20" fill="url(#pascalPedalGrad)" stroke="#64748b" strokeWidth="1" rx="2" />
-          <rect x="97" y={87 + pedalProgress * 10} width="16" height="4" fill="#e2e8f0" opacity="0.4" rx="1" />
-
-          {/* Brake Lines with premium gradient */}
-          <path
-            d="M150,95 L200,95 L200,50 L280,50"
-            fill="none"
-            stroke="url(#pascalBrakeFluidGrad)"
-            strokeWidth="10"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M152,95 L200,95 L200,52 L278,52"
-            fill="none"
-            stroke="#fecaca"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.3"
-          />
-          <path
-            d="M150,95 L200,95 L200,150 L280,150"
-            fill="none"
-            stroke="url(#pascalBrakeFluidGrad)"
-            strokeWidth="10"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M152,95 L200,95 L200,148 L278,148"
-            fill="none"
-            stroke="#fecaca"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.3"
-          />
-
-          {/* Pressure indicator with glow */}
-          {brakePedalForce > 0 && (
-            <g filter="url(#pascalBrakePressureGlow)">
-              <rect x="175" y="80" width="60" height="28" fill="#1e293b" stroke="#fcd34d" strokeWidth="2" rx="6" />
-              <rect x="177" y="82" width="56" height="6" fill="#fcd34d" opacity="0.2" rx="3" />
-            </g>
-          )}
-
-          {/* Front Wheel/Rotor with premium metallic effect */}
-          <g transform="translate(320, 50)" filter="url(#pascalRotorShine)">
-            <circle cx="40" cy="0" r="38" fill="url(#pascalRotorGrad)" stroke="#1e293b" strokeWidth="3" />
-            {/* Rotor ventilation slots */}
-            <circle cx="40" cy="0" r="30" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="8 4" />
-            <circle cx="40" cy="0" r="22" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="6 3" />
-            <circle cx="40" cy="0" r="15" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
-            {/* Hub center highlight */}
-            <circle cx="38" cy="-2" r="6" fill="#475569" opacity="0.5" />
-            {/* Brake calipers with gradient */}
-            <rect x={8 - caliperClamp} y="-14" width="18" height="28" fill="url(#pascalCaliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
-            <rect x={54 + caliperClamp} y="-14" width="18" height="28" fill="url(#pascalCaliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
-          </g>
-
-          {/* Rear Wheel/Rotor with premium metallic effect */}
-          <g transform="translate(320, 150)" filter="url(#pascalRotorShine)">
-            <circle cx="40" cy="0" r="38" fill="url(#pascalRotorGrad)" stroke="#1e293b" strokeWidth="3" />
-            {/* Rotor ventilation slots */}
-            <circle cx="40" cy="0" r="30" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="8 4" />
-            <circle cx="40" cy="0" r="22" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="6 3" />
-            <circle cx="40" cy="0" r="15" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
-            {/* Hub center highlight */}
-            <circle cx="38" cy="-2" r="6" fill="#475569" opacity="0.5" />
-            {/* Brake calipers with gradient */}
-            <rect x={8 - caliperClamp} y="-14" width="18" height="28" fill="url(#pascalCaliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
-            <rect x={54 + caliperClamp} y="-14" width="18" height="28" fill="url(#pascalCaliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
-          </g>
-        </svg>
-
-        {/* External labels using typo system */}
-        <div className="w-full grid grid-cols-4 gap-2 px-2 mt-2" style={{ maxWidth: isMobile ? 340 : 450 }}>
-          {/* Pedal label */}
-          <div className="flex flex-col items-center text-center">
-            <span style={{ fontSize: typo.label, color: '#64748b' }}>Pedal</span>
-          </div>
-
-          {/* Master cylinder label */}
-          <div className="flex flex-col items-center text-center">
-            <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Master</span>
-            <span style={{ fontSize: typo.label, color: '#64748b' }}>2 cm²</span>
-          </div>
-
-          {/* Pressure label */}
-          {brakePedalForce > 0 ? (
-            <div className="flex flex-col items-center text-center">
-              <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#fcd34d' }}>
-                {(brakePedalForce / masterCylinderArea).toFixed(0)} N/cm²
-              </span>
-              <span style={{ fontSize: typo.label, color: '#64748b' }}>Pressure</span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center text-center">
-              <span style={{ fontSize: typo.label, color: '#64748b' }}>Brake Lines</span>
-            </div>
-          )}
-
-          {/* Caliper label */}
-          <div className="flex flex-col items-center text-center">
-            <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Calipers</span>
-            <span style={{ fontSize: typo.label, color: '#64748b' }}>20 cm² each</span>
-          </div>
-        </div>
-
-        {/* Force readouts using external labels */}
-        <div className="w-full grid grid-cols-3 gap-2 px-2 mt-3" style={{ maxWidth: isMobile ? 340 : 450 }}>
-          <div className="bg-slate-800/50 rounded-lg p-2 border border-green-500/30 text-center">
-            <span style={{ fontSize: typo.label, color: '#22c55e' }}>Input Force</span>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: '#22c55e' }}>{brakePedalForce} N</div>
-          </div>
-
-          <div className="bg-slate-800/50 rounded-lg p-2 border border-red-500/30 text-center">
-            <span style={{ fontSize: typo.label, color: '#ef4444' }}>Output (per wheel)</span>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: '#ef4444' }}>{brakeForce.toFixed(0)} N</div>
-          </div>
-
-          <div className="bg-slate-800/50 rounded-lg p-2 border border-purple-500/30 text-center">
-            <span style={{ fontSize: typo.label, color: '#a855f7' }}>Multiplication</span>
-            <div style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: '#a855f7' }}>{(caliperArea / masterCylinderArea)}x</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ============================================================================
-  // PHASE RENDERERS
-  // ============================================================================
-
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6 text-center">
-      {/* Premium badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-        <span className="text-emerald-400/80 text-sm font-medium tracking-wide uppercase">Fluid Mechanics</span>
-      </div>
-
-      {/* Gradient title */}
-      <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-        Pascal's Law
-      </h1>
-
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
-        Force multiplication through pressure
-      </p>
-
-      {/* Premium card */}
-      <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-        <div className="mb-4">
-          {renderHydraulicSystem(isMobile ? 280 : 360, false)}
-        </div>
-        <p className="text-gray-300 text-center leading-relaxed mb-4">
-          A mechanic pushes with just 100 Newtons of force...
-          and lifts a 2-ton car!
-        </p>
-        <button
-          onClick={() => startAnimation()}
-          style={{ position: 'relative', zIndex: 10 }}
-          className="w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 text-white font-medium rounded-xl transition-colors border border-white/10"
-        >
-          Push the Small Piston
-        </button>
-      </div>
-
-      {/* CTA Button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="group px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 flex items-center gap-2"
-      >
-        Discover the Secret
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </button>
-
-      {/* Hint text */}
-      <p className="text-slate-500 text-sm mt-6">
-        Learn how hydraulic systems multiply force
-      </p>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-2xl mb-6">
-        <p className="text-base md:text-lg text-slate-300 mb-4">
-          When you push down on a small piston in a hydraulic system filled with fluid, what happens to the pressure throughout the fluid?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          'Pressure is strongest near the small piston and weakens with distance',
-          'Pressure is transmitted equally in all directions throughout the fluid',
-          'Pressure only travels in a straight line from one piston to the other',
-          'The fluid compresses and absorbs the pressure'
-        ].map((text, index) => (
-          <button
-            key={index}
-            onClick={() => handlePrediction(index)}
-            style={{ position: 'relative', zIndex: 10 }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === index
-                ? index === 1
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && index === 1
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{String.fromCharCode(65 + index)}.</span>
-            <span className="text-slate-200 ml-2">{text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            {selectedPrediction === 1 ? '✓ Correct!' : '✗ Not quite.'} This is <span className="text-cyan-400">Pascal's Law</span> - pressure transmits equally everywhere!
-          </p>
-          <button
-            onClick={() => goToPhase('play')}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-          >
-            Explore the Physics
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-white mb-4">Hydraulic Force Lab</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 mb-4">
-        {renderHydraulicSystem(isMobile ? 340 : 420, true)}
-
-        <div className="mt-6 grid grid-cols-3 gap-3 md:gap-4 text-center">
-          <div className="bg-slate-900/50 rounded-lg p-2 md:p-3">
-            <div className="text-xl md:text-2xl font-bold text-green-400">{inputForce} N</div>
-            <div className="text-xs md:text-sm text-slate-400">Input Force</div>
-          </div>
-          <div className="bg-slate-900/50 rounded-lg p-2 md:p-3">
-            <div className="text-xl md:text-2xl font-bold text-yellow-400">{mechanicalAdvantage.toFixed(1)}×</div>
-            <div className="text-xs md:text-sm text-slate-400">Multiplied</div>
-          </div>
-          <div className="bg-slate-900/50 rounded-lg p-2 md:p-3">
-            <div className="text-xl md:text-2xl font-bold text-red-400">{outputForce.toFixed(0)} N</div>
-            <div className="text-xs md:text-sm text-slate-400">Output Force</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
-        <div className="bg-slate-800/50 rounded-xl p-4">
-          <label className="text-sm text-slate-400 block mb-2">Input Force: {inputForce} N</label>
-          <input
-            type="range"
-            min="50"
-            max="500"
-            value={inputForce}
-            onChange={(e) => setInputForce(Number(e.target.value))}
-            className="w-full accent-green-500"
-          />
-        </div>
-        <div className="bg-slate-800/50 rounded-xl p-4">
-          <label className="text-sm text-slate-400 block mb-2">Small Piston: {smallPistonArea} cm²</label>
-          <input
-            type="range"
-            min="1"
-            max="10"
-            value={smallPistonArea}
-            onChange={(e) => setSmallPistonArea(Number(e.target.value))}
-            className="w-full accent-blue-500"
-          />
-        </div>
-        <div className="bg-slate-800/50 rounded-xl p-4">
-          <label className="text-sm text-slate-400 block mb-2">Large Piston: {largePistonArea} cm²</label>
-          <input
-            type="range"
-            min="10"
-            max="100"
-            value={largePistonArea}
-            onChange={(e) => setLargePistonArea(Number(e.target.value))}
-            className="w-full accent-red-500"
-          />
-        </div>
-        <button
-          onClick={() => startAnimation()}
-          style={{ position: 'relative', zIndex: 10 }}
-          className="p-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold transition-colors"
-        >
-          Activate Hydraulics
-        </button>
-      </div>
-
-      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
-        <h3 className="text-lg font-semibold text-cyan-400 mb-3">Pascal's Law Formula:</h3>
-        <div className="space-y-2 text-sm text-slate-300">
-          <p className="text-base md:text-lg text-center font-mono bg-slate-900/50 p-3 rounded">
-            F₁/A₁ = F₂/A₂ = P (Pressure is constant everywhere)
-          </p>
-          <p className="text-center text-cyan-400">
-            Rearranged: F₂ = F₁ × (A₂/A₁)
-          </p>
-          <p className="text-center text-yellow-400">
-            Mechanical Advantage = A₂/A₁ = {largePistonArea}/{smallPistonArea} = {mechanicalAdvantage.toFixed(1)}×
-          </p>
-        </div>
-      </div>
-
-      <button
-        onClick={() => goToPhase('review')}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-      >
-        Review the Concepts
-      </button>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-white mb-6">Understanding Pascal's Law</h2>
-
-      <div className="grid md:grid-cols-2 gap-4 md:gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-4 md:p-6">
-          <h3 className="text-lg md:text-xl font-bold text-red-400 mb-3">P₁ = P₂ (Equal Pressure)</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Pressure applied to a confined fluid transmits equally in all directions</li>
-            <li>P = F/A (Pressure = Force / Area)</li>
-            <li>The fluid must be incompressible (liquids, not gases)</li>
-            <li>Pressure acts perpendicular to all surfaces</li>
-            <li>Works regardless of the container's shape!</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-4 md:p-6">
-          <h3 className="text-lg md:text-xl font-bold text-cyan-400 mb-3">F₁/A₁ = F₂/A₂</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Same pressure on different areas = different forces</li>
-            <li>This is the key to force multiplication!</li>
-            <li>A small piston pushing creates large output force</li>
-            <li>The ratio of areas determines the mechanical advantage</li>
-            <li>10× larger area = 10× more force output</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-4 md:p-6 md:col-span-2">
-          <h3 className="text-lg md:text-xl font-bold text-emerald-400 mb-3">Mechanical Advantage</h3>
-          <div className="text-slate-300 text-sm space-y-2">
-            <p><strong>Pascal's Law:</strong> P₁ = P₂ (pressure is equal everywhere in the fluid)</p>
-            <p><strong>Therefore:</strong> F₁/A₁ = F₂/A₂</p>
-            <p><strong>Solving for output:</strong> F₂ = F₁ × (A₂/A₁)</p>
-            <p className="text-cyan-400 mt-3">
-              Example: A 100 N push on a 1 cm² piston creates 100 N/cm² pressure. That same pressure on a 10 cm² piston produces 1000 N of force - a 10× mechanical advantage!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <button
-        onClick={() => goToPhase('twist_predict')}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-      >
-        Discover a Surprising Twist
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-6">Brake System Challenge</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-2xl mb-6">
-        <p className="text-base md:text-lg text-slate-300 mb-4">
-          A car's brake system has a master cylinder (2 cm²) connected to four brake calipers (20 cm² each). When you press the brake pedal with 100 N of force...
-        </p>
-        <p className="text-base md:text-lg text-cyan-400 font-medium">
-          What is the total braking force across all four wheels?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          '100 N total - force just gets distributed to all wheels',
-          '1,000 N total - each wheel gets 250 N (1000/4)',
-          '4,000 N total - each wheel gets the full 1,000 N independently',
-          '10,000 N total - pressure multiplies between wheels too'
-        ].map((text, index) => (
-          <button
-            key={index}
-            onClick={() => handleTwistPrediction(index)}
-            style={{ position: 'relative', zIndex: 10 }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === index
-                ? index === 2
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && index === 2
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{String.fromCharCode(65 + index)}.</span>
-            <span className="text-slate-200 ml-2">{text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            {twistPrediction === 2 ? '✓ Correct!' : '✗ Not quite.'} Each caliper gets the FULL multiplied force independently!
-          </p>
-          <p className="text-slate-400 text-sm mt-2">
-            Pressure transmits equally to ALL brake calipers. Each 20 cm² caliper produces 1,000 N (10× multiplication). Four calipers = 4,000 N total braking force from just 100 N of pedal input!
-          </p>
-          <button
-            onClick={() => goToPhase('twist_play')}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-          >
-            Explore the Brake System
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-4">Interactive Brake System</h2>
-
-      <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-3xl mb-6">
-        {renderBrakeSystem()}
-
-        <div className="mt-6">
-          <label className="text-sm text-slate-400 block mb-2">Brake Pedal Force: {brakePedalForce} N</label>
-          <input
-            type="range"
-            min="0"
-            max="200"
-            value={brakePedalForce}
-            onChange={(e) => setBrakePedalForce(Number(e.target.value))}
-            className="w-full accent-red-500"
-          />
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
-            <span>Light press</span>
-            <span>Hard brake</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-4 md:p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-purple-400 mb-3">Hydraulic Multiplication in Brakes:</h3>
-        <ul className="space-y-2 text-slate-300 text-sm">
-          <li><strong>Master Cylinder:</strong> Small piston (2 cm²) creates high pressure</li>
-          <li><strong>Brake Lines:</strong> Transmit pressure equally to all calipers</li>
-          <li><strong>Calipers:</strong> Large pistons (20 cm²) multiply force at each wheel</li>
-          <li><strong>Key Insight:</strong> Each wheel gets 10× your pedal force INDEPENDENTLY!</li>
-        </ul>
-        <p className="text-cyan-400 mt-4 text-sm">
-          This is why you can stop a 2-ton car with just your foot - Pascal's Law working in every brake system!
-        </p>
-      </div>
-
-      <button
-        onClick={() => goToPhase('twist_review')}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
-      >
-        Review the Discovery
-      </button>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-6">Hydraulic Multiplication Explained</h2>
-
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-4 md:p-6 max-w-2xl mb-6">
-        <h3 className="text-lg md:text-xl font-bold text-purple-400 mb-4">Key Discoveries</h3>
-        <div className="space-y-4 text-slate-300">
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h4 className="text-cyan-400 font-semibold mb-2">1. Pressure Distributes Equally</h4>
-            <p className="text-sm">When you apply force to a master cylinder, the pressure (F/A) is transmitted equally to ALL connected cylinders - not split between them!</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h4 className="text-emerald-400 font-semibold mb-2">2. Each Output Gets Full Multiplication</h4>
-            <p className="text-sm">Every brake caliper experiences the same pressure and produces its own multiplied force. Four calipers = four times the force, not the force divided by four.</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-4">
-            <h4 className="text-yellow-400 font-semibold mb-2">3. Work is Still Conserved</h4>
-            <p className="text-sm">The brake pedal must travel farther to move all four caliper pistons. More output cylinders = more pedal travel required (hydraulic fluid must fill all of them).</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mb-6">
-        <h4 className="text-lg font-semibold text-white mb-2">Real-World Impact</h4>
-        <p className="text-slate-300 text-sm">
-          A typical brake system provides 40:1 total mechanical advantage (including pedal leverage + hydraulic multiplication). Your 50 N foot pressure becomes 2,000+ N of braking force at each wheel!
-        </p>
-      </div>
-
-      <button
-        onClick={() => goToPhase('transfer')}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-      >
-        Explore Real-World Applications
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const app = transferApps[activeAppTab];
-
-    return (
-      <div className="flex flex-col items-center p-4 md:p-6">
-        <h2 className="text-xl md:text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-
-        {/* App tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap justify-center">
-          {transferApps.map((a, index) => (
-            <button
-              key={index}
-              onClick={() => { setActiveAppTab(index); setExpandedApp(null); }}
-              style={{ position: 'relative', zIndex: 10 }}
-              className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-all text-sm md:text-base ${
-                activeAppTab === index
-                  ? `bg-gradient-to-r ${a.color} text-white`
-                  : completedApps.has(index)
-                  ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              {a.icon} {isMobile ? '' : a.short}
-            </button>
-          ))}
-        </div>
-
-        {/* Active app card */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-3xl w-full">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl">{app.icon}</span>
-            <div>
-              <h3 className="text-xl font-bold text-white">{app.title}</h3>
-              <p className="text-cyan-400 text-sm">{app.tagline}</p>
-            </div>
-          </div>
-
-          <p className="text-slate-300 mb-4">{app.description}</p>
-
-          <div className={`bg-gradient-to-r ${app.color} bg-opacity-20 rounded-xl p-4 mb-4`}>
-            <h4 className="font-semibold text-white mb-2">Physics Connection</h4>
-            <p className="text-slate-200 text-sm">{app.connection}</p>
-          </div>
-
-          <button
-            onClick={() => setExpandedApp(expandedApp === activeAppTab ? null : activeAppTab)}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="text-cyan-400 hover:text-cyan-300 text-sm font-medium mb-4"
-          >
-            {expandedApp === activeAppTab ? 'Hide Details' : 'Show More Details'}
-          </button>
-
-          {expandedApp === activeAppTab && (
-            <div className="space-y-4 animate-fadeIn">
-              <div>
-                <h4 className="font-semibold text-yellow-400 mb-2">How It Works</h4>
-                <p className="text-slate-300 text-sm">{app.howItWorks}</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold text-green-400 mb-2">Key Statistics</h4>
-                  <ul className="text-slate-300 text-sm space-y-1">
-                    {app.stats.map((stat, i) => (
-                      <li key={i}>{stat}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-blue-400 mb-2">Real Examples</h4>
-                  <ul className="text-slate-300 text-sm space-y-1">
-                    {app.examples.map((ex, i) => (
-                      <li key={i}>{ex}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-purple-400 mb-2">Industry Leaders</h4>
-                <div className="flex flex-wrap gap-2">
-                  {app.companies.map((company, i) => (
-                    <span key={i} className="px-2 py-1 bg-slate-700 rounded text-slate-300 text-sm">
-                      {company}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-orange-400 mb-2">Future Impact</h4>
-                <p className="text-slate-300 text-sm">{app.futureImpact}</p>
-              </div>
-            </div>
-          )}
-
-          {!completedApps.has(activeAppTab) && (
-            <button
-              onClick={() => handleAppComplete(activeAppTab)}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
-            >
-              Mark as Understood
-            </button>
-          )}
-        </div>
-
-        {/* Progress indicator */}
-        <div className="mt-6 flex items-center gap-2">
-          <span className="text-slate-400">Progress:</span>
-          <div className="flex gap-1">
-            {transferApps.map((_, i) => (
-              <div
-                key={i}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-slate-400">{completedApps.size}/4</span>
-        </div>
-
-        {completedApps.size >= 4 && (
-          <button
-            onClick={() => goToPhase('test')}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-          >
-            Take the Knowledge Test
-          </button>
         )}
-      </div>
+
+        {/* Front Brake/Rotor */}
+        <g transform="translate(290, 60)">
+          <circle cx="35" cy="0" r="35" fill="url(#rotorGrad)" stroke="#1e293b" strokeWidth="2" />
+          <circle cx="35" cy="0" r="25" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="6 3" />
+          <circle cx="35" cy="0" r="12" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
+          {/* Calipers */}
+          <rect x={5 - caliperClamp} y="-12" width="15" height="24" fill="url(#caliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
+          <rect x={50 + caliperClamp} y="-12" width="15" height="24" fill="url(#caliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
+        </g>
+        <text x="325" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="9">20 cm^2</text>
+
+        {/* Rear Brake/Rotor */}
+        <g transform="translate(290, 140)">
+          <circle cx="35" cy="0" r="35" fill="url(#rotorGrad)" stroke="#1e293b" strokeWidth="2" />
+          <circle cx="35" cy="0" r="25" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="6 3" />
+          <circle cx="35" cy="0" r="12" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
+          {/* Calipers */}
+          <rect x={5 - caliperClamp} y="-12" width="15" height="24" fill="url(#caliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
+          <rect x={50 + caliperClamp} y="-12" width="15" height="24" fill="url(#caliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
+        </g>
+        <text x="325" y="190" textAnchor="middle" fill={colors.textMuted} fontSize="9">20 cm^2</text>
+
+        {/* Force readouts */}
+        <g transform={`translate(20, ${height - 50})`}>
+          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#22c55e" strokeWidth="1" rx="6" />
+          <text x="50" y="15" textAnchor="middle" fill="#22c55e" fontSize="10">Input Force</text>
+          <text x="50" y="32" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="600">{brakePedalForce} N</text>
+        </g>
+        <g transform={`translate(130, ${height - 50})`}>
+          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#ef4444" strokeWidth="1" rx="6" />
+          <text x="50" y="15" textAnchor="middle" fill="#ef4444" fontSize="10">Per Wheel</text>
+          <text x="50" y="32" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="600">{brakeForce.toFixed(0)} N</text>
+        </g>
+        <g transform={`translate(240, ${height - 50})`}>
+          <rect x="0" y="0" width="100" height="40" fill={colors.bgSecondary} stroke="#a855f7" strokeWidth="1" rx="6" />
+          <text x="50" y="15" textAnchor="middle" fill="#a855f7" fontSize="10">Total (4 wheels)</text>
+          <text x="50" y="32" textAnchor="middle" fill="#a855f7" fontSize="14" fontWeight="600">{(brakeForce * 4).toFixed(0)} N</text>
+        </g>
+      </svg>
     );
   };
 
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-3xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <div className="bg-slate-900/50 rounded-lg p-3 mb-3">
-                <p className="text-slate-400 text-sm italic">{q.scenario}</p>
-              </div>
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ position: 'relative', zIndex: 10 }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-red-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-          <button
-            onClick={() => {
-              const score = calculateScore();
-              setTestScore(score);
-              setShowTestResults(true);
-              if (onGameEvent) {
-                onGameEvent({ type: 'test_completed', data: { score, total: 10 } });
-              }
-            }}
-            style={{ position: 'relative', zIndex: 10 }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-500 hover:to-orange-500'
-            }`}
-          >
-            Submit Answers
-          </button>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🔴💪
         </div>
-      ) : (
-        <div className="max-w-3xl w-full space-y-4">
-          <div className="bg-slate-800/50 rounded-2xl p-6 text-center">
-            <div className="text-6xl mb-4">{testScore >= 7 ? '🎉' : '📚'}</div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {testScore}/10
-            </h3>
-            <p className="text-slate-300 mb-6">
-              {testScore >= 7
-                ? 'Excellent! You\'ve mastered Pascal\'s Law and hydraulic systems!'
-                : 'Keep studying! Review the explanations below and try again.'}
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Pascal's Law
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "How can a mechanic push with 50 pounds of force and lift a <span style={{ color: colors.accent }}>2-ton car</span>? The answer lies in <span style={{ color: colors.fluid }}>hydraulic fluid</span> and one brilliant principle."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Pressure applied to a confined fluid is transmitted undiminished to every portion of the fluid and the walls of the container."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Blaise Pascal, 1653
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Discover the Secret
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Pressure is highest near the small piston and decreases with distance' },
+      { id: 'b', text: 'Pressure transmits equally throughout the entire fluid', correct: true },
+      { id: 'c', text: 'Pressure only travels in a straight line between the pistons' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
             </p>
           </div>
 
-          {/* Show explanations */}
-          <div className="space-y-4">
-            {testQuestions.map((q, qIndex) => {
-              const correctIndex = q.options.findIndex(o => o.correct);
-              const isCorrect = testAnswers[qIndex] === correctIndex;
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            When you push on a small piston in a hydraulic system, what happens to the pressure in the fluid?
+          </h2>
 
-              return (
-                <div key={qIndex} className={`rounded-xl p-4 ${isCorrect ? 'bg-emerald-900/30 border border-emerald-500/30' : 'bg-red-900/30 border border-red-500/30'}`}>
-                  <div className="flex items-start gap-2 mb-2">
-                    <span className={`text-lg ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {isCorrect ? '✓' : '✗'}
-                    </span>
-                    <p className="text-white font-medium text-sm">{qIndex + 1}. {q.question}</p>
-                  </div>
-                  <p className="text-slate-300 text-sm ml-6">
-                    <strong>Correct:</strong> {q.options[correctIndex].text}
-                  </p>
-                  <p className="text-slate-400 text-sm ml-6 mt-1">{q.explanation}</p>
-                </div>
-              );
-            })}
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>Push</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Small Piston</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
+              <div style={{
+                background: colors.fluid + '33',
+                padding: '20px 40px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.fluid}`,
+              }}>
+                <div style={{ fontSize: '24px', color: colors.fluid }}>Fluid</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>What happens to pressure?</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>-&gt;</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>???</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Large Piston</p>
+              </div>
+            </div>
           </div>
 
-          {testScore >= 7 ? (
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
             <button
-              onClick={() => goToPhase('mastery')}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                setShowTestResults(false);
-                setTestAnswers(Array(10).fill(-1));
-                goToPhase('review');
-              }}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="w-full py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
-            >
-              Review & Try Again
+              Test My Prediction
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => {
-    useEffect(() => {
-      if (onGameEvent) {
-        onGameEvent({ type: 'mastery_achieved', data: { score: testScore } });
-      }
-    }, []);
-
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6 text-center">
-        <div className="bg-gradient-to-br from-red-900/50 via-orange-900/50 to-yellow-900/50 rounded-3xl p-6 md:p-8 max-w-2xl">
-          <div className="text-7xl md:text-8xl mb-6">🏆</div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">Congratulations!</h1>
-          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-4">
-            Pascal's Law Master
-          </h2>
-          <p className="text-lg md:text-xl text-slate-300 mb-6">
-            You've mastered hydraulic systems and force multiplication through Pascal's Law!
-          </p>
-
-          <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6">
-            <div className="bg-slate-800/50 rounded-xl p-3 md:p-4">
-              <div className="text-2xl mb-2">🔴</div>
-              <p className="text-xs md:text-sm text-slate-300">Pressure Transmission</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-3 md:p-4">
-              <div className="text-2xl mb-2">💪</div>
-              <p className="text-xs md:text-sm text-slate-300">Force Multiplication</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-3 md:p-4">
-              <div className="text-2xl mb-2">⚖️</div>
-              <p className="text-xs md:text-sm text-slate-300">Energy Conservation</p>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-3 md:p-4">
-              <div className="text-2xl mb-2">🚗</div>
-              <p className="text-xs md:text-sm text-slate-300">Hydraulic Systems</p>
-            </div>
-          </div>
-
-          <div className="bg-slate-800/30 rounded-xl p-4 mb-6">
-            <h3 className="text-lg font-bold text-cyan-400 mb-2">Key Formula</h3>
-            <p className="text-xl md:text-2xl font-mono text-white">F₁/A₁ = F₂/A₂ = P</p>
-            <p className="text-slate-400 text-sm mt-2">Pressure is constant throughout a confined fluid</p>
-          </div>
-
-          <div className="bg-slate-800/30 rounded-xl p-4 mb-6">
-            <h3 className="text-lg font-bold text-emerald-400 mb-2">Your Score</h3>
-            <p className="text-3xl font-bold text-white">{testScore}/10</p>
-          </div>
-
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => goToPhase('hook')}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
-            >
-              Explore Again
-            </button>
-            <button
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  window.location.href = '/dashboard';
-                }
-              }}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl transition-colors"
-            >
-              Return to Dashboard
-            </button>
-          </div>
-        </div>
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // ============================================================================
-  // MAIN RENDER
-  // ============================================================================
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Hydraulic Force Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust the piston areas and see how force gets multiplied!
+          </p>
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Ambient background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-      </div>
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <HydraulicVisualization />
+            </div>
 
-      {/* Premium progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-400">Pascal's Law</span>
-            <span className="text-sm text-slate-500">{phaseNames[phase]}</span>
-          </div>
-          {/* Phase dots */}
-          <div className="flex justify-between px-1">
-            {phaseOrder.map((p, i) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ position: 'relative', zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phaseOrder.indexOf(phase) >= i
-                    ? 'bg-emerald-500'
-                    : 'bg-slate-700'
-                } ${phase === p ? 'w-6' : 'w-2'}`}
-                title={phaseNames[p]}
+            {/* Input Force slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Input Force (F1)</span>
+                <span style={{ ...typo.small, color: '#22c55e', fontWeight: 600 }}>{inputForce} N</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="500"
+                step="10"
+                value={inputForce}
+                onChange={(e) => setInputForce(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, #22c55e ${((inputForce - 50) / 450) * 100}%, ${colors.border} ${((inputForce - 50) / 450) * 100}%)`,
+                  cursor: 'pointer',
+                }}
               />
+            </div>
+
+            {/* Small Piston Area slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Small Piston Area (A1)</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{smallPistonArea} cm^2</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={smallPistonArea}
+                onChange={(e) => setSmallPistonArea(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.accent} ${((smallPistonArea - 1) / 9) * 100}%, ${colors.border} ${((smallPistonArea - 1) / 9) * 100}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Large Piston Area slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Large Piston Area (A2)</span>
+                <span style={{ ...typo.small, color: '#ef4444', fontWeight: 600 }}>{largePistonArea} cm^2</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                step="5"
+                value={largePistonArea}
+                onChange={(e) => setLargePistonArea(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, #ef4444 ${((largePistonArea - 10) / 90) * 100}%, ${colors.border} ${((largePistonArea - 10) / 90) * 100}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Activate button */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button
+                onClick={() => startAnimation()}
+                disabled={isAnimating}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: isAnimating ? colors.border : colors.accent,
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: isAnimating ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {isAnimating ? 'Pumping...' : 'Activate Hydraulics'}
+              </button>
+              <button
+                onClick={() => {
+                  setAnimationProgress(0);
+                  setIsAnimating(false);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Reset
+              </button>
+            </div>
+
+            {/* Stats display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: '#fcd34d' }}>{pressure.toFixed(0)} N/cm^2</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Pressure (constant)</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{mechanicalAdvantage.toFixed(1)}x</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Force Multiplication</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: '#ef4444' }}>{outputForce.toFixed(0)} N</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Output Force</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Formula explanation */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textPrimary, fontFamily: 'monospace', marginBottom: '8px' }}>
+              F1 / A1 = F2 / A2 = P (Pressure is constant)
+            </p>
+            <p style={{ ...typo.small, color: colors.accent }}>
+              F2 = F1 x (A2 / A1) = {inputForce} x ({largePistonArea} / {smallPistonArea}) = {outputForce.toFixed(0)} N
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Pascal's Law
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Pascal's Law: P1 = P2</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                Pressure applied to a <span style={{ color: colors.accent }}>confined, incompressible fluid</span> transmits equally in all directions throughout the fluid. The pressure at any point is the same regardless of the container's shape.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Force Multiplication: F2 = F1 x (A2/A1)</strong>
+              </p>
+              <p>
+                Since pressure is constant, a <span style={{ color: colors.accent }}>larger piston area</span> experiences a larger force. This is the key to hydraulic force multiplication!
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.warning}11`,
+            border: `1px solid ${colors.warning}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
+              But There's No Free Lunch!
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              Conservation of energy still applies: <strong>Work In = Work Out</strong>
+            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li>If force is multiplied {mechanicalAdvantage.toFixed(0)}x...</li>
+              <li>Distance is divided by {mechanicalAdvantage.toFixed(0)}x</li>
+              <li>Push 10 cm to move the load only {(10/mechanicalAdvantage).toFixed(1)} cm</li>
+            </ul>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Why It Works
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Liquids are essentially incompressible. When you push on one part of a confined liquid, the molecules transmit that push instantaneously and equally in all directions. This is fundamentally different from gases, which compress and absorb force.
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See a Real Application
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: '100 N total - force is conserved and just redistributed' },
+      { id: 'b', text: '1,000 N total - force is multiplied 10x and split between 4 wheels' },
+      { id: 'c', text: '4,000 N total - each wheel gets the full 1,000 N independently', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              Brake System Challenge
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A car brake system has a master cylinder (2 cm^2) connected to 4 brake calipers (20 cm^2 each). You press with 100 N. What's the TOTAL braking force?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              The master cylinder creates pressure that travels through brake lines to all four wheels simultaneously...
+            </p>
+            <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
+              [Pedal] -&gt; [Master 2cm^2] -&gt; [Fluid Lines] -&gt; [4x Calipers 20cm^2 each]
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See How Brakes Really Work
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Interactive Brake System
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Press the brake pedal and watch force multiply at EACH wheel!
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <BrakeSystemVisualization />
+            </div>
+
+            {/* Brake pedal force slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Brake Pedal Force</span>
+                <span style={{ ...typo.small, color: '#22c55e', fontWeight: 600 }}>{brakePedalForce} N</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="200"
+                value={brakePedalForce}
+                onChange={(e) => setBrakePedalForce(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, #22c55e ${(brakePedalForce / 200) * 100}%, ${colors.border} ${(brakePedalForce / 200) * 100}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Light press</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Emergency brake</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Key insight */}
+          {brakePedalForce > 50 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Each caliper receives the FULL {(brakePedalForce * 10).toFixed(0)} N - not split between them!
+                Total braking force: {(brakePedalForce * 10 * 4).toFixed(0)} N = {((brakePedalForce * 10 * 4) / 9.8).toFixed(0)} kg equivalent!
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Magic
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Hydraulic Multiplication Secret
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>P</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Pressure Transmits Equally</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The pressure created in the master cylinder transmits equally to ALL connected cylinders simultaneously. It doesn't get "split up" or "diluted" - every outlet sees the same pressure.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>F</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Each Output Gets Full Force</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Each brake caliper independently converts the pressure (P = F/A) into its own force (F = P x A). Four calipers don't share one force - they each generate their own full multiplied force!
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>W</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Work Is Still Conserved</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                The master cylinder must push more fluid to fill all four caliper pistons. More output cylinders = more pedal travel required. Energy conservation is maintained through volume balance.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>!</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Real-World Impact</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                This is why car brakes work so well! Your ~50 lb foot force becomes 500+ lbs at EACH wheel. Combined with brake booster leverage, you can stop a 4,000 lb car from highway speeds.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See More Real Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ok
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Pascal's Law Connection:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '!' : '?'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? "You've mastered Pascal's Law and hydraulic systems!"
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          !
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Pascal's Law Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how hydraulic systems multiply force using Pascal's principle of pressure transmission.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Pressure transmits equally in confined fluids',
+              'Force multiplication: F2 = F1 x (A2/A1)',
+              'Work is conserved: distance trades for force',
+              'Multiple outputs each get full multiplied force',
+              'Hydraulics power brakes, lifts, aircraft, presses',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>ok</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
             ))}
           </div>
         </div>
-      </div>
 
-      <div className="pt-20 pb-8 relative z-10">
-        {renderPhase()}
+        <div style={{
+          background: colors.bgSecondary,
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h4 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Key Formula</h4>
+          <p style={{ ...typo.h2, color: colors.textPrimary, fontFamily: 'monospace', margin: 0 }}>
+            F1/A1 = F2/A2 = P
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            Pressure is constant throughout confined fluid
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
 export default PascalLawRenderer;

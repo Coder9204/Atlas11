@@ -1,222 +1,312 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'prediction_correct'
-  | 'prediction_incorrect'
-  | 'twist_prediction_made'
-  | 'twist_correct'
-  | 'twist_incorrect'
-  | 'test_answer'
-  | 'test_complete'
-  | 'app_explored'
-  | 'mastery_achieved'
-  | 'animation_started'
-  | 'animation_complete'
-  | 'sound_played'
-  | 'navigation'
-  | 'entropy_calculated'
-  | 'microstates_changed'
-  | 'temperature_changed'
-  | 'heat_transferred'
-  | 'simulation_started'
-  | 'disorder_visualized';
+// ─────────────────────────────────────────────────────────────────────────────
+// Entropy & The Second Law of Thermodynamics - Complete 10-Phase Game
+// Why disorder always wins and time flows in one direction
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface EntropyRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete' | 'barrier' | 'mix') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType; freq2?: number }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 523, duration: 0.2, type: 'sine', freq2: 659 },
+      failure: { freq: 200, duration: 0.3, type: 'sine' },
+      transition: { freq: 440, duration: 0.15, type: 'sine', freq2: 550 },
+      complete: { freq: 523, duration: 0.4, type: 'sine', freq2: 784 },
+      barrier: { freq: 150, duration: 0.2, type: 'square' },
+      mix: { freq: 300, duration: 0.3, type: 'sine', freq2: 400 }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    if (sound.freq2) {
+      oscillator.frequency.setValueAtTime(sound.freq, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(sound.freq2, audioContext.currentTime + sound.duration / 2);
+    }
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-interface TestQuestion {
-  scenario: string;
-  question: string;
-  options: { text: string; correct: boolean }[];
-  explanation: string;
-}
-
-interface TransferApp {
-  icon: string;
-  title: string;
-  short: string;
-  tagline: string;
-  description: string;
-  connection: string;
-  howItWorks: string;
-  stats: { value: string; label: string }[];
-  examples: string[];
-  companies: string[];
-  futureImpact: string;
-  color: string;
-}
-
-interface Props {
-  onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// PARTICLE INTERFACE
+// ─────────────────────────────────────────────────────────────────────────────
 interface Particle {
   x: number;
   y: number;
   vx: number;
   vy: number;
-  side: 'left' | 'right' | 'mixed';
+  type: 'hot' | 'cold';
 }
 
-const realWorldApps = [
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
   {
-    icon: '🌡️',
-    title: 'Heat Engines & Thermodynamics',
-    short: 'Why no engine can be 100% efficient',
-    tagline: 'The Second Law sets the ultimate speed limit',
-    description: 'Every heat engine - from car engines to power plants - must reject some heat to a cold reservoir. This isn\'t a design flaw; it\'s entropy in action. The Carnot efficiency limit shows that even perfect engines can\'t convert all heat to work.',
-    connection: 'Just as gas molecules spontaneously spread to fill a container, heat spontaneously flows from hot to cold. Both processes increase total entropy, and neither can be fully reversed.',
-    howItWorks: 'A heat engine extracts work from the temperature difference between hot and cold reservoirs. The maximum efficiency is 1 - T_cold/T_hot. Real engines achieve 30-40% efficiency; the rest becomes waste heat.',
-    stats: [
-      { value: '40%', label: 'Best coal plant efficiency', icon: '⚡' },
-      { value: '60%', label: 'Combined cycle gas turbine', icon: '🔥' },
-      { value: '25%', label: 'Car engine efficiency', icon: '🚗' }
+    scenario: "A chemist places a drop of dye in a glass of still water. Without stirring, the dye gradually spreads throughout the entire glass over the course of an hour.",
+    question: "Why does the dye spread on its own without any external force?",
+    options: [
+      { id: 'a', label: "The dye molecules are attracted to water molecules" },
+      { id: 'b', label: "Random thermal motion explores all possible arrangements, and spread states vastly outnumber concentrated states", correct: true },
+      { id: 'c', label: "Gravity pulls the dye downward through the water" },
+      { id: 'd', label: "Water currents from temperature differences carry the dye" }
     ],
-    examples: ['Automobile engines', 'Steam power plants', 'Jet engines', 'Refrigerators (reverse heat engines)'],
-    companies: ['General Electric', 'Siemens Energy', 'Toyota', 'Rolls-Royce'],
-    futureImpact: 'Thermoelectric generators will harvest waste heat from vehicles and factories, turning entropy\'s tax into useful electricity.',
-    color: '#EF4444'
+    explanation: "Entropy drives diffusion. With billions of molecules in random motion, the number of ways to arrange molecules in a spread-out state is astronomically larger than concentrated states. The system naturally evolves toward the most probable (highest entropy) configuration."
   },
   {
-    icon: '💊',
-    title: 'Drug Dissolution & Mixing',
-    short: 'Why pills dissolve and mixtures form spontaneously',
-    tagline: 'Entropy drives medicine into your bloodstream',
-    description: 'When you take a pill, it dissolves because the drug molecules spreading throughout your stomach increases entropy. This same principle drives all mixing processes - from paint stirring to chemical reactions.',
-    connection: 'The particle simulation you explored shows exactly this: separated molecules spontaneously mix because mixed states have vastly more possible arrangements (microstates).',
-    howItWorks: 'Dissolution is entropically favored when molecules can access more microstates dissolved than solid. Entropy of mixing drives the process; pharmaceutical engineers tune solubility by controlling molecular interactions.',
-    stats: [
-      { value: '$1.5T', label: 'Global pharma market', icon: '💰' },
-      { value: '90%', label: 'Drugs are crystalline solids', icon: '💎' },
-      { value: '40%', label: 'Drug candidates fail due to poor solubility', icon: '📊' }
+    scenario: "A hot cup of coffee sits on a table. After 30 minutes, its temperature drops from 80C to room temperature (22C), while the room's temperature remains essentially unchanged.",
+    question: "How does this process relate to the Second Law of Thermodynamics?",
+    options: [
+      { id: 'a', label: "Heat flowed from cold to hot, which always happens spontaneously" },
+      { id: 'b', label: "Energy was destroyed as the coffee cooled" },
+      { id: 'c', label: "Total entropy increased as heat spread from the concentrated hot source to the cooler surroundings", correct: true },
+      { id: 'd', label: "The coffee violated thermodynamics by losing energy without work" }
     ],
-    examples: ['Extended-release tablets', 'IV drug solutions', 'Oral suspensions', 'Transdermal patches'],
-    companies: ['Pfizer', 'Johnson & Johnson', 'Novartis', 'Merck'],
-    futureImpact: 'Entropy-informed drug design will create "smart" pills that release medication at precisely controlled rates based on body conditions.',
-    color: '#8B5CF6'
+    explanation: "Heat spontaneously flows from hot to cold because this increases total entropy. The entropy lost by the coffee (Q/T_hot) is less than the entropy gained by the room (Q/T_cold), so net entropy increases. This is the essence of the Second Law."
   },
   {
-    icon: '🧬',
-    title: 'Protein Folding & Biology',
-    short: 'How life fights entropy locally while increasing it globally',
-    tagline: 'The paradox of biological order',
-    description: 'Living organisms seem to defy entropy by creating highly ordered structures. But life actually accelerates universal entropy increase by consuming free energy and releasing heat. Protein folding itself is an entropy-driven process!',
-    connection: 'When proteins fold, they release bound water molecules. The entropy gain from freeing these water molecules drives folding, showing that order can increase entropy when the whole system is considered.',
-    howItWorks: 'Unfolded proteins have ordered water "cages" around hydrophobic residues. Folding buries these residues, releasing water and increasing its entropy. The hydrophobic effect makes folding thermodynamically favorable.',
-    stats: [
-      { value: '50ms', label: 'Fastest protein folding time', icon: '⚡' },
-      { value: '10^300', label: 'Possible conformations for one protein', icon: '🔢' },
-      { value: '$200M', label: 'AlphaFold development cost', icon: '🧪' }
+    scenario: "A physicist proposes a device that takes heat from the ocean (a cold reservoir) and converts 100% of it into electricity with no other effects.",
+    question: "Why is this device impossible according to thermodynamics?",
+    options: [
+      { id: 'a', label: "The ocean doesn't contain enough thermal energy" },
+      { id: 'b', label: "It violates the Kelvin-Planck statement: you cannot convert heat entirely to work in a cycle", correct: true },
+      { id: 'c', label: "Salt in the ocean blocks thermal energy extraction" },
+      { id: 'd', label: "It would require infinite ocean surface area" }
     ],
-    examples: ['Hemoglobin oxygen binding', 'Enzyme catalysis', 'Antibody recognition', 'Muscle contraction'],
-    companies: ['DeepMind', 'Genentech', 'Amgen', 'Moderna'],
-    futureImpact: 'Understanding entropy in biology will enable designed proteins that self-assemble into nanomachines for targeted drug delivery.',
-    color: '#22C55E'
+    explanation: "The Kelvin-Planck statement of the Second Law states it's impossible to construct a device that operates in a cycle and produces no effect other than extracting heat from a reservoir and performing an equivalent amount of work. Some heat must always be rejected."
   },
   {
-    icon: '🌌',
-    title: 'Arrow of Time & Cosmology',
-    short: 'Why time flows in one direction',
-    tagline: 'Entropy defines past from future',
-    description: 'The Second Law of Thermodynamics is the only fundamental physics law that distinguishes past from future. The universe began in a low-entropy Big Bang and has been increasing in entropy ever since - giving time its arrow.',
-    connection: 'Your simulation shows irreversibility: mixed particles never spontaneously separate. This asymmetry - possible in principle but vanishingly improbable - is why eggs break but don\'t unbreak.',
-    howItWorks: 'The early universe was in an extraordinarily low-entropy state (smooth and uniform). As it expands and matter clumps, entropy increases. Stars, planets, and life are all temporary entropy gradients in this cosmic process.',
-    stats: [
-      { value: '10^88', label: 'Entropy of observable universe (in Boltzmann units)', icon: '🌍' },
-      { value: '10^120', label: 'Maximum possible entropy (black hole)', icon: '🕳️' },
-      { value: '13.8B years', label: 'Age of the universe', icon: '⏰' }
+    scenario: "A refrigerator keeps food cold inside (4C) while the kitchen stays warm (25C). The refrigerator seems to move heat from cold to hot.",
+    question: "Does this violate the Second Law of Thermodynamics?",
+    options: [
+      { id: 'a', label: "Yes, heat cannot flow from cold to hot under any circumstances" },
+      { id: 'b', label: "No, because work input creates more entropy in the surroundings than is removed from the food", correct: true },
+      { id: 'c', label: "Refrigerators are exempt from thermodynamic laws" },
+      { id: 'd', label: "The food actually generates heat that the refrigerator removes" }
     ],
-    examples: ['Black hole thermodynamics', 'Heat death of universe', 'Cosmological arrow of time', 'Hawking radiation'],
-    companies: ['NASA', 'ESA', 'CERN', 'Caltech'],
-    futureImpact: 'Understanding cosmic entropy may reveal whether our universe is a fluctuation in a larger multiverse, or explain how it began in such a special state.',
-    color: '#3B82F6'
+    explanation: "Refrigerators use work (electricity) to pump heat from cold to hot. The work generates additional entropy that more than compensates for the local entropy decrease inside the fridge. Total entropy of fridge + kitchen + power plant always increases."
+  },
+  {
+    scenario: "A deck of 52 cards is perfectly ordered by suit and rank. After shuffling it thoroughly 1000 times, a player checks if the deck has returned to its original order.",
+    question: "What's the probability of finding the original order after random shuffling?",
+    options: [
+      { id: 'a', label: "Exactly 1 in 1000 (one shuffle could restore order)" },
+      { id: 'b', label: "Impossible - shuffling can only create disorder" },
+      { id: 'c', label: "About 1 in 8x10^67 - possible but vanishingly improbable", correct: true },
+      { id: 'd', label: "50% - either it's in order or it's not" }
+    ],
+    explanation: "There are 52! = 8x10^67 possible arrangements. The original order is just ONE of these. While physically possible, the probability is so small that in the entire history of the universe, no randomly shuffled deck has ever returned to perfect order. This is 'statistical irreversibility.'"
+  },
+  {
+    scenario: "Living cells maintain highly organized internal structures - proteins fold precisely, DNA replicates accurately, and organelles stay compartmentalized.",
+    question: "How do living organisms create and maintain this order without violating the Second Law?",
+    options: [
+      { id: 'a', label: "Life operates outside the laws of thermodynamics" },
+      { id: 'b', label: "Organisms consume low-entropy food and export high-entropy waste, increasing net universal entropy", correct: true },
+      { id: 'c', label: "Quantum effects allow cells to temporarily reverse entropy" },
+      { id: 'd', label: "Evolution has optimized cells to store entropy for later release" }
+    ],
+    explanation: "Organisms are open systems that import free energy (low-entropy sunlight or food) and export entropy (heat, CO2, waste). A human produces about 100W of heat - pure entropy export. Life creates local order by accelerating global disorder."
+  },
+  {
+    scenario: "A computer programmer wants to understand the thermodynamic cost of computation. The computer erases 1 gigabyte of data by overwriting it with zeros.",
+    question: "According to Landauer's principle, what must happen when information is erased?",
+    options: [
+      { id: 'a', label: "Nothing - information is abstract and has no physical cost" },
+      { id: 'b', label: "At least kT*ln(2) joules of heat must be released per bit erased", correct: true },
+      { id: 'c', label: "The computer's processor must cool down to absorb the information" },
+      { id: 'd', label: "Erased data is stored in a quantum vacuum state" }
+    ],
+    explanation: "Landauer's principle connects information theory to thermodynamics. Erasing 1 bit reduces computational entropy, which must be compensated by releasing at least kT*ln(2) = 3x10^-21 J as heat. For 1 GB, that's about 2x10^-11 J minimum - actual computers waste millions of times more."
+  },
+  {
+    scenario: "At the Big Bang, the universe began in an extremely low-entropy state - hot, dense, and remarkably uniform. 13.8 billion years later, we have stars, galaxies, planets, and life.",
+    question: "How does the current structured universe represent higher entropy than the uniform early universe?",
+    options: [
+      { id: 'a', label: "It doesn't - the current universe has lower entropy due to organized structures" },
+      { id: 'b', label: "Gravity makes clumped matter the high-entropy state; uniform distribution was actually low-entropy", correct: true },
+      { id: 'c', label: "The universe's entropy hasn't changed since the Big Bang" },
+      { id: 'd', label: "Black holes absorbed all the entropy from the early universe" }
+    ],
+    explanation: "For gravitating systems, uniform distribution is LOW entropy! Gravity reverses our usual intuition. Clumping matter releases gravitational potential energy as heat, increasing total entropy. Black holes represent maximum entropy - the end state of gravitational collapse."
+  },
+  {
+    scenario: "An ice cube at 0C is placed in a glass of water at 0C. After several hours, the ice has completely melted, but the water temperature remains at 0C throughout.",
+    question: "If temperature stayed constant, how did entropy change during melting?",
+    options: [
+      { id: 'a', label: "Entropy stayed constant since temperature didn't change" },
+      { id: 'b', label: "Entropy decreased because solid ice is more ordered than liquid water" },
+      { id: 'c', label: "Entropy increased because liquid molecules have more possible arrangements than crystalline ice", correct: true },
+      { id: 'd', label: "Entropy is undefined during phase transitions" }
+    ],
+    explanation: "Even at constant temperature, entropy changes during phase transitions. Delta S = Q/T = latent heat / 273K is positive for melting. Liquid water molecules can arrange themselves in many more ways than the rigid crystal lattice of ice, so melting increases entropy."
+  },
+  {
+    scenario: "A physicist measures the efficiency of various heat engines: car engine (25%), coal power plant (40%), combined-cycle gas turbine (60%), and a theoretical Carnot engine operating between 600K and 300K.",
+    question: "What is the maximum possible efficiency for ANY heat engine operating between 600K and 300K?",
+    options: [
+      { id: 'a', label: "100% if perfectly designed" },
+      { id: 'b', label: "60% matching the best current technology" },
+      { id: 'c', label: "50% set by the Carnot efficiency limit (1 - T_cold/T_hot)", correct: true },
+      { id: 'd', label: "75% with future superconducting materials" }
+    ],
+    explanation: "The Carnot efficiency = 1 - T_cold/T_hot = 1 - 300/600 = 50% is the absolute maximum for ANY heat engine. This isn't a technology limit but a fundamental law: extracting work from heat requires rejecting some heat to maintain entropy balance. The Second Law sets this ceiling."
   }
 ];
 
-const EntropyRenderer: React.FC<Props> = ({
-  onGameEvent,
-  currentPhase,
-  onPhaseComplete
-}) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🔥',
+    title: 'Heat Engines & Power Generation',
+    short: 'Why no engine can be 100% efficient',
+    tagline: 'Entropy sets the ultimate efficiency limit',
+    description: 'Every power plant, car engine, and jet turbine is fundamentally limited by entropy. The Carnot efficiency shows that some heat must always be rejected to a cold reservoir - this is not a design flaw but a law of nature.',
+    connection: 'The particle mixing you observed shows why heat flows from hot to cold. Converting that heat flow into useful work requires maintaining temperature differences, and entropy demands its "tax" in the form of waste heat.',
+    howItWorks: 'Heat engines operate between hot (T_H) and cold (T_C) reservoirs. Maximum efficiency = 1 - T_C/T_H. A coal plant at 800K exhausting to 300K has max efficiency of 62.5%. Real friction and irreversibilities reduce this to ~40%.',
+    stats: [
+      { value: '40%', label: 'Best coal plant efficiency', icon: '🏭' },
+      { value: '62%', label: 'Combined cycle gas turbine', icon: '⚡' },
+      { value: '25%', label: 'Car engine typical', icon: '🚗' }
+    ],
+    examples: ['Nuclear power plants (33% efficient)', 'Jet engines (35-40%)', 'Steam locomotives (6-9%)', 'Modern gas turbines (>60%)'],
+    companies: ['GE Power', 'Siemens Energy', 'Mitsubishi Power', 'Rolls-Royce'],
+    futureImpact: 'Supercritical CO2 cycles and combined heat-and-power systems will push efficiencies toward 70%, but can never exceed the Carnot limit.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🧬',
+    title: 'Biology & Life Systems',
+    short: 'How life fights entropy locally by accelerating it globally',
+    tagline: 'Living organisms are entropy-exporting machines',
+    description: 'Life seems to defy entropy by creating incredible order - DNA replication, protein folding, cell division. But organisms survive by consuming low-entropy energy (food, sunlight) and exporting high-entropy waste (heat, CO2).',
+    connection: 'Just as your simulation showed local order being possible while total entropy increases, cells maintain internal order by paying an "entropy tax" to their environment. A human body exports about 100 watts of heat.',
+    howItWorks: 'ATP hydrolysis provides the free energy for ordering processes. Photosynthesis captures low-entropy photons. Metabolism breaks down ordered food molecules, releasing energy and producing disordered waste products.',
+    stats: [
+      { value: '100W', label: 'Human heat output', icon: '🌡️' },
+      { value: '10^14', label: 'Cells in human body', icon: '🔬' },
+      { value: '40%', label: 'Metabolic efficiency', icon: '⚡' }
+    ],
+    examples: ['ATP synthesis powers all cellular work', 'Protein folding driven by hydrophobic effect', 'DNA repair mechanisms', 'Photosynthesis captures order from light'],
+    companies: ['Moderna', 'Genentech', 'Illumina', 'CRISPR Therapeutics'],
+    futureImpact: 'Understanding cellular thermodynamics will enable synthetic biology, anti-aging therapies, and artificial cells that harvest entropy gradients.',
+    color: '#10B981'
+  },
+  {
+    icon: '💻',
+    title: 'Information & Computing',
+    short: 'The thermodynamic cost of bits',
+    tagline: 'Information is physical and obeys thermodynamics',
+    description: 'Landauer proved that erasing information has a minimum energy cost: kT*ln(2) per bit. This connects Shannon entropy (information theory) to Boltzmann entropy (thermodynamics), showing that computation is inherently physical.',
+    connection: 'When you observed particles mixing, information about their original positions was lost. That lost information corresponds to increased entropy. Similarly, erasing computer memory destroys information and must release heat.',
+    howItWorks: 'Reversible computing can theoretically avoid Landauer\'s limit, but irreversible operations (AND, OR gates) erase information. Modern CPUs waste millions of times the theoretical minimum, but approaching this limit is a path to ultra-efficient computing.',
+    stats: [
+      { value: '3x10^-21 J', label: 'Landauer limit/bit', icon: '🔢' },
+      { value: '1%', label: 'Global electricity for data centers', icon: '🏢' },
+      { value: '10^21', label: 'Bits stored globally', icon: '💾' }
+    ],
+    examples: ['Data center cooling (massive entropy export)', 'Quantum computing approaches reversibility', 'Maxwell\'s demon thought experiment', 'DNA as information storage'],
+    companies: ['Intel', 'NVIDIA', 'IBM', 'Google'],
+    futureImpact: 'Reversible computing and thermodynamically-optimized AI will enable computing power limited only by heat dissipation, not transistor density.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌌',
+    title: 'Cosmology & Time\'s Arrow',
+    short: 'Why time flows forward',
+    tagline: 'Entropy defines past from future',
+    description: 'The Second Law is the ONLY fundamental physics law that distinguishes past from future. The universe began in a remarkably low-entropy state (Big Bang) and has been increasing ever since. This entropy gradient gives time its direction.',
+    connection: 'Your simulation showed irreversibility - mixed particles never spontaneously separate. This same principle explains why eggs break but never unbreak, why we remember the past not the future, and why the universe ages.',
+    howItWorks: 'Gravity makes uniformity low-entropy. The smooth early universe was actually highly ordered. As matter clumps into stars and galaxies, entropy increases. The "heat death" is maximum entropy - uniform temperature, no gradients, no work possible.',
+    stats: [
+      { value: '10^88', label: 'Universe entropy (Boltzmann units)', icon: '🌍' },
+      { value: '10^120', label: 'Black hole max entropy', icon: '🕳️' },
+      { value: '10^100 yr', label: 'Time to heat death', icon: '⏱️' }
+    ],
+    examples: ['Cosmic microwave background uniformity', 'Black holes maximize entropy', 'Why we age in one direction', 'Memory formation is entropy increase'],
+    companies: ['NASA', 'ESA', 'CERN', 'LIGO'],
+    futureImpact: 'Understanding cosmological entropy may explain why the Big Bang was low-entropy, potentially revealing pre-Big-Bang physics or multiverse connections.',
+    color: '#8B5CF6'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+const EntropyRenderer: React.FC<EntropyRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Entropy simulation states
+  // Particle simulation state
   const [particles, setParticles] = useState<Particle[]>([]);
-  const [isSimulating, setIsSimulating] = useState(false);
   const [barrierRemoved, setBarrierRemoved] = useState(false);
-  const [numParticles, setNumParticles] = useState(20);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [particleCount, setParticleCount] = useState(30);
   const [timeElapsed, setTimeElapsed] = useState(0);
 
-  const navigationLockRef = useRef(false);
-  const lastNavigationRef = useRef(0);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  // Twist phase - heat flow
+  const [hotTemp, setHotTemp] = useState(400); // K
+  const [coldTemp, setColdTemp] = useState(300); // K
+  const [heatFlowing, setHeatFlowing] = useState(false);
+  const [heatTransferred, setHeatTransferred] = useState(0);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Animation refs
   const animationRef = useRef<number | null>(null);
+  const isNavigating = useRef(false);
 
-  // Boltzmann constant (for display, using simplified units)
-  const k_B = 1.38e-23; // J/K
-
-  // Initialize particles
-  const initializeParticles = useCallback((count: number, separated: boolean = true) => {
-    const newParticles: Particle[] = [];
-    for (let i = 0; i < count; i++) {
-      const isLeftSide = separated ? i < count / 2 : Math.random() > 0.5;
-      newParticles.push({
-        x: separated ? (isLeftSide ? 20 + Math.random() * 70 : 110 + Math.random() * 70) : 20 + Math.random() * 160,
-        y: 20 + Math.random() * 110,
-        vx: (Math.random() - 0.5) * 3,
-        vy: (Math.random() - 0.5) * 3,
-        side: isLeftSide ? 'left' : 'right'
-      });
-    }
-    return newParticles;
-  }, []);
-
-  // Calculate current entropy (simplified)
-  const calculateEntropy = useCallback(() => {
-    if (particles.length === 0) return 0;
-
-    const leftCount = particles.filter(p => p.x < 100).length;
-    const rightCount = particles.length - leftCount;
-    const total = particles.length;
-
-    if (leftCount === 0 || rightCount === 0) return 0;
-
-    // Using mixing entropy formula
-    const pLeft = leftCount / total;
-    const pRight = rightCount / total;
-    const S = -total * (pLeft * Math.log(pLeft) + pRight * Math.log(pRight));
-
-    return S;
-  }, [particles]);
-
-  // Calculate number of microstates (simplified)
-  const calculateMicrostates = useCallback(() => {
-    const n = particles.length;
-    const k = particles.filter(p => p.x < 100).length;
-    // Binomial coefficient approximation using Stirling
-    if (k === 0 || k === n) return 1;
-    const logOmega = n * Math.log(n) - k * Math.log(k) - (n - k) * Math.log(n - k);
-    return Math.round(Math.exp(logOmega));
-  }, [particles]);
-
-  // Check for mobile viewport
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -224,35 +314,93 @@ const EntropyRenderer: React.FC<Props> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#8B5CF6', // Purple for entropy theme
+    accentGlow: 'rgba(139, 92, 246, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    hot: '#EF4444',
+    cold: '#3B82F6',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
   };
 
-  // Sync with external phase control
-  useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
-    }
-  }, [currentPhase, phase]);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  // Initialize particles on mount
+  // Initialize particles
+  const initializeParticles = useCallback((count: number, separated: boolean = true) => {
+    const newParticles: Particle[] = [];
+    for (let i = 0; i < count; i++) {
+      const isHot = separated ? i < count / 2 : Math.random() > 0.5;
+      newParticles.push({
+        x: separated ? (isHot ? 15 + Math.random() * 35 : 50 + Math.random() * 35) : 15 + Math.random() * 70,
+        y: 15 + Math.random() * 70,
+        vx: (Math.random() - 0.5) * (isHot ? 3 : 1.5),
+        vy: (Math.random() - 0.5) * (isHot ? 3 : 1.5),
+        type: isHot ? 'hot' : 'cold'
+      });
+    }
+    return newParticles;
+  }, []);
+
+  // Calculate entropy (mixing entropy)
+  const calculateEntropy = useCallback(() => {
+    if (particles.length === 0) return 0;
+    const leftHot = particles.filter(p => p.x < 50 && p.type === 'hot').length;
+    const leftCold = particles.filter(p => p.x < 50 && p.type === 'cold').length;
+    const rightHot = particles.filter(p => p.x >= 50 && p.type === 'hot').length;
+    const rightCold = particles.filter(p => p.x >= 50 && p.type === 'cold').length;
+
+    // Simplified mixing entropy
+    const total = particles.length;
+    const hotFrac = particles.filter(p => p.type === 'hot').length / total;
+    const coldFrac = 1 - hotFrac;
+
+    // Calculate spatial mixing
+    const leftTotal = leftHot + leftCold;
+    const rightTotal = rightHot + rightCold;
+
+    if (leftTotal === 0 || rightTotal === 0) return hotFrac > 0 && coldFrac > 0 ? 0.5 : 0;
+
+    const leftMix = leftTotal > 0 ? -((leftHot/leftTotal) * Math.log((leftHot/leftTotal) + 0.001) + (leftCold/leftTotal) * Math.log((leftCold/leftTotal) + 0.001)) : 0;
+    const rightMix = rightTotal > 0 ? -((rightHot/rightTotal) * Math.log((rightHot/rightTotal) + 0.001) + (rightCold/rightTotal) * Math.log((rightCold/rightTotal) + 0.001)) : 0;
+
+    return (leftMix * leftTotal + rightMix * rightTotal) / total;
+  }, [particles]);
+
+  // Calculate microstates (simplified)
+  const calculateMicrostates = useCallback(() => {
+    const n = particles.length;
+    if (n === 0) return 1;
+    const k = particles.filter(p => p.x < 50).length;
+    if (k === 0 || k === n) return 1;
+    // Simplified binomial coefficient
+    const logOmega = n * Math.log(n) - k * Math.log(k) - (n - k) * Math.log(n - k);
+    return Math.min(Math.round(Math.exp(Math.min(logOmega, 20))), 1000000);
+  }, [particles]);
+
+  // Initialize particles on mount and count change
   useEffect(() => {
-    setParticles(initializeParticles(numParticles, true));
+    setParticles(initializeParticles(particleCount, true));
     setBarrierRemoved(false);
     setTimeElapsed(0);
-  }, [numParticles, initializeParticles]);
+    setIsSimulating(false);
+  }, [particleCount, initializeParticles]);
 
-  // Particle animation
+  // Particle animation loop
   useEffect(() => {
     if (!isSimulating) {
       if (animationRef.current) {
@@ -270,34 +418,39 @@ const EntropyRenderer: React.FC<Props> = ({
           let newVy = p.vy;
 
           // Wall collisions
-          if (newX < 10 || newX > 190) {
+          if (newX < 5 || newX > 95) {
             newVx = -newVx;
-            newX = Math.max(10, Math.min(190, newX));
+            newX = Math.max(5, Math.min(95, newX));
           }
-          if (newY < 10 || newY > 140) {
+          if (newY < 5 || newY > 95) {
             newVy = -newVy;
-            newY = Math.max(10, Math.min(140, newY));
+            newY = Math.max(5, Math.min(95, newY));
           }
 
           // Barrier collision (if not removed)
           if (!barrierRemoved) {
-            if (p.x < 100 && newX >= 100) {
+            if (p.x < 50 && newX >= 50) {
               newVx = -newVx;
-              newX = 99;
-            } else if (p.x >= 100 && newX < 100) {
+              newX = 49;
+            } else if (p.x >= 50 && newX < 50) {
               newVx = -newVx;
-              newX = 101;
+              newX = 51;
             }
           }
 
-          return {
-            ...p,
-            x: newX,
-            y: newY,
-            vx: newVx,
-            vy: newVy,
-            side: newX < 100 ? 'left' : 'right'
-          };
+          // Add small random perturbations for realistic thermal motion
+          newVx += (Math.random() - 0.5) * 0.1;
+          newVy += (Math.random() - 0.5) * 0.1;
+
+          // Limit max velocity
+          const speed = Math.sqrt(newVx * newVx + newVy * newVy);
+          const maxSpeed = p.type === 'hot' ? 4 : 2.5;
+          if (speed > maxSpeed) {
+            newVx = (newVx / speed) * maxSpeed;
+            newVy = (newVy / speed) * maxSpeed;
+          }
+
+          return { ...p, x: newX, y: newY, vx: newVx, vy: newVy };
         });
       });
 
@@ -313,1534 +466,1624 @@ const EntropyRenderer: React.FC<Props> = ({
     };
   }, [isSimulating, barrierRemoved]);
 
-  // Initialize audio context
+  // Heat flow simulation for twist phase
   useEffect(() => {
-    const initAudio = () => {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-    };
+    if (!heatFlowing) return;
 
-    window.addEventListener('click', initAudio, { once: true });
-    window.addEventListener('touchstart', initAudio, { once: true });
+    const interval = setInterval(() => {
+      setHotTemp(prev => {
+        const newTemp = prev - 0.5;
+        if (newTemp <= coldTemp + 10) {
+          setHeatFlowing(false);
+          return coldTemp + 10;
+        }
+        return newTemp;
+      });
+      setColdTemp(prev => Math.min(prev + 0.3, hotTemp - 10));
+      setHeatTransferred(prev => prev + 1);
+    }, 100);
 
-    return () => {
-      window.removeEventListener('click', initAudio);
-      window.removeEventListener('touchstart', initAudio);
-    };
-  }, []);
+    return () => clearInterval(interval);
+  }, [heatFlowing, coldTemp, hotTemp]);
 
-  const playSound = useCallback((soundType: 'correct' | 'incorrect' | 'transition' | 'complete' | 'barrier' | 'mix') => {
-    if (!audioContextRef.current) return;
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Challenge',
+    twist_play: 'Heat Flow',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-    const ctx = audioContextRef.current;
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    switch (soundType) {
-      case 'correct':
-        oscillator.frequency.setValueAtTime(523.25, ctx.currentTime);
-        oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.3);
-        break;
-      case 'incorrect':
-        oscillator.frequency.setValueAtTime(200, ctx.currentTime);
-        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.3);
-        break;
-      case 'transition':
-        oscillator.frequency.setValueAtTime(440, ctx.currentTime);
-        oscillator.frequency.setValueAtTime(550, ctx.currentTime + 0.05);
-        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.15);
-        break;
-      case 'complete':
-        oscillator.frequency.setValueAtTime(523.25, ctx.currentTime);
-        oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-        oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
-        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.4);
-        break;
-      case 'barrier':
-        oscillator.type = 'square';
-        oscillator.frequency.setValueAtTime(150, ctx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.2);
-        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.2);
-        break;
-      case 'mix':
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(300, ctx.currentTime);
-        oscillator.frequency.setValueAtTime(400, ctx.currentTime + 0.1);
-        oscillator.frequency.setValueAtTime(350, ctx.currentTime + 0.2);
-        gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.3);
-        break;
-    }
-
-    onGameEvent?.({ type: 'sound_played', data: { soundType } });
-  }, [onGameEvent]);
-
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastNavigationRef.current < 400) return;
-    if (navigationLockRef.current) return;
-
-    lastNavigationRef.current = now;
-    navigationLockRef.current = true;
-
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
     playSound('transition');
-    setPhase(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    onPhaseComplete?.(newPhase);
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
-  }, [playSound, onGameEvent, onPhaseComplete]);
-
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastNavigationRef.current < 400) return;
-    lastNavigationRef.current = now;
-
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-
-    const isCorrect = prediction === 'C';
-    playSound(isCorrect ? 'correct' : 'incorrect');
-    onGameEvent?.({
-      type: isCorrect ? 'prediction_correct' : 'prediction_incorrect',
-      data: { prediction }
-    });
-  }, [playSound, onGameEvent]);
-
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastNavigationRef.current < 400) return;
-    lastNavigationRef.current = now;
-
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-
-    const isCorrect = prediction === 'B';
-    playSound(isCorrect ? 'correct' : 'incorrect');
-    onGameEvent?.({
-      type: isCorrect ? 'twist_correct' : 'twist_incorrect',
-      data: { prediction }
-    });
-  }, [playSound, onGameEvent]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastNavigationRef.current < 400) return;
-    lastNavigationRef.current = now;
-
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-
-    onGameEvent?.({ type: 'test_answer', data: { questionIndex, answerIndex } });
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'entropy',
+        gameTitle: 'Entropy & Thermodynamics',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
   }, [onGameEvent]);
 
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastNavigationRef.current < 400) return;
-    lastNavigationRef.current = now;
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-    onGameEvent?.({ type: 'app_explored', data: { appIndex } });
-  }, [playSound, onGameEvent]);
-
-  const removeBarrier = useCallback(() => {
-    setBarrierRemoved(true);
-    playSound('barrier');
-    onGameEvent?.({ type: 'simulation_started', data: { barrierRemoved: true } });
-  }, [playSound, onGameEvent]);
-
+  // Reset simulation
   const resetSimulation = useCallback(() => {
-    setParticles(initializeParticles(numParticles, true));
+    setParticles(initializeParticles(particleCount, true));
     setBarrierRemoved(false);
     setTimeElapsed(0);
     setIsSimulating(false);
-  }, [numParticles, initializeParticles]);
+  }, [particleCount, initializeParticles]);
 
-  const testQuestions: TestQuestion[] = [
-    {
-      scenario: "A chemist mixes two different gases in an insulated container. Before mixing, each gas is in its own compartment at the same temperature and pressure.",
-      question: "What happens to the total entropy of the system after the barrier is removed?",
-      options: [
-        { text: "Decreases because mixing creates order", correct: false },
-        { text: "Stays the same because energy is conserved", correct: false },
-        { text: "Increases because there are more possible arrangements", correct: true },
-        { text: "Cannot be determined without knowing the gas types", correct: false }
-      ],
-      explanation: "Mixing always increases entropy because the number of possible microstates (ways particles can arrange themselves) dramatically increases when they have access to the full volume."
-    },
-    {
-      scenario: "A hot cup of coffee is placed in a room-temperature environment. Over time, it cools down to room temperature.",
-      question: "How does the total entropy of the universe change during this process?",
-      options: [
-        { text: "Decreases because the coffee becomes more ordered", correct: false },
-        { text: "Increases because heat flows from hot to cold", correct: true },
-        { text: "Stays the same because no work is done", correct: false },
-        { text: "First increases then decreases", correct: false }
-      ],
-      explanation: "Heat flowing from hot to cold is an irreversible process that increases total entropy. The entropy gained by the room exceeds the entropy lost by the coffee."
-    },
-    {
-      scenario: "An ice cube at 0°C absorbs 100 J of heat and melts into water, still at 0°C.",
-      question: "What is the entropy change of the ice?",
-      options: [
-        { text: "Zero because temperature didn't change", correct: false },
-        { text: "Negative because ice is more ordered", correct: false },
-        { text: "Positive because liquid has more microstates", correct: true },
-        { text: "Undefined at phase transitions", correct: false }
-      ],
-      explanation: "ΔS = Q/T = 100J/273K ≈ 0.37 J/K. Even at constant temperature, the phase change increases entropy because liquid molecules have many more possible arrangements than the crystalline solid."
-    },
-    {
-      scenario: "A physicist proposes a machine that spontaneously transfers heat from a cold reservoir to a hot one without any external work input.",
-      question: "Why is this machine impossible according to thermodynamics?",
-      options: [
-        { text: "Energy would not be conserved", correct: false },
-        { text: "It would violate the second law (entropy would decrease)", correct: true },
-        { text: "Heat cannot flow through a vacuum", correct: false },
-        { text: "The machine would require infinite power", correct: false }
-      ],
-      explanation: "The second law states that heat spontaneously flows from hot to cold, not vice versa. Reversing this would decrease total entropy, which is forbidden without external work input."
-    },
-    {
-      scenario: "A deck of cards starts perfectly ordered (all suits grouped and in sequence). After shuffling many times, it becomes disordered.",
-      question: "Could the deck ever return to its perfectly ordered state through random shuffling alone?",
-      options: [
-        { text: "No, it's physically impossible", correct: false },
-        { text: "Yes, but it's extremely improbable (statistically forbidden)", correct: true },
-        { text: "Yes, after exactly 52! shuffles", correct: false },
-        { text: "Only if shuffled counterclockwise", correct: false }
-      ],
-      explanation: "It's not forbidden by physical laws—just incredibly improbable. With 52! ≈ 8×10⁶⁷ possible arrangements, the chance of returning to one specific order is astronomically small."
-    },
-    {
-      scenario: "A living cell maintains highly ordered internal structures despite the second law of thermodynamics.",
-      question: "How does this not violate the second law?",
-      options: [
-        { text: "Living things are exempt from thermodynamics", correct: false },
-        { text: "Cells create local order by exporting disorder (heat, waste) to surroundings", correct: true },
-        { text: "The second law only applies to closed systems, and cells are open", correct: false },
-        { text: "Biological processes are reversible", correct: false }
-      ],
-      explanation: "Cells are open systems that take in low-entropy food and export high-entropy waste and heat. Total entropy of cell + surroundings always increases."
-    },
-    {
-      scenario: "A computer erases 1 bit of information from its memory.",
-      question: "According to Landauer's principle, what must happen?",
-      options: [
-        { text: "Nothing—information is not physical", correct: false },
-        { text: "At least kT·ln(2) joules of heat must be released to the environment", correct: true },
-        { text: "The computer must cool down", correct: false },
-        { text: "Energy is destroyed with the information", correct: false }
-      ],
-      explanation: "Erasing information increases the computer's entropy, which must be compensated by releasing at least kT·ln(2) ≈ 3×10⁻²¹ J per bit as heat. Information has a physical, thermodynamic cost."
-    },
-    {
-      scenario: "An engineer claims to have built a perpetual motion machine that extracts work from a single heat reservoir without any other effects.",
-      question: "This violates which statement?",
-      options: [
-        { text: "First law of thermodynamics", correct: false },
-        { text: "Kelvin-Planck statement of the second law", correct: true },
-        { text: "Conservation of momentum", correct: false },
-        { text: "Newton's third law", correct: false }
-      ],
-      explanation: "The Kelvin-Planck statement says it's impossible to extract work from a single heat reservoir in a cycle with no other effect. Some energy must always be rejected to a cold reservoir."
-    },
-    {
-      scenario: "The observable universe has been expanding and cooling since the Big Bang. It started in a very low-entropy state.",
-      question: "What is the 'heat death' hypothesis about the far future?",
-      options: [
-        { text: "The universe will become too hot for life", correct: false },
-        { text: "Maximum entropy—all processes stop, no free energy available", correct: true },
-        { text: "The universe will collapse back to a point", correct: false },
-        { text: "Stars will burn even hotter", correct: false }
-      ],
-      explanation: "As entropy approaches maximum, temperature gradients disappear, no work can be extracted, and all organized structures decay. The universe reaches thermodynamic equilibrium—maximum disorder."
-    },
-    {
-      scenario: "A chemist calculates that a proposed reaction has ΔG (Gibbs free energy change) = -50 kJ/mol at room temperature.",
-      question: "What can be concluded about this reaction?",
-      options: [
-        { text: "It will not occur spontaneously", correct: false },
-        { text: "It will occur spontaneously (is thermodynamically favorable)", correct: true },
-        { text: "Nothing—ΔG doesn't predict spontaneity", correct: false },
-        { text: "It requires a catalyst to proceed", correct: false }
-      ],
-      explanation: "Negative ΔG means the process is spontaneous at constant T and P. ΔG = ΔH - TΔS combines enthalpy and entropy into a single criterion for spontaneity."
-    }
-  ];
+  // Remove barrier
+  const removeBarrier = useCallback(() => {
+    setBarrierRemoved(true);
+    playSound('barrier');
+    setIsSimulating(true);
+  }, []);
 
-  const transferApps: TransferApp[] = [
-    {
-      icon: "🧬",
-      title: "Biochemistry & Life",
-      short: "Life",
-      tagline: "How living systems create order from chaos",
-      description: "Living organisms are far-from-equilibrium systems that maintain internal order by continuously increasing entropy in their surroundings through metabolism.",
-      connection: "Cells import low-entropy nutrients (organized chemical bonds) and export high-entropy waste (CO₂, heat). The net effect always increases total entropy.",
-      howItWorks: "ATP hydrolysis provides the thermodynamic driving force for ordering processes. Every protein fold, every DNA replication pays an entropy cost to the environment.",
-      stats: [
-        { value: "~10⁷", label: "ATP molecules/cell/second" },
-        { value: "37°C", label: "Human body temp (waste heat)" },
-        { value: "~100W", label: "Human metabolic heat output" },
-        { value: "~10¹⁴", label: "Cells in human body" }
-      ],
-      examples: [
-        "Protein folding (local order, global disorder)",
-        "DNA replication and repair",
-        "Photosynthesis capturing low-entropy light",
-        "Active transport against concentration gradients"
-      ],
-      companies: ["Moderna", "CRISPR Therapeutics", "Illumina", "Thermo Fisher", "Genentech"],
-      futureImpact: "Understanding entropy in biology enables synthetic biology, artificial cells, and potentially reversing aging by maintaining cellular order.",
-      color: "from-green-600 to-emerald-600"
-    },
-    {
-      icon: "💻",
-      title: "Information & Computing",
-      short: "Computing",
-      tagline: "The thermodynamics of bits",
-      description: "Information is physical. Every bit erased, every computation performed, has a minimum thermodynamic cost governed by entropy.",
-      connection: "Landauer's principle: erasing 1 bit requires dissipating at least kT·ln(2) energy. Reversible computing could theoretically avoid this cost.",
-      howItWorks: "Modern computers waste ~1 million times the Landauer limit due to irreversible logic gates. The heat from data centers is pure entropy being exported.",
-      stats: [
-        { value: "3×10⁻²¹J", label: "Landauer limit per bit" },
-        { value: "~1%", label: "World electricity for data centers" },
-        { value: "10²¹", label: "Bits stored globally" },
-        { value: "2030", label: "Computing may hit entropy limits" }
-      ],
-      examples: [
-        "Data center cooling requirements",
-        "CPU heat dissipation",
-        "Quantum computing and reversibility",
-        "Maxwell's demon thought experiment"
-      ],
-      companies: ["Intel", "NVIDIA", "Google", "IBM", "Microsoft"],
-      futureImpact: "Reversible computing and quantum computers could dramatically reduce the thermodynamic cost of computation, enabling far more powerful systems.",
-      color: "from-blue-600 to-cyan-600"
-    },
-    {
-      icon: "🌡️",
-      title: "Heat Engines & Efficiency",
-      short: "Engines",
-      tagline: "Why perfect efficiency is impossible",
-      description: "Heat engines convert thermal energy to work, but entropy limits their maximum efficiency. Some heat must always be rejected to a cold reservoir.",
-      connection: "Carnot efficiency η = 1 - T_cold/T_hot sets the absolute maximum. Real engines achieve 30-50% of this due to irreversibilities that create extra entropy.",
-      howItWorks: "The second law requires that Q_cold/T_cold ≥ Q_hot/T_hot. This inequality means some heat is always 'wasted' as the entropy price for doing work.",
-      stats: [
-        { value: "~40%", label: "Best coal plant efficiency" },
-        { value: "~60%", label: "Combined cycle gas turbine" },
-        { value: "100%", label: "Impossible (Carnot limit)" },
-        { value: "25%", label: "Car engine typical efficiency" }
-      ],
-      examples: [
-        "Power plant design optimization",
-        "Car engine thermodynamics",
-        "Refrigerator and heat pump COP",
-        "Waste heat recovery systems"
-      ],
-      companies: ["GE Power", "Siemens Energy", "Mitsubishi Power", "Tesla", "Toyota"],
-      futureImpact: "Waste heat recovery and thermoelectric generators could capture entropy being thrown away, improving overall energy system efficiency by 20-40%.",
-      color: "from-orange-600 to-red-600"
-    },
-    {
-      icon: "🌌",
-      title: "Cosmology & Arrow of Time",
-      short: "Cosmology",
-      tagline: "Why time flows forward",
-      description: "Entropy gives time its direction. The universe started in an extraordinarily low-entropy state (Big Bang) and has been increasing toward maximum entropy ever since.",
-      connection: "The 'arrow of time'—why we remember the past but not the future—emerges from entropy always increasing in closed systems.",
-      howItWorks: "Our memories, aging, and even causality itself are manifestations of the second law. We are beings who exist during the entropy increase phase of the universe.",
-      stats: [
-        { value: "10⁻⁴³s", label: "Planck time (earliest)" },
-        { value: "10¹²⁰", label: "Universe entropy estimate" },
-        { value: "10¹⁰⁰", label: "Years to heat death" },
-        { value: "1", label: "Direction of time" }
-      ],
-      examples: [
-        "Cosmic microwave background uniformity",
-        "Black hole thermodynamics",
-        "Heat death of the universe",
-        "Why we age and remember the past"
-      ],
-      companies: ["NASA", "ESA", "SpaceX", "LIGO", "CERN"],
-      futureImpact: "Understanding cosmological entropy may reveal why the Big Bang was low-entropy, possibly pointing to pre-Big-Bang physics or multiverse theories.",
-      color: "from-purple-600 to-indigo-600"
-    }
-  ];
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, #EC4899)`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-  const calculateScore = () => {
-    return testAnswers.reduce((score, answer, index) => {
-      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
-    }, 0);
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #EC4899)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  const renderParticleSimulation = (width: number = 200, height: number = 150) => {
-    const leftCount = particles.filter(p => p.x < 100).length;
-    const rightCount = particles.length - leftCount;
+  // Particle Visualization Component
+  const ParticleVisualization = ({ width = 320, height = 280 }: { width?: number; height?: number }) => {
     const entropy = calculateEntropy();
-    const maxEntropy = numParticles * Math.log(2); // Maximum when evenly distributed
-    const entropyRatio = maxEntropy > 0 ? entropy / maxEntropy : 0;
-
-    // Determine order state for visual feedback
-    const isOrdered = !barrierRemoved || entropyRatio < 0.3;
-    const isDisordered = barrierRemoved && entropyRatio > 0.7;
+    const microstates = calculateMicrostates();
+    const scale = width / 100;
 
     return (
-      <div className="flex flex-col items-center">
-        <svg width={width} height={height} className="mx-auto">
+      <div style={{ textAlign: 'center' }}>
+        <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
           <defs>
-            {/* Premium container gradient with depth */}
-            <linearGradient id="entContainerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e293b" />
-              <stop offset="25%" stopColor="#0f172a" />
-              <stop offset="50%" stopColor="#020617" />
-              <stop offset="75%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-
-            {/* Container border gradient */}
-            <linearGradient id="entContainerBorder" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.6" />
-              <stop offset="25%" stopColor="#8b5cf6" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.3" />
-              <stop offset="75%" stopColor="#8b5cf6" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity="0.6" />
-            </linearGradient>
-
-            {/* Blue particle gradient (left/ordered) */}
-            <radialGradient id="entParticleBlue" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#93c5fd" />
-              <stop offset="30%" stopColor="#60a5fa" />
-              <stop offset="60%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#1d4ed8" />
-            </radialGradient>
-
-            {/* Red particle gradient (right/disordered) */}
-            <radialGradient id="entParticleRed" cx="30%" cy="30%" r="70%">
+            <radialGradient id="hotParticle" cx="30%" cy="30%" r="70%">
               <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="30%" stopColor="#f87171" />
-              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#ef4444" />
               <stop offset="100%" stopColor="#b91c1c" />
             </radialGradient>
-
-            {/* Ordered state gradient (cool blue-purple) */}
-            <linearGradient id="entOrderedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="25%" stopColor="#6366f1" />
-              <stop offset="50%" stopColor="#8b5cf6" />
-              <stop offset="75%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#3b82f6" />
-            </linearGradient>
-
-            {/* Disordered state gradient (warm orange-red) */}
-            <linearGradient id="entDisorderedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f97316" />
-              <stop offset="25%" stopColor="#ef4444" />
-              <stop offset="50%" stopColor="#ec4899" />
-              <stop offset="75%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
-
-            {/* Entropy bar gradient (blue to red spectrum) */}
-            <linearGradient id="entEntropyBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="25%" stopColor="#8b5cf6" />
-              <stop offset="50%" stopColor="#d946ef" />
-              <stop offset="75%" stopColor="#f43f5e" />
-              <stop offset="100%" stopColor="#ef4444" />
-            </linearGradient>
-
-            {/* Barrier gradient */}
-            <linearGradient id="entBarrierGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#475569" />
-              <stop offset="25%" stopColor="#64748b" />
-              <stop offset="50%" stopColor="#94a3b8" />
-              <stop offset="75%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#475569" />
-            </linearGradient>
-
-            {/* Particle glow filter */}
-            <filter id="entParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <radialGradient id="coldParticle" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
+            <filter id="particleGlow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Strong glow for disordered state */}
-            <filter id="entDisorderGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Ordered state subtle glow */}
-            <filter id="entOrderGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Container inner shadow */}
-            <filter id="entInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" result="shadow" />
-              <feComposite in="SourceGraphic" in2="shadow" operator="over" />
-            </filter>
-
-            {/* Entropy indicator glow */}
-            <filter id="entBarGlow" x="-20%" y="-100%" width="140%" height="300%">
-              <feGaussianBlur stdDeviation="2" result="glow" />
-              <feMerge>
-                <feMergeNode in="glow" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
 
-          {/* Background with subtle gradient */}
-          <rect x="0" y="0" width={width} height={height} fill="#030712" rx="12" />
+          {/* Container background */}
+          <rect x="10" y="30" width={width - 20} height={height - 80} rx="8" fill="#0f172a" stroke={colors.border} strokeWidth="2" />
 
-          {/* Premium container with gradient and border glow */}
-          <rect
-            x="5" y="15"
-            width={width - 10} height={height - 25}
-            rx="8"
-            fill="url(#entContainerGrad)"
-            stroke="url(#entContainerBorder)"
-            strokeWidth="2"
-            filter="url(#entInnerShadow)"
-          />
-
-          {/* Order/Disorder visual indicator at top */}
-          <rect
-            x="10" y="3"
-            width={width - 20} height="6"
-            rx="3"
-            fill="#0f172a"
-            stroke="#1e293b"
-            strokeWidth="1"
-          />
-          <rect
-            x="10" y="3"
-            width={(width - 20) * entropyRatio} height="6"
-            rx="3"
-            fill="url(#entEntropyBarGrad)"
-            filter="url(#entBarGlow)"
-          />
-
-          {/* Barrier (if not removed) - premium metallic look */}
+          {/* Barrier */}
           {!barrierRemoved && (
-            <g>
-              <rect
-                x={width/2 - 3} y="20"
-                width="6" height={height - 35}
-                rx="2"
-                fill="url(#entBarrierGrad)"
-              />
-              {/* Barrier highlight */}
-              <line
-                x1={width/2} y1="22"
-                x2={width/2} y2={height - 17}
-                stroke="#cbd5e1"
-                strokeWidth="1"
-                strokeOpacity="0.4"
-              />
-            </g>
+            <rect x={width/2 - 3} y="35" width="6" height={height - 90} rx="2" fill="#64748b" />
           )}
 
-          {/* Barrier removed - dashed outline showing where it was */}
+          {/* Barrier removed indicator */}
           {barrierRemoved && (
-            <line
-              x1={width/2} y1="20"
-              x2={width/2} y2={height - 15}
-              stroke="#475569"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-              strokeOpacity="0.2"
-            />
+            <line x1={width/2} y1="35" x2={width/2} y2={height - 55} stroke={colors.border} strokeWidth="1" strokeDasharray="4,4" />
           )}
 
-          {/* Particles with premium gradients and glow */}
-          {particles.map((p, i) => {
-            const isLeft = p.x < 100;
-            const particleFilter = isDisordered ? "url(#entDisorderGlow)" :
-                                   isOrdered ? "url(#entOrderGlow)" :
-                                   "url(#entParticleGlow)";
-            return (
-              <circle
-                key={i}
-                cx={p.x * (width / 200)}
-                cy={p.y * (height / 150) + 5}
-                r="5"
-                fill={isLeft ? "url(#entParticleBlue)" : "url(#entParticleRed)"}
-                filter={particleFilter}
-              />
-            );
-          })}
+          {/* Particles */}
+          {particles.map((p, i) => (
+            <circle
+              key={i}
+              cx={10 + p.x * (width - 20) / 100}
+              cy={30 + p.y * (height - 80) / 100}
+              r={isMobile ? 4 : 5}
+              fill={p.type === 'hot' ? 'url(#hotParticle)' : 'url(#coldParticle)'}
+              filter="url(#particleGlow)"
+            />
+          ))}
 
-          {/* Side count indicators with glow */}
-          <g filter="url(#entParticleGlow)">
-            <circle cx={width * 0.2} cy={height - 8} r="8" fill="#1e293b" stroke="#3b82f6" strokeWidth="1" />
-            <circle cx={width * 0.8} cy={height - 8} r="8" fill="#1e293b" stroke="#ef4444" strokeWidth="1" />
-          </g>
+          {/* Labels */}
+          <text x={width * 0.25} y="20" textAnchor="middle" fill={colors.hot} fontSize="12" fontWeight="600">
+            Hot ({particles.filter(p => p.x < 50 && p.type === 'hot').length})
+          </text>
+          <text x={width * 0.75} y="20" textAnchor="middle" fill={colors.cold} fontSize="12" fontWeight="600">
+            Cold ({particles.filter(p => p.x >= 50 && p.type === 'cold').length})
+          </text>
+
+          {/* Stats bar */}
+          <rect x="10" y={height - 40} width={width - 20} height="35" rx="6" fill={colors.bgSecondary} />
+          <text x="20" y={height - 18} fill={colors.textSecondary} fontSize="11">
+            S = {entropy.toFixed(2)}
+          </text>
+          <text x={width/2} y={height - 18} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+            Omega = {microstates.toLocaleString()}
+          </text>
+          <text x={width - 20} y={height - 18} textAnchor="end" fill={colors.textSecondary} fontSize="11">
+            t = {timeElapsed}
+          </text>
         </svg>
-
-        {/* External text labels using typo system */}
-        <div className="flex justify-between w-full px-4 -mt-5 relative z-10">
-          <span
-            style={{ fontSize: typo.label }}
-            className="font-bold text-blue-400 bg-slate-900/80 px-1.5 py-0.5 rounded"
-          >
-            {leftCount}
-          </span>
-          <span
-            style={{ fontSize: typo.label }}
-            className="font-bold text-red-400 bg-slate-900/80 px-1.5 py-0.5 rounded"
-          >
-            {rightCount}
-          </span>
-        </div>
-
-        {/* Order/Disorder state label */}
-        <div
-          className={`mt-2 px-3 py-1 rounded-full text-xs font-medium transition-all duration-500 ${
-            isDisordered
-              ? 'bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-300 border border-orange-500/30'
-              : isOrdered
-                ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 border border-blue-500/30'
-                : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30'
-          }`}
-          style={{ fontSize: typo.label }}
-        >
-          {isDisordered ? 'High Entropy (Disordered)' : isOrdered ? 'Low Entropy (Ordered)' : 'Mixing...'}
-        </div>
       </div>
     );
   };
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      {/* Premium Badge */}
-      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-        <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-        <span className="text-purple-400 text-sm font-medium">Thermodynamics</span>
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🎲🔥❄️
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Entropy: The Arrow of Time
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Why do eggs break but never unbreak? Why does coffee cool but never spontaneously heat up? The answer lies in a single quantity: <span style={{ color: colors.accent }}>entropy</span> - the measure of disorder that gives time its direction."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <ParticleVisualization width={isMobile ? 280 : 340} height={220} />
+
+          <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px', fontStyle: 'italic' }}>
+            "The second law of thermodynamics holds, I think, the supreme position among the laws of Nature." - Sir Arthur Eddington
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            playSound('click');
+            nextPhase();
+          }}
+          style={primaryButtonStyle}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          Discover Why Disorder Wins
+        </button>
+
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      {/* Gradient Title */}
-      <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent mb-3`}>
-        Entropy: The Arrow of Time
-      </h1>
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', label: 'Yes, if we wait long enough particles will spontaneously separate' },
+      { id: 'b', label: 'No, it is physically impossible for particles to separate' },
+      { id: 'c', label: 'It is possible but so improbable it essentially never happens', correct: true },
+      { id: 'd', label: 'Only at absolute zero temperature' }
+    ];
 
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg mb-8 max-w-md">
-        Explore the fundamental law that gives time its direction
-      </p>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px',
+        paddingTop: '48px',
+      }}>
+        {renderProgressBar()}
 
-      {/* Premium Card */}
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 max-w-2xl shadow-2xl">
-        {renderParticleSimulation(isMobile ? 280 : 320, 180)}
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+          Make Your Prediction
+        </h2>
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          Phase 2 of 10: Predict
+        </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <div className="bg-slate-900/50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-cyan-400">{calculateEntropy().toFixed(2)}</div>
-            <div className="text-sm text-slate-400">Entropy (S)</div>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '600px',
+          width: '100%',
+          marginBottom: '24px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '32px' }}>🔴🔴</div>
+              <div style={{ color: colors.hot, fontWeight: 600 }}>Hot Side</div>
+            </div>
+            <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>+</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '32px' }}>🔵🔵</div>
+              <div style={{ color: colors.cold, fontWeight: 600 }}>Cold Side</div>
+            </div>
+            <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>=</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '32px' }}>🔴🔵</div>
+              <div style={{ color: colors.accent, fontWeight: 600 }}>Mixed</div>
+            </div>
           </div>
-          <div className="bg-slate-900/50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-purple-400">{calculateMicrostates()}</div>
-            <div className="text-sm text-slate-400">Microstates (Omega)</div>
+
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center' }}>
+            After removing the barrier, hot and cold particles mix together. Could they ever spontaneously <span style={{ color: colors.accent }}>separate back</span> into their original arrangement?
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '600px', width: '100%' }}>
+          {options.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => {
+                setPrediction(opt.id);
+                playSound(opt.correct ? 'success' : 'failure');
+                if (onGameEvent) {
+                  onGameEvent({
+                    eventType: opt.correct ? 'correct_answer' : 'incorrect_answer',
+                    gameType: 'entropy',
+                    gameTitle: 'Entropy & Thermodynamics',
+                    details: { prediction: opt.id },
+                    timestamp: Date.now()
+                  });
+                }
+              }}
+              style={{
+                background: prediction === opt.id
+                  ? (opt.correct ? colors.success + '33' : colors.error + '33')
+                  : colors.bgCard,
+                border: `2px solid ${prediction === opt.id ? (opt.correct ? colors.success : colors.error) : colors.border}`,
+                borderRadius: '12px',
+                padding: '16px 20px',
+                textAlign: 'left',
+                cursor: prediction ? 'default' : 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              disabled={prediction !== null}
+            >
+              <span style={{ color: colors.accent, fontWeight: 700, marginRight: '8px' }}>{opt.id.toUpperCase()}.</span>
+              <span style={{ color: colors.textPrimary }}>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {prediction && (
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '24px',
+            maxWidth: '600px',
+            width: '100%',
+            border: `1px solid ${options.find(o => o.id === prediction)?.correct ? colors.success : colors.error}`,
+          }}>
+            <p style={{ ...typo.body, color: options.find(o => o.id === prediction)?.correct ? colors.success : colors.error, fontWeight: 600, marginBottom: '8px' }}>
+              {options.find(o => o.id === prediction)?.correct ? 'Correct!' : 'Not quite!'}
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              The answer is C: It is <strong>statistically forbidden</strong>, not physically impossible. With enough particles, the probability of spontaneous separation is so astronomically small (less than 1 in 10^20 for just 100 particles) that it essentially never happens in the lifetime of the universe.
+            </p>
+            <button
+              onClick={() => {
+                playSound('click');
+                nextPhase();
+              }}
+              style={{ ...primaryButtonStyle, marginTop: '16px', width: '100%' }}
+            >
+              Explore the Simulation
+            </button>
+          </div>
+        )}
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px',
+        paddingTop: '48px',
+      }}>
+        {renderProgressBar()}
+
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>
+          Entropy Laboratory
+        </h2>
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          Phase 3 of 10: Experiment
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <ParticleVisualization width={isMobile ? 300 : 400} height={isMobile ? 260 : 300} />
+        </div>
+
+        {/* Controls */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: '16px',
+          maxWidth: '500px',
+          width: '100%',
+          marginBottom: '24px',
+        }}>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', border: `1px solid ${colors.border}` }}>
+            <label style={{ ...typo.small, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+              Particles: {particleCount}
+            </label>
+            <input
+              type="range"
+              min="10"
+              max="60"
+              value={particleCount}
+              onChange={(e) => setParticleCount(parseInt(e.target.value))}
+              style={{ width: '100%', accentColor: colors.accent }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => {
+                if (!barrierRemoved) {
+                  removeBarrier();
+                } else {
+                  setIsSimulating(!isSimulating);
+                }
+              }}
+              style={{
+                flex: 1,
+                background: isSimulating ? colors.error : colors.success,
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '16px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {!barrierRemoved ? '🚀 Remove Barrier' : isSimulating ? '⏸️ Pause' : '▶️ Play'}
+            </button>
+            <button
+              onClick={resetSimulation}
+              style={{
+                flex: 1,
+                background: colors.bgCard,
+                color: colors.textPrimary,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '12px',
+                padding: '16px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              ↺ Reset
+            </button>
           </div>
         </div>
 
-        <p className="text-xl text-slate-300 mt-6 mb-4">
-          Blue particles on the left, red on the right. What happens when we remove the barrier?
-        </p>
-        <p className="text-lg text-purple-400 font-medium">
-          Why don't they ever spontaneously separate again?
+        {/* Formula Display */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '20px',
+          maxWidth: '500px',
+          width: '100%',
+          marginBottom: '24px',
+          border: `1px solid ${colors.accent}33`,
+          textAlign: 'center',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+            Boltzmann's Entropy Formula
+          </h3>
+          <div style={{ fontSize: '24px', color: colors.textPrimary, fontFamily: 'serif', marginBottom: '8px' }}>
+            S = k<sub>B</sub> ln(Omega)
+          </div>
+          <p style={{ ...typo.small, color: colors.textSecondary }}>
+            Entropy (S) equals Boltzmann's constant times the natural log of microstates (Omega).
+            More ways to arrange = higher entropy!
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            playSound('click');
+            nextPhase();
+          }}
+          style={primaryButtonStyle}
+        >
+          Understand the Physics
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    const concepts = [
+      {
+        icon: '📊',
+        title: 'What is Entropy?',
+        color: colors.accent,
+        points: [
+          'A measure of disorder or randomness in a system',
+          'Counts the number of microscopic arrangements (microstates)',
+          'S = k_B * ln(Omega) - Boltzmann\'s famous formula',
+          'Higher entropy = more possible configurations',
+          'Nature spontaneously moves toward maximum entropy'
+        ]
+      },
+      {
+        icon: '⚖️',
+        title: 'The Second Law',
+        color: colors.hot,
+        points: [
+          'Total entropy of an isolated system never decreases',
+          'Delta S_universe >= 0 (always!)',
+          'Processes tend toward thermodynamic equilibrium',
+          'Heat spontaneously flows from hot to cold',
+          'Gives time its "arrow" - distinguishes past from future'
+        ]
+      },
+      {
+        icon: '🎲',
+        title: 'Statistical Mechanics',
+        color: colors.cold,
+        points: [
+          'Ordered states have few microstates (improbable)',
+          'Disordered states have many microstates (probable)',
+          'For 100 particles: ~10^30 arrangements',
+          'Probability of original order: essentially zero',
+          'Disorder wins by overwhelming statistics!'
+        ]
+      },
+      {
+        icon: '🔥',
+        title: 'Heat & Temperature',
+        color: colors.warning,
+        points: [
+          'Delta S = Q/T for reversible heat transfer',
+          'Adding heat increases molecular motion',
+          'More motion = more possible arrangements',
+          'Heat flows to maximize total entropy',
+          'This is why 100% efficient heat engines are impossible'
+        ]
+      }
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px',
+        paddingTop: '48px',
+      }}>
+        {renderProgressBar()}
+
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>
+          Understanding Entropy
+        </h2>
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          Phase 4 of 10: Review
         </p>
 
-        <div className="flex gap-4 mt-4 justify-center flex-wrap">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: '16px',
+          maxWidth: '800px',
+          width: '100%',
+          marginBottom: '32px',
+        }}>
+          {concepts.map((concept, i) => (
+            <div key={i} style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '20px',
+              border: `1px solid ${concept.color}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '28px' }}>{concept.icon}</span>
+                <h3 style={{ ...typo.h3, color: concept.color, margin: 0 }}>{concept.title}</h3>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                {concept.points.map((point, j) => (
+                  <li key={j} style={{ ...typo.small, color: colors.textSecondary, marginBottom: '6px' }}>
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => {
+            playSound('click');
+            nextPhase();
+          }}
+          style={primaryButtonStyle}
+        >
+          Ready for a Twist?
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST_PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', label: 'Yes - refrigerators violate the Second Law' },
+      { id: 'b', label: 'No - they export MORE entropy to surroundings than they remove from inside', correct: true },
+      { id: 'c', label: 'They only work because electricity is "ordered energy"' },
+      { id: 'd', label: 'The Second Law doesn\'t apply to machines' }
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px',
+        paddingTop: '48px',
+      }}>
+        {renderProgressBar()}
+
+        <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px', textAlign: 'center' }}>
+          The Twist Challenge
+        </h2>
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          Phase 5 of 10: New Variable
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '600px',
+          width: '100%',
+          marginBottom: '24px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <div style={{ fontSize: '48px', textAlign: 'center', marginBottom: '16px' }}>❄️🔌🔥</div>
+          <p style={{ ...typo.body, color: colors.textPrimary, textAlign: 'center', marginBottom: '16px' }}>
+            Your refrigerator keeps food cold (4C) while the kitchen stays warm (25C). Heat is flowing from <span style={{ color: colors.cold }}>cold</span> to <span style={{ color: colors.hot }}>hot</span>!
+          </p>
+          <p style={{ ...typo.body, color: '#06B6D4', textAlign: 'center', fontWeight: 600 }}>
+            Doesn't this violate the Second Law of Thermodynamics?
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '600px', width: '100%' }}>
+          {options.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => {
+                setTwistPrediction(opt.id);
+                playSound(opt.correct ? 'success' : 'failure');
+              }}
+              style={{
+                background: twistPrediction === opt.id
+                  ? (opt.correct ? colors.success + '33' : colors.error + '33')
+                  : colors.bgCard,
+                border: `2px solid ${twistPrediction === opt.id ? (opt.correct ? colors.success : colors.error) : colors.border}`,
+                borderRadius: '12px',
+                padding: '16px 20px',
+                textAlign: 'left',
+                cursor: twistPrediction ? 'default' : 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              disabled={twistPrediction !== null}
+            >
+              <span style={{ color: '#06B6D4', fontWeight: 700, marginRight: '8px' }}>{opt.id.toUpperCase()}.</span>
+              <span style={{ color: colors.textPrimary }}>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {twistPrediction && (
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginTop: '24px',
+            maxWidth: '600px',
+            width: '100%',
+            border: `1px solid ${colors.success}`,
+          }}>
+            <p style={{ ...typo.body, color: colors.success, fontWeight: 600, marginBottom: '8px' }}>
+              The key insight!
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              Refrigerators use electrical work to pump heat "uphill." The work input generates MORE entropy (waste heat dumped into your kitchen) than the entropy removed from inside. Total entropy still increases!
+            </p>
+            <button
+              onClick={() => {
+                playSound('click');
+                nextPhase();
+              }}
+              style={{ ...primaryButtonStyle, marginTop: '16px', width: '100%' }}
+            >
+              Explore Local Order
+            </button>
+          </div>
+        )}
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST_PLAY PHASE
+  if (phase === 'twist_play') {
+    const efficiency = hotTemp > coldTemp ? (1 - coldTemp / hotTemp) * 100 : 0;
+    const entropyChange = heatTransferred > 0 ? (heatTransferred / coldTemp - heatTransferred / hotTemp).toFixed(3) : '0.000';
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px',
+        paddingTop: '48px',
+      }}>
+        {renderProgressBar()}
+
+        <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px' }}>
+          Local Order, Global Disorder
+        </h2>
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          Phase 6 of 10: Heat Flow
+        </p>
+
+        {/* Heat Flow Visualization */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', alignItems: 'center' }}>
+            {/* Hot Reservoir */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '12px',
+                background: `linear-gradient(180deg, ${colors.hot}88 0%, ${colors.hot}44 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: `2px solid ${colors.hot}`,
+                marginBottom: '8px',
+              }}>
+                <span style={{ fontSize: '32px' }}>🔥</span>
+              </div>
+              <div style={{ ...typo.h3, color: colors.hot }}>{hotTemp.toFixed(0)}K</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Hot Reservoir</div>
+            </div>
+
+            {/* Arrow showing heat flow */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '32px', color: heatFlowing ? colors.warning : colors.textMuted }}>
+                {heatFlowing ? '⚡➡️⚡' : '➡️'}
+              </div>
+              <div style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+                Q = {heatTransferred} units
+              </div>
+            </div>
+
+            {/* Cold Reservoir */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '12px',
+                background: `linear-gradient(180deg, ${colors.cold}88 0%, ${colors.cold}44 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: `2px solid ${colors.cold}`,
+                marginBottom: '8px',
+              }}>
+                <span style={{ fontSize: '32px' }}>❄️</span>
+              </div>
+              <div style={{ ...typo.h3, color: colors.cold }}>{coldTemp.toFixed(0)}K</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Cold Reservoir</div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px',
+            marginTop: '24px',
+          }}>
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <div style={{ ...typo.h3, color: colors.accent }}>{efficiency.toFixed(1)}%</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Max Carnot Efficiency</div>
+            </div>
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <div style={{ ...typo.h3, color: colors.success }}>+{entropyChange}</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Delta S (net)</div>
+            </div>
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <div style={{ ...typo.h3, color: colors.warning }}>{(hotTemp - coldTemp).toFixed(0)}K</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>Temperature Gap</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '24px',
+        }}>
           <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              removeBarrier();
-              setIsSimulating(true);
+            onClick={() => {
+              setHeatFlowing(true);
+              playSound('mix');
             }}
-            disabled={barrierRemoved}
-            className={`px-6 py-3 ${barrierRemoved ? 'bg-slate-600 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-500'} text-white font-semibold rounded-xl transition-colors`}
+            disabled={heatFlowing || hotTemp <= coldTemp + 20}
+            style={{
+              background: heatFlowing ? colors.textMuted : colors.success,
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '16px 24px',
+              fontWeight: 700,
+              cursor: heatFlowing ? 'default' : 'pointer',
+              opacity: heatFlowing || hotTemp <= coldTemp + 20 ? 0.5 : 1,
+            }}
           >
-            {barrierRemoved ? 'Barrier Removed!' : 'Remove Barrier'}
+            {heatFlowing ? 'Heat Flowing...' : 'Start Heat Flow'}
           </button>
           <button
-            onPointerDown={(e) => { e.preventDefault(); resetSimulation(); }}
-            className="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-xl transition-colors"
+            onClick={() => {
+              setHotTemp(400);
+              setColdTemp(300);
+              setHeatFlowing(false);
+              setHeatTransferred(0);
+            }}
+            style={{
+              background: colors.bgCard,
+              color: colors.textPrimary,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '12px',
+              padding: '16px 24px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
           >
             Reset
           </button>
         </div>
-      </div>
 
-      {/* Premium CTA Button */}
-      <button
-        onPointerDown={(e) => { e.preventDefault(); goToPhase(1); }}
-        className="group mt-8 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-semibold rounded-2xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] flex items-center gap-2"
-      >
-        Discover the Secret
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </button>
-
-      {/* Subtle Hint */}
-      <p className="mt-4 text-slate-500 text-sm">
-        Tap to begin your exploration
-      </p>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          After mixing, particles are randomly distributed. Could they ever spontaneously separate back to their original arrangement?
-        </p>
-        <div className="flex justify-center gap-8 my-4">
-          <div className="text-center">
-            <div className="text-4xl mb-2">🔵🔵</div>
-            <div className="text-blue-400 font-bold">Left</div>
-            <div className="text-slate-400 text-sm">Ordered</div>
-          </div>
-          <div className="text-3xl text-slate-500">→ ? →</div>
-          <div className="text-center">
-            <div className="text-4xl mb-2">🔵🔴</div>
-            <div className="text-purple-400 font-bold">Mixed</div>
-            <div className="text-slate-400 text-sm">Disordered</div>
-          </div>
-        </div>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Yes, if we wait long enough they will separate' },
-          { id: 'B', text: 'No, it\'s physically impossible' },
-          { id: 'C', text: 'It\'s possible but so improbable it essentially never happens' },
-          { id: 'D', text: 'Only at absolute zero temperature' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'C'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'C'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! It's <span className="text-cyan-400">statistically forbidden</span>—not physically impossible, just incredibly improbable!
+        {/* Key Insight */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '20px',
+          maxWidth: '500px',
+          width: '100%',
+          border: `1px solid #06B6D4`,
+          marginBottom: '24px',
+        }}>
+          <h3 style={{ ...typo.h3, color: '#06B6D4', marginBottom: '12px' }}>Key Insight</h3>
+          <p style={{ ...typo.small, color: colors.textSecondary }}>
+            Heat naturally flows from hot to cold. The entropy <em>gained</em> by the cold reservoir (Q/T_cold) is GREATER than the entropy <em>lost</em> by the hot reservoir (Q/T_hot). Net entropy always increases!
           </p>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); goToPhase(2); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300"
-          >
-            Explore Entropy →
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Entropy Lab</h2>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderParticleSimulation(isMobile ? 280 : 350, 200)}
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-          <div className="text-center bg-slate-900/50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-cyan-400">{calculateEntropy().toFixed(2)}</div>
-            <div className="text-sm text-slate-400">Entropy S</div>
-          </div>
-          <div className="text-center bg-slate-900/50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-purple-400">{calculateMicrostates()}</div>
-            <div className="text-sm text-slate-400">Microstates Ω</div>
-          </div>
-          <div className="text-center bg-slate-900/50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-orange-400">{particles.filter(p => p.x < 100).length}</div>
-            <div className="text-sm text-slate-400">Left Side</div>
-          </div>
-          <div className="text-center bg-slate-900/50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-red-400">{particles.filter(p => p.x >= 100).length}</div>
-            <div className="text-sm text-slate-400">Right Side</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
-        <div className="bg-slate-800/70 rounded-xl p-4">
-          <label className="block text-sm text-slate-400 mb-2">Particles: {numParticles}</label>
-          <input
-            type="range"
-            min="10"
-            max="50"
-            value={numParticles}
-            onChange={(e) => {
-              const newCount = parseInt(e.target.value);
-              setNumParticles(newCount);
-              setParticles(initializeParticles(newCount, !barrierRemoved));
-              onGameEvent?.({ type: 'microstates_changed', data: { count: newCount } });
-            }}
-            className="w-full accent-purple-500"
-          />
-        </div>
-        <div className="flex gap-2">
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              if (!barrierRemoved) {
-                removeBarrier();
-              }
-              setIsSimulating(!isSimulating);
-            }}
-            className={`flex-1 p-4 rounded-xl font-semibold transition-colors ${
-              isSimulating ? 'bg-red-600 hover:bg-red-500' : 'bg-purple-600 hover:bg-purple-500'
-            } text-white`}
-          >
-            {isSimulating ? '⏹️ Pause' : '▶️ Run'}
-          </button>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); resetSimulation(); }}
-            className="flex-1 p-4 rounded-xl bg-slate-600 hover:bg-slate-500 text-white font-semibold transition-colors"
-          >
-            ↺ Reset
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
-        <h3 className="text-lg font-semibold text-purple-400 mb-3">Boltzmann's Formula</h3>
-        <div className="text-center text-xl text-white font-mono mb-2">
-          S = k<sub>B</sub> × ln(Ω)
-        </div>
-        <p className="text-sm text-slate-400">
-          Entropy (S) is proportional to the logarithm of microstates (Ω).
-          More ways to arrange particles = higher entropy. This is why disorder wins!
-        </p>
-      </div>
-
-      <button
-        onPointerDown={(e) => { e.preventDefault(); goToPhase(3); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300"
-      >
-        Review the Concepts →
-      </button>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Understanding Entropy</h2>
-
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">📊 What Is Entropy?</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• A measure of disorder or randomness</li>
-            <li>• The number of microscopic arrangements (microstates)</li>
-            <li>• S = k<sub>B</sub> ln(Ω) — Boltzmann's formula</li>
-            <li>• Higher entropy = more possible configurations</li>
-            <li>• Nature tends toward maximum entropy</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">⚖️ Second Law of Thermodynamics</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Total entropy of an isolated system never decreases</li>
-            <li>• ΔS<sub>universe</sub> ≥ 0 (always!)</li>
-            <li>• Processes tend toward equilibrium</li>
-            <li>• Explains why heat flows hot → cold</li>
-            <li>• Gives time its "arrow" (direction)</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-green-400 mb-3">🎲 Statistical Interpretation</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Ordered states: few microstates (improbable)</li>
-            <li>• Disordered states: many microstates (probable)</li>
-            <li>• For 20 particles: ~1 million arrangements</li>
-            <li>• Finding original order: 1 in 1,048,576 chance</li>
-            <li>• Disorder wins by overwhelming probability!</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">🔥 Heat and Entropy</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• ΔS = Q/T for reversible heat transfer</li>
-            <li>• Adding heat increases molecular motion</li>
-            <li>• More motion = more possible arrangements</li>
-            <li>• Heat flows to maximize total entropy</li>
-            <li>• This is why perpetual motion is impossible</li>
-          </ul>
-        </div>
-      </div>
-
-      <button
-        onPointerDown={(e) => { e.preventDefault(); goToPhase(4); }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-teal-500 transition-all duration-300"
-      >
-        Discover a Surprising Twist →
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-cyan-400 mb-6">The Twist Challenge</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Your refrigerator keeps food cold inside while the kitchen stays warm. It creates ORDER (cold, organized) from DISORDER (room temperature chaos).
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          Doesn't this violate the second law of thermodynamics?
-        </p>
-      </div>
-
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Yes - refrigerators violate the second law' },
-          { id: 'B', text: 'No - they export MORE disorder to the room than they create inside' },
-          { id: 'C', text: 'They only work because electricity is "ordered energy"' },
-          { id: 'D', text: 'The second law doesn\'t apply to machines' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
-            disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'B'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'B'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Refrigerators export more entropy (as heat) to the kitchen than they remove from inside!
-          </p>
-          <p className="text-slate-400 text-sm mt-2">
-            Total entropy still increases. You can create local order by paying an entropy "tax" elsewhere!
-          </p>
-          <button
-            onPointerDown={(e) => { e.preventDefault(); goToPhase(5); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-teal-500 transition-all duration-300"
-          >
-            Explore Local Order →
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-cyan-400 mb-4">Local Order, Global Disorder</h2>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-3xl mb-6">
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="text-center">
-            <h3 style={{ fontSize: typo.bodyLarge }} className="font-semibold text-blue-400 mb-3">Inside Refrigerator</h3>
-            <svg width="150" height="150" className="mx-auto">
-              <defs>
-                {/* Cold interior gradient */}
-                <radialGradient id="entColdInterior" cx="50%" cy="50%" r="70%">
-                  <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.3" />
-                  <stop offset="40%" stopColor="#0284c7" stopOpacity="0.2" />
-                  <stop offset="70%" stopColor="#0369a1" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#075985" stopOpacity="0.1" />
-                </radialGradient>
-                {/* Fridge outer shell */}
-                <linearGradient id="entFridgeShell" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#334155" />
-                  <stop offset="30%" stopColor="#1e293b" />
-                  <stop offset="70%" stopColor="#0f172a" />
-                  <stop offset="100%" stopColor="#020617" />
-                </linearGradient>
-                {/* Cold glow filter */}
-                <filter id="entColdGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                {/* Snowflake particles */}
-                <radialGradient id="entSnowflake" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="50%" stopColor="#e0f2fe" />
-                  <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0" />
-                </radialGradient>
-              </defs>
-              {/* Outer shell */}
-              <rect width="150" height="150" fill="url(#entFridgeShell)" rx="12" />
-              {/* Inner cold zone */}
-              <rect x="15" y="15" width="120" height="120" fill="url(#entColdInterior)" rx="8" stroke="#0ea5e9" strokeWidth="1" strokeOpacity="0.3" />
-              {/* Frost particles */}
-              {[
-                { x: 45, y: 50 }, { x: 75, y: 35 }, { x: 105, y: 55 },
-                { x: 55, y: 80 }, { x: 95, y: 75 }, { x: 75, y: 100 },
-                { x: 40, y: 110 }, { x: 110, y: 105 }
-              ].map((pos, i) => (
-                <circle key={i} cx={pos.x} cy={pos.y} r="3" fill="url(#entSnowflake)" filter="url(#entColdGlow)" opacity={0.7 + Math.random() * 0.3} />
-              ))}
-              {/* Down arrow indicating entropy decrease */}
-              <path d="M 75 115 L 65 125 L 75 135 L 85 125 Z" fill="#22d3ee" filter="url(#entColdGlow)" />
-            </svg>
-            {/* External labels */}
-            <div className="mt-2 space-y-1">
-              <p style={{ fontSize: typo.small }} className="font-bold text-cyan-400">Delta S &lt; 0</p>
-              <p style={{ fontSize: typo.label }} className="text-slate-400">Entropy decreases</p>
-              <p style={{ fontSize: typo.label }} className="text-emerald-400">(Order increases)</p>
-            </div>
-          </div>
-          <div className="text-center">
-            <h3 style={{ fontSize: typo.bodyLarge }} className="font-semibold text-orange-400 mb-3">Kitchen (Environment)</h3>
-            <svg width="150" height="150" className="mx-auto">
-              <defs>
-                {/* Hot environment gradient */}
-                <radialGradient id="entHotEnvironment" cx="50%" cy="50%" r="70%">
-                  <stop offset="0%" stopColor="#f97316" stopOpacity="0.4" />
-                  <stop offset="30%" stopColor="#ea580c" stopOpacity="0.3" />
-                  <stop offset="60%" stopColor="#c2410c" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#7c2d12" stopOpacity="0.1" />
-                </radialGradient>
-                {/* Kitchen outer */}
-                <linearGradient id="entKitchenShell" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#451a03" />
-                  <stop offset="30%" stopColor="#7c2d12" />
-                  <stop offset="70%" stopColor="#451a03" />
-                  <stop offset="100%" stopColor="#1c0a00" />
-                </linearGradient>
-                {/* Heat glow filter */}
-                <filter id="entHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="5" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                {/* Heat particle */}
-                <radialGradient id="entHeatParticle" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#fbbf24" />
-                  <stop offset="40%" stopColor="#f97316" />
-                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-                </radialGradient>
-              </defs>
-              {/* Outer shell */}
-              <rect width="150" height="150" fill="url(#entKitchenShell)" rx="12" />
-              {/* Inner hot zone */}
-              <rect x="15" y="15" width="120" height="120" fill="url(#entHotEnvironment)" rx="8" stroke="#f97316" strokeWidth="1" strokeOpacity="0.4" />
-              {/* Heat particles (chaotic) */}
-              {[
-                { x: 35, y: 40 }, { x: 60, y: 30 }, { x: 90, y: 45 }, { x: 115, y: 35 },
-                { x: 45, y: 70 }, { x: 75, y: 60 }, { x: 105, y: 75 },
-                { x: 30, y: 100 }, { x: 55, y: 90 }, { x: 85, y: 105 }, { x: 115, y: 95 },
-                { x: 40, y: 120 }, { x: 70, y: 115 }, { x: 100, y: 125 }
-              ].map((pos, i) => (
-                <circle key={i} cx={pos.x} cy={pos.y} r="4" fill="url(#entHeatParticle)" filter="url(#entHeatGlow)" opacity={0.6 + Math.random() * 0.4} />
-              ))}
-              {/* Up arrows indicating entropy increase */}
-              <path d="M 55 125 L 45 115 L 55 105 L 65 115 Z" fill="#f97316" filter="url(#entHeatGlow)" />
-              <path d="M 95 125 L 85 115 L 95 105 L 105 115 Z" fill="#f97316" filter="url(#entHeatGlow)" />
-            </svg>
-            {/* External labels */}
-            <div className="mt-2 space-y-1">
-              <p style={{ fontSize: typo.small }} className="font-bold text-orange-400">Delta S &gt;&gt; 0</p>
-              <p style={{ fontSize: typo.label }} className="text-slate-400">Entropy increases MORE</p>
-              <p style={{ fontSize: typo.label }} className="text-red-400">(Disorder exported)</p>
-            </div>
+          <div style={{ textAlign: 'center', marginTop: '12px', fontFamily: 'serif', fontSize: '18px', color: colors.textPrimary }}>
+            Delta S = Q/T_cold - Q/T_hot &gt; 0
           </div>
         </div>
 
-        <div className="mt-6 bg-slate-900/50 rounded-xl p-4">
-          <h4 className="text-emerald-400 font-semibold mb-2">The Key Insight:</h4>
-          <p className="text-slate-300 text-sm">
-            The second law says <span className="text-cyan-400">ΔS_total ≥ 0</span>, not that every part must increase.
-            You can decrease entropy locally by increasing it more elsewhere!
-          </p>
-          <p className="text-purple-400 font-mono text-center mt-3">
-            ΔS_inside + ΔS_kitchen + ΔS_power_plant &gt; 0 ✓
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-cyan-900/40 to-teal-900/40 rounded-2xl p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-cyan-400 mb-3">Life Itself Works This Way!</h3>
-        <ul className="space-y-2 text-slate-300 text-sm">
-          <li>• Living cells maintain incredible internal order</li>
-          <li>• They achieve this by eating low-entropy food (ordered chemical bonds)</li>
-          <li>• And excreting high-entropy waste (heat, CO₂, random molecules)</li>
-          <li>• Total entropy of organism + environment always increases</li>
-          <li>• You are a localized island of order in a sea of increasing disorder!</li>
-        </ul>
-      </div>
-
-      <button
-        onPointerDown={(e) => { e.preventDefault(); goToPhase(6); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-teal-500 transition-all duration-300"
-      >
-        Review the Discovery →
-      </button>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-cyan-400 mb-6">Key Discovery</h2>
-
-      <div className="bg-gradient-to-br from-cyan-900/40 to-teal-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-cyan-400 mb-4">Order Can Be Created—At a Cost!</h3>
-        <div className="space-y-4 text-slate-300">
-          <p>
-            The second law doesn't forbid local decreases in entropy. It just demands payment:
-          </p>
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-start gap-2">
-              <span className="text-blue-400">❄️</span>
-              <span><strong>Refrigerator:</strong> Creates cold inside, dumps heat outside</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-green-400">🌱</span>
-              <span><strong>Plant:</strong> Captures low-entropy sunlight, releases O₂ and heat</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-purple-400">🏭</span>
-              <span><strong>Factory:</strong> Creates ordered products, produces waste heat</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-pink-400">🧠</span>
-              <span><strong>Brain:</strong> Thinks ordered thoughts, dissipates 20W of heat</span>
-            </li>
-          </ul>
-          <p className="text-emerald-400 font-medium mt-4">
-            In every case: ΔS_local + ΔS_environment ≥ 0. The bill always gets paid!
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl">
-        <h4 className="text-purple-400 font-semibold mb-2">Free Energy: The Useful Metric</h4>
-        <div className="text-center text-white font-mono text-lg mb-2">
-          G = H - TS
-        </div>
-        <p className="text-slate-400 text-sm">
-          Gibbs free energy (G) combines enthalpy and entropy into one number.
-          Negative ΔG means a process is spontaneous—it will happen on its own!
-        </p>
-      </div>
-
-      <button
-        onPointerDown={(e) => { e.preventDefault(); goToPhase(7); }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300"
-      >
-        Explore Real-World Applications →
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {transferApps.map((app, index) => (
-          <button
-            key={index}
-            onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index
-                ? `bg-gradient-to-r ${app.color} text-white`
-                : completedApps.has(index)
-                ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {app.short}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-3xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-4xl">{transferApps[activeAppTab].icon}</span>
-          <div>
-            <h3 className="text-xl font-bold text-white">{transferApps[activeAppTab].title}</h3>
-            <p className="text-purple-400 text-sm">{transferApps[activeAppTab].tagline}</p>
-          </div>
-        </div>
-
-        <p className="text-slate-300 mb-4">{transferApps[activeAppTab].description}</p>
-
-        <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
-          <h4 className="text-purple-400 font-semibold mb-2">Connection to Entropy:</h4>
-          <p className="text-slate-400 text-sm">{transferApps[activeAppTab].connection}</p>
-        </div>
-
-        <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
-          <h4 className="text-cyan-400 font-semibold mb-2">How It Works:</h4>
-          <p className="text-slate-400 text-sm">{transferApps[activeAppTab].howItWorks}</p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          {transferApps[activeAppTab].stats.map((stat, i) => (
-            <div key={i} className="bg-slate-900/70 rounded-lg p-3 text-center">
-              <div className="text-xl font-bold text-white">{stat.value}</div>
-              <div className="text-xs text-slate-400">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-slate-900/50 rounded-xl p-4">
-            <h4 className="text-emerald-400 font-semibold mb-2">Examples:</h4>
-            <ul className="text-slate-400 text-sm space-y-1">
-              {transferApps[activeAppTab].examples.map((ex, i) => (
-                <li key={i}>• {ex}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-slate-900/50 rounded-xl p-4">
-            <h4 className="text-orange-400 font-semibold mb-2">Key Organizations:</h4>
-            <div className="flex flex-wrap gap-2">
-              {transferApps[activeAppTab].companies.map((company, i) => (
-                <span key={i} className="px-2 py-1 bg-slate-800 rounded text-slate-300 text-xs">{company}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-xl p-4">
-          <h4 className="text-purple-400 font-semibold mb-2">Future Impact:</h4>
-          <p className="text-slate-300 text-sm">{transferApps[activeAppTab].futureImpact}</p>
-        </div>
-
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
-            className="mt-4 w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
-          >
-            ✓ Mark as Explored
-          </button>
-        )}
-      </div>
-
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
-          {transferApps.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`}
-            />
-          ))}
-        </div>
-        <span className="text-slate-400">{completedApps.size}/{transferApps.length}</span>
-      </div>
-
-      {completedApps.size >= transferApps.length && (
         <button
-          onPointerDown={(e) => { e.preventDefault(); goToPhase(8); }}
-          className="mt-6 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-lg font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300 shadow-lg"
+          onClick={() => {
+            playSound('click');
+            nextPhase();
+          }}
+          style={primaryButtonStyle}
         >
-          Take the Knowledge Test →
+          Understand the Discovery
         </button>
-      )}
-    </div>
-  );
 
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+        {renderNavDots()}
+      </div>
+    );
+  }
 
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <div className="bg-slate-900/50 rounded-lg p-3 mb-3">
-                <p className="text-purple-400 text-sm italic">{q.scenario}</p>
+  // TWIST_REVIEW PHASE
+  if (phase === 'twist_review') {
+    const insights = [
+      { icon: '❄️', title: 'Refrigerator', desc: 'Uses work to pump heat from cold to hot. Entropy dumped outside exceeds entropy removed inside.' },
+      { icon: '🌱', title: 'Plant Growth', desc: 'Captures low-entropy sunlight, builds ordered structures, releases heat to environment.' },
+      { icon: '🏭', title: 'Manufacturing', desc: 'Creates ordered products by consuming free energy and generating waste heat.' },
+      { icon: '🧠', title: 'Thinking', desc: 'Your brain maintains order by dissipating ~20W of heat. Thoughts cost entropy!' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px',
+        paddingTop: '48px',
+      }}>
+        {renderProgressBar()}
+
+        <h2 style={{ ...typo.h2, color: '#06B6D4', marginBottom: '8px' }}>
+          The Deep Insight
+        </h2>
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          Phase 7 of 10: Deep Understanding
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '600px',
+          width: '100%',
+          marginBottom: '24px',
+          border: `1px solid #06B6D4`,
+        }}>
+          <h3 style={{ ...typo.h3, color: '#06B6D4', marginBottom: '16px', textAlign: 'center' }}>
+            Order CAN Be Created - At a Cost!
+          </h3>
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            The Second Law doesn't forbid local decreases in entropy. It just demands payment:
+          </p>
+
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {insights.map((item, i) => (
+              <div key={i} style={{
+                display: 'flex',
+                gap: '12px',
+                alignItems: 'flex-start',
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+              }}>
+                <span style={{ fontSize: '24px' }}>{item.icon}</span>
+                <div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{item.title}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{item.desc}</div>
+                </div>
               </div>
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {option.text}
-                  </button>
+            ))}
+          </div>
+
+          <div style={{
+            background: colors.success + '22',
+            borderRadius: '8px',
+            padding: '16px',
+            marginTop: '20px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.success, fontWeight: 600, margin: 0 }}>
+              In every case: Delta S_local + Delta S_environment &gt;= 0
+            </p>
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+              The entropy bill always gets paid!
+            </p>
+          </div>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '20px',
+          maxWidth: '500px',
+          width: '100%',
+          marginBottom: '24px',
+          border: `1px solid ${colors.accent}`,
+          textAlign: 'center',
+        }}>
+          <h4 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>Free Energy: The Useful Metric</h4>
+          <div style={{ fontSize: '24px', fontFamily: 'serif', color: colors.textPrimary, marginBottom: '8px' }}>
+            G = H - TS
+          </div>
+          <p style={{ ...typo.small, color: colors.textSecondary }}>
+            Gibbs free energy (G) combines enthalpy (H) and entropy (S). Negative Delta G means a process is spontaneous - it will happen on its own!
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            playSound('click');
+            nextPhase();
+          }}
+          style={primaryButtonStyle}
+        >
+          Explore Real-World Applications
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px',
+        paddingTop: '48px',
+      }}>
+        {renderProgressBar()}
+
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>
+          Real-World Applications
+        </h2>
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          Phase 8 of 10: Transfer ({completedApps.filter(c => c).length}/4 explored)
+        </p>
+
+        {/* App selector tabs */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          marginBottom: '20px',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}>
+          {realWorldApps.map((a, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedApp(i)}
+              style={{
+                background: selectedApp === i ? app.color : colors.bgCard,
+                color: selectedApp === i ? 'white' : colors.textSecondary,
+                border: `2px solid ${completedApps[i] ? colors.success : selectedApp === i ? app.color : colors.border}`,
+                borderRadius: '12px',
+                padding: '10px 16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>{a.icon}</span>
+              <span>{a.short}</span>
+              {completedApps[i] && <span>✓</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* App content */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '700px',
+          width: '100%',
+          marginBottom: '24px',
+          border: `1px solid ${app.color}44`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '48px' }}>{app.icon}</span>
+            <div>
+              <h3 style={{ ...typo.h3, color: 'white', margin: 0 }}>{app.title}</h3>
+              <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            </div>
+          </div>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            {app.description}
+          </p>
+
+          <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+            <h4 style={{ ...typo.small, color: colors.accent, fontWeight: 700, marginBottom: '8px' }}>Connection to Entropy:</h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.connection}</p>
+          </div>
+
+          <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+            <h4 style={{ ...typo.small, color: '#06B6D4', fontWeight: 700, marginBottom: '8px' }}>How It Works:</h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.howItWorks}</p>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+            {app.stats.map((stat, i) => (
+              <div key={i} style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                <div style={{ ...typo.h3, color: 'white', fontSize: '18px' }}>{stat.value}</div>
+                <div style={{ ...typo.small, color: colors.textMuted, fontSize: '11px' }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Examples & Companies */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+              <h4 style={{ ...typo.small, color: colors.success, fontWeight: 700, marginBottom: '8px' }}>Examples:</h4>
+              <ul style={{ margin: 0, paddingLeft: '16px' }}>
+                {app.examples.map((ex, i) => (
+                  <li key={i} style={{ ...typo.small, color: colors.textMuted, marginBottom: '4px' }}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+              <h4 style={{ ...typo.small, color: colors.warning, fontWeight: 700, marginBottom: '8px' }}>Key Companies:</h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {app.companies.map((company, i) => (
+                  <span key={i} style={{
+                    background: colors.bgCard,
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    ...typo.small,
+                    color: colors.textSecondary,
+                  }}>{company}</span>
                 ))}
               </div>
             </div>
-          ))}
+          </div>
 
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              setShowTestResults(true);
-              playSound('complete');
-              onGameEvent?.({ type: 'test_complete', data: { score: calculateScore() } });
-            }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500'
-            }`}
-          >
-            Submit Answers
-          </button>
+          {/* Future Impact */}
+          <div style={{ background: `${app.color}22`, borderRadius: '8px', padding: '16px' }}>
+            <h4 style={{ ...typo.small, color: app.color, fontWeight: 700, marginBottom: '8px' }}>Future Impact:</h4>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.futureImpact}</p>
+          </div>
+
+          {!completedApps[selectedApp] && (
+            <button
+              onClick={() => {
+                playSound('success');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{
+                width: '100%',
+                marginTop: '16px',
+                background: colors.success,
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '14px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Mark as Explored ✓
+            </button>
+          )}
         </div>
-      ) : (
-        <div className="max-w-2xl w-full">
-          <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
-            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {calculateScore()}/10
+
+        {allCompleted && (
+          <button
+            onClick={() => {
+              playSound('click');
+              nextPhase();
+            }}
+            style={primaryButtonStyle}
+          >
+            Take the Knowledge Test
+          </button>
+        )}
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    const currentQ = testQuestions[currentQuestion];
+    const answeredCount = testAnswers.filter(a => a !== null).length;
+    const allAnswered = answeredCount === 10;
+
+    if (testSubmitted) {
+      const score = testAnswers.reduce((acc, answer, i) => {
+        const correct = testQuestions[i].options.find(o => o.correct)?.id;
+        return acc + (answer === correct ? 1 : 0);
+      }, 0);
+
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '24px',
+          paddingTop: '48px',
+        }}>
+          {renderProgressBar()}
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Test Results
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '32px',
+            textAlign: 'center',
+            marginBottom: '24px',
+            border: `1px solid ${score >= 7 ? colors.success : colors.warning}`,
+          }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>
+              {score >= 9 ? '🏆' : score >= 7 ? '🎉' : score >= 5 ? '📚' : '💪'}
+            </div>
+            <h3 style={{ ...typo.h2, color: score >= 7 ? colors.success : colors.warning, marginBottom: '8px' }}>
+              {score}/10 Correct
             </h3>
-            <p className="text-slate-300 mb-4">
-              {calculateScore() >= 7
-                ? 'Excellent! You understand entropy and the second law!'
-                : 'Keep studying! Review the concepts and try again.'}
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              {score >= 9 ? 'Outstanding! You truly understand entropy!' :
+               score >= 7 ? 'Great job! You have solid understanding!' :
+               score >= 5 ? 'Good effort! Review the concepts and try again.' :
+               'Keep learning! Entropy takes time to master.'}
             </p>
           </div>
 
-          <div className="space-y-4 mb-6">
-            {testQuestions.map((q, qIndex) => {
-              const isCorrect = q.options[testAnswers[qIndex]]?.correct;
+          {/* Review answers */}
+          <div style={{ maxWidth: '600px', width: '100%', marginBottom: '24px' }}>
+            {testQuestions.map((q, i) => {
+              const correct = q.options.find(o => o.correct)?.id;
+              const isCorrect = testAnswers[i] === correct;
               return (
-                <div key={qIndex} className={`rounded-xl p-4 ${isCorrect ? 'bg-emerald-900/30' : 'bg-red-900/30'}`}>
-                  <p className="text-white font-medium mb-2">{qIndex + 1}. {q.question}</p>
-                  <p className={`text-sm ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                    Your answer: {q.options[testAnswers[qIndex]]?.text}
+                <div key={i} style={{
+                  background: colors.bgCard,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '12px',
+                  borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+                }}>
+                  <p style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600, marginBottom: '8px' }}>
+                    {i + 1}. {q.question}
+                  </p>
+                  <p style={{ ...typo.small, color: isCorrect ? colors.success : colors.error, marginBottom: '4px' }}>
+                    Your answer: {q.options.find(o => o.id === testAnswers[i])?.label}
                   </p>
                   {!isCorrect && (
-                    <p className="text-emerald-400 text-sm mt-1">
-                      Correct: {q.options.find(o => o.correct)?.text}
+                    <p style={{ ...typo.small, color: colors.success, marginBottom: '4px' }}>
+                      Correct: {q.options.find(o => o.correct)?.label}
                     </p>
                   )}
-                  <p className="text-slate-400 text-sm mt-2 italic">{q.explanation}</p>
+                  <p style={{ ...typo.small, color: colors.textMuted, fontStyle: 'italic' }}>
+                    {q.explanation}
+                  </p>
                 </div>
               );
             })}
           </div>
 
-          {calculateScore() >= 7 ? (
+          {score >= 7 ? (
             <button
-              onPointerDown={(e) => {
-                e.preventDefault();
-                goToPhase(9);
-                onGameEvent?.({ type: 'mastery_achieved' });
+              onClick={() => {
+                playSound('complete');
+                nextPhase();
               }}
-              className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+              style={primaryButtonStyle}
             >
-              Claim Your Mastery Badge →
+              Claim Your Mastery Badge!
             </button>
           ) : (
             <button
-              onPointerDown={(e) => {
-                e.preventDefault();
-                setShowTestResults(false);
-                setTestAnswers(Array(10).fill(-1));
-                goToPhase(3);
+              onClick={() => {
+                setTestSubmitted(false);
+                setTestAnswers(Array(10).fill(null));
+                setCurrentQuestion(0);
+                goToPhase('review');
               }}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300"
+              style={{
+                ...primaryButtonStyle,
+                background: `linear-gradient(135deg, ${colors.warning}, ${colors.error})`,
+              }}
             >
               Review & Try Again
             </button>
           )}
-        </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-purple-900/50 via-blue-900/50 to-cyan-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">🎲</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Entropy Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">
-          You've mastered entropy and the second law of thermodynamics!
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '24px',
+        paddingTop: '48px',
+      }}>
+        {renderProgressBar()}
+
+        <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>
+          Knowledge Assessment
+        </h2>
+        <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '24px' }}>
+          Question {currentQuestion + 1} of 10 ({answeredCount} answered)
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">📊</div>
-            <p className="text-sm text-slate-300">Microstates</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">⚖️</div>
-            <p className="text-sm text-slate-300">Second Law</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">⏰</div>
-            <p className="text-sm text-slate-300">Arrow of Time</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🔥</div>
-            <p className="text-sm text-slate-300">Free Energy</p>
-          </div>
+        {/* Progress dots */}
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '24px' }}>
+          {testQuestions.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentQuestion(i)}
+              style={{
+                width: currentQuestion === i ? '24px' : '12px',
+                height: '12px',
+                borderRadius: '6px',
+                border: 'none',
+                background: testAnswers[i] !== null ? colors.success : currentQuestion === i ? colors.accent : colors.border,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            />
+          ))}
         </div>
 
-        <div className="bg-slate-800/30 rounded-xl p-4 mb-6">
-          <p className="text-purple-400 font-mono text-lg">S = k<sub>B</sub> ln(Ω)</p>
-          <p className="text-slate-400 text-sm mt-2">You understand disorder!</p>
-        </div>
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '600px',
+          width: '100%',
+          marginBottom: '24px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '8px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, fontStyle: 'italic', margin: 0 }}>
+              {currentQ.scenario}
+            </p>
+          </div>
 
-        <div className="flex gap-4 justify-center">
-          <button
-            onPointerDown={(e) => { e.preventDefault(); goToPhase(0); }}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
-          >
-            ↺ Explore Again
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+          {/* Question */}
+          <p style={{ ...typo.body, color: colors.textPrimary, fontWeight: 600, marginBottom: '16px' }}>
+            {currentQ.question}
+          </p>
 
-  const renderPhase = () => {
-    switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Hook',
-    predict: 'Predict',
-    play: 'Explore',
-    review: 'Review',
-    twist_predict: 'Twist',
-    twist_play: 'Local Order',
-    twist_review: 'Discovery',
-    transfer: 'Apply',
-    test: 'Test',
-    mastery: 'Mastery'
-  };
-
-  const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium Background Layers */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-950/50 via-transparent to-pink-950/50" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
-
-      {/* Ambient Glow Circles */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-3/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-slate-400`}>Entropy</span>
-          <div className="flex gap-1.5 items-center">
-            {phases.map((p, i) => (
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {currentQ.options.map((opt) => (
               <button
-                key={p}
-                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-purple-500 w-6' : phases.indexOf(phase) > i ? 'bg-purple-500 w-2' : 'bg-slate-600 w-2'
-                }`}
-                title={phaseLabels[p]}
-              />
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent + '33' : colors.bgSecondary,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span style={{ color: colors.accent, fontWeight: 700, marginRight: '8px' }}>
+                  {opt.id.toUpperCase()}.
+                </span>
+                <span style={{ color: colors.textPrimary }}>{opt.label}</span>
+              </button>
             ))}
           </div>
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>{phaseLabels[phase]}</span>
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative z-10 pt-14 pb-8">
-        {renderPhase()}
+        {/* Navigation */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+            disabled={currentQuestion === 0}
+            style={{
+              background: colors.bgCard,
+              color: colors.textPrimary,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '12px',
+              padding: '14px 24px',
+              fontWeight: 600,
+              cursor: currentQuestion === 0 ? 'default' : 'pointer',
+              opacity: currentQuestion === 0 ? 0.5 : 1,
+            }}
+          >
+            Previous
+          </button>
+
+          {currentQuestion < 9 ? (
+            <button
+              onClick={() => setCurrentQuestion(Math.min(9, currentQuestion + 1))}
+              style={{
+                background: colors.accent,
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '14px 24px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                if (allAnswered) {
+                  playSound('complete');
+                  const score = testAnswers.reduce((acc, answer, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (answer === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                }
+              }}
+              disabled={!allAnswered}
+              style={{
+                background: allAnswered ? colors.success : colors.textMuted,
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '14px 24px',
+                fontWeight: 600,
+                cursor: allAnswered ? 'pointer' : 'default',
+                opacity: allAnswered ? 1 : 0.5,
+              }}
+            >
+              Submit Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, #1a0a2e 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          background: `linear-gradient(135deg, ${colors.accent}22, #EC489922)`,
+          borderRadius: '24px',
+          padding: '48px 32px',
+          maxWidth: '500px',
+          border: `2px solid ${colors.accent}`,
+          boxShadow: `0 0 60px ${colors.accentGlow}`,
+        }}>
+          <div style={{
+            fontSize: '80px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🎲🏆
+          </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Entropy Master!
+          </h1>
+
+          <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            You have mastered the Second Law of Thermodynamics and understand why disorder always wins!
+          </p>
+
+          {/* Achievement badges */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '16px',
+            marginBottom: '32px',
+          }}>
+            {[
+              { icon: '📊', label: 'Microstates' },
+              { icon: '⚖️', label: 'Second Law' },
+              { icon: '⏰', label: 'Arrow of Time' },
+              { icon: '🔥', label: 'Free Energy' },
+            ].map((badge, i) => (
+              <div key={i} style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '16px',
+                border: `1px solid ${colors.accent}44`,
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>{badge.icon}</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>{badge.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Boltzmann's formula celebration */}
+          <div style={{
+            background: colors.bgSecondary,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ fontSize: '28px', fontFamily: 'serif', color: colors.accent, marginBottom: '8px' }}>
+              S = k<sub>B</sub> ln(Omega)
+            </div>
+            <p style={{ ...typo.small, color: colors.textMuted }}>
+              You understand the most profound equation in thermodynamics!
+            </p>
+          </div>
+
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              background: colors.bgCard,
+              color: colors.textPrimary,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '12px',
+              padding: '14px 28px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Explore Again
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default EntropyRenderer;

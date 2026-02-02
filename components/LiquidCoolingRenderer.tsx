@@ -2,147 +2,291 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+// -----------------------------------------------------------------------------
+// Liquid Cooling Heat Transfer - Complete 10-Phase Game
+// Why water is 25x better at cooling than air
+// -----------------------------------------------------------------------------
 
-interface LiquidCoolingRendererProps {
-  gamePhase?: Phase; // Optional for resume functionality
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-// Phase order and labels for navigation
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Introduction',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Understanding',
-  twist_predict: 'New Variable',
-  twist_play: 'Explore Twist',
-  twist_review: 'Deep Insight',
-  transfer: 'Real World',
-  test: 'Knowledge Test',
-  mastery: 'Mastery'
+interface LiquidCoolingRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A data center engineer needs to cool a 500W GPU. Using air cooling with a flow rate of 100 CFM, the chip runs at 85C. They're considering switching to liquid cooling.",
+    question: "Why would water-based cooling dramatically reduce the chip temperature?",
+    options: [
+      { id: 'a', label: "Water is colder than air at room temperature" },
+      { id: 'b', label: "Water has ~4x higher specific heat capacity, absorbing more energy per unit mass per degree", correct: true },
+      { id: 'c', label: "Water flows faster than air through cooling channels" },
+      { id: 'd', label: "Water is denser, creating more pressure on the chip" }
+    ],
+    explanation: "Water's specific heat capacity (4.18 J/g*K) is about 4x higher than air (1.0 J/g*K). This means water can absorb 4x more thermal energy per gram for each degree of temperature rise. Combined with water's higher density and thermal conductivity, liquid cooling is roughly 25x more effective than air."
+  },
+  {
+    scenario: "An engineer is designing a cold plate for CPU cooling. Water enters at 25C and must remove 300W of heat. The flow rate is 1 L/min (about 16.7 g/s).",
+    question: "What will be the approximate outlet water temperature?",
+    options: [
+      { id: 'a', label: "About 26C (1C rise)" },
+      { id: 'b', label: "About 29C (4C rise)", correct: true },
+      { id: 'c', label: "About 45C (20C rise)" },
+      { id: 'd', label: "About 75C (50C rise)" }
+    ],
+    explanation: "Using Q = m_dot * Cp * deltaT: 300W = 16.7 g/s * 4.18 J/(g*K) * deltaT. Solving: deltaT = 300 / (16.7 * 4.18) = 4.3C. So outlet temperature is approximately 25 + 4 = 29C. Water's high specific heat keeps the temperature rise small."
+  },
+  {
+    scenario: "A gaming PC builder is choosing between a 240mm and 360mm radiator for their custom loop. Both use the same fans and coolant.",
+    question: "Why does the larger radiator provide better cooling?",
+    options: [
+      { id: 'a', label: "It holds more coolant, which stays cooler longer" },
+      { id: 'b', label: "Larger surface area increases heat transfer to air (Q = h*A*deltaT)", correct: true },
+      { id: 'c', label: "Bigger radiators create more water pressure" },
+      { id: 'd', label: "The coolant moves faster through larger radiators" }
+    ],
+    explanation: "Heat transfer from the radiator to air is governed by Q = h*A*deltaT, where A is surface area. A 360mm radiator has 50% more surface area than a 240mm, allowing more heat to be rejected to the air for the same temperature difference."
+  },
+  {
+    scenario: "In a direct-to-chip liquid cooling system, an engineer notices that increasing the flow rate from 0.5 to 2 L/min dramatically improved cooling, but going from 2 to 4 L/min showed diminishing returns.",
+    question: "What explains this diminishing return at higher flow rates?",
+    options: [
+      { id: 'a', label: "The pump can't maintain pressure at higher flows" },
+      { id: 'b', label: "At high flow, thermal resistance at the chip-water interface becomes the limiting factor", correct: true },
+      { id: 'c', label: "Water specific heat decreases at higher velocities" },
+      { id: 'd', label: "Turbulence reduces heat transfer at high flow rates" }
+    ],
+    explanation: "Heat must transfer from chip to cold plate to water. At low flows, the water's capacity to carry heat limits performance. At high flows, the thermal interface (chip-to-cold plate conduction and cold plate-to-water convection) becomes the bottleneck. The total thermal resistance has multiple components in series."
+  },
+  {
+    scenario: "A data center is comparing two cooling approaches: traditional air cooling using CRACs vs. rear-door heat exchangers with chilled water. Both maintain the same inlet air temperature.",
+    question: "What is a key advantage of the rear-door heat exchanger approach?",
+    options: [
+      { id: 'a', label: "It eliminates the need for any air movement" },
+      { id: 'b', label: "Heat is captured at the source before entering the room, reducing CRAC load", correct: true },
+      { id: 'c', label: "Water cooling is always cheaper than air cooling" },
+      { id: 'd', label: "It requires no chilled water infrastructure" }
+    ],
+    explanation: "Rear-door heat exchangers intercept hot exhaust air right at the rack, transferring heat to chilled water before it enters the room. This dramatically reduces the load on room-level cooling (CRACs), can eliminate hot aisles, and improves overall efficiency by capturing heat at a higher temperature differential."
+  },
+  {
+    scenario: "An immersion cooling tank uses 3M Novec fluid instead of water. The servers are completely submerged. An operator notices small bubbles forming on the hottest chips.",
+    question: "What phenomenon is occurring and why is it beneficial?",
+    options: [
+      { id: 'a', label: "Dissolved gas is escaping, which is harmful and should be avoided" },
+      { id: 'b', label: "Two-phase boiling absorbs massive heat via latent heat of vaporization", correct: true },
+      { id: 'c', label: "Chemical decomposition is occurring due to overheating" },
+      { id: 'd', label: "Cavitation is damaging the chip surface" }
+    ],
+    explanation: "Two-phase immersion cooling uses fluids with low boiling points (34-61C). When chips get hot, the fluid boils at the surface. The latent heat of vaporization absorbs enormous energy without temperature increase. For example, water's latent heat (2260 J/g) is 540x its sensible heat for 1C rise."
+  },
+  {
+    scenario: "Tesla's battery thermal management system circulates coolant through channels between battery cells. During DC fast charging at 250kW, the system works overtime to keep cells between 25-35C.",
+    question: "Why is precise temperature control so critical for EV batteries?",
+    options: [
+      { id: 'a', label: "Hot batteries produce more power, but they must be limited for comfort" },
+      { id: 'b', label: "Lithium-ion cells degrade faster outside optimal temperature range and can become unsafe", correct: true },
+      { id: 'c', label: "The coolant itself is damaged by temperatures above 35C" },
+      { id: 'd', label: "Vehicle regulations mandate exact temperature ranges" }
+    ],
+    explanation: "Lithium-ion batteries have an optimal operating window (typically 20-40C). Below this, internal resistance increases, reducing performance. Above this, degradation accelerates exponentially (Arrhenius behavior), reducing battery lifespan. At extreme temperatures, thermal runaway can occur, making cooling safety-critical."
+  },
+  {
+    scenario: "A supercomputer design team is comparing direct-to-chip water cooling vs. full immersion cooling. Both can handle the same heat load.",
+    question: "What is a key advantage of direct-to-chip over immersion cooling?",
+    options: [
+      { id: 'a', label: "Direct-to-chip provides better thermal performance" },
+      { id: 'b', label: "Direct-to-chip allows easy maintenance access and component replacement", correct: true },
+      { id: 'c', label: "Direct-to-chip uses less coolant overall" },
+      { id: 'd', label: "Direct-to-chip eliminates all water leakage risk" }
+    ],
+    explanation: "While immersion cooling can handle very high heat densities, it requires draining tanks and cleaning components for any maintenance. Direct-to-chip systems allow technicians to access, diagnose, and replace components without draining fluid, significantly improving serviceability in production environments."
+  },
+  {
+    scenario: "An engineer is optimizing a liquid cooling loop and wants to reduce the temperature difference between coolant inlet and outlet while maintaining the same heat removal.",
+    question: "According to Q = m_dot * Cp * deltaT, what should they increase?",
+    options: [
+      { id: 'a', label: "The radiator size" },
+      { id: 'b', label: "The coolant flow rate (m_dot)", correct: true },
+      { id: 'c', label: "The coolant inlet temperature" },
+      { id: 'd', label: "The number of cooling loops" }
+    ],
+    explanation: "From Q = m_dot * Cp * deltaT, for constant Q and Cp: deltaT = Q / (m_dot * Cp). Increasing flow rate (m_dot) directly reduces deltaT. This keeps the outlet temperature closer to inlet, improving thermal uniformity across the system."
+  },
+  {
+    scenario: "A new data center is designed with liquid cooling infrastructure that can deliver chilled water at 18C to server racks. Compared to air cooling that requires 15C supply air, this allows higher supply temperatures.",
+    question: "Why can liquid cooling operate with warmer supply temperatures?",
+    options: [
+      { id: 'a', label: "Liquids naturally cool down faster than gases" },
+      { id: 'b', label: "Higher heat transfer coefficient of liquids maintains adequate chip-to-coolant temperature gradient", correct: true },
+      { id: 'c', label: "Water has a higher boiling point than air" },
+      { id: 'd', label: "Liquid systems use more energy-efficient chillers" }
+    ],
+    explanation: "The heat transfer coefficient (h) for liquid convection is typically 100-1000x higher than for air. Since Q = h*A*deltaT, high h allows the same heat transfer with smaller deltaT. This means liquid cooling can use warmer supply temperatures while still maintaining acceptable chip temperatures, enabling free cooling and chiller efficiency gains."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '💻',
     title: 'Data Center Cooling',
-    short: 'Keeping servers running cool',
+    short: 'Keeping AI servers running cool',
     tagline: 'The liquid revolution in computing',
-    description: 'Modern data centers increasingly use liquid cooling to handle the intense heat from AI and high-performance computing. Direct-to-chip liquid cooling can remove 10x more heat than air, enabling denser server deployments and reducing cooling energy by 40%.',
-    connection: 'Water\'s high specific heat (4.18 kJ/kg·K) allows it to carry away much more heat per unit mass than air. The heat transfer equation Q = ṁCpΔT shows why liquid cooling enables higher power densities.',
-    howItWorks: 'Cold plates attach directly to CPUs and GPUs. Chilled water flows through microchannels, absorbing heat. The warm water circulates to cooling towers or heat exchangers. Some systems use immersion cooling where servers are submerged entirely.',
+    description: 'Modern data centers increasingly use liquid cooling to handle intense heat from AI and HPC workloads. Direct-to-chip cooling can remove 10x more heat than air, enabling denser server deployments.',
+    connection: "Water's high specific heat (4.18 kJ/kg*K) allows it to carry away much more heat per unit mass than air. The heat transfer equation Q = m_dot*Cp*deltaT shows why liquid cooling enables higher power densities.",
+    howItWorks: 'Cold plates attach directly to CPUs and GPUs. Chilled water flows through microchannels, absorbing heat. The warm water circulates to cooling towers or heat exchangers. Some systems use immersion where servers are fully submerged.',
     stats: [
-      { value: '1000 W/chip', label: 'Cooling capacity', icon: '⚡' },
+      { value: '1000W/chip', label: 'Cooling capacity', icon: '⚡' },
       { value: '40%', label: 'Energy savings', icon: '📈' },
-      { value: '$20B', label: 'DC cooling market', icon: '🚀' }
+      { value: '$25B', label: 'DC cooling market', icon: '💰' }
     ],
     examples: ['Microsoft Azure liquid cooling', 'Google TPU cooling', 'NVIDIA DGX systems', 'Meta AI clusters'],
     companies: ['Asetek', 'CoolIT', 'GRC', 'LiquidCool Solutions'],
-    futureImpact: 'Two-phase immersion cooling using engineered fluids will enable chip power densities exceeding 2000 W while recovering waste heat for building heating.',
+    futureImpact: 'Two-phase immersion cooling using engineered fluids will enable chip power densities exceeding 2000W while recovering waste heat for building heating.',
     color: '#3B82F6'
   },
   {
     icon: '🚗',
     title: 'EV Battery Thermal Management',
-    short: 'Keeping batteries in the zone',
-    tagline: 'Temperature equals range',
-    description: 'Electric vehicle batteries perform best between 20-40°C. Liquid cooling systems circulate glycol through cooling plates between cells, managing heat during fast charging and high-power driving while also warming batteries in cold weather.',
-    connection: 'The convective heat transfer equation governs battery cooling. Flow rate, coolant properties, and temperature differential determine how fast heat can be removed—critical during DC fast charging.',
+    short: 'Keeping batteries in the optimal zone',
+    tagline: 'Temperature equals range and lifespan',
+    description: 'Electric vehicle batteries perform best between 20-40C. Liquid cooling systems circulate glycol through cooling plates between cells, managing heat during fast charging and high-power driving.',
+    connection: 'The convective heat transfer equation governs battery cooling. Flow rate, coolant properties, and temperature differential determine how quickly heat can be removed - critical during 250kW DC fast charging.',
     howItWorks: 'Cooling plates with serpentine channels sandwich battery modules. A pump circulates coolant to a heat exchanger or chiller. Intelligent controls balance cooling power against pump energy. Cold weather operation reverses flow through a heater.',
     stats: [
-      { value: '250 kW', label: 'Charging power', icon: '⚡' },
+      { value: '250kW', label: 'Charging power', icon: '⚡' },
       { value: '30%', label: 'Range improvement', icon: '📈' },
-      { value: '$45B', label: 'EV thermal market', icon: '🚀' }
+      { value: '$50B', label: 'EV thermal market', icon: '💰' }
     ],
     examples: ['Tesla battery packs', 'Rivian thermal system', 'Porsche Taycan 800V', 'Lucid Air cooling'],
     companies: ['Tesla', 'Rivian', 'Hanon Systems', 'Valeo'],
-    futureImpact: 'Immersive cell cooling and thermal interface materials will enable safe 500 kW charging, achieving 80% charge in under 10 minutes.',
+    futureImpact: 'Immersive cell cooling and advanced thermal interface materials will enable safe 500kW charging, achieving 80% charge in under 10 minutes.',
     color: '#10B981'
   },
   {
     icon: '🔬',
     title: 'Superconductor Cooling',
     short: 'Reaching near absolute zero',
-    tagline: 'Where resistance vanishes',
-    description: 'Superconducting systems like MRI machines and particle accelerators require cooling to cryogenic temperatures. Liquid helium at 4.2K or high-temperature superconductor systems at 77K use liquid nitrogen—both leveraging the exceptional heat capacity of cryogenic fluids.',
-    connection: 'Cryogenic cooling applies the same heat transfer principles at extreme temperatures. Latent heat of vaporization provides high cooling capacity. Maintaining temperature stability requires careful thermal management.',
-    howItWorks: 'Superconducting magnets sit in liquid helium baths. Cryocoolers recondense boiled helium. Multi-layer insulation minimizes heat leak from the room-temperature environment. Some systems use closed-loop circulation of subcooled helium.',
+    tagline: 'Where electrical resistance vanishes',
+    description: 'Superconducting systems like MRI machines and particle accelerators require cooling to cryogenic temperatures. Liquid helium at 4.2K or liquid nitrogen at 77K provide the extreme cooling needed.',
+    connection: 'Cryogenic cooling applies the same heat transfer principles at extreme temperatures. Latent heat of vaporization provides enormous cooling capacity. Maintaining temperature stability requires careful thermal management of multiple heat leak sources.',
+    howItWorks: 'Superconducting magnets sit in liquid helium baths. Cryocoolers recondense boiled helium. Multi-layer insulation minimizes heat leak from room temperature. Some systems use closed-loop circulation of subcooled helium.',
     stats: [
-      { value: '4.2K', label: 'LHe temperature', icon: '⚡' },
-      { value: '1500L', label: 'MRI helium', icon: '📈' },
-      { value: '$8B', label: 'Cryogenics market', icon: '🚀' }
+      { value: '4.2K', label: 'LHe temperature', icon: '❄️' },
+      { value: '1500L', label: 'MRI helium', icon: '🧊' },
+      { value: '$10B', label: 'Cryogenics market', icon: '💰' }
     ],
     examples: ['MRI scanners', 'LHC superconducting magnets', 'Fusion reactor magnets', 'Quantum computers'],
     companies: ['Linde', 'Air Liquide', 'Bruker', 'Oxford Instruments'],
-    futureImpact: 'High-temperature superconductors will reduce cooling requirements, making fusion power and levitating transport more practical.',
+    futureImpact: 'High-temperature superconductors operating at 77K (liquid nitrogen) will dramatically reduce cooling requirements, making fusion power and maglev transport more practical.',
     color: '#8B5CF6'
   },
   {
     icon: '🎮',
     title: 'Gaming PC Cooling',
-    short: 'Maximum performance for gamers',
-    tagline: 'Enthusiast builds run cool',
-    description: 'High-end gaming PCs use custom liquid cooling loops to handle 500+ watts from overclocked CPUs and GPUs. Larger radiators, higher flow rates, and better thermal paste enable extreme performance while keeping temperatures under control.',
-    connection: 'Custom loops demonstrate heat transfer fundamentals. Radiator surface area, fan airflow, coolant flow rate, and temperature differential all appear in the cooling performance equation.',
+    short: 'Maximum performance for enthusiasts',
+    tagline: 'Custom loops for extreme builds',
+    description: 'High-end gaming PCs use custom liquid cooling loops to handle 500+ watts from overclocked CPUs and GPUs. Larger radiators, higher flow rates, and premium thermal paste enable peak performance.',
+    connection: 'Custom loops demonstrate heat transfer fundamentals clearly. Radiator surface area, fan airflow, coolant flow rate, and temperature differential all appear in the cooling performance equation.',
     howItWorks: 'A pump circulates coolant through water blocks on CPU and GPU. Heat transfers through copper bases into the coolant. Radiators with large surface area and fans reject heat to room air. Reservoirs aid in filling and monitoring.',
     stats: [
-      { value: '500 W+', label: 'Heat dissipation', icon: '⚡' },
-      { value: '20°C', label: 'Temp reduction', icon: '📈' },
-      { value: '$5B', label: 'PC cooling market', icon: '🚀' }
+      { value: '600W+', label: 'Heat dissipation', icon: '🔥' },
+      { value: '20C', label: 'Temp reduction', icon: '📉' },
+      { value: '$6B', label: 'PC cooling market', icon: '💰' }
     ],
     examples: ['Custom hardline builds', 'AIO liquid coolers', 'EKWB loop kits', 'Overclocker competition rigs'],
     companies: ['EKWB', 'Corsair', 'NZXT', 'Alphacool'],
-    futureImpact: 'Factory-sealed modular systems will bring custom loop performance to mainstream PCs without the complexity of building loops.',
+    futureImpact: 'Factory-sealed modular systems will bring custom loop performance to mainstream PCs without the complexity of building and maintaining open loops.',
     color: '#EF4444'
   }
 ];
 
-const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({
-  gamePhase,
-  onCorrectAnswer,
-  onIncorrectAnswer
-}) => {
-  // Internal phase state management
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
   const getInitialPhase = (): Phase => {
-    if (gamePhase && phaseOrder.includes(gamePhase)) {
-      return gamePhase;
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
     }
     return 'hook';
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+  const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Game-specific state
-  const [coolantType, setCoolantType] = useState<'air' | 'water' | 'oil' | 'twophase'>('water');
+  // Simulation state
+  const [coolantType, setCoolantType] = useState<'air' | 'water' | 'oil'>('water');
   const [flowRate, setFlowRate] = useState(5); // L/min
   const [heatLoad, setHeatLoad] = useState(500); // Watts
   const [inletTemp, setInletTemp] = useState(25); // Celsius
-  const [showFlowMode, setShowFlowMode] = useState<'laminar' | 'turbulent'>('turbulent');
   const [animationFrame, setAnimationFrame] = useState(0);
 
-  const lastClickRef = useRef(0);
+  // Twist phase - two-phase cooling
+  const [useTwoPhase, setUseTwoPhase] = useState(false);
+  const [twistHeatLoad, setTwistHeatLoad] = useState(500);
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
   const isNavigating = useRef(false);
 
-  // Sync phase with gamePhase prop changes (for resume functionality)
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
-      setPhase(gamePhase);
-    }
-  }, [gamePhase, phase]);
-
-  // Check for mobile
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -150,20 +294,7 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
+  // Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 360);
@@ -171,994 +302,1537 @@ const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
-
   // Coolant properties
-  const coolantProps: Record<string, { cp: number; k: number; name: string; color: string; hMultiplier: number }> = {
-    air: { cp: 1.005, k: 0.026, name: 'Air', color: '#94a3b8', hMultiplier: 1 },
-    water: { cp: 4.186, k: 0.60, name: 'Water', color: '#3b82f6', hMultiplier: 25 },
-    oil: { cp: 2.0, k: 0.15, name: 'Mineral Oil', color: '#eab308', hMultiplier: 8 },
-    twophase: { cp: 100, k: 0.80, name: 'Two-Phase (3M Novec)', color: '#a855f7', hMultiplier: 100 } // Effective Cp with phase change
+  const coolantProps: Record<string, { cp: number; k: number; density: number; name: string; color: string }> = {
+    air: { cp: 1.005, k: 0.026, density: 1.2, name: 'Air', color: '#94a3b8' },
+    water: { cp: 4.186, k: 0.60, density: 1000, name: 'Water', color: '#3b82f6' },
+    oil: { cp: 2.0, k: 0.15, density: 900, name: 'Mineral Oil', color: '#eab308' },
   };
 
   // Calculate heat transfer metrics
   const calcCoolingMetrics = useCallback(() => {
     const props = coolantProps[coolantType];
-    const massFlowRate = flowRate * 0.001 / 60; // Convert L/min to kg/s (approx for water)
+    // Convert L/min to kg/s
+    const volumeFlowRate = flowRate / 60000; // m^3/s
+    const massFlowRate = volumeFlowRate * props.density; // kg/s
 
     // Q = m_dot * Cp * deltaT -> deltaT = Q / (m_dot * Cp)
-    // For air, need to account for much lower density
-    const densityFactor = coolantType === 'air' ? 0.001 : 1;
-    const effectiveMassFlow = massFlowRate * densityFactor * 1000;
-
-    const deltaT = heatLoad / (effectiveMassFlow * props.cp * 1000);
+    const deltaT = heatLoad / (massFlowRate * props.cp * 1000);
     const outletTemp = inletTemp + deltaT;
 
-    // Heat transfer coefficient (simplified)
-    const flowFactor = showFlowMode === 'turbulent' ? 3 : 1;
-    const heatTransferCoeff = props.hMultiplier * flowFactor * 100; // W/(m2*K)
-
-    // Relative cooling capacity
-    const coolingCapacity = effectiveMassFlow * props.cp;
-    const maxCoolingCapacity = 10 * 4.186; // Reference: 10 L/min water
-    const relativeCapacity = (coolingCapacity / maxCoolingCapacity) * 100;
+    // Relative cooling effectiveness (normalized to water at 5 L/min)
+    const waterBaseline = (5 / 60000) * 1000 * 4.186 * 1000;
+    const currentCapacity = massFlowRate * props.cp * 1000;
+    const relativeCapacity = (currentCapacity / waterBaseline) * 100;
 
     return {
-      deltaT: Math.min(deltaT, 100),
-      outletTemp: Math.min(outletTemp, 125),
-      heatTransferCoeff,
-      relativeCapacity: Math.min(relativeCapacity, 200),
+      deltaT: Math.min(deltaT, 200),
+      outletTemp: Math.min(outletTemp, 225),
+      relativeCapacity: Math.min(relativeCapacity, 300),
       coolantName: props.name,
       coolantColor: props.color,
-      thermalConductivity: props.k,
-      specificHeat: props.cp
+      specificHeat: props.cp,
+      massFlowRate: massFlowRate * 1000 // g/s
     };
-  }, [coolantType, flowRate, heatLoad, inletTemp, showFlowMode]);
+  }, [coolantType, flowRate, heatLoad, inletTemp]);
 
   const metrics = calcCoolingMetrics();
 
-  // Navigation functions
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#3B82F6', // Blue for liquid/water
+    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Two-Phase',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
   const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
     if (isNavigating.current) return;
-
-    lastClickRef.current = now;
     isNavigating.current = true;
-
-    setPhase(p);
     playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'liquid-cooling',
+        gameTitle: 'Liquid Cooling Heat Transfer',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-    setTimeout(() => { isNavigating.current = false; }, 400);
-  }, [playSound]);
-
-  const goToNextPhase = useCallback(() => {
+  const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase]);
-
-  const goToPrevPhase = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phaseOrder[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
-
-  // Premium color palette
-  const colors = {
-    primary: '#a855f7', // purple-500
-    primaryDark: '#9333ea', // purple-600
-    accent: '#3b82f6', // blue-500
-    success: '#10b981', // emerald-500
-    bgDark: '#020617', // slate-950
-    bgCard: '#0f172a', // slate-900
-    bgCardLight: '#1e293b', // slate-800
-    border: '#334155', // slate-700
-    textPrimary: '#f8fafc', // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b', // slate-500
-  };
-
-  // Progress bar renderer
-  const renderProgressBar = () => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isMobile ? '8px 12px' : '10px 16px',
-        backgroundColor: colors.bgCard,
-        borderBottom: `1px solid ${colors.border}`,
-        gap: '8px'
-      }}>
-        {/* Back button */}
-        <button
-          onClick={goToPrevPhase}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
-            border: currentIdx > 0 ? `1px solid ${colors.border}` : '1px solid transparent',
-            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
-            cursor: currentIdx > 0 ? 'pointer' : 'default',
-            opacity: currentIdx > 0 ? 1 : 0.4,
-          }}
-        >
-          <span style={{ fontSize: '14px' }}>&#8592;</span>
-        </button>
-
-        {/* Progress dots */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
-          {phaseOrder.map((p, i) => (
-            <button
-              key={p}
-              onClick={() => i <= currentIdx && goToPhase(p)}
-              style={{
-                width: i === currentIdx ? '20px' : '10px',
-                height: '10px',
-                borderRadius: '5px',
-                border: 'none',
-                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-                opacity: i > currentIdx ? 0.5 : 1
-              }}
-              title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
-            />
-          ))}
-        </div>
-
-        {/* Phase counter */}
-        <span style={{
-          fontSize: '11px',
-          fontWeight: 700,
-          color: colors.primary,
-          padding: '4px 8px',
-          borderRadius: '6px',
-          backgroundColor: `${colors.primary}15`
-        }}>
-          {currentIdx + 1}/{phaseOrder.length}
-        </span>
-      </div>
-    );
-  };
-
-  // Bottom navigation bar renderer
-  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    const canGoBack = currentIdx > 0;
-
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: isMobile ? '12px' : '12px 16px',
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: '12px'
-      }}>
-        <button
-          onClick={goToPrevPhase}
-          style={{
-            padding: isMobile ? '10px 16px' : '10px 20px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontSize: isMobile ? '13px' : '14px',
-            backgroundColor: colors.bgCardLight,
-            color: colors.textSecondary,
-            border: `1px solid ${colors.border}`,
-            cursor: canGoBack ? 'pointer' : 'not-allowed',
-            opacity: canGoBack ? 1 : 0.3,
-            minHeight: '44px'
-          }}
-          disabled={!canGoBack}
-        >
-          &#8592; Back
-        </button>
-
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
-          {phaseLabels[phase]}
-        </span>
-
-        <button
-          onClick={goToNextPhase}
-          style={{
-            padding: isMobile ? '10px 20px' : '10px 24px',
-            borderRadius: '10px',
-            fontWeight: 700,
-            fontSize: isMobile ? '13px' : '14px',
-            background: canGoNext ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
-            border: 'none',
-            cursor: canGoNext ? 'pointer' : 'not-allowed',
-            opacity: canGoNext ? 1 : 0.4,
-            boxShadow: canGoNext ? `0 2px 12px ${colors.primary}30` : 'none',
-            minHeight: '44px'
-          }}
-          disabled={!canGoNext}
-        >
-          {nextLabel} &#8594;
-        </button>
-      </div>
-    );
-  };
-
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-    playSound(prediction === 'C' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-    playSound(prediction === 'B' ? 'success' : 'failure');
-  }, [playSound]);
-
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-  }, [playSound]);
-
-  const testQuestions = [
-    { question: "Water's specific heat capacity is approximately:", options: [{ text: "1.0 J/(g*K)", correct: false }, { text: "4.2 J/(g*K)", correct: true }, { text: "0.24 J/(g*K)", correct: false }, { text: "10 J/(g*K)", correct: false }] },
-    { question: "Why is water ~25x better than air for cooling?", options: [{ text: "Water is colder", correct: false }, { text: "Higher specific heat and thermal conductivity", correct: true }, { text: "Water is blue", correct: false }, { text: "Water flows faster", correct: false }] },
-    { question: "The heat transfer formula Q = m_dot * Cp * deltaT shows that:", options: [{ text: "Higher flow rate allows lower deltaT for same heat removal", correct: true }, { text: "Temperature doesn't affect heat transfer", correct: false }, { text: "Mass flow doesn't matter", correct: false }, { text: "Only Cp matters", correct: false }] },
-    { question: "Thermal conductivity (k) measures:", options: [{ text: "How fast a fluid flows", correct: false }, { text: "How well heat conducts through a material", correct: true }, { text: "The color of the coolant", correct: false }, { text: "The pressure drop", correct: false }] },
-    { question: "Turbulent flow is better for heat transfer because:", options: [{ text: "It's quieter", correct: false }, { text: "It mixes the fluid, breaking up thermal boundary layers", correct: true }, { text: "It uses less energy", correct: false }, { text: "It's more predictable", correct: false }] },
-    { question: "Two-phase cooling (boiling) is superior because:", options: [{ text: "It looks cool", correct: false }, { text: "Latent heat of vaporization absorbs massive energy at constant temp", correct: true }, { text: "It's cheaper", correct: false }, { text: "It's simpler", correct: false }] },
-    { question: "Direct-to-chip liquid cooling involves:", options: [{ text: "Submerging the whole server in liquid", correct: false }, { text: "Cold plates attached directly to CPUs/GPUs with liquid flowing through", correct: true }, { text: "Spraying liquid on the motherboard", correct: false }, { text: "Using liquid-filled heatsinks with no flow", correct: false }] },
-    { question: "Immersion cooling uses:", options: [{ text: "Water sprayed on servers", correct: false }, { text: "Servers submerged in dielectric (non-conductive) fluid", correct: true }, { text: "Ice blocks in the data center", correct: false }, { text: "Liquid nitrogen", correct: false }] },
-    { question: "The Reynolds number determines:", options: [{ text: "The color of the fluid", correct: false }, { text: "Whether flow is laminar or turbulent", correct: true }, { text: "The temperature of the fluid", correct: false }, { text: "The cost of cooling", correct: false }] },
-    { question: "Heat pipes work by:", options: [{ text: "Pumping water through tubes", correct: false }, { text: "Using capillary action and phase change to move heat with no pump", correct: true }, { text: "Using fans inside the pipe", correct: false }, { text: "Conducting heat through solid copper", correct: false }] }
-  ];
-
-  const applications = [
-    { title: "Direct-to-Chip Cooling", icon: "💧", description: "Cold plates on CPUs/GPUs with circulating water can handle 300-1000W per chip. Used by IBM, Dell, and others for HPC.", details: "Water carries 25x more heat than air per volume - enabling denser server racks." },
-    { title: "Immersion Cooling", icon: "🛁", description: "Servers fully submerged in dielectric fluid (like 3M Novec). All components cooled simultaneously.", details: "Enables PUE below 1.05 and can handle 100kW+ per rack!" },
-    { title: "Rear-Door Heat Exchangers", icon: "🚪", description: "Liquid-cooled doors on rack backs capture heat before it enters the room. Retrofit-friendly.", details: "Can capture 50-100% of rack heat without modifying servers." },
-    { title: "Two-Phase Immersion", icon: "🔥", description: "Dielectric fluid boils at chip surface, vapor rises, condenses, and drips back. No pumps needed!", details: "Boiling provides incredibly high heat transfer coefficients." }
-  ];
-
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
+  }, [phase, goToPhase, phaseOrder]);
 
   const getTempColor = (temp: number) => {
-    if (temp < 40) return '#22c55e';
-    if (temp < 60) return '#eab308';
+    if (temp < 40) return colors.success;
+    if (temp < 60) return colors.warning;
     if (temp < 80) return '#f97316';
-    return '#ef4444';
+    return colors.error;
   };
 
-  const renderLiquidCoolingVisualization = () => {
+  // Liquid Cooling Visualization SVG Component
+  const LiquidCoolingVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 320 : 380;
     const props = coolantProps[coolantType];
 
     return (
-      <svg viewBox="0 0 500 320" className="w-full max-w-2xl mx-auto">
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          <linearGradient id="coolantGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={props.color} stopOpacity="0.8" />
-            <stop offset="100%" stopColor={getTempColor(metrics.outletTemp)} stopOpacity="0.8" />
-          </linearGradient>
           <linearGradient id="heatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#dc2626" />
             <stop offset="100%" stopColor="#fbbf24" />
           </linearGradient>
+          <filter id="glowFilter">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
-        {/* Heat source (CPU/GPU) */}
-        <rect x="180" y="100" width="140" height="80" fill="url(#heatGrad)" stroke="#ef4444" strokeWidth="2" rx="5" />
-        <text x="250" y="130" textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">Heat Source</text>
-        <text x="250" y="150" textAnchor="middle" fontSize="14" fill="white">{heatLoad}W</text>
-        <text x="250" y="170" textAnchor="middle" fontSize="10" fill="white">{metrics.outletTemp.toFixed(1)}C surface</text>
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Liquid Cooling Heat Transfer
+        </text>
 
-        {/* Cold plate / cooling block */}
-        <rect x="170" y="80" width="160" height="20" fill="#374151" stroke="#4b5563" strokeWidth="2" rx="3" />
-        <text x="250" y="95" textAnchor="middle" fontSize="10" fill="#e5e7eb">Cold Plate</text>
+        {/* Heat source (CPU/GPU) */}
+        <g transform={`translate(${width/2 - 70}, 50)`}>
+          <rect x="0" y="40" width="140" height="70" fill="url(#heatGrad)" stroke="#ef4444" strokeWidth="2" rx="5" />
+          <text x="70" y="65" textAnchor="middle" fontSize="11" fill="white" fontWeight="bold">Heat Source</text>
+          <text x="70" y="85" textAnchor="middle" fontSize="16" fill="white" fontWeight="bold">{heatLoad}W</text>
+          <text x="70" y="102" textAnchor="middle" fontSize="10" fill="white">Surface Temp: {Math.min(metrics.outletTemp + 15, 150).toFixed(0)}C</text>
+
+          {/* Cold plate on top */}
+          <rect x="-10" y="20" width="160" height="20" fill="#374151" stroke="#4b5563" strokeWidth="2" rx="3" />
+          <text x="70" y="34" textAnchor="middle" fontSize="9" fill="#e5e7eb">Cold Plate</text>
+        </g>
 
         {/* Inlet pipe */}
-        <path d="M50,90 L170,90" stroke={props.color} strokeWidth="12" fill="none" strokeLinecap="round" />
-        <text x="110" y="75" textAnchor="middle" fontSize="10" fill={props.color}>Inlet {inletTemp}C</text>
-
-        {/* Coolant flow animation - inlet */}
-        {[...Array(5)].map((_, i) => {
-          const x = 60 + ((animationFrame * (flowRate / 3) + i * 25) % 110);
-          return (
-            <circle key={`in-${i}`} cx={x} cy={90} r={4} fill="white" opacity={0.6} />
-          );
-        })}
+        <g>
+          <line x1="30" y1="80" x2={width/2 - 80} y2="80" stroke={props.color} strokeWidth="14" strokeLinecap="round" />
+          <text x="60" y="65" textAnchor="middle" fontSize="10" fill={props.color} fontWeight="600">IN {inletTemp}C</text>
+          {/* Flow particles */}
+          {[...Array(4)].map((_, i) => {
+            const x = 40 + ((animationFrame * (flowRate / 3) + i * 30) % (width/2 - 120));
+            return <circle key={`in-${i}`} cx={x} cy={80} r={4} fill="white" opacity={0.7} />;
+          })}
+        </g>
 
         {/* Outlet pipe */}
-        <path d="M330,90 L450,90" stroke={getTempColor(metrics.outletTemp)} strokeWidth="12" fill="none" strokeLinecap="round" />
-        <text x="390" y="75" textAnchor="middle" fontSize="10" fill={getTempColor(metrics.outletTemp)}>Outlet {metrics.outletTemp.toFixed(1)}C</text>
+        <g>
+          <line x1={width/2 + 80} y1="80" x2={width - 30} y2="80" stroke={getTempColor(metrics.outletTemp)} strokeWidth="14" strokeLinecap="round" />
+          <text x={width - 60} y="65" textAnchor="middle" fontSize="10" fill={getTempColor(metrics.outletTemp)} fontWeight="600">OUT {metrics.outletTemp.toFixed(1)}C</text>
+          {/* Flow particles */}
+          {[...Array(4)].map((_, i) => {
+            const x = width/2 + 90 + ((animationFrame * (flowRate / 3) + i * 30) % (width/2 - 120));
+            return <circle key={`out-${i}`} cx={x} cy={80} r={4} fill="white" opacity={0.7} />;
+          })}
+        </g>
 
-        {/* Coolant flow animation - outlet */}
-        {[...Array(5)].map((_, i) => {
-          const x = 340 + ((animationFrame * (flowRate / 3) + i * 25) % 110);
-          return (
-            <circle key={`out-${i}`} cx={x} cy={90} r={4} fill="white" opacity={0.6} />
-          );
-        })}
-
-        {/* Two-phase bubbles if applicable */}
-        {coolantType === 'twophase' && (
-          <>
-            {[...Array(8)].map((_, i) => {
-              const x = 190 + (i % 4) * 35;
-              const y = 85 - ((animationFrame + i * 15) % 30);
-              const size = 3 + Math.sin(animationFrame / 10 + i) * 2;
-              return (
-                <circle key={`bubble-${i}`} cx={x} cy={y} r={size} fill="white" opacity={0.7} />
-              );
-            })}
-            <text x="250" y="65" textAnchor="middle" fontSize="9" fill="#a855f7">Boiling at surface!</text>
-          </>
-        )}
-
-        {/* Flow pattern visualization */}
-        <rect x="40" y="200" width="180" height="100" fill="#1f2937" rx="5" />
-        <text x="130" y="220" textAnchor="middle" fontSize="11" fill="#e5e7eb" fontWeight="bold">Flow Pattern</text>
-
-        {showFlowMode === 'laminar' ? (
-          <>
-            {[0, 1, 2, 3, 4].map(i => (
-              <path key={i} d={`M60,${240 + i * 12} L200,${240 + i * 12}`} stroke={props.color} strokeWidth="2" opacity={0.6} />
-            ))}
-            <text x="130" y="295" textAnchor="middle" fontSize="10" fill="#9ca3af">Laminar: Parallel layers, poor mixing</text>
-          </>
-        ) : (
-          <>
-            {[0, 1, 2, 3, 4].map(i => {
-              const offset = Math.sin(animationFrame / 5 + i) * 10;
-              return (
-                <path
-                  key={i}
-                  d={`M60,${250 + i * 8} Q100,${250 + i * 8 + offset} 130,${250 + i * 8} Q160,${250 + i * 8 - offset} 200,${250 + i * 8}`}
-                  stroke={props.color}
-                  strokeWidth="2"
-                  fill="none"
-                  opacity={0.6}
-                />
-              );
-            })}
-            <text x="130" y="295" textAnchor="middle" fontSize="10" fill="#22c55e">Turbulent: Mixing improves heat transfer!</text>
-          </>
-        )}
+        {/* Formula box */}
+        <g transform={`translate(${width/2 - 100}, 145)`}>
+          <rect x="0" y="0" width="200" height="45" rx="8" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="1" />
+          <text x="100" y="18" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="700">Q = m_dot x Cp x deltaT</text>
+          <text x="100" y="36" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+            {heatLoad}W = {metrics.massFlowRate.toFixed(1)}g/s x {metrics.specificHeat.toFixed(2)} x {metrics.deltaT.toFixed(1)}C
+          </text>
+        </g>
 
         {/* Metrics panel */}
-        <rect x="260" y="200" width="220" height="100" fill="#1f2937" rx="5" />
-        <text x="370" y="220" textAnchor="middle" fontSize="11" fill="#e5e7eb" fontWeight="bold">{metrics.coolantName} Properties</text>
-        <text x="270" y="240" fontSize="10" fill="#9ca3af">Specific Heat: {metrics.specificHeat.toFixed(2)} J/(g*K)</text>
-        <text x="270" y="258" fontSize="10" fill="#9ca3af">Conductivity: {metrics.thermalConductivity.toFixed(3)} W/(m*K)</text>
-        <text x="270" y="276" fontSize="10" fill="#9ca3af">Heat Transfer: {metrics.heatTransferCoeff.toFixed(0)} W/(m2*K)</text>
-        <text x="270" y="294" fontSize="10" fill={metrics.relativeCapacity > 100 ? '#22c55e' : metrics.relativeCapacity > 50 ? '#eab308' : '#ef4444'}>
-          Relative Capacity: {metrics.relativeCapacity.toFixed(0)}%
-        </text>
+        <g transform={`translate(20, 205)`}>
+          <rect x="0" y="0" width={width - 40} height="80" rx="8" fill={colors.bgSecondary} />
 
-        {/* Formula */}
-        <text x="250" y="30" textAnchor="middle" fontSize="12" fill="#22d3ee" fontWeight="bold">Q = m_dot x Cp x deltaT</text>
-        <text x="250" y="50" textAnchor="middle" fontSize="10" fill="#9ca3af">
-          {heatLoad}W = flow x {metrics.specificHeat.toFixed(1)} x {metrics.deltaT.toFixed(1)}C
-        </text>
+          <g transform="translate(20, 15)">
+            <text x="0" y="12" fill={colors.textMuted} fontSize="10">Coolant</text>
+            <text x="0" y="30" fill={props.color} fontSize="16" fontWeight="700">{props.name}</text>
+            <text x="0" y="48" fill={colors.textMuted} fontSize="10">Cp = {props.cp.toFixed(2)} J/(g*K)</text>
+          </g>
+
+          <g transform={`translate(${(width-40)/3}, 15)`}>
+            <text x="0" y="12" fill={colors.textMuted} fontSize="10">Temp Rise</text>
+            <text x="0" y="30" fill={getTempColor(metrics.outletTemp)} fontSize="16" fontWeight="700">{metrics.deltaT.toFixed(1)}C</text>
+            <text x="0" y="48" fill={colors.textMuted} fontSize="10">deltaT = Q/(m*Cp)</text>
+          </g>
+
+          <g transform={`translate(${2*(width-40)/3}, 15)`}>
+            <text x="0" y="12" fill={colors.textMuted} fontSize="10">Cooling Capacity</text>
+            <text x="0" y="30" fill={metrics.relativeCapacity > 80 ? colors.success : colors.warning} fontSize="16" fontWeight="700">{metrics.relativeCapacity.toFixed(0)}%</text>
+            <text x="0" y="48" fill={colors.textMuted} fontSize="10">vs water baseline</text>
+          </g>
+        </g>
+
+        {/* Comparison bar */}
+        <g transform={`translate(20, 300)`}>
+          <text x="0" y="12" fill={colors.textMuted} fontSize="10">Cooling Effectiveness Comparison:</text>
+          <rect x="0" y="20" width={width - 40} height="12" rx="6" fill={colors.border} />
+          <rect x="0" y="20" width={Math.min((width - 40) * (metrics.relativeCapacity / 200), width - 40)} height="12" rx="6" fill={props.color} />
+          <text x={(width-40)/4} y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">Air (1x)</text>
+          <text x={(width-40)/2} y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">Oil (8x)</text>
+          <text x={3*(width-40)/4} y="50" textAnchor="middle" fill={colors.textMuted} fontSize="9">Water (25x)</text>
+        </g>
       </svg>
     );
   };
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-purple-400 tracking-wide">DATA CENTER PHYSICS</span>
+  // Two-Phase Visualization for twist phase
+  const TwoPhaseVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 320;
+
+    const singlePhaseDeltaT = twistHeatLoad / ((5 / 60000) * 1000 * 4.186 * 1000);
+    const twoPhaseDeltaT = useTwoPhase ? twistHeatLoad / ((5 / 60000) * 1000 * 100 * 1000) : singlePhaseDeltaT; // Effective Cp with latent heat
+
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          {useTwoPhase ? 'Two-Phase (Boiling) Cooling' : 'Single-Phase Liquid Cooling'}
+        </text>
+
+        {/* Heat source with cooling */}
+        <g transform={`translate(${width/2 - 80}, 45)`}>
+          {/* Fluid/tank */}
+          <rect x="0" y="0" width="160" height="100" fill={useTwoPhase ? '#7c3aed22' : '#3b82f622'} stroke={useTwoPhase ? '#7c3aed' : '#3b82f6'} strokeWidth="2" rx="8" />
+
+          {/* Heat source at bottom */}
+          <rect x="30" y="70" width="100" height="25" fill="url(#heatGrad)" stroke="#ef4444" strokeWidth="2" rx="4" />
+          <text x="80" y="88" textAnchor="middle" fontSize="12" fill="white" fontWeight="bold">{twistHeatLoad}W</text>
+
+          {/* Bubbles for two-phase */}
+          {useTwoPhase && [...Array(12)].map((_, i) => {
+            const x = 40 + (i % 4) * 30;
+            const baseY = 65;
+            const y = baseY - ((animationFrame * 1.5 + i * 20) % 60);
+            const size = 4 + Math.sin(animationFrame / 10 + i) * 2;
+            return (
+              <circle key={`bubble-${i}`} cx={x} cy={y} r={size} fill="white" opacity={0.6} />
+            );
+          })}
+
+          {/* Condenser at top for two-phase */}
+          {useTwoPhase && (
+            <g>
+              <rect x="20" y="-25" width="120" height="20" fill="#374151" stroke="#60a5fa" strokeWidth="2" rx="3" />
+              <text x="80" y="-11" textAnchor="middle" fontSize="9" fill="#60a5fa">Condenser</text>
+              {/* Dripping condensate */}
+              {[...Array(3)].map((_, i) => {
+                const x = 50 + i * 30;
+                const y = -5 + ((animationFrame + i * 40) % 15);
+                return <circle key={`drop-${i}`} cx={x} cy={y} r={2} fill="#60a5fa" />;
+              })}
+            </g>
+          )}
+
+          {/* Temperature indicator */}
+          <text x="80" y={useTwoPhase ? 130 : 115} textAnchor="middle" fontSize="11" fill={colors.textSecondary}>
+            Surface: {useTwoPhase ? '34C (boiling point)' : `${(25 + singlePhaseDeltaT + 10).toFixed(0)}C`}
+          </text>
+        </g>
+
+        {/* Explanation panel */}
+        <g transform={`translate(20, ${height - 110})`}>
+          <rect x="0" y="0" width={width - 40} height="95" rx="8" fill={colors.bgSecondary} />
+
+          {useTwoPhase ? (
+            <g>
+              <text x="15" y="20" fill="#7c3aed" fontSize="12" fontWeight="600">Two-Phase (Boiling) Advantage:</text>
+              <text x="15" y="40" fill={colors.textSecondary} fontSize="10">Latent heat of vaporization: 2260 J/g</text>
+              <text x="15" y="55" fill={colors.textSecondary} fontSize="10">vs sensible heat: 4.2 J/g per 1C</text>
+              <text x="15" y="75" fill={colors.success} fontSize="11" fontWeight="600">540x more energy absorbed at constant temp!</text>
+            </g>
+          ) : (
+            <g>
+              <text x="15" y="20" fill={colors.accent} fontSize="12" fontWeight="600">Single-Phase Limitation:</text>
+              <text x="15" y="40" fill={colors.textSecondary} fontSize="10">Heat absorbed: Q = m*Cp*deltaT</text>
+              <text x="15" y="55" fill={colors.textSecondary} fontSize="10">Temperature must rise to transfer heat</text>
+              <text x="15" y="75" fill={colors.warning} fontSize="11" fontWeight="600">Temperature rise: {singlePhaseDeltaT.toFixed(1)}C at {twistHeatLoad}W</text>
+            </g>
+          )}
+        </g>
+      </svg>
+    );
+  };
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          💧🔥
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Liquid Cooling Heat Transfer
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Why is <span style={{ color: colors.accent }}>water</span> 25x better at cooling than <span style={{ color: '#94a3b8' }}>air</span>? The secret lies in a fundamental property called specific heat capacity."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.body, color: colors.textPrimary, marginBottom: '12px' }}>
+            A 500W GPU generates as much heat as a small space heater!
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            Air cooling struggles to keep up. But run water through a cold plate and temperatures drop dramatically. The physics behind this powers everything from gaming PCs to data centers to electric vehicles.
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Explore Liquid Cooling
+        </button>
+
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-blue-200 bg-clip-text text-transparent">
-        Liquid Cooling Heat Transfer
-      </h1>
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Water is denser than air, so more mass contacts the heat source' },
+      { id: 'b', text: 'Water has ~4x higher specific heat capacity, absorbing more energy per degree', correct: true },
+      { id: 'c', text: 'Water is naturally colder than air at room temperature' },
+    ];
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Why is water 25x better at cooling than air?
-      </p>
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <div className="text-6xl mb-6">💧 🔥 ❄️</div>
-
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              A 500W GPU generates as much heat as a small space heater!
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
             </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Air cooling struggles to keep up. But run water through a cold plate and temperatures drop dramatically. Why?
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-purple-400 font-semibold">
-                It's all about specific heat capacity and thermal conductivity!
-              </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Why can water remove much more heat than air at the same flow rate?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>🔥</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>500W Heat</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
+              <div style={{
+                background: colors.accent + '33',
+                padding: '20px 30px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.accent}`,
+              }}>
+                <div style={{ fontSize: '24px' }}>💧</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Coolant</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>❄️</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Cool Chip</p>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <button
-        onClick={goToNextPhase}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Explore Liquid Cooling
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          To remove 500W of heat with a 5C temperature rise, you need a certain mass flow rate. Water's specific heat is 4.2 J/(g*K), while air's is 1.0 J/(g*K).
-        </p>
-        <p className="text-cyan-400">Why can water remove the same heat with much less mass flow?</p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Water is denser than air' },
-          { id: 'B', text: 'Water is colder than air' },
-          { id: 'C', text: 'Water has 4x higher specific heat - it absorbs more energy per degree' },
-          { id: 'D', text: 'Water flows faster than air' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            disabled={showPredictionFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Water's high specific heat (4.2 vs 1.0 J/gK) means it can absorb 4x more energy per gram per degree. Combined with higher density and thermal conductivity, water is ~25x more effective!
-          </p>
-          <button
-            onClick={goToNextPhase}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl"
-          >
-            Explore Heat Transfer
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Liquid Cooling Lab</h2>
-      <p className="text-slate-400 mb-4">Compare different coolants and see heat transfer in action!</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-        {renderLiquidCoolingVisualization()}
-      </div>
-
-      <div className="grid gap-4 w-full max-w-2xl mb-4">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Coolant Type</label>
-          <div className="grid grid-cols-4 gap-2">
-            {(['air', 'water', 'oil', 'twophase'] as const).map(type => (
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                key={type}
-                onClick={() => setCoolantType(type)}
-                className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors ${
-                  coolantType === type ? 'text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
-                }`}
-                style={{ backgroundColor: coolantType === type ? coolantProps[type].color : undefined, WebkitTapHighlightColor: 'transparent' }}
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
               >
-                {coolantProps[type].name}
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
               </button>
             ))}
           </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
         </div>
 
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Flow Rate: {flowRate} L/min</label>
-          <input type="range" min="1" max="20" value={flowRate} onChange={(e) => setFlowRate(parseInt(e.target.value))} className="w-full accent-purple-500" />
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Heat Load: {heatLoad}W</label>
-          <input type="range" min="100" max="1000" step="50" value={heatLoad} onChange={(e) => setHeatLoad(parseInt(e.target.value))} className="w-full accent-orange-500" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => setShowFlowMode(showFlowMode === 'laminar' ? 'turbulent' : 'laminar')}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-3 rounded-xl font-medium transition-colors ${
-              showFlowMode === 'turbulent' ? 'bg-emerald-600 text-white' : 'bg-slate-600 text-white'
-            }`}
-          >
-            {showFlowMode === 'turbulent' ? 'Turbulent Flow' : 'Laminar Flow'}
-          </button>
-          <div className="bg-slate-600 p-3 rounded-xl text-center">
-            <span className="text-sm text-slate-300">Delta T: </span>
-            <span className="font-bold" style={{ color: getTempColor(metrics.outletTemp) }}>{metrics.deltaT.toFixed(1)}C</span>
-          </div>
-        </div>
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <button
-        onClick={goToNextPhase}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl"
-      >
-        Learn the Science
-      </button>
-    </div>
-  );
+  // PLAY PHASE - Interactive Liquid Cooling Simulator
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">The Science of Liquid Cooling</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">Specific Heat Capacity (Cp)</h3>
-          <p className="text-slate-300 text-sm mb-2">Energy to raise 1g by 1C:</p>
-          <ul className="text-sm text-slate-300 space-y-1">
-            <li>- Water: 4.18 J/(g*K)</li>
-            <li>- Air: 1.01 J/(g*K)</li>
-            <li>- Oil: ~2.0 J/(g*K)</li>
-          </ul>
-          <p className="text-purple-400 text-sm mt-2">Water absorbs 4x more heat per mass!</p>
-        </div>
-        <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">Thermal Conductivity (k)</h3>
-          <p className="text-slate-300 text-sm mb-2">How fast heat conducts (W/mK):</p>
-          <ul className="text-sm text-slate-300 space-y-1">
-            <li>- Water: 0.60 W/(m*K)</li>
-            <li>- Air: 0.026 W/(m*K)</li>
-            <li>- Copper: 400 W/(m*K)</li>
-          </ul>
-          <p className="text-cyan-400 text-sm mt-2">Water conducts heat 23x faster than air!</p>
-        </div>
-        <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">The Heat Transfer Equation</h3>
-          <div className="font-mono text-center text-lg text-white mb-2">Q = m_dot x Cp x deltaT</div>
-          <p className="text-slate-300 text-sm">Heat removed equals mass flow rate times specific heat times temperature difference. Higher Cp means less flow needed for the same heat removal!</p>
-        </div>
-      </div>
-      <button
-        onClick={goToNextPhase}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-      >
-        Discover a Surprising Twist
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Two-Phase Twist</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Water is great, but there's something even better: two-phase cooling where the liquid BOILS at the chip surface. The vapor rises, condenses, and drips back down.
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          Why is boiling even more effective than liquid flow?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'Vapor moves faster than liquid' },
-          { id: 'B', text: 'The latent heat of vaporization absorbs massive energy at constant temperature' },
-          { id: 'C', text: 'Bubbles provide better mixing' },
-          { id: 'D', text: 'Boiling is louder, so heat escapes as sound' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            disabled={showTwistFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Water's latent heat of vaporization is 2260 J/g - that's 540x more than heating water by 1C! Phase change absorbs enormous energy while keeping temperature constant at the boiling point.
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Liquid Cooling Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare different coolants and see how specific heat affects temperature rise.
           </p>
-          <button
-            onClick={goToNextPhase}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-          >
-            Explore Two-Phase Cooling
-          </button>
-        </div>
-      )}
-    </div>
-  );
 
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Two-Phase Cooling Demo</h2>
-      <p className="text-slate-400 mb-4">Compare regular liquid cooling to two-phase (boiling) systems!</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-        {renderLiquidCoolingVisualization()}
-      </div>
-
-      <div className="grid gap-4 w-full max-w-2xl mb-4">
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => setCoolantType('water')}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl font-medium transition-colors ${
-              coolantType === 'water' ? 'bg-blue-600 text-white' : 'bg-slate-600 text-white'
-            }`}
-          >
-            Water (Single Phase)
-          </button>
-          <button
-            onClick={() => setCoolantType('twophase')}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl font-medium transition-colors ${
-              coolantType === 'twophase' ? 'bg-purple-600 text-white' : 'bg-slate-600 text-white'
-            }`}
-          >
-            Two-Phase (3M Novec)
-          </button>
-        </div>
-
-        <div className={`p-4 rounded-xl ${coolantType === 'twophase' ? 'bg-purple-900/30' : 'bg-blue-900/30'}`}>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold" style={{ color: getTempColor(metrics.outletTemp) }}>
-                {metrics.deltaT.toFixed(1)}C
-              </div>
-              <div className="text-sm text-slate-300">Temperature Rise</div>
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <LiquidCoolingVisualization />
             </div>
-            <div>
-              <div className="text-2xl font-bold text-emerald-400">
-                {metrics.heatTransferCoeff.toFixed(0)}
+
+            {/* Coolant selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ ...typo.small, color: colors.textSecondary, marginBottom: '12px' }}>
+                Select Coolant Type:
               </div>
-              <div className="text-sm text-slate-300">Heat Transfer Coeff</div>
-            </div>
-          </div>
-          <p className="text-sm text-slate-300 mt-3 text-center">
-            {coolantType === 'twophase'
-              ? "Boiling provides massive heat transfer - liquid stays at constant temp during phase change!"
-              : "Single-phase: temperature rises as liquid absorbs heat."}
-          </p>
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Heat Load: {heatLoad}W</label>
-          <input type="range" min="100" max="1000" step="50" value={heatLoad} onChange={(e) => setHeatLoad(parseInt(e.target.value))} className="w-full accent-orange-500" />
-        </div>
-      </div>
-
-      <button
-        onClick={goToNextPhase}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-      >
-        See Explanation
-      </button>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Why Two-Phase is Revolutionary</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">Latent Heat vs Sensible Heat</h3>
-          <p className="text-slate-300 text-sm">
-            Sensible heat: Q = m*Cp*deltaT (temp changes)<br/>
-            Latent heat: Q = m*L (temp stays constant!)<br/><br/>
-            Water's L = 2260 J/g vs Cp*deltaT = 4.2 J/(g*C).<br/>
-            One gram boiling absorbs as much heat as heating 540g by 1C!
-          </p>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Benefits of Two-Phase</h3>
-          <ul className="text-sm text-slate-300 space-y-1">
-            <li>- Constant temperature operation</li>
-            <li>- Much higher heat transfer coefficients</li>
-            <li>- No pump needed (thermosyphon)</li>
-            <li>- Self-regulating: more heat = more boiling</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">Immersion Cooling in Practice</h3>
-          <p className="text-slate-300">Modern two-phase immersion uses fluids like 3M Novec that boil at 34-61C (safe for electronics). Servers sit in tanks of this fluid. Heat causes boiling, vapor rises to a condenser, and liquid drips back. PUE can drop below 1.05!</p>
-        </div>
-      </div>
-      <button
-        onClick={goToNextPhase}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl"
-      >
-        Explore Real-World Applications
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveAppTab(index)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index ? 'bg-purple-600 text-white'
-              : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
-          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
-        </div>
-        <p className="text-lg text-slate-300 mb-3">{applications[activeAppTab].description}</p>
-        <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onClick={() => handleAppComplete(activeAppTab)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">{applications.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-      {completedApps.size >= 4 && (
-        <button
-          onClick={goToNextPhase}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl"
-        >
-          Take the Knowledge Test
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                {(['air', 'water', 'oil'] as const).map(type => (
                   <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-purple-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
+                    key={type}
+                    onClick={() => { playSound('click'); setCoolantType(type); }}
+                    style={{
+                      flex: 1,
+                      minWidth: '100px',
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      border: `2px solid ${coolantType === type ? coolantProps[type].color : colors.border}`,
+                      background: coolantType === type ? `${coolantProps[type].color}22` : colors.bgSecondary,
+                      color: coolantType === type ? coolantProps[type].color : colors.textSecondary,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      transition: 'all 0.2s',
+                    }}
                   >
-                    {option.text}
+                    {coolantProps[type].name}
+                    <div style={{ fontSize: '10px', marginTop: '4px', fontWeight: 400 }}>
+                      Cp = {coolantProps[type].cp.toFixed(2)}
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
-          ))}
+
+            {/* Flow rate slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} L/min</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="20"
+                value={flowRate}
+                onChange={(e) => setFlowRate(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.accent} ${((flowRate - 1) / 19) * 100}%, ${colors.border} ${((flowRate - 1) / 19) * 100}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Heat load slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Heat Load (GPU Power)</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{heatLoad}W</span>
+              </div>
+              <input
+                type="range"
+                min="100"
+                max="1000"
+                step="50"
+                value={heatLoad}
+                onChange={(e) => setHeatLoad(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.warning} ${((heatLoad - 100) / 900) * 100}%, ${colors.border} ${((heatLoad - 100) / 900) * 100}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Discovery prompt */}
+          {coolantType === 'air' && (
+            <div style={{
+              background: `${colors.error}22`,
+              border: `1px solid ${colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                Notice the huge temperature rise with air! Try switching to water.
+              </p>
+            </div>
+          )}
+
+          {coolantType === 'water' && metrics.deltaT < 10 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Water keeps temperature rise under control! High specific heat means more energy absorbed per degree.
+              </p>
+            </div>
+          )}
+
           <button
-            onClick={() => setShowTestResults(true)}
-            disabled={testAnswers.includes(-1)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'}`}
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Submit Answers
+            Understand the Physics
           </button>
         </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
-          <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered liquid cooling!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() >= 7 ? (
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Liquid Cooling
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>The Heat Transfer Equation:</strong>
+              </p>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'center',
+                marginBottom: '16px',
+              }}>
+                <span style={{ color: colors.accent, fontSize: '20px', fontWeight: 700, fontFamily: 'monospace' }}>
+                  Q = m_dot x Cp x deltaT
+                </span>
+              </div>
+              <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                <li style={{ marginBottom: '8px' }}><strong>Q</strong> = Heat transfer rate (Watts)</li>
+                <li style={{ marginBottom: '8px' }}><strong>m_dot</strong> = Mass flow rate (g/s)</li>
+                <li style={{ marginBottom: '8px' }}><strong>Cp</strong> = Specific heat capacity (J/g*K)</li>
+                <li style={{ marginBottom: '8px' }}><strong>deltaT</strong> = Temperature rise (C or K)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: Specific Heat Matters!
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              For the same Q and m_dot, the temperature rise is:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#94a3b8' }}>Air (Cp = 1.0):</span>
+                <span style={{ color: colors.error, fontWeight: 600 }}>High deltaT</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#eab308' }}>Oil (Cp = 2.0):</span>
+                <span style={{ color: colors.warning, fontWeight: 600 }}>Medium deltaT</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: colors.accent }}>Water (Cp = 4.2):</span>
+                <span style={{ color: colors.success, fontWeight: 600 }}>Low deltaT</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              Why Water is 25x Better
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Water combines high specific heat (4x air) with high density (800x air) and thermal conductivity (23x air). Together, these properties make water approximately 25x more effective at removing heat than air for the same volumetric flow.
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover Something Even Better
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Vapor rises faster, improving circulation' },
+      { id: 'b', text: 'Phase change absorbs massive energy via latent heat at constant temperature', correct: true },
+      { id: 'c', text: 'Bubbles create turbulence that mixes the fluid better' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Two-Phase Cooling
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What if the liquid actually BOILS at the chip surface? Why would that be even better?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              In two-phase immersion cooling, servers are submerged in a special fluid (like 3M Novec) that boils at low temperatures (34-61C). The fluid boils on hot chips, vapor rises, condenses, and drips back.
+            </p>
+            <div style={{ textAlign: 'center', fontSize: '32px' }}>
+              🖥️ -&gt; 💧 -&gt; 🫧 -&gt; ❄️ -&gt; 💧
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
             <button
-              onClick={() => { onCorrectAnswer?.(); goToNextPhase(); }}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl"
-            >
-              Review & Try Again
+              Explore Two-Phase Cooling
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
-      <div className="bg-gradient-to-br from-purple-900/50 via-blue-900/50 to-cyan-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">💧</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Liquid Cooling Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">You've mastered liquid cooling heat transfer!</p>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🌡️</div><p className="text-sm text-slate-300">Specific Heat</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⚡</div><p className="text-sm text-slate-300">Conductivity</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔥</div><p className="text-sm text-slate-300">Two-Phase Cooling</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🛁</div><p className="text-sm text-slate-300">Immersion</p></div>
-        </div>
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPhaseContent = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  // Determine if next button should be enabled for each phase
-  const canProceed = () => {
-    switch (phase) {
-      case 'hook': return true;
-      case 'predict': return showPredictionFeedback;
-      case 'play': return true;
-      case 'review': return true;
-      case 'twist_predict': return showTwistFeedback;
-      case 'twist_play': return true;
-      case 'twist_review': return true;
-      case 'transfer': return completedApps.size >= 4;
-      case 'test': return showTestResults && calculateScore() >= 7;
-      case 'mastery': return false;
-      default: return true;
-    }
-  };
-
-  // Get next button label for each phase
-  const getNextLabel = () => {
-    switch (phase) {
-      case 'hook': return 'Start';
-      case 'predict': return showPredictionFeedback ? 'Continue' : 'Select an answer';
-      case 'play': return 'Learn More';
-      case 'review': return 'Discover Twist';
-      case 'twist_predict': return showTwistFeedback ? 'Continue' : 'Select an answer';
-      case 'twist_play': return 'See Explanation';
-      case 'twist_review': return 'Applications';
-      case 'transfer': return completedApps.size >= 4 ? 'Take Test' : `Complete ${4 - completedApps.size} more`;
-      case 'test': return calculateScore() >= 7 ? 'Complete' : 'Score 7+ to pass';
-      case 'mastery': return 'Complete';
-      default: return 'Continue';
-    }
-  };
-
-  return (
-    <div className="absolute inset-0 flex flex-col bg-[#0a0f1a] text-white overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900 pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Progress bar header */}
-      <div className="relative z-10 flex-shrink-0">
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-      </div>
 
-      {/* Main content - scrollable */}
-      <div className="relative z-10 flex-1 overflow-y-auto">
-        {renderPhaseContent()}
-      </div>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Two-Phase vs Single-Phase Cooling
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Compare the cooling performance with and without phase change.
+          </p>
 
-      {/* Bottom navigation bar */}
-      <div className="relative z-10 flex-shrink-0">
-        {renderBottomBar(canProceed(), getNextLabel())}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <TwoPhaseVisualization />
+            </div>
+
+            {/* Mode toggle */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+              <button
+                onClick={() => { playSound('click'); setUseTwoPhase(false); }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '8px',
+                  border: `2px solid ${!useTwoPhase ? colors.accent : colors.border}`,
+                  background: !useTwoPhase ? `${colors.accent}22` : colors.bgSecondary,
+                  color: !useTwoPhase ? colors.accent : colors.textSecondary,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Single-Phase (Water)
+              </button>
+              <button
+                onClick={() => { playSound('click'); setUseTwoPhase(true); }}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '8px',
+                  border: `2px solid ${useTwoPhase ? '#7c3aed' : colors.border}`,
+                  background: useTwoPhase ? '#7c3aed22' : colors.bgSecondary,
+                  color: useTwoPhase ? '#7c3aed' : colors.textSecondary,
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                Two-Phase (Boiling)
+              </button>
+            </div>
+
+            {/* Heat load slider */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Heat Load</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{twistHeatLoad}W</span>
+              </div>
+              <input
+                type="range"
+                min="100"
+                max="2000"
+                step="100"
+                value={twistHeatLoad}
+                onChange={(e) => setTwistHeatLoad(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+          </div>
+
+          {useTwoPhase && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Boiling absorbs 540x more energy than sensible heating! Temperature stays constant at boiling point.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Power of Phase Change
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🌡️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Sensible Heat vs Latent Heat</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>Sensible heat:</strong> Q = m * Cp * deltaT (temperature changes)<br/>
+                <strong>Latent heat:</strong> Q = m * L (temperature stays constant!)<br/><br/>
+                Water: L = 2260 J/g vs Cp*deltaT = 4.2 J/g per 1C<br/>
+                <span style={{ color: colors.success }}>One gram boiling absorbs as much heat as heating 540g by 1C!</span>
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🫧</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Benefits of Two-Phase Cooling</h3>
+              </div>
+              <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+                <li>Constant temperature operation at boiling point</li>
+                <li>Extremely high heat transfer coefficients</li>
+                <li>Self-regulating: more heat = more boiling</li>
+                <li>No pump needed (thermosyphon effect)</li>
+              </ul>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🛁</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Immersion Cooling in Practice</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Modern two-phase immersion uses fluids like 3M Novec that boil at 34-61C (safe for electronics). Servers sit in tanks of this fluid. Heat causes boiling, vapor rises to a condenser, and liquid drips back. PUE (Power Usage Effectiveness) can drop below 1.05!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Connection to Heat Transfer:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand liquid cooling heat transfer!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          💧
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Liquid Cooling Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand the fundamental physics that makes liquid cooling essential for high-power computing.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Takeaways:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Q = m_dot x Cp x deltaT governs heat transfer',
+              "Water's high Cp (4.2 J/g*K) enables efficient cooling",
+              'Liquid cooling is ~25x more effective than air',
+              'Two-phase boiling provides massive heat absorption',
+              'Latent heat is 540x sensible heat for water',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default LiquidCoolingRenderer;

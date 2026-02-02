@@ -1,186 +1,179 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ────────────────────────────────────────────────────────────────────────────
-// TYPE DEFINITIONS
-// ────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
+// UPS Battery Sizing - Complete 10-Phase Game
+// Why battery capacity drops dramatically at high discharge rates
+// -----------------------------------------------------------------------------
 
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
-
-// Phase order and labels for navigation
-const phaseOrder: Phase[] = [
-  'hook',
-  'predict',
-  'play',
-  'review',
-  'twist_predict',
-  'twist_play',
-  'twist_review',
-  'transfer',
-  'test',
-  'mastery',
-];
-
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Introduction',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Understanding',
-  twist_predict: 'New Variable',
-  twist_play: 'Explore Twist',
-  twist_review: 'Deep Insight',
-  transfer: 'Real World',
-  test: 'Knowledge Test',
-  mastery: 'Mastery'
-};
-
-interface UPSBatterySizingRendererProps {
-  gamePhase?: Phase; // Optional for resume functionality
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// 10-QUESTION TEST DATA
-// ────────────────────────────────────────────────────────────────────────────
+interface UPSBatterySizingRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
 
-const TEST_QUESTIONS = [
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
   {
-    question: 'What does "Ah" (Amp-hours) measure in a battery?',
+    scenario: "A small business owner purchases a UPS rated at 100Ah for their server room. The vendor claims it can power their 2400W load for 2 hours based on simple math (100Ah x 48V = 4800Wh / 2400W = 2hr).",
+    question: "What will the actual runtime likely be?",
     options: [
-      { text: 'The voltage output of the battery', correct: false },
-      { text: 'The total charge capacity at a specific discharge rate', correct: true },
-      { text: 'The physical size of the battery', correct: false },
-      { text: 'The maximum current the battery can deliver', correct: false },
+      { id: 'a', label: "Exactly 2 hours - the math is correct" },
+      { id: 'b', label: "About 60-90 minutes due to Peukert effect at high discharge rates", correct: true },
+      { id: 'c', label: "More than 2 hours because batteries have reserve capacity" },
+      { id: 'd', label: "About 1.5 hours due to inverter inefficiency only" }
     ],
+    explanation: "At high discharge rates (C/2 or faster), the Peukert effect significantly reduces effective battery capacity. A 100Ah battery rated at C/20 may only deliver 50-65Ah at C/1 rates. Combined with inverter losses, actual runtime is often 50-60% of theoretical calculations."
   },
   {
-    question: "What is Peukert's Law?",
+    scenario: "A data center engineer is comparing lead-acid batteries (Peukert exponent ~1.2) with lithium-ion batteries (Peukert exponent ~1.05) for a new UPS installation requiring 15-minute backup at high power.",
+    question: "Why might lithium-ion be a better choice despite higher upfront cost?",
     options: [
-      { text: 'A law about battery charging speed', correct: false },
-      { text: 'A formula showing effective capacity decreases at higher discharge rates', correct: true },
-      { text: 'A regulation for battery safety', correct: false },
-      { text: 'The relationship between voltage and current', correct: false },
+      { id: 'a', label: "Lithium batteries are lighter and take less floor space" },
+      { id: 'b', label: "Lower Peukert exponent means lithium maintains capacity better at high discharge rates", correct: true },
+      { id: 'c', label: "Lithium batteries never need replacement" },
+      { id: 'd', label: "Lead-acid batteries cannot deliver high current" }
     ],
+    explanation: "With a Peukert exponent of 1.05 vs 1.2, lithium batteries lose only ~5% capacity at high C-rates while lead-acid loses 20-40%. For short, high-power UPS applications, this means lithium needs significantly less capacity to deliver the same runtime."
   },
   {
-    question: 'A 100Ah battery at C/20 rate will deliver about how much at C/1 rate?',
+    scenario: "A hospital is designing a UPS system for critical life support equipment. The calculated load is 50kW with required backup time of 30 minutes. Initial battery sizing is 50kW x 0.5hr = 25kWh.",
+    question: "What minimum battery capacity should actually be installed?",
     options: [
-      { text: '100Ah - capacity stays the same', correct: false },
-      { text: '50-60Ah - capacity is reduced at higher discharge rates', correct: true },
-      { text: '200Ah - faster discharge means more capacity', correct: false },
-      { text: '90-95Ah - only slight reduction', correct: false },
+      { id: 'a', label: "25kWh - the calculation is sufficient" },
+      { id: 'b', label: "30kWh - add 20% safety margin" },
+      { id: 'c', label: "50-60kWh - account for Peukert effect, aging, temperature, and safety margins", correct: true },
+      { id: 'd', label: "100kWh - always double for hospitals" }
     ],
+    explanation: "Hospital UPS sizing must include: Peukert derating (1.3-1.5x), battery aging factor (1.25x for 80% end-of-life capacity), temperature derating, and safety margin. A 25kWh theoretical need typically requires 50-60kWh installed capacity for reliable 30-minute runtime."
   },
   {
-    question: 'Why do data centers typically use 10-15 minute UPS runtime?',
+    scenario: "An IT manager notices their UPS batteries that provided 15 minutes backup when new now only provide 8 minutes, despite the load remaining constant.",
+    question: "What is the most likely cause of this capacity reduction?",
     options: [
-      { text: "It's the cheapest option", correct: false },
-      { text: 'Batteries cannot last longer', correct: false },
-      { text: 'Long enough for generator startup, minimizing battery cost/weight', correct: true },
-      { text: 'Government regulations require it', correct: false },
+      { id: 'a', label: "The batteries were defective from the factory" },
+      { id: 'b', label: "Normal battery aging - capacity degrades 20-30% over 3-5 years of use", correct: true },
+      { id: 'c', label: "The UPS inverter has become less efficient" },
+      { id: 'd', label: "Power quality issues have damaged the batteries" }
     ],
+    explanation: "Lead-acid UPS batteries typically have a 3-5 year lifespan with capacity gradually declining to 80% of original. High temperatures, deep discharges, and frequent cycling accelerate aging. Most manufacturers recommend replacement at 80% capacity to ensure adequate backup."
   },
   {
-    question: 'What happens to lead-acid battery capacity in cold temperatures?',
+    scenario: "A data center in Phoenix, Arizona experiences summer temperatures reaching 40C (104F) in the battery room despite air conditioning.",
+    question: "How does this affect UPS battery performance and lifespan?",
     options: [
-      { text: 'Capacity increases significantly', correct: false },
-      { text: 'Capacity decreases - chemical reactions slow down', correct: true },
-      { text: 'No change - batteries are temperature-independent', correct: false },
-      { text: 'The battery charges faster', correct: false },
+      { id: 'a', label: "No significant effect - batteries are designed for high temperatures" },
+      { id: 'b', label: "Immediate capacity increases but lifespan is cut roughly in half for every 10C above 25C", correct: true },
+      { id: 'c', label: "Capacity decreases but lifespan increases due to slower chemical reactions" },
+      { id: 'd', label: "Only affects charging time, not capacity or lifespan" }
     ],
+    explanation: "The Arrhenius equation shows battery life halves for every 8-10C above 25C. At 40C, a 5-year battery might last only 2.5 years. While capacity temporarily increases at higher temperatures, the accelerated degradation is far more costly. Proper cooling is essential."
   },
   {
-    question: 'What is the typical Peukert exponent for lead-acid batteries?',
+    scenario: "A UPS vendor recommends limiting depth of discharge (DoD) to 50% rather than using the full 100% battery capacity for maximum cycle life.",
+    question: "How much longer can batteries last at 50% DoD compared to 100% DoD?",
     options: [
-      { text: 'Exactly 1.0', correct: false },
-      { text: 'Around 1.1-1.3', correct: true },
-      { text: 'Between 2.0-3.0', correct: false },
-      { text: 'Less than 1.0', correct: false },
+      { id: 'a', label: "About 10% longer - minor improvement" },
+      { id: 'b', label: "About twice as long - linear relationship" },
+      { id: 'c', label: "3-5 times longer - exponential relationship between DoD and cycle life", correct: true },
+      { id: 'd', label: "No difference - DoD only affects runtime, not lifespan" }
     ],
+    explanation: "Cycle life vs DoD follows an exponential curve. Lead-acid batteries might deliver 300 cycles at 100% DoD but 1,200+ cycles at 50% DoD. This is why many UPS systems are oversized - deeper capacity allows shallower cycling and longer battery life."
   },
   {
-    question: 'Why do lithium batteries have a lower Peukert exponent than lead-acid?',
+    scenario: "An engineer must design a 480V battery string using individual 12V 100Ah sealed lead-acid batteries.",
+    question: "How many batteries are needed and what is the string capacity?",
     options: [
-      { text: 'They are physically larger', correct: false },
-      { text: 'Lower internal resistance and better chemical kinetics', correct: true },
-      { text: 'They operate at higher voltages', correct: false },
-      { text: 'They contain more electrolyte', correct: false },
+      { id: 'a', label: "40 batteries in series providing 4,000Ah" },
+      { id: 'b', label: "40 batteries in series providing 100Ah at 480V", correct: true },
+      { id: 'c', label: "4 batteries in series providing 100Ah at 48V" },
+      { id: 'd', label: "40 batteries in parallel providing 100Ah at 12V" }
     ],
+    explanation: "Series connections add voltage while maintaining the same Ah capacity: 480V / 12V = 40 batteries. The string capacity remains 100Ah at 480V (48kWh total). To increase capacity, you would add parallel strings - each string would be 40 batteries."
   },
   {
-    question: 'In UPS design, what does "N+1 redundancy" mean?',
+    scenario: "A cloud provider is evaluating UPS topology options for a new data center. They need zero transfer time and the highest reliability for their Tier IV facility.",
+    question: "Which UPS topology should they choose?",
     options: [
-      { text: 'One extra UPS beyond what is needed for the load', correct: true },
-      { text: 'The UPS has one battery', correct: false },
-      { text: 'Network plus one backup', correct: false },
-      { text: 'The newest version of UPS technology', correct: false },
+      { id: 'a', label: "Standby (offline) UPS - most efficient" },
+      { id: 'b', label: "Line-interactive UPS - good balance of features" },
+      { id: 'c', label: "Online double-conversion UPS - zero transfer time, load always on inverter", correct: true },
+      { id: 'd', label: "Any topology works for Tier IV requirements" }
     ],
+    explanation: "Online double-conversion UPS continuously converts AC-DC-AC, so the load always runs from the inverter with zero transfer time. This provides complete isolation from grid issues. While less efficient (92-96% vs 97-99% for other types), it's required for critical facilities."
   },
   {
-    question: 'What is the relationship: Power (W) = ?',
+    scenario: "A telecom company is deploying remote cell sites with battery backup. Each site has 5kW load and requires 8 hours of backup for power outages.",
+    question: "What makes this application particularly challenging for battery sizing?",
     options: [
-      { text: 'Voltage / Current', correct: false },
-      { text: 'Voltage x Current', correct: true },
-      { text: 'Voltage + Current', correct: false },
-      { text: 'Current / Voltage', correct: false },
+      { id: 'a', label: "The low power level makes it simple" },
+      { id: 'b', label: "Long duration discharge means C-rate is actually favorable, but temperature extremes and lack of climate control are major factors", correct: true },
+      { id: 'c', label: "Remote sites always need double the calculated capacity" },
+      { id: 'd', label: "Telecom loads are constant and predictable" }
     ],
+    explanation: "Long-duration discharge (8 hours = C/8 rate) minimizes Peukert losses. However, remote sites face extreme temperatures (-30C to +50C), limited maintenance access, and often no climate control. These factors can reduce effective capacity by 50% or more, requiring significant oversizing."
   },
   {
-    question: 'Why is battery sizing more complex than just Ah x Voltage = Wh?',
+    scenario: "A facility manager is comparing quotes for UPS battery replacements. Vendor A offers cheap batteries with 1-year warranty, while Vendor B offers premium batteries with 5-year warranty at 2.5x the price.",
+    question: "Which is likely the better long-term value?",
     options: [
-      { text: 'Marketing makes it complicated', correct: false },
-      { text: 'Peukert effect, temperature, age, and depth of discharge all affect real capacity', correct: true },
-      { text: 'Only applies to car batteries', correct: false },
-      { text: 'The formula is incorrect', correct: false },
+      { id: 'a', label: "Vendor A - lower cost is always better" },
+      { id: 'b', label: "Vendor B - premium batteries typically last 4-5x longer and provide more reliable capacity", correct: true },
+      { id: 'c', label: "No difference - all batteries are essentially the same" },
+      { id: 'd', label: "Cannot determine without knowing the brand names" }
     ],
-  },
+    explanation: "Premium UPS batteries use thicker plates, better separators, and higher-purity materials. They typically maintain capacity longer and have lower failure rates. Over 10 years, 2 sets of premium batteries at 2.5x cost ($5x total) beat 5+ sets of cheap batteries at 1x cost ($5x+ total) plus labor and risk."
+  }
 ];
 
-// ────────────────────────────────────────────────────────────────────────────
-// TRANSFER APPLICATIONS
-// ────────────────────────────────────────────────────────────────────────────
-
-const TRANSFER_APPS = [
-  {
-    title: 'Data Center UPS Systems',
-    icon: '🏢',
-    description: 'Large data centers use massive UPS systems with hundreds of battery strings. Understanding Peukert effect is critical for sizing - underestimating means downtime during outages.',
-  },
-  {
-    title: 'Electric Vehicle Range',
-    icon: '🚗',
-    description: 'EV range estimates use similar principles. Aggressive driving (high discharge rate) reduces effective capacity, which is why highway driving often yields less range than city driving.',
-  },
-  {
-    title: 'Solar Energy Storage',
-    icon: '☀️',
-    description: 'Home battery systems (like Powerwall) must account for discharge rates. High power appliances during outages drain batteries faster than the simple Wh rating suggests.',
-  },
-  {
-    title: 'Medical Equipment Backup',
-    icon: '🏥',
-    description: 'Hospital critical systems need precise UPS sizing. Life support equipment cannot tolerate power interruption, so engineers add significant safety margins accounting for Peukert losses.',
-  },
-];
-
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '🏢',
     title: 'Data Center Backup Power',
-    short: 'Protecting billions in infrastructure',
-    tagline: 'Every second of uptime matters',
+    short: 'Enterprise UPS systems',
+    tagline: 'Protecting billions in infrastructure',
     description: 'Data centers use UPS systems with hundreds of battery strings providing 10-15 minutes of backup. This bridges the gap until generators start. Undersized batteries mean downtime costing $100K+ per minute.',
     connection: 'Peukert effect means high-power discharge delivers less energy than rated. A 1000Ah battery might only provide 600Ah at data center discharge rates.',
     howItWorks: 'Parallel battery strings share the load. Monitoring systems track state of charge and health. Automatic transfer switches seamlessly transition from utility to battery to generator.',
@@ -197,13 +190,13 @@ const realWorldApps = [
   {
     icon: '🚗',
     title: 'Electric Vehicle Range',
-    short: 'Why your EV range varies so much',
-    tagline: 'Pedal position affects physics',
+    short: 'EV battery performance',
+    tagline: 'Why your range varies so much',
     description: 'EV range estimates assume moderate driving. Aggressive acceleration or highway speeds dramatically increase discharge rate, triggering Peukert losses. A 300-mile rated range might only achieve 200 miles driven hard.',
     connection: 'Higher power draw means higher C-rate discharge. Lithium batteries have low Peukert exponents (~1.05) but the effect is still significant at extreme power levels.',
     howItWorks: 'Battery management systems track real-time consumption and adjust range estimates. Regenerative braking partially recovers energy. Preconditioning optimizes battery temperature.',
     stats: [
-      { value: '30-40%', label: 'Range loss when spirited driving', icon: '📉' },
+      { value: '30-40%', label: 'Range loss at high speed', icon: '📉' },
       { value: '1.05', label: 'Li-ion Peukert exponent', icon: '📊' },
       { value: '150kW', label: 'Peak motor power', icon: '⚡' }
     ],
@@ -215,8 +208,8 @@ const realWorldApps = [
   {
     icon: '☀️',
     title: 'Solar Battery Sizing',
-    short: 'Storing sunshine for the night',
-    tagline: 'Capacity meets reality',
+    short: 'Home energy storage',
+    tagline: 'Storing sunshine for the night',
     description: 'Home batteries like Tesla Powerwall are sized for overnight loads. Running high-power appliances during outages drains them faster than expected due to Peukert effect and inverter inefficiency.',
     connection: 'A 13.5kWh battery might only deliver 10kWh when powering AC units and refrigerators simultaneously at high C-rates.',
     howItWorks: 'Hybrid inverters manage solar, grid, and battery. Load prioritization extends runtime for critical circuits. State of health tracking adjusts available capacity over time.',
@@ -233,7 +226,7 @@ const realWorldApps = [
   {
     icon: '🏥',
     title: 'Medical Equipment Backup',
-    short: 'When batteries are life or death',
+    short: 'Hospital critical power',
     tagline: 'Zero tolerance for failure',
     description: 'Hospital critical systems require precise UPS sizing with massive safety margins. Life support, surgical equipment, and medication refrigeration cannot tolerate even brief interruptions.',
     connection: 'Engineers apply 50%+ derating factors for Peukert effect, temperature, aging, and depth of discharge. Better to oversize than risk patient harm.',
@@ -250,81 +243,56 @@ const realWorldApps = [
   }
 ];
 
-// ────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // MAIN COMPONENT
-// ────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
+const UPSBatterySizingRenderer: React.FC<UPSBatterySizingRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-export default function UPSBatterySizingRenderer({
-  gamePhase,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}: UPSBatterySizingRendererProps) {
-  // Internal phase state management
   const getInitialPhase = (): Phase => {
-    if (gamePhase && phaseOrder.includes(gamePhase)) {
-      return gamePhase;
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
     }
     return 'hook';
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // State
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(TEST_QUESTIONS.length).fill(null));
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Simulation state
+  const [batteryCapacity, setBatteryCapacity] = useState(100); // Ah
+  const [loadPower, setLoadPower] = useState(2400); // Watts
+  const [batteryVoltage] = useState(48); // Volts
+  const [temperature, setTemperature] = useState(25); // Celsius
+  const [animationFrame, setAnimationFrame] = useState(0);
+
+  // Twist phase - discharge rate scenario
+  const [dischargeRate, setDischargeRate] = useState(1); // C-rate multiplier (1 = C/1, 0.5 = C/2, etc.)
+  const [batteryAge, setBatteryAge] = useState(0); // years
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
 
-  // Play phase state
-  const [batteryCapacity, setBatteryCapacity] = useState(100); // Ah
-  const [loadPower, setLoadPower] = useState(1000); // Watts
-  const [batteryVoltage] = useState(48); // Volts (fixed for simplicity)
-  const [hasExperimented, setHasExperimented] = useState(false);
-  const [experimentCount, setExperimentCount] = useState(0);
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
-  // Twist phase state
-  const [dischargeRate, setDischargeRate] = useState(1); // C-rate multiplier
-  const [hasExploredTwist, setHasExploredTwist] = useState(false);
-
-  // Animation
-  const [animationFrame, setAnimationFrame] = useState(0);
-  const lastClickRef = useRef(0);
+  // Navigation ref
   const isNavigating = useRef(false);
 
-  // Sync phase with gamePhase prop changes (for resume functionality)
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
-      setPhase(gamePhase);
-    }
-  }, [gamePhase, phase]);
-
-  // Check for mobile
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
 
   // Animation loop
   useEffect(() => {
@@ -334,231 +302,44 @@ export default function UPSBatterySizingRenderer({
     return () => clearInterval(interval);
   }, []);
 
-  // Sound utility
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
+  // Peukert exponent (typical for lead-acid)
+  const peukertExponent = 1.2;
 
-  // Navigation functions
-  const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (isNavigating.current) return;
-
-    lastClickRef.current = now;
-    isNavigating.current = true;
-
-    setPhase(p);
-    playSound('transition');
-
-    setTimeout(() => { isNavigating.current = false; }, 400);
-  }, [playSound]);
-
-  const goToNextPhase = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex < phaseOrder.length - 1) {
-      goToPhase(phaseOrder[currentIndex + 1]);
-    }
-  }, [phase, goToPhase]);
-
-  const goToPrevPhase = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phaseOrder[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
-
-  // Premium color palette
-  const colors = {
-    primary: '#10b981', // emerald-500
-    primaryDark: '#059669', // emerald-600
-    accent: '#14b8a6', // teal-500
-    success: '#10b981', // emerald-500
-    bgDark: '#020617', // slate-950
-    bgCard: '#0f172a', // slate-900
-    bgCardLight: '#1e293b', // slate-800
-    border: '#334155', // slate-700
-    textPrimary: '#f8fafc', // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b', // slate-500
-  };
-
-  // Progress bar renderer
-  const renderProgressBar = () => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isMobile ? '8px 12px' : '10px 16px',
-        backgroundColor: colors.bgCard,
-        borderBottom: `1px solid ${colors.border}`,
-        gap: '8px'
-      }}>
-        {/* Back button */}
-        <button
-          onClick={goToPrevPhase}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
-            border: currentIdx > 0 ? `1px solid ${colors.border}` : '1px solid transparent',
-            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
-            cursor: currentIdx > 0 ? 'pointer' : 'default',
-            opacity: currentIdx > 0 ? 1 : 0.4,
-          }}
-        >
-          <span style={{ fontSize: '14px' }}>&#8592;</span>
-        </button>
-
-        {/* Progress dots */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
-          {phaseOrder.map((p, i) => (
-            <button
-              key={p}
-              onClick={() => i <= currentIdx && goToPhase(p)}
-              style={{
-                width: i === currentIdx ? '20px' : '10px',
-                height: '10px',
-                borderRadius: '5px',
-                border: 'none',
-                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-                opacity: i > currentIdx ? 0.5 : 1
-              }}
-              title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
-            />
-          ))}
-        </div>
-
-        {/* Phase counter */}
-        <span style={{
-          fontSize: '11px',
-          fontWeight: 700,
-          color: colors.primary,
-          padding: '4px 8px',
-          borderRadius: '6px',
-          backgroundColor: `${colors.primary}15`
-        }}>
-          {currentIdx + 1}/{phaseOrder.length}
-        </span>
-      </div>
-    );
-  };
-
-  // Bottom navigation bar renderer
-  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    const canGoBack = currentIdx > 0;
-
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: isMobile ? '12px' : '12px 16px',
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: '12px'
-      }}>
-        <button
-          onClick={goToPrevPhase}
-          style={{
-            padding: isMobile ? '10px 16px' : '10px 20px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontSize: isMobile ? '13px' : '14px',
-            backgroundColor: colors.bgCardLight,
-            color: colors.textSecondary,
-            border: `1px solid ${colors.border}`,
-            cursor: canGoBack ? 'pointer' : 'not-allowed',
-            opacity: canGoBack ? 1 : 0.3,
-            minHeight: '44px'
-          }}
-          disabled={!canGoBack}
-        >
-          &#8592; Back
-        </button>
-
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
-          {phaseLabels[phase]}
-        </span>
-
-        <button
-          onClick={goToNextPhase}
-          style={{
-            padding: isMobile ? '10px 20px' : '10px 24px',
-            borderRadius: '10px',
-            fontWeight: 700,
-            fontSize: isMobile ? '13px' : '14px',
-            background: canGoNext ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
-            border: 'none',
-            cursor: canGoNext ? 'pointer' : 'not-allowed',
-            opacity: canGoNext ? 1 : 0.4,
-            boxShadow: canGoNext ? `0 2px 12px ${colors.primary}30` : 'none',
-            minHeight: '44px'
-          }}
-          disabled={!canGoNext}
-        >
-          {nextLabel} &#8594;
-        </button>
-      </div>
-    );
-  };
-
-  // Calculations
-  const peukertExponent = 1.2; // Typical for lead-acid
-
+  // Calculate ideal runtime (simple math)
   const calculateIdealRuntime = useCallback(() => {
     const current = loadPower / batteryVoltage;
     const hours = batteryCapacity / current;
     return hours * 60; // minutes
   }, [batteryCapacity, loadPower, batteryVoltage]);
 
+  // Calculate actual runtime with Peukert effect
   const calculateActualRuntime = useCallback(() => {
     const current = loadPower / batteryVoltage;
-    const ratedCurrent = batteryCapacity / 20; // C/20 rate
+    const ratedCurrent = batteryCapacity / 20; // C/20 rate (standard rating)
     const effectiveCapacity = batteryCapacity * Math.pow(ratedCurrent / current, peukertExponent - 1);
-    const hours = effectiveCapacity / current;
-    return Math.max(0, hours * 60); // minutes
-  }, [batteryCapacity, loadPower, batteryVoltage, peukertExponent]);
 
+    // Apply temperature derating
+    const tempFactor = temperature < 25 ? 1 - (25 - temperature) * 0.01 : 1;
+
+    // Apply age derating (20% loss over 5 years)
+    const ageFactor = 1 - (batteryAge * 0.04);
+
+    const adjustedCapacity = effectiveCapacity * tempFactor * ageFactor;
+    const hours = adjustedCapacity / current;
+    return Math.max(0, hours * 60); // minutes
+  }, [batteryCapacity, loadPower, batteryVoltage, temperature, batteryAge, peukertExponent]);
+
+  // Calculate twist scenario runtime
   const calculateTwistRuntime = useCallback(() => {
-    const baseCurrent = batteryCapacity / 20; // C/20 rate
-    const actualCurrent = baseCurrent * dischargeRate * 20; // Convert C-rate to actual current
-    const effectiveCapacity = batteryCapacity * Math.pow(1 / dischargeRate, peukertExponent - 1);
+    const ratedCapacity = 100; // Fixed 100Ah battery for twist
+    const baseCurrent = ratedCapacity / 20; // C/20 current
+    const actualCurrent = baseCurrent * dischargeRate * 20; // Actual current at given C-rate
+    const effectiveCapacity = ratedCapacity * Math.pow(1 / dischargeRate, peukertExponent - 1);
     const hours = effectiveCapacity / actualCurrent;
     return Math.max(0, hours * 60); // minutes
-  }, [batteryCapacity, dischargeRate, peukertExponent]);
+  }, [dischargeRate, peukertExponent]);
 
+  // Capacity loss percentage
   const capacityLossPercent = useCallback(() => {
     const ideal = calculateIdealRuntime();
     const actual = calculateActualRuntime();
@@ -566,1105 +347,1488 @@ export default function UPSBatterySizingRenderer({
     return ((ideal - actual) / ideal) * 100;
   }, [calculateIdealRuntime, calculateActualRuntime]);
 
-  // Handlers
-  const handlePrediction = useCallback((choice: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setPrediction(choice);
-    setShowPredictionFeedback(true);
-  }, []);
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#10B981', // Emerald for battery/energy
+    accentGlow: 'rgba(16, 185, 129, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    battery: '#10B981',
+    loss: '#EF4444',
+  };
 
-  const handleTwistPrediction = useCallback((choice: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(choice);
-    setShowTwistFeedback(true);
-  }, []);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  const handleSliderChange = useCallback((setter: React.Dispatch<React.SetStateAction<number>>, value: number) => {
-    setter(value);
-    setExperimentCount(prev => {
-      const newCount = prev + 1;
-      if (newCount >= 5) setHasExperimented(true);
-      return newCount;
-    });
-  }, []);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore Twist',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  const handleTwistSliderChange = useCallback((value: number) => {
-    setDischargeRate(value);
-    setHasExploredTwist(true);
-  }, []);
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'ups-battery-sizing',
+        gameTitle: 'UPS Battery Sizing',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-  const handleCompleteApp = useCallback((appIndex: number) => {
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-  }, []);
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
 
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
-
-  const handleSubmitTest = useCallback(() => {
-    let score = 0;
-    testAnswers.forEach((answer, index) => {
-      if (answer !== null && TEST_QUESTIONS[index].options[answer].correct) score++;
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
-    else if (onIncorrectAnswer) onIncorrectAnswer();
-  }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // TEST QUESTIONS - Scenario-based multiple choice
-  // ──────────────────────────────────────────────────────────────────────────
-
-  const testQuestions = [
-    {
-      scenario: "A small business owner is setting up their first server room and wants to protect against power outages.",
-      question: "What is the primary purpose of a UPS (Uninterruptible Power Supply)?",
-      options: [
-        { id: 'a', label: "To reduce electricity bills by storing cheap off-peak power", correct: false },
-        { id: 'b', label: "To provide immediate backup power during outages until generators start or safe shutdown occurs", correct: true },
-        { id: 'c', label: "To permanently replace grid power with battery power", correct: false },
-        { id: 'd', label: "To increase the voltage supplied to equipment", correct: false },
-      ],
-      explanation: "A UPS provides instant backup power when mains power fails, bridging the gap until generators come online (typically 10-30 seconds) or allowing time for graceful equipment shutdown. It's not designed for long-term power replacement or voltage boosting."
-    },
-    {
-      scenario: "An IT administrator sees a UPS rated at 3000VA but only 2400W. They need to power servers drawing 2000W.",
-      question: "Why is the VA (Volt-Ampere) rating higher than the Watts rating on a UPS?",
-      options: [
-        { id: 'a', label: "VA is the European measurement while Watts is American", correct: false },
-        { id: 'b', label: "VA measures apparent power while Watts measures real power; the difference accounts for power factor", correct: true },
-        { id: 'c', label: "The manufacturer is using marketing tricks to inflate specifications", correct: false },
-        { id: 'd', label: "VA rating is for input power, Watts is for output power", correct: false },
-      ],
-      explanation: "VA (apparent power) and Watts (real power) differ due to power factor. Most IT loads have a power factor of 0.8-0.9, meaning a 3000VA UPS delivers about 2400-2700W of real power. Always size based on Watts for resistive loads or VA for the total load including reactive components."
-    },
-    {
-      scenario: "A data center has a 200Ah battery bank at 48V supporting a 4800W load. The simple calculation suggests 2 hours of runtime.",
-      question: "Using Peukert's Law with an exponent of 1.2, approximately how long will the battery actually last?",
-      options: [
-        { id: 'a', label: "2 hours - the calculation is straightforward", correct: false },
-        { id: 'b', label: "2.5 hours - batteries perform better under load", correct: false },
-        { id: 'c', label: "1.2-1.5 hours - high discharge rate reduces effective capacity", correct: true },
-        { id: 'd', label: "4 hours - Peukert's Law doubles capacity at high discharge", correct: false },
-      ],
-      explanation: "Peukert's Law shows that high discharge rates significantly reduce effective battery capacity. At a 1-hour discharge rate (C/1), a battery typically delivers only 50-75% of its rated capacity compared to the standard C/20 rate. The 2-hour theoretical runtime becomes approximately 1.2-1.5 hours in practice."
-    },
-    {
-      scenario: "A facility manager must choose between lead-acid and lithium-ion batteries for a new UPS installation in a space-constrained data center.",
-      question: "What is a key advantage of lithium-ion batteries over lead-acid for UPS applications?",
-      options: [
-        { id: 'a', label: "Lithium-ion batteries are always cheaper to purchase upfront", correct: false },
-        { id: 'b', label: "Lithium-ion has lower Peukert effect, higher energy density, and longer cycle life", correct: true },
-        { id: 'c', label: "Lithium-ion batteries never require a battery management system", correct: false },
-        { id: 'd', label: "Lead-acid batteries cannot be used in UPS systems", correct: false },
-      ],
-      explanation: "Lithium-ion batteries have a Peukert exponent near 1.05 (vs 1.1-1.3 for lead-acid), meaning they maintain capacity better at high discharge rates. They also offer 3-4x the energy density (smaller footprint), 2-3x longer cycle life, and faster recharge times, though they require sophisticated battery management systems."
-    },
-    {
-      scenario: "A hospital IT director is evaluating UPS topologies for their critical care monitoring systems that cannot tolerate any power interruption.",
-      question: "Which UPS topology provides zero transfer time and continuous power conditioning?",
-      options: [
-        { id: 'a', label: "Standby (offline) UPS - it's the most reliable", correct: false },
-        { id: 'b', label: "Line-interactive UPS - it has automatic voltage regulation", correct: false },
-        { id: 'c', label: "Online double-conversion UPS - load always runs from inverter", correct: true },
-        { id: 'd', label: "All topologies provide zero transfer time", correct: false },
-      ],
-      explanation: "Online double-conversion UPS continuously converts AC to DC to AC, so the load always runs from the inverter with zero transfer time. Line-interactive has 2-4ms transfer time with voltage regulation. Standby UPS has 5-12ms transfer time. For life-critical systems, online topology is essential despite higher cost and lower efficiency."
-    },
-    {
-      scenario: "A UPS battery bank is installed in an equipment room where temperature fluctuates between 15°C (59°F) in winter and 35°C (95°F) in summer.",
-      question: "How does temperature affect lead-acid battery capacity and lifespan?",
-      options: [
-        { id: 'a', label: "Higher temperatures increase both capacity and lifespan", correct: false },
-        { id: 'b', label: "Temperature has no significant effect on sealed batteries", correct: false },
-        { id: 'c', label: "Cold reduces capacity; heat above 25°C cuts lifespan roughly in half per 10°C increase", correct: true },
-        { id: 'd', label: "Batteries should be kept as cold as possible for maximum performance", correct: false },
-      ],
-      explanation: "At 0°C, lead-acid capacity drops to about 80% of rated. More critically, battery life follows the Arrhenius equation: every 10°C above 25°C roughly halves battery lifespan. A battery rated for 5 years at 25°C may last only 2.5 years at 35°C. Optimal range is 20-25°C (68-77°F)."
-    },
-    {
-      scenario: "A UPS vendor recommends limiting battery discharge to 50% depth of discharge (DoD) rather than using the full 100% capacity.",
-      question: "Why does limiting depth of discharge significantly extend battery cycle life?",
-      options: [
-        { id: 'a', label: "It doesn't - this is a sales tactic to sell larger batteries", correct: false },
-        { id: 'b', label: "Shallow discharges cause less mechanical stress and chemical degradation, exponentially increasing cycle life", correct: true },
-        { id: 'c', label: "Batteries can only be discharged to 50% anyway", correct: false },
-        { id: 'd', label: "Limiting DoD only matters for lithium batteries, not lead-acid", correct: false },
-      ],
-      explanation: "Deep discharges cause significant plate sulfation in lead-acid and dendrite formation in lithium. At 50% DoD, a lead-acid battery might deliver 1,200+ cycles versus 300-400 cycles at 100% DoD. The relationship is exponential - a battery cycled at 30% DoD can last 5-10x longer than one cycled at 80% DoD."
-    },
-    {
-      scenario: "A data center engineer needs to configure a 480V battery string using 12V lead-acid batteries, each rated at 100Ah.",
-      question: "How many 12V/100Ah batteries in series are needed, and what is the total string capacity?",
-      options: [
-        { id: 'a', label: "40 batteries in series; 4,000Ah total capacity", correct: false },
-        { id: 'b', label: "40 batteries in series; 100Ah capacity at 480V", correct: true },
-        { id: 'c', label: "4 batteries in series; 100Ah at 48V", correct: false },
-        { id: 'd', label: "40 batteries in parallel; 4,000Ah at 12V", correct: false },
-      ],
-      explanation: "Series connections add voltage while maintaining the same Ah capacity: 480V ÷ 12V = 40 batteries. The string capacity remains 100Ah at 480V (48kWh total). Parallel connections would add capacity at the same voltage. This is why high-voltage UPS systems require many batteries in series strings."
-    },
-    {
-      scenario: "A UPS system is rated at 95% efficiency. The protected load draws exactly 100kW continuously.",
-      question: "How much total power must the UPS draw from the utility or batteries to support this load?",
-      options: [
-        { id: 'a', label: "100kW - efficiency losses are covered by battery reserves", correct: false },
-        { id: 'b', label: "95kW - higher efficiency means less input power needed", correct: false },
-        { id: 'c', label: "105.3kW - the 5% loss means input must exceed output", correct: true },
-        { id: 'd', label: "100.5kW - only 0.5% is actually lost as heat", correct: false },
-      ],
-      explanation: "Efficiency = Output/Input, so Input = Output/Efficiency = 100kW/0.95 = 105.3kW. The 5.3kW difference (5%) is converted to heat, which must be removed by cooling systems. This is why UPS rooms need significant HVAC capacity - a 1MW UPS at 95% efficiency generates 52.6kW of heat continuously."
-    },
-    {
-      scenario: "A Tier III data center architect is designing a 2MW critical load facility with 2N redundant UPS systems and 15-minute battery runtime.",
-      question: "What total UPS capacity and battery runtime should be installed to meet these requirements?",
-      options: [
-        { id: 'a', label: "2MW UPS with 15-minute batteries - matches the load exactly", correct: false },
-        { id: 'b', label: "4MW total UPS (2 x 2MW) with 15-minute batteries on each, accounting for Peukert losses", correct: true },
-        { id: 'c', label: "2MW UPS with 30-minute batteries for safety margin", correct: false },
-        { id: 'd', label: "3MW UPS with 10-minute batteries - generators start faster", correct: false },
-      ],
-      explanation: "2N redundancy means two completely independent UPS systems, each capable of supporting the full load. Total installed UPS capacity is 4MW (2 x 2MW). Each system's batteries must deliver 15 minutes at full load. Battery sizing must include Peukert derating (typically 1.5-2x), aging factor (1.25x), and temperature margin - often resulting in 40-50% more battery capacity than simple calculations suggest."
-    },
-  ];
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // RENDER FUNCTIONS
-  // ──────────────────────────────────────────────────────────────────────────
-
-  const renderBatteryVisualization = () => {
+  // Battery Visualization SVG Component
+  const BatteryVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 320 : 380;
     const idealMinutes = calculateIdealRuntime();
     const actualMinutes = calculateActualRuntime();
     const fillPercent = Math.min(100, (actualMinutes / Math.max(idealMinutes, 1)) * 100);
+    const lossPercent = 100 - fillPercent;
 
     return (
-      <svg viewBox="0 0 400 300" className="w-full h-64">
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          <linearGradient id="batteryFill" x1="0%" y1="100%" x2="0%" y2="0%">
+          <linearGradient id="batteryFillGrad" x1="0%" y1="100%" x2="0%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" />
             <stop offset="50%" stopColor="#84cc16" />
             <stop offset="100%" stopColor="#eab308" />
           </linearGradient>
-          <linearGradient id="batteryLoss" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#f97316" stopOpacity="0.3" />
+          <linearGradient id="batteryLossGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#f97316" stopOpacity="0.4" />
           </linearGradient>
         </defs>
 
-        {/* Background */}
-        <rect width="400" height="300" fill="#1e293b" rx="12" />
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Battery Capacity vs Actual Delivery
+        </text>
 
         {/* Battery casing */}
-        <rect x="80" y="40" width="180" height="220" fill="#374151" rx="12" stroke="#4b5563" strokeWidth="3" />
-        <rect x="130" y="25" width="80" height="20" fill="#4b5563" rx="4" />
+        <g transform="translate(40, 50)">
+          <rect x="0" y="0" width="120" height="200" fill="#374151" rx="12" stroke="#4b5563" strokeWidth="3" />
+          <rect x="35" y="-15" width="50" height="20" fill="#4b5563" rx="4" />
 
-        {/* Battery fill - actual capacity */}
-        <rect
-          x="95"
-          y={255 - (fillPercent / 100) * 195}
-          width="150"
-          height={(fillPercent / 100) * 195}
-          fill="url(#batteryFill)"
-          rx="6"
-        />
-
-        {/* Lost capacity indicator */}
-        {fillPercent < 100 && (
+          {/* Battery fill - actual capacity */}
           <rect
-            x="95"
-            y="60"
-            width="150"
-            height={195 - (fillPercent / 100) * 195}
-            fill="url(#batteryLoss)"
+            x="10"
+            y={190 - (fillPercent / 100) * 180}
+            width="100"
+            height={(fillPercent / 100) * 180}
+            fill="url(#batteryFillGrad)"
             rx="6"
           />
-        )}
 
-        {/* Capacity labels */}
-        <text x="170" y="150" textAnchor="middle" fill="#ffffff" fontSize="24" fontWeight="bold">
-          {actualMinutes.toFixed(1)}
-        </text>
-        <text x="170" y="175" textAnchor="middle" fill="#94a3b8" fontSize="12">
-          minutes actual
-        </text>
+          {/* Lost capacity indicator */}
+          {lossPercent > 0 && (
+            <rect
+              x="10"
+              y="10"
+              width="100"
+              height={(lossPercent / 100) * 180}
+              fill="url(#batteryLossGrad)"
+              rx="6"
+            />
+          )}
 
-        {/* Side panel - stats */}
-        <rect x="280" y="50" width="110" height="200" fill="#1f2937" rx="8" />
+          {/* Capacity percentage */}
+          <text x="60" y="100" textAnchor="middle" fill="#ffffff" fontSize="20" fontWeight="bold">
+            {fillPercent.toFixed(0)}%
+          </text>
+          <text x="60" y="120" textAnchor="middle" fill="#94a3b8" fontSize="10">
+            Effective
+          </text>
 
-        <text x="335" y="80" textAnchor="middle" fill="#94a3b8" fontSize="10">IDEAL TIME</text>
-        <text x="335" y="105" textAnchor="middle" fill="#22c55e" fontSize="18" fontWeight="bold">
-          {idealMinutes.toFixed(1)} min
-        </text>
-
-        <text x="335" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">ACTUAL TIME</text>
-        <text x="335" y="165" textAnchor="middle" fill="#f59e0b" fontSize="18" fontWeight="bold">
-          {actualMinutes.toFixed(1)} min
-        </text>
-
-        <text x="335" y="200" textAnchor="middle" fill="#94a3b8" fontSize="10">CAPACITY LOSS</text>
-        <text x="335" y="225" textAnchor="middle" fill="#ef4444" fontSize="18" fontWeight="bold">
-          {capacityLossPercent().toFixed(1)}%
-        </text>
-
-        {/* Current draw indicator */}
-        <g transform="translate(40, 140)">
+          {/* Leaking electrons animation */}
           {[...Array(5)].map((_, i) => (
             <circle
               key={i}
-              cx="15"
-              cy={-30 + (animationFrame * 2 + i * 40) % 160}
-              r="4"
-              fill="#fbbf24"
-              opacity={0.3 + ((animationFrame + i * 20) % 100) / 100 * 0.7}
+              cx={120 + Math.sin((animationFrame + i * 72) * Math.PI / 180) * 10}
+              cy={50 + ((animationFrame + i * 50) % 150)}
+              r="3"
+              fill={colors.loss}
+              opacity={0.4 + Math.sin((animationFrame + i * 30) * Math.PI / 180) * 0.3}
             />
           ))}
-          <text x="15" y="100" textAnchor="middle" fill="#fbbf24" fontSize="10">
-            {(loadPower / batteryVoltage).toFixed(1)}A
+        </g>
+
+        {/* Stats panel */}
+        <g transform={`translate(${isMobile ? 180 : 200}, 50)`}>
+          <rect x="0" y="0" width={isMobile ? 140 : 180} height="200" fill="#1f2937" rx="8" />
+
+          <text x={isMobile ? 70 : 90} y="25" textAnchor="middle" fill="#94a3b8" fontSize="10">IDEAL RUNTIME</text>
+          <text x={isMobile ? 70 : 90} y="50" textAnchor="middle" fill="#22c55e" fontSize="18" fontWeight="bold">
+            {idealMinutes.toFixed(1)} min
+          </text>
+
+          <text x={isMobile ? 70 : 90} y="80" textAnchor="middle" fill="#94a3b8" fontSize="10">ACTUAL RUNTIME</text>
+          <text x={isMobile ? 70 : 90} y="105" textAnchor="middle" fill="#f59e0b" fontSize="18" fontWeight="bold">
+            {actualMinutes.toFixed(1)} min
+          </text>
+
+          <text x={isMobile ? 70 : 90} y="135" textAnchor="middle" fill="#94a3b8" fontSize="10">CAPACITY LOSS</text>
+          <text x={isMobile ? 70 : 90} y="160" textAnchor="middle" fill="#ef4444" fontSize="18" fontWeight="bold">
+            {capacityLossPercent().toFixed(1)}%
+          </text>
+
+          <text x={isMobile ? 70 : 90} y="190" textAnchor="middle" fill="#94a3b8" fontSize="9">
+            Due to Peukert Effect
+          </text>
+        </g>
+
+        {/* Formula display */}
+        <g transform={`translate(40, ${height - 85})`}>
+          <rect x="0" y="0" width={width - 80} height="60" fill="rgba(16, 185, 129, 0.1)" rx="8" />
+          <text x={(width - 80) / 2} y="20" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
+            Peukert Equation: t = H x (C / (I x H))^k
+          </text>
+          <text x={(width - 80) / 2} y="38" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+            k = {peukertExponent} (lead-acid) | Current draw: {(loadPower / batteryVoltage).toFixed(1)}A
+          </text>
+          <text x={(width - 80) / 2} y="52" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+            Temp: {temperature}C | Age: {batteryAge} years
           </text>
         </g>
       </svg>
     );
   };
 
-  const renderPeukertVisualization = () => {
-    const runtimes = [0.5, 1, 2, 5, 10, 20].map(rate => {
-      const baseCurrent = batteryCapacity / 20;
-      const actualCurrent = baseCurrent * rate;
-      const effectiveCapacity = batteryCapacity * Math.pow(1 / (rate), peukertExponent - 1);
+  // Discharge Rate Visualization for twist phase
+  const DischargeRateVisualization = () => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 320;
+
+    // Calculate runtimes for different C-rates
+    const cRates = [0.05, 0.1, 0.2, 0.5, 1, 2, 4];
+    const runtimes = cRates.map(rate => {
+      const ratedCapacity = 100;
+      const baseCurrent = ratedCapacity / 20;
+      const actualCurrent = baseCurrent * rate * 20;
+      const effectiveCapacity = ratedCapacity * Math.pow(1 / rate, peukertExponent - 1);
       return {
         rate,
-        runtime: (effectiveCapacity / actualCurrent) * 60,
-        efficiency: (effectiveCapacity / batteryCapacity) * 100,
+        cRate: rate <= 0.05 ? 'C/20' : rate <= 0.1 ? 'C/10' : rate <= 0.2 ? 'C/5' : rate <= 0.5 ? 'C/2' : rate <= 1 ? 'C/1' : rate <= 2 ? '2C' : '4C',
+        runtime: Math.max(0, (effectiveCapacity / actualCurrent) * 60),
+        efficiency: Math.min(100, (effectiveCapacity / ratedCapacity) * 100),
       };
     });
 
     const maxRuntime = Math.max(...runtimes.map(r => r.runtime));
+    const barWidth = (width - 100) / runtimes.length - 8;
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-64">
-        <defs>
-          <linearGradient id="barGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#6366f1" />
-          </linearGradient>
-        </defs>
-
-        {/* Background */}
-        <rect width="400" height="280" fill="#1e293b" rx="12" />
-
-        {/* Title */}
-        <text x="200" y="25" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">
-          Peukert Effect: Discharge Rate vs Runtime
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Runtime vs Discharge Rate (100Ah Battery)
         </text>
 
         {/* Chart area */}
-        <rect x="60" y="45" width="320" height="180" fill="#0f172a" rx="6" />
+        <g transform="translate(60, 50)">
+          <rect x="0" y="0" width={width - 100} height="160" fill="#0f172a" rx="6" />
 
-        {/* Bars */}
-        {runtimes.map((r, i) => {
-          const barWidth = 40;
-          const barHeight = (r.runtime / maxRuntime) * 160;
-          const x = 75 + i * 52;
-          const isSelected = Math.abs(r.rate - dischargeRate * 20) < 0.5;
+          {/* Bars */}
+          {runtimes.map((r, i) => {
+            const barHeight = (r.runtime / maxRuntime) * 140;
+            const x = 8 + i * (barWidth + 8);
+            const isSelected = Math.abs(r.rate - dischargeRate) < 0.01;
 
-          return (
-            <g key={i}>
-              <rect
-                x={x}
-                y={205 - barHeight}
-                width={barWidth}
-                height={barHeight}
-                fill={isSelected ? '#f59e0b' : 'url(#barGrad)'}
-                rx="4"
-              />
-              <text x={x + 20} y="235" textAnchor="middle" fill="#94a3b8" fontSize="9">
-                C/{(20 / r.rate).toFixed(0)}
-              </text>
-              <text x={x + 20} y="250" textAnchor="middle" fill="#64748b" fontSize="8">
-                {r.rate}x
-              </text>
-              <text x={x + 20} y={200 - barHeight} textAnchor="middle" fill="#ffffff" fontSize="9">
-                {r.runtime.toFixed(0)}m
-              </text>
-            </g>
-          );
-        })}
+            return (
+              <g key={i}>
+                <rect
+                  x={x}
+                  y={150 - barHeight}
+                  width={barWidth}
+                  height={barHeight}
+                  fill={isSelected ? '#f59e0b' : '#3b82f6'}
+                  rx="4"
+                  opacity={isSelected ? 1 : 0.7}
+                />
+                <text x={x + barWidth/2} y="175" textAnchor="middle" fill="#94a3b8" fontSize="9">
+                  {r.cRate}
+                </text>
+                <text x={x + barWidth/2} y={145 - barHeight} textAnchor="middle" fill="#ffffff" fontSize="8">
+                  {r.runtime.toFixed(0)}m
+                </text>
+                <text x={x + barWidth/2} y="190" textAnchor="middle" fill="#64748b" fontSize="8">
+                  {r.efficiency.toFixed(0)}%
+                </text>
+              </g>
+            );
+          })}
+        </g>
 
-        {/* Y-axis label */}
-        <text x="25" y="135" textAnchor="middle" fill="#94a3b8" fontSize="10" transform="rotate(-90, 25, 135)">
-          Runtime (min)
-        </text>
+        {/* Legend */}
+        <g transform={`translate(${width/2 - 60}, ${height - 50})`}>
+          <text x="0" y="0" fill="#3b82f6" fontSize="10">Runtime (min)</text>
+          <text x="0" y="15" fill="#64748b" fontSize="10">Efficiency (%)</text>
+        </g>
 
-        {/* Efficiency indicator */}
-        <text x="200" y="275" textAnchor="middle" fill="#f59e0b" fontSize="11">
-          Current rate: C/{(20 / dischargeRate / 20).toFixed(1)} = {(dischargeRate * 100).toFixed(0)}% of C/20 efficiency
-        </text>
+        {/* Current selection indicator */}
+        <g transform={`translate(${width/2 - 80}, ${height - 25})`}>
+          <rect x="0" y="-10" width="160" height="25" fill="rgba(245, 158, 11, 0.2)" rx="4" />
+          <text x="80" y="5" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">
+            Selected: {dischargeRate <= 0.05 ? 'C/20' : dischargeRate <= 0.1 ? 'C/10' : dischargeRate <= 0.5 ? 'C/2' : dischargeRate <= 1 ? 'C/1' : dischargeRate <= 2 ? '2C' : '4C'} rate
+          </text>
+        </g>
       </svg>
     );
   };
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // PHASE RENDERERS
-  // ──────────────────────────────────────────────────────────────────────────
-
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-emerald-400 tracking-wide">DATA CENTER PHYSICS</span>
-      </div>
-
-      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-8 shadow-2xl shadow-emerald-500/30">
-        <span className="text-4xl">🔋</span>
-      </div>
-
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-emerald-100 to-teal-200 bg-clip-text text-transparent">
-        UPS Battery Sizing
-      </h1>
-
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        How long can a data center run when the grid fails?
-      </p>
-
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 mb-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 rounded-3xl" />
-        <div className="relative flex items-start gap-4 text-left">
-          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-            <span className="text-2xl">⚡</span>
-          </div>
-          <div>
-            <h3 className="font-semibold text-white mb-1">The Critical Bridge</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              When power fails, UPS batteries keep servers running until generators start.
-              But battery capacity isn&apos;t as simple as the label suggests - discharge rate dramatically affects actual runtime!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <button
-        onClick={goToNextPhase}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="group relative px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Explore Battery Sizing
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderPredict = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-          <span className="text-xl">🤔</span>
-        </div>
-        <h2 className="text-xl font-bold text-slate-800">Make Your Prediction</h2>
-      </div>
-
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 mb-6">
-        <p className="text-blue-800 leading-relaxed">
-          A UPS has a <strong>100Ah battery at 48V</strong>. The data center load is <strong>2,400W</strong>.
-          Simple math says: 100Ah x 48V = 4,800Wh / 2,400W = <strong>2 hours</strong>.
-        </p>
-        <p className="text-blue-700 mt-2 font-medium">
-          How long will it actually last?
-        </p>
-      </div>
-
-      <div className="space-y-3 mb-6">
-        {[
-          { id: 'exact', label: 'Exactly 2 hours - math is math', icon: '📐' },
-          { id: 'more', label: 'More than 2 hours - batteries have reserves', icon: '📈' },
-          { id: 'less', label: 'Less than 2 hours - high discharge reduces capacity', icon: '📉' },
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            disabled={showPredictionFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
-              prediction === option.id
-                ? option.id === 'less'
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-red-300 bg-red-50'
-                : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
-            } ${showPredictionFeedback ? 'cursor-default' : 'cursor-pointer'}`}
-          >
-            <span className="text-2xl">{option.icon}</span>
-            <span className="font-medium text-slate-700">{option.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {showPredictionFeedback && (
-        <>
-          <div className={`p-5 rounded-2xl mb-6 ${
-            prediction === 'less' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-          }`}>
-            <p className={`leading-relaxed ${prediction === 'less' ? 'text-emerald-800' : 'text-amber-800'}`}>
-              {prediction === 'less' ? (
-                <><strong>Exactly right!</strong> At high discharge rates, Peukert&apos;s Law kicks in - the battery&apos;s effective capacity drops significantly. A 2-hour theoretical runtime might only give you 60-90 minutes!</>
-              ) : (
-                <><strong>Surprising result:</strong> High discharge rates actually reduce effective capacity! This is called Peukert&apos;s Law - the faster you drain a battery, the less total energy you get.</>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={goToNextPhase}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg"
-          >
-            See It In Action →
-          </button>
-        </>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-          <span className="text-xl">🔬</span>
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">UPS Battery Simulator</h2>
-          <p className="text-sm text-slate-500">Adjust load and see real vs ideal runtime</p>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
-        {renderBatteryVisualization()}
-      </div>
-
-      <div className="space-y-4 mb-6">
-        <div className="bg-slate-100 rounded-xl p-4">
-          <label className="text-slate-700 text-sm font-medium block mb-2">
-            Battery Capacity: {batteryCapacity} Ah
-          </label>
-          <input
-            type="range"
-            min="50"
-            max="200"
-            value={batteryCapacity}
-            onChange={(e) => handleSliderChange(setBatteryCapacity, parseInt(e.target.value))}
-            className="w-full accent-emerald-500"
-          />
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
-            <span>50 Ah</span>
-            <span>200 Ah</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-100 rounded-xl p-4">
-          <label className="text-slate-700 text-sm font-medium block mb-2">
-            Load Power: {loadPower} W ({(loadPower / batteryVoltage).toFixed(1)} A)
-          </label>
-          <input
-            type="range"
-            min="500"
-            max="5000"
-            step="100"
-            value={loadPower}
-            onChange={(e) => handleSliderChange(setLoadPower, parseInt(e.target.value))}
-            className="w-full accent-amber-500"
-          />
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
-            <span>500 W (Low)</span>
-            <span>5000 W (High)</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
-        <p className="text-amber-800 text-sm leading-relaxed">
-          <strong>Notice:</strong> As you increase load power, the gap between ideal and actual runtime grows!
-          This is Peukert&apos;s Law in action - high discharge rates reduce effective battery capacity.
-        </p>
-      </div>
-
-      <button
-        onClick={goToNextPhase}
-        disabled={!hasExperimented}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-          hasExperimented
-            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
-            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-        }`}
-      >
-        {hasExperimented ? 'Continue to Review →' : `Adjust sliders ${Math.max(0, 5 - experimentCount)} more times...`}
-      </button>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-          <span className="text-xl">📖</span>
-        </div>
-        <h2 className="text-xl font-bold text-slate-800">Understanding Peukert&apos;s Law</h2>
-      </div>
-
-      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 mb-6 text-center text-white">
-        <p className="text-indigo-200 text-sm mb-2">Peukert&apos;s Equation</p>
-        <div className="text-2xl font-bold mb-2">t = H × (C / (I × H))^k</div>
-        <p className="text-indigo-200 text-sm">
-          where k = Peukert exponent (1.1-1.3 for lead-acid)
-        </p>
-      </div>
-
-      <div className="space-y-4 mb-6">
-        {[
-          {
-            icon: '🔋',
-            title: 'Battery Capacity Rating',
-            desc: 'Batteries are rated at slow discharge (C/20 = 20 hours to fully discharge). Real-world loads discharge much faster.',
-          },
-          {
-            icon: '⚡',
-            title: 'Peukert Effect',
-            desc: 'At high discharge rates, internal resistance losses increase. Chemical reactions can\'t keep up, reducing effective capacity.',
-          },
-          {
-            icon: '📊',
-            title: 'Practical Impact',
-            desc: 'A 100Ah battery at C/20 might only deliver 50-60Ah at C/1 rate. UPS designers must account for this!',
-          },
-        ].map((item, i) => (
-          <div key={i} className="bg-white border border-slate-200 rounded-2xl p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{item.icon}</span>
-              <div>
-                <h3 className="font-bold text-slate-800 mb-1">{item.title}</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <button
-        onClick={goToNextPhase}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg"
-      >
-        Now for a Twist... →
-      </button>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-          <span className="text-xl">🔄</span>
-        </div>
-        <h2 className="text-xl font-bold text-slate-800">The Fast Discharge Twist</h2>
-      </div>
-
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 mb-6">
-        <p className="text-amber-800 leading-relaxed">
-          A data center needs <strong>5 minutes of UPS backup</strong> while generators start.
-          They calculate they need 100Ah based on their load.
-        </p>
-        <p className="text-amber-700 mt-2 font-medium">
-          But 5 minutes is a very fast discharge (C/0.08)! What should they actually install?
-        </p>
-      </div>
-
-      <div className="space-y-3 mb-6">
-        {[
-          { id: 'same', label: '100Ah - the calculation is correct', icon: '✅' },
-          { id: 'double', label: '150-200Ah - need extra for Peukert losses', icon: '📈' },
-          { id: 'less', label: 'Less than 100Ah - short duration is more efficient', icon: '📉' },
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            disabled={showTwistFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
-              twistPrediction === option.id
-                ? option.id === 'double'
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-amber-300 bg-amber-50'
-                : 'border-slate-200 hover:border-amber-300 hover:bg-amber-50'
-            } ${showTwistFeedback ? 'cursor-default' : 'cursor-pointer'}`}
-          >
-            <span className="text-2xl">{option.icon}</span>
-            <span className="font-medium text-slate-700">{option.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {showTwistFeedback && (
-        <>
-          <div className={`p-5 rounded-2xl mb-6 ${
-            twistPrediction === 'double' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-          }`}>
-            <p className={`leading-relaxed ${twistPrediction === 'double' ? 'text-emerald-800' : 'text-amber-800'}`}>
-              {twistPrediction === 'double' ? (
-                <><strong>Exactly right!</strong> At very high discharge rates, Peukert losses can be 30-50%! A 5-minute backup at high power might need 150-200% of the calculated capacity.</>
-              ) : (
-                <><strong>Important lesson:</strong> Fast discharge dramatically reduces effective capacity. Data centers typically install 150-200% of calculated needs to ensure reliability.</>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={goToNextPhase}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-          >
-            Explore Discharge Rates →
-          </button>
-        </>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-          <span className="text-xl">📊</span>
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">Discharge Rate Explorer</h2>
-          <p className="text-sm text-slate-500">See how C-rate affects actual runtime</p>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 mb-6">
-        {renderPeukertVisualization()}
-      </div>
-
-      <div className="bg-slate-100 rounded-xl p-4 mb-6">
-        <label className="text-slate-700 text-sm font-medium block mb-2">
-          Discharge Rate: C/{(20 / dischargeRate / 20).toFixed(1)} ({(dischargeRate * 100).toFixed(0)}% of C/20)
-        </label>
-        <input
-          type="range"
-          min="0.05"
-          max="2"
-          step="0.05"
-          value={dischargeRate}
-          onChange={(e) => handleTwistSliderChange(parseFloat(e.target.value))}
-          className="w-full accent-orange-500"
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
         />
-        <div className="flex justify-between text-xs text-slate-500 mt-1">
-          <span>C/20 (Slow)</span>
-          <span>C/1 (Fast)</span>
-          <span>2C (Very Fast)</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-emerald-600">{calculateTwistRuntime().toFixed(1)} min</div>
-          <div className="text-sm text-emerald-700">Actual Runtime</div>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-red-600">
-            {(100 - (calculateTwistRuntime() / (batteryCapacity / (batteryCapacity / 20 * dischargeRate * 20) * 60)) * 100).toFixed(0)}%
-          </div>
-          <div className="text-sm text-red-700">Capacity Loss</div>
-        </div>
-      </div>
-
-      <button
-        onClick={goToNextPhase}
-        disabled={!hasExploredTwist}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-          hasExploredTwist
-            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-        }`}
-      >
-        {hasExploredTwist ? 'Continue →' : 'Try the discharge rate slider...'}
-      </button>
+      ))}
     </div>
   );
 
-  const renderTwistReview = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
-          <span className="text-xl">💡</span>
-        </div>
-        <h2 className="text-xl font-bold text-slate-800">Practical UPS Sizing</h2>
-      </div>
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #059669)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
 
-      <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-2xl p-6 mb-6">
-        <h3 className="font-bold text-slate-800 mb-4 text-center">Real-World Considerations</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center bg-white rounded-xl p-4">
-            <div className="text-3xl mb-2">🌡️</div>
-            <div className="text-sm text-slate-700 font-medium">Temperature</div>
-            <div className="text-xs text-teal-600">Cold = less capacity</div>
-          </div>
-          <div className="text-center bg-white rounded-xl p-4">
-            <div className="text-3xl mb-2">📅</div>
-            <div className="text-sm text-slate-700 font-medium">Battery Age</div>
-            <div className="text-xs text-teal-600">Capacity degrades 20%+</div>
-          </div>
-          <div className="text-center bg-white rounded-xl p-4">
-            <div className="text-3xl mb-2">⚡</div>
-            <div className="text-sm text-slate-700 font-medium">Peukert Effect</div>
-            <div className="text-xs text-teal-600">Fast drain = 30-50% loss</div>
-          </div>
-          <div className="text-center bg-white rounded-xl p-4">
-            <div className="text-3xl mb-2">🔄</div>
-            <div className="text-sm text-slate-700 font-medium">Safety Margin</div>
-            <div className="text-xs text-teal-600">Design for 150-200%</div>
-          </div>
-        </div>
-      </div>
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-6">
-        <h4 className="font-bold text-slate-800 mb-2">Data Center Best Practices</h4>
-        <ul className="text-slate-600 text-sm space-y-2">
-          <li>• Size for 10-15 minute runtime (generator startup time)</li>
-          <li>• Add 50-100% capacity margin for Peukert and aging</li>
-          <li>• Use lithium batteries for lower Peukert effect (k ≈ 1.05)</li>
-          <li>• Monitor battery health continuously</li>
-        </ul>
-      </div>
-
-      <button
-        onClick={goToNextPhase}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg"
-      >
-        See Real Applications →
-      </button>
-    </div>
-  );
-
-  const renderTransfer = () => {
-    const allAppsCompleted = completedApps.size >= 4;
-
+  // HOOK PHASE
+  if (phase === 'hook') {
     return (
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-            <span className="text-xl">🌍</span>
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">Real-World Applications</h2>
-            <p className="text-sm text-slate-500">Complete all 4 to unlock assessment</p>
-          </div>
-        </div>
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {TRANSFER_APPS.map((app, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveAppTab(index)}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center gap-2 ${
-                activeAppTab === index
-                  ? 'bg-emerald-500 text-white shadow-lg'
-                  : completedApps.has(index)
-                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {completedApps.has(index) && <span>✓</span>}
-              {app.icon}
-            </button>
-          ))}
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🔋⚡
         </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-6">
-          <div className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-3xl">{TRANSFER_APPS[activeAppTab].icon}</span>
-              <h3 className="font-bold text-slate-800 text-lg">{TRANSFER_APPS[activeAppTab].title}</h3>
-            </div>
-            <p className="text-slate-600 text-sm leading-relaxed mb-4">
-              {TRANSFER_APPS[activeAppTab].description}
-            </p>
-            {!completedApps.has(activeAppTab) ? (
-              <button
-                onClick={() => handleCompleteApp(activeAppTab)}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg"
-              >
-                Mark as Complete
-              </button>
-            ) : (
-              <div className="w-full py-3 bg-emerald-100 text-emerald-700 rounded-xl font-semibold text-center">
-                Completed
-              </div>
-            )}
-          </div>
-        </div>
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          UPS Battery Sizing
+        </h1>
 
-        <div className="bg-slate-50 rounded-2xl p-4 mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-slate-700">Progress</span>
-            <span className="text-sm font-bold text-emerald-600">{completedApps.size}/4</span>
-          </div>
-          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-              style={{ width: `${(completedApps.size / 4) * 100}%` }}
-            />
-          </div>
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "A 100Ah battery should power a 50A load for 2 hours, right? Simple math... <span style={{ color: colors.loss }}>but physics disagrees</span>. The faster you drain a battery, the less total energy you get."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "When power fails, UPS batteries must bridge the gap until generators start. Data centers size for 15-minute runtime, but Peukert's Law means a 'simple' calculation can leave you 40% short."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - Data Center Power Engineering
+          </p>
         </div>
 
         <button
-          onClick={goToNextPhase}
-          disabled={!allAppsCompleted}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-            allAppsCompleted
-              ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-          }`}
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
         >
-          {allAppsCompleted ? 'Take the Assessment →' : `Complete ${4 - completedApps.size} more`}
+          Explore Battery Physics
         </button>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderTest = () => {
-    const answeredCount = testAnswers.filter(a => a !== null).length;
-    const allAnswered = answeredCount === TEST_QUESTIONS.length;
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Exactly 2 hours - the math is straightforward (100Ah x 48V = 4800Wh / 2400W = 2hr)' },
+      { id: 'b', text: 'About 60-90 minutes - high discharge rates reduce effective capacity', correct: true },
+      { id: 'c', text: 'More than 2 hours - batteries have reserve capacity beyond the rating' },
+    ];
 
     return (
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-            <span className="text-xl">📝</span>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">Knowledge Assessment</h2>
-            <p className="text-sm text-slate-500">10 questions - 70% to pass</p>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A UPS has a 100Ah battery at 48V. The data center load is 2400W (50A). Simple math says runtime = 2 hours. What will actually happen?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>🔋</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>100Ah @ 48V</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{
+                background: colors.accent + '33',
+                padding: '20px 30px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.accent}`,
+              }}>
+                <div style={{ fontSize: '24px', color: colors.accent }}>2400W Load</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>50A Draw</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '48px' }}>???</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Runtime</p>
+              </div>
+            </div>
           </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
         </div>
 
-        {!testSubmitted ? (
-          <>
-            <div className="bg-slate-50 rounded-2xl p-4 mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-slate-700">Progress</span>
-                <span className="text-sm font-bold text-violet-600">{answeredCount}/10</span>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE - Interactive Battery Simulator
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            UPS Battery Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust load power and see how Peukert effect reduces actual runtime
+          </p>
+
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <BatteryVisualization />
+            </div>
+
+            {/* Battery Capacity slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Battery Capacity</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batteryCapacity} Ah</span>
               </div>
-              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all duration-300"
-                  style={{ width: `${(answeredCount / 10) * 100}%` }}
-                />
+              <input
+                type="range"
+                min="50"
+                max="200"
+                step="10"
+                value={batteryCapacity}
+                onChange={(e) => setBatteryCapacity(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: colors.accent }}
+              />
+            </div>
+
+            {/* Load Power slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Load Power</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{loadPower} W ({(loadPower/batteryVoltage).toFixed(1)} A)</span>
+              </div>
+              <input
+                type="range"
+                min="500"
+                max="5000"
+                step="100"
+                value={loadPower}
+                onChange={(e) => setLoadPower(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: colors.warning }}
+              />
+            </div>
+
+            {/* Temperature slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Temperature</span>
+                <span style={{ ...typo.small, color: '#f97316', fontWeight: 600 }}>{temperature}C</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="5"
+                value={temperature}
+                onChange={(e) => setTemperature(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#f97316' }}
+              />
+            </div>
+
+            {/* Battery Age slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Battery Age</span>
+                <span style={{ ...typo.small, color: '#8b5cf6', fontWeight: 600 }}>{batteryAge} years</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                step="1"
+                value={batteryAge}
+                onChange={(e) => setBatteryAge(parseInt(e.target.value))}
+                style={{ width: '100%', accentColor: '#8b5cf6' }}
+              />
+            </div>
+          </div>
+
+          {/* Discovery prompt */}
+          {capacityLossPercent() > 20 && (
+            <div style={{
+              background: `${colors.loss}22`,
+              border: `1px solid ${colors.loss}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.loss, margin: 0 }}>
+                Notice how high power draw causes {capacityLossPercent().toFixed(0)}% capacity loss! This is Peukert's Law in action.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Battery Discharge
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Peukert's Law: t = H x (C / (I x H))^k</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                This equation describes a counterintuitive fact: battery capacity is NOT fixed. It depends on how fast you drain it. The faster you discharge, the less total energy you can extract.
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Key Variables:</strong>
+              </p>
+              <ul style={{ paddingLeft: '20px', lineHeight: 1.8 }}>
+                <li><strong>t</strong> = actual runtime (hours)</li>
+                <li><strong>H</strong> = rated time (typically 20 hours for C/20 rating)</li>
+                <li><strong>C</strong> = rated capacity (Ah)</li>
+                <li><strong>I</strong> = actual discharge current</li>
+                <li><strong>k</strong> = Peukert exponent (1.1-1.3 for lead-acid, ~1.05 for lithium)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: C-Rate Matters
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
+              Batteries are rated at C/20 (20-hour discharge). At faster rates:
+            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li><strong>C/10:</strong> ~95% of rated capacity</li>
+              <li><strong>C/5:</strong> ~85% of rated capacity</li>
+              <li><strong>C/1:</strong> ~60% of rated capacity</li>
+              <li><strong>2C:</strong> ~45% of rated capacity</li>
+            </ul>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.loss, marginBottom: '12px' }}>
+              Why This Matters for UPS Sizing
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Data centers typically need 10-15 minute backup (very fast discharge). At these rates, you might only get 50-60% of the battery's rated capacity. Engineers must account for this by installing 1.5-2x the calculated capacity!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover More Factors
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Capacity increases because shorter discharge means less time for internal losses' },
+      { id: 'b', text: 'Capacity stays the same - Ah is Ah regardless of discharge rate' },
+      { id: 'c', text: 'Capacity decreases dramatically - chemical reactions cannot keep up at high rates', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Discharge Rate
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Compare a battery discharged over 20 hours (C/20) vs 1 hour (C/1). What happens to effective capacity?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px' }}>🐢</div>
+                <p style={{ ...typo.small, color: colors.success }}>C/20 Rate</p>
+                <p style={{ ...typo.small, color: colors.textMuted }}>5A for 20 hours</p>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>100Ah delivered</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px' }}>🐇</div>
+                <p style={{ ...typo.small, color: colors.warning }}>C/1 Rate</p>
+                <p style={{ ...typo.small, color: colors.textMuted }}>100A for 1 hour</p>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>??? Ah delivered</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See the Data
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            C-Rate vs Effective Capacity
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            See how discharge rate affects the energy you can actually extract
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <DischargeRateVisualization />
+            </div>
+
+            {/* Discharge rate selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Select Discharge Rate</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>
+                  {dischargeRate <= 0.05 ? 'C/20 (20hr)' : dischargeRate <= 0.1 ? 'C/10 (10hr)' : dischargeRate <= 0.2 ? 'C/5 (5hr)' : dischargeRate <= 0.5 ? 'C/2 (2hr)' : dischargeRate <= 1 ? 'C/1 (1hr)' : dischargeRate <= 2 ? '2C (30min)' : '4C (15min)'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.05"
+                max="4"
+                step="0.05"
+                value={dischargeRate}
+                onChange={(e) => setDischargeRate(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: colors.warning }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>C/20 (Slow)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>4C (Very Fast)</span>
               </div>
             </div>
 
-            <div className="space-y-6 mb-6">
-              {TEST_QUESTIONS.map((q, qIndex) => (
-                <div key={qIndex} className="bg-white border border-slate-200 rounded-2xl p-5">
-                  <div className="flex items-start gap-3 mb-4">
-                    <span className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ${
-                      testAnswers[qIndex] !== null ? 'bg-violet-500 text-white' : 'bg-slate-200 text-slate-600'
-                    }`}>
-                      {qIndex + 1}
-                    </span>
-                    <p className="font-medium text-slate-800 leading-relaxed">{q.question}</p>
+            {/* Stats display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{calculateTwistRuntime().toFixed(1)} min</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Actual Runtime</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.loss }}>
+                  {(100 - (calculateTwistRuntime() / (100 / (100/20 * dischargeRate * 20) * 60)) * 100).toFixed(0)}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Capacity Lost</div>
+              </div>
+            </div>
+          </div>
+
+          {dischargeRate >= 2 && (
+            <div style={{
+              background: `${colors.loss}22`,
+              border: `1px solid ${colors.loss}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.loss, margin: 0 }}>
+                At {dischargeRate}C rate, you lose nearly half the battery's capacity! This is why UPS systems need significant oversizing.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Solution
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Proper UPS Battery Sizing
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>1.</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Peukert Derating Factor</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                For 10-15 minute UPS runtime (C/4 to C/6 rate), apply <span style={{ color: colors.accent }}>1.3-1.5x derating</span>. A 50kWh theoretical need becomes 65-75kWh installed.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>2.</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>End-of-Life Capacity</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Batteries degrade to ~80% capacity over their life. Design for <span style={{ color: colors.accent }}>1.25x factor</span> to ensure adequate backup even with aged batteries.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>3.</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Temperature Derating</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Below 25C, capacity drops ~1% per degree. At 15C, apply <span style={{ color: colors.accent }}>10% additional derating</span>. Keep battery rooms climate-controlled.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.accent}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>4.</span>
+                <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Total Sizing Factor</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Combined: 1.4 (Peukert) x 1.25 (aging) x 1.1 (temp) x 1.1 (safety) = <span style={{ color: colors.accent, fontWeight: 'bold' }}>~2x theoretical capacity</span>. This is why real UPS installations are much larger than "simple math" suggests!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    check
                   </div>
-                  <div className="space-y-2 ml-10">
-                    {q.options.map((option, oIndex) => (
-                      <button
-                        key={oIndex}
-                        onClick={() => handleTestAnswer(qIndex, oIndex)}
-                        style={{ WebkitTapHighlightColor: 'transparent' }}
-                        className={`w-full p-3 rounded-xl text-left text-sm transition-all duration-200 ${
-                          testAnswers[qIndex] === oIndex
-                            ? 'bg-violet-500 text-white shadow-lg'
-                            : 'bg-slate-50 text-slate-700 hover:bg-violet-50 border border-slate-200'
-                        }`}
-                      >
-                        {option.text}
-                      </button>
-                    ))}
-                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.short}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Peukert Effect Applies:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
             </div>
-
-            <button
-              onClick={handleSubmitTest}
-              disabled={!allAnswered}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-                allAnswered
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
-            >
-              {allAnswered ? 'Submit Assessment' : `Answer ${10 - answeredCount} more`}
-            </button>
-          </>
-        ) : (
-          <div className="text-center py-8">
-            <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-6 ${
-              testScore >= 7 ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gradient-to-br from-amber-500 to-orange-500'
-            }`}>
-              <span className="text-5xl">{testScore >= 7 ? '🔋' : '📚'}</span>
-            </div>
-
-            <h3 className="text-2xl font-bold text-slate-800 mb-2">{testScore}/10 Correct</h3>
-            <p className="text-slate-600 mb-8">
-              {testScore >= 7 ? 'Excellent! You understand UPS battery sizing!' : 'Review the concepts and try again.'}
-            </p>
-
-            {testScore >= 7 ? (
-              <button
-                onClick={goToNextPhase}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg"
-              >
-                Complete Lesson →
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <button
-                  onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null)); }}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                  className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-slate-200 text-slate-700"
-                >
-                  Try Again
-                </button>
-              </div>
-            )}
           </div>
-        )}
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => (
-    <div className="max-w-2xl mx-auto px-6 py-8 text-center">
-      <div className="mb-6">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 shadow-xl shadow-emerald-500/30 mb-4">
-          <span className="text-4xl">🏆</span>
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand UPS battery sizing and Peukert effect!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
         </div>
-      </div>
-
-      <h1 className="text-2xl font-bold text-white mb-3">UPS Battery Sizing Master!</h1>
-
-      <p className="text-base text-slate-300 mb-6 max-w-md mx-auto">
-        You now understand how to properly size UPS batteries for data center reliability.
-      </p>
-
-      <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-5 text-left">
-        <h3 className="font-bold text-white mb-3 text-center">Key Takeaways</h3>
-        <ul className="space-y-2 text-slate-300">
-          {[
-            'Peukert\'s Law: High discharge rates reduce effective capacity',
-            'C-rate matters: C/1 gives 50-60% of C/20 capacity',
-            'Design margins: 150-200% for real-world reliability',
-            'Temperature and age further reduce capacity',
-            'Lithium batteries have lower Peukert effect than lead-acid',
-          ].map((item, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs">✓</span>
-              <span className="text-sm leading-relaxed">{item}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-
-  // Main render content
-  const renderPhaseContent = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
+      );
     }
-  };
 
-  // Determine if next button should be enabled for each phase
-  const canProceed = () => {
-    switch (phase) {
-      case 'hook': return true;
-      case 'predict': return showPredictionFeedback;
-      case 'play': return hasExperimented;
-      case 'review': return true;
-      case 'twist_predict': return showTwistFeedback;
-      case 'twist_play': return hasExploredTwist;
-      case 'twist_review': return true;
-      case 'transfer': return completedApps.size >= 4;
-      case 'test': return testSubmitted && testScore >= 7;
-      case 'mastery': return false;
-      default: return true;
-    }
-  };
+    const question = testQuestions[currentQuestion];
 
-  // Get next button label for each phase
-  const getNextLabel = () => {
-    switch (phase) {
-      case 'hook': return 'Start';
-      case 'predict': return showPredictionFeedback ? 'Continue' : 'Select an answer';
-      case 'play': return hasExperimented ? 'Continue' : `Experiment ${Math.max(0, 5 - experimentCount)} more`;
-      case 'review': return 'Discover Twist';
-      case 'twist_predict': return showTwistFeedback ? 'Continue' : 'Select an answer';
-      case 'twist_play': return hasExploredTwist ? 'Continue' : 'Try the slider';
-      case 'twist_review': return 'Applications';
-      case 'transfer': return completedApps.size >= 4 ? 'Take Test' : `Complete ${4 - completedApps.size} more`;
-      case 'test': return testScore >= 7 ? 'Complete' : 'Score 7+ to pass';
-      case 'mastery': return 'Complete';
-      default: return 'Continue';
-    }
-  };
-
-  return (
-    <div className="absolute inset-0 flex flex-col bg-[#0a0f1a] text-white overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900 pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Progress bar header */}
-      <div className="relative z-10 flex-shrink-0">
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-      </div>
 
-      {/* Main content - scrollable */}
-      <div className="relative z-10 flex-1 overflow-y-auto">
-        {renderPhaseContent()}
-      </div>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
 
-      {/* Bottom navigation bar */}
-      <div className="relative z-10 flex-shrink-0">
-        {renderBottomBar(canProceed(), getNextLabel())}
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
-}
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          UPS Battery Sizing Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand why battery capacity depends on discharge rate and how to properly size UPS systems for critical applications.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Takeaways:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              "Peukert's Law: faster discharge = less capacity",
+              'C/1 rate delivers only 50-60% of C/20 capacity',
+              'Apply 1.5-2x derating for real-world sizing',
+              'Temperature and aging further reduce capacity',
+              'Lithium has lower Peukert exponent than lead-acid',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>check</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default UPSBatterySizingRenderer;

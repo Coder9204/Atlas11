@@ -2,25 +2,294 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
+// =============================================================================
 // TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
+// =============================================================================
 
-interface LaminarTurbulentRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
+interface LaminarTurbulentRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// =============================================================================
+// SOUND UTILITY
+// =============================================================================
+
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// =============================================================================
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// =============================================================================
+
+const testQuestions = [
+  {
+    scenario: "You're filling a bathtub and notice the water stream from the faucet is perfectly clear and glassy at low flow, but becomes white and chaotic when you turn it up high.",
+    question: "What physical quantity determines this transition?",
+    options: [
+      { id: 'a', label: "Water temperature - hot water is more turbulent" },
+      { id: 'b', label: "Reynolds number - the ratio of inertial to viscous forces", correct: true },
+      { id: 'c', label: "Water pressure alone - higher pressure equals turbulence" },
+      { id: 'd', label: "Pipe material - metal pipes create turbulence" }
+    ],
+    explanation: "The Reynolds number (Re = rho*v*D/mu) determines flow regime. When inertial forces dominate viscous forces (high Re), flow becomes turbulent. The faucet transition happens as velocity increases, raising Re above ~4000."
+  },
+  {
+    scenario: "A pipeline engineer is designing a system to transport crude oil (viscosity 50x water) versus water through identical pipes at the same volumetric flow rate.",
+    question: "Which fluid is more likely to flow turbulently?",
+    options: [
+      { id: 'a', label: "Oil - its thickness creates more friction and chaos" },
+      { id: 'b', label: "Water - lower viscosity means higher Reynolds number", correct: true },
+      { id: 'c', label: "Both identical - same pipe, same flow rate" },
+      { id: 'd', label: "Cannot determine without knowing pipe diameter" }
+    ],
+    explanation: "Reynolds number is inversely proportional to viscosity (Re = rho*v*D/mu). Water's much lower viscosity gives it a higher Re at the same velocity, making turbulence more likely. Oil's high viscosity suppresses turbulent fluctuations."
+  },
+  {
+    scenario: "A blood vessel develops a 70% stenosis (narrowing) due to plaque buildup. A doctor places a stethoscope over the area and hears a whooshing sound called a 'bruit'.",
+    question: "What causes this audible sound?",
+    options: [
+      { id: 'a', label: "Blood cells rubbing against the plaque surface" },
+      { id: 'b', label: "Turbulent flow - the narrowing increases velocity and Reynolds number", correct: true },
+      { id: 'c', label: "Laminar flow becoming more organized" },
+      { id: 'd', label: "The heart beating harder to push blood through" }
+    ],
+    explanation: "The stenosis dramatically increases local blood velocity (continuity equation). This raises the Reynolds number above the critical threshold (~2300-4000), triggering turbulent flow. The chaotic eddies create the audible bruit sound."
+  },
+  {
+    scenario: "A golf ball manufacturer is deciding whether to make balls smooth or dimpled. A smooth ball seems more 'aerodynamic' intuitively.",
+    question: "Why do dimpled balls actually fly 2x farther than smooth ones?",
+    options: [
+      { id: 'a', label: "Dimples trap air, making the ball lighter" },
+      { id: 'b', label: "Dimples trigger turbulent boundary layer that delays flow separation, reducing drag", correct: true },
+      { id: 'c', label: "Dimples increase spin, which creates lift" },
+      { id: 'd', label: "Smooth balls have more surface area creating friction" }
+    ],
+    explanation: "Counterintuitively, dimples trigger a turbulent boundary layer that stays attached longer around the ball's curve. This dramatically reduces the low-pressure wake behind the ball, cutting total drag by ~50%. The small increase in skin friction is far outweighed by reduced pressure drag."
+  },
+  {
+    scenario: "An aircraft designer is trying to maintain laminar flow over a wing to reduce fuel consumption. Even a small imperfection like bug splatter can ruin the laminar flow region.",
+    question: "Why are laminar boundary layers so sensitive to surface imperfections?",
+    options: [
+      { id: 'a', label: "Imperfections heat up the air" },
+      { id: 'b', label: "Small disturbances amplify in laminar flow, triggering transition to turbulence", correct: true },
+      { id: 'c', label: "Bugs are chemically reactive with air" },
+      { id: 'd', label: "Laminar flow requires perfectly smooth surfaces to exist at all" }
+    ],
+    explanation: "Laminar flow exists in a delicate balance. Small disturbances (surface roughness, vibrations) can grow exponentially through instability mechanisms. Once disturbances exceed a threshold, they trigger transition to turbulence, increasing drag significantly."
+  },
+  {
+    scenario: "A microfluidics researcher designs a lab-on-chip device with channels only 100 micrometers wide. Fluids flow side-by-side without mixing.",
+    question: "Why is turbulent mixing essentially impossible in these tiny channels?",
+    options: [
+      { id: 'a', label: "The channel walls prevent eddies from forming" },
+      { id: 'b', label: "Reynolds number scales with length - microscale means Re << 1, firmly laminar", correct: true },
+      { id: 'c', label: "Surface tension prevents turbulence" },
+      { id: 'd', label: "Microfluidic devices use special anti-turbulence coatings" }
+    ],
+    explanation: "Reynolds number is proportional to characteristic length (Re = rho*v*L/mu). At 100 um scale with typical velocities, Re is around 1-100 - thousands of times below the turbulent transition. Viscous forces completely dominate, ensuring laminar flow."
+  },
+  {
+    scenario: "A Formula 1 team notices their car's underbody has small scratches and imperfections from track debris. The aerodynamics team is concerned.",
+    question: "How do these imperfections affect the airflow under the car?",
+    options: [
+      { id: 'a', label: "They have no effect - the car is too fast for imperfections to matter" },
+      { id: 'b', label: "They trigger premature transition to turbulent flow, increasing drag", correct: true },
+      { id: 'c', label: "They create helpful vortices that increase downforce" },
+      { id: 'd', label: "They only matter aesthetically" }
+    ],
+    explanation: "F1 cars carefully design smooth underbodies to maintain laminar flow regions. Surface imperfections act as 'trip wires' that trigger turbulent transition earlier than intended, increasing skin friction drag and hurting performance."
+  },
+  {
+    scenario: "A chemical plant is pumping a Newtonian fluid through a long pipeline and wants to reduce pumping power costs. They're considering adding drag-reducing polymers.",
+    question: "How do these polymers reduce turbulent drag by up to 80%?",
+    options: [
+      { id: 'a', label: "They make the fluid thicker, reducing flow rate" },
+      { id: 'b', label: "They suppress turbulent eddies near the pipe wall without eliminating turbulence", correct: true },
+      { id: 'c', label: "They coat the pipe wall making it smoother" },
+      { id: 'd', label: "They convert turbulent flow back to laminar" }
+    ],
+    explanation: "Drag-reducing polymers (like polyethylene oxide) are long-chain molecules that stretch and dampen the small eddies responsible for momentum transfer near the wall. The bulk flow remains turbulent, but near-wall turbulence is suppressed, dramatically reducing friction."
+  },
+  {
+    scenario: "A heat exchanger designer must choose between laminar and turbulent flow for cooling a hot surface. Heat transfer is critical.",
+    question: "Which flow regime provides better heat transfer, and why?",
+    options: [
+      { id: 'a', label: "Laminar - smooth flow allows heat to conduct better" },
+      { id: 'b', label: "Turbulent - eddies enhance mixing and heat transfer despite higher pumping cost", correct: true },
+      { id: 'c', label: "Both are equal - heat transfer depends only on temperature difference" },
+      { id: 'd', label: "Transitional flow - it combines benefits of both" }
+    ],
+    explanation: "Turbulent flow dramatically enhances heat transfer (5-10x) because eddies continuously bring fresh cool fluid to the hot surface and carry hot fluid away. Laminar flow relies only on slow molecular conduction through the boundary layer. Most heat exchangers operate turbulently."
+  },
+  {
+    scenario: "An engineer calculates Re = 3000 for flow in a pipe. The textbook says transition occurs at Re = 2300.",
+    question: "What should the engineer expect to observe?",
+    options: [
+      { id: 'a', label: "Fully developed turbulent flow throughout the pipe" },
+      { id: 'b', label: "Intermittent turbulence - 'turbulent puffs' that come and go amid laminar flow", correct: true },
+      { id: 'c', label: "Fully laminar flow - 2300 is just a rough estimate" },
+      { id: 'd', label: "The flow will oscillate between fully laminar and fully turbulent" }
+    ],
+    explanation: "Re = 3000 is in the transition zone (2300-4000). Flow is intermittent - localized turbulent patches ('puffs') form and decay within otherwise laminar flow. The transition is sensitive to disturbances and not a sharp boundary."
+  }
+];
+
+// =============================================================================
+// REAL WORLD APPLICATIONS - 4 detailed applications with stats
+// =============================================================================
+
+const realWorldApps = [
+  {
+    icon: '✈️',
+    title: 'Aircraft Aerodynamics',
+    short: 'Aviation',
+    tagline: 'The Quest for Laminar Flow',
+    description: 'Aircraft designers obsess over maintaining laminar flow across wings to reduce fuel consumption. At cruise speeds, laminar boundary layers have 5-10x lower skin friction than turbulent ones. Even small imperfections - bug splatter, ice crystals, rivets - can trigger premature transition, destroying laminar flow regions.',
+    connection: 'The Reynolds number governs boundary layer transition on aircraft surfaces. At flight Reynolds numbers of 10-100 million, maintaining laminar flow requires careful pressure gradient management and surface smoothness within microns.',
+    howItWorks: 'Natural laminar flow (NLF) airfoils have carefully designed pressure distributions that delay transition. Hybrid laminar flow control (HLFC) actively sucks away turbulent disturbances through micro-perforated surfaces. Composite materials enable smoother surfaces than riveted aluminum.',
+    stats: [
+      { value: '10-15%', label: 'Fuel savings from laminar flow', icon: '⛽' },
+      { value: '5-10x', label: 'Drag increase when laminar->turbulent', icon: '📈' },
+      { value: '10-100M', label: 'Typical flight Reynolds number', icon: '🔢' }
+    ],
+    examples: [
+      'Boeing 787 uses natural laminar flow nacelles',
+      'Gliders achieve 60:1 lift-to-drag with extensive laminar flow',
+      'NASA X-66 tests hybrid laminar flow control',
+      'F-22 stealth coatings also promote laminar flow'
+    ],
+    companies: ['Boeing', 'Airbus', 'NASA', 'Lockheed Martin'],
+    futureImpact: 'Active laminar flow control with smart surfaces could enable 25-30% efficiency gains, critical for sustainable aviation.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🩺',
+    title: 'Cardiovascular Medicine',
+    short: 'Blood Flow',
+    tagline: 'When Turbulence Means Trouble',
+    description: 'Normal blood flow is laminar - smooth and silent. Turbulent blood flow is pathological, occurring at stenoses (narrowings) and faulty heart valves. Doctors literally hear turbulence as murmurs and bruits through stethoscopes. Turbulent flow also damages blood vessel walls and promotes further plaque growth.',
+    connection: 'Blood normally has Re ~ 1000-2000 in major arteries. A 70% stenosis can locally increase velocity 10x, pushing Re above 4000 and triggering audible turbulence. The transition is a key diagnostic marker.',
+    howItWorks: 'Doppler ultrasound measures blood velocity to calculate local Reynolds numbers. High-velocity jets through stenoses appear as bright signals. Turbulent flow creates characteristic spectral broadening patterns that cardiologists recognize instantly.',
+    stats: [
+      { value: '~2300', label: 'Critical Re for blood flow', icon: '⚠️' },
+      { value: '30-100 cm/s', label: 'Normal arterial velocity', icon: '🌊' },
+      { value: '70%', label: 'Stenosis threshold for turbulence', icon: '❤️' }
+    ],
+    examples: [
+      'Carotid bruits indicate stroke risk',
+      'Heart murmurs reveal valve problems',
+      'Artificial heart valves designed for laminar flow',
+      'Stents restore laminar flow in blocked arteries'
+    ],
+    companies: ['Medtronic', 'Edwards Lifesciences', 'Abbott', 'Siemens Healthineers'],
+    futureImpact: 'AI-powered acoustic sensors could enable continuous at-home cardiovascular monitoring, detecting turbulence years before symptoms appear.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🏭',
+    title: 'Pipeline Engineering',
+    short: 'Oil & Gas',
+    tagline: 'Billions in Pumping Costs',
+    description: 'The oil and gas industry transports fluids through millions of kilometers of pipelines. The difference between laminar and turbulent flow determines pumping power - turbulent flow can require 10x more energy. Drag-reducing polymers can cut turbulent friction by 80%, saving billions annually.',
+    connection: 'Pipeline flow regime directly determines pressure drop and pumping cost. Laminar pipe flow (Re < 2300) has friction factor f = 64/Re, while turbulent follows the Moody diagram with much higher values.',
+    howItWorks: 'Engineers select pipe diameter based on flow rate and fluid viscosity to optimize Reynolds number. For viscous crude oil, larger pipes maintain lower Re. Drag-reducing agents (long-chain polymers) suppress near-wall turbulence without eliminating bulk turbulent mixing.',
+    stats: [
+      { value: '80%', label: 'Friction reduction with DRAs', icon: '📉' },
+      { value: '$2B+', label: 'Annual DRA market value', icon: '💰' },
+      { value: '3M+ km', label: 'Global pipeline network', icon: '🌍' }
+    ],
+    examples: [
+      'Trans-Alaska Pipeline uses heated oil and DRAs',
+      'Natural gas pipelines operate at Re > 10 million',
+      'Slurry pipelines transport coal-water mixtures',
+      'Subsea pipelines require thermal management'
+    ],
+    companies: ['Kinder Morgan', 'TransCanada', 'Baker Hughes', 'Schlumberger'],
+    futureImpact: 'Smart pipeline networks with AI-controlled DRA injection will optimize flow in real-time, crucial for hydrogen transport.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔬',
+    title: 'Microfluidics',
+    short: 'Lab-on-Chip',
+    tagline: 'Where Laminar is Guaranteed',
+    description: 'Microfluidic devices operate at scales where turbulence is essentially impossible. With channel dimensions of 10-500 micrometers, Reynolds numbers rarely exceed 100. This predictable laminar flow enables precise control of chemical reactions, cell sorting, and diagnostic assays on palm-sized "lab-on-chip" devices.',
+    connection: 'The Reynolds number scales with length (Re ~ L). At 100 um scale with typical velocities, Re ~ 1-10 - thousands of times below turbulent transition. Two streams flow side-by-side and mix only by diffusion.',
+    howItWorks: 'Microfluidic channels exploit laminar flow for precise control. Streams can flow parallel without mixing, enabling concentration gradients. Inertial focusing (at moderate Re ~ 1-100) positions particles at equilibrium locations for high-throughput sorting.',
+    stats: [
+      { value: '<100', label: 'Typical channel Reynolds number', icon: '📊' },
+      { value: '10-500 um', label: 'Channel dimensions', icon: '📏' },
+      { value: '10^6/sec', label: 'Cell sorting throughput', icon: '🧫' }
+    ],
+    examples: [
+      'COVID rapid tests use microfluidic transport',
+      'Cell sorters isolate circulating tumor cells',
+      'Organ-on-chip devices test drug responses',
+      'Point-of-care diagnostics from finger pricks'
+    ],
+    companies: ['Illumina', '10x Genomics', 'Fluidigm', 'Dolomite Microfluidics'],
+    futureImpact: 'Lab-on-chip technology will democratize medical diagnostics, enabling comprehensive blood panels from a single drop.',
+    color: '#8B5CF6'
+  }
+];
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
+const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
   const [faucetFlow, setFaucetFlow] = useState(0);
-
-  // Predict phase
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [showPredictResult, setShowPredictResult] = useState(false);
 
   // Play phase - flow simulator
   const [flowVelocity, setFlowVelocity] = useState(0.5);
@@ -32,20 +301,20 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
   const animationRef = useRef<number>();
 
   // Twist phase - boundary layers
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistResult, setShowTwistResult] = useState(false);
   const [objectShape, setObjectShape] = useState<'sphere' | 'streamlined' | 'flat'>('sphere');
 
   // Transfer phase
-  const [activeApp, setActiveApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set([0]));
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
   // Test phase
-  const [testAnswers, setTestAnswers] = useState<number[]>([]);
-  const [showTestResults, setShowTestResults] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
-  // UI state
-  const [isMobile, setIsMobile] = useState(false);
+  // Navigation ref
+  const isNavigating = useRef(false);
 
   // Responsive detection
   useEffect(() => {
@@ -55,56 +324,23 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
-
-  // Web Audio API sound
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete' = 'click') => {
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      const freqMap = { click: 440, success: 600, failure: 300, transition: 520, complete: 700 };
-      oscillator.frequency.value = freqMap[type];
-      oscillator.type = 'sine';
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    } catch {}
-  }, []);
-
   // Calculate Reynolds number
   const calculateReynolds = (velocity: number, diameter: number, viscosity: number): number => {
-    const density = 1000; // water kg/m³
-    // Re = ρvD/μ
-    return (density * velocity * diameter) / (viscosity * 1000);
+    const density = 1000; // water kg/m3
+    // Re = rho*v*D/mu (diameter in cm -> m, viscosity relative to water)
+    return (density * velocity * (diameter / 100)) / (viscosity * 0.001);
   };
 
   // Get flow type based on Reynolds number
   const getFlowType = (Re: number): 'laminar' | 'transition' | 'turbulent' => {
-    if (Re < 2000) return 'laminar';
+    if (Re < 2300) return 'laminar';
     if (Re < 4000) return 'transition';
     return 'turbulent';
   };
 
   // Dye particle animation
   useEffect(() => {
-    if (!showDyeInjection) return;
+    if (phase !== 'play' || !showDyeInjection) return;
 
     const Re = calculateReynolds(flowVelocity, pipeDiameter, fluidViscosity);
     const flowType = getFlowType(Re);
@@ -125,13 +361,10 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
         let newY = p.y;
 
         if (flowType === 'turbulent') {
-          // Chaotic motion
           newY += (Math.random() - 0.5) * 15;
         } else if (flowType === 'transition') {
-          // Some waviness
           newY += (Math.random() - 0.5) * 5;
         }
-        // Laminar: particles stay in lanes
 
         return {
           ...p,
@@ -147,659 +380,258 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [flowVelocity, pipeDiameter, fluidViscosity, showDyeInjection]);
+  }, [phase, flowVelocity, pipeDiameter, fluidViscosity, showDyeInjection]);
 
-  // Test questions
-  const testQuestions = [
-    {
-      question: "What primarily determines whether flow is laminar or turbulent?",
-      options: [
-        { text: "Fluid color", correct: false },
-        { text: "Reynolds number (Re = ρvD/μ)", correct: true },
-        { text: "Pipe material", correct: false },
-        { text: "Fluid temperature only", correct: false }
-      ]
-    },
-    {
-      question: "You turn on a faucet slowly — the water stream is clear. What happens when you turn it up high?",
-      options: [
-        { text: "Stream stays clear but faster", correct: false },
-        { text: "Stream becomes white and chaotic", correct: true },
-        { text: "Stream gets thinner", correct: false },
-        { text: "No change in appearance", correct: false }
-      ]
-    },
-    {
-      question: "Which flow type has LOWER drag for most shapes?",
-      options: [
-        { text: "Turbulent - energy helps it slide", correct: false },
-        { text: "Laminar - smooth, orderly motion", correct: true },
-        { text: "They have equal drag", correct: false },
-        { text: "Depends on color", correct: false }
-      ]
-    },
-    {
-      question: "What is the critical Reynolds number for pipe flow transition?",
-      options: [
-        { text: "Re ≈ 100", correct: false },
-        { text: "Re ≈ 2300", correct: true },
-        { text: "Re ≈ 10,000", correct: false },
-        { text: "Re ≈ 1,000,000", correct: false }
-      ]
-    },
-    {
-      question: "Why does adding honey to water change its flow behavior?",
-      options: [
-        { text: "Honey adds color", correct: false },
-        { text: "Higher viscosity raises critical Re threshold", correct: true },
-        { text: "Honey is lighter", correct: false },
-        { text: "No effect on flow", correct: false }
-      ]
-    },
-    {
-      question: "Golf ball dimples work by:",
-      options: [
-        { text: "Making the ball heavier", correct: false },
-        { text: "Triggering turbulent boundary layer (less drag)", correct: true },
-        { text: "Increasing laminar flow", correct: false },
-        { text: "Aesthetic only", correct: false }
-      ]
-    },
-    {
-      question: "Blood flow in arteries is usually:",
-      options: [
-        { text: "Always turbulent - heart pumps hard", correct: false },
-        { text: "Laminar, except in diseased vessels", correct: true },
-        { text: "Random chaos", correct: false },
-        { text: "Only turbulent in veins", correct: false }
-      ]
-    },
-    {
-      question: "To keep flow laminar in a pipe, you should:",
-      options: [
-        { text: "Increase velocity", correct: false },
-        { text: "Decrease pipe diameter", correct: false },
-        { text: "Increase viscosity or decrease velocity", correct: true },
-        { text: "Make pipe rougher", correct: false }
-      ]
-    },
-    {
-      question: "Why do Formula 1 cars have smooth underbodies?",
-      options: [
-        { text: "Weight reduction", correct: false },
-        { text: "Maintain laminar airflow for less drag", correct: true },
-        { text: "Aesthetic design", correct: false },
-        { text: "Easier to clean", correct: false }
-      ]
-    },
-    {
-      question: "The transition from laminar to turbulent is:",
-      options: [
-        { text: "Gradual and predictable", correct: false },
-        { text: "Sudden and sensitive to disturbances", correct: true },
-        { text: "Impossible to predict", correct: false },
-        { text: "Only occurs in gases", correct: false }
-      ]
-    }
-  ];
-
-  // Real-world applications
-  const applications = [
-    {
-      icon: "🚿",
-      title: "Plumbing Design",
-      short: "Pipe flow",
-      tagline: "Keeping water flowing smoothly",
-      description: "Engineers design water supply systems to maintain laminar flow where possible, minimizing energy loss and noise.",
-      connection: "Reynolds number determines pipe sizing. Too small = turbulent = high friction losses and noisy pipes.",
-      howItWorks: "By calculating Re for expected flow rates, engineers select pipe diameters that keep Re < 2300 for quiet, efficient systems. Larger pipes = lower velocity = lower Re.",
-      stats: ["Laminar friction: ~16/Re", "Turbulent friction: ~0.02-0.05", "Energy loss: v² relationship"],
-      examples: ["Home water supply", "Industrial pipelines", "HVAC ducts", "Medical IV tubing"],
-      companies: ["Grundfos", "Pentair", "Victaulic", "Uponor"],
-      futureImpact: "Smart pipe systems with variable flow control optimize for laminar conditions, reducing pumping energy by 30%.",
-      color: "#3B82F6"
-    },
-    {
-      icon: "✈️",
-      title: "Aircraft Design",
-      short: "Drag reduction",
-      tagline: "The laminar flow holy grail",
-      description: "Maintaining laminar flow over aircraft surfaces dramatically reduces drag — a key goal for fuel efficiency.",
-      connection: "Laminar boundary layers have much lower skin friction. Transition to turbulent increases drag significantly.",
-      howItWorks: "Smooth surfaces, careful pressure gradients, and suction systems keep boundary layers laminar longer. Even small contamination (bugs, rivets) can trigger transition.",
-      stats: ["Laminar drag: 1× baseline", "Turbulent drag: 3-5× higher", "Fuel savings: up to 15%"],
-      examples: ["Boeing 787 wings", "Glider designs", "Laminar flow nacelles", "Natural laminar airfoils"],
-      companies: ["Boeing", "Airbus", "NASA", "DLR"],
-      futureImpact: "Hybrid laminar flow control with boundary layer suction could revolutionize long-range aircraft efficiency.",
-      color: "#10B981"
-    },
-    {
-      icon: "⚽",
-      title: "Sports Equipment",
-      short: "Ball aerodynamics",
-      tagline: "Dimples, seams, and spin",
-      description: "Golf balls, soccer balls, and baseballs are designed with specific surface textures that manipulate flow transition.",
-      connection: "Counterintuitively, triggering turbulent boundary layers REDUCES drag on blunt objects by delaying flow separation.",
-      howItWorks: "Golf ball dimples create turbulent boundary layer that stays attached longer, reducing wake size. Smooth balls have earlier separation and more drag!",
-      stats: ["Golf ball drag: 50% less with dimples", "Cricket seam: 20% swing effect", "Soccer ball panels: affects trajectory"],
-      examples: ["Golf ball dimples", "Baseball seams", "Soccer panel design", "Tennis ball fuzz"],
-      companies: ["Titleist", "Nike", "Adidas", "Wilson"],
-      futureImpact: "Computational fluid dynamics enables precision-engineered surface textures for optimal performance in all sports.",
-      color: "#F59E0B"
-    },
-    {
-      icon: "❤️",
-      title: "Cardiovascular Health",
-      short: "Blood flow",
-      tagline: "When turbulence means trouble",
-      description: "Normal blood flow is laminar. Turbulence in arteries is a sign of disease and can be heard with a stethoscope.",
-      connection: "Arterial plaques narrow vessels, increasing local velocity and Reynolds number, triggering turbulent flow (bruit sounds).",
-      howItWorks: "Doctors listen for turbulent flow sounds ('bruits') as indicators of arterial blockages. Normal arteries maintain laminar flow even at high cardiac output.",
-      stats: ["Normal Re: ~1000-2000", "Turbulent bruit: Re > 4000", "Detection: stethoscope or ultrasound"],
-      examples: ["Carotid artery screening", "Heart valve assessment", "Aneurysm detection", "Artificial heart design"],
-      companies: ["Medtronic", "St. Jude Medical", "Philips Healthcare", "GE Healthcare"],
-      futureImpact: "AI-powered acoustic analysis can detect early arterial disease through subtle changes in flow sounds.",
-      color: "#EF4444"
-    }
-  ];
-
-  // Real-world applications (comprehensive)
-  const realWorldApps = [
-    {
-      icon: '✈️',
-      title: 'Aircraft Aerodynamics',
-      short: 'Aviation flight',
-      tagline: 'Mastering Flow for Fuel Efficiency',
-      description: 'Aircraft designers obsess over maintaining laminar flow across wing surfaces. The boundary layer transition from laminar to turbulent dramatically increases skin friction drag, directly impacting fuel consumption. Modern aircraft like the Boeing 787 and Airbus A350 use natural laminar flow airfoils, smooth composite surfaces, and careful pressure gradient management to delay transition and reduce drag by up to 15%.',
-      connection: 'The Reynolds number governs when boundary layer transition occurs on aircraft surfaces. At flight speeds and altitudes, engineers must carefully design wing profiles that maintain favorable pressure gradients to keep flow laminar as long as possible, minimizing the energy penalty of turbulent boundary layers.',
-      howItWorks: 'Wings are designed with specific airfoil shapes that create favorable pressure gradients (pressure decreasing in flow direction) which stabilize the laminar boundary layer. Surface roughness must be minimized—even bug splatter or ice crystals can trigger premature transition. Advanced hybrid laminar flow control (HLFC) uses boundary layer suction through micro-perforated surfaces to actively remove turbulent disturbances and extend laminar regions.',
-      stats: [
-        { value: '15%', label: 'Potential fuel savings', icon: '⛽' },
-        { value: '5-10×', label: 'Drag increase (laminar to turbulent)', icon: '📈' },
-        { value: '10+ million', label: 'Flight Reynolds number', icon: '🔢' }
-      ],
-      examples: [
-        'Boeing 787 Dreamliner uses natural laminar flow nacelles reducing drag by 10%',
-        'Gliders achieve 60:1 lift-to-drag ratios with extensive laminar flow',
-        'NASA X-66 demonstrator tests hybrid laminar flow control technology',
-        'F-22 Raptor uses stealth coatings that also promote laminar flow'
-      ],
-      companies: ['Boeing', 'Airbus', 'NASA', 'Lockheed Martin', 'Rolls-Royce'],
-      futureImpact: 'Active laminar flow control with smart surfaces that detect and respond to turbulence onset could enable 25-30% fuel efficiency gains. Combined with sustainable aviation fuels and electric propulsion, this could dramatically reduce aviation\'s carbon footprint.',
-      color: '#3b82f6'
-    },
-    {
-      icon: '🩺',
-      title: 'Blood Flow in Arteries',
-      short: 'Cardiovascular dynamics',
-      tagline: 'When Turbulence Signals Trouble',
-      description: 'Blood normally flows through arteries in a smooth, laminar pattern. When vessels become narrowed by atherosclerotic plaques (stenosis), blood velocity increases through the constriction, raising the local Reynolds number and triggering turbulent flow. This turbulence creates audible sounds called bruits that doctors can detect with a stethoscope, serving as an early warning of cardiovascular disease.',
-      connection: 'The transition from laminar to turbulent blood flow directly correlates with vessel health. Normal arterial flow has Reynolds numbers around 1000-2000 (well within laminar regime). Stenosis increases local velocity, pushing Re above 4000 and triggering turbulence. The chaotic eddies damage the vessel endothelium and accelerate plaque growth—a dangerous positive feedback loop.',
-      howItWorks: 'Blood viscosity (3-4 centipoise) and vessel geometry determine the critical Reynolds number for transition. At a 70% stenosis, blood velocity can increase 10-fold through the narrowing. Doppler ultrasound measures these velocity changes to quantify stenosis severity. Turbulent flow also increases shear stress on vessel walls, activating platelets and promoting clot formation at the stenosis site.',
-      stats: [
-        { value: '30 cm/s', label: 'Normal aortic velocity', icon: '🌊' },
-        { value: '~2300', label: 'Critical Re in vessels', icon: '⚠️' },
-        { value: '70%', label: 'Stenosis for turbulent onset', icon: '❤️' }
-      ],
-      examples: [
-        'Carotid artery screening detects stroke risk via turbulent flow sounds',
-        'Aortic valve stenosis increases velocity from 1 m/s to over 5 m/s',
-        'Heart murmurs result from turbulent flow through abnormal valves',
-        'Artificial heart valves are designed to minimize turbulence and hemolysis'
-      ],
-      companies: ['Medtronic', 'Edwards Lifesciences', 'Boston Scientific', 'Abbott', 'Siemens Healthineers'],
-      futureImpact: 'AI-powered acoustic sensors could enable continuous at-home cardiovascular monitoring, detecting subtle changes in flow patterns years before symptoms appear. Computational fluid dynamics now guides personalized stent placement to restore laminar flow and prevent restenosis.',
-      color: '#ef4444'
-    },
-    {
-      icon: '🛢️',
-      title: 'Pipeline Design',
-      short: 'Oil and gas transport',
-      tagline: 'Billions in Pumping Costs at Stake',
-      description: 'The oil and gas industry transports fluids through thousands of miles of pipelines, where the difference between laminar and turbulent flow determines pumping energy requirements and operational costs. Pipeline engineers carefully balance diameter, flow rate, and fluid properties to optimize the Reynolds number and minimize pressure losses, potentially saving billions of dollars annually across the global pipeline network.',
-      connection: 'Pipeline flow regime directly determines friction factor and pressure drop. Laminar flow (Re < 2300) has friction factor f = 64/Re, while turbulent flow follows the Moody diagram with much higher values. A pipeline operating in turbulent regime may require 10× more pumping power than one designed to maintain laminar conditions.',
-      howItWorks: 'Engineers select pipe diameter based on expected flow rates and fluid viscosity to achieve target Reynolds numbers. For crude oil (viscosity 10-1000 cP), larger diameters maintain laminar flow. Drag-reducing agents (DRAs)—long-chain polymers—can reduce turbulent friction by up to 80% by suppressing eddy formation near the pipe wall. Pipeline operators continuously monitor flow conditions and inject DRAs at optimal locations.',
-      stats: [
-        { value: '80%', label: 'Friction reduction with DRAs', icon: '📉' },
-        { value: '$2B+', label: 'Annual DRA market value', icon: '💰' },
-        { value: '2.5 million km', label: 'Global pipeline network', icon: '🌍' }
-      ],
-      examples: [
-        'Trans-Alaska Pipeline uses heated oil and DRAs to maintain flow',
-        'Natural gas pipelines operate at high Reynolds numbers (10⁷) with smooth pipe walls',
-        'Subsea pipelines require careful thermal management to prevent wax formation',
-        'Slurry pipelines transport coal-water mixtures with controlled turbulence'
-      ],
-      companies: ['Kinder Morgan', 'Enterprise Products', 'TransCanada', 'Baker Hughes', 'Schlumberger'],
-      futureImpact: 'Smart pipeline networks with distributed sensors and AI-controlled DRA injection will optimize flow conditions in real-time. Hydrogen transport pipelines will require new flow regime considerations due to hydrogen\'s unique properties (low viscosity, high diffusivity).',
-      color: '#f59e0b'
-    },
-    {
-      icon: '🔬',
-      title: 'Microfluidics',
-      short: 'Lab-on-chip devices',
-      tagline: 'Where Laminar Flow is Guaranteed',
-      description: 'Microfluidic devices operate at length scales where turbulence is essentially impossible. With channel dimensions of 10-500 micrometers and typical velocities of mm/s to cm/s, Reynolds numbers rarely exceed 100—firmly in the laminar regime. This predictable flow behavior enables precise control of chemical reactions, cell sorting, and diagnostic assays on "lab-on-chip" devices that fit in your palm.',
-      connection: 'The Reynolds number scaling (Re = ρvL/μ) means that microscale channels inherently operate in laminar conditions. At L = 100 μm and v = 1 cm/s in water, Re ≈ 1—thousands of times below the turbulent transition. This creates perfectly parallel streamlines where fluids flow side-by-side without mixing, enabling new analytical techniques impossible at macro scales.',
-      howItWorks: 'In microfluidic channels, two fluid streams can flow parallel to each other and only mix by molecular diffusion at their interface. This enables precise control of concentration gradients, reaction timing, and particle sorting. Inertial focusing uses the subtle effects of fluid inertia at moderate Re (1-100) to position cells or particles at specific equilibrium positions without active forces—enabling high-throughput sorting at millions of particles per second.',
-      stats: [
-        { value: '<100', label: 'Typical channel Re', icon: '📊' },
-        { value: '10-500 μm', label: 'Channel dimensions', icon: '📏' },
-        { value: '10⁶/sec', label: 'Cell sorting throughput', icon: '🧫' }
-      ],
-      examples: [
-        'COVID-19 rapid antigen tests use microfluidic sample transport',
-        'Cell-sorting chips isolate circulating tumor cells from blood',
-        'Organ-on-chip devices replicate tissue microenvironments for drug testing',
-        'Point-of-care diagnostics detect biomarkers in minutes from a finger prick'
-      ],
-      companies: ['Illumina', 'Fluidigm', 'Dolomite Microfluidics', 'Standard BioTools', '10x Genomics'],
-      futureImpact: 'Lab-on-chip technology will democratize medical diagnostics, enabling comprehensive blood panels from a single drop of blood. Microfluidic organs-on-chips will reduce animal testing while providing more accurate drug response predictions through personalized patient-derived cell cultures.',
-      color: '#8b5cf6'
-    }
-  ];
-
-  // Handle test answer
-  const handleTestAnswer = (answerIndex: number) => {
-    playSound('click');
-    const currentQuestion = testAnswers.length;
-    const isCorrect = testQuestions[currentQuestion].options[answerIndex].correct;
-
-    if (isCorrect) {
-      onCorrectAnswer?.();
-    } else {
-      onIncorrectAnswer?.();
-    }
-
-    setTestAnswers(prev => [...prev, answerIndex]);
-  };
-
-  // Calculate test score
-  const calculateScore = (): number => {
-    return testAnswers.reduce((score, answerIndex, questionIndex) => {
-      return score + (testQuestions[questionIndex].options[answerIndex].correct ? 1 : 0);
-    }, 0);
-  };
-
-  // Premium color palette
+  // Colors
   const colors = {
-    background: '#0F0F1A',
-    card: '#1A1A2E',
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#22D3EE',
+    accentGlow: 'rgba(34, 211, 238, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    laminar: '#22D3EE',
+    turbulent: '#F97316',
     primary: '#00D4FF',
     secondary: '#7B68EE',
-    accent: '#FF6B6B',
-    success: '#4ADE80',
-    warning: '#FBBF24',
-    text: '#FFFFFF',
-    textSecondary: '#A0AEC0',
-    laminar: '#22D3EE',
-    turbulent: '#F97316'
   };
 
-  // Phase labels for display
-  const phaseLabels: Record<string, string> = {
-    hook: 'Hook',
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
     predict: 'Predict',
-    play: 'Lab',
-    review: 'Review',
-    twist_predict: 'Twist Predict',
-    twist_play: 'Twist Lab',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Boundary Layers',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
     mastery: 'Mastery'
   };
 
-  const phaseOrder = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'laminar-turbulent',
+        gameTitle: 'Laminar vs Turbulent Flow',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-  // Helper render functions
-  const renderProgressBar = () => {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '20px' }}>
-        {phaseOrder.map((p, i) => (
-          <div
-            key={p}
-            style={{
-              height: '4px',
-              flex: 1,
-              borderRadius: '2px',
-              background: i <= currentPhaseIndex ? `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})` : '#333',
-              transition: 'all 0.3s ease'
-            }}
-          />
-        ))}
-      </div>
-    );
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  const renderBottomBar = (onNext: () => void, disabled: boolean = false, label: string = "Continue") => (
+  // Progress bar component
+  const renderProgressBar = () => (
     <div style={{
-      marginTop: '24px',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      paddingTop: '16px',
-      borderTop: `1px solid ${colors.card}`
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
     }}>
-      <button
-        onPointerDown={!disabled ? onNext : undefined}
-        disabled={disabled}
-        style={{
-          padding: '14px 32px',
-          fontSize: '16px',
-          fontWeight: '600',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          background: disabled ? '#333' : `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-          color: colors.text,
-          opacity: disabled ? 0.5 : 1,
-          transition: 'all 0.2s ease',
-          transform: disabled ? 'none' : 'translateY(0)',
-        }}
-        onPointerEnter={(e) => {
-          if (!disabled) e.currentTarget.style.transform = 'translateY(-2px)';
-        }}
-        onPointerLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-        }}
-      >
-        {label} →
-      </button>
-    </div>
-  );
-
-  const renderKeyTakeaway = (text: string) => (
-    <div style={{
-      padding: '16px 20px',
-      background: `linear-gradient(135deg, ${colors.primary}15, ${colors.secondary}15)`,
-      borderLeft: `4px solid ${colors.primary}`,
-      borderRadius: '0 12px 12px 0',
-      marginTop: '20px'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-        <span style={{ fontSize: '20px' }}>💡</span>
-        <p style={{ margin: 0, color: colors.text, lineHeight: 1.6, fontSize: '15px' }}>{text}</p>
-      </div>
-    </div>
-  );
-
-  const renderSectionHeader = (emoji: string, title: string, subtitle?: string) => (
-    <div style={{ marginBottom: '20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: subtitle ? '4px' : 0 }}>
-        <span style={{ fontSize: '28px' }}>{emoji}</span>
-        <h2 style={{ margin: 0, color: colors.text, fontSize: isMobile ? '22px' : '26px', fontWeight: '700' }}>{title}</h2>
-      </div>
-      {subtitle && (
-        <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px', marginLeft: '44px' }}>{subtitle}</p>
-      )}
-    </div>
-  );
-
-  // PHASE RENDERS
-
-  // Hook Phase
-  const renderHook = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🌊", "Two Types of Flow", "Laminar vs turbulent")}
-
       <div style={{
-        background: colors.card,
-        borderRadius: '16px',
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
+
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // =============================================================================
+  // PHASE RENDERS
+  // =============================================================================
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: '24px',
-        marginBottom: '20px',
-        textAlign: 'center'
+        textAlign: 'center',
       }}>
+        {renderProgressBar()}
+
         {hookStep === 0 && (
           <>
-            <p style={{ color: colors.text, fontSize: '18px', lineHeight: 1.6, marginBottom: '24px' }}>
-              Turn on a faucet just slightly — the water stream is <span style={{ color: colors.laminar }}>clear and glassy</span>.<br/>
-              Crank it up high — it becomes <span style={{ color: colors.turbulent }}>white and chaotic</span>.
+            <div style={{
+              fontSize: '64px',
+              marginBottom: '24px',
+              animation: 'pulse 2s infinite',
+            }}>
+              🌊💨
+            </div>
+            <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+              Laminar vs Turbulent Flow
+            </h1>
+
+            <p style={{
+              ...typo.body,
+              color: colors.textSecondary,
+              maxWidth: '600px',
+              marginBottom: '32px',
+            }}>
+              Turn on a faucet slowly - the water is <span style={{ color: colors.laminar }}>clear and glassy</span>.
+              Crank it up - it becomes <span style={{ color: colors.turbulent }}>white and chaotic</span>.
+              What changed? Just the speed. Same water, same pipe - but fundamentally different physics.
             </p>
 
-            <svg width="340" height="240" viewBox="0 0 340 240" style={{ margin: '0 auto', display: 'block' }}>
-              <defs>
-                {/* Premium faucet metal gradient */}
-                <linearGradient id="lamtFaucetMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#9ca3af" />
-                  <stop offset="25%" stopColor="#6b7280" />
-                  <stop offset="50%" stopColor="#4b5563" />
-                  <stop offset="75%" stopColor="#6b7280" />
-                  <stop offset="100%" stopColor="#9ca3af" />
-                </linearGradient>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '500px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Try it: Adjust the faucet below to see the transition.
+              </p>
 
-                {/* Faucet spout gradient */}
-                <linearGradient id="lamtFaucetSpout" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#6b7280" />
-                  <stop offset="40%" stopColor="#4b5563" />
-                  <stop offset="100%" stopColor="#374151" />
-                </linearGradient>
+              {/* Faucet visualization */}
+              <svg width="300" height="180" viewBox="0 0 300 180" style={{ margin: '20px auto', display: 'block' }}>
+                <defs>
+                  <linearGradient id="hookFaucetMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#9ca3af" />
+                    <stop offset="50%" stopColor="#4b5563" />
+                    <stop offset="100%" stopColor="#9ca3af" />
+                  </linearGradient>
+                </defs>
 
-                {/* Laminar water gradient */}
-                <linearGradient id="lamtLaminarWater" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.9" />
-                  <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.7" />
-                  <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#0891b2" stopOpacity="0.5" />
-                </linearGradient>
+                {/* Faucet */}
+                <rect x="125" y="10" width="50" height="30" rx="5" fill="url(#hookFaucetMetal)" />
+                <rect x="140" y="35" width="20" height="25" fill="url(#hookFaucetMetal)" />
+                <ellipse cx="150" cy="60" rx="12" ry="5" fill="#374151" />
 
-                {/* Turbulent water gradient */}
-                <linearGradient id="lamtTurbulentWater" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.9" />
-                  <stop offset="30%" stopColor="#fde68a" stopOpacity="0.8" />
-                  <stop offset="70%" stopColor="#fcd34d" stopOpacity="0.7" />
-                  <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.6" />
-                </linearGradient>
-
-                {/* Water droplet glow */}
-                <radialGradient id="lamtDropletGlow" cx="50%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-                  <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Sink basin gradient */}
-                <linearGradient id="lamtSinkBasin" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#1f2937" />
-                  <stop offset="50%" stopColor="#111827" />
-                  <stop offset="100%" stopColor="#030712" />
-                </linearGradient>
-
-                {/* Water ripple effect */}
-                <radialGradient id="lamtWaterRipple" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.5" />
-                  <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Glow filter */}
-                <filter id="lamtWaterGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Bubble filter */}
-                <filter id="lamtBubbleFilter" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="1" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Background */}
-              <rect width="340" height="240" fill="#0a0f1a" />
-
-              {/* Wall tile pattern */}
-              <pattern id="lamtTilePattern" width="30" height="30" patternUnits="userSpaceOnUse">
-                <rect width="30" height="30" fill="#111827" stroke="#1f2937" strokeWidth="0.5" />
-              </pattern>
-              <rect x="0" y="0" width="340" height="180" fill="url(#lamtTilePattern)" />
-
-              {/* Premium Faucet Assembly */}
-              <g transform="translate(170, 0)">
-                {/* Wall mount plate */}
-                <rect x="-50" y="5" width="100" height="20" rx="4" fill="url(#lamtFaucetMetal)" />
-                <rect x="-45" y="8" width="90" height="14" rx="3" fill="#374151" opacity="0.3" />
-
-                {/* Faucet body */}
-                <rect x="-35" y="20" width="70" height="25" rx="6" fill="url(#lamtFaucetMetal)" />
-                <ellipse cx="0" cy="32" rx="30" ry="10" fill="#4b5563" opacity="0.3" />
-
-                {/* Handle */}
-                <g transform="translate(-45, 25)">
-                  <rect x="0" y="0" width="15" height="8" rx="2" fill="#374151" />
-                  <rect x="2" y="-12" width="11" height="14" rx="2" fill="url(#lamtFaucetMetal)" />
-                  <circle cx="7.5" cy="-6" r="4" fill="#1f2937" />
-                </g>
-
-                {/* Spout */}
-                <path d="M -15 45 L -15 55 Q -15 65 0 65 L 0 55 Q -5 55 -5 50 L -5 45 Z" fill="url(#lamtFaucetSpout)" />
-                <ellipse cx="-7" cy="65" rx="8" ry="4" fill="#374151" />
-                <ellipse cx="-7" cy="65" rx="5" ry="2.5" fill="#1f2937" />
-              </g>
-
-              {/* Water stream */}
-              {faucetFlow === 0 ? (
-                <g>
-                  <text x="170" y="120" fill={colors.textSecondary} fontSize="14" textAnchor="middle" fontWeight="500">
-                    Adjust the faucet
-                  </text>
-                  <text x="170" y="140" fill={colors.textSecondary} fontSize="12" textAnchor="middle" opacity="0.7">
-                    Use the slider below
-                  </text>
-                </g>
-              ) : faucetFlow < 50 ? (
-                // Laminar flow - smooth, glassy stream
-                <g>
-                  {/* Main laminar stream with glow */}
-                  <path
-                    d="M 158 70 Q 158 110 156 150 Q 155 170 154 195 L 166 195 Q 167 170 168 150 Q 170 110 170 70 Z"
-                    fill="url(#lamtLaminarWater)"
-                    filter="url(#lamtWaterGlow)"
-                  />
-                  {/* Glassy highlight */}
-                  <path
-                    d="M 161 75 Q 161 110 160 150 L 162 150 Q 163 110 163 75 Z"
-                    fill="#ffffff"
-                    opacity="0.4"
-                  />
-
-                  {/* Ripples in sink */}
-                  <ellipse cx="160" cy="198" rx="15" ry="4" fill="url(#lamtWaterRipple)">
-                    <animate attributeName="rx" values="15;20;15" dur="1s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="1s" repeatCount="indefinite" />
-                  </ellipse>
-
-                  {/* Label */}
-                  <g transform="translate(240, 110)">
-                    <rect x="0" y="-12" width="80" height="35" rx="6" fill={colors.laminar} opacity="0.15" />
-                    <text x="40" y="5" fill={colors.laminar} fontSize="13" textAnchor="middle" fontWeight="600">Laminar</text>
-                    <text x="40" y="18" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Smooth, clear</text>
-                  </g>
-                </g>
-              ) : (
-                // Turbulent flow - chaotic, aerated stream
-                <g>
-                  {/* Chaotic turbulent stream */}
-                  <path
-                    d="M 153 70 Q 148 90 145 110 Q 140 130 138 150 Q 135 170 130 195 L 190 195 Q 185 170 182 150 Q 180 130 177 110 Q 174 90 175 70 Z"
-                    fill="url(#lamtTurbulentWater)"
-                    opacity="0.8"
-                  >
-                    <animate attributeName="d" values="M 153 70 Q 148 90 145 110 Q 140 130 138 150 Q 135 170 130 195 L 190 195 Q 185 170 182 150 Q 180 130 177 110 Q 174 90 175 70 Z; M 155 70 Q 145 90 148 110 Q 138 130 142 150 Q 132 170 135 195 L 185 195 Q 188 170 178 150 Q 182 130 175 110 Q 178 90 173 70 Z; M 153 70 Q 148 90 145 110 Q 140 130 138 150 Q 135 170 130 195 L 190 195 Q 185 170 182 150 Q 180 130 177 110 Q 174 90 175 70 Z" dur="0.3s" repeatCount="indefinite" />
+                {/* Water stream */}
+                {faucetFlow === 0 ? (
+                  <text x="150" y="110" fill={colors.textMuted} fontSize="12" textAnchor="middle">Faucet Off</text>
+                ) : faucetFlow < 50 ? (
+                  <path d="M 145 65 Q 145 100 143 140 L 157 140 Q 155 100 155 65 Z" fill={colors.laminar} opacity="0.7" />
+                ) : (
+                  <path d="M 140 65 Q 130 90 125 140 L 175 140 Q 170 90 160 65 Z" fill={colors.turbulent} opacity="0.6">
+                    <animate attributeName="d"
+                      values="M 140 65 Q 130 90 125 140 L 175 140 Q 170 90 160 65 Z;M 140 65 Q 135 90 120 140 L 180 140 Q 165 90 160 65 Z;M 140 65 Q 130 90 125 140 L 175 140 Q 170 90 160 65 Z"
+                      dur="0.3s" repeatCount="indefinite" />
                   </path>
+                )}
 
-                  {/* White foam/bubbles effect */}
-                  <g filter="url(#lamtBubbleFilter)">
-                    {[
-                      {x: 150, y: 85, r: 4}, {x: 165, y: 95, r: 3}, {x: 155, y: 110, r: 5},
-                      {x: 168, y: 125, r: 3}, {x: 148, y: 135, r: 4}, {x: 172, y: 145, r: 3},
-                      {x: 145, y: 155, r: 5}, {x: 175, y: 165, r: 4}, {x: 155, y: 175, r: 3},
-                      {x: 140, y: 180, r: 4}, {x: 180, y: 185, r: 3}
-                    ].map((bubble, i) => (
-                      <circle
-                        key={i}
-                        cx={bubble.x}
-                        cy={bubble.y}
-                        r={bubble.r}
-                        fill="url(#lamtDropletGlow)"
-                      >
-                        <animate attributeName="cx" values={`${bubble.x};${bubble.x + (i % 2 === 0 ? 8 : -8)};${bubble.x}`} dur={`${0.2 + i * 0.05}s`} repeatCount="indefinite" />
-                        <animate attributeName="cy" values={`${bubble.y};${bubble.y + 10};${bubble.y}`} dur={`${0.3 + i * 0.03}s`} repeatCount="indefinite" />
-                      </circle>
-                    ))}
-                  </g>
+                {/* Sink */}
+                <rect x="75" y="145" width="150" height="25" rx="5" fill="#1f2937" stroke="#374151" />
 
-                  {/* Splashing in sink */}
-                  <ellipse cx="160" cy="198" rx="35" ry="8" fill="url(#lamtWaterRipple)">
-                    <animate attributeName="rx" values="35;45;35" dur="0.3s" repeatCount="indefinite" />
-                  </ellipse>
-                  {/* Splash droplets */}
-                  {[{x: 130, y: 190}, {x: 190, y: 188}, {x: 145, y: 185}, {x: 175, y: 183}].map((drop, i) => (
-                    <circle key={i} cx={drop.x} cy={drop.y} r="2" fill="#67e8f9" opacity="0.6">
-                      <animate attributeName="cy" values={`${drop.y};${drop.y - 15};${drop.y}`} dur={`${0.4 + i * 0.1}s`} repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0.6;0.2;0.6" dur={`${0.4 + i * 0.1}s`} repeatCount="indefinite" />
-                    </circle>
-                  ))}
+                {/* Labels */}
+                {faucetFlow > 0 && faucetFlow < 50 && (
+                  <text x="220" y="100" fill={colors.laminar} fontSize="14" fontWeight="600">Laminar</text>
+                )}
+                {faucetFlow >= 50 && (
+                  <text x="220" y="100" fill={colors.turbulent} fontSize="14" fontWeight="600">Turbulent</text>
+                )}
+              </svg>
 
-                  {/* Label */}
-                  <g transform="translate(240, 110)">
-                    <rect x="0" y="-12" width="80" height="35" rx="6" fill={colors.turbulent} opacity="0.15" />
-                    <text x="40" y="5" fill={colors.turbulent} fontSize="13" textAnchor="middle" fontWeight="600">Turbulent</text>
-                    <text x="40" y="18" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Chaotic, white</text>
-                  </g>
-                </g>
-              )}
-
-              {/* Sink basin */}
-              <rect x="80" y="195" width="180" height="35" rx="4" fill="url(#lamtSinkBasin)" stroke="#374151" strokeWidth="1" />
-              <rect x="85" y="200" width="170" height="25" rx="3" fill="#0a0f1a" />
-
-              {/* Drain */}
-              <circle cx="170" cy="215" r="8" fill="#030712" stroke="#1f2937" strokeWidth="1" />
-              <circle cx="170" cy="215" r="4" fill="#111827" />
-            </svg>
-
-            {/* Faucet control */}
-            <div style={{ marginTop: '16px' }}>
-              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Faucet: </span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={faucetFlow}
-                onChange={(e) => {
-                  setFaucetFlow(Number(e.target.value));
-                  playSound('click');
-                }}
-                style={{ width: '150px', accentColor: faucetFlow < 50 ? colors.laminar : colors.turbulent }}
-              />
-              <span style={{ color: colors.textSecondary, fontSize: '14px', marginLeft: '10px' }}>
-                {faucetFlow === 0 ? 'Off' : faucetFlow < 50 ? 'Low' : 'High'}
-              </span>
+              <div style={{ marginTop: '16px' }}>
+                <span style={{ color: colors.textSecondary, fontSize: '14px' }}>Faucet: </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={faucetFlow}
+                  onChange={(e) => {
+                    setFaucetFlow(Number(e.target.value));
+                    playSound('click');
+                  }}
+                  style={{ width: '150px', accentColor: faucetFlow < 50 ? colors.laminar : colors.turbulent }}
+                />
+                <span style={{ color: colors.textSecondary, fontSize: '14px', marginLeft: '10px' }}>
+                  {faucetFlow === 0 ? 'Off' : faucetFlow < 50 ? 'Low' : 'High'}
+                </span>
+              </div>
             </div>
 
-            {faucetFlow > 0 && (
+            {faucetFlow > 30 && (
               <button
-                onPointerDown={() => setHookStep(1)}
-                style={{
-                  marginTop: '20px',
-                  padding: '12px 24px',
-                  background: colors.primary,
-                  color: colors.background,
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: '600'
-                }}
+                onClick={() => { playSound('click'); setHookStep(1); }}
+                style={primaryButtonStyle}
               >
-                Continue →
+                What Causes This?
               </button>
             )}
           </>
@@ -807,1974 +639,1339 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
 
         {hookStep === 1 && (
           <>
-            <p style={{ color: colors.text, fontSize: '20px', lineHeight: 1.6, marginBottom: '20px' }}>
-              🤔 What changed? Just the <span style={{ color: colors.primary }}>speed</span>.
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '16px', lineHeight: 1.6, marginBottom: '20px' }}>
-              Same water, same pipe, same faucet — but the flow fundamentally transformed.
-            </p>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              The Reynolds Number
+            </h2>
+
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '16px',
-              textAlign: 'left'
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '600px',
+              border: `1px solid ${colors.border}`,
             }}>
-              <div style={{
-                padding: '16px',
-                background: `${colors.laminar}15`,
-                borderRadius: '12px',
-                border: `2px solid ${colors.laminar}`
-              }}>
-                <p style={{ color: colors.laminar, fontWeight: '600', margin: '0 0 8px 0' }}>Laminar Flow</p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px' }}>
-                  Smooth parallel layers sliding past each other
-                </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <div style={{
+                  padding: '16px',
+                  background: `${colors.laminar}15`,
+                  borderRadius: '12px',
+                  border: `2px solid ${colors.laminar}`
+                }}>
+                  <p style={{ color: colors.laminar, fontWeight: '600', margin: '0 0 8px 0' }}>Laminar Flow</p>
+                  <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px' }}>
+                    Smooth parallel layers sliding past each other. Re &lt; 2300
+                  </p>
+                </div>
+                <div style={{
+                  padding: '16px',
+                  background: `${colors.turbulent}15`,
+                  borderRadius: '12px',
+                  border: `2px solid ${colors.turbulent}`
+                }}>
+                  <p style={{ color: colors.turbulent, fontWeight: '600', margin: '0 0 8px 0' }}>Turbulent Flow</p>
+                  <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px' }}>
+                    Chaotic eddies and mixing in all directions. Re &gt; 4000
+                  </p>
+                </div>
               </div>
+
               <div style={{
                 padding: '16px',
-                background: `${colors.turbulent}15`,
-                borderRadius: '12px',
-                border: `2px solid ${colors.turbulent}`
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                textAlign: 'center'
               }}>
-                <p style={{ color: colors.turbulent, fontWeight: '600', margin: '0 0 8px 0' }}>Turbulent Flow</p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px' }}>
-                  Chaotic eddies and mixing in all directions
+                <p style={{ color: colors.accent, fontSize: '20px', fontWeight: '700', margin: '0 0 8px 0' }}>
+                  Re = rho * v * D / mu
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                  Reynolds number = Inertial forces / Viscous forces
                 </p>
               </div>
             </div>
 
-            {renderKeyTakeaway("The transition between laminar and turbulent flow is controlled by the Reynolds number — a ratio of inertial to viscous forces.")}
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Explore the Physics
+            </button>
           </>
         )}
+
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      {hookStep === 1 && renderBottomBar(() => onPhaseComplete?.())}
-    </div>
-  );
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Water - lower viscosity allows chaos to develop more easily', correct: true },
+      { id: 'b', text: 'Honey - its thickness creates more friction and turbulence' },
+      { id: 'c', text: 'Same - velocity alone determines turbulence, not fluid properties' },
+    ];
 
-  // Predict Phase
-  const renderPredict = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🔮", "Make a Prediction", "When does flow become turbulent?")}
-
+    return (
       <div style={{
-        background: colors.card,
-        borderRadius: '16px',
+        minHeight: '100vh',
+        background: colors.bgPrimary,
         padding: '24px',
-        marginBottom: '20px'
       }}>
-        <p style={{ color: colors.text, fontSize: '17px', lineHeight: 1.6, marginBottom: '24px' }}>
-          You have two identical pipes. One carries water, the other honey.<br/>
-          Both flow at the same velocity.
-        </p>
+        {renderProgressBar()}
 
-        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ marginBottom: '20px' }}>
-          {/* Water pipe */}
-          <g transform="translate(100, 35)">
-            <rect x="-60" y="-15" width="120" height="30" rx="5" fill="#333" />
-            <rect x="-55" y="-10" width="110" height="20" fill={colors.laminar} opacity="0.4" />
-            <text y="35" fill={colors.laminar} fontSize="12" textAnchor="middle">Water (thin)</text>
-          </g>
-          {/* Honey pipe */}
-          <g transform="translate(300, 35)">
-            <rect x="-60" y="-15" width="120" height="30" rx="5" fill="#333" />
-            <rect x="-55" y="-10" width="110" height="20" fill={colors.warning} opacity="0.6" />
-            <text y="35" fill={colors.warning} fontSize="12" textAnchor="middle">Honey (thick)</text>
-          </g>
-          <text x="200" y="100" fill={colors.textSecondary} fontSize="13" textAnchor="middle">Same velocity, same pipe size</text>
-        </svg>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
 
-        <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
-          Which flow is more likely to become turbulent?
-        </p>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            You have two identical pipes at the same flow velocity. One carries water, the other honey.
+          </h2>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {[
-            { value: 'water', label: 'Water — lower viscosity allows more chaos', color: colors.laminar },
-            { value: 'honey', label: 'Honey — thickness creates more friction', color: colors.warning },
-            { value: 'same', label: 'Same — velocity alone determines turbulence', color: colors.textSecondary }
-          ].map(option => (
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg width="100%" height="100" viewBox="0 0 400 100">
+              {/* Water pipe */}
+              <g transform="translate(100, 40)">
+                <rect x="-60" y="-15" width="120" height="30" rx="5" fill="#333" />
+                <rect x="-55" y="-10" width="110" height="20" fill={colors.laminar} opacity="0.4" />
+                <text y="30" fill={colors.laminar} fontSize="12" textAnchor="middle">Water (thin)</text>
+              </g>
+              {/* Honey pipe */}
+              <g transform="translate(300, 40)">
+                <rect x="-60" y="-15" width="120" height="30" rx="5" fill="#333" />
+                <rect x="-55" y="-10" width="110" height="20" fill={colors.warning} opacity="0.6" />
+                <text y="30" fill={colors.warning} fontSize="12" textAnchor="middle">Honey (thick)</text>
+              </g>
+              <text x="200" y="50" fill={colors.textSecondary} fontSize="14" textAnchor="middle">vs</text>
+            </svg>
+
+            <p style={{ ...typo.h3, color: colors.textPrimary, marginTop: '16px' }}>
+              Which flow is more likely to become turbulent?
+            </p>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
             <button
-              key={option.value}
-              onPointerDown={() => {
-                setPrediction(option.value);
-                playSound('click');
-              }}
-              style={{
-                padding: '16px 20px',
-                fontSize: '15px',
-                background: prediction === option.value ? `${option.color}20` : colors.background,
-                color: prediction === option.value ? option.color : colors.textSecondary,
-                border: `2px solid ${prediction === option.value ? option.color : '#333'}`,
-                borderRadius: '12px',
-                cursor: 'pointer',
-                textAlign: 'left',
-                transition: 'all 0.2s ease'
-              }}
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              {option.label}
+              Test My Prediction
             </button>
-          ))}
+          )}
         </div>
 
-        {prediction && !showPredictResult && (
-          <button
-            onPointerDown={() => {
-              setShowPredictResult(true);
-              playSound(prediction === 'water' ? 'success' : 'failure');
-            }}
-            style={{
-              marginTop: '20px',
-              padding: '14px 28px',
-              width: '100%',
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600'
-            }}
-          >
-            Lock In Prediction
-          </button>
-        )}
-
-        {showPredictResult && (
-          <div style={{
-            marginTop: '20px',
-            padding: '20px',
-            background: prediction === 'water' ? `${colors.success}20` : `${colors.primary}20`,
-            borderRadius: '12px',
-            border: `2px solid ${prediction === 'water' ? colors.success : colors.primary}`
-          }}>
-            {prediction === 'water' ? (
-              <>
-                <p style={{ color: colors.success, fontSize: '18px', fontWeight: '600', margin: '0 0 12px 0' }}>
-                  ✓ Exactly right!
-                </p>
-                <p style={{ color: colors.text, margin: 0, lineHeight: 1.6 }}>
-                  Water becomes turbulent more easily! Lower viscosity means less "stickiness" to dampen chaotic motion.
-                </p>
-              </>
-            ) : (
-              <>
-                <p style={{ color: colors.primary, fontSize: '18px', fontWeight: '600', margin: '0 0 12px 0' }}>
-                  Good thinking, but it's water!
-                </p>
-                <p style={{ color: colors.text, margin: 0, lineHeight: 1.6 }}>
-                  Honey's high viscosity acts like a damper, suppressing turbulent fluctuations.
-                  Water's low viscosity allows chaos to develop more easily.
-                </p>
-              </>
-            )}
-          </div>
-        )}
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      {showPredictResult && renderBottomBar(() => onPhaseComplete?.())}
-    </div>
-  );
-
-  // Play Phase
-  const renderPlay = () => {
+  // PLAY PHASE - Interactive Reynolds Number Simulator
+  if (phase === 'play') {
     const Re = calculateReynolds(flowVelocity, pipeDiameter, fluidViscosity);
     const flowType = getFlowType(Re);
 
     return (
-      <div style={{ padding: isMobile ? '16px' : '24px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-        {renderSectionHeader("🎮", "Reynolds Number Lab", "Control flow conditions")}
 
-        <div style={{
-          background: colors.card,
-          borderRadius: '16px',
-          padding: '20px',
-          marginBottom: '20px'
-        }}>
-          {/* Premium pipe visualization with dye */}
-          <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-            <svg width="100%" height="280" viewBox="0 0 500 280">
-              {/* Premium SVG Definitions */}
-              <defs>
-                {/* Premium pipe wall gradient - metallic steel look */}
-                <linearGradient id="lamtPipeWall" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#6b7280" />
-                  <stop offset="15%" stopColor="#4b5563" />
-                  <stop offset="50%" stopColor="#374151" />
-                  <stop offset="85%" stopColor="#4b5563" />
-                  <stop offset="100%" stopColor="#6b7280" />
-                </linearGradient>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Reynolds Number Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust velocity, diameter, and viscosity to control the flow regime.
+          </p>
 
-                {/* Pipe interior gradient - dark with depth */}
-                <linearGradient id="lamtPipeInterior" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#1f2937" />
-                  <stop offset="20%" stopColor="#111827" />
-                  <stop offset="50%" stopColor="#030712" />
-                  <stop offset="80%" stopColor="#111827" />
-                  <stop offset="100%" stopColor="#1f2937" />
-                </linearGradient>
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            {/* Pipe visualization with dye */}
+            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <svg width="100%" height="200" viewBox="0 0 450 200">
+                <defs>
+                  <linearGradient id="pipeWall" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#6b7280" />
+                    <stop offset="50%" stopColor="#374151" />
+                    <stop offset="100%" stopColor="#6b7280" />
+                  </linearGradient>
+                  <linearGradient id="pipeInterior" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#1f2937" />
+                    <stop offset="50%" stopColor="#030712" />
+                    <stop offset="100%" stopColor="#1f2937" />
+                  </linearGradient>
+                </defs>
 
-                {/* Laminar flow gradient - smooth cyan */}
-                <linearGradient id="lamtLaminarFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
-                  <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.6" />
-                  <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
-                </linearGradient>
+                {/* Pipe */}
+                <rect x="25" y="55" width="400" height="10" fill="url(#pipeWall)" />
+                <rect x="25" y="135" width="400" height="10" fill="url(#pipeWall)" />
+                <rect x="25" y="65" width="400" height="70" fill="url(#pipeInterior)" />
 
-                {/* Turbulent flow gradient - energetic orange */}
-                <linearGradient id="lamtTurbulentFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#fb923c" stopOpacity="0.3" />
-                  <stop offset="30%" stopColor="#f97316" stopOpacity="0.6" />
-                  <stop offset="70%" stopColor="#ea580c" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#fb923c" stopOpacity="0.3" />
-                </linearGradient>
-
-                {/* Transition flow gradient - warning yellow */}
-                <linearGradient id="lamtTransitionFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#fde047" stopOpacity="0.3" />
-                  <stop offset="30%" stopColor="#facc15" stopOpacity="0.6" />
-                  <stop offset="70%" stopColor="#eab308" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#fde047" stopOpacity="0.3" />
-                </linearGradient>
-
-                {/* Dye injector gradient */}
-                <linearGradient id="lamtDyeInjector" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#a78bfa" />
-                  <stop offset="50%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#7c3aed" />
-                </linearGradient>
-
-                {/* Particle glow radial gradient */}
-                <radialGradient id="lamtParticleGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
-                  <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.8" />
-                  <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Turbulent particle glow */}
-                <radialGradient id="lamtTurbulentParticleGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#fdba74" stopOpacity="1" />
-                  <stop offset="40%" stopColor="#fb923c" stopOpacity="0.8" />
-                  <stop offset="70%" stopColor="#f97316" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
-                </radialGradient>
-
-                {/* Reynolds number indicator gradient */}
-                <linearGradient id="lamtReynoldsIndicator" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#22d3ee" />
-                  <stop offset="33%" stopColor="#4ade80" />
-                  <stop offset="50%" stopColor="#facc15" />
-                  <stop offset="75%" stopColor="#fb923c" />
-                  <stop offset="100%" stopColor="#ef4444" />
-                </linearGradient>
-
-                {/* Transition zone gradient */}
-                <linearGradient id="lamtTransitionZone" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#facc15" stopOpacity="0.1" />
-                  <stop offset="50%" stopColor="#fb923c" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#facc15" stopOpacity="0.1" />
-                </linearGradient>
-
-                {/* Pipe end cap gradient */}
-                <radialGradient id="lamtPipeEndCap" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#4b5563" />
-                  <stop offset="60%" stopColor="#374151" />
-                  <stop offset="100%" stopColor="#1f2937" />
-                </radialGradient>
-
-                {/* Glow filter for particles */}
-                <filter id="lamtParticleBlur" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur stdDeviation="2" />
-                </filter>
-
-                {/* Glow filter with merge for bright particles */}
-                <filter id="lamtGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Inner shadow for pipe depth */}
-                <filter id="lamtInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
-                  <feOffset dx="0" dy="2" result="offsetBlur" />
-                  <feComposite in="SourceGraphic" in2="offsetBlur" operator="over" />
-                </filter>
-
-                {/* Laboratory background gradient */}
-                <linearGradient id="lamtLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#030712" />
-                  <stop offset="50%" stopColor="#0a0f1a" />
-                  <stop offset="100%" stopColor="#030712" />
-                </linearGradient>
-
-                {/* Grid pattern for lab feel */}
-                <pattern id="lamtLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                  <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
-                </pattern>
-              </defs>
-
-              {/* Laboratory background */}
-              <rect width="500" height="280" fill="url(#lamtLabBg)" />
-              <rect width="500" height="280" fill="url(#lamtLabGrid)" />
-
-              {/* Title and flow type indicator */}
-              <text x="250" y="22" fill={colors.text} fontSize="14" textAnchor="middle" fontWeight="700" style={{ letterSpacing: '1px' }}>
-                {flowType.toUpperCase()} FLOW REGIME
-              </text>
-
-              {/* Reynolds Number Indicator Bar */}
-              <g transform="translate(50, 35)">
-                {/* Background track */}
-                <rect x="0" y="0" width="400" height="12" rx="6" fill="#1f2937" stroke="#374151" strokeWidth="1" />
-
-                {/* Gradient fill */}
-                <rect x="1" y="1" width="398" height="10" rx="5" fill="url(#lamtReynoldsIndicator)" opacity="0.3" />
-
-                {/* Zone markers */}
-                <line x1="80" y1="0" x2="80" y2="12" stroke="#4ade80" strokeWidth="1" opacity="0.6" />
-                <line x1="160" y1="0" x2="160" y2="12" stroke="#facc15" strokeWidth="1" opacity="0.6" />
-                <text x="40" y="24" fill="#22d3ee" fontSize="8" textAnchor="middle">Laminar</text>
-                <text x="120" y="24" fill="#facc15" fontSize="8" textAnchor="middle">Transition</text>
-                <text x="280" y="24" fill="#f97316" fontSize="8" textAnchor="middle">Turbulent</text>
-
-                {/* Current Re indicator */}
-                {(() => {
-                  const rePosition = Math.min(395, Math.max(5, (Re / 10000) * 400));
-                  return (
-                    <g transform={`translate(${rePosition}, 6)`}>
-                      <circle r="8" fill={flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning} filter="url(#lamtGlowFilter)" />
-                      <circle r="5" fill="#fff" />
-                      <text y="22" fill={flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning} fontSize="10" textAnchor="middle" fontWeight="700">
-                        Re = {Re.toFixed(0)}
-                      </text>
-                    </g>
-                  );
-                })()}
-              </g>
-
-              {/* Main Pipe Assembly */}
-              <g transform="translate(25, 100)">
-                {/* Pipe inlet end cap */}
-                <ellipse cx="15" cy="45" rx="12" ry="50" fill="url(#lamtPipeEndCap)" />
-                <ellipse cx="15" cy="45" rx="8" ry="42" fill="#030712" />
-
-                {/* Top pipe wall */}
-                <rect x="15" y="0" width="430" height="12" fill="url(#lamtPipeWall)" />
-                <rect x="15" y="10" width="430" height="2" fill="#1f2937" />
-
-                {/* Bottom pipe wall */}
-                <rect x="15" y="78" width="430" height="12" fill="url(#lamtPipeWall)" />
-                <rect x="15" y="78" width="430" height="2" fill="#6b7280" />
-
-                {/* Pipe interior */}
-                <rect x="15" y="12" width="430" height="66" fill="url(#lamtPipeInterior)" />
-
-                {/* Transition zone indicator (if in transition) */}
-                {flowType === 'transition' && (
-                  <rect x="180" y="12" width="100" height="66" fill="url(#lamtTransitionZone)">
-                    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.5s" repeatCount="indefinite" />
-                  </rect>
-                )}
-
-                {/* Flow streamlines based on type */}
+                {/* Flow streamlines */}
                 {flowType === 'laminar' ? (
-                  // Laminar: smooth parallel flow lines with velocity profile
-                  <>
-                    {[20, 30, 40, 50, 60, 70].map((y, i) => {
-                      const distFromCenter = Math.abs(y - 45);
-                      const velocity = 1 - (distFromCenter / 35) * 0.6;
-                      return (
-                        <g key={i}>
-                          <line
-                            x1="25"
-                            y1={y}
-                            x2="440"
-                            y2={y}
-                            stroke="url(#lamtLaminarFlow)"
-                            strokeWidth={2 + velocity * 2}
-                            opacity={0.4 + velocity * 0.3}
-                          />
-                          {/* Animated flow arrows */}
-                          {[0, 1, 2, 3, 4].map((j) => (
-                            <polygon
-                              key={j}
-                              points={`${80 + j * 90},${y - 3} ${90 + j * 90},${y} ${80 + j * 90},${y + 3}`}
-                              fill={colors.laminar}
-                              opacity={0.6}
-                            >
-                              <animate
-                                attributeName="transform"
-                                type="translate"
-                                values={`0,0; ${velocity * 20},0; 0,0`}
-                                dur={`${1.5 - velocity * 0.5}s`}
-                                repeatCount="indefinite"
-                              />
-                            </polygon>
-                          ))}
-                        </g>
-                      );
-                    })}
-                  </>
+                  // Laminar: parallel lines
+                  [75, 90, 100, 110, 125].map((y, i) => (
+                    <line key={i} x1="40" y1={y} x2="410" y2={y} stroke={colors.laminar} strokeWidth="2" opacity="0.5">
+                      <animate attributeName="stroke-dashoffset" from="0" to="-20" dur={`${1.5 - flowVelocity * 0.2}s`} repeatCount="indefinite" />
+                    </line>
+                  ))
                 ) : flowType === 'turbulent' ? (
-                  // Turbulent: chaotic eddies and vortices
-                  <>
-                    {Array.from({ length: 12 }).map((_, i) => {
-                      const baseY = 18 + i * 5;
-                      const seed = i * 17;
-                      return (
-                        <path
-                          key={i}
-                          d={`M 25 ${baseY}
-                             Q ${60 + (seed % 20)} ${baseY + ((seed * 3) % 15) - 7} ${100} ${baseY + ((seed * 5) % 10) - 5}
-                             Q ${150 + (seed % 15)} ${baseY + ((seed * 7) % 20) - 10} ${200} ${baseY + ((seed * 2) % 12) - 6}
-                             Q ${260 + (seed % 25)} ${baseY + ((seed * 4) % 18) - 9} ${320} ${baseY + ((seed * 6) % 14) - 7}
-                             Q ${370 + (seed % 18)} ${baseY + ((seed * 8) % 16) - 8} ${440} ${baseY + ((seed * 3) % 10) - 5}`}
-                          fill="none"
-                          stroke="url(#lamtTurbulentFlow)"
-                          strokeWidth="1.5"
-                          opacity="0.5"
-                        >
-                          <animate
-                            attributeName="d"
-                            values={`M 25 ${baseY} Q ${60 + (seed % 20)} ${baseY + ((seed * 3) % 15) - 7} ${100} ${baseY + ((seed * 5) % 10) - 5} Q ${150 + (seed % 15)} ${baseY + ((seed * 7) % 20) - 10} ${200} ${baseY + ((seed * 2) % 12) - 6} Q ${260 + (seed % 25)} ${baseY + ((seed * 4) % 18) - 9} ${320} ${baseY + ((seed * 6) % 14) - 7} Q ${370 + (seed % 18)} ${baseY + ((seed * 8) % 16) - 8} ${440} ${baseY + ((seed * 3) % 10) - 5};
-                                    M 25 ${baseY + 3} Q ${65 + (seed % 22)} ${baseY + ((seed * 4) % 16) - 5} ${105} ${baseY + ((seed * 6) % 12) - 3} Q ${155 + (seed % 18)} ${baseY + ((seed * 8) % 22) - 8} ${205} ${baseY + ((seed * 3) % 14) - 4} Q ${265 + (seed % 28)} ${baseY + ((seed * 5) % 20) - 7} ${325} ${baseY + ((seed * 7) % 16) - 5} Q ${375 + (seed % 20)} ${baseY + ((seed * 9) % 18) - 6} ${440} ${baseY + ((seed * 4) % 12) - 3};
-                                    M 25 ${baseY} Q ${60 + (seed % 20)} ${baseY + ((seed * 3) % 15) - 7} ${100} ${baseY + ((seed * 5) % 10) - 5} Q ${150 + (seed % 15)} ${baseY + ((seed * 7) % 20) - 10} ${200} ${baseY + ((seed * 2) % 12) - 6} Q ${260 + (seed % 25)} ${baseY + ((seed * 4) % 18) - 9} ${320} ${baseY + ((seed * 6) % 14) - 7} Q ${370 + (seed % 18)} ${baseY + ((seed * 8) % 16) - 8} ${440} ${baseY + ((seed * 3) % 10) - 5}`}
-                            dur={`${0.8 + (i % 3) * 0.2}s`}
-                            repeatCount="indefinite"
-                          />
-                        </path>
-                      );
-                    })}
-                    {/* Turbulent eddies/vortices */}
-                    {[120, 220, 320, 400].map((x, i) => (
-                      <circle
-                        key={i}
-                        cx={x}
-                        cy={35 + (i % 3) * 15}
-                        r={8 + (i % 2) * 4}
-                        fill="none"
-                        stroke={colors.turbulent}
-                        strokeWidth="1"
-                        opacity="0.3"
-                      >
-                        <animateTransform
-                          attributeName="transform"
-                          type="rotate"
-                          values={`0 ${x} ${35 + (i % 3) * 15}; 360 ${x} ${35 + (i % 3) * 15}`}
-                          dur={`${1 + i * 0.3}s`}
-                          repeatCount="indefinite"
-                        />
-                      </circle>
-                    ))}
-                  </>
+                  // Turbulent: wavy chaotic lines
+                  [75, 90, 100, 110, 125].map((y, i) => (
+                    <path key={i}
+                      d={`M 40 ${y} Q 100 ${y + (i % 2 === 0 ? 15 : -15)} 160 ${y} Q 220 ${y + (i % 2 === 0 ? -10 : 10)} 280 ${y} Q 340 ${y + (i % 2 === 0 ? 12 : -12)} 410 ${y}`}
+                      fill="none" stroke={colors.turbulent} strokeWidth="2" opacity="0.5">
+                      <animate attributeName="d"
+                        values={`M 40 ${y} Q 100 ${y + 15} 160 ${y} Q 220 ${y - 10} 280 ${y} Q 340 ${y + 12} 410 ${y};M 40 ${y} Q 100 ${y - 12} 160 ${y} Q 220 ${y + 8} 280 ${y} Q 340 ${y - 15} 410 ${y};M 40 ${y} Q 100 ${y + 15} 160 ${y} Q 220 ${y - 10} 280 ${y} Q 340 ${y + 12} 410 ${y}`}
+                        dur="0.5s" repeatCount="indefinite" />
+                    </path>
+                  ))
                 ) : (
-                  // Transition: wavy, unstable flow
-                  <>
-                    {[25, 35, 45, 55, 65].map((y, i) => (
-                      <path
-                        key={i}
-                        d={`M 25 ${y}
-                           Q 80 ${y + (i % 2 === 0 ? 8 : -8)} 140 ${y}
-                           Q 200 ${y + (i % 2 === 0 ? -6 : 6)} 260 ${y}
-                           Q 320 ${y + (i % 2 === 0 ? 10 : -10)} 380 ${y}
-                           Q 420 ${y + (i % 2 === 0 ? -5 : 5)} 440 ${y}`}
-                        fill="none"
-                        stroke="url(#lamtTransitionFlow)"
-                        strokeWidth="2"
-                        opacity="0.5"
-                      >
-                        <animate
-                          attributeName="d"
-                          values={`M 25 ${y} Q 80 ${y + (i % 2 === 0 ? 8 : -8)} 140 ${y} Q 200 ${y + (i % 2 === 0 ? -6 : 6)} 260 ${y} Q 320 ${y + (i % 2 === 0 ? 10 : -10)} 380 ${y} Q 420 ${y + (i % 2 === 0 ? -5 : 5)} 440 ${y};
-                                  M 25 ${y} Q 80 ${y + (i % 2 === 0 ? -6 : 6)} 140 ${y} Q 200 ${y + (i % 2 === 0 ? 10 : -10)} 260 ${y} Q 320 ${y + (i % 2 === 0 ? -8 : 8)} 380 ${y} Q 420 ${y + (i % 2 === 0 ? 6 : -6)} 440 ${y};
-                                  M 25 ${y} Q 80 ${y + (i % 2 === 0 ? 8 : -8)} 140 ${y} Q 200 ${y + (i % 2 === 0 ? -6 : 6)} 260 ${y} Q 320 ${y + (i % 2 === 0 ? 10 : -10)} 380 ${y} Q 420 ${y + (i % 2 === 0 ? -5 : 5)} 440 ${y}`}
-                          dur="2s"
-                          repeatCount="indefinite"
-                        />
-                      </path>
-                    ))}
-                  </>
+                  // Transition: wavy lines
+                  [75, 90, 100, 110, 125].map((y, i) => (
+                    <path key={i}
+                      d={`M 40 ${y} Q 150 ${y + (i % 2 === 0 ? 8 : -8)} 260 ${y} Q 350 ${y + (i % 2 === 0 ? -6 : 6)} 410 ${y}`}
+                      fill="none" stroke={colors.warning} strokeWidth="2" opacity="0.5">
+                      <animate attributeName="d"
+                        values={`M 40 ${y} Q 150 ${y + 8} 260 ${y} Q 350 ${y - 6} 410 ${y};M 40 ${y} Q 150 ${y - 6} 260 ${y} Q 350 ${y + 8} 410 ${y};M 40 ${y} Q 150 ${y + 8} 260 ${y} Q 350 ${y - 6} 410 ${y}`}
+                        dur="1.5s" repeatCount="indefinite" />
+                    </path>
+                  ))
                 )}
 
-                {/* Dye particles with glow effect */}
+                {/* Dye particles */}
                 {showDyeInjection && dyeParticles.map(p => (
-                  <g key={p.id}>
-                    <circle
-                      cx={p.x - 25}
-                      cy={p.y - 55}
-                      r={6}
-                      fill={flowType === 'turbulent' ? 'url(#lamtTurbulentParticleGlow)' : 'url(#lamtParticleGlow)'}
-                      filter="url(#lamtParticleBlur)"
-                    />
-                    <circle
-                      cx={p.x - 25}
-                      cy={p.y - 55}
-                      r={3}
-                      fill={flowType === 'turbulent' ? colors.turbulent : flowType === 'laminar' ? colors.laminar : colors.warning}
-                      filter="url(#lamtGlowFilter)"
-                    />
+                  <circle key={p.id} cx={p.x} cy={p.y} r="4"
+                    fill={flowType === 'turbulent' ? colors.turbulent : flowType === 'laminar' ? colors.laminar : colors.warning}
+                  />
+                ))}
+
+                {/* Dye injector */}
+                {showDyeInjection && (
+                  <g transform="translate(35, 75)">
+                    <rect x="-10" y="0" width="20" height="50" rx="3" fill="#8B5CF6" />
+                    <rect x="-5" y="15" width="10" height="20" fill="#0a0f1a" opacity="0.5" />
                   </g>
-                ))}
+                )}
 
-                {/* Pipe outlet end cap */}
-                <ellipse cx="445" cy="45" rx="12" ry="50" fill="url(#lamtPipeEndCap)" />
-                <ellipse cx="445" cy="45" rx="8" ry="42" fill="#0a0f1a" />
-              </g>
-
-              {/* Premium Dye Injector Assembly */}
-              {showDyeInjection && (
-                <g transform="translate(25, 120)">
-                  {/* Injector body */}
-                  <rect x="-8" y="-15" width="22" height="55" rx="4" fill="url(#lamtDyeInjector)" stroke="#a78bfa" strokeWidth="1" />
-                  <rect x="-3" y="-10" width="12" height="45" rx="2" fill="#1e1b4b" opacity="0.5" />
-
-                  {/* Nozzle */}
-                  <rect x="14" y="15" width="12" height="8" rx="2" fill="#6d28d9" />
-                  <ellipse cx="26" cy="19" rx="3" ry="4" fill="#8b5cf6" />
-
-                  {/* Dye level indicator */}
-                  <rect x="0" y="0" width="6" height="30" rx="1" fill="#030712" />
-                  <rect x="1" y="10" width="4" height="19" rx="1" fill="#a78bfa">
-                    <animate attributeName="height" values="19;15;19" dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="y" values="10;14;10" dur="2s" repeatCount="indefinite" />
-                  </rect>
-
-                  {/* Label */}
-                  <text x="4" y="52" fill="#a78bfa" fontSize="8" textAnchor="middle" fontWeight="600">DYE</text>
-                </g>
-              )}
-
-              {/* Flow direction arrow */}
-              <g transform="translate(250, 255)">
-                <line x1="-60" y1="0" x2="60" y2="0" stroke={colors.textSecondary} strokeWidth="2" />
-                <polygon points="60,-6 75,0 60,6" fill={colors.textSecondary} />
-                <text x="0" y="18" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Flow Direction</text>
-              </g>
-
-              {/* Scale/legend */}
-              <g transform="translate(420, 240)">
-                <rect x="0" y="0" width="70" height="35" rx="4" fill="#111827" stroke="#1f2937" />
-                <circle cx="15" cy="12" r="4" fill={colors.laminar} />
-                <text x="25" y="15" fill={colors.textSecondary} fontSize="8">Laminar</text>
-                <circle cx="15" cy="26" r="4" fill={colors.turbulent} />
-                <text x="25" y="29" fill={colors.textSecondary} fontSize="8">Turbulent</text>
-              </g>
-            </svg>
-          </div>
-
-          {/* Controls */}
-          <div style={{ display: 'grid', gap: '16px' }}>
-            {/* Velocity slider */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: colors.text, fontSize: '14px', fontWeight: '600' }}>Flow Velocity (v)</span>
-                <span style={{ color: colors.primary, fontSize: '14px' }}>{flowVelocity.toFixed(1)} m/s</span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="5"
-                step="0.1"
-                value={flowVelocity}
-                onChange={(e) => setFlowVelocity(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.primary }}
-              />
+                {/* Labels */}
+                <text x="225" y="25" fill={flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning}
+                  fontSize="16" textAnchor="middle" fontWeight="700">
+                  {flowType.toUpperCase()} FLOW
+                </text>
+                <text x="225" y="180" fill={colors.textMuted} fontSize="12" textAnchor="middle">
+                  Flow Direction ---&gt;
+                </text>
+              </svg>
             </div>
 
-            {/* Diameter slider */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: colors.text, fontSize: '14px', fontWeight: '600' }}>Pipe Diameter (D)</span>
-                <span style={{ color: colors.secondary, fontSize: '14px' }}>{pipeDiameter.toFixed(1)} cm</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="10"
-                step="0.5"
-                value={pipeDiameter}
-                onChange={(e) => setPipeDiameter(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.secondary }}
-              />
-            </div>
-
-            {/* Viscosity slider */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ color: colors.text, fontSize: '14px', fontWeight: '600' }}>Fluid Viscosity (μ)</span>
-                <span style={{ color: colors.warning, fontSize: '14px' }}>{fluidViscosity.toFixed(1)}× water</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="50"
-                step="0.5"
-                value={fluidViscosity}
-                onChange={(e) => setFluidViscosity(Number(e.target.value))}
-                style={{ width: '100%', accentColor: colors.warning }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textSecondary }}>
-                <span>Water</span>
-                <span>Oil</span>
-                <span>Honey</span>
-              </div>
-            </div>
-
-            {/* Dye toggle */}
-            <button
-              onPointerDown={() => setShowDyeInjection(!showDyeInjection)}
-              style={{
-                padding: '10px 16px',
-                background: showDyeInjection ? colors.secondary : colors.background,
-                color: showDyeInjection ? colors.background : colors.textSecondary,
-                border: `1px solid ${showDyeInjection ? colors.secondary : '#444'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '13px'
-              }}
-            >
-              {showDyeInjection ? '✓' : '○'} Dye Injection Visualization
-            </button>
-          </div>
-
-          {/* Reynolds number explanation */}
-          <div style={{
-            marginTop: '20px',
-            padding: '16px',
-            background: colors.background,
-            borderRadius: '12px',
-            border: `1px solid ${flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning}30`
-          }}>
-            <p style={{ color: colors.text, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
-              Reynolds Number: Re = ρvD/μ
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '13px', margin: '0 0 8px 0' }}>
-              Re &lt; 2000: Laminar | 2000-4000: Transition | Re &gt; 4000: Turbulent
-            </p>
+            {/* Reynolds number display */}
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 12px',
-              background: `${flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning}20`,
-              borderRadius: '8px'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+              marginBottom: '20px',
             }}>
-              <span style={{
-                color: flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning,
-                fontSize: '24px',
-                fontWeight: '700'
-              }}>
-                Re = {Re.toFixed(0)}
-              </span>
-              <span style={{ color: colors.textSecondary, fontSize: '13px' }}>
-                → {flowType.charAt(0).toUpperCase() + flowType.slice(1)} Flow
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {renderKeyTakeaway("Reynolds number predicts flow regime: higher velocity or larger pipes → higher Re → turbulence. Higher viscosity → lower Re → laminar.")}
-
-        {renderBottomBar(() => onPhaseComplete?.())}
-      </div>
-    );
-  };
-
-  // Review Phase
-  const renderReview = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("📚", "Flow Regimes Explained", "Why transitions happen")}
-
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px'
-      }}>
-        <div style={{ display: 'grid', gap: '16px' }}>
-          {[
-            {
-              title: "Laminar Flow (Re < 2000)",
-              text: "Fluid moves in smooth, parallel layers. Viscous forces dominate, dampening any disturbances. Predictable, efficient.",
-              color: colors.laminar,
-              icon: "〰️"
-            },
-            {
-              title: "Transition Zone (2000-4000)",
-              text: "Flow is unstable — small disturbances can trigger turbulence. Flow may flip between states.",
-              color: colors.warning,
-              icon: "🌀"
-            },
-            {
-              title: "Turbulent Flow (Re > 4000)",
-              text: "Chaotic eddies at all scales. Inertial forces dominate. Much higher friction and mixing.",
-              color: colors.turbulent,
-              icon: "💥"
-            },
-            {
-              title: "The Reynolds Number Balance",
-              text: "Re = Inertial forces / Viscous forces = ρvD/μ. High Re means inertia wins → turbulence.",
-              color: colors.secondary,
-              icon: "⚖️"
-            }
-          ].map((item, i) => (
-            <div key={i} style={{
-              padding: '16px',
-              background: `${item.color}10`,
-              borderRadius: '12px',
-              borderLeft: `4px solid ${item.color}`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '20px' }}>{item.icon}</span>
-                <p style={{ color: item.color, fontWeight: '600', margin: 0, fontSize: '15px' }}>
-                  {item.title}
-                </p>
-              </div>
-              <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.5, paddingLeft: '30px' }}>
-                {item.text}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Premium Visual comparison */}
-        <div style={{
-          marginTop: '20px',
-          padding: '16px',
-          background: colors.background,
-          borderRadius: '12px'
-        }}>
-          <p style={{ color: colors.text, fontWeight: '600', margin: '0 0 12px 0', textAlign: 'center' }}>
-            Dye Test Comparison
-          </p>
-          <svg width="100%" height="140" viewBox="0 0 450 140">
-            <defs>
-              {/* Premium pipe gradients for review */}
-              <linearGradient id="lamtReviewPipeWall" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#6b7280" />
-                <stop offset="30%" stopColor="#4b5563" />
-                <stop offset="70%" stopColor="#374151" />
-                <stop offset="100%" stopColor="#4b5563" />
-              </linearGradient>
-              <linearGradient id="lamtReviewPipeInner" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#1f2937" />
-                <stop offset="50%" stopColor="#0a0f1a" />
-                <stop offset="100%" stopColor="#1f2937" />
-              </linearGradient>
-              <radialGradient id="lamtReviewDyeGlowLam" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
-                <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="lamtReviewDyeGlowTrans" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fde047" stopOpacity="1" />
-                <stop offset="60%" stopColor="#facc15" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="lamtReviewDyeGlowTurb" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fb923c" stopOpacity="1" />
-                <stop offset="60%" stopColor="#f97316" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
-              </radialGradient>
-              <filter id="lamtReviewGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            {/* Laminar Flow Pipe */}
-            <g transform="translate(10, 10)">
-              {/* Pipe structure */}
-              <rect x="0" y="0" width="130" height="8" rx="2" fill="url(#lamtReviewPipeWall)" />
-              <rect x="0" y="52" width="130" height="8" rx="2" fill="url(#lamtReviewPipeWall)" />
-              <rect x="0" y="8" width="130" height="44" fill="url(#lamtReviewPipeInner)" />
-
-              {/* Smooth laminar dye line */}
-              <line x1="10" y1="30" x2="120" y2="30" stroke={colors.laminar} strokeWidth="4" filter="url(#lamtReviewGlow)" />
-              <line x1="10" y1="30" x2="120" y2="30" stroke="#67e8f9" strokeWidth="2" />
-
-              {/* Animated particles */}
-              {[20, 45, 70, 95].map((x, i) => (
-                <circle key={i} cx={x} cy="30" r="3" fill="url(#lamtReviewDyeGlowLam)">
-                  <animate attributeName="cx" values={`${x};${x + 15};${x}`} dur="2s" repeatCount="indefinite" />
-                </circle>
-              ))}
-
-              {/* Label */}
-              <rect x="30" y="68" width="70" height="20" rx="4" fill={colors.laminar} opacity="0.2" />
-              <text x="65" y="82" fill={colors.laminar} fontSize="11" textAnchor="middle" fontWeight="600">LAMINAR</text>
-              <text x="65" y="100" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Re &lt; 2000</text>
-            </g>
-
-            {/* Transition Flow Pipe */}
-            <g transform="translate(160, 10)">
-              {/* Pipe structure */}
-              <rect x="0" y="0" width="130" height="8" rx="2" fill="url(#lamtReviewPipeWall)" />
-              <rect x="0" y="52" width="130" height="8" rx="2" fill="url(#lamtReviewPipeWall)" />
-              <rect x="0" y="8" width="130" height="44" fill="url(#lamtReviewPipeInner)" />
-
-              {/* Wavy transition dye line */}
-              <path d="M 10 30 Q 30 20 50 30 Q 70 40 90 30 Q 110 20 120 30" fill="none" stroke={colors.warning} strokeWidth="4" filter="url(#lamtReviewGlow)">
-                <animate attributeName="d" values="M 10 30 Q 30 20 50 30 Q 70 40 90 30 Q 110 20 120 30; M 10 30 Q 30 40 50 30 Q 70 20 90 30 Q 110 40 120 30; M 10 30 Q 30 20 50 30 Q 70 40 90 30 Q 110 20 120 30" dur="1.5s" repeatCount="indefinite" />
-              </path>
-
-              {/* Animated particles spreading */}
-              {[25, 55, 85].map((x, i) => (
-                <g key={i}>
-                  <circle cx={x} cy="28" r="3" fill="url(#lamtReviewDyeGlowTrans)">
-                    <animate attributeName="cy" values="28;32;28" dur={`${1 + i * 0.2}s`} repeatCount="indefinite" />
-                  </circle>
-                  <circle cx={x + 10} cy="32" r="2" fill="url(#lamtReviewDyeGlowTrans)">
-                    <animate attributeName="cy" values="32;26;32" dur={`${1.2 + i * 0.2}s`} repeatCount="indefinite" />
-                  </circle>
-                </g>
-              ))}
-
-              {/* Label */}
-              <rect x="25" y="68" width="80" height="20" rx="4" fill={colors.warning} opacity="0.2" />
-              <text x="65" y="82" fill={colors.warning} fontSize="11" textAnchor="middle" fontWeight="600">TRANSITION</text>
-              <text x="65" y="100" fill={colors.textSecondary} fontSize="9" textAnchor="middle">2000 - 4000</text>
-            </g>
-
-            {/* Turbulent Flow Pipe */}
-            <g transform="translate(310, 10)">
-              {/* Pipe structure */}
-              <rect x="0" y="0" width="130" height="8" rx="2" fill="url(#lamtReviewPipeWall)" />
-              <rect x="0" y="52" width="130" height="8" rx="2" fill="url(#lamtReviewPipeWall)" />
-              <rect x="0" y="8" width="130" height="44" fill="url(#lamtReviewPipeInner)" />
-
-              {/* Chaotic turbulent dye */}
-              <path d="M 10 25 Q 20 40 35 20 Q 50 45 65 25 Q 80 50 95 30 Q 110 15 120 35" fill="none" stroke={colors.turbulent} strokeWidth="3" filter="url(#lamtReviewGlow)">
-                <animate attributeName="d" values="M 10 25 Q 20 40 35 20 Q 50 45 65 25 Q 80 50 95 30 Q 110 15 120 35; M 10 35 Q 20 15 35 40 Q 50 20 65 45 Q 80 25 95 40 Q 110 50 120 25; M 10 25 Q 20 40 35 20 Q 50 45 65 25 Q 80 50 95 30 Q 110 15 120 35" dur="0.8s" repeatCount="indefinite" />
-              </path>
-
-              {/* Scattered turbulent particles */}
-              {[20, 40, 60, 80, 100].map((x, i) => (
-                <g key={i}>
-                  <circle cx={x} cy={25 + (i % 3) * 10} r="4" fill="url(#lamtReviewDyeGlowTurb)">
-                    <animate attributeName="cy" values={`${25 + (i % 3) * 10};${35 - (i % 2) * 15};${25 + (i % 3) * 10}`} dur={`${0.5 + i * 0.1}s`} repeatCount="indefinite" />
-                    <animate attributeName="cx" values={`${x};${x + (i % 2 === 0 ? 5 : -5)};${x}`} dur={`${0.6 + i * 0.1}s`} repeatCount="indefinite" />
-                  </circle>
-                </g>
-              ))}
-
-              {/* Eddy visualization */}
-              <circle cx="50" cy="30" r="12" fill="none" stroke={colors.turbulent} strokeWidth="1" opacity="0.4">
-                <animateTransform attributeName="transform" type="rotate" values="0 50 30; 360 50 30" dur="1s" repeatCount="indefinite" />
-              </circle>
-              <circle cx="90" cy="35" r="8" fill="none" stroke={colors.turbulent} strokeWidth="1" opacity="0.3">
-                <animateTransform attributeName="transform" type="rotate" values="360 90 35; 0 90 35" dur="0.8s" repeatCount="indefinite" />
-              </circle>
-
-              {/* Label */}
-              <rect x="25" y="68" width="80" height="20" rx="4" fill={colors.turbulent} opacity="0.2" />
-              <text x="65" y="82" fill={colors.turbulent} fontSize="11" textAnchor="middle" fontWeight="600">TURBULENT</text>
-              <text x="65" y="100" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Re &gt; 4000</text>
-            </g>
-          </svg>
-        </div>
-
-        {renderKeyTakeaway("The Reynolds number determines flow character by comparing how hard fluid pushes (inertia) vs how much it resists (viscosity).")}
-      </div>
-
-      {renderBottomBar(() => onPhaseComplete?.())}
-    </div>
-  );
-
-  // Twist Predict Phase
-  const renderTwistPredict = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🔄", "The Golf Ball Paradox", "When turbulence helps")}
-
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px'
-      }}>
-        <p style={{ color: colors.text, fontSize: '17px', lineHeight: 1.6, marginBottom: '24px' }}>
-          Golf balls have 300-500 dimples. A smooth golf ball would be more "aerodynamic," right?
-        </p>
-
-        <svg width="100%" height="120" viewBox="0 0 400 120" style={{ marginBottom: '20px' }}>
-          {/* Smooth ball */}
-          <g transform="translate(100, 60)">
-            <circle r="35" fill="#fff" />
-            <text y="55" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Smooth ball</text>
-          </g>
-          {/* Dimpled ball */}
-          <g transform="translate(300, 60)">
-            <circle r="35" fill="#fff" />
-            {/* Dimples */}
-            {Array.from({ length: 12 }).map((_, i) => {
-              const angle = (i * 30) * Math.PI / 180;
-              const r = 25;
-              return (
-                <circle
-                  key={i}
-                  cx={r * Math.cos(angle)}
-                  cy={r * Math.sin(angle)}
-                  r={4}
-                  fill="#ddd"
-                />
-              );
-            })}
-            <text y="55" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Dimpled ball</text>
-          </g>
-          <text x="200" y="60" fill={colors.textSecondary} fontSize="14" textAnchor="middle">vs</text>
-        </svg>
-
-        <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
-          Which ball flies farther?
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {[
-            { value: 'smooth', label: 'Smooth — less surface friction, less drag', color: colors.laminar },
-            { value: 'dimpled', label: 'Dimpled — roughness creates some benefit', color: colors.turbulent },
-            { value: 'same', label: 'Same distance — shape matters, not surface', color: colors.textSecondary }
-          ].map(option => (
-            <button
-              key={option.value}
-              onPointerDown={() => {
-                setTwistPrediction(option.value);
-                playSound('click');
-              }}
-              style={{
-                padding: '14px 18px',
-                fontSize: '14px',
-                background: twistPrediction === option.value ? `${option.color}20` : colors.background,
-                color: twistPrediction === option.value ? option.color : colors.textSecondary,
-                border: `2px solid ${twistPrediction === option.value ? option.color : '#333'}`,
-                borderRadius: '10px',
-                cursor: 'pointer',
-                textAlign: 'left'
-              }}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-
-        {twistPrediction && !showTwistResult && (
-          <button
-            onPointerDown={() => {
-              setShowTwistResult(true);
-              playSound(twistPrediction === 'dimpled' ? 'success' : 'failure');
-            }}
-            style={{
-              marginTop: '20px',
-              padding: '14px 28px',
-              width: '100%',
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-              color: colors.text,
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '16px',
-              fontWeight: '600'
-            }}
-          >
-            Lock In Prediction
-          </button>
-        )}
-
-        {showTwistResult && (
-          <div style={{
-            marginTop: '20px',
-            padding: '20px',
-            background: twistPrediction === 'dimpled' ? `${colors.success}20` : `${colors.accent}20`,
-            borderRadius: '12px',
-            border: `2px solid ${twistPrediction === 'dimpled' ? colors.success : colors.accent}`
-          }}>
-            {twistPrediction === 'dimpled' ? (
-              <p style={{ color: colors.success, margin: 0 }}>
-                <strong>✓ Counterintuitive but correct!</strong> Dimpled balls fly nearly TWICE as far! The dimples trigger a turbulent boundary layer that stays attached longer, reducing the wake and overall drag.
-              </p>
-            ) : (
-              <p style={{ color: colors.accent, margin: 0 }}>
-                <strong>Surprising answer!</strong> Dimpled balls actually fly nearly twice as far! Counterintuitively, the "rougher" surface creates LESS drag by triggering turbulent boundary layers.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {showTwistResult && renderBottomBar(() => onPhaseComplete?.())}
-    </div>
-  );
-
-  // Twist Play Phase
-  const renderTwistPlay = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🎮", "Boundary Layer Lab", "See why dimples work")}
-
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '20px'
-      }}>
-        {/* Shape selector */}
-        <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {(['sphere', 'streamlined', 'flat'] as const).map(shape => (
-            <button
-              key={shape}
-              onPointerDown={() => setObjectShape(shape)}
-              style={{
-                padding: '10px 20px',
-                background: objectShape === shape ? colors.primary : colors.background,
-                color: objectShape === shape ? colors.background : colors.textSecondary,
-                border: `1px solid ${objectShape === shape ? colors.primary : '#444'}`,
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: objectShape === shape ? '600' : '400'
-              }}
-            >
-              {shape === 'sphere' ? '⚽ Sphere' : shape === 'streamlined' ? '🛩️ Streamlined' : '📦 Flat Plate'}
-            </button>
-          ))}
-        </div>
-
-        {/* Premium Flow visualization */}
-        <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-          <svg width="100%" height="240" viewBox="0 0 500 240">
-            <defs>
-              {/* Premium sphere gradient */}
-              <radialGradient id="lamtSphereGrad" cx="35%" cy="35%" r="65%">
-                <stop offset="0%" stopColor="#9ca3af" />
-                <stop offset="40%" stopColor="#6b7280" />
-                <stop offset="80%" stopColor="#4b5563" />
-                <stop offset="100%" stopColor="#374151" />
-              </radialGradient>
-
-              {/* Dimpled sphere gradient */}
-              <radialGradient id="lamtDimpledSphereGrad" cx="35%" cy="35%" r="65%">
-                <stop offset="0%" stopColor="#fafafa" />
-                <stop offset="30%" stopColor="#e5e7eb" />
-                <stop offset="70%" stopColor="#d1d5db" />
-                <stop offset="100%" stopColor="#9ca3af" />
-              </radialGradient>
-
-              {/* Streamlined body gradient */}
-              <linearGradient id="lamtStreamlinedGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#9ca3af" />
-                <stop offset="30%" stopColor="#6b7280" />
-                <stop offset="70%" stopColor="#4b5563" />
-                <stop offset="100%" stopColor="#6b7280" />
-              </linearGradient>
-
-              {/* Flat plate gradient */}
-              <linearGradient id="lamtFlatPlateGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#4b5563" />
-                <stop offset="50%" stopColor="#6b7280" />
-                <stop offset="100%" stopColor="#4b5563" />
-              </linearGradient>
-
-              {/* Laminar boundary layer */}
-              <linearGradient id="lamtBLLaminar" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#0891b2" stopOpacity="0.2" />
-              </linearGradient>
-
-              {/* Turbulent boundary layer */}
-              <linearGradient id="lamtBLTurbulent" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#fb923c" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="#f97316" stopOpacity="0.5" />
-                <stop offset="100%" stopColor="#ea580c" stopOpacity="0.2" />
-              </linearGradient>
-
-              {/* Large wake gradient */}
-              <radialGradient id="lamtLargeWake" cx="20%" cy="50%" r="80%">
-                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
-                <stop offset="50%" stopColor="#dc2626" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
-              </radialGradient>
-
-              {/* Small wake gradient */}
-              <radialGradient id="lamtSmallWake" cx="20%" cy="50%" r="80%">
-                <stop offset="0%" stopColor="#4ade80" stopOpacity="0.3" />
-                <stop offset="50%" stopColor="#22c55e" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
-              </radialGradient>
-
-              {/* Air flow gradient */}
-              <linearGradient id="lamtAirFlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6" />
-                <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.2" />
-              </linearGradient>
-
-              {/* Glow filters */}
-              <filter id="lamtBLGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-
-              {/* Wake blur filter */}
-              <filter id="lamtWakeBlur" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="8" />
-              </filter>
-
-              {/* Dimple pattern */}
-              <pattern id="lamtDimplePattern" width="12" height="12" patternUnits="userSpaceOnUse">
-                <circle cx="6" cy="6" r="3" fill="#9ca3af" />
-              </pattern>
-
-              {/* Wind tunnel background */}
-              <linearGradient id="lamtWindTunnel" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#111827" />
-                <stop offset="50%" stopColor="#0a0f1a" />
-                <stop offset="100%" stopColor="#111827" />
-              </linearGradient>
-            </defs>
-
-            {/* Wind tunnel background */}
-            <rect width="500" height="240" fill="url(#lamtWindTunnel)" />
-
-            {/* Grid lines for wind tunnel feel */}
-            {[20, 60, 100, 140, 180, 220].map((y, i) => (
-              <line key={i} x1="0" y1={y} x2="500" y2={y} stroke="#1f2937" strokeWidth="0.5" opacity="0.3" />
-            ))}
-
-            {/* Incoming flow arrows */}
-            {[40, 80, 120, 160, 200].map((y, i) => (
-              <g key={i}>
-                <line x1="10" y1={y} x2="70" y2={y} stroke="url(#lamtAirFlow)" strokeWidth="2" />
-                <polygon points="70,-4 82,0 70,4" transform={`translate(0, ${y})`} fill="#22d3ee" opacity="0.6">
-                  <animate attributeName="transform" values={`translate(0, ${y}); translate(10, ${y}); translate(0, ${y})`} dur="1.5s" repeatCount="indefinite" />
-                </polygon>
-              </g>
-            ))}
-
-            {/* Title */}
-            <text x="250" y="20" fill={colors.text} fontSize="12" textAnchor="middle" fontWeight="600" style={{ letterSpacing: '1px' }}>
-              {objectShape === 'sphere' ? 'BOUNDARY LAYER COMPARISON' : objectShape === 'streamlined' ? 'STREAMLINED AERODYNAMICS' : 'BLUFF BODY FLOW'}
-            </text>
-
-            {/* Object and flow pattern */}
-            {objectShape === 'sphere' && (
-              <>
-                {/* Smooth Sphere - Left Side */}
-                <g transform="translate(130, 120)">
-                  {/* Incoming flow streamlines curving around */}
-                  {[-50, -30, -10, 10, 30, 50].map((offset, i) => (
-                    <path
-                      key={i}
-                      d={`M -60 ${offset} Q -45 ${offset} -40 ${offset * 0.8} Q -35 ${offset * 0.6} -30 ${offset * 0.3}`}
-                      fill="none"
-                      stroke={colors.laminar}
-                      strokeWidth="1"
-                      opacity="0.4"
-                    />
-                  ))}
-
-                  {/* Sphere with premium gradient */}
-                  <circle r="45" fill="url(#lamtSphereGrad)" />
-                  <ellipse rx="30" ry="8" transform="translate(-10, -20) rotate(-20)" fill="#fff" opacity="0.15" />
-
-                  {/* Laminar boundary layer - separates early */}
-                  <path
-                    d="M -45 0 Q -52 -25 -38 -42 Q -10 -55 20 -48 Q 40 -35 42 -10"
-                    fill="none"
-                    stroke="url(#lamtBLLaminar)"
-                    strokeWidth="3"
-                    strokeDasharray="6,3"
-                    filter="url(#lamtBLGlow)"
-                  />
-                  <text x="-60" y="-55" fill={colors.laminar} fontSize="8" fontWeight="600">Laminar BL</text>
-
-                  {/* Separation point indicator */}
-                  <circle cx="42" cy="-10" r="4" fill={colors.accent} filter="url(#lamtBLGlow)">
-                    <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
-                  </circle>
-                  <text x="55" y="-5" fill={colors.accent} fontSize="7">Separation</text>
-
-                  {/* Large wake */}
-                  <ellipse cx="85" cy="0" rx="70" ry="55" fill="url(#lamtLargeWake)" filter="url(#lamtWakeBlur)" />
-
-                  {/* Wake eddies */}
-                  {[{x: 70, y: -20, r: 12}, {x: 90, y: 15, r: 15}, {x: 110, y: -5, r: 10}].map((eddy, i) => (
-                    <circle key={i} cx={eddy.x} cy={eddy.y} r={eddy.r} fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.3">
-                      <animateTransform attributeName="transform" type="rotate" values={`0 ${eddy.x} ${eddy.y}; 360 ${eddy.x} ${eddy.y}`} dur={`${1.5 + i * 0.3}s`} repeatCount="indefinite" />
-                    </circle>
-                  ))}
-
-                  {/* Label */}
-                  <rect x="-55" y="55" width="110" height="24" rx="4" fill={colors.accent} opacity="0.15" />
-                  <text y="70" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="600">SMOOTH BALL</text>
-                  <text y="82" fill={colors.textSecondary} fontSize="8" textAnchor="middle">Early separation = Large drag</text>
-                </g>
-
-                {/* VS indicator */}
-                <text x="250" y="125" fill={colors.textSecondary} fontSize="14" textAnchor="middle" fontWeight="700">VS</text>
-
-                {/* Dimpled Sphere - Right Side */}
-                <g transform="translate(370, 120)">
-                  {/* Incoming flow streamlines */}
-                  {[-50, -30, -10, 10, 30, 50].map((offset, i) => (
-                    <path
-                      key={i}
-                      d={`M -60 ${offset} Q -45 ${offset} -40 ${offset * 0.7} Q -35 ${offset * 0.4} -30 ${offset * 0.1}`}
-                      fill="none"
-                      stroke={colors.turbulent}
-                      strokeWidth="1"
-                      opacity="0.4"
-                    />
-                  ))}
-
-                  {/* Dimpled sphere */}
-                  <circle r="40" fill="url(#lamtDimpledSphereGrad)" />
-
-                  {/* Visible dimples */}
-                  {Array.from({ length: 16 }).map((_, i) => {
-                    const angle = (i * Math.PI * 2) / 16;
-                    const r = 28;
-                    return (
-                      <circle
-                        key={i}
-                        cx={r * Math.cos(angle)}
-                        cy={r * Math.sin(angle)}
-                        r="4"
-                        fill="#9ca3af"
-                        stroke="#6b7280"
-                        strokeWidth="0.5"
-                      />
-                    );
-                  })}
-                  {Array.from({ length: 8 }).map((_, i) => {
-                    const angle = (i * Math.PI * 2) / 8 + Math.PI / 8;
-                    const r = 18;
-                    return (
-                      <circle
-                        key={i + 16}
-                        cx={r * Math.cos(angle)}
-                        cy={r * Math.sin(angle)}
-                        r="3"
-                        fill="#9ca3af"
-                        stroke="#6b7280"
-                        strokeWidth="0.5"
-                      />
-                    );
-                  })}
-                  <ellipse rx="25" ry="6" transform="translate(-8, -18) rotate(-20)" fill="#fff" opacity="0.2" />
-
-                  {/* Turbulent boundary layer - stays attached longer */}
-                  <path
-                    d="M -40 0 Q -48 -22 -35 -38 Q -8 -50 22 -42 Q 38 -28 40 -5 Q 42 20 35 35"
-                    fill="none"
-                    stroke="url(#lamtBLTurbulent)"
-                    strokeWidth="3"
-                    filter="url(#lamtBLGlow)"
-                  />
-                  <text x="-55" y="-48" fill={colors.turbulent} fontSize="8" fontWeight="600">Turbulent BL</text>
-
-                  {/* Later separation point */}
-                  <circle cx="35" cy="35" r="4" fill={colors.success} filter="url(#lamtBLGlow)">
-                    <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
-                  </circle>
-                  <text x="50" y="40" fill={colors.success} fontSize="7">Late Sep.</text>
-
-                  {/* Small wake */}
-                  <ellipse cx="60" cy="5" rx="35" ry="28" fill="url(#lamtSmallWake)" filter="url(#lamtWakeBlur)" />
-
-                  {/* Label */}
-                  <rect x="-55" y="55" width="110" height="24" rx="4" fill={colors.success} opacity="0.15" />
-                  <text y="70" fill={colors.success} fontSize="10" textAnchor="middle" fontWeight="600">DIMPLED BALL</text>
-                  <text y="82" fill={colors.textSecondary} fontSize="8" textAnchor="middle">Late separation = 50% less drag!</text>
-                </g>
-              </>
-            )}
-
-            {objectShape === 'streamlined' && (
-              <g transform="translate(250, 120)">
-                {/* Incoming flow */}
-                {[-60, -40, -20, 0, 20, 40, 60].map((offset, i) => (
-                  <path
-                    key={i}
-                    d={`M -150 ${offset} Q -100 ${offset} -85 ${offset * 0.9} Q -70 ${offset * 0.7} -50 ${offset * 0.5}`}
-                    fill="none"
-                    stroke={colors.success}
-                    strokeWidth="1.5"
-                    opacity="0.4"
-                  />
-                ))}
-
-                {/* Streamlined body */}
-                <ellipse rx="100" ry="30" fill="url(#lamtStreamlinedGrad)" />
-                <ellipse rx="70" ry="10" transform="translate(-15, -12)" fill="#fff" opacity="0.15" />
-
-                {/* Attached boundary layer all around */}
-                <path
-                  d="M -100 0 Q -110 -25 -85 -38 Q -30 -45 30 -42 Q 85 -38 100 -8 Q 105 0 100 8 Q 85 38 30 42 Q -30 45 -85 38 Q -110 25 -100 0"
-                  fill="none"
-                  stroke={colors.success}
-                  strokeWidth="2"
-                  opacity="0.6"
-                  filter="url(#lamtBLGlow)"
-                />
-
-                {/* Minimal wake */}
-                <ellipse cx="115" cy="0" rx="20" ry="12" fill="url(#lamtSmallWake)" filter="url(#lamtWakeBlur)" />
-
-                {/* Flow continues smoothly */}
-                {[-20, 0, 20].map((offset, i) => (
-                  <path
-                    key={i}
-                    d={`M 100 ${offset * 0.3} Q 120 ${offset * 0.5} 150 ${offset * 0.8} Q 180 ${offset} 220 ${offset}`}
-                    fill="none"
-                    stroke={colors.success}
-                    strokeWidth="1"
-                    opacity="0.3"
-                  />
-                ))}
-
-                {/* Label */}
-                <rect x="-80" y="50" width="160" height="28" rx="4" fill={colors.success} opacity="0.15" />
-                <text y="65" fill={colors.success} fontSize="11" textAnchor="middle" fontWeight="600">STREAMLINED - OPTIMAL</text>
-                <text y="78" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Flow stays attached - Minimal drag</text>
-              </g>
-            )}
-
-            {objectShape === 'flat' && (
-              <g transform="translate(250, 120)">
-                {/* Incoming flow hitting plate */}
-                {[-60, -30, 0, 30, 60].map((offset, i) => (
-                  <path
-                    key={i}
-                    d={`M -150 ${offset} L -20 ${offset}`}
-                    fill="none"
-                    stroke={colors.primary}
-                    strokeWidth="1.5"
-                    opacity="0.4"
-                  />
-                ))}
-
-                {/* Flat plate */}
-                <rect x="-15" y="-60" width="30" height="120" rx="3" fill="url(#lamtFlatPlateGrad)" />
-                <rect x="-10" y="-55" width="5" height="110" fill="#9ca3af" opacity="0.3" />
-
-                {/* Immediate separation and massive wake */}
-                <path
-                  d="M 15 -60 Q 30 -70 50 -65 Q 100 -50 120 0 Q 100 50 50 65 Q 30 70 15 60"
-                  fill="none"
-                  stroke={colors.accent}
-                  strokeWidth="2"
-                  strokeDasharray="4,2"
-                />
-
-                {/* Massive chaotic wake */}
-                <ellipse cx="90" cy="0" rx="90" ry="70" fill="url(#lamtLargeWake)" filter="url(#lamtWakeBlur)" />
-
-                {/* Large eddies in wake */}
-                {[
-                  {x: 60, y: -30, r: 18}, {x: 100, y: 20, r: 22}, {x: 80, y: -10, r: 15},
-                  {x: 130, y: -15, r: 12}, {x: 110, y: 35, r: 16}
-                ].map((eddy, i) => (
-                  <circle key={i} cx={eddy.x} cy={eddy.y} r={eddy.r} fill="none" stroke={colors.accent} strokeWidth="1.5" opacity="0.4">
-                    <animateTransform attributeName="transform" type="rotate" values={`0 ${eddy.x} ${eddy.y}; ${i % 2 === 0 ? 360 : -360} ${eddy.x} ${eddy.y}`} dur={`${1 + i * 0.2}s`} repeatCount="indefinite" />
-                  </circle>
-                ))}
-
-                {/* Separation points marked */}
-                <circle cx="15" cy="-60" r="4" fill={colors.accent} filter="url(#lamtBLGlow)">
-                  <animate attributeName="r" values="4;6;4" dur="0.8s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="15" cy="60" r="4" fill={colors.accent} filter="url(#lamtBLGlow)">
-                  <animate attributeName="r" values="4;6;4" dur="0.8s" repeatCount="indefinite" />
-                </circle>
-
-                {/* Label */}
-                <rect x="-80" y="80" width="160" height="28" rx="4" fill={colors.accent} opacity="0.15" />
-                <text y="95" fill={colors.accent} fontSize="11" textAnchor="middle" fontWeight="600">FLAT PLATE - WORST</text>
-                <text y="108" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Immediate separation - Maximum drag</text>
-              </g>
-            )}
-          </svg>
-        </div>
-
-        {/* Explanation */}
-        <div style={{
-          padding: '16px',
-          background: colors.background,
-          borderRadius: '12px',
-          border: `1px solid ${colors.turbulent}30`
-        }}>
-          <p style={{ color: colors.turbulent, fontSize: '14px', fontWeight: '600', margin: '0 0 8px 0' }}>
-            The Boundary Layer Trick:
-          </p>
-          <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
-            {objectShape === 'sphere' ? (
-              "Dimples trigger a turbulent boundary layer that has more momentum near the surface. This energized layer stays attached longer around the curve, reducing the wake size and overall drag by ~50%!"
-            ) : objectShape === 'streamlined' ? (
-              "Streamlined shapes avoid the need for boundary layer tricks — the gentle curves allow flow to stay attached naturally. Best drag performance overall."
-            ) : (
-              "Flat plates face immediate separation regardless of boundary layer state. Turbulent BL can't help much here — the shape is simply bad for aerodynamics."
-            )}
-          </p>
-        </div>
-      </div>
-
-      {renderKeyTakeaway("For blunt objects, turbulent boundary layers stay attached longer, reducing wake size and drag — that's why golf balls have dimples!")}
-
-      {renderBottomBar(() => onPhaseComplete?.())}
-    </div>
-  );
-
-  // Twist Review Phase
-  const renderTwistReview = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🔬", "Drag & Flow Summary", "When turbulence helps vs hurts")}
-
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '24px',
-        marginBottom: '20px'
-      }}>
-        <div style={{ display: 'grid', gap: '16px' }}>
-          <div style={{
-            padding: '20px',
-            background: colors.background,
-            borderRadius: '12px'
-          }}>
-            <p style={{ color: colors.success, fontWeight: '600', margin: '0 0 8px 0' }}>
-              ✓ Turbulence HELPS (blunt objects):
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
-              Golf balls, soccer balls, cyclists' helmets — turbulent BL delays separation, reducing pressure drag.
-              The small increase in skin friction is far outweighed by reduced wake drag.
-            </p>
-          </div>
-
-          <div style={{
-            padding: '20px',
-            background: colors.background,
-            borderRadius: '12px'
-          }}>
-            <p style={{ color: colors.accent, fontWeight: '600', margin: '0 0 8px 0' }}>
-              ✗ Turbulence HURTS (streamlined objects):
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
-              Aircraft wings, submarines, race cars — for these shapes, laminar flow already stays attached.
-              Triggering turbulence only adds skin friction drag with no wake benefit.
-            </p>
-          </div>
-
-          <div style={{
-            padding: '20px',
-            background: colors.background,
-            borderRadius: '12px'
-          }}>
-            <p style={{ color: colors.primary, fontWeight: '600', margin: '0 0 8px 0' }}>
-              ⚖️ The Design Trade-off:
-            </p>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
-              Engineers must balance: Can we streamline the shape? If not, would triggering turbulence reduce wake drag more than it adds friction drag?
-            </p>
-          </div>
-        </div>
-
-        {renderKeyTakeaway("The relationship between turbulence and drag depends on shape. For blunt objects, turbulence reduces total drag. For streamlined shapes, laminar flow wins.")}
-      </div>
-
-      {renderBottomBar(() => onPhaseComplete?.())}
-    </div>
-  );
-
-  // Transfer Phase
-  const renderTransfer = () => (
-    <div style={{ padding: isMobile ? '16px' : '24px' }}>
-      {renderProgressBar()}
-      {renderSectionHeader("🌍", "Flow Physics in Action", "From pipes to arteries")}
-
-      <div style={{
-        background: colors.card,
-        borderRadius: '16px',
-        padding: '20px',
-        marginBottom: '20px'
-      }}>
-        {/* App navigation */}
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          marginBottom: '20px',
-          overflowX: 'auto',
-          paddingBottom: '8px'
-        }}>
-          {applications.map((app, i) => (
-            <button
-              key={i}
-              onPointerDown={() => {
-                if (completedApps.has(i)) {
-                  setActiveApp(i);
-                  playSound('click');
-                }
-              }}
-              style={{
-                padding: '10px 16px',
-                background: activeApp === i ? app.color : completedApps.has(i) ? colors.background : '#1a1a1a',
-                color: activeApp === i ? '#fff' : completedApps.has(i) ? app.color : '#444',
-                border: `2px solid ${completedApps.has(i) ? app.color : '#333'}`,
-                borderRadius: '10px',
-                cursor: completedApps.has(i) ? 'pointer' : 'not-allowed',
-                whiteSpace: 'nowrap',
-                fontSize: '14px',
-                fontWeight: activeApp === i ? '600' : '400',
-                opacity: completedApps.has(i) ? 1 : 0.5
-              }}
-            >
-              {app.icon} {app.short}
-            </button>
-          ))}
-        </div>
-
-        {/* Active application content */}
-        {(() => {
-          const app = applications[activeApp];
-          return (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <span style={{ fontSize: '36px' }}>{app.icon}</span>
-                <div>
-                  <h3 style={{ margin: 0, color: app.color, fontSize: '22px' }}>{app.title}</h3>
-                  <p style={{ margin: 0, color: colors.textSecondary, fontSize: '14px' }}>{app.tagline}</p>
-                </div>
-              </div>
-
-              <p style={{ color: colors.text, fontSize: '15px', lineHeight: 1.6, marginBottom: '16px' }}>
-                {app.description}
-              </p>
-
               <div style={{
-                padding: '16px',
-                background: `${app.color}15`,
+                background: colors.bgSecondary,
                 borderRadius: '12px',
-                marginBottom: '16px'
+                padding: '16px',
+                textAlign: 'center',
               }}>
-                <p style={{ color: app.color, fontWeight: '600', margin: '0 0 8px 0', fontSize: '14px' }}>
-                  🔗 Physics Connection:
-                </p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.5 }}>
-                  {app.connection}
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <p style={{ color: colors.text, fontWeight: '600', margin: '0 0 8px 0', fontSize: '14px' }}>
-                  ⚙️ How It Works:
-                </p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '14px', lineHeight: 1.6 }}>
-                  {app.howItWorks}
-                </p>
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                gap: '12px',
-                marginBottom: '16px'
-              }}>
-                <div style={{ padding: '12px', background: colors.background, borderRadius: '10px' }}>
-                  <p style={{ color: app.color, fontWeight: '600', margin: '0 0 6px 0', fontSize: '13px' }}>📊 Key Stats:</p>
-                  <ul style={{ margin: 0, paddingLeft: '16px', color: colors.textSecondary, fontSize: '12px' }}>
-                    {app.stats.map((stat, i) => <li key={i}>{stat}</li>)}
-                  </ul>
+                <div style={{ ...typo.h3, color: flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning }}>
+                  {Re.toFixed(0)}
                 </div>
-
-                <div style={{ padding: '12px', background: colors.background, borderRadius: '10px' }}>
-                  <p style={{ color: app.color, fontWeight: '600', margin: '0 0 6px 0', fontSize: '13px' }}>💡 Examples:</p>
-                  <ul style={{ margin: 0, paddingLeft: '16px', color: colors.textSecondary, fontSize: '12px' }}>
-                    {app.examples.slice(0, 3).map((ex, i) => <li key={i}>{ex}</li>)}
-                  </ul>
-                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Reynolds Number</div>
               </div>
-
               <div style={{
-                padding: '14px',
-                background: colors.background,
-                borderRadius: '10px',
-                borderLeft: `4px solid ${app.color}`
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
               }}>
-                <p style={{ color: colors.text, fontWeight: '600', margin: '0 0 4px 0', fontSize: '13px' }}>
-                  🔮 Future Impact:
-                </p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '13px', lineHeight: 1.5 }}>
-                  {app.futureImpact}
-                </p>
+                <div style={{ ...typo.h3, color: colors.laminar }}>2300</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Laminar Limit</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.turbulent }}>4000</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Turbulent Threshold</div>
               </div>
             </div>
-          );
-        })()}
 
-        {/* Next app button */}
-        {activeApp < applications.length - 1 && (
-          <button
-            onPointerDown={() => {
-              const next = activeApp + 1;
-              setCompletedApps(prev => new Set([...prev, next]));
-              setActiveApp(next);
-              playSound('success');
-            }}
-            style={{
-              marginTop: '20px',
-              padding: '12px 24px',
-              width: '100%',
-              background: `linear-gradient(135deg, ${applications[activeApp + 1].color}, ${colors.secondary})`,
-              color: '#fff',
-              border: 'none',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: '600'
-            }}
-          >
-            Next: {applications[activeApp + 1].icon} {applications[activeApp + 1].title} →
-          </button>
-        )}
-      </div>
-
-      {completedApps.size === applications.length && renderBottomBar(() => onPhaseComplete?.())}
-    </div>
-  );
-
-  // Test Phase
-  const renderTest = () => {
-    const currentQuestion = testAnswers.length;
-    const isComplete = currentQuestion >= testQuestions.length;
-
-    return (
-      <div style={{ padding: isMobile ? '16px' : '24px' }}>
-        {renderProgressBar()}
-        {renderSectionHeader("📝", "Knowledge Check", `Question ${Math.min(currentQuestion + 1, testQuestions.length)} of ${testQuestions.length}`)}
-
-        <div style={{
-          background: colors.card,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '20px'
-        }}>
-          {!isComplete && !showTestResults ? (
-            <>
-              <p style={{
-                color: colors.text,
-                fontSize: '17px',
-                lineHeight: 1.6,
-                marginBottom: '24px'
-              }}>
-                {testQuestions[currentQuestion].question}
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {testQuestions[currentQuestion].options.map((option, i) => (
-                  <button
-                    key={i}
-                    onPointerDown={() => handleTestAnswer(i)}
-                    style={{
-                      padding: '14px 18px',
-                      fontSize: '14px',
-                      background: colors.background,
-                      color: colors.text,
-                      border: `2px solid #333`,
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onPointerEnter={(e) => {
-                      e.currentTarget.style.borderColor = colors.primary;
-                      e.currentTarget.style.background = `${colors.primary}10`;
-                    }}
-                    onPointerLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#333';
-                      e.currentTarget.style.background = colors.background;
-                    }}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+            {/* Sliders */}
+            <div style={{ display: 'grid', gap: '16px' }}>
+              {/* Velocity slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Velocity (v)</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowVelocity.toFixed(1)} m/s</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="5"
+                  step="0.1"
+                  value={flowVelocity}
+                  onChange={(e) => setFlowVelocity(parseFloat(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.accent }}
+                />
               </div>
 
-              {/* Progress dots */}
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
-                {testQuestions.map((q, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      background: i < currentQuestion
-                        ? (testQuestions[i].options[testAnswers[i]].correct ? colors.success : colors.accent)
-                        : i === currentQuestion
-                          ? colors.primary
-                          : '#333'
-                    }}
-                  />
-                ))}
+              {/* Diameter slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Diameter (D)</span>
+                  <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{pipeDiameter.toFixed(1)} cm</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="10"
+                  step="0.5"
+                  value={pipeDiameter}
+                  onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.success }}
+                />
               </div>
-            </>
-          ) : !showTestResults ? (
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ color: colors.text, fontSize: '18px', marginBottom: '20px' }}>
-                Test complete! Ready to see your results?
-              </p>
+
+              {/* Viscosity slider */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Fluid Viscosity (mu)</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{fluidViscosity.toFixed(1)}x water</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="50"
+                  step="0.5"
+                  value={fluidViscosity}
+                  onChange={(e) => setFluidViscosity(parseFloat(e.target.value))}
+                  style={{ width: '100%', accentColor: colors.warning }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: colors.textMuted }}>
+                  <span>Water</span>
+                  <span>Oil</span>
+                  <span>Honey</span>
+                </div>
+              </div>
+
+              {/* Dye toggle */}
               <button
-                onPointerDown={() => {
-                  setShowTestResults(true);
-                  playSound('success');
-                }}
+                onClick={() => setShowDyeInjection(!showDyeInjection)}
                 style={{
-                  padding: '14px 32px',
-                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-                  color: colors.text,
-                  border: 'none',
-                  borderRadius: '12px',
+                  padding: '10px 16px',
+                  background: showDyeInjection ? colors.accent + '33' : colors.bgSecondary,
+                  color: showDyeInjection ? colors.accent : colors.textMuted,
+                  border: `1px solid ${showDyeInjection ? colors.accent : colors.border}`,
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: '600'
+                  fontSize: '13px'
                 }}
               >
-                Show Results
+                {showDyeInjection ? 'Dye Injection: ON' : 'Dye Injection: OFF'}
               </button>
             </div>
-          ) : (
-            <div>
-              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                <div style={{
-                  fontSize: '48px',
-                  fontWeight: '700',
-                  color: calculateScore() >= 7 ? colors.success : calculateScore() >= 5 ? colors.warning : colors.accent
-                }}>
-                  {calculateScore()}/{testQuestions.length}
-                </div>
-                <p style={{ color: colors.textSecondary, margin: 0 }}>
-                  {calculateScore() >= 8 ? "Fluid Dynamics Expert!" :
-                   calculateScore() >= 6 ? "Great understanding!" :
-                   "Keep studying flow physics!"}
-                </p>
-              </div>
+          </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {testQuestions.map((q, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      padding: '14px',
-                      background: colors.background,
-                      borderRadius: '10px',
-                      borderLeft: `4px solid ${q.options[testAnswers[i]].correct ? colors.success : colors.accent}`
-                    }}
-                  >
-                    <p style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '13px', fontWeight: '500' }}>
-                      {i + 1}. {q.question}
-                    </p>
-                    <p style={{
-                      color: q.options[testAnswers[i]].correct ? colors.success : colors.accent,
-                      margin: '0 0 4px 0',
-                      fontSize: '12px'
-                    }}>
-                      Your answer: {q.options[testAnswers[i]].text}
-                      {q.options[testAnswers[i]].correct ? ' ✓' : ` ✗ (Correct: ${q.options.find(o => o.correct)?.text})`}
-                    </p>
-                  </div>
-                ))}
-              </div>
+          {/* Discovery prompt */}
+          <div style={{
+            background: `${colors.accent}22`,
+            border: `1px solid ${colors.accent}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.accent, margin: 0 }}>
+              {flowType === 'laminar'
+                ? "Notice the smooth, parallel dye streaks. Increase velocity to see the transition!"
+                : flowType === 'turbulent'
+                ? "See how the dye mixes chaotically? Try increasing viscosity to calm it down."
+                : "You're in the transition zone! Small disturbances can tip it either way."}
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Flow Regimes
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Re = rho * v * D / mu</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                The Reynolds number compares <span style={{ color: colors.turbulent }}>inertial forces</span> (momentum, pushing forward) to <span style={{ color: colors.laminar }}>viscous forces</span> (internal friction, resisting motion).
+              </p>
+              <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                <li style={{ marginBottom: '8px' }}><strong style={{ color: colors.laminar }}>Re &lt; 2300:</strong> Laminar - viscosity wins, flow stays organized</li>
+                <li style={{ marginBottom: '8px' }}><strong style={{ color: colors.warning }}>2300 &lt; Re &lt; 4000:</strong> Transition - unstable, intermittent turbulence</li>
+                <li><strong style={{ color: colors.turbulent }}>Re &gt; 4000:</strong> Turbulent - inertia wins, chaotic mixing</li>
+              </ul>
             </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: Your Prediction Was About Viscosity!
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Water (low viscosity) becomes turbulent more easily than honey (high viscosity) at the same velocity.
+              Viscosity in the denominator means higher mu = lower Re = more laminar.
+              Honey's thickness acts like a damper, suppressing turbulent fluctuations.
+            </p>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.success, marginBottom: '12px' }}>
+              Why This Matters
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Engineers use Reynolds number to predict flow in pipes, around aircraft, through blood vessels, and in microfluidic devices.
+              Laminar flow is predictable and efficient. Turbulent flow enhances mixing and heat transfer but increases drag.
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Discover a Paradox
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Smooth ball - less surface friction means less drag' },
+      { id: 'b', text: 'Dimpled ball - roughness somehow reduces drag', correct: true },
+      { id: 'c', text: 'Same distance - only mass and launch angle matter' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              The Golf Ball Paradox
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Golf balls have 300-500 dimples. A smooth ball seems more "aerodynamic"...
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg width="100%" height="120" viewBox="0 0 400 120">
+              {/* Smooth ball */}
+              <g transform="translate(100, 60)">
+                <circle r="35" fill="#fff" />
+                <text y="55" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Smooth</text>
+              </g>
+              {/* Dimpled ball */}
+              <g transform="translate(300, 60)">
+                <circle r="35" fill="#fff" />
+                {Array.from({ length: 12 }).map((_, i) => {
+                  const angle = (i * 30) * Math.PI / 180;
+                  const r = 25;
+                  return (
+                    <circle key={i} cx={r * Math.cos(angle)} cy={r * Math.sin(angle)} r={4} fill="#ddd" />
+                  );
+                })}
+                <text y="55" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Dimpled</text>
+              </g>
+              <text x="200" y="65" fill={colors.textSecondary} fontSize="16" textAnchor="middle" fontWeight="700">VS</text>
+            </svg>
+
+            <p style={{ ...typo.h3, color: colors.textPrimary, marginTop: '16px' }}>
+              Which ball flies farther?
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See the Answer
+            </button>
           )}
         </div>
 
-        {showTestResults && renderBottomBar(() => onPhaseComplete?.(), false, "Complete Journey")}
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // Mastery Phase
-  const renderMastery = () => {
-    const score = calculateScore();
-
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
     return (
-      <div style={{ padding: isMobile ? '16px' : '24px' }}>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
 
-        <div style={{
-          background: `linear-gradient(135deg, ${colors.laminar}20, ${colors.turbulent}20)`,
-          borderRadius: '20px',
-          padding: '32px',
-          textAlign: 'center',
-          marginBottom: '20px',
-          border: `2px solid ${colors.primary}50`,
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Confetti effect */}
-          {score >= 7 && Array.from({ length: 20 }).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                position: 'absolute',
-                width: '10px',
-                height: '10px',
-                background: [colors.primary, colors.secondary, colors.accent, colors.success, colors.laminar][i % 5],
-                borderRadius: i % 2 === 0 ? '50%' : '2px',
-                left: `${Math.random() * 100}%`,
-                top: '-20px',
-                animation: `fall ${2 + Math.random() * 2}s linear infinite`,
-                animationDelay: `${Math.random() * 2}s`,
-                opacity: 0.8
-              }}
-            />
-          ))}
-
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>🌊🎓</div>
-
-          <h2 style={{ color: colors.text, margin: '0 0 8px 0', fontSize: '28px', fontWeight: '700' }}>
-            Flow Master!
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Boundary Layer Lab
           </h2>
-
-          <p style={{ color: colors.textSecondary, margin: '0 0 24px 0', fontSize: '16px' }}>
-            You understand the physics of laminar and turbulent flow
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Explore why dimples reduce drag on blunt objects.
           </p>
 
           <div style={{
-            display: 'inline-block',
-            padding: '16px 32px',
-            background: colors.card,
-            borderRadius: '12px',
-            marginBottom: '24px'
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
           }}>
-            <div style={{ color: colors.primary, fontSize: '36px', fontWeight: '700' }}>
-              {score}/{testQuestions.length}
+            {/* Shape selector */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              {(['sphere', 'streamlined', 'flat'] as const).map(shape => (
+                <button
+                  key={shape}
+                  onClick={() => setObjectShape(shape)}
+                  style={{
+                    padding: '10px 20px',
+                    background: objectShape === shape ? colors.accent : colors.bgSecondary,
+                    color: objectShape === shape ? colors.bgPrimary : colors.textSecondary,
+                    border: `1px solid ${objectShape === shape ? colors.accent : colors.border}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: objectShape === shape ? '600' : '400'
+                  }}
+                >
+                  {shape === 'sphere' ? 'Sphere (Golf Ball)' : shape === 'streamlined' ? 'Streamlined' : 'Flat Plate'}
+                </button>
+              ))}
             </div>
-            <div style={{ color: colors.textSecondary, fontSize: '14px' }}>Final Score</div>
+
+            {/* Visualization */}
+            <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+              <svg width="100%" height="200" viewBox="0 0 500 200">
+                <defs>
+                  <radialGradient id="sphereGrad" cx="35%" cy="35%" r="65%">
+                    <stop offset="0%" stopColor="#e5e7eb" />
+                    <stop offset="100%" stopColor="#6b7280" />
+                  </radialGradient>
+                  <linearGradient id="wakeGradRed" x1="0%" y1="50%" x2="100%" y2="50%">
+                    <stop offset="0%" stopColor={colors.error} stopOpacity="0.5" />
+                    <stop offset="100%" stopColor={colors.error} stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="wakeGradGreen" x1="0%" y1="50%" x2="100%" y2="50%">
+                    <stop offset="0%" stopColor={colors.success} stopOpacity="0.5" />
+                    <stop offset="100%" stopColor={colors.success} stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Incoming flow arrows */}
+                {[40, 70, 100, 130, 160].map((y, i) => (
+                  <g key={i}>
+                    <line x1="10" y1={y} x2="60" y2={y} stroke={colors.laminar} strokeWidth="2" opacity="0.5" />
+                    <polygon points="60,-4 72,0 60,4" transform={`translate(0, ${y})`} fill={colors.laminar} opacity="0.5" />
+                  </g>
+                ))}
+
+                {objectShape === 'sphere' && (
+                  <>
+                    {/* SMOOTH SPHERE - left */}
+                    <g transform="translate(140, 100)">
+                      <circle r="40" fill="url(#sphereGrad)" />
+                      <path d="M 40 -5 Q 60 -30 90 -35 L 90 35 Q 60 30 40 5" fill="url(#wakeGradRed)" />
+                      <text x="0" y="60" fill={colors.error} fontSize="11" textAnchor="middle" fontWeight="600">SMOOTH</text>
+                      <text x="0" y="75" fill={colors.textMuted} fontSize="9" textAnchor="middle">Large wake = High drag</text>
+                      <circle cx="40" cy="0" r="4" fill={colors.error}>
+                        <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
+                      </circle>
+                      <text x="55" y="-15" fill={colors.error} fontSize="8">Early separation</text>
+                    </g>
+
+                    {/* VS */}
+                    <text x="250" y="105" fill={colors.textSecondary} fontSize="16" textAnchor="middle" fontWeight="700">VS</text>
+
+                    {/* DIMPLED SPHERE - right */}
+                    <g transform="translate(360, 100)">
+                      <circle r="40" fill="url(#sphereGrad)" />
+                      {/* Dimples */}
+                      {Array.from({ length: 12 }).map((_, i) => {
+                        const angle = (i * 30) * Math.PI / 180;
+                        return <circle key={i} cx={28 * Math.cos(angle)} cy={28 * Math.sin(angle)} r="4" fill="#9ca3af" />;
+                      })}
+                      <path d="M 40 -3 Q 50 -12 60 -15 L 60 15 Q 50 12 40 3" fill="url(#wakeGradGreen)" />
+                      <text x="0" y="60" fill={colors.success} fontSize="11" textAnchor="middle" fontWeight="600">DIMPLED</text>
+                      <text x="0" y="75" fill={colors.textMuted} fontSize="9" textAnchor="middle">Small wake = 50% less drag!</text>
+                      <circle cx="38" cy="20" r="4" fill={colors.success}>
+                        <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
+                      </circle>
+                      <text x="55" y="30" fill={colors.success} fontSize="8">Late separation</text>
+                    </g>
+                  </>
+                )}
+
+                {objectShape === 'streamlined' && (
+                  <g transform="translate(250, 100)">
+                    <ellipse rx="100" ry="35" fill="url(#sphereGrad)" />
+                    <path d="M 100 0 Q 110 -5 115 0 Q 110 5 100 0" fill="url(#wakeGradGreen)" />
+                    <text x="0" y="55" fill={colors.success} fontSize="12" textAnchor="middle" fontWeight="600">STREAMLINED</text>
+                    <text x="0" y="70" fill={colors.textMuted} fontSize="10" textAnchor="middle">Flow stays attached - Minimal drag</text>
+                  </g>
+                )}
+
+                {objectShape === 'flat' && (
+                  <g transform="translate(250, 100)">
+                    <rect x="-15" y="-50" width="30" height="100" rx="3" fill="#6b7280" />
+                    <ellipse cx="80" cy="0" rx="80" ry="60" fill="url(#wakeGradRed)" />
+                    {/* Eddies */}
+                    {[40, 80, 120].map((x, i) => (
+                      <circle key={i} cx={x} cy={(i % 2 === 0 ? -1 : 1) * 20} r={15 + i * 3} fill="none" stroke={colors.error} strokeWidth="1" opacity="0.3">
+                        <animateTransform attributeName="transform" type="rotate" values={`0 ${x} ${(i % 2 === 0 ? -1 : 1) * 20}; 360 ${x} ${(i % 2 === 0 ? -1 : 1) * 20}`} dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
+                      </circle>
+                    ))}
+                    <text x="0" y="70" fill={colors.error} fontSize="12" textAnchor="middle" fontWeight="600">FLAT PLATE</text>
+                    <text x="0" y="85" fill={colors.textMuted} fontSize="10" textAnchor="middle">Immediate separation - Maximum drag</text>
+                  </g>
+                )}
+              </svg>
+            </div>
+
+            {/* Explanation */}
+            <div style={{
+              padding: '16px',
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              borderLeft: `4px solid ${objectShape === 'sphere' ? colors.success : objectShape === 'streamlined' ? colors.success : colors.error}`
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                {objectShape === 'sphere' ? (
+                  <>
+                    <strong style={{ color: colors.success }}>The Dimple Effect:</strong> Dimples trigger a turbulent boundary layer that has more momentum near the surface.
+                    This energized layer stays attached longer, dramatically reducing the wake and total drag by ~50%.
+                  </>
+                ) : objectShape === 'streamlined' ? (
+                  <>
+                    <strong style={{ color: colors.success }}>Streamlined shapes</strong> avoid the need for boundary layer tricks - the gentle curves keep flow attached naturally.
+                    Laminar flow here is optimal!
+                  </>
+                ) : (
+                  <>
+                    <strong style={{ color: colors.error }}>Flat plates</strong> cause immediate separation regardless of boundary layer state.
+                    Turbulent BL cannot help much here - the shape itself is the problem.
+                  </>
+                )}
+              </p>
+            </div>
           </div>
 
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Trade-off
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            When Turbulence Helps vs Hurts
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚽</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Turbulence HELPS (Blunt Objects)</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Golf balls, soccer balls, cyclist helmets - turbulent boundary layers delay separation, reducing wake drag.
+                The small increase in skin friction is far outweighed by the reduced pressure drag.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.error}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>✈️</span>
+                <h3 style={{ ...typo.h3, color: colors.error, margin: 0 }}>Turbulence HURTS (Streamlined Objects)</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Aircraft wings, submarines, race cars - for these shapes, laminar flow already stays attached.
+                Triggering turbulence only adds skin friction drag with no wake benefit.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.accent}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚖️</span>
+                <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>The Engineering Trade-off</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Engineers must consider: Can the shape be streamlined? If not, would triggering turbulence reduce wake drag more than it adds skin friction?
+                The answer depends on shape, speed, and Reynolds number.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: '16px',
-            textAlign: 'left'
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
           }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.short}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Flow Physics Connection:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand laminar and turbulent flow!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🌊🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Flow Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand the physics of laminar and turbulent flow, and when each is beneficial.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '450px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            Key Takeaways:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              { icon: "⚖️", title: "Reynolds Number", text: "Re = ρvD/μ predicts flow type" },
-              { icon: "〰️", title: "Laminar Flow", text: "Smooth layers, Re < 2000" },
-              { icon: "⚽", title: "Dimple Effect", text: "Turbulent BL reduces blunt drag" }
+              'Reynolds number predicts flow regime (Re = rho*v*D/mu)',
+              'Re < 2300: Laminar | Re > 4000: Turbulent',
+              'Higher viscosity suppresses turbulence',
+              'Dimples help blunt objects by delaying separation',
+              'Streamlined shapes benefit from laminar flow',
             ].map((item, i) => (
-              <div key={i} style={{
-                padding: '16px',
-                background: colors.card,
-                borderRadius: '12px'
-              }}>
-                <span style={{ fontSize: '24px' }}>{item.icon}</span>
-                <p style={{ color: colors.text, fontWeight: '600', margin: '8px 0 4px 0', fontSize: '14px' }}>
-                  {item.title}
-                </p>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: '12px' }}>
-                  {item.text}
-                </p>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <style>{`
-          @keyframes fall {
-            to {
-              transform: translateY(500px) rotate(360deg);
-              opacity: 0;
-            }
-          }
-        `}</style>
-
-        {renderKeyTakeaway("From faucets to aircraft to your arteries — understanding flow transitions is essential to engineering and medicine alike!")}
-
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-            🌊 You now see the invisible dance between order and chaos in every flowing fluid!
-          </p>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  // Main render
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/3 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Laminar vs Turbulent Flow</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p, i) => (
-              <div
-                key={p}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
-                    : currentPhaseIndex > i
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">
-        <div style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          padding: isMobile ? '8px' : '16px'
-        }}>
-          {renderPhase()}
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 };
 
 export default LaminarTurbulentRenderer;

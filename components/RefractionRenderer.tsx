@@ -1,14 +1,182 @@
-import React, { useState, useEffect, useCallback } from 'react';
+'use client';
 
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// -----------------------------------------------------------------------------
+// Refraction (Broken Straw) - Complete 10-Phase Game
+// How light bends when passing between materials
+// -----------------------------------------------------------------------------
+
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
+}
+
+interface RefractionRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "You're at a swimming pool and notice that the water appears much shallower than it actually is. A friend jumps in expecting 1.5m of water but it's actually 2m deep.",
+    question: "What causes the pool to look shallower than it is?",
+    options: [
+      { id: 'a', label: "Water compresses the light waves making things look smaller" },
+      { id: 'b', label: "Light bends when leaving water, making the bottom appear raised", correct: true },
+      { id: 'c', label: "Your eyes adjust incorrectly underwater" },
+      { id: 'd', label: "Chlorine in the water distorts the image" }
+    ],
+    explanation: "When light travels from water to air, it bends away from the normal (perpendicular). Your brain assumes light travels in straight lines, so it perceives the bottom at a shallower depth than reality."
+  },
+  {
+    scenario: "An indigenous spearfisher aims at a fish in clear water. Instead of aiming directly at where they see the fish, they aim at a point below and slightly behind the apparent position.",
+    question: "Why must the spearfisher aim below the apparent fish position?",
+    options: [
+      { id: 'a', label: "Fish swim faster than they appear to" },
+      { id: 'b', label: "The actual fish is deeper than where it appears due to refraction", correct: true },
+      { id: 'c', label: "Water resistance slows the spear" },
+      { id: 'd', label: "Fish can see the spear coming and dodge" }
+    ],
+    explanation: "Light from the fish bends at the water surface, making the fish appear higher and closer than it actually is. Experienced fishers learn to compensate by aiming lower."
+  },
+  {
+    scenario: "A straw in a glass of water appears bent or broken at the water surface. You move your head from side to side while watching.",
+    question: "What happens to the apparent bend as you change your viewing angle?",
+    options: [
+      { id: 'a', label: "The bend stays exactly the same regardless of viewing angle" },
+      { id: 'b', label: "The apparent displacement changes because light takes different paths to your eye", correct: true },
+      { id: 'c', label: "The bend reverses direction" },
+      { id: 'd', label: "The straw appears straight when viewed from certain angles" }
+    ],
+    explanation: "The apparent position of the underwater portion depends on your viewing angle. Different angles mean different ray paths through the refracting surface, changing how much the straw appears displaced."
+  },
+  {
+    scenario: "An optometrist is fitting a patient with new glasses. The patient needs stronger lenses than their current pair.",
+    question: "What property of the new lenses needs to be different to bend light more?",
+    options: [
+      { id: 'a', label: "The lenses need to be more curved and/or made of higher refractive index material", correct: true },
+      { id: 'b', label: "The lenses need to be flatter and thinner" },
+      { id: 'c', label: "The lenses just need to be larger in diameter" },
+      { id: 'd', label: "The lenses need a darker tint" }
+    ],
+    explanation: "Lens power depends on curvature and material. Higher refractive index materials bend light more per unit curvature. Steeper curves also increase bending. Both factors contribute to stronger prescriptions."
+  },
+  {
+    scenario: "A jeweler is examining two clear gemstones. One is diamond (n=2.42) and one is cubic zirconia (n=2.15). Both are cut identically.",
+    question: "Which stone will have more 'fire' (rainbow sparkle) and why?",
+    options: [
+      { id: 'a', label: "Cubic zirconia, because it's softer and reflects more" },
+      { id: 'b', label: "Diamond, because higher refractive index means more bending and dispersion", correct: true },
+      { id: 'c', label: "They will look identical since cuts are the same" },
+      { id: 'd', label: "Neither shows fire - that only comes from colored gems" }
+    ],
+    explanation: "Diamond's higher refractive index causes light to bend more and separates colors (dispersion) more dramatically. Combined with its lower critical angle for total internal reflection, this creates more brilliance and fire."
+  },
+  {
+    scenario: "A fiber optic cable carries internet data across the ocean. The glass fiber core has a higher refractive index than the surrounding cladding.",
+    question: "How does this refractive index difference enable data transmission?",
+    options: [
+      { id: 'a', label: "Light travels faster in the core, speeding up transmission" },
+      { id: 'b', label: "Light hitting the boundary at shallow angles reflects totally, staying trapped in the core", correct: true },
+      { id: 'c', label: "The cladding absorbs stray light that would cause interference" },
+      { id: 'd', label: "The difference creates an electric field that guides the light" }
+    ],
+    explanation: "When light in a higher-index material hits a boundary with lower-index material at a shallow angle (beyond the critical angle), it reflects completely - this is total internal reflection. Light bounces along the fiber core without escaping."
+  },
+  {
+    scenario: "You're driving on a hot summer day and see what looks like water on the road ahead. As you approach, the 'water' disappears.",
+    question: "What causes this mirage effect?",
+    options: [
+      { id: 'a', label: "Heat evaporates water from the road surface" },
+      { id: 'b', label: "Hot air near the road has lower refractive index, bending light upward", correct: true },
+      { id: 'c', label: "Your eyes get tired and create illusions" },
+      { id: 'd', label: "Sunlight reflects directly off the road surface" }
+    ],
+    explanation: "Hot air is less dense and has a lower refractive index. Light from the sky gradually bends as it passes through the temperature gradient, curving upward toward your eyes. You see sky reflected where the road should be - looking like water."
+  },
+  {
+    scenario: "A scientist adds sugar to water in a beaker. As the concentration increases, a laser beam passing through bends more and more.",
+    question: "What is happening to the water's optical properties?",
+    options: [
+      { id: 'a', label: "Sugar makes the water denser, which decreases its refractive index" },
+      { id: 'b', label: "Dissolved sugar increases the refractive index, causing more bending", correct: true },
+      { id: 'c', label: "Sugar crystals scatter the light in different directions" },
+      { id: 'd', label: "The sugar creates a chemical reaction that changes light color" }
+    ],
+    explanation: "Dissolved substances increase the refractive index of liquids. Sugar water (n~1.4-1.5 depending on concentration) bends light more than pure water (n=1.33). This principle is used in refractometers to measure sugar content in foods and beverages."
+  },
+  {
+    scenario: "A underwater photographer notices that objects appear larger and closer when viewed through their diving mask.",
+    question: "What causes this magnification effect underwater?",
+    options: [
+      { id: 'a', label: "The mask lens acts as a magnifying glass" },
+      { id: 'b', label: "Light bending at the water-air-mask interface creates apparent magnification", correct: true },
+      { id: 'c', label: "Water pressure compresses the photographer's eyes" },
+      { id: 'd', label: "Reduced light underwater makes pupils dilate, increasing perceived size" }
+    ],
+    explanation: "Light bends when passing from water through the mask's air space to your eyes. This refraction makes objects appear about 33% larger and 25% closer than they actually are - a standard compensation underwater photographers must learn."
+  },
+  {
+    scenario: "An engineer is designing an anti-reflective coating for camera lenses. They need to minimize light loss at the air-glass boundary.",
+    question: "How does the coating reduce reflection by using refraction principles?",
+    options: [
+      { id: 'a', label: "The coating absorbs incoming light before it can reflect" },
+      { id: 'b', label: "The coating has intermediate refractive index, creating destructive interference of reflected waves", correct: true },
+      { id: 'c', label: "The coating is perfectly smooth to prevent scattering" },
+      { id: 'd', label: "The coating polarizes light to block reflections" }
+    ],
+    explanation: "Anti-reflective coatings use thin layers with intermediate refractive indices. Light reflects from both the top and bottom of the coating. When the coating thickness equals 1/4 wavelength, these reflections destructively interfere, canceling each other."
+  }
+];
+
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '👓',
     title: 'Prescription Eyeglasses',
     short: 'Lens curvature refracts light to correct nearsightedness, farsightedness, and astigmatism',
     tagline: 'Bending light to perfect vision',
-    description: 'Over 4 billion people worldwide need vision correction. Eyeglass lenses use precisely calculated curvatures to refract light, compensating for eyes that focus incorrectly. Myopia (nearsightedness) requires diverging lenses, while hyperopia (farsightedness) needs converging lenses. Modern high-index materials bend light more with thinner, lighter lenses.',
-    connection: 'This game teaches how different materials bend light at different angles - the exact physics optometrists use when prescribing lenses.',
-    howItWorks: 'Light entering a curved lens refracts at each surface according to Snell law. The lens power in diopters equals 1/focal length in meters. Steeper curves and higher refractive index materials bend light more. Progressive lenses vary curvature to provide multiple focal lengths.',
+    description: 'Over 4 billion people worldwide need vision correction. Eyeglass lenses use precisely calculated curvatures to refract light, compensating for eyes that focus incorrectly. Myopia (nearsightedness) requires diverging lenses, while hyperopia (farsightedness) needs converging lenses.',
+    connection: 'This game teaches how different materials bend light at different angles - the exact physics optometrists use when prescribing lenses with specific curvatures and materials.',
+    howItWorks: 'Light entering a curved lens refracts at each surface according to Snell\'s law. The lens power in diopters equals 1/focal length in meters. Steeper curves and higher refractive index materials bend light more.',
     stats: [
       { value: '4B+', label: 'People needing correction', icon: '👁️' },
       { value: '1.74', label: 'High-index lens n value', icon: '🔬' },
@@ -24,12 +192,12 @@ const realWorldApps = [
     title: 'Camera Lens Design',
     short: 'Multi-element lenses use refraction to focus images sharply across the entire frame',
     tagline: 'Engineering the perfect image',
-    description: 'Camera lenses contain 10-20 precisely shaped glass elements, each designed to refract light in ways that correct for aberrations. Chromatic aberration (color fringing) occurs because different wavelengths refract differently. Lens designers combine elements of different materials to cancel these effects.',
+    description: 'Camera lenses contain 10-20 precisely shaped glass elements, each designed to refract light in ways that correct for aberrations. Chromatic aberration (color fringing) occurs because different wavelengths refract differently.',
     connection: 'The wavelength-dependent refraction explored in this game explains chromatic aberration - the challenge every camera lens designer must overcome.',
-    howItWorks: 'Each lens element has specific curvature and refractive index. Rays from scene points must all converge to the same image point regardless of where they enter the lens. Special low-dispersion glass and aspherical elements correct aberrations. Computational design optimizes element placement.',
+    howItWorks: 'Each lens element has specific curvature and refractive index. Rays from scene points must all converge to the same image point regardless of where they enter the lens. Special low-dispersion glass and aspherical elements correct aberrations.',
     stats: [
       { value: '10-20', label: 'Elements in quality lenses', icon: '🔍' },
-      { value: 'f/1.2-f/2.8', label: 'Fast lens apertures', icon: '📸' },
+      { value: 'f/1.2', label: 'Fast lens apertures', icon: '📸' },
       { value: '$100B', label: 'Camera market size', icon: '💵' }
     ],
     examples: ['Smartphone lenses', 'DSLR zooms', 'Cinema primes', 'Microscope objectives'],
@@ -42,12 +210,12 @@ const realWorldApps = [
     title: 'Gemstone Cutting',
     short: 'Diamond facets maximize brilliance by exploiting total internal reflection',
     tagline: 'The science of sparkle',
-    description: 'A diamond sparkle comes from its high refractive index (n=2.42) and precisely angled facets. Light entering the diamond refracts, then reflects internally off the back facets (total internal reflection), and exits through the top with dramatic dispersion into spectral colors. Cut quality determines how effectively this physics is exploited.',
+    description: 'A diamond\'s sparkle comes from its high refractive index (n=2.42) and precisely angled facets. Light entering the diamond refracts, then reflects internally off the back facets (total internal reflection), and exits through the top with dramatic dispersion.',
     connection: 'This game demonstrates critical angles and total internal reflection - the physics that makes diamonds and other gems sparkle brilliantly.',
-    howItWorks: 'Diamond critical angle is only 24.4 degrees due to high refractive index. Facets are angled so light entering the top reflects off back facets rather than passing through. The stone acts as a light trap, returning light with fire (dispersion into colors) and brilliance (total light return).',
+    howItWorks: 'Diamond\'s critical angle is only 24.4 degrees due to high refractive index. Facets are angled so light entering the top reflects off back facets rather than passing through. The stone acts as a light trap.',
     stats: [
       { value: '2.42', label: 'Diamond refractive index', icon: '💎' },
-      { value: '24.4°', label: 'Critical angle in diamond', icon: '📐' },
+      { value: '24.4°', label: 'Critical angle', icon: '📐' },
       { value: '$80B', label: 'Diamond jewelry market', icon: '💍' }
     ],
     examples: ['Round brilliant cut', 'Princess cut', 'Emerald cut', 'Cushion cut'],
@@ -60,13 +228,13 @@ const realWorldApps = [
     title: 'Fiber Optic Communications',
     short: 'Total internal reflection guides light signals thousands of kilometers through glass fibers',
     tagline: 'The internet travels at light speed',
-    description: 'The global internet runs on fiber optics - thin glass strands that trap light through total internal reflection. Data encoded as light pulses travels thousands of kilometers with minimal loss. A single fiber can carry terabits per second, enabling video calls, streaming, and cloud computing across continents.',
+    description: 'The global internet runs on fiber optics - thin glass strands that trap light through total internal reflection. Data encoded as light pulses travels thousands of kilometers with minimal loss, enabling modern digital infrastructure.',
     connection: 'Total internal reflection, demonstrated when light bends at material boundaries in this game, is exactly how fiber optics guide light around the world.',
-    howItWorks: 'Optical fiber has a high-index core surrounded by lower-index cladding. Light entering at shallow angles exceeds the critical angle and reflects internally rather than escaping. Pulses bounce along the fiber, losing only about 0.2 dB per kilometer in modern single-mode fiber.',
+    howItWorks: 'Optical fiber has a high-index core surrounded by lower-index cladding. Light entering at shallow angles exceeds the critical angle and reflects internally rather than escaping. Pulses bounce along the fiber.',
     stats: [
       { value: '100+ Tbps', label: 'Capacity per fiber pair', icon: '📡' },
       { value: '0.2 dB/km', label: 'Signal loss rate', icon: '📉' },
-      { value: '500M km', label: 'Total fiber deployed globally', icon: '🌍' }
+      { value: '500M km', label: 'Fiber deployed globally', icon: '🌍' }
     ],
     examples: ['Submarine cables', 'Metro networks', 'Data center interconnects', 'FTTH broadband'],
     companies: ['Corning', 'Prysmian', 'Fujikura', 'OFS'],
@@ -75,53 +243,48 @@ const realWorldApps = [
   }
 ];
 
-interface RefractionRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
-}
+// -----------------------------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------------------------
+const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#3b82f6',
-  accentGlow: 'rgba(59, 130, 246, 0.4)',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  water: '#60a5fa',
-  straw: '#fbbf24',
-  glass: 'rgba(255, 255, 255, 0.2)',
-};
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
 
-const RefractionRenderer: React.FC<RefractionRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
   // Simulation state
-  const [viewingAngle, setViewingAngle] = useState(0);
-  const [refractiveIndex, setRefractiveIndex] = useState(1.33); // Water
+  const [viewingAngle, setViewingAngle] = useState(30);
+  const [refractiveIndex, setRefractiveIndex] = useState(1.33);
   const [waterLevel, setWaterLevel] = useState(60);
   const [showRayPaths, setShowRayPaths] = useState(false);
 
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  // Twist phase - different materials
+  const [material, setMaterial] = useState<'water' | 'sugar' | 'glass' | 'diamond'>('water');
+
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Responsive detection
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
+  const isNavigating = useRef(false);
+
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -129,1066 +292,1601 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Get refractive index for material
+  const getMaterialIndex = (mat: string) => {
+    const indices: Record<string, number> = {
+      water: 1.33,
+      sugar: 1.45,
+      glass: 1.52,
+      diamond: 2.42
+    };
+    return indices[mat] || 1.33;
   };
 
-  const predictions = [
-    { id: 'cup', label: 'Moving the cup causes more bending' },
-    { id: 'head', label: 'Moving your head left-right changes the apparent break' },
-    { id: 'same', label: 'Both cause equal changes to the break' },
-    { id: 'none', label: 'Neither affects the break - it stays constant' },
-  ];
-
-  const twistPredictions = [
-    { id: 'less', label: 'Sugar water bends light less' },
-    { id: 'more', label: 'Sugar water bends light more (bigger apparent break)' },
-    { id: 'same', label: 'Sugar water has no different effect' },
-    { id: 'color', label: 'Sugar water adds colors to the break' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'Spearfishing Compensation',
-      description: 'Fish appear closer to the surface than they actually are. Skilled spearfishers learn to aim below the apparent position.',
-      question: 'Why must spearfishers aim below where they see the fish?',
-      answer: 'Light bends away from normal when exiting water. Your brain traces rays straight back, placing the fish higher than its true position.',
-    },
-    {
-      title: 'Swimming Pool Depth',
-      description: 'Pools look shallower than they are. A 2m pool might appear only 1.5m deep from above.',
-      question: 'Why do pools look shallower than they are?',
-      answer: 'Light from the bottom bends at the surface. Your brain assumes straight-line paths, making the bottom appear raised.',
-    },
-    {
-      title: 'Corrective Lenses',
-      description: 'Eyeglasses bend light to compensate for eyes that focus incorrectly. The lens curvature determines bending strength.',
-      question: 'How do glasses correct vision using refraction?',
-      answer: 'Curved lenses bend light before it enters the eye, effectively moving the focal point onto the retina where the eye\'s natural lens fails.',
-    },
-    {
-      title: 'Fiber Optic Communication',
-      description: 'Light bounces inside glass fibers by total internal reflection, carrying data across continents.',
-      question: 'How does refraction enable fiber optic cables?',
-      answer: 'The fiber\'s core has higher refractive index than cladding. Light hitting the boundary at shallow angles reflects totally, staying trapped inside.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'What causes a straw to appear "broken" in water?',
-      options: [
-        { text: 'Water magnifies part of the straw', correct: false },
-        { text: 'Light changes speed at the water surface, bending rays', correct: true },
-        { text: 'The straw actually bends when wet', correct: false },
-        { text: 'Air bubbles distort the image', correct: false },
-      ],
-    },
-    {
-      question: 'Why does your brain perceive the straw in the wrong position?',
-      options: [
-        { text: 'Eyes have built-in errors', correct: false },
-        { text: 'Brain assumes light travels in straight lines', correct: true },
-        { text: 'Water creates a mirror effect', correct: false },
-        { text: 'The straw reflects light differently underwater', correct: false },
-      ],
-    },
-    {
-      question: 'When light goes from air into water, it bends:',
-      options: [
-        { text: 'Away from the normal (perpendicular)', correct: false },
-        { text: 'Toward the normal (perpendicular)', correct: true },
-        { text: 'Parallel to the surface', correct: false },
-        { text: 'It doesn\'t bend at all', correct: false },
-      ],
-    },
-    {
-      question: 'What determines how much light bends at a boundary?',
-      options: [
-        { text: 'Only the color of light', correct: false },
-        { text: 'The difference in refractive indices of the two materials', correct: true },
-        { text: 'Only the temperature', correct: false },
-        { text: 'The brightness of the light', correct: false },
-      ],
-    },
-    {
-      question: 'Sugar water has a higher refractive index than plain water. This means:',
-      options: [
-        { text: 'Light travels faster in sugar water', correct: false },
-        { text: 'Light bends more when entering sugar water', correct: true },
-        { text: 'Light cannot enter sugar water', correct: false },
-        { text: 'Sugar water is opaque', correct: false },
-      ],
-    },
-    {
-      question: 'The refractive index of a material compares:',
-      options: [
-        { text: 'Light speed in vacuum to light speed in that material', correct: true },
-        { text: 'Material density to water density', correct: false },
-        { text: 'Material hardness to glass hardness', correct: false },
-        { text: 'Material color to white light', correct: false },
-      ],
-    },
-    {
-      question: 'Why does the break in the straw change when you move your viewing angle?',
-      options: [
-        { text: 'The straw is flexible', correct: false },
-        { text: 'Different viewing angles mean different ray paths through the water', correct: true },
-        { text: 'Your eyes adjust focus', correct: false },
-        { text: 'The water ripples', correct: false },
-      ],
-    },
-    {
-      question: 'A fish in water appears at position A. Where is its actual position?',
-      options: [
-        { text: 'Higher than A (closer to surface)', correct: false },
-        { text: 'Lower than A (deeper in water)', correct: true },
-        { text: 'Exactly at position A', correct: false },
-        { text: 'Horizontally offset from A', correct: false },
-      ],
-    },
-    {
-      question: 'Diamond has a very high refractive index (~2.4). Compared to glass (~1.5):',
-      options: [
-        { text: 'Diamond bends light less', correct: false },
-        { text: 'Diamond bends light more, creating more sparkle', correct: true },
-        { text: 'Both bend light equally', correct: false },
-        { text: 'Diamond doesn\'t bend light', correct: false },
-      ],
-    },
-    {
-      question: 'If you look straight down (perpendicular) at a straw in water:',
-      options: [
-        { text: 'Maximum bending occurs', correct: false },
-        { text: 'No apparent displacement - the straw looks straight', correct: true },
-        { text: 'The straw disappears', correct: false },
-        { text: 'Colors separate', correct: false },
-      ],
-    },
-  ];
-
-  // Calculate apparent straw position based on refraction
+  // Calculate apparent shift based on refraction
   const calculateApparentShift = useCallback(() => {
     const angleRad = (viewingAngle * Math.PI) / 180;
     const n = refractiveIndex;
-    // Simplified apparent depth calculation
     const shift = Math.tan(angleRad) * (1 - 1/n) * waterLevel * 0.5;
-    return Math.min(Math.max(shift, -30), 30);
+    return Math.min(Math.max(shift, -40), 40);
   }, [viewingAngle, refractiveIndex, waterLevel]);
 
   const apparentShift = calculateApparentShift();
 
-  // Render the glass with straw visualization
-  const renderVisualization = () => {
-    const glassWidth = 120;
-    const glassHeight = 200;
-    const waterHeight = (waterLevel / 100) * glassHeight * 0.8;
-    const waterSurfaceY = 40 + glassHeight - waterHeight - 3;
-    const glassLeft = (300 - glassWidth) / 2;
-    const glassRight = glassLeft + glassWidth;
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#3B82F6',
+    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+    water: '#60a5fa',
+    straw: '#fbbf24',
+  };
 
-    // Calculate angle for arc markers
-    const incidentAngle = Math.abs(viewingAngle);
-    const refractedAngle = Math.abs(Math.asin(Math.sin(viewingAngle * Math.PI / 180) / refractiveIndex) * 180 / Math.PI) || 0;
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Materials',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'refraction',
+        gameTitle: 'Refraction (Broken Straw)',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
+
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Straw in Water Visualization SVG Component
+  const RefractionVisualization = ({ showControls = false }: { showControls?: boolean }) => {
+    const width = isMobile ? 320 : 400;
+    const height = isMobile ? 280 : 320;
+    const glassWidth = 100;
+    const glassHeight = 180;
+    const waterHeight = (waterLevel / 100) * glassHeight * 0.85;
+    const glassLeft = (width - glassWidth) / 2;
+    const glassTop = 50;
+    const waterSurfaceY = glassTop + glassHeight - waterHeight;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
-        <svg width="300" height="260" viewBox="0 0 300 260">
-          {/* Definitions for gradients and filters */}
-          <defs>
-            {/* Background gradient */}
-            <linearGradient id="refrBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.6" />
+          </linearGradient>
+          <linearGradient id="strawGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#f59e0b" />
+          </linearGradient>
+          <filter id="glowFilter">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-            {/* Water depth gradient */}
-            <linearGradient id="refrWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.6" />
-            </linearGradient>
+        {/* Title */}
+        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+          Light Bending at Water Surface
+        </text>
 
-            {/* Glass container gradient */}
-            <linearGradient id="refrGlassGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.1)" />
-              <stop offset="50%" stopColor="rgba(255,255,255,0.3)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
-            </linearGradient>
+        {/* Background grid */}
+        {Array.from({ length: 10 }).map((_, i) => (
+          <React.Fragment key={i}>
+            <line x1={i * (width/10)} y1="35" x2={i * (width/10)} y2={height - 20} stroke={colors.border} strokeWidth="1" opacity="0.3" />
+            <line x1="0" y1={35 + i * ((height - 55) / 10)} x2={width} y2={35 + i * ((height - 55) / 10)} stroke={colors.border} strokeWidth="1" opacity="0.3" />
+          </React.Fragment>
+        ))}
 
-            {/* Straw gradient */}
-            <linearGradient id="refrStrawGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f59e0b" />
-              <stop offset="50%" stopColor="#fbbf24" />
-              <stop offset="100%" stopColor="#f59e0b" />
-            </linearGradient>
+        {/* Glass container */}
+        <rect
+          x={glassLeft}
+          y={glassTop}
+          width={glassWidth}
+          height={glassHeight}
+          fill="none"
+          stroke="rgba(255,255,255,0.3)"
+          strokeWidth="2"
+          rx="4"
+        />
 
-            {/* Light ray gradient - actual path */}
-            <linearGradient id="refrRayActualGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
+        {/* Water */}
+        <rect
+          x={glassLeft + 2}
+          y={waterSurfaceY}
+          width={glassWidth - 4}
+          height={waterHeight - 2}
+          fill="url(#waterGradient)"
+          rx="2"
+        />
 
-            {/* Light ray gradient - perceived path */}
-            <linearGradient id="refrRayPerceivedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#34d399" />
-            </linearGradient>
+        {/* Water surface highlight */}
+        <line
+          x1={glassLeft + 2}
+          y1={waterSurfaceY}
+          x2={glassLeft + glassWidth - 2}
+          y2={waterSurfaceY}
+          stroke={colors.water}
+          strokeWidth="2"
+          filter="url(#glowFilter)"
+        />
 
-            {/* Water surface glow filter */}
-            <filter id="refrSurfaceGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        {/* Straw above water (actual) */}
+        <line
+          x1={width/2}
+          y1={glassTop - 10}
+          x2={width/2}
+          y2={waterSurfaceY}
+          stroke="url(#strawGradient)"
+          strokeWidth="8"
+          strokeLinecap="round"
+        />
 
-            {/* Straw glow filter */}
-            <filter id="refrStrawGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        {/* Straw underwater - ghost (actual position) */}
+        <line
+          x1={width/2}
+          y1={waterSurfaceY}
+          x2={width/2}
+          y2={glassTop + glassHeight - 10}
+          stroke={colors.straw}
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeDasharray="4,4"
+          opacity="0.25"
+        />
 
-            {/* Ray glow filter */}
-            <filter id="refrRayGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2.5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+        {/* Straw underwater - apparent position */}
+        <line
+          x1={width/2}
+          y1={waterSurfaceY}
+          x2={width/2 + apparentShift}
+          y2={glassTop + glassHeight - 10}
+          stroke="url(#strawGradient)"
+          strokeWidth="8"
+          strokeLinecap="round"
+          filter="url(#glowFilter)"
+        />
 
-            {/* Eye glow filter */}
-            <filter id="refrEyeGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Background with gradient */}
-          <rect x="0" y="0" width="300" height="260" fill="url(#refrBgGradient)" />
-
-          {/* Grid pattern behind */}
-          {Array.from({ length: 15 }).map((_, i) => (
-            <React.Fragment key={i}>
-              <line x1={i * 20} y1="0" x2={i * 20} y2="260" stroke="#1e3a5f" strokeWidth="1" opacity="0.5" />
-              <line x1="0" y1={i * 20} x2="300" y2={i * 20} stroke="#1e3a5f" strokeWidth="1" opacity="0.5" />
-            </React.Fragment>
-          ))}
-
-          {/* Air medium label background */}
-          <rect x="220" y="50" width="50" height="20" rx="4" fill="rgba(30, 41, 59, 0.8)" />
-          <text x="245" y="64" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="500">
-            AIR
-          </text>
-
-          {/* Glass container with gradient */}
-          <rect
-            x={glassLeft}
-            y="40"
-            width={glassWidth}
-            height={glassHeight}
-            fill="none"
-            stroke="url(#refrGlassGradient)"
-            strokeWidth="3"
-            rx="5"
-          />
-
-          {/* Glass shine effect */}
-          <line
-            x1={glassLeft + 5}
-            y1="45"
-            x2={glassLeft + 5}
-            y2={40 + glassHeight - 5}
-            stroke="rgba(255,255,255,0.15)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-
-          {/* Water with depth gradient */}
-          <rect
-            x={glassLeft + 3}
-            y={waterSurfaceY}
-            width={glassWidth - 6}
-            height={waterHeight}
-            fill="url(#refrWaterGradient)"
-            rx="2"
-          />
-
-          {/* Water medium label background */}
-          <rect x="220" y={waterSurfaceY + waterHeight / 2 - 10} width="60" height="20" rx="4" fill="rgba(30, 41, 59, 0.8)" />
-          <text x="250" y={waterSurfaceY + waterHeight / 2 + 4} textAnchor="middle" fill={colors.water} fontSize="11" fontWeight="500">
-            {refractiveIndex < 1.4 ? 'WATER' : refractiveIndex < 1.5 ? 'SUGAR' : 'GLASS'}
-          </text>
-          <text x="250" y={waterSurfaceY + waterHeight / 2 + 16} textAnchor="middle" fill={colors.textMuted} fontSize="9">
-            n={refractiveIndex.toFixed(2)}
-          </text>
-
-          {/* Water surface line with glow */}
-          <line
-            x1={glassLeft + 3}
-            y1={waterSurfaceY}
-            x2={glassRight - 3}
-            y2={waterSurfaceY}
-            stroke={colors.water}
-            strokeWidth="2"
-            filter="url(#refrSurfaceGlow)"
-          />
-
-          {/* Surface ripple effects */}
-          <ellipse
-            cx="150"
-            cy={waterSurfaceY}
-            rx="40"
-            ry="2"
-            fill="none"
-            stroke="rgba(96, 165, 250, 0.3)"
-            strokeWidth="1"
-          />
-
-          {/* Normal line (perpendicular to surface) */}
-          {showRayPaths && (
+        {/* Ray paths if enabled */}
+        {showRayPaths && (
+          <>
+            {/* Normal line */}
             <line
-              x1="150"
+              x1={width/2}
               y1={waterSurfaceY - 40}
-              x2="150"
+              x2={width/2}
               y2={waterSurfaceY + 40}
               stroke="rgba(148, 163, 184, 0.5)"
               strokeWidth="1"
               strokeDasharray="4,4"
             />
-          )}
 
-          {/* Angle arc markers when ray paths shown */}
-          {showRayPaths && viewingAngle !== 0 && (
-            <>
-              {/* Incident angle arc (in air) */}
-              <path
-                d={`M 150 ${waterSurfaceY - 25} A 25 25 0 0 ${viewingAngle > 0 ? 1 : 0} ${150 + 25 * Math.sin(viewingAngle * Math.PI / 180)} ${waterSurfaceY - 25 * Math.cos(viewingAngle * Math.PI / 180)}`}
-                fill="none"
-                stroke={colors.warning}
-                strokeWidth="2"
-                opacity="0.7"
-              />
-              {/* Refracted angle arc (in water) */}
-              <path
-                d={`M 150 ${waterSurfaceY + 20} A 20 20 0 0 ${apparentShift > 0 ? 1 : 0} ${150 + 20 * Math.sin(Math.atan(apparentShift / 60))} ${waterSurfaceY + 20 * Math.cos(Math.atan(apparentShift / 60))}`}
-                fill="none"
-                stroke={colors.accent}
-                strokeWidth="2"
-                opacity="0.7"
-              />
-            </>
-          )}
+            {/* Light ray in water */}
+            <line
+              x1={width/2 + apparentShift * 0.8}
+              y1={glassTop + glassHeight - 40}
+              x2={width/2}
+              y2={waterSurfaceY}
+              stroke={colors.error}
+              strokeWidth="2"
+              strokeDasharray="6,4"
+              filter="url(#glowFilter)"
+            />
 
-          {/* Straw - above water (actual position) with glow */}
-          <line
-            x1="150"
-            y1="20"
-            x2="150"
-            y2={waterSurfaceY}
-            stroke="url(#refrStrawGradient)"
-            strokeWidth="8"
-            strokeLinecap="round"
-            filter="url(#refrStrawGlow)"
-          />
+            {/* Light ray in air to eye */}
+            <line
+              x1={width/2}
+              y1={waterSurfaceY}
+              x2={width/2 + 50 + viewingAngle * 0.5}
+              y2={glassTop - 30}
+              stroke={colors.error}
+              strokeWidth="2"
+              strokeDasharray="6,4"
+              filter="url(#glowFilter)"
+            />
 
-          {/* Straw stripe detail */}
-          <line
-            x1="148"
-            y1="25"
-            x2="148"
-            y2={waterSurfaceY - 5}
-            stroke="rgba(255,255,255,0.3)"
-            strokeWidth="1"
-          />
+            {/* Perceived straight path */}
+            <line
+              x1={width/2 + apparentShift * 0.8}
+              y1={glassTop + glassHeight - 40}
+              x2={width/2 + 50 + viewingAngle * 0.5}
+              y2={glassTop - 30}
+              stroke={colors.success}
+              strokeWidth="2"
+              opacity="0.5"
+            />
 
-          {/* Straw - underwater (actual position, ghost) */}
-          <line
-            x1="150"
-            y1={waterSurfaceY}
-            x2="150"
-            y2={40 + glassHeight - 10}
-            stroke={colors.straw}
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray="4,4"
-            opacity="0.25"
-          />
+            {/* Bending point indicator */}
+            <circle
+              cx={width/2}
+              cy={waterSurfaceY}
+              r="6"
+              fill={colors.accent}
+              filter="url(#glowFilter)"
+            />
+          </>
+        )}
 
-          {/* Straw - underwater (apparent position) with glow */}
-          <line
-            x1="150"
-            y1={waterSurfaceY}
-            x2={150 + apparentShift}
-            y2={40 + glassHeight - 10}
-            stroke="url(#refrStrawGradient)"
-            strokeWidth="8"
-            strokeLinecap="round"
-            filter="url(#refrStrawGlow)"
-          />
+        {/* Eye indicator */}
+        <g transform={`translate(${width/2 + 50 + viewingAngle * 0.5}, ${glassTop - 35})`}>
+          <ellipse cx="0" cy="8" rx="10" ry="6" fill="white" stroke={colors.textPrimary} strokeWidth="2" />
+          <circle cx="0" cy="8" r="3" fill={colors.accent} />
+          <circle cx="1" cy="7" r="1" fill="white" />
+        </g>
 
-          {/* Underwater straw stripe detail */}
-          <line
-            x1={148 + apparentShift * 0.1}
-            y1={waterSurfaceY + 5}
-            x2={148 + apparentShift * 0.9}
-            y2={40 + glassHeight - 15}
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="1"
-          />
+        {/* Labels */}
+        <text x={width - 40} y={glassTop - 10} fill={colors.textMuted} fontSize="10" textAnchor="middle">AIR</text>
+        <text x={width - 40} y={waterSurfaceY + 30} fill={colors.water} fontSize="10" textAnchor="middle">
+          {material.toUpperCase()}
+        </text>
+        <text x={width - 40} y={waterSurfaceY + 42} fill={colors.textMuted} fontSize="9" textAnchor="middle">
+          n={refractiveIndex.toFixed(2)}
+        </text>
 
-          {/* Ray paths if enabled */}
-          {showRayPaths && (
-            <>
-              {/* Bending indicator at surface */}
-              <circle
-                cx="150"
-                cy={waterSurfaceY}
-                r="6"
-                fill={colors.accent}
-                opacity="0.6"
-                filter="url(#refrRayGlow)"
-              />
+        {/* Shift indicator */}
+        <text x={width/2} y={height - 5} textAnchor="middle" fill={colors.textSecondary} fontSize="11">
+          Apparent shift: {apparentShift > 0 ? '+' : ''}{apparentShift.toFixed(1)}px
+        </text>
 
-              {/* Light ray from underwater straw - in water */}
-              <line
-                x1={150 + apparentShift * 0.8}
-                y1={40 + glassHeight - 50}
-                x2="150"
-                y2={waterSurfaceY}
-                stroke="url(#refrRayActualGradient)"
-                strokeWidth="2.5"
-                strokeDasharray="6,4"
-                filter="url(#refrRayGlow)"
-              />
-
-              {/* Light ray from surface to eye - in air */}
-              <line
-                x1="150"
-                y1={waterSurfaceY}
-                x2={200 + viewingAngle}
-                y2="10"
-                stroke="url(#refrRayActualGradient)"
-                strokeWidth="2.5"
-                strokeDasharray="6,4"
-                filter="url(#refrRayGlow)"
-              />
-
-              {/* Apparent path (what brain thinks) */}
-              <line
-                x1={150 + apparentShift * 0.8}
-                y1={40 + glassHeight - 50}
-                x2={200 + viewingAngle}
-                y2="10"
-                stroke="url(#refrRayPerceivedGradient)"
-                strokeWidth="2"
-                opacity="0.6"
-                filter="url(#refrRayGlow)"
-              />
-
-              {/* Arrow heads on rays */}
-              <polygon
-                points={`${195 + viewingAngle},15 ${200 + viewingAngle},10 ${205 + viewingAngle},18`}
-                fill={colors.error}
-                opacity="0.8"
-              />
-            </>
-          )}
-
-          {/* Eye icon with glow */}
-          <g transform={`translate(${200 + viewingAngle}, 5)`} filter="url(#refrEyeGlow)">
-            <ellipse cx="0" cy="8" rx="12" ry="7" fill="white" stroke={colors.textPrimary} strokeWidth="2" />
-            <circle cx="0" cy="8" r="4" fill={colors.accent} />
-            <circle cx="1" cy="7" r="1.5" fill="white" opacity="0.8" />
+        {/* Legend */}
+        {showRayPaths && (
+          <g transform={`translate(15, ${height - 45})`}>
+            <rect x="0" y="0" width="80" height="35" rx="4" fill="rgba(30, 41, 59, 0.9)" />
+            <line x1="8" y1="12" x2="25" y2="12" stroke={colors.error} strokeWidth="2" strokeDasharray="4,2" />
+            <text x="30" y="15" fill={colors.textMuted} fontSize="9">Actual ray</text>
+            <line x1="8" y1="26" x2="25" y2="26" stroke={colors.success} strokeWidth="2" />
+            <text x="30" y="29" fill={colors.textMuted} fontSize="9">Perceived</text>
           </g>
-
-          {/* Viewing angle indicator */}
-          {viewingAngle !== 0 && (
-            <text x={200 + viewingAngle} y="28" textAnchor="middle" fill={colors.textMuted} fontSize="10">
-              {viewingAngle > 0 ? '+' : ''}{viewingAngle}°
-            </text>
-          )}
-
-          {/* Legend when rays are shown */}
-          {showRayPaths && (
-            <g transform="translate(15, 220)">
-              <rect x="0" y="0" width="85" height="35" rx="4" fill="rgba(30, 41, 59, 0.9)" />
-              <line x1="8" y1="12" x2="25" y2="12" stroke={colors.error} strokeWidth="2" strokeDasharray="4,2" />
-              <text x="30" y="15" fill={colors.textMuted} fontSize="9">Actual ray</text>
-              <line x1="8" y1="26" x2="25" y2="26" stroke={colors.success} strokeWidth="2" />
-              <text x="30" y="29" fill={colors.textMuted} fontSize="9">Perceived</text>
-            </g>
-          )}
-        </svg>
-
-        {/* Labels moved outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: typo.elementGap,
-          fontSize: typo.small,
-          color: colors.textSecondary,
-        }}>
-          <span style={{ color: colors.textMuted }}>Apparent shift:</span>
-          <span style={{
-            color: apparentShift === 0 ? colors.textMuted : colors.accent,
-            fontWeight: 600,
-            fontVariantNumeric: 'tabular-nums',
-          }}>
-            {apparentShift > 0 ? '+' : ''}{apparentShift.toFixed(1)}px
-          </span>
-          {Math.abs(apparentShift) > 15 && (
-            <span style={{
-              color: colors.warning,
-              fontSize: typo.label,
-              padding: '2px 6px',
-              background: 'rgba(245, 158, 11, 0.15)',
-              borderRadius: '4px',
-            }}>
-              Strong bending
-            </span>
-          )}
-        </div>
-      </div>
+        )}
+      </svg>
     );
   };
 
-  const handleTestAnswer = (answerIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[currentTestQuestion] = answerIndex;
-    setTestAnswers(newAnswers);
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-    if (currentTestQuestion < testQuestions.length - 1) {
-      setCurrentTestQuestion(currentTestQuestion + 1);
-    }
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  const submitTest = () => {
-    let score = 0;
-    testAnswers.forEach((answer, i) => {
-      if (answer !== null && testQuestions[i].options[answer]?.correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 7) {
-      onCorrectAnswer?.();
-    } else {
-      onIncorrectAnswer?.();
-    }
-  };
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
-  const renderPhaseContent = () => {
-    switch (phase) {
-      case 'hook':
-        return (
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '16px' }}>
-              The Broken Straw Illusion
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Will the straw look more bent when you move your head left-right, or when you move the cup?
-            </p>
-            {renderVisualization()}
-            <div style={{ marginTop: '24px' }}>
-              <p style={{ color: colors.textMuted, fontSize: '14px' }}>
-                Notice how the straw appears to "break" at the water surface. The underwater portion seems shifted from where it should be.
-              </p>
-            </div>
-          </div>
-        );
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-      case 'predict':
-        return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🥤💡
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          The Broken Straw Illusion
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Put a straw in water and it appears to <span style={{ color: colors.accent }}>bend or break</span> at the surface. Is this magic? An optical illusion? Or is something real happening to the light?"
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <RefractionVisualization />
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
+            Notice how the straw appears "broken" at the water line - the underwater part seems shifted from where it should be.
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
+        >
+          Investigate the Mystery
+        </button>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Moving the cup causes more change to the apparent break' },
+      { id: 'b', text: 'Moving your head (viewing angle) causes more change', correct: true },
+      { id: 'c', text: 'Both cause equal changes - the break stays proportional' },
+      { id: 'd', text: 'Neither affects the break - it stays constant' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
               Make Your Prediction
-            </h2>
-            <div style={{ marginBottom: '24px' }}>
-              {renderVisualization()}
-            </div>
-            <div style={{
-              background: colors.bgCard,
-              padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '24px'
-            }}>
-              <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '8px' }}>
-                What You're Looking At
-              </h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                A straw in a glass of water viewed from an angle. The grid behind helps you see the apparent displacement.
-                The dashed line shows where the straw actually is; the solid line shows where it appears.
-              </p>
-            </div>
-            <p style={{ color: colors.textSecondary, marginBottom: '16px' }}>
-              Which action will change the apparent break MORE?
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    background: prediction === p.id ? colors.accent : colors.bgCard,
-                    color: colors.textPrimary,
-                    border: 'none',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '16px',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Which action will change the apparent "break" in the straw MORE?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <RefractionVisualization />
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px' }}>🔄</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Move the cup</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>vs</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px' }}>👀</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Move your head</p>
+              </div>
             </div>
           </div>
-        );
 
-      case 'play':
-        return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              Explore Refraction
-            </h2>
-            {renderVisualization()}
-            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                  Viewing Angle: {viewingAngle}°
-                </label>
-                <input
-                  type="range"
-                  min="-45"
-                  max="45"
-                  value={viewingAngle}
-                  onChange={(e) => setViewingAngle(Number(e.target.value))}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div>
-                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                  Refractive Index: {refractiveIndex.toFixed(2)} ({refractiveIndex < 1.4 ? 'Water' : refractiveIndex < 1.5 ? 'Sugar Water' : 'Glass'})
-                </label>
-                <input
-                  type="range"
-                  min="1.0"
-                  max="1.6"
-                  step="0.01"
-                  value={refractiveIndex}
-                  onChange={(e) => setRefractiveIndex(Number(e.target.value))}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div>
-                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                  Water Level: {waterLevel}%
-                </label>
-                <input
-                  type="range"
-                  min="20"
-                  max="90"
-                  value={waterLevel}
-                  onChange={(e) => setWaterLevel(Number(e.target.value))}
-                  style={{ width: '100%' }}
-                />
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                onClick={() => setShowRayPaths(!showRayPaths)}
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Explore Refraction
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust the controls to see how viewing angle and material affect the apparent break.
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <RefractionVisualization showControls />
+            </div>
+
+            {/* Viewing angle slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
+              </div>
+              <input
+                type="range"
+                min="-45"
+                max="45"
+                value={viewingAngle}
+                onChange={(e) => setViewingAngle(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Left (-45°)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Straight (0°)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Right (+45°)</span>
+              </div>
+            </div>
+
+            {/* Refractive index slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Refractive Index</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                  {refractiveIndex.toFixed(2)} ({refractiveIndex < 1.4 ? 'Water' : refractiveIndex < 1.5 ? 'Sugar Water' : 'Glass'})
+                </span>
+              </div>
+              <input
+                type="range"
+                min="1.0"
+                max="1.6"
+                step="0.01"
+                value={refractiveIndex}
+                onChange={(e) => setRefractiveIndex(parseFloat(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Water level slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Water Level</span>
+                <span style={{ ...typo.small, color: colors.water, fontWeight: 600 }}>{waterLevel}%</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="90"
+                value={waterLevel}
+                onChange={(e) => setWaterLevel(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Toggle ray paths */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <button
+                onClick={() => { playSound('click'); setShowRayPaths(!showRayPaths); }}
                 style={{
                   padding: '12px 24px',
-                  background: showRayPaths ? colors.accent : colors.bgCard,
-                  color: colors.textPrimary,
-                  border: 'none',
                   borderRadius: '8px',
+                  border: 'none',
+                  background: showRayPaths ? colors.accent : colors.bgSecondary,
+                  color: 'white',
+                  fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
                 {showRayPaths ? 'Hide Ray Paths' : 'Show Ray Paths'}
               </button>
             </div>
-          </div>
-        );
 
-      case 'review':
-        return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              Understanding Refraction
-            </h2>
+            {/* Stats display */}
             <div style={{
-              background: prediction === 'head' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '24px'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '18px' }}>
-                {prediction === 'head' ? '✓ Correct!' : '✗ Not quite!'} Moving your viewing angle changes how the light rays reach your eye through the refracting surface.
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{viewingAngle}°</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Viewing Angle</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>{refractiveIndex.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Refractive Index</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>{apparentShift.toFixed(1)}px</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Apparent Shift</div>
+              </div>
+            </div>
+          </div>
+
+          {Math.abs(viewingAngle) > 30 && (
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                Notice how extreme viewing angles create the biggest apparent shift!
               </p>
             </div>
-            {renderVisualization()}
-            <div style={{ marginTop: '24px', color: colors.textSecondary }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics:</h3>
-              <ul style={{ lineHeight: '1.8' }}>
-                <li>Light changes speed when entering water (slower than in air)</li>
-                <li>This speed change causes the light ray to bend at the surface</li>
-                <li>Your brain assumes light travels in straight lines</li>
-                <li>So you see the underwater portion in the wrong position</li>
-                <li>The apparent shift depends on viewing angle and how different the materials are</li>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: prediction === 'b' ? `${colors.success}22` : `${colors.error}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${prediction === 'b' ? colors.success : colors.error}44`,
+          }}>
+            <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.error, margin: 0 }}>
+              {prediction === 'b' ? '✓ Correct! ' : '✗ Not quite! '}
+              Moving your viewing angle changes the apparent break more because it changes the path light takes through the refracting surface.
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Refraction
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Snell's Law: n₁ sin(θ₁) = n₂ sin(θ₂)</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                When light passes from one material to another with a different <span style={{ color: colors.accent }}>refractive index</span>, it changes direction. The refractive index tells us how much slower light travels in that material compared to vacuum.
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: 2 }}>
+                <li>Air: n ≈ 1.00 (light travels near maximum speed)</li>
+                <li>Water: n ≈ 1.33 (light travels 25% slower)</li>
+                <li>Glass: n ≈ 1.50 (light travels 33% slower)</li>
+                <li>Diamond: n ≈ 2.42 (light travels 59% slower)</li>
               </ul>
             </div>
           </div>
-        );
 
-      case 'twist_predict':
-        return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              The Twist: Sugar Water
-            </h2>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              What if we dissolve sugar in the water? Sugar increases the refractive index.
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Why Your Brain Gets Fooled
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Your brain assumes light always travels in straight lines. When light bends at the water surface, your brain traces the ray straight back - putting the underwater straw in the wrong position. The bigger the angle, the more bending, the bigger the illusion!
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {twistPredictions.map((p) => (
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore Different Materials
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Sugar water bends light LESS than plain water' },
+      { id: 'b', text: 'Sugar water bends light MORE than plain water (bigger apparent break)', correct: true },
+      { id: 'c', text: 'Sugar water has no different effect on light bending' },
+      { id: 'd', text: 'Sugar water adds rainbow colors to the bending' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: Material Properties
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What happens if we dissolve sugar in the water?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              Sugar increases the density of water. How will this affect the "broken straw" effect?
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center', padding: '16px', background: colors.bgSecondary, borderRadius: '12px' }}>
+                <div style={{ fontSize: '36px' }}>💧</div>
+                <p style={{ ...typo.small, color: colors.textMuted, margin: '8px 0 0' }}>Plain Water</p>
+                <p style={{ ...typo.small, color: colors.water, fontWeight: 600 }}>n = 1.33</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>→</div>
+              <div style={{ textAlign: 'center', padding: '16px', background: colors.bgSecondary, borderRadius: '12px' }}>
+                <div style={{ fontSize: '36px' }}>🍬💧</div>
+                <p style={{ ...typo.small, color: colors.textMuted, margin: '8px 0 0' }}>Sugar Water</p>
+                <p style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>n = ???</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Compare Materials
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    const materials = [
+      { id: 'water', name: 'Water', n: 1.33, color: colors.water },
+      { id: 'sugar', name: 'Sugar Water', n: 1.45, color: colors.warning },
+      { id: 'glass', name: 'Glass', n: 1.52, color: '#a78bfa' },
+      { id: 'diamond', name: 'Diamond', n: 2.42, color: '#f472b6' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Compare Different Materials
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Select different materials to see how refractive index affects the apparent break
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <RefractionVisualization showControls />
+            </div>
+
+            {/* Material selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {materials.map((mat) => (
                 <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
+                  key={mat.id}
+                  onClick={() => {
+                    playSound('click');
+                    setMaterial(mat.id as typeof material);
+                    setRefractiveIndex(mat.n);
+                  }}
                   style={{
-                    padding: '16px',
-                    background: twistPrediction === p.id ? colors.accent : colors.bgCard,
-                    color: colors.textPrimary,
-                    border: 'none',
+                    padding: '16px 8px',
                     borderRadius: '12px',
+                    border: `2px solid ${material === mat.id ? mat.color : colors.border}`,
+                    background: material === mat.id ? `${mat.color}22` : colors.bgSecondary,
                     cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '16px',
+                    textAlign: 'center',
                   }}
                 >
-                  {p.label}
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{mat.name}</div>
+                  <div style={{ ...typo.small, color: mat.color, fontWeight: 700 }}>n = {mat.n}</div>
                 </button>
               ))}
             </div>
-          </div>
-        );
 
-      case 'twist_play':
-        return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              Compare Water vs Sugar Water
-            </h2>
-            <p style={{ color: colors.textSecondary, marginBottom: '16px' }}>
-              Increase the refractive index to simulate adding sugar:
-            </p>
-            {renderVisualization()}
-            <div style={{ marginTop: '24px' }}>
-              <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                Refractive Index: {refractiveIndex.toFixed(2)}
-              </label>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <span style={{ color: colors.textMuted }}>Water (1.33)</span>
-                <input
-                  type="range"
-                  min="1.33"
-                  max="1.50"
-                  step="0.01"
-                  value={refractiveIndex}
-                  onChange={(e) => setRefractiveIndex(Number(e.target.value))}
-                  style={{ flex: 1 }}
-                />
-                <span style={{ color: colors.textMuted }}>Sugar Water (1.50)</span>
+            {/* Viewing angle slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
+              </div>
+              <input
+                type="range"
+                min="-45"
+                max="45"
+                value={viewingAngle}
+                onChange={(e) => setViewingAngle(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Comparison stats */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.water }}>
+                  {(Math.tan(viewingAngle * Math.PI / 180) * (1 - 1/1.33) * waterLevel * 0.5).toFixed(1)}px
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Water Shift</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: materials.find(m => m.id === material)?.color }}>
+                  {apparentShift.toFixed(1)}px
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>{materials.find(m => m.id === material)?.name} Shift</div>
               </div>
             </div>
           </div>
-        );
 
-      case 'twist_review':
-        return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              Higher Index = More Bending
-            </h2>
+          {refractiveIndex > 1.4 && (
             <div style={{
-              background: twistPrediction === 'more' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              padding: '16px',
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
               borderRadius: '12px',
-              marginBottom: '24px'
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '18px' }}>
-                {twistPrediction === 'more' ? '✓ Correct!' : '✗ Actually,'} Sugar water has a higher refractive index, causing more bending!
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                Higher refractive index = More bending = Bigger apparent shift!
               </p>
             </div>
-            <div style={{ color: colors.textSecondary }}>
-              <p style={{ marginBottom: '12px' }}>
-                The refractive index tells us how much slower light travels in a medium compared to vacuum:
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Pattern
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: twistPrediction === 'b' ? `${colors.success}22` : `${colors.error}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${twistPrediction === 'b' ? colors.success : colors.error}44`,
+          }}>
+            <p style={{ ...typo.body, color: twistPrediction === 'b' ? colors.success : colors.error, margin: 0 }}>
+              {twistPrediction === 'b' ? '✓ Correct! ' : '✗ Actually, '}
+              Sugar water has a higher refractive index, causing MORE light bending and a bigger apparent break!
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Refractive Index Pattern
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔢</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>What Refractive Index Means</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                n = speed of light in vacuum / speed of light in material. Higher n means light travels slower in that material. When light slows down entering a denser medium, it bends toward the normal (perpendicular line).
               </p>
-              <ul style={{ lineHeight: '1.8' }}>
-                <li>Air: n ≈ 1.00</li>
-                <li>Water: n ≈ 1.33</li>
-                <li>Sugar water: n ≈ 1.40-1.50</li>
-                <li>Glass: n ≈ 1.50</li>
-                <li>Diamond: n ≈ 2.42</li>
-              </ul>
-              <p style={{ marginTop: '12px' }}>
-                Greater difference in n between materials = more bending at the boundary.
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📊</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Common Refractive Indices</h3>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '12px' }}>
+                {[
+                  { name: 'Air', n: '1.00', note: 'Reference' },
+                  { name: 'Water', n: '1.33', note: '25% slower' },
+                  { name: 'Sugar Water', n: '1.40-1.50', note: 'Varies with concentration' },
+                  { name: 'Glass', n: '1.50-1.90', note: 'Varies by type' },
+                  { name: 'Cubic Zirconia', n: '2.15', note: 'Fake diamond' },
+                  { name: 'Diamond', n: '2.42', note: 'Maximum sparkle' },
+                ].map((item, i) => (
+                  <div key={i} style={{ background: colors.bgSecondary, padding: '8px 12px', borderRadius: '8px' }}>
+                    <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{item.name}: {item.n}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{item.note}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Total Internal Reflection</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                When light goes from high-n to low-n material at a steep enough angle (beyond the "critical angle"), it reflects completely instead of refracting. This is how fiber optics trap light inside glass fibers and how diamonds trap light for maximum sparkle!
               </p>
             </div>
           </div>
-        );
 
-      case 'transfer':
-        return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              Real-World Applications
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {transferApplications.map((app, index) => (
-                <div
-                  key={index}
-                  style={{
-                    background: colors.bgCard,
-                    padding: '20px',
-                    borderRadius: '12px',
-                    border: transferCompleted.has(index) ? `2px solid ${colors.success}` : 'none',
-                  }}
-                >
-                  <h3 style={{ color: colors.accent, marginBottom: '8px' }}>{app.title}</h3>
-                  <p style={{ color: colors.textSecondary, marginBottom: '12px' }}>{app.description}</p>
-                  <p style={{ color: colors.textMuted, fontStyle: 'italic', marginBottom: '8px' }}>
-                    {app.question}
-                  </p>
-                  {!transferCompleted.has(index) ? (
-                    <button
-                      onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                      style={{
-                        padding: '8px 16px',
-                        background: colors.accent,
-                        color: colors.textPrimary,
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Reveal Answer
-                    </button>
-                  ) : (
-                    <p style={{ color: colors.success }}>{app.answer}</p>
-                  )}
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Refraction Connects:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
             </div>
           </div>
-        );
 
-      case 'test':
-        return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              Test Your Knowledge
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🏆' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
             </h2>
-            {!testSubmitted ? (
-              <>
-                <div style={{ marginBottom: '16px' }}>
-                  <span style={{ color: colors.textMuted }}>
-                    Question {currentTestQuestion + 1} of {testQuestions.length}
-                  </span>
-                  <div style={{
-                    height: '4px',
-                    background: colors.bgCard,
-                    borderRadius: '2px',
-                    marginTop: '8px'
-                  }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${((currentTestQuestion + 1) / testQuestions.length) * 100}%`,
-                      background: colors.accent,
-                      borderRadius: '2px',
-                    }} />
-                  </div>
-                </div>
-                <p style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '20px' }}>
-                  {testQuestions[currentTestQuestion].question}
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {testQuestions[currentTestQuestion].options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleTestAnswer(index)}
-                      style={{
-                        padding: '16px',
-                        background: testAnswers[currentTestQuestion] === index ? colors.accent : colors.bgCard,
-                        color: colors.textPrimary,
-                        border: 'none',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                      }}
-                    >
-                      {option.text}
-                    </button>
-                  ))}
-                </div>
-                {testAnswers.every(a => a !== null) && (
-                  <button
-                    onClick={submitTest}
-                    style={{
-                      marginTop: '24px',
-                      padding: '16px 32px',
-                      background: colors.success,
-                      color: colors.textPrimary,
-                      border: 'none',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      fontSize: '18px',
-                      width: '100%',
-                    }}
-                  >
-                    Submit Test
-                  </button>
-                )}
-              </>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand refraction and light bending!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
             ) : (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                  {testScore >= 7 ? '🎉' : '📚'}
-                </div>
-                <p style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '8px' }}>
-                  You scored {testScore} out of {testQuestions.length}
-                </p>
-                <p style={{ color: colors.textSecondary }}>
-                  {testScore >= 7 ? 'Excellent understanding of refraction!' : 'Review the concepts and try again!'}
-                </p>
-              </div>
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
             )}
           </div>
-        );
-
-      case 'mastery':
-        return (
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '80px', marginBottom: '24px' }}>🏆</div>
-            <h2 style={{ color: colors.textPrimary, fontSize: '32px', marginBottom: '16px' }}>
-              Refraction Mastered!
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              You now understand how light bends at boundaries between materials.
-            </p>
-            <div style={{
-              background: colors.bgCard,
-              padding: '24px',
-              borderRadius: '16px',
-              textAlign: 'left'
-            }}>
-              <h3 style={{ color: colors.accent, marginBottom: '16px' }}>Key Concepts Mastered:</h3>
-              <ul style={{ color: colors.textSecondary, lineHeight: '2' }}>
-                <li>Light changes speed in different materials</li>
-                <li>Speed change causes bending at boundaries</li>
-                <li>Refractive index quantifies how much light slows</li>
-                <li>Your brain assumes straight-line light paths</li>
-                <li>Greater index difference = more bending</li>
-              </ul>
-            </div>
-            <button
-              onClick={() => onPhaseComplete?.()}
-              style={{
-                marginTop: '24px',
-                padding: '16px 32px',
-                background: `linear-gradient(135deg, ${colors.accent}, ${colors.success})`,
-                color: colors.textPrimary,
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontSize: '18px',
-              }}
-            >
-              Complete Lesson
-            </button>
-          </div>
-        );
-
-      default:
-        return null;
+          {renderNavDots()}
+        </div>
+      );
     }
-  };
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: colors.bgPrimary,
-      color: colors.textPrimary,
-      paddingBottom: '100px',
-    }}>
-      {renderPhaseContent()}
+    const question = testQuestions[currentQuestion];
 
-      {/* Fixed Footer Navigation */}
+    return (
       <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: colors.bgDark,
-        borderTop: `1px solid ${colors.bgCard}`,
-        padding: '16px 24px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1000,
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
       }}>
-        <span style={{ color: colors.textMuted, fontSize: '14px' }}>
-          Refraction (Broken Straw)
-        </span>
-        {phase !== 'mastery' && phase !== 'test' && (
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Refraction Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how light bends at boundaries between materials and why our brain gets fooled by this phenomenon.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Mastered:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Light changes speed in different materials',
+              'Speed change causes bending (Snell\'s Law)',
+              'Refractive index quantifies how much light slows',
+              'Your brain assumes straight-line paths (causing illusions)',
+              'Higher refractive index = more bending',
+              'Total internal reflection traps light',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
           <button
-            onClick={() => onPhaseComplete?.()}
-            disabled={
-              (phase === 'predict' && !prediction) ||
-              (phase === 'twist_predict' && !twistPrediction) ||
-              (phase === 'transfer' && transferCompleted.size < 4)
-            }
+            onClick={() => goToPhase('hook')}
             style={{
-              padding: '12px 24px',
-              background: colors.accent,
-              color: colors.textPrimary,
-              border: 'none',
-              borderRadius: '8px',
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
               cursor: 'pointer',
-              opacity: (
-                (phase === 'predict' && !prediction) ||
-                (phase === 'twist_predict' && !twistPrediction) ||
-                (phase === 'transfer' && transferCompleted.size < 4)
-              ) ? 0.5 : 1,
             }}
           >
-            Continue
+            Play Again
           </button>
-        )}
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
 export default RefractionRenderer;

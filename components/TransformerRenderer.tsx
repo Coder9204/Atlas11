@@ -1,56 +1,173 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TYPES & INTERFACES
-// ─────────────────────────────────────────────────────────────────────────────
-type Phase =
-  | 'hook'
-  | 'predict'
-  | 'play'
-  | 'review'
-  | 'twist_predict'
-  | 'twist_play'
-  | 'twist_review'
-  | 'transfer'
-  | 'test'
-  | 'mastery';
+// -----------------------------------------------------------------------------
+// Transformers - Complete 10-Phase Game
+// Understanding electromagnetic induction and voltage transformation
+// -----------------------------------------------------------------------------
 
-interface GameEvent {
-  type: 'prediction' | 'observation' | 'interaction' | 'completion';
-  phase: Phase;
-  data: Record<string, unknown>;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
 interface TransformerRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
-interface GameState {
-  phase: Phase;
-  prediction: string | null;
-  twistPrediction: string | null;
-  testAnswers: number[];
-  completedApps: number[];
-  primaryTurns: number;
-  secondaryTurns: number;
-  inputVoltage: number;
-  isAC: boolean;
-}
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
-const PHASES: Phase[] = [
-  'hook', 'predict', 'play', 'review',
-  'twist_predict', 'twist_play', 'twist_review',
-  'transfer', 'test', 'mastery'
+// -----------------------------------------------------------------------------
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// -----------------------------------------------------------------------------
+const testQuestions = [
+  {
+    scenario: "A student wraps two separate coils of wire around an iron ring and connects the primary coil to an AC power source. The secondary coil is not physically connected to the primary.",
+    question: "What fundamental principle allows voltage to appear in the secondary coil?",
+    options: [
+      { id: 'a', label: "Electric current flows through the iron core from primary to secondary" },
+      { id: 'b', label: "Electromagnetic induction - changing magnetic flux induces an EMF in the secondary", correct: true },
+      { id: 'c', label: "Static electricity builds up and jumps across the gap" },
+      { id: 'd', label: "The iron core acts as a conductor between the two coils" }
+    ],
+    explanation: "Electromagnetic induction is the core principle: AC current in the primary creates a changing magnetic field in the iron core. This changing magnetic flux passes through the secondary coil and, according to Faraday's Law, induces an electromotive force (EMF) - no physical connection needed!"
+  },
+  {
+    scenario: "An engineer is designing a doorbell transformer. The wall outlet provides 120V AC, and the doorbell requires 12V AC to operate safely.",
+    question: "If the primary coil has 500 turns, how many turns should the secondary coil have?",
+    options: [
+      { id: 'a', label: "5000 turns" },
+      { id: 'b', label: "500 turns" },
+      { id: 'c', label: "50 turns", correct: true },
+      { id: 'd', label: "250 turns" }
+    ],
+    explanation: "Using the transformer equation V2/V1 = N2/N1, we get 12/120 = N2/500. Solving: N2 = 500 x (12/120) = 500 x 0.1 = 50 turns. The 10:1 voltage reduction requires a 10:1 turns ratio reduction."
+  },
+  {
+    scenario: "A power plant generates electricity at 22,000V. Before transmission, the voltage is increased to 400,000V. At your neighborhood substation, it is reduced to 11,000V, then finally to 240V at the pole transformer.",
+    question: "How many step-up and step-down transformers are used in this power delivery chain?",
+    options: [
+      { id: 'a', label: "1 step-up and 1 step-down transformer" },
+      { id: 'b', label: "2 step-up and 1 step-down transformer" },
+      { id: 'c', label: "1 step-up and 2 step-down transformers", correct: true },
+      { id: 'd', label: "2 step-up and 2 step-down transformers" }
+    ],
+    explanation: "There is 1 step-up transformer (22kV to 400kV at the power plant) and 2 step-down transformers (400kV to 11kV at the substation, then 11kV to 240V at the pole). Step-up increases voltage; step-down decreases it."
+  },
+  {
+    scenario: "A rural town is 50km from the nearest power plant. The transmission lines have a total resistance of 10 ohms. The town needs 1 MW of power. An engineer must choose between transmitting at 10,000V or 100,000V.",
+    question: "Approximately how much power is lost as heat in the transmission lines at each voltage level?",
+    options: [
+      { id: 'a', label: "10,000V loses 100kW; 100,000V loses 10kW" },
+      { id: 'b', label: "10,000V loses 1MW; 100,000V loses 10kW" },
+      { id: 'c', label: "10,000V loses 100kW; 100,000V loses 1kW", correct: true },
+      { id: 'd', label: "Both lose the same power because P = 1MW in both cases" }
+    ],
+    explanation: "Power loss = I^2 x R. At 10,000V: I = 1MW/10kV = 100A, so loss = 100^2 x 10 = 100kW. At 100,000V: I = 1MW/100kV = 10A, so loss = 10^2 x 10 = 1kW. Increasing voltage 10x reduces current 10x and losses 100x!"
+  },
+  {
+    scenario: "A transformer manufacturer notices that their new high-frequency transformer runs much hotter than expected. The core is made from a solid block of iron instead of the usual laminated sheets.",
+    question: "What is the primary cause of the excessive heat, and how do laminations help?",
+    options: [
+      { id: 'a', label: "Copper losses in the windings; laminations reduce wire resistance" },
+      { id: 'b', label: "Eddy currents circulating in the solid core; laminations break up these current loops", correct: true },
+      { id: 'c', label: "Air gaps in the core; laminations provide better magnetic contact" },
+      { id: 'd', label: "Friction between magnetic domains; laminations act as lubricant layers" }
+    ],
+    explanation: "Eddy currents are loops of electric current induced within the core by the changing magnetic field. In a solid core, these currents flow freely and generate significant I^2R heat. Laminating the core (thin insulated sheets) forces eddy currents into smaller loops, dramatically reducing their magnitude and associated power loss."
+  },
+  {
+    scenario: "Two identical 100kVA transformers are installed in parallel to share the load at a factory. Transformer A has 4% impedance and Transformer B has 6% impedance. The total load is 180kVA.",
+    question: "How will the 180kVA load be shared between the two transformers?",
+    options: [
+      { id: 'a', label: "Each transformer carries 90kVA (equal sharing)" },
+      { id: 'b', label: "Transformer A carries 108kVA, Transformer B carries 72kVA", correct: true },
+      { id: 'c', label: "Transformer A carries 72kVA, Transformer B carries 108kVA" },
+      { id: 'd', label: "All 180kVA flows through Transformer A because it has lower impedance" }
+    ],
+    explanation: "When transformers operate in parallel, they share load inversely proportional to their impedance. The ratio is 6:4 (or 3:2), so A carries 3/5 of load = 108kVA and B carries 2/5 = 72kVA. Lower impedance means the transformer 'accepts' more current - but not all of it."
+  },
+  {
+    scenario: "A laboratory needs to reduce 240V to 220V for some imported European equipment. An engineer suggests using an auto-transformer instead of a conventional two-winding transformer rated at 5kVA.",
+    question: "What is a key advantage of the auto-transformer in this application?",
+    options: [
+      { id: 'a', label: "It provides better electrical isolation between input and output" },
+      { id: 'b', label: "It can handle the 5kVA load with much smaller and lighter construction", correct: true },
+      { id: 'c', label: "It works with DC as well as AC power" },
+      { id: 'd', label: "It completely eliminates core losses" }
+    ],
+    explanation: "An auto-transformer uses a single winding with a tap, so part of the power is conducted directly (not transformed). When the voltage ratio is close to 1:1 (like 240V to 220V), only a small fraction of power is actually transformed, allowing a much smaller core and winding. However, there is no electrical isolation between primary and secondary."
+  },
+  {
+    scenario: "A factory receives three-phase power at 11kV and needs 400V for its machinery. The electrical contractor offers either a delta-wye or wye-wye transformer configuration.",
+    question: "What is a significant advantage of the delta-wye configuration over wye-wye?",
+    options: [
+      { id: 'a', label: "Delta-wye uses less copper wire in the windings" },
+      { id: 'b', label: "Delta-wye suppresses third harmonic currents and provides a neutral for single-phase loads", correct: true },
+      { id: 'c', label: "Delta-wye allows the transformer to work with DC power" },
+      { id: 'd', label: "Delta-wye eliminates the need for a grounding connection" }
+    ],
+    explanation: "Delta-wye is popular because the delta primary traps third harmonic currents (preventing them from distorting the supply), while the wye secondary provides a neutral point for supplying single-phase 230V loads alongside three-phase 400V loads."
+  },
+  {
+    scenario: "A utility company is installing a 50MVA transformer at a major substation. The design team must choose between ONAN (oil natural, air natural) and OFAF (oil forced, air forced) cooling systems.",
+    question: "Under what operating condition would OFAF cooling be essential?",
+    options: [
+      { id: 'a', label: "When the transformer operates at very light loads below 20% capacity" },
+      { id: 'b', label: "When the transformer must handle sustained loads near or above rated capacity in hot climates", correct: true },
+      { id: 'c', label: "When the transformer is only used for voltage regulation, not power transfer" },
+      { id: 'd', label: "When the transformer is located underground with unlimited ventilation" }
+    ],
+    explanation: "OFAF (oil forced, air forced) uses pumps and fans to actively circulate cooling oil and air. This is essential when transformers operate at high loads for extended periods, especially in hot environments, because natural convection (ONAN) cannot remove heat fast enough."
+  },
+  {
+    scenario: "A technician energizes a large distribution transformer by closing the circuit breaker. The protection relay detects a current spike of 8-12 times the rated current for about 100 milliseconds, but does not trip the breaker.",
+    question: "What causes this temporary current spike, and why does the relay not trip?",
+    options: [
+      { id: 'a', label: "A short circuit in the secondary winding; the relay is faulty" },
+      { id: 'b', label: "Magnetizing inrush current due to core saturation; relays are designed with time delays to allow for this", correct: true },
+      { id: 'c', label: "Capacitor charging current from power factor correction; the relay ignores reactive current" },
+      { id: 'd', label: "Eddy currents in the tank; the relay only monitors winding current" }
+    ],
+    explanation: "Magnetizing inrush current occurs when a transformer is energized and the core temporarily saturates due to residual magnetism and the point on the voltage wave at switching. This can cause currents 8-15x rated for a few cycles. Protection relays use harmonic restraint or time delays to distinguish inrush from actual faults."
+  }
 ];
 
+// -----------------------------------------------------------------------------
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
     icon: '⚡',
@@ -126,320 +243,24 @@ const realWorldApps = [
   }
 ];
 
-const TEST_QUESTIONS = [
-  {
-    question: 'What determines the voltage ratio in a transformer?',
-    options: [
-      { text: 'The thickness of the wire', correct: false },
-      { text: 'The ratio of turns in primary to secondary coils', correct: true },
-      { text: 'The speed of the AC current', correct: false },
-      { text: 'The size of the iron core', correct: false }
-    ]
-  },
-  {
-    question: 'Why don\'t transformers work with DC (direct current)?',
-    options: [
-      { text: 'DC is too weak', correct: false },
-      { text: 'DC flows in the wrong direction', correct: false },
-      { text: 'DC creates a static field - no changing flux to induce current', correct: true },
-      { text: 'DC would melt the transformer', correct: false }
-    ]
-  },
-  {
-    question: 'A transformer steps up voltage from 100V to 1000V. What happens to current?',
-    options: [
-      { text: 'Current increases 10x', correct: false },
-      { text: 'Current stays the same', correct: false },
-      { text: 'Current decreases to 1/10', correct: true },
-      { text: 'Current becomes DC', correct: false }
-    ]
-  },
-  {
-    question: 'Why do power lines use high voltage for transmission?',
-    options: [
-      { text: 'High voltage travels faster', correct: false },
-      { text: 'High voltage looks more impressive', correct: false },
-      { text: 'Lower current means less I squared R heat loss in wires', correct: true },
-      { text: 'High voltage is safer', correct: false }
-    ]
-  },
-  {
-    question: 'A transformer has 500 turns on the primary and 100 turns on the secondary. What type is it?',
-    options: [
-      { text: 'Step-up transformer', correct: false },
-      { text: 'Step-down transformer', correct: true },
-      { text: 'Isolation transformer', correct: false },
-      { text: 'Auto-transformer', correct: false }
-    ]
-  },
-  {
-    question: 'What is the purpose of the iron core in a transformer?',
-    options: [
-      { text: 'To conduct electricity between coils', correct: false },
-      { text: 'To concentrate and channel magnetic flux between coils', correct: true },
-      { text: 'To cool down the transformer', correct: false },
-      { text: 'To add weight for stability', correct: false }
-    ]
-  },
-  {
-    question: 'Why are transformer cores made of laminated sheets instead of solid iron?',
-    options: [
-      { text: 'Laminated sheets are cheaper to manufacture', correct: false },
-      { text: 'To reduce eddy currents and energy loss', correct: true },
-      { text: 'Solid iron would be too heavy', correct: false },
-      { text: 'To make the transformer easier to assemble', correct: false }
-    ]
-  },
-  {
-    question: 'Your phone charger converts 120V AC to 5V DC. Which component steps down the voltage?',
-    options: [
-      { text: 'A resistor', correct: false },
-      { text: 'A capacitor', correct: false },
-      { text: 'A transformer (or switching circuit)', correct: true },
-      { text: 'A diode', correct: false }
-    ]
-  },
-  {
-    question: 'In an ideal transformer, what is conserved between primary and secondary?',
-    options: [
-      { text: 'Voltage', correct: false },
-      { text: 'Current', correct: false },
-      { text: 'Power (V x I)', correct: true },
-      { text: 'Frequency doubles', correct: false }
-    ]
-  },
-  {
-    question: 'A step-up transformer increases voltage. What happens to the output current compared to input?',
-    options: [
-      { text: 'Output current increases proportionally', correct: false },
-      { text: 'Output current decreases proportionally', correct: true },
-      { text: 'Output current stays the same', correct: false },
-      { text: 'Output current becomes zero', correct: false }
-    ]
-  }
-];
-
-const TRANSFER_APPS = [
-  {
-    title: 'Power Grid',
-    description: 'Power plants step up to 400kV for transmission, then step down to 240V for homes. This reduces losses by 99%!',
-    icon: '⚡'
-  },
-  {
-    title: 'Phone Chargers',
-    description: 'Your phone charger contains a tiny transformer (or switching circuit) to convert 120/240V to the 5V your phone needs.',
-    icon: '📱'
-  },
-  {
-    title: 'Welding Equipment',
-    description: 'Arc welders step down voltage but massively increase current, creating enough heat to melt steel.',
-    icon: '🔧'
-  },
-  {
-    title: 'Microwave Ovens',
-    description: 'A transformer steps up 120V to 4000V to power the magnetron that generates microwaves.',
-    icon: '📡'
-  }
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TEST QUESTIONS - Scenario-based multiple choice questions
-// ─────────────────────────────────────────────────────────────────────────────
-const testQuestions = [
-  {
-    // Question 1: Core concept - electromagnetic induction (Easy)
-    scenario: 'A student wraps two separate coils of wire around an iron ring and connects the primary coil to an AC power source.',
-    question: 'What fundamental principle allows voltage to appear in the secondary coil even though the coils are not physically connected?',
-    options: [
-      { id: 'a', label: 'Electric current flows through the iron core from primary to secondary', correct: false },
-      { id: 'b', label: 'Electromagnetic induction - the changing magnetic flux induces an EMF in the secondary', correct: true },
-      { id: 'c', label: 'Static electricity builds up and jumps across the gap', correct: false },
-      { id: 'd', label: 'The iron core acts as a conductor between the two coils', correct: false }
-    ],
-    explanation: 'Electromagnetic induction is the core principle: AC current in the primary creates a changing magnetic field in the iron core. This changing magnetic flux passes through the secondary coil and, according to Faraday\'s Law, induces an electromotive force (EMF) in the secondary - no physical connection needed!'
-  },
-  {
-    // Question 2: Turns ratio and voltage (Easy-Medium)
-    scenario: 'An engineer is designing a doorbell transformer. The wall outlet provides 120V AC, and the doorbell requires 12V AC to operate safely.',
-    question: 'If the primary coil has 500 turns, how many turns should the secondary coil have?',
-    options: [
-      { id: 'a', label: '5000 turns', correct: false },
-      { id: 'b', label: '500 turns', correct: false },
-      { id: 'c', label: '50 turns', correct: true },
-      { id: 'd', label: '250 turns', correct: false }
-    ],
-    explanation: 'Using the transformer equation V2/V1 = N2/N1, we get 12/120 = N2/500. Solving: N2 = 500 x (12/120) = 500 x 0.1 = 50 turns. The 10:1 voltage reduction requires a 10:1 turns ratio reduction.'
-  },
-  {
-    // Question 3: Step-up vs step-down (Medium)
-    scenario: 'A power plant generates electricity at 22,000V. Before transmission over long-distance power lines, the voltage is increased to 400,000V. At your neighborhood substation, it is reduced to 11,000V, then finally to 240V at the pole transformer near your house.',
-    question: 'How many step-up and step-down transformers are used in this power delivery chain?',
-    options: [
-      { id: 'a', label: '1 step-up and 1 step-down transformer', correct: false },
-      { id: 'b', label: '2 step-up and 1 step-down transformer', correct: false },
-      { id: 'c', label: '1 step-up and 2 step-down transformers', correct: true },
-      { id: 'd', label: '2 step-up and 2 step-down transformers', correct: false }
-    ],
-    explanation: 'There is 1 step-up transformer (22kV to 400kV at the power plant) and 2 step-down transformers (400kV to 11kV at the substation, then 11kV to 240V at the pole). Step-up increases voltage; step-down decreases it.'
-  },
-  {
-    // Question 4: Power transmission efficiency (Medium)
-    scenario: 'A rural town is 50km from the nearest power plant. The transmission lines have a total resistance of 10 ohms. The town needs 1 MW of power. An engineer must choose between transmitting at 10,000V or 100,000V.',
-    question: 'Approximately how much power is lost as heat in the transmission lines at each voltage level?',
-    options: [
-      { id: 'a', label: '10,000V loses 100kW; 100,000V loses 10kW', correct: false },
-      { id: 'b', label: '10,000V loses 1MW; 100,000V loses 10kW', correct: false },
-      { id: 'c', label: '10,000V loses 100kW; 100,000V loses 1kW', correct: true },
-      { id: 'd', label: 'Both lose the same power because P = 1MW in both cases', correct: false }
-    ],
-    explanation: 'Power loss = I^2 x R. At 10,000V: I = 1MW/10kV = 100A, so loss = 100^2 x 10 = 100kW. At 100,000V: I = 1MW/100kV = 10A, so loss = 10^2 x 10 = 1kW. Increasing voltage 10x reduces current 10x and losses 100x!'
-  },
-  {
-    // Question 5: Core losses - hysteresis and eddy current (Medium-Hard)
-    scenario: 'A transformer manufacturer notices that their new high-frequency transformer runs much hotter than expected. The core is made from a solid block of iron instead of the usual laminated sheets.',
-    question: 'What is the primary cause of the excessive heat, and how do laminations help?',
-    options: [
-      { id: 'a', label: 'Copper losses in the windings; laminations reduce wire resistance', correct: false },
-      { id: 'b', label: 'Eddy currents circulating in the solid core; laminations break up these current loops', correct: true },
-      { id: 'c', label: 'Air gaps in the core; laminations provide better magnetic contact', correct: false },
-      { id: 'd', label: 'Friction between magnetic domains; laminations act as lubricant layers', correct: false }
-    ],
-    explanation: 'Eddy currents are loops of electric current induced within the core by the changing magnetic field. In a solid core, these currents flow freely and generate significant I^2R heat. Laminating the core (thin insulated sheets) forces eddy currents into smaller loops, dramatically reducing their magnitude and associated power loss.'
-  },
-  {
-    // Question 6: Transformer impedance (Hard)
-    scenario: 'Two identical 100kVA transformers are installed in parallel to share the load at a factory. Transformer A has 4% impedance and Transformer B has 6% impedance. The total load is 180kVA.',
-    question: 'How will the 180kVA load be shared between the two transformers?',
-    options: [
-      { id: 'a', label: 'Each transformer carries 90kVA (equal sharing)', correct: false },
-      { id: 'b', label: 'Transformer A carries 108kVA, Transformer B carries 72kVA', correct: true },
-      { id: 'c', label: 'Transformer A carries 72kVA, Transformer B carries 108kVA', correct: false },
-      { id: 'd', label: 'All 180kVA flows through Transformer A because it has lower impedance', correct: false }
-    ],
-    explanation: 'When transformers operate in parallel, they share load inversely proportional to their impedance. The ratio is 6:4 (or 3:2), so A carries 3/5 of load = 108kVA and B carries 2/5 = 72kVA. Lower impedance means the transformer "accepts" more current - but not all of it.'
-  },
-  {
-    // Question 7: Auto-transformers (Hard)
-    scenario: 'A laboratory needs to reduce 240V to 220V for some imported European equipment. An engineer suggests using an auto-transformer instead of a conventional two-winding transformer rated at 5kVA.',
-    question: 'What is a key advantage of the auto-transformer in this application?',
-    options: [
-      { id: 'a', label: 'It provides better electrical isolation between input and output', correct: false },
-      { id: 'b', label: 'It can handle the 5kVA load with much smaller and lighter construction', correct: true },
-      { id: 'c', label: 'It works with DC as well as AC power', correct: false },
-      { id: 'd', label: 'It completely eliminates core losses', correct: false }
-    ],
-    explanation: 'An auto-transformer uses a single winding with a tap, so part of the power is conducted directly (not transformed). When the voltage ratio is close to 1:1 (like 240V to 220V), only a small fraction of power is actually transformed, allowing a much smaller core and winding. However, there is no electrical isolation between primary and secondary.'
-  },
-  {
-    // Question 8: Three-phase transformer configurations (Hard)
-    scenario: 'A factory receives three-phase power at 11kV and needs 400V for its machinery. The electrical contractor offers either a delta-wye (triangle-star) or wye-wye (star-star) transformer configuration.',
-    question: 'What is a significant advantage of the delta-wye configuration over wye-wye?',
-    options: [
-      { id: 'a', label: 'Delta-wye uses less copper wire in the windings', correct: false },
-      { id: 'b', label: 'Delta-wye suppresses third harmonic currents and provides a neutral for single-phase loads', correct: true },
-      { id: 'c', label: 'Delta-wye allows the transformer to work with DC power', correct: false },
-      { id: 'd', label: 'Delta-wye eliminates the need for a grounding connection', correct: false }
-    ],
-    explanation: 'Delta-wye is popular because the delta primary traps third harmonic currents (preventing them from distorting the supply), while the wye secondary provides a neutral point for supplying single-phase 230V loads alongside three-phase 400V loads. This makes it ideal for mixed industrial and commercial installations.'
-  },
-  {
-    // Question 9: Transformer cooling methods (Hard)
-    scenario: 'A utility company is installing a 50MVA transformer at a major substation. The design team must choose between ONAN (oil natural, air natural) and OFAF (oil forced, air forced) cooling systems.',
-    question: 'Under what operating condition would OFAF cooling be essential?',
-    options: [
-      { id: 'a', label: 'When the transformer operates at very light loads below 20% capacity', correct: false },
-      { id: 'b', label: 'When the transformer must handle sustained loads near or above rated capacity in hot climates', correct: true },
-      { id: 'c', label: 'When the transformer is only used for voltage regulation, not power transfer', correct: false },
-      { id: 'd', label: 'When the transformer is located underground with unlimited ventilation', correct: false }
-    ],
-    explanation: 'OFAF (oil forced, air forced) uses pumps and fans to actively circulate cooling oil and air. This is essential when transformers operate at high loads for extended periods, especially in hot environments, because natural convection (ONAN) cannot remove heat fast enough. OFAF can increase the effective rating of a transformer by 50% or more compared to ONAN.'
-  },
-  {
-    // Question 10: Saturation and inrush current (Hard)
-    scenario: 'A technician energizes a large distribution transformer by closing the circuit breaker. The protection relay detects a current spike of 8-12 times the rated current for about 100 milliseconds, but does not trip the breaker.',
-    question: 'What causes this temporary current spike, and why does the relay not trip?',
-    options: [
-      { id: 'a', label: 'A short circuit in the secondary winding; the relay is faulty', correct: false },
-      { id: 'b', label: 'Magnetizing inrush current due to core saturation; relays are designed with time delays to allow for this', correct: true },
-      { id: 'c', label: 'Capacitor charging current from power factor correction; the relay ignores reactive current', correct: false },
-      { id: 'd', label: 'Eddy currents in the tank; the relay only monitors winding current', correct: false }
-    ],
-    explanation: 'Magnetizing inrush current occurs when a transformer is energized and the core temporarily saturates due to residual magnetism and the point on the voltage wave at switching. This can cause currents 8-15x rated for a few cycles. Protection relays use harmonic restraint or time delays to distinguish inrush from actual faults, preventing nuisance tripping.'
-  }
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPER FUNCTIONS
-// ─────────────────────────────────────────────────────────────────────────────
-function isValidPhase(phase: string): phase is Phase {
-  return PHASES.includes(phase as Phase);
-}
-
-function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'complete'): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    const sounds: Record<string, { freq: number; type: OscillatorType; duration: number }> = {
-      click: { freq: 600, type: 'sine', duration: 0.08 },
-      success: { freq: 880, type: 'sine', duration: 0.15 },
-      failure: { freq: 220, type: 'sine', duration: 0.25 },
-      transition: { freq: 440, type: 'triangle', duration: 0.12 },
-      complete: { freq: 660, type: 'sine', duration: 0.2 }
-    };
-
-    const sound = sounds[type];
-    oscillator.frequency.setValueAtTime(sound.freq, audioContext.currentTime);
-    oscillator.type = sound.type;
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + sound.duration);
-  } catch {
-    // Audio not available
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-export default function TransformerRenderer({ phase: initialPhase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: TransformerRendererProps) {
-  // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>(initialPhase || 'hook');
+// -----------------------------------------------------------------------------
+const TransformerRenderer: React.FC<TransformerRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<number[]>([]);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-
   const [isMobile, setIsMobile] = useState(false);
-
-  // Responsive detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
 
   // Simulation state
   const [primaryTurns, setPrimaryTurns] = useState(100);
@@ -448,202 +269,142 @@ export default function TransformerRenderer({ phase: initialPhase, onPhaseComple
   const [isAC, setIsAC] = useState(true);
   const [acPhase, setAcPhase] = useState(0);
 
-  // Twist state - DC comparison
+  // Twist phase state
   const [twistMode, setTwistMode] = useState<'ac' | 'dc'>('ac');
 
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
-  // Calculated values
-  const turnsRatio = secondaryTurns / primaryTurns;
-  const outputVoltage = isAC ? inputVoltage * turnsRatio : 0;
-  const inputCurrent = 1; // Assume 1A input for simplicity
-  const outputCurrent = isAC ? inputCurrent / turnsRatio : 0;
-  const transformerType = turnsRatio > 1 ? 'Step-Up' : turnsRatio < 1 ? 'Step-Down' : 'Isolation';
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
-  // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const goToPhase = (newPhase: Phase) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  // Navigation ref
+  const isNavigating = useRef(false);
 
-    playSound('transition');
-    setPhase(newPhase);
-    if (onPhaseComplete) onPhaseComplete();
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
-  };
-
-  const nextPhase = () => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) {
-      goToPhase(PHASES[currentIndex + 1]);
-    }
-  };
-
-  // ─── Animation Effect ────────────────────────────────────────────────────────
+  // Responsive design
   useEffect(() => {
-    if (!isAC) return;
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // AC animation
+  useEffect(() => {
+    if (!isAC && phase !== 'twist_play') return;
+    if (phase === 'twist_play' && twistMode === 'dc') return;
 
     const interval = setInterval(() => {
       setAcPhase(p => (p + 0.15) % (Math.PI * 2));
     }, 50);
-
     return () => clearInterval(interval);
-  }, [isAC]);
+  }, [isAC, phase, twistMode]);
 
-  // Reset when returning to play phase
-  useEffect(() => {
-    if (phase === 'play') {
-      setPrimaryTurns(100);
-      setSecondaryTurns(200);
-      setInputVoltage(120);
-      setIsAC(true);
-    }
-    if (phase === 'twist_play') {
-      setTwistMode('ac');
-    }
-  }, [phase]);
+  // Calculated values
+  const turnsRatio = secondaryTurns / primaryTurns;
+  const outputVoltage = isAC ? inputVoltage * turnsRatio : 0;
+  const inputCurrent = 1; // Assume 1A for display
+  const outputCurrent = isAC ? inputCurrent / turnsRatio : 0;
+  const transformerType = turnsRatio > 1 ? 'Step-Up' : turnsRatio < 1 ? 'Step-Down' : 'Isolation';
 
-  // ─── Render Helpers ──────────────────────────────────────────────────────────
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#F59E0B',
+    accentGlow: 'rgba(245, 158, 11, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
+  };
+
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
+
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Hook',
+    hook: 'Introduction',
     predict: 'Predict',
-    play: 'Lab',
-    review: 'Review',
-    twist_predict: 'Twist Predict',
-    twist_play: 'Twist Lab',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'AC vs DC',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
     mastery: 'Mastery'
   };
 
-  const renderProgressBar = () => null; // Replaced by header progress dots
+  const goToPhase = useCallback((p: Phase) => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    playSound('transition');
+    setPhase(p);
+    if (onGameEvent) {
+      onGameEvent({
+        eventType: 'phase_changed',
+        gameType: 'transformer',
+        gameTitle: 'Transformers',
+        details: { phase: p },
+        timestamp: Date.now()
+      });
+    }
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, [onGameEvent]);
 
-  const renderTransformer = (pTurns: number, sTurns: number, vIn: number, ac: boolean, animPhase: number) => {
+  const nextPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Transformer Visualization
+  const TransformerVisualization = ({ pTurns, sTurns, vIn, ac, animPhase: animP }: { pTurns: number; sTurns: number; vIn: number; ac: boolean; animPhase: number }) => {
+    const width = isMobile ? 340 : 480;
+    const height = isMobile ? 280 : 320;
     const ratio = sTurns / pTurns;
     const vOut = ac ? vIn * ratio : 0;
-    const currentIntensity = ac ? Math.abs(Math.sin(animPhase)) : 0;
-    const fluxIntensity = ac ? currentIntensity : 0;
-    const inputCurrent = 1; // Assume 1A input
-    const outputCurrent = ac ? inputCurrent / ratio : 0;
+    const currentIntensity = ac ? Math.abs(Math.sin(animP)) : 0;
 
     return (
-      <svg viewBox="0 0 500 340" className="w-full" style={{ maxHeight: '320px' }}>
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
-          {/* Premium iron core gradient with laminated steel appearance */}
-          <linearGradient id="xfmrIronCore" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="coreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#6b7280" />
-            <stop offset="20%" stopColor="#4b5563" />
-            <stop offset="40%" stopColor="#374151" />
-            <stop offset="60%" stopColor="#4b5563" />
-            <stop offset="80%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#374151" />
             <stop offset="100%" stopColor="#1f2937" />
           </linearGradient>
-
-          {/* Laminated steel texture for core edges */}
-          <linearGradient id="xfmrLaminatedSteel" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#64748b" />
-            <stop offset="10%" stopColor="#475569" />
-            <stop offset="20%" stopColor="#64748b" />
-            <stop offset="30%" stopColor="#475569" />
-            <stop offset="40%" stopColor="#64748b" />
-            <stop offset="50%" stopColor="#475569" />
-            <stop offset="60%" stopColor="#64748b" />
-            <stop offset="70%" stopColor="#475569" />
-            <stop offset="80%" stopColor="#64748b" />
-            <stop offset="90%" stopColor="#475569" />
-            <stop offset="100%" stopColor="#64748b" />
-          </linearGradient>
-
-          {/* Primary coil copper gradient */}
-          <linearGradient id="xfmrCopperPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fbbf24" />
-            <stop offset="25%" stopColor="#f59e0b" />
+          <linearGradient id="copperPrimary" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" />
             <stop offset="50%" stopColor="#d97706" />
-            <stop offset="75%" stopColor="#b45309" />
-            <stop offset="100%" stopColor="#92400e" />
+            <stop offset="100%" stopColor="#b45309" />
           </linearGradient>
-
-          {/* Secondary coil copper gradient */}
-          <linearGradient id="xfmrCopperSecondary" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="copperSecondary" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#fde047" />
-            <stop offset="25%" stopColor="#facc15" />
             <stop offset="50%" stopColor="#eab308" />
-            <stop offset="75%" stopColor="#ca8a04" />
-            <stop offset="100%" stopColor="#a16207" />
+            <stop offset="100%" stopColor="#ca8a04" />
           </linearGradient>
-
-          {/* Magnetic flux radial gradient - blue field effect */}
-          <radialGradient id="xfmrMagneticFlux" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
-            <stop offset="30%" stopColor="#2563eb" stopOpacity="0.6" />
-            <stop offset="60%" stopColor="#1d4ed8" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+          <radialGradient id="fluxGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
           </radialGradient>
-
-          {/* Primary current glow - red energy */}
-          <radialGradient id="xfmrPrimaryGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
-            <stop offset="30%" stopColor="#f87171" stopOpacity="0.7" />
-            <stop offset="60%" stopColor="#ef4444" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Secondary current glow - green energy */}
-          <radialGradient id="xfmrSecondaryGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
-            <stop offset="30%" stopColor="#4ade80" stopOpacity="0.7" />
-            <stop offset="60%" stopColor="#22c55e" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
-          </radialGradient>
-
-          {/* Indicator panel gradient */}
-          <linearGradient id="xfmrPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1f2937" />
-            <stop offset="50%" stopColor="#111827" />
-            <stop offset="100%" stopColor="#0f172a" />
-          </linearGradient>
-
-          {/* Lab background gradient */}
-          <linearGradient id="xfmrLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#030712" />
-            <stop offset="50%" stopColor="#0a1628" />
-            <stop offset="100%" stopColor="#030712" />
-          </linearGradient>
-
-          {/* Glow filter for active elements */}
-          <filter id="xfmrGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Strong glow for flux visualization */}
-          <filter id="xfmrFluxGlow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Soft inner glow for coils */}
-          <filter id="xfmrCoilGlow" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Voltage indicator glow */}
-          <filter id="xfmrVoltageGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id="glow">
             <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -652,1107 +413,1383 @@ export default function TransformerRenderer({ phase: initialPhase, onPhaseComple
           </filter>
         </defs>
 
-        {/* Premium lab background */}
-        <rect width="500" height="340" fill="url(#xfmrLabBg)" />
+        {/* Title */}
+        <text x={width/2} y="22" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">
+          Transformer Circuit - {ac ? 'AC Input' : 'DC Input'}
+        </text>
 
-        {/* Subtle grid pattern */}
-        <pattern id="xfmrGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
-        </pattern>
-        <rect width="500" height="340" fill="url(#xfmrGrid)" />
-
-        {/* === PREMIUM IRON CORE === */}
-        <g transform="translate(145, 55)">
-          {/* Outer core frame with laminated appearance */}
-          <rect x="0" y="0" width="210" height="190" rx="8" fill="url(#xfmrIronCore)" stroke="url(#xfmrLaminatedSteel)" strokeWidth="4" />
-
-          {/* Inner cutout (air gap / winding window) */}
-          <rect x="25" y="25" width="160" height="140" rx="4" fill="#030712" stroke="#1f2937" strokeWidth="2" />
-
-          {/* Lamination lines for realism */}
-          {[...Array(8)].map((_, i) => (
-            <line key={i} x1="5" y1={25 + i * 20} x2="20" y2={25 + i * 20} stroke="#374151" strokeWidth="1" opacity="0.6" />
-          ))}
-          {[...Array(8)].map((_, i) => (
-            <line key={i} x1="190" y1={25 + i * 20} x2="205" y2={25 + i * 20} stroke="#374151" strokeWidth="1" opacity="0.6" />
-          ))}
-
-          {/* Core label */}
-          <text x="105" y="-8" textAnchor="middle" className="text-[9px] fill-slate-400 font-medium uppercase tracking-wider">Laminated Iron Core</text>
+        {/* Iron Core */}
+        <g transform={`translate(${width/2 - 80}, 45)`}>
+          <rect x="0" y="0" width="160" height="140" rx="6" fill="url(#coreGrad)" stroke="#4b5563" strokeWidth="3" />
+          <rect x="20" y="20" width="120" height="100" rx="4" fill={colors.bgPrimary} />
+          <text x="80" y="-8" textAnchor="middle" fill={colors.textMuted} fontSize="9">Iron Core</text>
         </g>
 
-        {/* === MAGNETIC FLUX VISUALIZATION === */}
+        {/* Magnetic Flux (only when AC) */}
         {ac && (
-          <g style={{ opacity: fluxIntensity * 0.9 }} filter="url(#xfmrFluxGlow)">
-            {/* Top flux path */}
-            <rect x="170" y="75" width="160" height="18" rx="3" fill="url(#xfmrMagneticFlux)">
-              <animate attributeName="opacity" values="0.4;0.9;0.4" dur="0.5s" repeatCount="indefinite" />
-            </rect>
-            {/* Bottom flux path */}
-            <rect x="170" y="207" width="160" height="18" rx="3" fill="url(#xfmrMagneticFlux)">
-              <animate attributeName="opacity" values="0.4;0.9;0.4" dur="0.5s" repeatCount="indefinite" />
-            </rect>
-            {/* Left flux path */}
-            <rect x="150" y="80" width="18" height="150" rx="3" fill="url(#xfmrMagneticFlux)">
-              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
-            </rect>
-            {/* Right flux path */}
-            <rect x="332" y="80" width="18" height="150" rx="3" fill="url(#xfmrMagneticFlux)">
-              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
-            </rect>
-
-            {/* Flux direction arrows */}
-            <g className="fill-blue-300" style={{ opacity: 0.8 }}>
-              <polygon points="250,82 256,75 256,89" />
-              <polygon points="250,218 244,225 256,225" />
-              <polygon points="158,150 165,144 165,156" />
-              <polygon points="342,150 335,156 335,144" />
-            </g>
-
-            {/* Flux label */}
-            <text x="250" y="150" textAnchor="middle" className="text-[8px] fill-blue-300 font-medium">
-              Magnetic Flux (Phi)
+          <g style={{ opacity: currentIntensity * 0.7 }}>
+            <rect x={width/2 - 75} y="55" width="150" height="12" rx="2" fill="url(#fluxGlow)" />
+            <rect x={width/2 - 75} y="163" width="150" height="12" rx="2" fill="url(#fluxGlow)" />
+            <text x={width/2} y="115" textAnchor="middle" fill="#60a5fa" fontSize="9" opacity={currentIntensity}>
+              Magnetic Flux
             </text>
           </g>
         )}
 
-        {/* === PRIMARY COIL (LEFT) === */}
-        <g transform="translate(180, 95)">
-          {/* Coil glow background when active */}
-          {ac && (
-            <ellipse cx="0" cy="55" rx="30" ry="65" fill="url(#xfmrPrimaryGlow)" style={{ opacity: currentIntensity * 0.5 }} />
-          )}
-
-          {/* Copper windings */}
-          {[...Array(Math.min(Math.floor(pTurns / 10), 10))].map((_, i) => (
-            <g key={i}>
-              <ellipse
-                cx="0"
-                cy={10 + i * 11}
-                rx="22"
-                ry="7"
-                fill="none"
-                stroke="url(#xfmrCopperPrimary)"
-                strokeWidth="5"
-                filter={ac ? "url(#xfmrCoilGlow)" : undefined}
-                style={{ opacity: ac ? 0.7 + currentIntensity * 0.3 : 0.5 }}
-              />
-              {/* Highlight on each coil */}
-              <ellipse
-                cx="-5"
-                cy={8 + i * 11}
-                rx="8"
-                ry="2"
-                fill="#fde68a"
-                opacity="0.3"
-              />
-            </g>
+        {/* Primary Coil */}
+        <g transform={`translate(${width/2 - 55}, 70)`}>
+          {[...Array(Math.min(Math.floor(pTurns / 15), 8))].map((_, i) => (
+            <ellipse
+              key={i}
+              cx="0"
+              cy={i * 11}
+              rx="18"
+              ry="6"
+              fill="none"
+              stroke="url(#copperPrimary)"
+              strokeWidth="4"
+              style={{ opacity: ac ? 0.7 + currentIntensity * 0.3 : 0.4 }}
+            />
           ))}
-
-          {/* Primary label */}
-          <text x="0" y="135" textAnchor="middle" className="text-[10px] fill-red-400 font-bold">Primary</text>
-          <text x="0" y="148" textAnchor="middle" className="text-[9px] fill-slate-400">{pTurns} turns</text>
+          <text x="0" y="100" textAnchor="middle" fill="#f87171" fontSize="10" fontWeight="600">Primary</text>
+          <text x="0" y="112" textAnchor="middle" fill={colors.textMuted} fontSize="9">{pTurns} turns</text>
         </g>
 
-        {/* === SECONDARY COIL (RIGHT) === */}
-        <g transform="translate(320, 95)">
-          {/* Coil glow background when active */}
-          {ac && vOut > 0 && (
-            <ellipse cx="0" cy="55" rx="30" ry="65" fill="url(#xfmrSecondaryGlow)" style={{ opacity: currentIntensity * 0.5 }} />
-          )}
-
-          {/* Copper windings - more turns visible for step-up */}
-          {[...Array(Math.min(Math.floor(sTurns / 10), 12))].map((_, i) => (
-            <g key={i}>
-              <ellipse
-                cx="0"
-                cy={8 + i * 9}
-                rx="22"
-                ry="6"
-                fill="none"
-                stroke="url(#xfmrCopperSecondary)"
-                strokeWidth="4"
-                filter={ac && vOut > 0 ? "url(#xfmrCoilGlow)" : undefined}
-                style={{ opacity: ac && vOut > 0 ? 0.7 + currentIntensity * 0.3 : 0.5 }}
-              />
-              {/* Highlight on each coil */}
-              <ellipse
-                cx="-5"
-                cy={6 + i * 9}
-                rx="7"
-                ry="2"
-                fill="#fef08a"
-                opacity="0.3"
-              />
-            </g>
+        {/* Secondary Coil */}
+        <g transform={`translate(${width/2 + 55}, 70)`}>
+          {[...Array(Math.min(Math.floor(sTurns / 15), 10))].map((_, i) => (
+            <ellipse
+              key={i}
+              cx="0"
+              cy={i * 9}
+              rx="18"
+              ry="5"
+              fill="none"
+              stroke="url(#copperSecondary)"
+              strokeWidth="3"
+              style={{ opacity: ac && vOut > 0 ? 0.7 + currentIntensity * 0.3 : 0.4 }}
+            />
           ))}
-
-          {/* Secondary label */}
-          <text x="0" y="135" textAnchor="middle" className="text-[10px] fill-green-400 font-bold">Secondary</text>
-          <text x="0" y="148" textAnchor="middle" className="text-[9px] fill-slate-400">{sTurns} turns</text>
+          <text x="0" y="100" textAnchor="middle" fill="#4ade80" fontSize="10" fontWeight="600">Secondary</text>
+          <text x="0" y="112" textAnchor="middle" fill={colors.textMuted} fontSize="9">{sTurns} turns</text>
         </g>
 
-        {/* === INPUT VOLTAGE/CURRENT INDICATOR === */}
-        <g transform="translate(15, 75)">
-          <rect x="0" y="0" width="95" height="110" rx="10" fill="url(#xfmrPanelBg)" stroke="#374151" strokeWidth="2" />
-          <rect x="3" y="3" width="89" height="20" rx="6" fill="#0f172a" />
-          <text x="47" y="17" textAnchor="middle" className="text-[10px] fill-slate-300 font-bold uppercase tracking-wide">Input</text>
-
-          {/* Voltage display */}
-          <rect x="8" y="28" width="79" height="32" rx="4" fill="#030712" stroke="#1e3a8a" strokeWidth="1" />
-          <text x="47" y="50" textAnchor="middle" className="text-[16px] fill-red-400 font-bold font-mono" filter="url(#xfmrVoltageGlow)">
-            {vIn}V
-          </text>
-
-          {/* Current display */}
-          <rect x="8" y="65" width="79" height="20" rx="4" fill="#030712" stroke="#1e3a8a" strokeWidth="1" />
-          <text x="47" y="79" textAnchor="middle" className="text-[11px] fill-amber-400 font-mono">
-            {inputCurrent.toFixed(1)}A
-          </text>
-
-          {/* AC/DC indicator */}
-          <rect x="8" y="90" width="79" height="16" rx="4" fill={ac ? '#14532d' : '#450a0a'} stroke={ac ? '#22c55e' : '#ef4444'} strokeWidth="1" />
-          <text x="47" y="102" textAnchor="middle" className={`text-[10px] font-bold ${ac ? 'fill-green-400' : 'fill-red-400'}`}>
-            {ac ? 'AC ∿ 60Hz' : 'DC ═'}
+        {/* Input Panel */}
+        <g transform="translate(15, 60)">
+          <rect x="0" y="0" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+          <text x="37" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">INPUT</text>
+          <text x="37" y="38" textAnchor="middle" fill="#f87171" fontSize="16" fontWeight="700">{vIn}V</text>
+          <text x="37" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="9">{ac ? 'AC ~' : 'DC ='}</text>
+          <rect x="10" y="62" width="55" height="12" rx="3" fill={ac ? '#14532d' : '#450a0a'} />
+          <text x="37" y="72" textAnchor="middle" fill={ac ? '#4ade80' : '#f87171'} fontSize="8" fontWeight="600">
+            {ac ? 'ACTIVE' : 'DC MODE'}
           </text>
         </g>
 
-        {/* === OUTPUT VOLTAGE/CURRENT INDICATOR === */}
-        <g transform="translate(390, 75)">
-          <rect x="0" y="0" width="95" height="110" rx="10" fill="url(#xfmrPanelBg)" stroke="#374151" strokeWidth="2" />
-          <rect x="3" y="3" width="89" height="20" rx="6" fill="#0f172a" />
-          <text x="47" y="17" textAnchor="middle" className="text-[10px] fill-slate-300 font-bold uppercase tracking-wide">Output</text>
-
-          {/* Voltage display */}
-          <rect x="8" y="28" width="79" height="32" rx="4" fill="#030712" stroke={vOut > 0 ? '#14532d' : '#7f1d1d'} strokeWidth="1" />
-          <text x="47" y="50" textAnchor="middle" className={`text-[16px] font-bold font-mono ${vOut > 0 ? 'fill-green-400' : 'fill-red-400'}`} filter="url(#xfmrVoltageGlow)">
+        {/* Output Panel */}
+        <g transform={`translate(${width - 90}, 60)`}>
+          <rect x="0" y="0" width="75" height="80" rx="6" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+          <text x="37" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">OUTPUT</text>
+          <text x="37" y="38" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#6b7280'} fontSize="16" fontWeight="700">
             {vOut.toFixed(0)}V
           </text>
-
-          {/* Current display */}
-          <rect x="8" y="65" width="79" height="20" rx="4" fill="#030712" stroke={vOut > 0 ? '#14532d' : '#7f1d1d'} strokeWidth="1" />
-          <text x="47" y="79" textAnchor="middle" className={`text-[11px] font-mono ${vOut > 0 ? 'fill-cyan-400' : 'fill-gray-500'}`}>
-            {outputCurrent.toFixed(2)}A
+          <text x="37" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+            {vOut > 0 ? `${(inputCurrent / ratio).toFixed(2)}A` : 'No output'}
           </text>
-
-          {/* Status indicator */}
-          <rect x="8" y="90" width="79" height="16" rx="4" fill={vOut > 0 ? '#14532d' : '#450a0a'} stroke={vOut > 0 ? '#22c55e' : '#ef4444'} strokeWidth="1" />
-          <text x="47" y="102" textAnchor="middle" className={`text-[10px] font-bold ${vOut > 0 ? 'fill-green-400' : 'fill-red-400'}`}>
+          <rect x="10" y="62" width="55" height="12" rx="3" fill={vOut > 0 ? '#14532d' : '#450a0a'} />
+          <text x="37" y="72" textAnchor="middle" fill={vOut > 0 ? '#4ade80' : '#f87171'} fontSize="8" fontWeight="600">
             {vOut > 0 ? 'ACTIVE' : 'NO OUTPUT'}
           </text>
         </g>
 
-        {/* === WAVEFORM VISUALIZATION === */}
-        <g transform="translate(0, 260)">
-          {/* Input waveform panel */}
-          <rect x="15" y="0" width="95" height="50" rx="6" fill="#030712" stroke="#374151" strokeWidth="1" />
-          <text x="62" y="12" textAnchor="middle" className="text-[8px] fill-slate-400">Input Waveform</text>
+        {/* Waveforms */}
+        <g transform={`translate(15, ${height - 65})`}>
+          <rect x="0" y="0" width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
+          <text x="37" y="10" textAnchor="middle" fill={colors.textMuted} fontSize="7">Input Wave</text>
           {ac ? (
             <path
-              d={`M 22 35 ${[...Array(14)].map((_, i) =>
-                `L ${22 + i * 6} ${35 + Math.sin(animPhase + i * 0.6) * 12}`
-              ).join(' ')}`}
+              d={`M 8 25 ${[...Array(10)].map((_, i) => `L ${8 + i * 6} ${25 + Math.sin(animP + i * 0.8) * 8}`).join(' ')}`}
               fill="none"
-              stroke="#ef4444"
+              stroke="#f87171"
               strokeWidth="2"
-              strokeLinecap="round"
             />
           ) : (
-            <line x1="22" y1="35" x2="100" y2="35" stroke="#6b7280" strokeWidth="2" strokeDasharray="4 2" />
+            <line x1="8" y1="25" x2="68" y2="25" stroke="#6b7280" strokeWidth="2" strokeDasharray="4 2" />
           )}
+        </g>
 
-          {/* Output waveform panel */}
-          <rect x="390" y="0" width="95" height="50" rx="6" fill="#030712" stroke="#374151" strokeWidth="1" />
-          <text x="437" y="12" textAnchor="middle" className="text-[8px] fill-slate-400">Output Waveform</text>
+        <g transform={`translate(${width - 90}, ${height - 65})`}>
+          <rect x="0" y="0" width="75" height="40" rx="4" fill={colors.bgPrimary} stroke={colors.border} strokeWidth="1" />
+          <text x="37" y="10" textAnchor="middle" fill={colors.textMuted} fontSize="7">Output Wave</text>
           {ac && vOut > 0 ? (
             <path
-              d={`M 397 35 ${[...Array(14)].map((_, i) =>
-                `L ${397 + i * 6} ${35 + Math.sin(animPhase + i * 0.6) * 12 * Math.min(ratio, 2)}`
-              ).join(' ')}`}
+              d={`M 8 25 ${[...Array(10)].map((_, i) => `L ${8 + i * 6} ${25 + Math.sin(animP + i * 0.8) * 8 * Math.min(ratio, 1.5)}`).join(' ')}`}
               fill="none"
-              stroke="#22c55e"
+              stroke="#4ade80"
               strokeWidth="2"
-              strokeLinecap="round"
             />
           ) : (
-            <line x1="397" y1="35" x2="475" y2="35" stroke="#374151" strokeWidth="2" strokeDasharray="4 2" />
+            <line x1="8" y1="25" x2="68" y2="25" stroke="#374151" strokeWidth="2" strokeDasharray="4 2" />
           )}
         </g>
 
-        {/* === TRANSFORMER TYPE BADGE === */}
-        <g transform="translate(175, 5)">
-          <rect x="0" y="0" width="150" height="38" rx="10" fill="url(#xfmrPanelBg)" stroke={ratio > 1 ? '#22c55e' : ratio < 1 ? '#f97316' : '#3b82f6'} strokeWidth="2" />
-          <text x="75" y="16" textAnchor="middle" className="text-[9px] fill-slate-400 uppercase tracking-wider">Transformer Type</text>
-          <text x="75" y="31" textAnchor="middle" className={`text-[13px] font-bold ${
-            ratio > 1 ? 'fill-green-400' : ratio < 1 ? 'fill-orange-400' : 'fill-blue-400'
-          }`}>
-            {ratio > 1 ? '⬆ STEP-UP' : ratio < 1 ? '⬇ STEP-DOWN' : '= ISOLATION'}
+        {/* Transformer Type Badge */}
+        <g transform={`translate(${width/2 - 50}, ${height - 55})`}>
+          <rect x="0" y="0" width="100" height="30" rx="6" fill={colors.bgSecondary} stroke={ratio > 1 ? '#22c55e' : ratio < 1 ? '#f97316' : '#3b82f6'} strokeWidth="2" />
+          <text x="50" y="12" textAnchor="middle" fill={colors.textMuted} fontSize="8">Type</text>
+          <text x="50" y="24" textAnchor="middle" fill={ratio > 1 ? '#4ade80' : ratio < 1 ? '#fb923c' : '#60a5fa'} fontSize="10" fontWeight="700">
+            {ratio > 1 ? 'STEP-UP' : ratio < 1 ? 'STEP-DOWN' : 'ISOLATION'}
           </text>
         </g>
 
-        {/* === TURNS RATIO DISPLAY === */}
-        <g transform="translate(200, 315)">
-          <rect x="0" y="0" width="100" height="22" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
-          <text x="50" y="15" textAnchor="middle" className="text-[10px] fill-yellow-400 font-mono font-medium">
-            Ratio: {ratio.toFixed(2)}:1
-          </text>
-        </g>
-
-        {/* === CONNECTION WIRES === */}
-        {/* Input wires */}
-        <line x1="110" y1="105" x2="160" y2="105" stroke="#ef4444" strokeWidth="2" strokeDasharray={ac ? "none" : "4 2"} />
-        <line x1="110" y1="165" x2="160" y2="165" stroke="#ef4444" strokeWidth="2" strokeDasharray={ac ? "none" : "4 2"} />
-
-        {/* Output wires */}
-        <line x1="340" y1="105" x2="390" y2="105" stroke={vOut > 0 ? "#22c55e" : "#374151"} strokeWidth="2" />
-        <line x1="340" y1="165" x2="390" y2="165" stroke={vOut > 0 ? "#22c55e" : "#374151"} strokeWidth="2" />
-
-        {/* Power flow indicators */}
-        {ac && (
-          <g style={{ opacity: currentIntensity }}>
-            <circle cx={130 + Math.sin(animPhase * 2) * 15} cy="105" r="3" fill="#fca5a5" filter="url(#xfmrGlow)" />
-            <circle cx={130 - Math.sin(animPhase * 2) * 15} cy="165" r="3" fill="#fca5a5" filter="url(#xfmrGlow)" />
-          </g>
-        )}
-        {ac && vOut > 0 && (
-          <g style={{ opacity: currentIntensity }}>
-            <circle cx={365 + Math.sin(animPhase * 2) * 12} cy="105" r="3" fill="#86efac" filter="url(#xfmrGlow)" />
-            <circle cx={365 - Math.sin(animPhase * 2) * 12} cy="165" r="3" fill="#86efac" filter="url(#xfmrGlow)" />
-          </g>
-        )}
+        {/* Turns Ratio */}
+        <text x={width/2} y={height - 8} textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="600">
+          Ratio: {ratio.toFixed(2)}:1
+        </text>
       </svg>
     );
   };
 
-  const renderPowerTransmission = (useHighVoltage: boolean) => {
-    const transmissionVoltage = useHighVoltage ? 400000 : 240;
-    const current = useHighVoltage ? 0.0006 : 1000; // P = VI = 240W
-    const wireResistance = 10; // ohms
-    const powerLoss = current * current * wireResistance;
-    const efficiency = ((240 - powerLoss) / 240) * 100;
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
+    </div>
+  );
 
-    return (
-      <svg viewBox="0 0 500 220" className="w-full" style={{ maxHeight: '180px' }}>
-        <defs>
-          {/* Building gradient */}
-          <linearGradient id="xfmrBuildingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#475569" />
-            <stop offset="30%" stopColor="#374151" />
-            <stop offset="70%" stopColor="#1f2937" />
-            <stop offset="100%" stopColor="#111827" />
-          </linearGradient>
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
+        <button
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
 
-          {/* Transformer box gradient */}
-          <linearGradient id="xfmrBoxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1f2937" />
-            <stop offset="50%" stopColor="#111827" />
-            <stop offset="100%" stopColor="#0f172a" />
-          </linearGradient>
-
-          {/* High voltage wire glow */}
-          <filter id="xfmrWireGlow" x="-20%" y="-200%" width="140%" height="500%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Heat glow filter */}
-          <filter id="xfmrHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Transmission line gradient */}
-          <linearGradient id="xfmrLineHV" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="50%" stopColor="#4ade80" />
-            <stop offset="100%" stopColor="#22c55e" />
-          </linearGradient>
-
-          <linearGradient id="xfmrLineLV" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="50%" stopColor="#f87171" />
-            <stop offset="100%" stopColor="#ef4444" />
-          </linearGradient>
-
-          {/* Background gradient */}
-          <linearGradient id="xfmrTransBg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#030712" />
-            <stop offset="50%" stopColor="#0a1628" />
-            <stop offset="100%" stopColor="#030712" />
-          </linearGradient>
-        </defs>
-
-        {/* Background */}
-        <rect width="500" height="220" fill="url(#xfmrTransBg)" />
-
-        {/* Grid pattern */}
-        <pattern id="xfmrTransGrid" width="25" height="25" patternUnits="userSpaceOnUse">
-          <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
-        </pattern>
-        <rect width="500" height="220" fill="url(#xfmrTransGrid)" />
-
-        {/* === POWER PLANT === */}
-        <g transform="translate(20, 70)">
-          <rect x="0" y="0" width="70" height="70" rx="6" fill="url(#xfmrBuildingGrad)" stroke="#475569" strokeWidth="2" />
-          {/* Smokestacks */}
-          <rect x="10" y="-20" width="12" height="25" rx="2" fill="#374151" stroke="#4b5563" strokeWidth="1" />
-          <rect x="30" y="-25" width="12" height="30" rx="2" fill="#374151" stroke="#4b5563" strokeWidth="1" />
-          <rect x="50" y="-15" width="10" height="20" rx="2" fill="#374151" stroke="#4b5563" strokeWidth="1" />
-          {/* Windows */}
-          <rect x="8" y="12" width="14" height="10" rx="1" fill="#fbbf24" opacity="0.6" />
-          <rect x="28" y="12" width="14" height="10" rx="1" fill="#fbbf24" opacity="0.5" />
-          <rect x="48" y="12" width="14" height="10" rx="1" fill="#fbbf24" opacity="0.7" />
-          <rect x="8" y="35" width="54" height="20" rx="2" fill="#1f2937" stroke="#374151" strokeWidth="1" />
-          <text x="35" y="49" textAnchor="middle" className="text-[9px] fill-slate-300 font-medium">GENERATOR</text>
-          {/* Label */}
-          <text x="35" y="85" textAnchor="middle" className="text-[10px] fill-slate-400 font-medium">Power Plant</text>
-          <text x="35" y="97" textAnchor="middle" className="text-[11px] fill-yellow-400 font-bold">240V AC</text>
-        </g>
-
-        {/* === STEP-UP TRANSFORMER === */}
-        {useHighVoltage && (
-          <g transform="translate(110, 85)">
-            <rect x="0" y="0" width="50" height="50" rx="6" fill="url(#xfmrBoxGrad)" stroke="#22c55e" strokeWidth="2" />
-            <rect x="5" y="5" width="40" height="15" rx="3" fill="#030712" stroke="#14532d" strokeWidth="1" />
-            <text x="25" y="16" textAnchor="middle" className="text-[8px] fill-green-400 font-bold">STEP-UP</text>
-            {/* Coil symbols */}
-            <ellipse cx="15" cy="35" rx="8" ry="5" fill="none" stroke="#f59e0b" strokeWidth="2" />
-            <ellipse cx="35" cy="35" rx="8" ry="5" fill="none" stroke="#fde047" strokeWidth="2" />
-            <text x="25" y="60" textAnchor="middle" className="text-[7px] fill-slate-500">1:1667</text>
-          </g>
-        )}
-
-        {/* === TRANSMISSION LINES === */}
-        <g>
-          {/* Power line towers */}
-          {useHighVoltage && (
-            <>
-              <polygon points="200,60 210,120 190,120" fill="#374151" stroke="#475569" strokeWidth="1" />
-              <line x1="185" y1="65" x2="215" y2="65" stroke="#475569" strokeWidth="2" />
-              <polygon points="290,60 300,120 280,120" fill="#374151" stroke="#475569" strokeWidth="1" />
-              <line x1="275" y1="65" x2="305" y2="65" stroke="#475569" strokeWidth="2" />
-            </>
-          )}
-
-          {/* Transmission wire */}
-          <line
-            x1={useHighVoltage ? 160 : 90}
-            y1={useHighVoltage ? 65 : 105}
-            x2={useHighVoltage ? 330 : 390}
-            y2={useHighVoltage ? 65 : 105}
-            stroke={useHighVoltage ? 'url(#xfmrLineHV)' : 'url(#xfmrLineLV)'}
-            strokeWidth={useHighVoltage ? 3 : 8}
-            filter={useHighVoltage ? 'url(#xfmrWireGlow)' : undefined}
-          />
-
-          {/* Second wire for HV */}
-          {useHighVoltage && (
-            <line x1="160" y1="75" x2="330" y2="75" stroke="url(#xfmrLineHV)" strokeWidth="2" filter="url(#xfmrWireGlow)" />
-          )}
-
-          {/* Voltage/Current label */}
-          <rect x="195" y={useHighVoltage ? 82 : 70} width="100" height="28" rx="6" fill="#0f172a" stroke={useHighVoltage ? '#22c55e' : '#ef4444'} strokeWidth="1" />
-          <text x="245" y={useHighVoltage ? 93 : 81} textAnchor="middle" className={`text-[9px] font-bold ${useHighVoltage ? 'fill-green-400' : 'fill-red-400'}`}>
-            {useHighVoltage ? '400,000V' : '240V'}
-          </text>
-          <text x="245" y={useHighVoltage ? 105 : 93} textAnchor="middle" className={`text-[8px] ${useHighVoltage ? 'fill-cyan-400' : 'fill-orange-400'}`}>
-            {useHighVoltage ? '0.6mA' : '1000A'}
-          </text>
-        </g>
-
-        {/* Heat loss visualization for low voltage */}
-        {!useHighVoltage && (
-          <g filter="url(#xfmrHeatGlow)">
-            {[...Array(8)].map((_, i) => (
-              <g key={i}>
-                <circle cx={120 + i * 35} cy="90" r="8" fill="#ef4444" opacity="0.6">
-                  <animate attributeName="opacity" values="0.3;0.8;0.3" dur={`${0.3 + i * 0.1}s`} repeatCount="indefinite" />
-                  <animate attributeName="r" values="6;10;6" dur={`${0.4 + i * 0.05}s`} repeatCount="indefinite" />
-                </circle>
-                <circle cx={120 + i * 35} cy="90" r="4" fill="#fbbf24" opacity="0.8">
-                  <animate attributeName="opacity" values="0.5;1;0.5" dur={`${0.25 + i * 0.08}s`} repeatCount="indefinite" />
-                </circle>
-              </g>
-            ))}
-            <text x="245" y="125" textAnchor="middle" className="text-[10px] fill-red-400 font-bold">MASSIVE HEAT LOSS!</text>
-          </g>
-        )}
-
-        {/* === STEP-DOWN TRANSFORMER === */}
-        {useHighVoltage && (
-          <g transform="translate(330, 85)">
-            <rect x="0" y="0" width="50" height="50" rx="6" fill="url(#xfmrBoxGrad)" stroke="#f97316" strokeWidth="2" />
-            <rect x="5" y="5" width="40" height="15" rx="3" fill="#030712" stroke="#7c2d12" strokeWidth="1" />
-            <text x="25" y="16" textAnchor="middle" className="text-[7px] fill-orange-400 font-bold">STEP-DOWN</text>
-            {/* Coil symbols */}
-            <ellipse cx="15" cy="35" rx="8" ry="5" fill="none" stroke="#fde047" strokeWidth="2" />
-            <ellipse cx="35" cy="35" rx="8" ry="5" fill="none" stroke="#f59e0b" strokeWidth="2" />
-            <text x="25" y="60" textAnchor="middle" className="text-[7px] fill-slate-500">1667:1</text>
-          </g>
-        )}
-
-        {/* === HOUSE === */}
-        <g transform="translate(400, 70)">
-          <rect x="0" y="20" width="70" height="50" rx="4" fill="url(#xfmrBuildingGrad)" stroke="#475569" strokeWidth="2" />
-          {/* Roof */}
-          <polygon points="35,-5 -5,20 75,20" fill="#374151" stroke="#475569" strokeWidth="1" />
-          {/* Door */}
-          <rect x="28" y="45" width="14" height="25" rx="2" fill="#78350f" stroke="#92400e" strokeWidth="1" />
-          {/* Windows */}
-          <rect x="8" y="30" width="14" height="12" rx="1" fill="#fbbf24" opacity="0.7" />
-          <rect x="48" y="30" width="14" height="12" rx="1" fill="#fbbf24" opacity="0.6" />
-          {/* Label */}
-          <text x="35" y="85" textAnchor="middle" className="text-[10px] fill-slate-400 font-medium">Home</text>
-          <text x="35" y="97" textAnchor="middle" className="text-[11px] fill-yellow-400 font-bold">240V AC</text>
-        </g>
-
-        {/* === EFFICIENCY DISPLAY === */}
-        <g transform="translate(160, 165)">
-          <rect x="0" y="0" width="170" height="45" rx="8" fill="#0f172a" stroke={efficiency > 90 ? '#22c55e' : '#ef4444'} strokeWidth="2" />
-          <text x="85" y="16" textAnchor="middle" className="text-[9px] fill-slate-400 uppercase tracking-wide">Power Delivered to Home</text>
-          <text x="85" y="36" textAnchor="middle" className={`text-[14px] font-bold ${efficiency > 90 ? 'fill-green-400' : 'fill-red-400'}`}>
-            {efficiency > 0 ? efficiency.toFixed(1) : '0.0'}% Efficiency
-          </text>
-          <text x="85" y="42" textAnchor="middle" className={`text-[8px] ${efficiency > 90 ? 'fill-emerald-300' : 'fill-red-300'}`}>
-            {useHighVoltage ? '(Minimal Loss)' : '(Huge Loss - Wires Melt!)'}
-          </text>
-        </g>
-      </svg>
-    );
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
   };
 
-  // ─── Phase Renderers ─────────────────────────────────────────────────────────
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-yellow-400 tracking-wide">PHYSICS EXPLORATION</span>
-      </div>
+  // ---------------------------------------------------------------------------
+  // PHASE RENDERS
+  // ---------------------------------------------------------------------------
 
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-yellow-100 to-orange-200 bg-clip-text text-transparent">
-        The Power Grid Mystery
-      </h1>
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover why 400,000 volts flow through power lines—yet your home only uses 120V
-      </p>
-
-      {/* Premium card with graphic */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-orange-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <div className="text-6xl mb-6">⚡</div>
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              If you tried to send household current through long wires, they&apos;d glow red hot!
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              A simple device called a &quot;transformer&quot; makes our power grid possible.
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-yellow-400 font-semibold">
-                Why did AC win the &quot;War of Currents&quot;?
-              </p>
-            </div>
-          </div>
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          ⚡🔌
         </div>
-      </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
-      {/* Premium CTA button */}
-      <button
-        onPointerDown={(e) => { e.preventDefault(); nextPhase(); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-yellow-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover the Secret
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Transformers
+        </h1>
 
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-yellow-400">✦</span>
-          Interactive Lab
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-yellow-400">✦</span>
-          Real-World Examples
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-yellow-400">✦</span>
-          Knowledge Test
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPredict = () => (
-    <div className="text-center space-y-6">
-      <h2 className="text-2xl font-bold text-white">Make Your Prediction</h2>
-      <div className="bg-gray-800 rounded-xl p-6 max-w-lg mx-auto">
-        <p className="text-gray-300 mb-6">
-          A transformer has two coils wound around an iron core. If the secondary coil
-          has twice as many turns as the primary, what happens to the output voltage?
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "Why do power lines carry <span style={{ color: colors.accent }}>400,000 volts</span> when your home only uses <span style={{ color: colors.success }}>120 volts</span>? The answer lies in one of the most important inventions of the electrical age."
         </p>
-        <div className="space-y-3">
-          {[
-            'Output voltage is halved',
-            'Output voltage stays the same',
-            'Output voltage doubles',
-            'No current flows at all'
-          ].map((option, i) => (
-            <button
-              key={i}
-              onPointerDown={() => {
-                playSound('click');
-                setPrediction(option);
-              }}
-              className={`w-full p-4 rounded-lg text-left transition-all ${
-                prediction === option
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "If you tried to send household current through long transmission lines, the wires would glow red hot! Transformers make modern power grids possible by trading voltage for current."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            - The War of Currents: Tesla vs Edison
+          </p>
         </div>
-      </div>
-      {prediction && (
+
         <button
-          onPointerDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
         >
-          Test Your Prediction →
+          Discover How Transformers Work
         </button>
-      )}
-    </div>
-  );
 
-  const renderPlay = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">Transformer Simulator</h2>
-
-      <div className="bg-gray-800 rounded-xl p-6">
-        {renderTransformer(primaryTurns, secondaryTurns, inputVoltage, isAC, acPhase)}
-
-        <div className="grid grid-cols-2 gap-6 mt-6">
-          <div>
-            <label className="block text-red-400 font-medium mb-2">
-              Primary Turns: {primaryTurns}
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="200"
-              step="10"
-              value={primaryTurns}
-              onChange={(e) => setPrimaryTurns(Number(e.target.value))}
-              className="w-full accent-red-500"
-            />
-          </div>
-          <div>
-            <label className="block text-green-400 font-medium mb-2">
-              Secondary Turns: {secondaryTurns}
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="500"
-              step="10"
-              value={secondaryTurns}
-              onChange={(e) => setSecondaryTurns(Number(e.target.value))}
-              className="w-full accent-green-500"
-            />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-yellow-400 font-medium mb-2">
-            Input Voltage: {inputVoltage}V
-          </label>
-          <input
-            type="range"
-            min="12"
-            max="240"
-            step="12"
-            value={inputVoltage}
-            onChange={(e) => setInputVoltage(Number(e.target.value))}
-            className="w-full accent-yellow-500"
-          />
-        </div>
-
-        <div className="mt-4 p-4 bg-gray-700 rounded-lg">
-          <p className="text-gray-300 text-center">
-            <span className="text-yellow-400">Turns Ratio:</span> {turnsRatio.toFixed(2)}:1
-            {' | '}
-            <span className="text-green-400">Output:</span> {outputVoltage.toFixed(0)}V
-            {' | '}
-            <span className="text-cyan-400">Type:</span> {transformerType}
-          </p>
-        </div>
+        {renderNavDots()}
       </div>
+    );
+  }
 
-      <div className="text-center">
-        <button
-          onPointerDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
-        >
-          Understand the Physics →
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">The Magic of Magnetic Coupling</h2>
-
-      <div className="bg-gray-800 rounded-xl p-6 space-y-4">
-        <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
-          <h3 className="text-yellow-400 font-bold mb-2">How Transformers Work</h3>
-          <p className="text-gray-300">
-            AC current in the primary creates a <span className="text-blue-400 font-bold">changing magnetic flux</span> in
-            the iron core. This flux passes through the secondary coil and induces voltage by Faraday&apos;s law!
-          </p>
-        </div>
-
-        <div className="p-4 bg-gray-700 rounded-lg text-center">
-          <p className="text-white font-mono text-lg">V₂/V₁ = N₂/N₁</p>
-          <p className="text-gray-400 text-sm mt-2">
-            Output voltage / Input voltage = Secondary turns / Primary turns
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-green-900/30 rounded-lg border border-green-600">
-            <h4 className="text-green-400 font-bold mb-2">Step-Up</h4>
-            <p className="text-gray-300 text-sm">
-              More secondary turns → Higher voltage, lower current
-              <br />
-              Used for: Power transmission
-            </p>
-          </div>
-          <div className="p-4 bg-orange-900/30 rounded-lg border border-orange-600">
-            <h4 className="text-orange-400 font-bold mb-2">Step-Down</h4>
-            <p className="text-gray-300 text-sm">
-              Fewer secondary turns → Lower voltage, higher current
-              <br />
-              Used for: Phone chargers, doorbells
-            </p>
-          </div>
-        </div>
-
-        <div className="p-4 bg-purple-900/30 rounded-lg border border-purple-600">
-          <p className="text-purple-300">
-            💡 <strong>Conservation of Energy:</strong> Power in ≈ Power out.
-            If voltage goes up 10×, current goes down 10×. You can&apos;t create free energy!
-          </p>
-        </div>
-      </div>
-
-      <div className="text-center">
-        <button
-          onPointerDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
-        >
-          What About DC? →
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="text-center space-y-6">
-      <h2 className="text-2xl font-bold text-white">The DC Question</h2>
-      <div className="bg-gray-800 rounded-xl p-6 max-w-lg mx-auto">
-        <p className="text-gray-300 mb-6">
-          What happens if you connect a battery (DC) to the primary coil of a transformer?
-        </p>
-        <div className="space-y-3">
-          {[
-            'The transformer works normally',
-            'The output voltage is doubled',
-            'No output voltage - DC creates a static field',
-            'The transformer becomes a motor'
-          ].map((option, i) => (
-            <button
-              key={i}
-              onPointerDown={() => {
-                playSound('click');
-                setTwistPrediction(option);
-              }}
-              className={`w-full p-4 rounded-lg text-left transition-all ${
-                twistPrediction === option
-                  ? 'bg-yellow-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-      {twistPrediction && (
-        <button
-          onPointerDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
-        >
-          See What Happens →
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">AC vs DC: The Critical Difference</h2>
-
-      <div className="bg-gray-800 rounded-xl p-6">
-        {renderTransformer(100, 200, 120, twistMode === 'ac', acPhase)}
-
-        <div className="flex justify-center gap-4 mt-6">
-          <button
-            onPointerDown={() => {
-              playSound('click');
-              setTwistMode('ac');
-            }}
-            className={`px-6 py-3 rounded-lg font-bold ${
-              twistMode === 'ac' ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-300'
-            }`}
-          >
-            ∿ AC Input
-          </button>
-          <button
-            onPointerDown={() => {
-              playSound('click');
-              setTwistMode('dc');
-            }}
-            className={`px-6 py-3 rounded-lg font-bold ${
-              twistMode === 'dc' ? 'bg-red-600 text-white' : 'bg-gray-600 text-gray-300'
-            }`}
-          >
-            ═ DC Input
-          </button>
-        </div>
-
-        <div className={`mt-4 p-4 rounded-lg border ${
-          twistMode === 'ac'
-            ? 'bg-green-900/30 border-green-600'
-            : 'bg-red-900/30 border-red-600'
-        }`}>
-          <p className={`text-center ${twistMode === 'ac' ? 'text-green-300' : 'text-red-300'}`}>
-            {twistMode === 'ac' ? (
-              <>
-                <span className="font-bold">AC: Constantly changing current → changing flux → induced EMF!</span>
-                <br />
-                <span className="text-sm">Output: 240V AC</span>
-              </>
-            ) : (
-              <>
-                <span className="font-bold">DC: Constant current → static flux → NO induction!</span>
-                <br />
-                <span className="text-sm">Output: 0V (nothing happens after initial moment)</span>
-              </>
-            )}
-          </p>
-        </div>
-      </div>
-
-      <div className="text-center">
-        <button
-          onPointerDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
-        >
-          Why This Matters →
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderTwistReview = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">Why AC Won the War of Currents</h2>
-
-      <div className="bg-gray-800 rounded-xl p-6 space-y-4">
-        <div className="p-4 bg-green-900/30 rounded-lg border border-green-600">
-          <h3 className="text-green-400 font-bold mb-2">Tesla&apos;s Triumph</h3>
-          <p className="text-gray-300">
-            In the 1880s, Edison promoted DC while Tesla/Westinghouse championed AC.
-            <span className="text-yellow-400 font-bold"> AC won because transformers work!</span>{' '}
-            You can step voltage up for efficient transmission, then down for safe use.
-          </p>
-        </div>
-
-        <div className="bg-gray-700 rounded-lg p-4">
-          <h4 className="text-white font-bold mb-2 text-center">Power Loss Comparison</h4>
-          <div className="space-y-4">
-            <div>
-              <p className="text-gray-400 text-sm mb-2">With High Voltage Transmission (AC + Transformers):</p>
-              {renderPowerTransmission(true)}
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm mb-2">With Low Voltage (DC, no transformers):</p>
-              {renderPowerTransmission(false)}
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
-          <p className="text-yellow-300 text-sm">
-            💡 <strong>The Math:</strong> Power loss = I²R. If you step up voltage 1000×,
-            current drops 1000×, and losses drop by 1,000,000×!
-          </p>
-        </div>
-      </div>
-
-      <div className="text-center">
-        <button
-          onPointerDown={() => { playSound('click'); nextPhase(); }}
-          className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
-        >
-          See Real Applications →
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white text-center">Real-World Transformers</h2>
-      <p className="text-gray-400 text-center">Explore how transformers power modern life</p>
-
-      <div className="grid grid-cols-2 gap-4">
-        {TRANSFER_APPS.map((app, i) => (
-          <button
-            key={i}
-            onPointerDown={() => {
-              playSound('click');
-              setCompletedApps(prev => new Set([...prev, i]));
-            }}
-            className={`p-4 rounded-xl text-left transition-all ${
-              completedApps.has(i)
-                ? 'bg-green-900/30 border-2 border-green-600'
-                : 'bg-gray-800 border-2 border-gray-700 hover:border-yellow-500'
-            }`}
-          >
-            <div className="text-3xl mb-2">{app.icon}</div>
-            <h3 className="text-white font-bold mb-1">{app.title}</h3>
-            <p className="text-gray-400 text-sm">{app.description}</p>
-            {completedApps.has(i) && (
-              <div className="mt-2 text-green-400 text-sm">✓ Explored</div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {completedApps.size >= 4 && (
-        <div className="text-center">
-          <button
-            onPointerDown={() => { playSound('complete'); nextPhase(); }}
-            className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
-          >
-            Take the Test →
-          </button>
-        </div>
-      )}
-
-      {completedApps.size < 4 && (
-        <p className="text-center text-gray-500">
-          Explore all {4 - completedApps.size} remaining applications to continue
-        </p>
-      )}
-    </div>
-  );
-
-  const renderTest = () => {
-    const currentQuestion = testAnswers.length;
-    const isComplete = currentQuestion >= TEST_QUESTIONS.length;
-
-    if (isComplete) {
-      const score = testAnswers.reduce(
-        (acc, answer, i) => acc + (TEST_QUESTIONS[i].options[answer]?.correct ? 1 : 0),
-        0
-      );
-      const passed = score >= 3;
-      if (passed && onCorrectAnswer) onCorrectAnswer();
-
-      return (
-        <div className="text-center space-y-6">
-          <h2 className="text-2xl font-bold text-white">Test Complete!</h2>
-          <div className={`text-6xl font-bold ${passed ? 'text-green-400' : 'text-red-400'}`}>
-            {score}/{TEST_QUESTIONS.length}
-          </div>
-          <p className="text-gray-300">
-            {passed ? 'Excellent understanding of transformers!' : 'Review the concepts and try again.'}
-          </p>
-          <button
-            onPointerDown={() => {
-              if (passed) {
-                playSound('complete');
-                nextPhase();
-              } else {
-                playSound('click');
-                setTestAnswers([]);
-              }
-            }}
-            className={`px-8 py-4 rounded-xl font-bold text-lg ${
-              passed
-                ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
-                : 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white'
-            }`}
-          >
-            {passed ? 'Complete Lesson →' : 'Try Again'}
-          </button>
-        </div>
-      );
-    }
-
-    const question = TEST_QUESTIONS[currentQuestion];
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'Output voltage is halved' },
+      { id: 'b', text: 'Output voltage stays the same' },
+      { id: 'c', text: 'Output voltage doubles', correct: true },
+    ];
 
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-white text-center">Knowledge Check</h2>
-        <div className="flex justify-center gap-2 mb-4">
-          {TEST_QUESTIONS.map((_, i) => (
-            <div
-              key={i}
-              className={`w-3 h-3 rounded-full ${
-                i < currentQuestion
-                  ? TEST_QUESTIONS[i].options[testAnswers[i]]?.correct
-                    ? 'bg-green-500'
-                    : 'bg-red-500'
-                  : i === currentQuestion
-                    ? 'bg-yellow-500'
-                    : 'bg-gray-600'
-              }`}
-            />
-          ))}
-        </div>
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-        <div className="bg-gray-800 rounded-xl p-6">
-          <p className="text-white text-lg mb-6">{question.question}</p>
-          <div className="space-y-3">
-            {question.options.map((option, i) => (
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              Make Your Prediction
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A transformer has two coils wound around an iron core. If the secondary coil has TWICE as many turns as the primary, what happens to the output voltage?
+          </h2>
+
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', color: '#f87171' }}>Primary</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>100 turns</p>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>--&gt;</div>
+              <div style={{
+                background: '#374151',
+                padding: '20px 30px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.border}`,
+              }}>
+                <div style={{ fontSize: '24px', color: colors.textMuted }}>Iron Core</div>
+              </div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>--&gt;</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', color: '#4ade80' }}>Secondary</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>200 turns</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
               <button
-                key={i}
-                onPointerDown={() => {
-                  playSound(option.correct ? 'success' : 'failure');
-                  setTestAnswers([...testAnswers, i]);
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
                 }}
-                className="w-full p-4 bg-gray-700 text-gray-300 rounded-lg text-left hover:bg-gray-600 transition-all"
               >
-                {option.text}
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
               </button>
             ))}
           </div>
+
+          {prediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Test My Prediction
+            </button>
+          )}
         </div>
+
+        {renderNavDots()}
       </div>
     );
-  };
+  }
 
-  const renderMastery = () => (
-    <div className="text-center space-y-6">
-      <div className="text-6xl mb-4">🏆</div>
-      <h2 className="text-3xl font-bold text-white">Transformer Master!</h2>
-      <div className="bg-gray-800 rounded-xl p-6 max-w-md mx-auto">
-        <p className="text-gray-300 mb-4">You&apos;ve mastered:</p>
-        <ul className="text-left text-gray-300 space-y-2">
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> Voltage ratio = turns ratio
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> Transformers need AC (changing flux)
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> Power conservation: V×I = constant
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> Why high voltage reduces transmission losses
-          </li>
-        </ul>
-      </div>
-      <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600 max-w-md mx-auto">
-        <p className="text-yellow-300">
-          ⚡ Key Insight: Transformers make our power grid possible—step up for efficient transmission, step down for safe use!
-        </p>
-      </div>
-      <button
-        onPointerDown={() => {
-          playSound('complete');
-          if (onPhaseComplete) onPhaseComplete();
-        }}
-        className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
-      >
-        🎓 Claim Your Badge
-      </button>
-    </div>
-  );
+  // PLAY PHASE
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-  // ─── Main Render ─────────────────────────────────────────────────────────────
-  const renderPhase = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return null;
-    }
-  };
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Transformer Simulator
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Adjust the turns on each coil to see how voltage transforms.
+          </p>
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Transformers</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p, i) => (
-              <button
-                key={p}
-                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-yellow-400 w-6 shadow-lg shadow-yellow-400/30'
-                    : PHASES.indexOf(phase) > i
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <TransformerVisualization
+                pTurns={primaryTurns}
+                sTurns={secondaryTurns}
+                vIn={inputVoltage}
+                ac={isAC}
+                animPhase={acPhase}
               />
+            </div>
+
+            {/* Primary turns slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: '#f87171' }}>Primary Turns</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{primaryTurns}</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                step="10"
+                value={primaryTurns}
+                onChange={(e) => setPrimaryTurns(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Secondary turns slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: '#4ade80' }}>Secondary Turns</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{secondaryTurns}</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="400"
+                step="10"
+                value={secondaryTurns}
+                onChange={(e) => setSecondaryTurns(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Input voltage slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Input Voltage</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{inputVoltage}V</span>
+              </div>
+              <input
+                type="range"
+                min="12"
+                max="240"
+                step="12"
+                value={inputVoltage}
+                onChange={(e) => setInputVoltage(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Stats display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{turnsRatio.toFixed(2)}:1</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Turns Ratio</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>{outputVoltage.toFixed(0)}V</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Output Voltage</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: turnsRatio > 1 ? '#4ade80' : '#fb923c' }}>{transformerType}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Type</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Discovery prompt */}
+          {turnsRatio > 1.5 && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                More secondary turns = higher output voltage! This is a step-up transformer.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Transformers
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ ...typo.body, color: colors.textSecondary }}>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>Faraday's Law of Electromagnetic Induction</strong>
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                AC current in the primary coil creates a <span style={{ color: '#60a5fa' }}>changing magnetic field</span> in the iron core. This changing flux passes through the secondary coil and induces a voltage!
+              </p>
+              <p style={{ marginBottom: '16px' }}>
+                <strong style={{ color: colors.textPrimary }}>The Transformer Equation:</strong>
+              </p>
+              <div style={{
+                background: colors.bgSecondary,
+                padding: '16px',
+                borderRadius: '8px',
+                textAlign: 'center',
+                fontFamily: 'monospace',
+                fontSize: '18px',
+                color: colors.accent,
+              }}>
+                V2 / V1 = N2 / N1
+              </div>
+              <p style={{ marginTop: '16px', ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
+                Output voltage / Input voltage = Secondary turns / Primary turns
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              Key Insight: Power Conservation
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              Power in = Power out (ideal transformer). If voltage goes UP, current goes DOWN:
+            </p>
+            <div style={{
+              background: colors.bgSecondary,
+              padding: '12px',
+              borderRadius: '8px',
+              marginTop: '12px',
+              textAlign: 'center',
+              fontFamily: 'monospace',
+              color: colors.textPrimary,
+            }}>
+              V1 x I1 = V2 x I2
+            </div>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
+              You cannot create free energy - just trade voltage for current!
+            </p>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '16px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <h4 style={{ color: colors.success, marginBottom: '8px' }}>Step-Up</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                More secondary turns = Higher voltage, lower current. Used for power transmission.
+              </p>
+            </div>
+            <div style={{
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
+              borderRadius: '12px',
+              padding: '16px',
+            }}>
+              <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Step-Down</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary }}>
+                Fewer secondary turns = Lower voltage, higher current. Used for chargers, doorbells.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            But What About DC?
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'The transformer works normally with DC' },
+      { id: 'b', text: 'The output voltage is doubled' },
+      { id: 'c', text: 'No output voltage - DC creates a static field with no induction', correct: true },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              New Variable: AC vs DC
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            What happens if you connect a battery (DC) to the primary coil of a transformer?
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary }}>
+              DC = Direct Current (constant, like a battery)
+              <br />
+              AC = Alternating Current (oscillating, like wall outlet)
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
             ))}
           </div>
-          <span className="text-sm font-medium text-yellow-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto">{renderPhase()}</div>
-    </div>
-  );
-}
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See What Happens
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            AC vs DC: The Critical Difference
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Toggle between AC and DC to see why transformers need AC
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <TransformerVisualization
+                pTurns={100}
+                sTurns={200}
+                vIn={120}
+                ac={twistMode === 'ac'}
+                animPhase={acPhase}
+              />
+            </div>
+
+            {/* AC/DC Toggle */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+              <button
+                onClick={() => { playSound('click'); setTwistMode('ac'); }}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: twistMode === 'ac' ? colors.success : colors.bgSecondary,
+                  color: twistMode === 'ac' ? 'white' : colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                AC Input ~
+              </button>
+              <button
+                onClick={() => { playSound('click'); setTwistMode('dc'); }}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: twistMode === 'dc' ? colors.error : colors.bgSecondary,
+                  color: twistMode === 'dc' ? 'white' : colors.textSecondary,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                DC Input =
+              </button>
+            </div>
+
+            {/* Explanation */}
+            <div style={{
+              background: twistMode === 'ac' ? `${colors.success}22` : `${colors.error}22`,
+              border: `1px solid ${twistMode === 'ac' ? colors.success : colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              {twistMode === 'ac' ? (
+                <div style={{ color: colors.success }}>
+                  <p style={{ fontWeight: 700, marginBottom: '8px' }}>AC: Constantly changing current = changing magnetic flux = induced EMF!</p>
+                  <p style={{ ...typo.small }}>Output: 240V AC (step-up working perfectly)</p>
+                </div>
+              ) : (
+                <div style={{ color: colors.error }}>
+                  <p style={{ fontWeight: 700, marginBottom: '8px' }}>DC: Constant current = STATIC magnetic flux = NO induction!</p>
+                  <p style={{ ...typo.small }}>Output: 0V (nothing happens after the initial moment)</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Why This Matters
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Why AC Won the War of Currents
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚡</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Tesla vs Edison (1880s)</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Edison promoted DC while Tesla/Westinghouse championed AC. <span style={{ color: colors.accent }}>AC won because transformers work!</span> You can step voltage up for efficient transmission, then down for safe use.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>P</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Power Loss = I^2 x R</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                If you step up voltage 1000x, current drops 1000x, and power loss drops by <span style={{ color: colors.success }}>1,000,000x</span>! This is why high-voltage transmission is so efficient.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>Grid</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>The Modern Power Grid</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Power plants generate at ~22kV, step up to 400kV for transmission, then step down through substations (11kV) and pole transformers (240V) to your home. Only ~5% of power is lost over thousands of miles!
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    OK
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How Transformers Connect:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? 'Trophy' : 'Book'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You understand transformers and electromagnetic induction!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          Trophy
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Transformer Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand electromagnetic induction and how transformers make our power grid possible.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Voltage ratio = turns ratio (V2/V1 = N2/N1)',
+              'Transformers require AC (changing flux)',
+              'Power is conserved: V1 x I1 = V2 x I2',
+              'High voltage transmission reduces losses',
+              'Step-up vs step-down applications',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>OK</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default TransformerRenderer;
