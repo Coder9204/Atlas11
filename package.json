@@ -10,7 +10,12 @@
     "firebase:deploy": "firebase deploy",
     "firebase:emulators": "firebase emulators:start",
     "generate-sitemap": "node scripts/generate-sitemap.js",
-    "prebuild": "node scripts/generate-sitemap.js"
+    "prebuild": "node scripts/generate-sitemap.js",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:game": "vitest run --testPathPattern"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",
@@ -25,15 +30,22 @@
     "three": "^0.182.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/mathjs": "^9.4.1",
     "@types/node": "^22.14.0",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^5.0.0",
+    "@vitest/ui": "^4.0.18",
     "autoprefixer": "^10.4.24",
+    "happy-dom": "^20.5.0",
+    "jsdom": "^28.0.0",
     "postcss": "^8.5.6",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vitest": "^4.0.18"
   },
   "browserslist": [
     "> 0.5%",
