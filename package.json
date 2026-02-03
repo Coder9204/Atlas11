@@ -15,7 +15,9 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:game": "vitest run --testPathPattern"
+    "test:game": "vitest run tests/games/",
+    "test:all-games": "vitest run tests/games/",
+    "generate:test": "./scripts/generate-game-test.sh"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",
