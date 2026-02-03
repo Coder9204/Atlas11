@@ -1,153 +1,304 @@
-import React, { useState, useCallback, useEffect } from 'react';
+'use client';
 
-const realWorldApps = [
-  {
-    icon: '🌐',
-    title: 'Fiber Optic Communications',
-    short: 'Light signals travel through glass cables using total internal reflection',
-    tagline: 'The backbone of the internet',
-    description: 'Fiber optic cables carry 99% of intercontinental data traffic. Light bounces along glass cores thinner than a hair, using total internal reflection to travel thousands of kilometers with minimal loss.',
-    connection: 'Snell\'s Law determines the critical angle for total internal reflection. When light hits the fiber cladding at angles greater than the critical angle, it reflects completely back into the core instead of refracting out.',
-    howItWorks: 'The fiber core has higher refractive index (n≈1.48) than the cladding (n≈1.46). Light entering at shallow angles hits the boundary beyond the critical angle (~82°), reflecting totally. Signals can travel 100km before needing amplification.',
-    stats: [
-      { value: '99%', label: 'Of intercontinental data via fiber', icon: '📡' },
-      { value: '500M km', label: 'Fiber installed globally', icon: '🌍' },
-      { value: '100 Tbps', label: 'Single fiber capacity', icon: '⚡' }
-    ],
-    examples: ['Submarine internet cables', 'Data center interconnects', 'FTTH broadband', 'Medical endoscopes'],
-    companies: ['Corning', 'Prysmian', 'Furukawa', 'CommScope'],
-    futureImpact: 'New hollow-core fibers and space-division multiplexing could increase capacity 100x, enabling real-time global computing and holographic communication.',
-    color: '#3B82F6'
-  },
-  {
-    icon: '💎',
-    title: 'Diamond Cutting & Gemology',
-    short: 'Precise facet angles maximize sparkle through internal reflections',
-    tagline: 'Science meets brilliance',
-    description: 'Diamond\'s exceptional sparkle comes from its high refractive index (n=2.42) and careful cutting. Master cutters calculate exact angles so light entering the top bounces inside and exits back through the crown.',
-    connection: 'Snell\'s Law and total internal reflection determine the critical angle for diamonds (~24.4°). Facets are cut so light reflects multiple times internally before exiting the top, creating fire and brilliance.',
-    howItWorks: 'Light enters the table, refracts into the diamond, then hits pavilion facets at angles exceeding the critical angle. The light reflects, bounces to the other side, reflects again, and exits the crown, splitting into spectral colors.',
-    stats: [
-      { value: '24.4°', label: 'Diamond critical angle', icon: '💎' },
-      { value: '$80B', label: 'Annual diamond market', icon: '💰' },
-      { value: '57', label: 'Facets in ideal cut', icon: '🔷' }
-    ],
-    examples: ['Engagement rings', 'Precision optics', 'Industrial cutting tools', 'Laser windows'],
-    companies: ['De Beers', 'Tiffany & Co', 'GIA', 'Swarovski'],
-    futureImpact: 'AI-optimized cutting algorithms and lab-grown diamonds are making perfect optical properties more accessible while expanding industrial applications.',
-    color: '#8B5CF6'
-  },
-  {
-    icon: '👓',
-    title: 'Corrective Lenses',
-    short: 'Eyeglasses and contacts bend light to focus on the retina',
-    tagline: 'Bending light for better vision',
-    description: 'Over 4 billion people wear corrective lenses. Glasses and contacts use precisely curved surfaces to refract light, compensating for eyes that focus images in front of or behind the retina.',
-    connection: 'Snell\'s Law governs how light bends at each lens surface. Lens designers calculate the exact curvatures needed to add or subtract focusing power, redirecting light rays to converge on the retina.',
-    howItWorks: 'Myopia (nearsightedness) needs diverging lenses to spread light before it enters the eye. Hyperopia (farsightedness) needs converging lenses. Astigmatism requires cylindrical corrections. Modern lenses combine multiple corrections.',
-    stats: [
-      { value: '4B+', label: 'People need vision correction', icon: '👁️' },
-      { value: '$150B', label: 'Global eyewear market', icon: '📈' },
-      { value: '700+', label: 'Years of lens making', icon: '🏛️' }
-    ],
-    examples: ['Prescription glasses', 'Contact lenses', 'Intraocular implants', 'VR/AR headsets'],
-    companies: ['EssilorLuxottica', 'Zeiss', 'Johnson & Johnson Vision', 'CooperVision'],
-    futureImpact: 'Smart lenses with adjustable focus, AR overlays, and drug-delivering contacts are transforming vision correction into vision enhancement.',
-    color: '#10B981'
-  },
-  {
-    icon: '📸',
-    title: 'Camera & Microscope Optics',
-    short: 'Compound lens systems create sharp images at any scale',
-    tagline: 'From galaxies to molecules',
-    description: 'Modern optical systems use multiple precisely shaped lenses to capture images from microscopic cells to distant galaxies. Each lens element is designed using Snell\'s Law to correct aberrations and focus light perfectly.',
-    connection: 'Snell\'s Law determines how light bends at each glass-air interface. Multi-element lens designs use different glass types (different n values) to cancel chromatic aberration and achieve sharp focus across the entire image.',
-    howItWorks: 'Camera lenses combine 10-20 elements with different refractive indices. Crown glass (lower n) and flint glass (higher n) pairs cancel chromatic aberration. Aspherical elements correct geometric distortions, all calculated from Snell\'s Law.',
-    stats: [
-      { value: '1.4B', label: 'Cameras shipped yearly', icon: '📷' },
-      { value: '0.1 nm', label: 'Electron microscope resolution', icon: '🔬' },
-      { value: '$45B', label: 'Optical lens market', icon: '💹' }
-    ],
-    examples: ['Smartphone cameras', 'Professional DSLRs', 'Electron microscopes', 'Space telescopes'],
-    companies: ['Canon', 'Sony', 'Nikon', 'Zeiss'],
-    futureImpact: 'Metalenses using nanostructures could replace bulky multi-element designs, enabling paper-thin cameras with perfect optics in every device.',
-    color: '#F59E0B'
-  }
-];
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// ============================================================================
+// SNELL'S LAW - Premium Apple/Airbnb Design System
+// ============================================================================
+
+type GameEventType =
+  | 'phase_change'
+  | 'prediction_made'
+  | 'simulation_started'
+  | 'parameter_changed'
+  | 'twist_prediction_made'
+  | 'app_explored'
+  | 'test_answered'
+  | 'test_completed'
+  | 'mastery_achieved';
+
+interface GameEvent {
+  type: GameEventType;
+  data?: Record<string, unknown>;
+}
+
+// Phase type for the game
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Compare Media',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
 
 interface SnellsLawRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  width?: number;
+  height?: number;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
 }
 
 // ============================================================================
-// SNELL'S LAW - Premium Design System (Apple/Airbnb Quality)
+// PREMIUM DESIGN TOKENS
 // ============================================================================
-
-const colors = {
-  // Backgrounds
-  bgDeep: '#030712',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  bgElevated: '#1e293b',
-  bgHover: '#334155',
-
-  // Text
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  textTertiary: '#64748b',
-
-  // Brand
-  accent: '#8b5cf6',
-  accentGlow: 'rgba(139, 92, 246, 0.4)',
-  primary: '#3b82f6',
-
-  // Semantic
-  success: '#10b981',
-  successLight: '#34d399',
-  warning: '#f59e0b',
-  warningLight: '#fbbf24',
-  error: '#ef4444',
-
-  // Physics-specific
-  beam: '#fbbf24',
-  beamLight: '#fcd34d',
-  beamDark: '#d97706',
-  water: '#60a5fa',
-  waterLight: '#93c5fd',
-  waterDark: '#2563eb',
-  oil: '#84cc16',
-  oilLight: '#a3e635',
-  oilDark: '#65a30d',
-  glass: '#94a3b8',
-  glassLight: '#cbd5e1',
-  glassDark: '#64748b',
-  air: '#e0f2fe',
+const design = {
+  colors: {
+    bgDeep: '#030712',
+    bgPrimary: '#0f172a',
+    bgSecondary: '#1e293b',
+    bgTertiary: '#334155',
+    bgCard: 'rgba(30, 41, 59, 0.9)',
+    bgElevated: '#1e293b',
+    bgHover: '#334155',
+    textPrimary: '#f8fafc',
+    textSecondary: '#e2e8f0',
+    textMuted: '#94a3b8',
+    textDisabled: '#64748b',
+    accentPrimary: '#8b5cf6',
+    accentSecondary: '#a78bfa',
+    accentMuted: '#4c1d95',
+    accentGlow: 'rgba(139, 92, 246, 0.4)',
+    cyan: '#06b6d4',
+    cyanMuted: 'rgba(6, 182, 212, 0.2)',
+    success: '#10b981',
+    successMuted: 'rgba(16, 185, 129, 0.15)',
+    error: '#ef4444',
+    errorMuted: 'rgba(239, 68, 68, 0.15)',
+    warning: '#f59e0b',
+    warningLight: '#fbbf24',
+    border: '#334155',
+    borderLight: '#475569',
+    borderFocus: '#8b5cf6',
+    beam: '#fbbf24',
+    beamLight: '#fcd34d',
+    beamDark: '#d97706',
+    water: '#60a5fa',
+    waterLight: '#93c5fd',
+    waterDark: '#2563eb',
+    oil: '#84cc16',
+    oilLight: '#a3e635',
+    oilDark: '#65a30d',
+    glass: '#94a3b8',
+    glassLight: '#cbd5e1',
+    glassDark: '#64748b',
+    air: '#e0f2fe',
+  },
+  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 },
+  radius: { sm: 8, md: 12, lg: 16, xl: 20, full: 9999 },
+  font: {
+    sans: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+    mono: '"SF Mono", "Fira Code", monospace'
+  },
+  shadow: {
+    sm: '0 2px 8px rgba(0,0,0,0.3)',
+    md: '0 8px 24px rgba(0,0,0,0.4)',
+    lg: '0 16px 48px rgba(0,0,0,0.5)',
+    glow: (color: string) => `0 0 32px ${color}40`
+  }
 };
 
-const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
-}) => {
-  // Simulation state
-  const [incidentAngle, setIncidentAngle] = useState(45);
-  const [medium, setMedium] = useState<'water' | 'oil' | 'glass'>('water');
-  const [showMeasurements, setShowMeasurements] = useState(false);
+// Real-world applications with detailed information
+const realWorldApps = [
+  {
+    id: 'fiber',
+    icon: '🌐',
+    title: 'Fiber Optic Communications',
+    subtitle: 'The backbone of the internet',
+    description: 'Fiber optic cables carry 99% of intercontinental data traffic. Light bounces along glass cores thinner than a hair, using total internal reflection to travel thousands of kilometers with minimal loss.',
+    connection: 'Snell\'s Law determines the critical angle for total internal reflection. When light hits the fiber cladding at angles greater than the critical angle, it reflects completely back into the core instead of refracting out.',
+    howItWorks: 'The fiber core has higher refractive index (n=1.48) than the cladding (n=1.46). Light entering at shallow angles hits the boundary beyond the critical angle (~82 degrees), reflecting totally. Signals can travel 100km before needing amplification.',
+    examples: ['Submarine internet cables', 'Data center interconnects', 'FTTH broadband', 'Medical endoscopes'],
+    stat: '99% of global data',
+    companies: ['Corning', 'Prysmian', 'Furukawa', 'CommScope'],
+    futureImpact: 'New hollow-core fibers and space-division multiplexing could increase capacity 100x, enabling real-time global computing.',
+    color: design.colors.cyan
+  },
+  {
+    id: 'diamonds',
+    icon: '💎',
+    title: 'Diamond Cutting & Gemology',
+    subtitle: 'Science meets brilliance',
+    description: 'Diamond\'s exceptional sparkle comes from its high refractive index (n=2.42) and careful cutting. Master cutters calculate exact angles so light entering the top bounces inside and exits back through the crown.',
+    connection: 'Snell\'s Law and total internal reflection determine the critical angle for diamonds (~24.4 degrees). Facets are cut so light reflects multiple times internally before exiting the top, creating fire and brilliance.',
+    howItWorks: 'Light enters the table, refracts into the diamond, then hits pavilion facets at angles exceeding the critical angle. The light reflects, bounces to the other side, reflects again, and exits the crown, splitting into spectral colors.',
+    examples: ['Engagement rings', 'Precision optics', 'Industrial cutting tools', 'Laser windows'],
+    stat: '24.4 degree critical angle',
+    companies: ['De Beers', 'Tiffany & Co', 'GIA', 'Swarovski'],
+    futureImpact: 'AI-optimized cutting algorithms and lab-grown diamonds are making perfect optical properties more accessible.',
+    color: design.colors.accentPrimary
+  },
+  {
+    id: 'lenses',
+    icon: '👓',
+    title: 'Corrective Lenses',
+    subtitle: 'Bending light for better vision',
+    description: 'Over 4 billion people wear corrective lenses. Glasses and contacts use precisely curved surfaces to refract light, compensating for eyes that focus images in front of or behind the retina.',
+    connection: 'Snell\'s Law governs how light bends at each lens surface. Lens designers calculate the exact curvatures needed to add or subtract focusing power, redirecting light rays to converge on the retina.',
+    howItWorks: 'Myopia needs diverging lenses to spread light before it enters the eye. Hyperopia needs converging lenses. Astigmatism requires cylindrical corrections. Modern lenses combine multiple corrections using Snell\'s Law.',
+    examples: ['Prescription glasses', 'Contact lenses', 'Intraocular implants', 'VR/AR headsets'],
+    stat: '4B+ people worldwide',
+    companies: ['EssilorLuxottica', 'Zeiss', 'Johnson & Johnson Vision', 'CooperVision'],
+    futureImpact: 'Smart lenses with adjustable focus, AR overlays, and drug-delivering contacts are transforming vision correction.',
+    color: design.colors.success
+  },
+  {
+    id: 'cameras',
+    icon: '📸',
+    title: 'Camera & Microscope Optics',
+    subtitle: 'From galaxies to molecules',
+    description: 'Modern optical systems use multiple precisely shaped lenses to capture images from microscopic cells to distant galaxies. Each lens element is designed using Snell\'s Law to correct aberrations and focus light perfectly.',
+    connection: 'Snell\'s Law determines how light bends at each glass-air interface. Multi-element lens designs use different glass types (different n values) to cancel chromatic aberration and achieve sharp focus.',
+    howItWorks: 'Camera lenses combine 10-20 elements with different refractive indices. Crown glass (lower n) and flint glass (higher n) pairs cancel chromatic aberration. Aspherical elements correct distortions, all calculated from Snell\'s Law.',
+    examples: ['Smartphone cameras', 'Professional DSLRs', 'Electron microscopes', 'Space telescopes'],
+    stat: '1.4B cameras/year',
+    companies: ['Canon', 'Sony', 'Nikon', 'Zeiss'],
+    futureImpact: 'Metalenses using nanostructures could replace bulky multi-element designs, enabling paper-thin cameras with perfect optics.',
+    color: design.colors.warning
+  }
+];
 
-  // Phase-specific state
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
-  const [testSubmitted, setTestSubmitted] = useState(false);
-  const [testScore, setTestScore] = useState(0);
+// Test questions with scenarios and A-D format
+const testQuestions = [
+  {
+    scenario: 'A laser beam travels from air into water at a 45-degree angle from the normal.',
+    question: 'According to Snell\'s Law (n1 sin theta1 = n2 sin theta2), what happens to the light?',
+    options: [
+      { label: 'A', text: 'It bends toward the normal because water has a higher refractive index', correct: true },
+      { label: 'B', text: 'It bends away from the normal', correct: false },
+      { label: 'C', text: 'It continues in a straight line', correct: false },
+      { label: 'D', text: 'It reflects back into the air', correct: false }
+    ],
+    explanation: 'When light enters a denser medium (higher n), Snell\'s Law shows sin(theta2) = (n1/n2)sin(theta1). Since n2 > n1, theta2 < theta1, meaning the ray bends toward the normal.'
+  },
+  {
+    scenario: 'A diver underwater looks up at a fish floating on the surface.',
+    question: 'Why does the fish appear to be in a different position than it actually is?',
+    options: [
+      { label: 'A', text: 'Water magnifies objects', correct: false },
+      { label: 'B', text: 'Light refracts as it crosses the water-air interface, changing direction', correct: true },
+      { label: 'C', text: 'The diver\'s mask distorts the image', correct: false },
+      { label: 'D', text: 'Water absorbs certain wavelengths', correct: false }
+    ],
+    explanation: 'Snell\'s Law explains that light bends when crossing the water-air boundary. This refraction makes objects appear displaced from their actual positions.'
+  },
+  {
+    scenario: 'An optician is designing a lens with refractive index n=1.5 to focus light.',
+    question: 'If light enters the lens perpendicular to the surface (theta1 = 0 degrees), what is the refracted angle?',
+    options: [
+      { label: 'A', text: 'Maximum bending occurs at perpendicular incidence', correct: false },
+      { label: 'B', text: 'The light bends at 45 degrees', correct: false },
+      { label: 'C', text: 'No bending occurs - the light continues straight (theta2 = 0)', correct: true },
+      { label: 'D', text: 'Total internal reflection occurs', correct: false }
+    ],
+    explanation: 'When theta1 = 0, sin(0) = 0, so n1(0) = n2 sin(theta2) means sin(theta2) = 0, thus theta2 = 0. Perpendicular light passes straight through.'
+  },
+  {
+    scenario: 'A fiber optic cable uses glass with n=1.52 surrounded by cladding with n=1.48.',
+    question: 'What physical principle allows light to travel through the fiber without escaping?',
+    options: [
+      { label: 'A', text: 'Light absorption by the cladding', correct: false },
+      { label: 'B', text: 'Total internal reflection when light exceeds the critical angle', correct: true },
+      { label: 'C', text: 'Diffraction around the fiber core', correct: false },
+      { label: 'D', text: 'Interference patterns in the glass', correct: false }
+    ],
+    explanation: 'Snell\'s Law predicts a critical angle where sin(theta_c) = n2/n1. Beyond this angle, light reflects completely (total internal reflection) instead of refracting out.'
+  },
+  {
+    scenario: 'A jeweler is examining why a diamond sparkles more than glass.',
+    question: 'Diamond has n=2.42 while glass has n=1.5. How does this affect their critical angles?',
+    options: [
+      { label: 'A', text: 'Diamond has a larger critical angle, so less light is trapped', correct: false },
+      { label: 'B', text: 'Diamond has a smaller critical angle (~24 deg vs ~42 deg), trapping more light inside', correct: true },
+      { label: 'C', text: 'Both have the same critical angle', correct: false },
+      { label: 'D', text: 'Critical angle doesn\'t depend on refractive index', correct: false }
+    ],
+    explanation: 'Critical angle = arcsin(1/n). Higher n means smaller critical angle. Diamond\'s small critical angle (24.4 deg) means light is more easily trapped by total internal reflection.'
+  },
+  {
+    scenario: 'Light travels from air (n=1.00) into glass (n=1.52) at 30 degrees from normal.',
+    question: 'Using Snell\'s Law, what is sin(theta2)?',
+    options: [
+      { label: 'A', text: 'sin(30 deg) x 1.52 = 0.76', correct: false },
+      { label: 'B', text: 'sin(30 deg) / 1.52 = 0.33', correct: true },
+      { label: 'C', text: 'sin(30 deg) + 1.52 = 2.02', correct: false },
+      { label: 'D', text: '1.52 / sin(30 deg) = 3.04', correct: false }
+    ],
+    explanation: 'Snell\'s Law: n1 sin(theta1) = n2 sin(theta2). So sin(theta2) = (n1/n2) sin(theta1) = (1.00/1.52) x 0.5 = 0.33, giving theta2 approximately 19 degrees.'
+  },
+  {
+    scenario: 'A photographer notices chromatic aberration (rainbow edges) in their lens.',
+    question: 'Why does this happen according to Snell\'s Law?',
+    options: [
+      { label: 'A', text: 'All colors have the same refractive index', correct: false },
+      { label: 'B', text: 'Different wavelengths have slightly different refractive indices, causing different bending angles', correct: true },
+      { label: 'C', text: 'The lens is scratched', correct: false },
+      { label: 'D', text: 'Light intensity is too high', correct: false }
+    ],
+    explanation: 'Refractive index varies with wavelength (dispersion). Blue light (shorter wavelength) refracts more than red, so Snell\'s Law gives different angles for each color, causing chromatic aberration.'
+  },
+  {
+    scenario: 'A scientist compares light bending in water (n=1.33) versus vegetable oil (n=1.47).',
+    question: 'For the same incident angle from air, which medium bends light more toward the normal?',
+    options: [
+      { label: 'A', text: 'Water bends light more because it\'s denser', correct: false },
+      { label: 'B', text: 'Oil bends light more because higher n means smaller refracted angle', correct: true },
+      { label: 'C', text: 'Both bend light equally', correct: false },
+      { label: 'D', text: 'Neither bends light - they only absorb it', correct: false }
+    ],
+    explanation: 'From Snell\'s Law: sin(theta2) = (n1/n2) sin(theta1). Higher n2 means smaller sin(theta2), thus smaller theta2 - more bending toward normal. Oil (n=1.47) bends more than water (n=1.33).'
+  },
+  {
+    scenario: 'An engineer designs an underwater camera housing with a flat glass window.',
+    question: 'Why do underwater objects appear closer than they actually are?',
+    options: [
+      { label: 'A', text: 'Water pressure compresses the image', correct: false },
+      { label: 'B', text: 'Refraction at the water-glass-air interfaces changes the apparent position', correct: true },
+      { label: 'C', text: 'Underwater lighting is brighter', correct: false },
+      { label: 'D', text: 'The glass window acts as a magnifying lens', correct: false }
+    ],
+    explanation: 'Snell\'s Law causes light to bend at each interface. The net effect of water-glass-air refraction makes underwater objects appear about 25% closer than their actual distance.'
+  },
+  {
+    scenario: 'A student wonders why the "normal" line is important in Snell\'s Law.',
+    question: 'What is the "normal" and why do we measure angles from it?',
+    options: [
+      { label: 'A', text: 'The normal is parallel to the surface; angles measured from it are simpler', correct: false },
+      { label: 'B', text: 'The normal is perpendicular to the surface; it provides a consistent reference for measuring angles', correct: true },
+      { label: 'C', text: 'The normal is the average of incident and refracted rays', correct: false },
+      { label: 'D', text: 'The normal is the light beam itself', correct: false }
+    ],
+    explanation: 'The normal is a line perpendicular to the surface at the point of incidence. Measuring angles from the normal (not the surface) gives consistent, unambiguous values for Snell\'s Law calculations.'
+  }
+];
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, gamePhase }) => {
+  // Phase state
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  });
+
+  // Sync phase with gamePhase prop
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase, phase]);
+
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -158,7 +309,7 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography system
+  // Responsive typography
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -166,13 +317,23 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
     body: isMobile ? '14px' : '16px',
     small: isMobile ? '12px' : '14px',
     label: isMobile ? '10px' : '12px',
-    svgLabel: isMobile ? '11px' : '13px',
-    svgValue: isMobile ? '12px' : '14px',
     pagePadding: isMobile ? '16px' : '24px',
     cardPadding: isMobile ? '12px' : '16px',
     sectionGap: isMobile ? '16px' : '20px',
     elementGap: isMobile ? '8px' : '12px',
   };
+
+  // Game state
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [incidentAngle, setIncidentAngle] = useState(45);
+  const [medium, setMedium] = useState<'water' | 'oil' | 'glass'>('water');
+  const [showMeasurements, setShowMeasurements] = useState(false);
+  const [activeApp, setActiveApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [testIndex, setTestIndex] = useState(0);
+  const [answers, setAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [showResult, setShowResult] = useState(false);
 
   const refractiveIndices: Record<string, number> = {
     air: 1.00,
@@ -181,140 +342,6 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
     glass: 1.52,
   };
 
-  const predictions = [
-    { id: 'more', label: 'Steeper entry angle = MORE bending' },
-    { id: 'less', label: 'Steeper entry angle = LESS bending' },
-    { id: 'same', label: 'Entry angle doesn\'t affect bending amount' },
-    { id: 'reverse', label: 'Steep angles bend one way, shallow angles the other' },
-  ];
-
-  const twistPredictions = [
-    { id: 'same', label: 'Oil bends light the same as water' },
-    { id: 'more', label: 'Oil bends light MORE than water' },
-    { id: 'less', label: 'Oil bends light LESS than water' },
-    { id: 'opposite', label: 'Oil bends light in the opposite direction' },
-  ];
-
-  const transferApplications = [
-    {
-      title: 'Optical Fibers',
-      description: 'Light stays trapped inside glass fibers by total internal reflection, bouncing thousands of times per meter.',
-      question: 'Why doesn\'t light escape from optical fibers at bends?',
-      answer: 'As long as the bend isn\'t too sharp, light hits the fiber walls at angles beyond the critical angle, causing total internal reflection.',
-    },
-    {
-      title: 'Mirages',
-      description: 'Hot air near the ground has lower density and lower refractive index. Light gradually bends upward, creating the illusion of water.',
-      question: 'Why do mirages look like water on hot roads?',
-      answer: 'Light from the sky curves upward near the hot surface due to the refractive index gradient. Your brain interprets this as reflection from water.',
-    },
-    {
-      title: 'Gemstone Cutting',
-      description: 'Diamond cutters angle facets to maximize internal reflections, creating the characteristic sparkle.',
-      question: 'Why are diamonds cut with specific angles?',
-      answer: 'Diamond\'s high refractive index (2.42) means a small critical angle (~24°). Proper facet angles ensure light bounces inside before exiting the top.',
-    },
-    {
-      title: 'Underwater Photography',
-      description: 'Camera housings must account for refraction at the water-glass-air interfaces to focus correctly.',
-      question: 'Why do underwater cameras need special lenses?',
-      answer: 'Refraction at the dome port changes the apparent distance to subjects. Dome ports minimize this by keeping light perpendicular to the curved surface.',
-    },
-  ];
-
-  const testQuestions = [
-    {
-      question: 'Snell\'s Law states that n₁sin(θ₁) equals:',
-      options: [
-        { text: 'n₂sin(θ₂)', correct: true },
-        { text: 'n₂cos(θ₂)', correct: false },
-        { text: 'n₂/sin(θ₂)', correct: false },
-        { text: 'n₁ + n₂', correct: false },
-      ],
-    },
-    {
-      question: 'When light enters a denser medium (higher n), it bends:',
-      options: [
-        { text: 'Away from the normal', correct: false },
-        { text: 'Toward the normal', correct: true },
-        { text: 'Parallel to the surface', correct: false },
-        { text: 'It doesn\'t bend', correct: false },
-      ],
-    },
-    {
-      question: 'If light enters perpendicular to a surface (θ₁ = 0°), what happens?',
-      options: [
-        { text: 'Maximum bending occurs', correct: false },
-        { text: 'No bending occurs (θ₂ = 0° too)', correct: true },
-        { text: 'Total internal reflection', correct: false },
-        { text: 'Light is absorbed', correct: false },
-      ],
-    },
-    {
-      question: 'The "normal" in Snell\'s Law refers to:',
-      options: [
-        { text: 'A line parallel to the surface', correct: false },
-        { text: 'A line perpendicular to the surface at the point of incidence', correct: true },
-        { text: 'The average of both rays', correct: false },
-        { text: 'The light beam itself', correct: false },
-      ],
-    },
-    {
-      question: 'If n₁ = 1.0 (air) and n₂ = 1.5, and θ₁ = 30°, then sin(θ₂) equals:',
-      options: [
-        { text: 'sin(30°) × 1.5 = 0.75', correct: false },
-        { text: 'sin(30°) / 1.5 = 0.33', correct: true },
-        { text: 'sin(30°) + 1.5 = 2.0', correct: false },
-        { text: '1.5 / sin(30°) = 3.0', correct: false },
-      ],
-    },
-    {
-      question: 'Why does the ratio sin(θ₁)/sin(θ₂) stay constant for a given pair of materials?',
-      options: [
-        { text: 'It\'s a coincidence', correct: false },
-        { text: 'The ratio equals n₂/n₁, which is fixed for those materials', correct: true },
-        { text: 'Temperature keeps it constant', correct: false },
-        { text: 'It only appears constant due to measurement error', correct: false },
-      ],
-    },
-    {
-      question: 'Total internal reflection occurs when:',
-      options: [
-        { text: 'Light enters a denser medium', correct: false },
-        { text: 'Light tries to exit to a less dense medium at a shallow angle', correct: true },
-        { text: 'Light hits any surface at 45°', correct: false },
-        { text: 'The surface is a mirror', correct: false },
-      ],
-    },
-    {
-      question: 'The critical angle depends on:',
-      options: [
-        { text: 'Only the incident light intensity', correct: false },
-        { text: 'The ratio of refractive indices of the two media', correct: true },
-        { text: 'Only the wavelength of light', correct: false },
-        { text: 'The thickness of the materials', correct: false },
-      ],
-    },
-    {
-      question: 'Vegetable oil has n ≈ 1.47, water has n ≈ 1.33. Light entering oil from water:',
-      options: [
-        { text: 'Bends toward the normal', correct: true },
-        { text: 'Bends away from the normal', correct: false },
-        { text: 'Doesn\'t bend (same n)', correct: false },
-        { text: 'Is completely reflected', correct: false },
-      ],
-    },
-    {
-      question: 'Why is Snell\'s Law useful even without the exact formula?',
-      options: [
-        { text: 'It\'s not useful without math', correct: false },
-        { text: 'It tells us direction and relative amount of bending', correct: true },
-        { text: 'Only the formula matters', correct: false },
-        { text: 'It only works for visible light', correct: false },
-      ],
-    },
-  ];
-
   // Calculate refracted angle using Snell's law
   const calculateRefractedAngle = useCallback(() => {
     const n1 = refractiveIndices.air;
@@ -322,146 +349,276 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
     const theta1Rad = (incidentAngle * Math.PI) / 180;
     const sinTheta2 = (n1 / n2) * Math.sin(theta1Rad);
 
-    if (sinTheta2 > 1) return 90; // Total internal reflection (wouldn't happen air->denser)
+    if (sinTheta2 > 1) return 90;
     return (Math.asin(sinTheta2) * 180) / Math.PI;
   }, [incidentAngle, medium]);
 
   const refractedAngle = calculateRefractedAngle();
 
-  // Premium SVG visualization with gradients and glow effects
+  // Web Audio API sound
+  const playSound = useCallback((soundType: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    const soundConfig = {
+      click: { frequency: 400, type: 'sine' as OscillatorType, duration: 0.1 },
+      success: { frequency: 600, type: 'sine' as OscillatorType, duration: 0.15 },
+      failure: { frequency: 200, type: 'square' as OscillatorType, duration: 0.2 },
+      transition: { frequency: 480, type: 'sine' as OscillatorType, duration: 0.15 },
+      complete: { frequency: 800, type: 'sine' as OscillatorType, duration: 0.3 }
+    };
+    const { frequency, type, duration } = soundConfig[soundType];
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = frequency;
+      oscillator.type = type;
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (e) { /* Audio not supported */ }
+  }, []);
+
+  // Emit game events
+  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+    onGameEvent?.({ type, data });
+  }, [onGameEvent]);
+
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
+    setPhase(newPhase);
+    playSound('transition');
+    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+  }, [phase, playSound, emitEvent]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
+  }, [phase, goToPhase]);
+
+  // Render button helper
+  const renderButton = (
+    label: string,
+    onClickHandler: () => void,
+    variant: 'primary' | 'secondary' | 'ghost' | 'success' = 'primary',
+    disabled = false,
+    size: 'sm' | 'md' | 'lg' = 'md'
+  ) => {
+    const sizeStyles: Record<string, React.CSSProperties> = {
+      sm: { padding: '10px 18px', fontSize: '13px' },
+      md: { padding: '14px 28px', fontSize: '15px' },
+      lg: { padding: '18px 36px', fontSize: '17px' }
+    };
+
+    const variantStyles: Record<string, React.CSSProperties> = {
+      primary: {
+        background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+        color: '#fff',
+        boxShadow: `0 4px 20px ${design.colors.accentGlow}`,
+      },
+      secondary: {
+        background: design.colors.bgElevated,
+        color: design.colors.textPrimary,
+        border: `1px solid ${design.colors.border}`,
+      },
+      ghost: {
+        background: 'transparent',
+        color: design.colors.textSecondary,
+        border: `1px solid ${design.colors.border}`,
+      },
+      success: {
+        background: `linear-gradient(135deg, ${design.colors.success} 0%, #059669 100%)`,
+        color: '#fff',
+        boxShadow: `0 4px 20px rgba(16, 185, 129, 0.3)`,
+      }
+    };
+
+    return (
+      <button
+        onClick={() => {
+          if (disabled) return;
+          onClickHandler();
+        }}
+        disabled={disabled}
+        style={{
+          fontFamily: design.font.sans,
+          fontWeight: 600,
+          borderRadius: design.radius.lg,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          transition: 'all 0.2s ease',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: design.spacing.sm,
+          opacity: disabled ? 0.5 : 1,
+          border: 'none',
+          outline: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          ...sizeStyles[size],
+          ...variantStyles[variant]
+        }}
+      >
+        {label}
+      </button>
+    );
+  };
+
+  // Progress bar with navigation dots
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 24px',
+        background: design.colors.bgCard,
+        borderBottom: `1px solid ${design.colors.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 1000
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: design.colors.accentPrimary }}>
+            Snell's Law
+          </span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {phaseOrder.map((p, idx) => (
+              <button
+                key={p}
+                aria-label={phaseLabels[p]}
+                title={phaseLabels[p]}
+                onClick={() => goToPhase(p)}
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '8px',
+                  background: idx < currentIndex ? design.colors.success : p === phase ? design.colors.accentPrimary : design.colors.bgElevated,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  padding: 0
+                }}
+              />
+            ))}
+          </div>
+        </div>
+        <span style={{ fontSize: '12px', color: design.colors.textMuted }}>
+          Phase {currentIndex + 1}
+        </span>
+      </div>
+    );
+  };
+
+  // SVG Visualization with premium gradients
   const renderVisualization = () => {
-    const centerX = 150;
-    const centerY = 140;
-    const beamLength = 100;
+    const centerX = 200;
+    const centerY = 150;
+    const beamLength = 120;
 
     const incidentRad = (incidentAngle * Math.PI) / 180;
     const refractedRad = (refractedAngle * Math.PI) / 180;
 
-    // Calculate beam endpoints
     const incidentEndX = centerX - Math.sin(incidentRad) * beamLength;
     const incidentEndY = centerY - Math.cos(incidentRad) * beamLength;
     const refractedEndX = centerX + Math.sin(refractedRad) * beamLength;
     const refractedEndY = centerY + Math.cos(refractedRad) * beamLength;
 
-    // Medium-specific colors
     const getMediumColors = () => {
       switch (medium) {
-        case 'water':
-          return { main: colors.water, light: colors.waterLight, dark: colors.waterDark };
-        case 'oil':
-          return { main: colors.oil, light: colors.oilLight, dark: colors.oilDark };
-        case 'glass':
-          return { main: colors.glass, light: colors.glassLight, dark: colors.glassDark };
-        default:
-          return { main: colors.water, light: colors.waterLight, dark: colors.waterDark };
+        case 'water': return { main: design.colors.water, light: design.colors.waterLight, dark: design.colors.waterDark };
+        case 'oil': return { main: design.colors.oil, light: design.colors.oilLight, dark: design.colors.oilDark };
+        case 'glass': return { main: design.colors.glass, light: design.colors.glassLight, dark: design.colors.glassDark };
+        default: return { main: design.colors.water, light: design.colors.waterLight, dark: design.colors.waterDark };
       }
     };
     const mediumColors = getMediumColors();
-
-    // Arc radius for angle indicators
-    const arcRadius = 35;
+    const arcRadius = 40;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-        {/* Legend outside SVG using typo system */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '16px',
           justifyContent: 'center',
           padding: '8px 16px',
-          background: colors.bgElevated,
+          background: design.colors.bgElevated,
           borderRadius: '8px',
-          border: `1px solid ${colors.bgHover}`,
+          border: `1px solid ${design.colors.bgHover}`,
         }}>
-          <span style={{ fontSize: typo.small, color: colors.textMuted }}>
-            <span style={{ color: colors.air }}>Air</span> n=1.00
+          <span style={{ fontSize: typo.small, color: design.colors.textMuted }}>
+            <span style={{ color: design.colors.air }}>Air</span> n=1.00
           </span>
-          <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+          <span style={{ fontSize: typo.small, color: design.colors.textMuted }}>
             <span style={{ color: mediumColors.main }}>{medium.charAt(0).toUpperCase() + medium.slice(1)}</span> n={refractiveIndices[medium].toFixed(2)}
           </span>
         </div>
 
-        <svg width="300" height="260" viewBox="0 0 300 260">
-          {/* Premium defs section */}
+        <svg width="400" height="300" viewBox="0 0 400 300" style={{ maxWidth: '100%' }}>
           <defs>
-            {/* Background gradient with depth */}
             <linearGradient id="snellBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0f172a"/>
               <stop offset="50%" stopColor="#0a0f1a"/>
               <stop offset="100%" stopColor="#030712"/>
             </linearGradient>
 
-            {/* Air medium gradient - subtle atmosphere */}
             <linearGradient id="snellAirGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.air} stopOpacity="0.08"/>
-              <stop offset="50%" stopColor={colors.air} stopOpacity="0.05"/>
-              <stop offset="100%" stopColor={colors.air} stopOpacity="0.02"/>
+              <stop offset="0%" stopColor={design.colors.air} stopOpacity="0.08"/>
+              <stop offset="50%" stopColor={design.colors.air} stopOpacity="0.05"/>
+              <stop offset="100%" stopColor={design.colors.air} stopOpacity="0.02"/>
             </linearGradient>
 
-            {/* Water medium gradient */}
             <linearGradient id="snellWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.waterDark} stopOpacity="0.15"/>
-              <stop offset="50%" stopColor={colors.water} stopOpacity="0.25"/>
-              <stop offset="100%" stopColor={colors.waterLight} stopOpacity="0.35"/>
+              <stop offset="0%" stopColor={design.colors.waterDark} stopOpacity="0.15"/>
+              <stop offset="50%" stopColor={design.colors.water} stopOpacity="0.25"/>
+              <stop offset="100%" stopColor={design.colors.waterLight} stopOpacity="0.35"/>
             </linearGradient>
 
-            {/* Oil medium gradient */}
             <linearGradient id="snellOilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.oilDark} stopOpacity="0.15"/>
-              <stop offset="50%" stopColor={colors.oil} stopOpacity="0.25"/>
-              <stop offset="100%" stopColor={colors.oilLight} stopOpacity="0.35"/>
+              <stop offset="0%" stopColor={design.colors.oilDark} stopOpacity="0.15"/>
+              <stop offset="50%" stopColor={design.colors.oil} stopOpacity="0.25"/>
+              <stop offset="100%" stopColor={design.colors.oilLight} stopOpacity="0.35"/>
             </linearGradient>
 
-            {/* Glass medium gradient */}
             <linearGradient id="snellGlassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.glassDark} stopOpacity="0.2"/>
-              <stop offset="50%" stopColor={colors.glass} stopOpacity="0.3"/>
-              <stop offset="100%" stopColor={colors.glassLight} stopOpacity="0.4"/>
+              <stop offset="0%" stopColor={design.colors.glassDark} stopOpacity="0.2"/>
+              <stop offset="50%" stopColor={design.colors.glass} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={design.colors.glassLight} stopOpacity="0.4"/>
             </linearGradient>
 
-            {/* Light beam gradient */}
             <linearGradient id="snellBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.beamDark}/>
-              <stop offset="30%" stopColor={colors.beam}/>
-              <stop offset="50%" stopColor={colors.beamLight}/>
-              <stop offset="70%" stopColor={colors.beam}/>
-              <stop offset="100%" stopColor={colors.beamDark}/>
+              <stop offset="0%" stopColor={design.colors.beamDark}/>
+              <stop offset="30%" stopColor={design.colors.beam}/>
+              <stop offset="50%" stopColor={design.colors.beamLight}/>
+              <stop offset="70%" stopColor={design.colors.beam}/>
+              <stop offset="100%" stopColor={design.colors.beamDark}/>
             </linearGradient>
 
-            {/* Interface line gradient */}
-            <linearGradient id="snellInterfaceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.textMuted} stopOpacity="0.2"/>
-              <stop offset="30%" stopColor={colors.textMuted} stopOpacity="0.8"/>
-              <stop offset="50%" stopColor={colors.textSecondary} stopOpacity="1"/>
-              <stop offset="70%" stopColor={colors.textMuted} stopOpacity="0.8"/>
-              <stop offset="100%" stopColor={colors.textMuted} stopOpacity="0.2"/>
-            </linearGradient>
-
-            {/* Normal line gradient */}
             <linearGradient id="snellNormalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.accent} stopOpacity="0.1"/>
-              <stop offset="30%" stopColor={colors.accent} stopOpacity="0.6"/>
-              <stop offset="50%" stopColor={colors.accent} stopOpacity="0.8"/>
-              <stop offset="70%" stopColor={colors.accent} stopOpacity="0.6"/>
-              <stop offset="100%" stopColor={colors.accent} stopOpacity="0.1"/>
+              <stop offset="0%" stopColor={design.colors.accentPrimary} stopOpacity="0.1"/>
+              <stop offset="30%" stopColor={design.colors.accentPrimary} stopOpacity="0.6"/>
+              <stop offset="50%" stopColor={design.colors.accentPrimary} stopOpacity="0.8"/>
+              <stop offset="70%" stopColor={design.colors.accentPrimary} stopOpacity="0.6"/>
+              <stop offset="100%" stopColor={design.colors.accentPrimary} stopOpacity="0.1"/>
             </linearGradient>
 
-            {/* Incident angle arc gradient */}
             <linearGradient id="snellIncidentArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.warning} stopOpacity="0.5"/>
-              <stop offset="50%" stopColor={colors.warningLight} stopOpacity="1"/>
-              <stop offset="100%" stopColor={colors.warning} stopOpacity="0.5"/>
+              <stop offset="0%" stopColor={design.colors.warning} stopOpacity="0.5"/>
+              <stop offset="50%" stopColor={design.colors.warningLight} stopOpacity="1"/>
+              <stop offset="100%" stopColor={design.colors.warning} stopOpacity="0.5"/>
             </linearGradient>
 
-            {/* Refracted angle arc gradient */}
             <linearGradient id="snellRefractedArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.success} stopOpacity="0.5"/>
-              <stop offset="50%" stopColor={colors.successLight} stopOpacity="1"/>
-              <stop offset="100%" stopColor={colors.success} stopOpacity="0.5"/>
+              <stop offset="0%" stopColor={design.colors.success} stopOpacity="0.5"/>
+              <stop offset="50%" stopColor="#34d399" stopOpacity="1"/>
+              <stop offset="100%" stopColor={design.colors.success} stopOpacity="0.5"/>
             </linearGradient>
 
-            {/* Light beam glow filter */}
             <filter id="snellBeamGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
               <feMerge>
@@ -471,26 +628,6 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
               </feMerge>
             </filter>
 
-            {/* Soft glow for interface */}
-            <filter id="snellInterfaceGlow" x="-10%" y="-100%" width="120%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            {/* Incidence point glow */}
-            <filter id="snellPointGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            {/* Arc glow filter */}
             <filter id="snellArcGlow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
               <feMerge>
@@ -500,55 +637,13 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
             </filter>
           </defs>
 
-          {/* Background with gradient */}
-          <rect x="0" y="0" width="300" height="260" fill="url(#snellBgGrad)" rx="8"/>
+          <rect x="0" y="0" width="400" height="300" fill="url(#snellBgGrad)" rx="12"/>
+          <rect x="0" y="0" width="400" height={centerY} fill="url(#snellAirGrad)"/>
+          <rect x="0" y={centerY} width="400" height={300 - centerY} fill={`url(#snell${medium.charAt(0).toUpperCase() + medium.slice(1)}Grad)`}/>
 
-          {/* Air region (top) with atmosphere effect */}
-          <rect x="0" y="0" width="300" height={centerY} fill="url(#snellAirGrad)" rx="8 8 0 0"/>
+          <line x1="0" y1={centerY} x2="400" y2={centerY} stroke={design.colors.textMuted} strokeWidth="2" strokeOpacity="0.5"/>
+          <line x1={centerX} y1={centerY - 120} x2={centerX} y2={centerY + 120} stroke="url(#snellNormalGrad)" strokeWidth="1.5" strokeDasharray="6,4"/>
 
-          {/* Medium region (bottom) with realistic gradient */}
-          <rect
-            x="0"
-            y={centerY}
-            width="300"
-            height={260 - centerY}
-            fill={`url(#snell${medium.charAt(0).toUpperCase() + medium.slice(1)}Grad)`}
-          />
-
-          {/* Interface transition zone */}
-          <rect
-            x="0"
-            y={centerY - 3}
-            width="300"
-            height="6"
-            fill="url(#snellInterfaceGrad)"
-            opacity="0.5"
-          />
-
-          {/* Interface line with glow */}
-          <line
-            x1="0"
-            y1={centerY}
-            x2="300"
-            y2={centerY}
-            stroke="url(#snellInterfaceGrad)"
-            strokeWidth="2"
-            filter="url(#snellInterfaceGlow)"
-          />
-
-          {/* Normal line (dashed) with gradient */}
-          <line
-            x1={centerX}
-            y1={centerY - 100}
-            x2={centerX}
-            y2={centerY + 100}
-            stroke="url(#snellNormalGrad)"
-            strokeWidth="1.5"
-            strokeDasharray="6,4"
-          />
-
-          {/* Angle arcs - always visible for clarity */}
-          {/* Incident angle arc */}
           <path
             d={`M ${centerX} ${centerY - arcRadius} A ${arcRadius} ${arcRadius} 0 0 0 ${centerX - Math.sin(incidentRad) * arcRadius} ${centerY - Math.cos(incidentRad) * arcRadius}`}
             fill="none"
@@ -557,7 +652,6 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
             filter="url(#snellArcGlow)"
           />
 
-          {/* Refracted angle arc */}
           <path
             d={`M ${centerX} ${centerY + arcRadius} A ${arcRadius} ${arcRadius} 0 0 1 ${centerX + Math.sin(refractedRad) * arcRadius} ${centerY + Math.cos(refractedRad) * arcRadius}`}
             fill="none"
@@ -566,107 +660,48 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
             filter="url(#snellArcGlow)"
           />
 
-          {/* Incident beam with glow */}
-          <line
-            x1={incidentEndX}
-            y1={incidentEndY}
-            x2={centerX}
-            y2={centerY}
-            stroke={colors.beam}
-            strokeWidth="5"
-            strokeLinecap="round"
-            filter="url(#snellBeamGlow)"
-          />
-          <line
-            x1={incidentEndX}
-            y1={incidentEndY}
-            x2={centerX}
-            y2={centerY}
-            stroke="url(#snellBeamGrad)"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
+          <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke={design.colors.beam} strokeWidth="5" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
+          <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke="url(#snellBeamGrad)" strokeWidth="3" strokeLinecap="round"/>
 
-          {/* Arrow head for incident beam */}
-          <polygon
-            points={`${centerX},${centerY} ${centerX - 6},${centerY - 12} ${centerX + 4},${centerY - 10}`}
-            fill={colors.beam}
-            transform={`rotate(${-incidentAngle}, ${centerX}, ${centerY})`}
-            filter="url(#snellBeamGlow)"
-          />
+          <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke={design.colors.beam} strokeWidth="5" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
+          <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke="url(#snellBeamGrad)" strokeWidth="3" strokeLinecap="round"/>
 
-          {/* Refracted beam with glow */}
-          <line
-            x1={centerX}
-            y1={centerY}
-            x2={refractedEndX}
-            y2={refractedEndY}
-            stroke={colors.beam}
-            strokeWidth="5"
-            strokeLinecap="round"
-            filter="url(#snellBeamGlow)"
-          />
-          <line
-            x1={centerX}
-            y1={centerY}
-            x2={refractedEndX}
-            y2={refractedEndY}
-            stroke="url(#snellBeamGrad)"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
+          <circle cx={centerX} cy={centerY} r="6" fill={design.colors.beamLight} filter="url(#snellBeamGlow)"/>
+          <circle cx={centerX} cy={centerY} r="4" fill="#fff"/>
 
-          {/* Incidence point with glow */}
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r="5"
-            fill={colors.beamLight}
-            filter="url(#snellPointGlow)"
-          />
-          <circle
-            cx={centerX}
-            cy={centerY}
-            r="3"
-            fill="#fff"
-          />
+          <text x="20" y="30" fill={design.colors.air} fontSize="12" fontWeight="600">AIR (n=1.00)</text>
+          <text x="20" y={centerY + 25} fill={mediumColors.main} fontSize="12" fontWeight="600">{medium.toUpperCase()} (n={refractiveIndices[medium].toFixed(2)})</text>
         </svg>
 
-        {/* Measurements outside SVG using typo system */}
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '16px',
           justifyContent: 'center',
           padding: '10px 16px',
-          background: colors.bgElevated,
+          background: design.colors.bgElevated,
           borderRadius: '8px',
-          border: `1px solid ${colors.bgHover}`,
+          border: `1px solid ${design.colors.bgHover}`,
         }}>
-          <span style={{ fontSize: typo.svgValue, color: colors.warning, fontWeight: 600 }}>
+          <span style={{ fontSize: typo.small, color: design.colors.warning, fontWeight: 600 }}>
             Incident: {incidentAngle.toFixed(0)}deg
           </span>
-          <span style={{ fontSize: typo.svgValue, color: colors.success, fontWeight: 600 }}>
+          <span style={{ fontSize: typo.small, color: design.colors.success, fontWeight: 600 }}>
             Refracted: {refractedAngle.toFixed(1)}deg
           </span>
         </div>
 
-        {/* Extended Snell's Law display when measurements shown */}
         {showMeasurements && (
           <div style={{
             padding: '12px 16px',
-            background: `linear-gradient(135deg, ${colors.bgElevated} 0%, ${colors.bgHover} 100%)`,
+            background: `linear-gradient(135deg, ${design.colors.bgElevated} 0%, ${design.colors.bgHover} 100%)`,
             borderRadius: '10px',
-            border: `1px solid ${colors.accent}30`,
+            border: `1px solid ${design.colors.accentPrimary}30`,
             textAlign: 'center',
           }}>
-            <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
-              <span style={{ color: colors.accent, fontWeight: 600 }}>Snells Law:</span>{' '}
-              sin({incidentAngle}deg) / sin({refractedAngle.toFixed(1)}deg) ={' '}
-              <span style={{ color: colors.beamLight, fontWeight: 600 }}>
-                {(Math.sin(incidentRad) / Math.sin(refractedRad * Math.PI / 180)).toFixed(2)}
-              </span>{' '}
-              ~ n2/n1
+            <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
+              <span style={{ color: design.colors.accentPrimary, fontWeight: 600 }}>Snell's Law:</span>{' '}
+              n1 sin(theta1) = n2 sin(theta2)
             </p>
           </div>
         )}
@@ -674,121 +709,127 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
     );
   };
 
-  const handleTestAnswer = (answerIndex: number) => {
-    const newAnswers = [...testAnswers];
-    newAnswers[currentTestQuestion] = answerIndex;
-    setTestAnswers(newAnswers);
+  // Prediction options
+  const predictions = [
+    { id: 'A', label: 'A) Steeper entry angle = MORE bending toward normal' },
+    { id: 'B', label: 'B) Steeper entry angle = LESS bending' },
+    { id: 'C', label: 'C) Entry angle doesn\'t affect bending amount' },
+    { id: 'D', label: 'D) Steep angles bend one way, shallow angles the other' },
+  ];
 
-    if (currentTestQuestion < testQuestions.length - 1) {
-      setCurrentTestQuestion(currentTestQuestion + 1);
-    }
-  };
+  const twistPredictions = [
+    { id: 'A', label: 'A) Oil bends light the same as water' },
+    { id: 'B', label: 'B) Oil bends light MORE than water (toward normal)' },
+    { id: 'C', label: 'C) Oil bends light LESS than water' },
+    { id: 'D', label: 'D) Oil bends light in the opposite direction' },
+  ];
 
-  const submitTest = () => {
-    let score = 0;
-    testAnswers.forEach((answer, i) => {
-      if (answer !== null && testQuestions[i].options[answer]?.correct) {
-        score++;
-      }
-    });
-    setTestScore(score);
-    setTestSubmitted(true);
-    if (score >= 7) {
-      onCorrectAnswer?.();
-    } else {
-      onIncorrectAnswer?.();
-    }
-  };
-
+  // Render phase content
   const renderPhaseContent = () => {
     switch (phase) {
       case 'hook':
         return (
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '28px', marginBottom: '16px' }}>
-              Measuring the Bend
-            </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              If the beam enters at a steeper angle, does it bend more or less?
-            </p>
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <h1 style={{ fontSize: typo.title, fontWeight: 700, color: design.colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
+                Measuring the Bend
+              </h1>
+              <p style={{ fontSize: typo.bodyLarge, color: design.colors.textSecondary, maxWidth: '600px', margin: '0 auto', fontWeight: 400, lineHeight: 1.6 }}>
+                If a light beam enters at a steeper angle, does it bend more or less? Let's discover Snell's Law - the physics formula that governs all refraction!
+              </p>
+            </div>
+
             {renderVisualization()}
-            <p style={{ color: colors.textMuted, fontSize: '14px', marginTop: '16px' }}>
-              Watch how light bends at the boundary between air and another medium.
-            </p>
+
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              <p style={{ fontSize: typo.body, color: design.colors.textMuted, marginBottom: '24px', fontWeight: 400, lineHeight: 1.6 }}>
+                Watch how light bends at the boundary between air and another medium. The dashed line is the "normal" - perpendicular to the surface.
+              </p>
+              {renderButton('Start Discovery', goNext)}
+            </div>
           </div>
         );
 
       case 'predict':
         return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px', lineHeight: 1.3 }}>
               Make Your Prediction
             </h2>
+            <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '24px', fontWeight: 400, lineHeight: 1.6 }}>
+              Think about what happens when you increase the incident angle (steeper entry). What do you expect to happen to the refracted ray?
+            </p>
+
             <div style={{ marginBottom: '24px' }}>
               {renderVisualization()}
             </div>
-            <div style={{
-              background: colors.bgCard,
-              padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '24px'
-            }}>
-              <h3 style={{ color: colors.accent, fontSize: '16px', marginBottom: '8px' }}>
-                What You're Looking At
-              </h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-                A light beam enters water from air. The dashed line is the "normal" (perpendicular to surface).
-                Angles are measured from the normal, not the surface.
-              </p>
-            </div>
-            <p style={{ color: colors.textSecondary, marginBottom: '16px' }}>
-              As you increase the incident angle (steeper entry):
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
               {predictions.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setPrediction(p.id)}
+                  onClick={() => {
+                    setPrediction(p.id);
+                    playSound('click');
+                    emitEvent('prediction_made', { prediction: p.id });
+                  }}
                   style={{
                     padding: '16px',
-                    background: prediction === p.id ? colors.accent : colors.bgCard,
-                    color: colors.textPrimary,
-                    border: 'none',
-                    borderRadius: '12px',
+                    background: prediction === p.id ? design.colors.accentPrimary : design.colors.bgCard,
+                    color: design.colors.textPrimary,
+                    border: prediction === p.id ? `2px solid ${design.colors.accentSecondary}` : `1px solid ${design.colors.border}`,
+                    borderRadius: design.radius.md,
                     cursor: 'pointer',
                     textAlign: 'left',
+                    fontSize: typo.body,
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
+
+            {prediction && (
+              <div style={{ textAlign: 'center' }}>
+                {renderButton('Continue', goNext)}
+              </div>
+            )}
           </div>
         );
 
       case 'play':
         return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px', lineHeight: 1.3 }}>
               Explore Snell's Law
             </h2>
+            <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '24px', fontWeight: 400, lineHeight: 1.6 }}>
+              Adjust the incident angle and observe how the refracted angle changes. Notice the relationship between them!
+            </p>
+
             {renderVisualization()}
+
             <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-                  Incident Angle (θ₁): {incidentAngle}°
+                <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
+                  Incident Angle: {incidentAngle}deg
                 </label>
                 <input
                   type="range"
                   min="5"
                   max="85"
                   value={incidentAngle}
-                  onChange={(e) => setIncidentAngle(Number(e.target.value))}
-                  style={{ width: '100%' }}
+                  onChange={(e) => {
+                    setIncidentAngle(Number(e.target.value));
+                    emitEvent('parameter_changed', { incidentAngle: Number(e.target.value) });
+                  }}
+                  style={{ width: '100%', cursor: 'pointer' }}
                 />
               </div>
+
               <div>
-                <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+                <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
                   Medium:
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -799,11 +840,13 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
                       style={{
                         flex: 1,
                         padding: '12px',
-                        background: medium === m ? colors.accent : colors.bgCard,
-                        color: colors.textPrimary,
+                        background: medium === m ? design.colors.accentPrimary : design.colors.bgCard,
+                        color: design.colors.textPrimary,
                         border: 'none',
-                        borderRadius: '8px',
+                        borderRadius: design.radius.sm,
                         cursor: 'pointer',
+                        fontSize: typo.small,
+                        transition: 'all 0.2s ease'
                       }}
                     >
                       {m.charAt(0).toUpperCase() + m.slice(1)} (n={refractiveIndices[m]})
@@ -811,106 +854,151 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
                   ))}
                 </div>
               </div>
+
               <button
                 onClick={() => setShowMeasurements(!showMeasurements)}
                 style={{
                   padding: '12px 24px',
-                  background: showMeasurements ? colors.success : colors.bgCard,
-                  color: colors.textPrimary,
+                  background: showMeasurements ? design.colors.success : design.colors.bgCard,
+                  color: design.colors.textPrimary,
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: design.radius.sm,
                   cursor: 'pointer',
+                  fontSize: typo.body,
+                  transition: 'all 0.2s ease'
                 }}
               >
-                {showMeasurements ? 'Hide Measurements' : 'Show Angle Measurements'}
+                {showMeasurements ? 'Hide Formula' : 'Show Snell\'s Law Formula'}
               </button>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              {renderButton('Continue', goNext)}
             </div>
           </div>
         );
 
       case 'review':
+        const predictionCorrect = prediction === 'A';
         return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>
               Understanding Snell's Law
             </h2>
+
             <div style={{
-              background: prediction === 'more' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              background: predictionCorrect ? design.colors.successMuted : design.colors.errorMuted,
               padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '24px'
+              borderRadius: design.radius.md,
+              marginBottom: '24px',
+              border: `1px solid ${predictionCorrect ? design.colors.success : design.colors.error}`
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '18px' }}>
-                {prediction === 'more' ? '✓ Correct!' : '✗ Actually,'} steeper incident angles produce more absolute bending!
+              <p style={{ color: predictionCorrect ? design.colors.success : design.colors.error, fontSize: typo.bodyLarge, fontWeight: 600, margin: 0 }}>
+                {predictionCorrect ? 'Correct!' : 'Not quite!'} Steeper incident angles produce more bending toward the normal when entering a denser medium.
               </p>
             </div>
-            {renderVisualization()}
-            <div style={{ marginTop: '24px', color: colors.textSecondary }}>
-              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Pattern:</h3>
-              <ul style={{ lineHeight: '1.8' }}>
-                <li>n₁ sin(θ₁) = n₂ sin(θ₂) — Snell's Law</li>
-                <li>The ratio sin(θ₁)/sin(θ₂) stays constant for a given material pair</li>
-                <li>Light going into denser medium: bends toward normal</li>
-                <li>Light going into less dense medium: bends away from normal</li>
-                <li>At θ₁ = 0° (perpendicular): no bending at all</li>
+
+            <div style={{ color: design.colors.textSecondary, marginBottom: '24px' }}>
+              <h3 style={{ color: design.colors.accentPrimary, marginBottom: '12px', fontSize: typo.bodyLarge }}>The Physics Principle:</h3>
+              <ul style={{ lineHeight: '1.8', fontSize: typo.body }}>
+                <li><strong>Snell's Law:</strong> n1 sin(theta1) = n2 sin(theta2)</li>
+                <li>The ratio sin(theta1)/sin(theta2) stays constant for a given material pair</li>
+                <li>Light entering a denser medium (higher n) bends toward the normal</li>
+                <li>Light entering a less dense medium bends away from the normal</li>
+                <li>At theta1 = 0 degrees (perpendicular): no bending occurs</li>
               </ul>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              {renderButton('Continue', goNext)}
             </div>
           </div>
         );
 
       case 'twist_predict':
         return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              The Twist: Different Medium
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>
+              New Variable: Different Medium
             </h2>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              What if we use vegetable oil (n ≈ 1.47) instead of water (n ≈ 1.33)?
+            <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '24px' }}>
+              What if we change from water (n = 1.33) to vegetable oil (n = 1.47)? Both are denser than air, but oil has a higher refractive index.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
               {twistPredictions.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
+                  onClick={() => {
+                    setTwistPrediction(p.id);
+                    playSound('click');
+                    emitEvent('twist_prediction_made', { prediction: p.id });
+                  }}
                   style={{
                     padding: '16px',
-                    background: twistPrediction === p.id ? colors.accent : colors.bgCard,
-                    color: colors.textPrimary,
-                    border: 'none',
-                    borderRadius: '12px',
+                    background: twistPrediction === p.id ? design.colors.accentPrimary : design.colors.bgCard,
+                    color: design.colors.textPrimary,
+                    border: twistPrediction === p.id ? `2px solid ${design.colors.accentSecondary}` : `1px solid ${design.colors.border}`,
+                    borderRadius: design.radius.md,
                     cursor: 'pointer',
                     textAlign: 'left',
+                    fontSize: typo.body,
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
+
+            {twistPrediction && (
+              <div style={{ textAlign: 'center' }}>
+                {renderButton('Continue', goNext)}
+              </div>
+            )}
           </div>
         );
 
       case 'twist_play':
         return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>
               Compare Water vs Oil
             </h2>
+            <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '24px' }}>
+              Switch between media and adjust the angle to see how the refractive index affects bending.
+            </p>
+
             {renderVisualization()}
-            <div style={{ marginTop: '24px' }}>
-              <p style={{ color: colors.textSecondary, marginBottom: '12px' }}>
-                Switch between media to compare bending:
-              </p>
+
+            <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ color: design.colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
+                  Incident Angle: {incidentAngle}deg
+                </label>
+                <input
+                  type="range"
+                  min="5"
+                  max="85"
+                  value={incidentAngle}
+                  onChange={(e) => setIncidentAngle(Number(e.target.value))}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
+              </div>
+
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={() => setMedium('water')}
                   style={{
                     flex: 1,
                     padding: '16px',
-                    background: medium === 'water' ? colors.water : colors.bgCard,
-                    color: colors.textPrimary,
+                    background: medium === 'water' ? design.colors.water : design.colors.bgCard,
+                    color: design.colors.textPrimary,
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: design.radius.sm,
                     cursor: 'pointer',
+                    fontSize: typo.body,
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   Water (n=1.33)
@@ -920,197 +1008,380 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
                   style={{
                     flex: 1,
                     padding: '16px',
-                    background: medium === 'oil' ? colors.oil : colors.bgCard,
-                    color: colors.textPrimary,
+                    background: medium === 'oil' ? design.colors.oil : design.colors.bgCard,
+                    color: design.colors.textPrimary,
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: design.radius.sm,
                     cursor: 'pointer',
+                    fontSize: typo.body,
+                    transition: 'all 0.2s ease'
                   }}
                 >
                   Oil (n=1.47)
                 </button>
               </div>
-              <p style={{ color: colors.textMuted, marginTop: '16px', textAlign: 'center' }}>
-                Current refracted angle: {refractedAngle.toFixed(1)}°
-              </p>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              {renderButton('Continue', goNext)}
             </div>
           </div>
         );
 
       case 'twist_review':
+        const twistCorrect = twistPrediction === 'B';
         return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>
               Higher Index = More Bending
             </h2>
+
             <div style={{
-              background: twistPrediction === 'more' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              background: twistCorrect ? design.colors.successMuted : design.colors.errorMuted,
               padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '24px'
+              borderRadius: design.radius.md,
+              marginBottom: '24px',
+              border: `1px solid ${twistCorrect ? design.colors.success : design.colors.error}`
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '18px' }}>
-                {twistPrediction === 'more' ? '✓ Correct!' : '✗ Actually,'} oil has a higher refractive index, so light bends MORE toward the normal.
+              <p style={{ color: twistCorrect ? design.colors.success : design.colors.error, fontSize: typo.bodyLarge, fontWeight: 600, margin: 0 }}>
+                {twistCorrect ? 'Correct!' : 'Actually,'} oil has a higher refractive index, so light bends MORE toward the normal compared to water.
               </p>
             </div>
-            <div style={{ color: colors.textSecondary }}>
-              <p style={{ marginBottom: '12px' }}>From Snell's Law: n₁ sin(θ₁) = n₂ sin(θ₂)</p>
-              <p style={{ marginBottom: '12px' }}>Rearranging: sin(θ₂) = (n₁/n₂) sin(θ₁)</p>
-              <p style={{ marginBottom: '12px' }}>Higher n₂ → smaller sin(θ₂) → smaller θ₂ → more bending toward normal!</p>
+
+            <div style={{ color: design.colors.textSecondary, marginBottom: '24px' }}>
+              <h3 style={{ color: design.colors.accentPrimary, marginBottom: '12px', fontSize: typo.bodyLarge }}>The Physics Explains:</h3>
+              <ul style={{ lineHeight: '1.8', fontSize: typo.body }}>
+                <li>From Snell's Law: sin(theta2) = (n1/n2) sin(theta1)</li>
+                <li>Higher n2 means smaller sin(theta2)</li>
+                <li>Smaller sin(theta2) means smaller theta2</li>
+                <li>Smaller refracted angle = more bending toward normal</li>
+              </ul>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              {renderButton('Continue', goNext)}
             </div>
           </div>
         );
 
       case 'transfer':
+        const app = realWorldApps[activeApp];
         return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '8px' }}>
               Real-World Applications
             </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {transferApplications.map((app, index) => (
-                <div
-                  key={index}
+            <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '24px' }}>
+              Explore how Snell's Law is used in industry and everyday technology. These examples connect physics principles to real applications.
+            </p>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto' }}>
+              {realWorldApps.map((a, idx) => (
+                <button
+                  key={a.id}
+                  onClick={() => {
+                    setActiveApp(idx);
+                    setCompletedApps(new Set([...completedApps, idx]));
+                    emitEvent('app_explored', { app: a.id });
+                  }}
                   style={{
-                    background: colors.bgCard,
-                    padding: '20px',
-                    borderRadius: '12px',
-                    border: transferCompleted.has(index) ? `2px solid ${colors.success}` : 'none',
+                    padding: '12px 16px',
+                    background: activeApp === idx ? app.color : design.colors.bgCard,
+                    color: design.colors.textPrimary,
+                    border: completedApps.has(idx) ? `2px solid ${design.colors.success}` : `1px solid ${design.colors.border}`,
+                    borderRadius: design.radius.sm,
+                    cursor: 'pointer',
+                    fontSize: typo.small,
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  <h3 style={{ color: colors.accent, marginBottom: '8px' }}>{app.title}</h3>
-                  <p style={{ color: colors.textSecondary, marginBottom: '12px' }}>{app.description}</p>
-                  <p style={{ color: colors.textMuted, fontStyle: 'italic', marginBottom: '8px' }}>
-                    {app.question}
-                  </p>
-                  {!transferCompleted.has(index) ? (
-                    <button
-                      onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                      style={{
-                        padding: '8px 16px',
-                        background: colors.accent,
-                        color: colors.textPrimary,
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Reveal Answer
-                    </button>
-                  ) : (
-                    <p style={{ color: colors.success }}>{app.answer}</p>
-                  )}
-                </div>
+                  {a.icon} {a.title}
+                </button>
               ))}
+            </div>
+
+            <div style={{
+              background: design.colors.bgCard,
+              padding: '24px',
+              borderRadius: design.radius.lg,
+              border: `1px solid ${design.colors.border}`
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '40px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ fontSize: typo.bodyLarge, fontWeight: 600, color: design.colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ fontSize: typo.small, color: design.colors.textMuted, margin: 0 }}>{app.subtitle}</p>
+                </div>
+              </div>
+
+              <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: design.colors.bgElevated,
+                padding: '16px',
+                borderRadius: design.radius.sm,
+                marginBottom: '16px'
+              }}>
+                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.accentPrimary, marginBottom: '8px' }}>
+                  CONNECTION TO SNELL'S LAW:
+                </h4>
+                <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                <span style={{
+                  padding: '8px 12px',
+                  background: `${app.color}20`,
+                  color: app.color,
+                  borderRadius: design.radius.sm,
+                  fontSize: typo.small,
+                  fontWeight: 600
+                }}>
+                  {app.stat}
+                </span>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.textMuted, marginBottom: '8px' }}>
+                  EXAMPLES:
+                </h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {app.examples.map((ex, i) => (
+                    <span key={i} style={{
+                      padding: '6px 10px',
+                      background: design.colors.bgElevated,
+                      color: design.colors.textSecondary,
+                      borderRadius: design.radius.sm,
+                      fontSize: typo.label
+                    }}>
+                      {ex}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.textMuted, marginBottom: '8px' }}>
+                  COMPANIES:
+                </h4>
+                <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
+                  {app.companies.join(' | ')}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+              {renderButton('Continue to Test', goNext)}
             </div>
           </div>
         );
 
       case 'test':
+        const currentQ = testQuestions[testIndex];
+        const selectedAnswer = answers[testIndex];
+
+        if (showResult) {
+          const score = answers.reduce((acc, ans, idx) => {
+            if (ans !== null && testQuestions[idx].options[ans]?.correct) {
+              return acc + 1;
+            }
+            return acc;
+          }, 0);
+
+          return (
+            <div style={{ padding: typo.pagePadding, paddingTop: '80px', textAlign: 'center' }}>
+              <h2 style={{ fontSize: typo.title, fontWeight: 700, color: design.colors.textPrimary, marginBottom: '24px' }}>
+                Test Complete!
+              </h2>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>
+                {score >= 7 ? '🎉' : score >= 5 ? '👍' : '📚'}
+              </div>
+              <p style={{ fontSize: typo.heading, color: design.colors.textPrimary, marginBottom: '8px' }}>
+                You scored {score} / 10
+              </p>
+              <p style={{ fontSize: typo.body, color: design.colors.textMuted, marginBottom: '24px' }}>
+                {score >= 7 ? 'Excellent! You\'ve mastered Snell\'s Law!' : score >= 5 ? 'Good job! Keep practicing!' : 'Keep learning - you\'ll get there!'}
+              </p>
+              {renderButton('Continue', goNext, score >= 7 ? 'success' : 'primary')}
+            </div>
+          );
+        }
+
         return (
-          <div style={{ padding: '24px' }}>
-            <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
-              Test Your Knowledge
-            </h2>
-            {!testSubmitted ? (
-              <>
-                <div style={{ marginBottom: '16px' }}>
-                  <span style={{ color: colors.textMuted }}>
-                    Question {currentTestQuestion + 1} of {testQuestions.length}
-                  </span>
-                </div>
-                <p style={{ color: colors.textPrimary, fontSize: '18px', marginBottom: '20px' }}>
-                  {testQuestions[currentTestQuestion].question}
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {testQuestions[currentTestQuestion].options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleTestAnswer(index)}
-                      style={{
-                        padding: '16px',
-                        background: testAnswers[currentTestQuestion] === index ? colors.accent : colors.bgCard,
-                        color: colors.textPrimary,
-                        border: 'none',
-                        borderRadius: '12px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                      }}
-                    >
-                      {option.text}
-                    </button>
-                  ))}
-                </div>
-                {testAnswers.every(a => a !== null) && (
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, margin: 0 }}>
+                Knowledge Test
+              </h2>
+              <span style={{ fontSize: typo.body, color: design.colors.textMuted }} data-testid="question-counter">
+                Question {testIndex + 1} of 10
+              </span>
+            </div>
+
+            {/* Quiz progress dots */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '20px' }}>
+              {Array.from({ length: 10 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    background: answers[idx] !== null
+                      ? design.colors.success
+                      : idx === testIndex
+                        ? design.colors.accentPrimary
+                        : design.colors.bgElevated,
+                    transition: 'all 0.2s ease'
+                  }}
+                />
+              ))}
+            </div>
+
+            <div style={{
+              background: design.colors.bgCard,
+              padding: '20px',
+              borderRadius: design.radius.md,
+              marginBottom: '20px',
+              border: `1px solid ${design.colors.border}`
+            }}>
+              <p style={{ fontSize: typo.small, color: design.colors.textMuted, marginBottom: '12px', fontStyle: 'italic' }}>
+                Scenario: {currentQ.scenario}
+              </p>
+              <p style={{ fontSize: typo.bodyLarge, color: design.colors.textPrimary, fontWeight: 500, margin: 0 }}>
+                {currentQ.question}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              {currentQ.options.map((option, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    const newAnswers = [...answers];
+                    newAnswers[testIndex] = idx;
+                    setAnswers(newAnswers);
+                    playSound('click');
+                    emitEvent('test_answered', { questionIndex: testIndex, answer: idx });
+                  }}
+                  style={{
+                    padding: '16px',
+                    background: selectedAnswer === idx ? design.colors.accentPrimary : design.colors.bgCard,
+                    color: design.colors.textPrimary,
+                    border: selectedAnswer === idx ? `2px solid ${design.colors.accentSecondary}` : `1px solid ${design.colors.border}`,
+                    borderRadius: design.radius.md,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: typo.body,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {option.label}) {option.text}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
+              {testIndex > 0 && (
+                <button
+                  onClick={() => setTestIndex(testIndex - 1)}
+                  style={{
+                    padding: '12px 24px',
+                    background: design.colors.bgCard,
+                    color: design.colors.textSecondary,
+                    border: `1px solid ${design.colors.border}`,
+                    borderRadius: design.radius.sm,
+                    cursor: 'pointer',
+                    fontSize: typo.body,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+              <div style={{ flex: 1 }} />
+              {selectedAnswer !== null && (
+                testIndex < 9 ? (
                   <button
-                    onClick={submitTest}
+                    onClick={() => setTestIndex(testIndex + 1)}
                     style={{
-                      marginTop: '24px',
-                      padding: '16px 32px',
-                      background: colors.success,
-                      color: colors.textPrimary,
+                      padding: '12px 24px',
+                      background: design.colors.accentPrimary,
+                      color: '#fff',
                       border: 'none',
-                      borderRadius: '12px',
+                      borderRadius: design.radius.sm,
                       cursor: 'pointer',
-                      width: '100%',
+                      fontSize: typo.body,
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowResult(true);
+                      playSound('complete');
+                      emitEvent('test_completed', { answers });
+                    }}
+                    style={{
+                      padding: '12px 24px',
+                      background: design.colors.success,
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: design.radius.sm,
+                      cursor: 'pointer',
+                      fontSize: typo.body,
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     Submit Test
                   </button>
-                )}
-              </>
-            ) : (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                  {testScore >= 7 ? '🎉' : '📚'}
-                </div>
-                <p style={{ color: colors.textPrimary, fontSize: '24px' }}>
-                  You scored {testScore} out of {testQuestions.length}
-                </p>
-              </div>
-            )}
+                )
+              )}
+            </div>
           </div>
         );
 
       case 'mastery':
         return (
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ padding: typo.pagePadding, paddingTop: '80px', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>🏆</div>
-            <h2 style={{ color: colors.textPrimary, fontSize: '32px', marginBottom: '16px' }}>
-              Snell's Law Mastered!
+            <h2 style={{ fontSize: typo.title, fontWeight: 700, color: design.colors.textPrimary, marginBottom: '16px' }}>
+              Congratulations! You've Mastered Snell's Law!
             </h2>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              You understand the mathematical relationship governing refraction.
+            <p style={{ fontSize: typo.bodyLarge, color: design.colors.textSecondary, marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px' }}>
+              You now understand the mathematical relationship that governs how light bends at interfaces. This principle is fundamental to optics, fiber communications, and lens design.
             </p>
+
             <div style={{
-              background: colors.bgCard,
+              background: design.colors.bgCard,
               padding: '24px',
-              borderRadius: '16px',
-              textAlign: 'left'
+              borderRadius: design.radius.lg,
+              textAlign: 'left',
+              maxWidth: '500px',
+              margin: '0 auto 32px',
+              border: `1px solid ${design.colors.border}`
             }}>
-              <h3 style={{ color: colors.accent, marginBottom: '16px' }}>Key Concepts:</h3>
-              <ul style={{ color: colors.textSecondary, lineHeight: '2' }}>
-                <li>n₁ sin(θ₁) = n₂ sin(θ₂)</li>
-                <li>Higher n = more bending toward normal</li>
-                <li>Ratio of sines = ratio of indices (inverted)</li>
-                <li>Perpendicular entry = no bending</li>
+              <h3 style={{ color: design.colors.accentPrimary, marginBottom: '16px', fontSize: typo.bodyLarge }}>Key Concepts Learned:</h3>
+              <ul style={{ color: design.colors.textSecondary, lineHeight: '2', fontSize: typo.body, margin: 0, paddingLeft: '20px' }}>
+                <li>n1 sin(theta1) = n2 sin(theta2) - Snell's Law</li>
+                <li>Higher refractive index = more bending toward normal</li>
+                <li>Ratio of sines equals inverse ratio of indices</li>
+                <li>Perpendicular entry means no bending</li>
+                <li>Total internal reflection at critical angle</li>
               </ul>
             </div>
-            <button
-              onClick={() => onPhaseComplete?.()}
-              style={{
-                marginTop: '24px',
-                padding: '16px 32px',
-                background: `linear-gradient(135deg, ${colors.accent}, ${colors.success})`,
-                color: colors.textPrimary,
-                border: 'none',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                fontSize: '18px',
-              }}
-            >
-              Complete Lesson
-            </button>
+
+            {renderButton('Complete Lesson', () => {
+              playSound('complete');
+              emitEvent('mastery_achieved', {});
+            }, 'success', false, 'lg')}
           </div>
         );
 
@@ -1122,56 +1393,14 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
   return (
     <div style={{
       minHeight: '100vh',
-      background: colors.bgPrimary,
-      color: colors.textPrimary,
-      paddingBottom: '100px',
+      background: `linear-gradient(145deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
+      fontFamily: design.font.sans,
+      color: design.colors.textPrimary,
     }}>
+      {renderProgressBar()}
       {renderPhaseContent()}
-
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        background: colors.bgDark,
-        borderTop: `1px solid ${colors.bgCard}`,
-        padding: '16px 24px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1000,
-      }}>
-        <span style={{ color: colors.textMuted, fontSize: '14px' }}>
-          Snell's Law
-        </span>
-        {phase !== 'mastery' && phase !== 'test' && (
-          <button
-            onClick={() => onPhaseComplete?.()}
-            disabled={
-              (phase === 'predict' && !prediction) ||
-              (phase === 'twist_predict' && !twistPrediction) ||
-              (phase === 'transfer' && transferCompleted.size < 4)
-            }
-            style={{
-              padding: '12px 24px',
-              background: colors.accent,
-              color: colors.textPrimary,
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              opacity: (
-                (phase === 'predict' && !prediction) ||
-                (phase === 'twist_predict' && !twistPrediction) ||
-                (phase === 'transfer' && transferCompleted.size < 4)
-              ) ? 0.5 : 1,
-            }}
-          >
-            Continue
-          </button>
-        )}
-      </div>
     </div>
   );
 };
 
-export default RefractionRenderer;
+export default SnellsLawRenderer;

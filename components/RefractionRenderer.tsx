@@ -178,7 +178,7 @@ const realWorldApps = [
     connection: 'This game teaches how different materials bend light at different angles - the exact physics optometrists use when prescribing lenses with specific curvatures and materials.',
     howItWorks: 'Light entering a curved lens refracts at each surface according to Snell\'s law. The lens power in diopters equals 1/focal length in meters. Steeper curves and higher refractive index materials bend light more.',
     stats: [
-      { value: '4B+', label: 'People needing correction', icon: '👁️' },
+      { value: '50%', label: 'Of adults need correction', icon: '👁️' },
       { value: '1.74', label: 'High-index lens n value', icon: '🔬' },
       { value: '$150B', label: 'Global eyewear market', icon: '💰' }
     ],
@@ -708,7 +708,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Investigate the Mystery
+          Start Exploring
         </button>
 
         {renderNavDots()}
