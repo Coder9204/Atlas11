@@ -169,8 +169,8 @@ const realWorldApps = [
 // Test questions with scenarios and A-D format
 const testQuestions = [
   {
-    scenario: 'A laser beam travels from air into water at a 45-degree angle from the normal.',
-    question: 'According to Snell\'s Law (n1 sin theta1 = n2 sin theta2), what happens to the light?',
+    scenario: 'A laser beam in a laboratory travels from air (n=1.00) into water (n=1.33) at a 45-degree angle from the normal line.',
+    question: 'According to Snell\'s Law (n1 sin theta1 = n2 sin theta2), what happens to the light beam?',
     options: [
       { label: 'A', text: 'It bends toward the normal because water has a higher refractive index', correct: true },
       { label: 'B', text: 'It bends away from the normal', correct: false },
@@ -326,7 +326,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [incidentAngle, setIncidentAngle] = useState(45);
+  const [incidentAngle, setIncidentAngle] = useState(30);
   const [medium, setMedium] = useState<'water' | 'oil' | 'glass'>('water');
   const [showMeasurements, setShowMeasurements] = useState(false);
   const [activeApp, setActiveApp] = useState(0);
@@ -334,6 +334,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
   const [testIndex, setTestIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [showResult, setShowResult] = useState(false);
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
 
   const refractiveIndices: Record<string, number> = {
     air: 1.00,
@@ -470,10 +471,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
     const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
+        flexShrink: 0,
         padding: '16px 24px',
         background: design.colors.bgCard,
         borderBottom: `1px solid ${design.colors.border}`,
@@ -492,14 +490,15 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                 key={p}
                 aria-label={phaseLabels[p]}
                 title={phaseLabels[p]}
-                onClick={() => goToPhase(p)}
+                onClick={() => { if (idx <= currentIndex) goToPhase(p); }}
                 style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '8px',
+                  width: p === phase ? '20px' : '10px',
+                  height: '10px',
+                  borderRadius: '5px',
                   background: idx < currentIndex ? design.colors.success : p === phase ? design.colors.accentPrimary : design.colors.bgElevated,
                   border: 'none',
-                  cursor: 'pointer',
+                  cursor: idx <= currentIndex ? 'pointer' : 'default',
+                  opacity: idx > currentIndex ? 0.5 : 1,
                   transition: 'all 0.3s ease',
                   padding: 0
                 }}
@@ -637,40 +636,50 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             </filter>
           </defs>
 
-          <rect x="0" y="0" width="400" height="300" fill="url(#snellBgGrad)" rx="12"/>
-          <rect x="0" y="0" width="400" height={centerY} fill="url(#snellAirGrad)"/>
-          <rect x="0" y={centerY} width="400" height={300 - centerY} fill={`url(#snell${medium.charAt(0).toUpperCase() + medium.slice(1)}Grad)`}/>
+          <g className="background">
+            <rect x="0" y="0" width="400" height="300" fill="url(#snellBgGrad)" rx="12"/>
+            <rect x="0" y="0" width="400" height={centerY} fill="url(#snellAirGrad)"/>
+            <rect x="0" y={centerY} width="400" height={300 - centerY} fill={`url(#snell${medium.charAt(0).toUpperCase() + medium.slice(1)}Grad)`}/>
+          </g>
 
-          <line x1="0" y1={centerY} x2="400" y2={centerY} stroke={design.colors.textMuted} strokeWidth="2" strokeOpacity="0.5"/>
-          <line x1={centerX} y1={centerY - 120} x2={centerX} y2={centerY + 120} stroke="url(#snellNormalGrad)" strokeWidth="1.5" strokeDasharray="6,4"/>
+          <g className="interface">
+            <line x1="0" y1={centerY} x2="400" y2={centerY} stroke={design.colors.textMuted} strokeWidth="2" strokeOpacity="0.5"/>
+            <line x1={centerX} y1={centerY - 120} x2={centerX} y2={centerY + 120} stroke="url(#snellNormalGrad)" strokeWidth="1.5" strokeDasharray="6,4"/>
+          </g>
 
-          <path
-            d={`M ${centerX} ${centerY - arcRadius} A ${arcRadius} ${arcRadius} 0 0 0 ${centerX - Math.sin(incidentRad) * arcRadius} ${centerY - Math.cos(incidentRad) * arcRadius}`}
-            fill="none"
-            stroke="url(#snellIncidentArcGrad)"
-            strokeWidth="2.5"
-            filter="url(#snellArcGlow)"
-          />
+          <g className="arcs">
+            <path
+              d={`M ${centerX} ${centerY - arcRadius} A ${arcRadius} ${arcRadius} 0 0 0 ${centerX - Math.sin(incidentRad) * arcRadius} ${centerY - Math.cos(incidentRad) * arcRadius}`}
+              fill="none"
+              stroke="url(#snellIncidentArcGrad)"
+              strokeWidth="2.5"
+              filter="url(#snellArcGlow)"
+            />
 
-          <path
-            d={`M ${centerX} ${centerY + arcRadius} A ${arcRadius} ${arcRadius} 0 0 1 ${centerX + Math.sin(refractedRad) * arcRadius} ${centerY + Math.cos(refractedRad) * arcRadius}`}
-            fill="none"
-            stroke="url(#snellRefractedArcGrad)"
-            strokeWidth="2.5"
-            filter="url(#snellArcGlow)"
-          />
+            <path
+              d={`M ${centerX} ${centerY + arcRadius} A ${arcRadius} ${arcRadius} 0 0 1 ${centerX + Math.sin(refractedRad) * arcRadius} ${centerY + Math.cos(refractedRad) * arcRadius}`}
+              fill="none"
+              stroke="url(#snellRefractedArcGrad)"
+              strokeWidth="2.5"
+              filter="url(#snellArcGlow)"
+            />
+          </g>
 
-          <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke={design.colors.beam} strokeWidth="5" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
-          <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke="url(#snellBeamGrad)" strokeWidth="3" strokeLinecap="round"/>
+          <g className="beams">
+            <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke={design.colors.beam} strokeWidth="5" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
+            <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke="url(#snellBeamGrad)" strokeWidth="3" strokeLinecap="round"/>
 
-          <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke={design.colors.beam} strokeWidth="5" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
-          <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke="url(#snellBeamGrad)" strokeWidth="3" strokeLinecap="round"/>
+            <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke={design.colors.beam} strokeWidth="5" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
+            <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke="url(#snellBeamGrad)" strokeWidth="3" strokeLinecap="round"/>
 
-          <circle cx={centerX} cy={centerY} r="6" fill={design.colors.beamLight} filter="url(#snellBeamGlow)"/>
-          <circle cx={centerX} cy={centerY} r="4" fill="#fff"/>
+            <circle cx={centerX} cy={centerY} r="6" fill={design.colors.beamLight} filter="url(#snellBeamGlow)"/>
+            <circle cx={centerX} cy={centerY} r="4" fill="#fff"/>
+          </g>
 
-          <text x="20" y="30" fill={design.colors.air} fontSize="12" fontWeight="600">AIR (n=1.00)</text>
-          <text x="20" y={centerY + 25} fill={mediumColors.main} fontSize="12" fontWeight="600">{medium.toUpperCase()} (n={refractiveIndices[medium].toFixed(2)})</text>
+          <g className="labels">
+            <text x="20" y="30" fill={design.colors.air} fontSize="12" fontWeight="600">AIR (n=1.00)</text>
+            <text x="20" y={centerY + 25} fill={mediumColors.main} fontSize="12" fontWeight="600">{medium.toUpperCase()} (n={refractiveIndices[medium].toFixed(2)})</text>
+          </g>
         </svg>
 
         <div style={{
@@ -724,12 +733,81 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
     { id: 'D', label: 'D) Oil bends light in the opposite direction' },
   ];
 
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const canGoNext = !(phase === 'test' && !showResult);
+    const nextDisabled = isLast || !canGoNext;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 24px',
+        borderTop: `1px solid ${design.colors.border}`,
+        background: design.colors.bgCard,
+        flexShrink: 0
+      }}>
+        <button
+          onClick={() => {
+            if (!isFirst) goToPhase(phaseOrder[currentIndex - 1]);
+          }}
+          style={{
+            padding: '10px 20px',
+            borderRadius: design.radius.sm,
+            fontWeight: 600,
+            fontSize: '14px',
+            background: design.colors.bgElevated,
+            color: design.colors.textSecondary,
+            border: `1px solid ${design.colors.border}`,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            opacity: isFirst ? 0.3 : 1,
+            minHeight: '44px'
+          }}
+        >
+          ← Back
+        </button>
+
+        <span style={{
+          fontSize: '12px',
+          color: design.colors.textMuted,
+          fontWeight: 600
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={() => {
+            if (!isLast && canGoNext) goNext();
+          }}
+          style={{
+            padding: '10px 24px',
+            borderRadius: design.radius.sm,
+            fontWeight: 700,
+            fontSize: '14px',
+            background: nextDisabled ? design.colors.bgElevated : `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+            color: nextDisabled ? design.colors.textMuted : design.colors.textPrimary,
+            border: 'none',
+            cursor: nextDisabled ? 'not-allowed' : 'pointer',
+            opacity: nextDisabled ? 0.4 : 1,
+            boxShadow: nextDisabled ? 'none' : `0 2px 12px ${design.colors.accentGlow}`,
+            minHeight: '44px'
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
   // Render phase content
   const renderPhaseContent = () => {
     switch (phase) {
       case 'hook':
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <h1 style={{ fontSize: typo.title, fontWeight: 700, color: design.colors.textPrimary, marginBottom: '16px', lineHeight: 1.2 }}>
                 Measuring the Bend
@@ -752,7 +830,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
 
       case 'predict':
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px', lineHeight: 1.3 }}>
               Make Your Prediction
             </h2>
@@ -800,7 +878,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
 
       case 'play':
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px', lineHeight: 1.3 }}>
               Explore Snell's Law
             </h2>
@@ -881,7 +959,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
       case 'review':
         const predictionCorrect = prediction === 'A';
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>
               Understanding Snell's Law
             </h2>
@@ -917,13 +995,53 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
 
       case 'twist_predict':
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>
               New Variable: Different Medium
             </h2>
             <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '24px' }}>
               What if we change from water (n = 1.33) to vegetable oil (n = 1.47)? Both are denser than air, but oil has a higher refractive index.
             </p>
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <svg width="400" height="200" viewBox="0 0 400 200" style={{ maxWidth: '100%' }}>
+                <defs>
+                  <linearGradient id="twistWaterFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={design.colors.waterDark} stopOpacity="0.2"/>
+                    <stop offset="100%" stopColor={design.colors.waterLight} stopOpacity="0.4"/>
+                  </linearGradient>
+                  <linearGradient id="twistOilFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={design.colors.oilDark} stopOpacity="0.2"/>
+                    <stop offset="100%" stopColor={design.colors.oilLight} stopOpacity="0.4"/>
+                  </linearGradient>
+                  <filter id="twistGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                <g className="waterSide">
+                  <rect x="5" y="5" width="185" height="190" rx="8" fill="#0a0f1a" stroke={design.colors.water} strokeWidth="1"/>
+                  <rect x="5" y="80" width="185" height="115" rx="0" fill="url(#twistWaterFill)"/>
+                  <text x="97" y="25" fill={design.colors.water} fontSize="11" fontWeight="600" textAnchor="middle">WATER (n=1.33)</text>
+                  <line x1="97" y1="40" x2="97" y2="170" stroke={design.colors.accentPrimary} strokeWidth="1" strokeDasharray="4,3" strokeOpacity="0.5"/>
+                  <line x1="60" y1="40" x2="97" y2="80" stroke={design.colors.beam} strokeWidth="3" filter="url(#twistGlow)"/>
+                  <line x1="97" y1="80" x2="120" y2="160" stroke={design.colors.beam} strokeWidth="3" filter="url(#twistGlow)"/>
+                  <circle cx="97" cy="80" r="3" fill="#fff"/>
+                  <text x="97" y="185" fill={design.colors.textMuted} fontSize="9" textAnchor="middle">Moderate bending</text>
+                </g>
+                <g className="oilSide">
+                  <rect x="210" y="5" width="185" height="190" rx="8" fill="#0a0f1a" stroke={design.colors.oil} strokeWidth="1"/>
+                  <rect x="210" y="80" width="185" height="115" rx="0" fill="url(#twistOilFill)"/>
+                  <text x="302" y="25" fill={design.colors.oil} fontSize="11" fontWeight="600" textAnchor="middle">OIL (n=1.47)</text>
+                  <line x1="302" y1="40" x2="302" y2="170" stroke={design.colors.accentPrimary} strokeWidth="1" strokeDasharray="4,3" strokeOpacity="0.5"/>
+                  <line x1="265" y1="40" x2="302" y2="80" stroke={design.colors.beam} strokeWidth="3" filter="url(#twistGlow)"/>
+                  <line x1="302" y1="80" x2="320" y2="160" stroke={design.colors.beam} strokeWidth="3" filter="url(#twistGlow)"/>
+                  <circle cx="302" cy="80" r="3" fill="#fff"/>
+                  <text x="302" y="185" fill={design.colors.textMuted} fontSize="9" textAnchor="middle">More bending?</text>
+                </g>
+                <text x="200" y="105" fill={design.colors.textMuted} fontSize="12" textAnchor="middle" fontWeight="600">vs</text>
+              </svg>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
               {twistPredictions.map((p) => (
@@ -961,7 +1079,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
 
       case 'twist_play':
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>
               Compare Water vs Oil
             </h2>
@@ -1031,7 +1149,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
       case 'twist_review':
         const twistCorrect = twistPrediction === 'B';
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>
               Higher Index = More Bending
             </h2>
@@ -1067,7 +1185,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
       case 'transfer':
         const app = realWorldApps[activeApp];
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '8px' }}>
               Real-World Applications
             </h2>
@@ -1133,6 +1251,34 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                 </p>
               </div>
 
+              <div style={{
+                background: design.colors.bgElevated,
+                padding: '16px',
+                borderRadius: design.radius.sm,
+                marginBottom: '16px'
+              }}>
+                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.cyan, marginBottom: '8px' }}>
+                  HOW IT WORKS:
+                </h4>
+                <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              <div style={{
+                background: design.colors.bgElevated,
+                padding: '16px',
+                borderRadius: design.radius.sm,
+                marginBottom: '16px'
+              }}>
+                <h4 style={{ fontSize: typo.small, fontWeight: 600, color: design.colors.success, marginBottom: '8px' }}>
+                  FUTURE IMPACT:
+                </h4>
+                <p style={{ fontSize: typo.small, color: design.colors.textSecondary, margin: 0 }}>
+                  {app.futureImpact}
+                </p>
+              </div>
+
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
                 <span style={{
                   padding: '8px 12px',
@@ -1194,7 +1340,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
           }, 0);
 
           return (
-            <div style={{ padding: typo.pagePadding, paddingTop: '80px', textAlign: 'center' }}>
+            <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
               <h2 style={{ fontSize: typo.title, fontWeight: 700, color: design.colors.textPrimary, marginBottom: '24px' }}>
                 Test Complete!
               </h2>
@@ -1207,13 +1353,31 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
               <p style={{ fontSize: typo.body, color: design.colors.textMuted, marginBottom: '24px' }}>
                 {score >= 7 ? 'Excellent! You\'ve mastered Snell\'s Law!' : score >= 5 ? 'Good job! Keep practicing!' : 'Keep learning - you\'ll get there!'}
               </p>
-              {renderButton('Continue', goNext, score >= 7 ? 'success' : 'primary')}
+
+              <div style={{ marginTop: '24px', textAlign: 'left' }}>
+                <h3 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
+                {testQuestions.map((q, i) => {
+                  const userAnswer = answers[i];
+                  const isCorrect = userAnswer !== null && q.options[userAnswer]?.correct;
+                  return (
+                    <div key={i} style={{
+                      padding: '12px', marginBottom: '8px', borderRadius: '8px',
+                      background: isCorrect ? design.colors.successMuted : design.colors.errorMuted,
+                      border: `1px solid ${isCorrect ? design.colors.success : design.colors.error}`
+                    }}>
+                      <p style={{ fontWeight: 600, color: design.colors.textPrimary, margin: '0 0 4px 0', fontSize: typo.body }}>Q{i + 1}: {q.scenario}</p>
+                      <p style={{ color: design.colors.textSecondary, margin: '0 0 4px 0', fontSize: typo.small }}>Your answer: {userAnswer !== null ? q.options[userAnswer].text : 'Skipped'}</p>
+                      {!isCorrect && <p style={{ color: design.colors.success, margin: 0, fontSize: typo.small }}>Correct: {q.options.find(o => o.correct)?.text}</p>}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           );
         }
 
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px' }}>
+          <div style={{ padding: typo.pagePadding, }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, margin: 0 }}>
                 Knowledge Test
@@ -1259,37 +1423,92 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-              {currentQ.options.map((option, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    const newAnswers = [...answers];
-                    newAnswers[testIndex] = idx;
-                    setAnswers(newAnswers);
-                    playSound('click');
-                    emitEvent('test_answered', { questionIndex: testIndex, answer: idx });
-                  }}
-                  style={{
-                    padding: '16px',
-                    background: selectedAnswer === idx ? design.colors.accentPrimary : design.colors.bgCard,
-                    color: design.colors.textPrimary,
-                    border: selectedAnswer === idx ? `2px solid ${design.colors.accentSecondary}` : `1px solid ${design.colors.border}`,
-                    borderRadius: design.radius.md,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: typo.body,
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {option.label}) {option.text}
-                </button>
-              ))}
+              {currentQ.options.map((option, idx) => {
+                const isConfirmed = confirmedIndex === testIndex;
+                const isSelected = selectedAnswer === idx;
+                const isCorrectOption = option.correct;
+
+                let optionBg = design.colors.bgCard;
+                let optionBorder = `1px solid ${design.colors.border}`;
+
+                if (isConfirmed) {
+                  if (isSelected && isCorrectOption) {
+                    optionBg = design.colors.successMuted;
+                    optionBorder = `2px solid ${design.colors.success}`;
+                  } else if (isSelected && !isCorrectOption) {
+                    optionBg = design.colors.errorMuted;
+                    optionBorder = `2px solid ${design.colors.error}`;
+                  } else if (isCorrectOption) {
+                    optionBg = design.colors.successMuted;
+                    optionBorder = `2px solid ${design.colors.success}`;
+                  }
+                } else if (isSelected) {
+                  optionBg = design.colors.accentPrimary;
+                  optionBorder = `2px solid ${design.colors.accentSecondary}`;
+                }
+
+                return (
+                  <div key={idx}>
+                    <button
+                      onClick={() => {
+                        if (isConfirmed) return;
+                        const newAnswers = [...answers];
+                        newAnswers[testIndex] = idx;
+                        setAnswers(newAnswers);
+                        playSound('click');
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '16px',
+                        background: optionBg,
+                        color: design.colors.textPrimary,
+                        border: optionBorder,
+                        borderRadius: design.radius.md,
+                        cursor: isConfirmed ? 'default' : 'pointer',
+                        textAlign: 'left',
+                        fontSize: typo.body,
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {option.label}) {option.text}
+                      {isConfirmed && isSelected && isCorrectOption && (
+                        <span style={{ marginLeft: '8px', color: design.colors.success, fontWeight: 700 }}>
+                          ✓ Correct!
+                        </span>
+                      )}
+                      {isConfirmed && isSelected && !isCorrectOption && (
+                        <span style={{ marginLeft: '8px', color: design.colors.error, fontWeight: 700 }}>
+                          ✗ Incorrect
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
+
+            {/* Explanation after confirming */}
+            {confirmedIndex === testIndex && (
+              <div style={{
+                background: design.colors.bgElevated,
+                padding: '16px',
+                borderRadius: design.radius.md,
+                marginBottom: '24px',
+                border: `1px solid ${design.colors.border}`
+              }}>
+                <p style={{ fontSize: typo.body, color: design.colors.textSecondary, margin: 0 }}>
+                  <span style={{ fontWeight: 600, color: design.colors.accentPrimary }}>Explanation: </span>
+                  {currentQ.explanation}
+                </p>
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
               {testIndex > 0 && (
                 <button
-                  onClick={() => setTestIndex(testIndex - 1)}
+                  onClick={() => {
+                    setTestIndex(testIndex - 1);
+                  }}
                   style={{
                     padding: '12px 24px',
                     background: design.colors.bgCard,
@@ -1305,10 +1524,40 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                 </button>
               )}
               <div style={{ flex: 1 }} />
-              {selectedAnswer !== null && (
+              {/* Check Answer button: always rendered when not confirmed, disabled if no answer */}
+              {confirmedIndex !== testIndex && (
+                <button
+                  onClick={() => {
+                    if (selectedAnswer === null) return;
+                    setConfirmedIndex(testIndex);
+                    emitEvent('test_answered', { questionIndex: testIndex, answer: selectedAnswer });
+                    playSound(currentQ.options[selectedAnswer]?.correct ? 'success' : 'failure');
+                  }}
+                  disabled={selectedAnswer === null}
+                  style={{
+                    padding: '12px 24px',
+                    background: selectedAnswer !== null ? design.colors.cyan : design.colors.bgElevated,
+                    color: selectedAnswer !== null ? '#fff' : design.colors.textMuted,
+                    border: 'none',
+                    borderRadius: design.radius.sm,
+                    cursor: selectedAnswer !== null ? 'pointer' : 'not-allowed',
+                    fontSize: typo.body,
+                    fontWeight: 600,
+                    transition: 'all 0.2s ease',
+                    opacity: selectedAnswer !== null ? 1 : 0.5
+                  }}
+                >
+                  Check Answer
+                </button>
+              )}
+              {/* Next Question / Submit Test button: shown only after confirming */}
+              {confirmedIndex === testIndex && (
                 testIndex < 9 ? (
                   <button
-                    onClick={() => setTestIndex(testIndex + 1)}
+                    onClick={() => {
+                      setConfirmedIndex(null);
+                      setTestIndex(testIndex + 1);
+                    }}
                     style={{
                       padding: '12px 24px',
                       background: design.colors.accentPrimary,
@@ -1320,7 +1569,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    Next
+                    Next Question
                   </button>
                 ) : (
                   <button
@@ -1350,7 +1599,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
 
       case 'mastery':
         return (
-          <div style={{ padding: typo.pagePadding, paddingTop: '80px', textAlign: 'center' }}>
+          <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>🏆</div>
             <h2 style={{ fontSize: typo.title, fontWeight: 700, color: design.colors.textPrimary, marginBottom: '16px' }}>
               Congratulations! You've Mastered Snell's Law!
@@ -1381,6 +1630,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             {renderButton('Complete Lesson', () => {
               playSound('complete');
               emitEvent('mastery_achieved', {});
+              window.location.href = '/';
             }, 'success', false, 'lg')}
           </div>
         );
@@ -1392,13 +1642,24 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
       background: `linear-gradient(145deg, ${design.colors.bgDeep} 0%, ${design.colors.bgPrimary} 50%, ${design.colors.bgSecondary} 100%)`,
       fontFamily: design.font.sans,
       color: design.colors.textPrimary,
     }}>
       {renderProgressBar()}
-      {renderPhaseContent()}
+      <div style={{
+        flex: '1 1 0%',
+        minHeight: 0,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch' as any
+      }}>
+        {renderPhaseContent()}
+      </div>
+      {renderBottomBar()}
     </div>
   );
 };

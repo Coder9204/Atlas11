@@ -362,7 +362,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Fluid Comparison',
+    twist_play: 'Twist Play',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -572,6 +572,17 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             )}
           </>
         )}
+
+        {/* Water surface bubbles and wave path */}
+        <circle cx={width * 0.3} cy={waterTop + 8} r="3" fill="rgba(125,211,252,0.3)">
+          <animate attributeName="cy" values={`${waterTop + 8};${waterTop + 3};${waterTop + 8}`} dur="2s" repeatCount="indefinite" />
+        </circle>
+        <circle cx={width * 0.6} cy={waterTop + 12} r="4" fill="rgba(125,211,252,0.2)">
+          <animate attributeName="cy" values={`${waterTop + 12};${waterTop + 6};${waterTop + 12}`} dur="2.5s" repeatCount="indefinite" />
+        </circle>
+        <circle cx={width * 0.8} cy={waterTop + 6} r="2" fill="rgba(125,211,252,0.25)" />
+        <path d={`M43,${waterTop - 2} Q${width * 0.25},${waterTop - 5} ${width * 0.5},${waterTop - 2} T${width - 43},${waterTop - 2}`} fill="none" stroke="rgba(125,211,252,0.3)" strokeWidth="1" />
+        <path d={`M43,${waterTop + waterHeight} Q${width * 0.3},${waterTop + waterHeight - 8} ${width * 0.6},${waterTop + waterHeight} T${width - 43},${waterTop + waterHeight}`} fill="none" stroke="rgba(7,89,133,0.4)" strokeWidth="1" />
       </svg>
     );
   };
@@ -637,6 +648,74 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
     transition: 'all 0.2s ease',
   };
 
+  // Bottom navigation bar
+  const currentIndex = phaseOrder.indexOf(phase);
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === phaseOrder.length - 1;
+  const canGoNext = !isLast && phase !== 'test';
+
+  const renderBottomBar = () => (
+    <div style={{
+      flexShrink: 0,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 20px',
+      borderTop: '1px solid rgba(255,255,255,0.1)',
+      background: 'rgba(0,0,0,0.3)',
+    }}>
+      <button
+        onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])}
+        style={{
+          padding: '8px 20px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: 'transparent',
+          color: isFirst ? 'rgba(255,255,255,0.3)' : 'white',
+          cursor: isFirst ? 'not-allowed' : 'pointer',
+          opacity: isFirst ? 0.4 : 1,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        ← Back
+      </button>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        {phaseOrder.map((p, i) => (
+          <div
+            key={p}
+            onClick={() => i <= currentIndex && goToPhase(p)}
+            title={phaseLabels[p]}
+            style={{
+              width: p === phase ? '20px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              background: p === phase ? '#3b82f6' : i < currentIndex ? '#10b981' : 'rgba(255,255,255,0.2)',
+              cursor: i <= currentIndex ? 'pointer' : 'default',
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+      <button
+        onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])}
+        style={{
+          padding: '8px 20px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)',
+          color: 'white',
+          cursor: canGoNext ? 'pointer' : 'not-allowed',
+          opacity: canGoNext ? 1 : 0.4,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        Next →
+      </button>
+    </div>
+  );
+
   // ============================================================================
   // PHASE RENDERS
   // ============================================================================
@@ -663,7 +742,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
         }}>
           🚢 🪨
         </div>
-        <style>{`@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }`}</style>
+        <style>{`@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } } .muted-secondary { color: #94a3b8; } .muted-dim { color: #6B7280; }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
           Buoyancy & Archimedes' Principle
@@ -701,7 +780,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           Discover Why Things Float
         </button>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -740,35 +819,66 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             What property of an object determines whether it will float or sink in water?
           </h2>
 
-          {/* Visual comparison */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '20px',
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🪨</div>
-              <p style={{ ...typo.small, color: colors.error }}>Stone: Sinks</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Heavy & Dense</p>
-            </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🪵</div>
-              <p style={{ ...typo.small, color: colors.success }}>Wood: Floats</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Light & Porous</p>
-            </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🚢</div>
-              <p style={{ ...typo.small, color: colors.success }}>Ship: Floats</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>Heavy but Hollow</p>
-            </div>
+          {/* SVG Visual comparison */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="440" height="280" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="predictWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#075985" stopOpacity="0.6" />
+                </linearGradient>
+                <linearGradient id="stoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#78716c" />
+                  <stop offset="100%" stopColor="#44403c" />
+                </linearGradient>
+                <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#d97706" />
+                  <stop offset="100%" stopColor="#92400e" />
+                </linearGradient>
+                <linearGradient id="shipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#4338ca" />
+                </linearGradient>
+                <filter id="predictGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Water */}
+              <rect x="20" y="140" width="400" height="120" fill="url(#predictWater)" rx="4" />
+              <line x1="20" y1="140" x2="420" y2="140" stroke="#7dd3fc" strokeWidth="2" />
+              {/* Stone - sinks to bottom */}
+              <g filter="url(#predictGlow)">
+                <circle cx="80" cy="230" r="25" fill="url(#stoneGrad)" />
+                <text x="80" y="235" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">Stone</text>
+              </g>
+              <text x="80" y="270" textAnchor="middle" fill={colors.error} fontSize="11">Sinks</text>
+              {/* Wood - floats at surface */}
+              <g filter="url(#predictGlow)">
+                <rect x="195" y="125" width="50" height="30" rx="4" fill="url(#woodGrad)" />
+                <text x="220" y="144" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Wood</text>
+              </g>
+              <text x="220" y="115" textAnchor="middle" fill={colors.success} fontSize="11">Floats</text>
+              {/* Ship - floats (hollow hull) */}
+              <g filter="url(#predictGlow)">
+                <path d="M320,130 L370,130 L380,155 L310,155 Z" fill="url(#shipGrad)" />
+                <rect x="335" y="115" width="15" height="15" fill={colors.accent} rx="2" />
+                <text x="345" y="170" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">Ship</text>
+              </g>
+              <text x="345" y="185" textAnchor="middle" fill={colors.success} fontSize="11">Floats!</text>
+              {/* Labels */}
+              <text x="220" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">What determines floating vs sinking?</text>
+              <text x="80" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="10">Dense & Heavy</text>
+              <text x="220" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="10">Light & Porous</text>
+              <text x="345" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="10">Heavy but Hollow</text>
+              {/* Arrows */}
+              <path d="M80,65 L80,90" stroke={colors.error} strokeWidth="2" markerEnd="url(#arrowDown)" />
+              <path d="M220,65 L220,90" stroke={colors.success} strokeWidth="2" />
+              <path d="M345,65 L345,90" stroke={colors.success} strokeWidth="2" />
+              <circle cx="80" cy="95" r="3" fill={colors.error} />
+              <circle cx="220" cy="95" r="3" fill={colors.success} />
+              <circle cx="345" cy="95" r="3" fill={colors.success} />
+            </svg>
           </div>
 
           {/* Options */}
@@ -818,7 +928,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1034,7 +1144,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1127,7 +1237,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1166,35 +1276,50 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
             Ice floats in water with 10% above the surface. If you place the same ice cube in vegetable oil (density 0.9 kg/L instead of water's 1.0 kg/L), what happens?
           </h2>
 
-          {/* Visual comparison */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '20px',
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', marginBottom: '8px' }}>🧊</div>
-              <p style={{ ...typo.small, color: colors.textPrimary }}>Ice</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>0.92 kg/L</p>
-            </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted }}>in</div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', marginBottom: '8px' }}>💧</div>
-              <p style={{ ...typo.small, color: colors.water }}>Water: 1.0 kg/L</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>90% submerged</p>
-            </div>
-            <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '36px', marginBottom: '8px' }}>🫒</div>
-              <p style={{ ...typo.small, color: colors.warning }}>Oil: 0.9 kg/L</p>
-              <p style={{ ...typo.small, color: colors.textMuted }}>???</p>
-            </div>
+          {/* SVG Visual comparison */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <svg width="440" height="240" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="twistWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#075985" stopOpacity="0.7" />
+                </linearGradient>
+                <linearGradient id="twistOil" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#b45309" stopOpacity="0.6" />
+                </linearGradient>
+                <filter id="twistGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Water tank */}
+              <rect x="20" y="30" width="180" height="180" fill="none" stroke={colors.border} strokeWidth="2" rx="6" />
+              <rect x="22" y="80" width="176" height="128" fill="url(#twistWater)" rx="4" />
+              <line x1="22" y1="80" x2="198" y2="80" stroke="#7dd3fc" strokeWidth="2" />
+              <text x="110" y="22" textAnchor="middle" fill={colors.accent} fontSize="13" fontWeight="bold">Water (1.0 kg/L)</text>
+              {/* Ice in water - 90% submerged */}
+              <g filter="url(#twistGlow)">
+                <rect x="85" y="72" width="50" height="50" rx="6" fill="#a5f3fc" stroke="#22d3ee" strokeWidth="1.5" />
+                <text x="110" y="100" textAnchor="middle" fill="#0e7490" fontSize="10" fontWeight="bold">ICE</text>
+              </g>
+              <text x="110" y="150" textAnchor="middle" fill="white" fontSize="10">90% submerged</text>
+              {/* Oil tank */}
+              <rect x="240" y="30" width="180" height="180" fill="none" stroke={colors.border} strokeWidth="2" rx="6" />
+              <rect x="242" y="80" width="176" height="128" fill="url(#twistOil)" rx="4" />
+              <line x1="242" y1="80" x2="418" y2="80" stroke="#fbbf24" strokeWidth="2" />
+              <text x="330" y="22" textAnchor="middle" fill={colors.warning} fontSize="13" fontWeight="bold">Oil (0.9 kg/L)</text>
+              {/* Ice in oil - unknown */}
+              <g filter="url(#twistGlow)">
+                <rect x="305" y="68" width="50" height="50" rx="6" fill="#a5f3fc" stroke="#22d3ee" strokeWidth="1.5" />
+                <text x="330" y="96" textAnchor="middle" fill="#0e7490" fontSize="10" fontWeight="bold">ICE</text>
+              </g>
+              <text x="330" y="150" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">???</text>
+              {/* Arrow between */}
+              <path d="M205,120 L235,120" stroke={colors.textMuted} strokeWidth="2" />
+              <polygon points="232,115 240,120 232,125" fill={colors.textMuted} />
+              <text x="220" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="9">vs</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1242,7 +1367,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1447,7 +1572,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1532,7 +1657,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           </button>
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1736,7 +1861,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           )}
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1777,7 +1902,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                 onClick={() => { playSound('complete'); nextPhase(); }}
                 style={primaryButtonStyle}
               >
-                Achieve Mastery
+                Next: Achieve Mastery
               </button>
             ) : (
               <button
@@ -1791,11 +1916,11 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
                 }}
                 style={primaryButtonStyle}
               >
-                Review & Try Again
+                Back to Review
               </button>
             )}
           </div>
-          {renderNavDots()}
+          {renderBottomBar()}
         </div>
       );
     }
@@ -2033,7 +2158,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           </div>
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -2177,7 +2302,7 @@ const BuoyancyRenderer: React.FC<BuoyancyRendererProps> = ({ onGameEvent, gamePh
           </a>
         </div>
 
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }

@@ -114,7 +114,7 @@ const testQuestions = [
     options: [
       { id: 'a', label: "Tall stacks catch more wind, pushing the ship sideways" },
       { id: 'b', label: "Adding weight high raises the center of mass, reducing the metacentric height and stability", correct: true },
-      { id: 'c', label: "The containers block the captain's view of approaching waves" },
+      { id: 'c', label: "The containers obstruct the captain's view of approaching waves" },
       { id: 'd', label: "Tall stacks require the ship to travel more slowly" }
     ],
     explanation: "Ships balance around their center of buoyancy and center of gravity. When cargo raises the center of mass, the 'metacentric height' (distance between these points) decreases. A smaller metacentric height means less restoring force when the ship tilts - exactly like our fork experiment when weight shifts above the pivot."
@@ -124,7 +124,7 @@ const testQuestions = [
     question: "Why does the astronaut rotate around a specific point rather than randomly tumbling?",
     options: [
       { id: 'a', label: "Air currents in the module cause consistent rotation" },
-      { id: 'b', label: "All rotation occurs around the center of mass, which continues moving in a straight line", correct: true },
+      { id: 'b', label: "All rotation occurs around the center of mass, and the COM travels in a straight line", correct: true },
       { id: 'c', label: "The space station's artificial gravity creates a rotation axis" },
       { id: 'd', label: "Magnetic fields from station equipment orient the astronaut" }
     ],
@@ -174,7 +174,7 @@ const realWorldApps = [
     title: 'Vehicle Rollover Prevention',
     short: 'Keeping vehicles grounded through physics',
     tagline: 'When centrifugal force meets center of mass',
-    description: 'Modern vehicles use electronic stability control (ESC) systems that monitor the vehicle center of mass position relative to its wheelbase. When sensors detect dangerous COM shifts during sharp turns or sudden maneuvers, the system automatically applies selective braking to individual wheels and reduces engine power to prevent rollover.',
+    description: 'Modern vehicles use electronic stability control (ESC) systems that monitor the vehicle center of mass position relative to its wheelbase. ESC reduces rollover accidents by 35% and processes data from gyroscopic sensors over 100 times per second with a response time of 50ms. When sensors detect dangerous COM shifts during sharp turns or sudden maneuvers, the system automatically applies selective braking to individual wheels and reduces engine power to prevent rollover. SUVs with a COM height above 0.7m are 3x more likely to roll over than sedans at 0.5m.',
     connection: 'Just like our fork experiment, vehicle stability depends on keeping the center of mass low and within the base of support. When cornering forces push the COM beyond the tire contact patches, the vehicle tips - exactly like adding weight to the wrong side of the toothpick.',
     howItWorks: 'Gyroscopic sensors measure roll rate and lateral acceleration 100+ times per second. An onboard computer compares these against a model of the vehicles COM position, factoring in cargo and passengers. When rollover risk exceeds thresholds, hydraulic brakes pulse individual wheels while throttle cuts power.',
     stats: [
@@ -271,7 +271,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
   // Twist phase - adjustable weight
   const [twistWeight, setTwistWeight] = useState(50); // grams
-  const [twistPosition, setTwistPosition] = useState(0); // -1 to +1
+  const [twistPosition, setTwistPosition] = useState(-0.5); // -1 to +1
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -344,9 +344,12 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
   };
 
+  // Confirm flow for quiz
+  const [confirmedIndex, setConfirmedIndex] = useState(-1);
+
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
-  const phaseLabels: Record<Phase, string> = {
+  const phaseNames: Record<string, string> = {
     hook: 'Introduction',
     predict: 'Predict',
     play: 'Experiment',
@@ -358,6 +361,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     test: 'Knowledge Test',
     mastery: 'Mastery'
   };
+  const phaseLabels = phaseNames as Record<Phase, string>;
 
   const goToPhase = useCallback((p: Phase) => {
     if (isNavigating.current) return;
@@ -384,11 +388,12 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   }, [phase, goToPhase, phaseOrder]);
 
   // Fork Balance Visualization
-  const ForkVisualization = ({ showWeight = false, weightPos = 0, tiltAngle = 0 }: { showWeight?: boolean; weightPos?: number; tiltAngle?: number }) => {
+  const ForkVisualization = ({ showWeight = false, weightPos = 0, tiltAngle = 0, pivotPct = 50 }: { showWeight?: boolean; weightPos?: number; tiltAngle?: number; pivotPct?: number }) => {
     const width = isMobile ? 340 : 480;
     const height = isMobile ? 280 : 340;
     const cx = width / 2;
-    const pivotY = height * 0.45;
+    // pivotPct shifts the pivot point vertically (20=high, 80=low)
+    const pivotY = height * (0.3 + (pivotPct / 100) * 0.3);
 
     // Calculate COM position
     const comX = cx + (showWeight ? weightPos * 60 : -40);
@@ -544,6 +549,31 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const isTestPhase = phase === 'test';
+    const quizComplete = isTestPhase && testSubmitted;
+    const canGoNext = !isLast && (!isTestPhase || quizComplete);
+    return (
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        <button onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1 }}>
+          Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <div key={p} onClick={() => i <= currentIndex && goToPhase(p)} title={phaseNames[p] || p} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#3b82f6' : i < currentIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
+        </div>
+        <button onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4 }}>
+          Next
+        </button>
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #059669)`,
@@ -561,6 +591,9 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   // ============================================================================
   // PHASE RENDERS
   // ============================================================================
+
+  // Wrap all phase content with bottom bar
+  const renderPhaseContent = (): React.ReactNode => {
 
   // HOOK PHASE
   if (phase === 'hook') {
@@ -753,7 +786,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <ForkVisualization />
+              <ForkVisualization pivotPct={pivotHeight} />
             </div>
 
             {/* COM Toggle */}
@@ -792,6 +825,22 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
               <span style={{ ...typo.small, color: showCOM ? colors.error : colors.textSecondary, fontWeight: showCOM ? 600 : 400 }}>
                 Show COM
               </span>
+            </div>
+
+            {/* Pivot height slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Pivot Height</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pivotHeight}%</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="80"
+                value={pivotHeight}
+                onChange={(e) => setPivotHeight(parseInt(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+              />
             </div>
 
             {/* Key observation */}
@@ -1578,68 +1627,91 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
             ))}
           </div>
 
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+          {/* Navigation with confirm flow */}
+          {(() => {
+            const hasAnswer = !!testAnswers[currentQuestion];
+            const isConfirmed = confirmedIndex >= currentQuestion;
+            const isLastQ = currentQuestion === 9;
+
+            if (hasAnswer && !isConfirmed) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      setConfirmedIndex(currentQuestion);
+                      playSound('click');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: colors.accent,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Check Answer
+                  </button>
+                </div>
+              );
+            }
+            if (isConfirmed && !isLastQ) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      setCurrentQuestion(prev => prev + 1);
+                      playSound('click');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: colors.accent,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Next Question
+                  </button>
+                </div>
+              );
+            }
+            if (isConfirmed && isLastQ) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      const score = testAnswers.reduce((acc, ans, i) => {
+                        const correct = testQuestions[i].options.find(o => (o as any).correct)?.id;
+                        return acc + (ans === correct ? 1 : 0);
+                      }, 0);
+                      setTestScore(score);
+                      setTestSubmitted(true);
+                      playSound(score >= 7 ? 'complete' : 'failure');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Submit Test
+                  </button>
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
 
         {renderNavDots()}
@@ -1737,6 +1809,16 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   }
 
   return null;
+  }; // end renderPhaseContent
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {renderPhaseContent()}
+      </div>
+      {renderBottomBar()}
+    </div>
+  );
 };
 
 export default CenterOfMassRenderer;

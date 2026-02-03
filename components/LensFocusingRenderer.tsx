@@ -366,7 +366,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Magnifier',
+    twist_play: 'Explore Twist',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -674,6 +674,31 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
     </div>
   );
 
+  // Bottom bar with Back/Next
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const isTestPhase = phase === 'test';
+    const quizComplete = isTestPhase && testSubmitted;
+    const canGoNext = !isLast && (!isTestPhase || quizComplete);
+    return (
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: `1px solid ${colors.border}`, background: 'rgba(0,0,0,0.3)' }}>
+        <button onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: `1px solid ${colors.border}`, background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1, transition: 'all 0.2s ease', fontWeight: 600 }}>
+          ← Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <div key={p} onClick={() => i <= currentIndex && goToPhase(p)} title={phaseLabels[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? colors.accent : i < currentIndex ? colors.success : 'rgba(255,255,255,0.2)', cursor: i <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
+        </div>
+        <button onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? `linear-gradient(135deg, ${colors.accent}, #0891b2)` : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4, transition: 'all 0.2s ease', fontWeight: 700 }}>
+          Next →
+        </button>
+      </div>
+    );
+  };
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #0891b2)`,
@@ -696,16 +721,17 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   if (phase === 'hook') {
     return (
       <div style={{
+        height: '100vh',
         minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        color: 'white',
+        fontWeight: 400,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -748,14 +774,20 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
           </p>
         </div>
 
+        <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '12px', maxWidth: '400px', marginBottom: '16px' }}>
+          Discover the fundamental optics equation that governs every lens system
+        </p>
+
         <button
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Lens Physics
+          Start Exploring
         </button>
 
         {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -770,13 +802,17 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        color: 'white',
+        fontWeight: 400,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -784,45 +820,49 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             border: `1px solid ${colors.accent}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+            <p style={{ fontSize: '14px', color: colors.accent, margin: 0, fontWeight: 600 }}>
               Make Your Prediction
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            You hold a magnifying glass between a candle and a wall. At what position will you see the sharpest image?
+          <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.textPrimary, marginBottom: '24px' }}>
+            What happens when you hold a magnifying glass between a candle and a wall?
           </h2>
 
-          {/* Simple diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🕯️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Candle</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>---</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>🔍</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Lens at ?</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>---</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📋</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Wall/Screen</p>
-              </div>
-            </div>
-          </div>
+          <svg width="400" height="180" viewBox="0 0 400 180" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }}>
+            <defs>
+              <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={colors.accent} stopOpacity="0.2" />
+                <stop offset="50%" stopColor={colors.accent} stopOpacity="0.6" />
+                <stop offset="100%" stopColor={colors.accent} stopOpacity="0.2" />
+              </linearGradient>
+              <filter id="predictLensGlow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <g className="background"><rect x="0" y="0" width="400" height="180" fill="#0f172a" rx="12" /></g>
+            <g className="objects">
+              <rect x="30" y="50" width="6" height="80" fill="#f59e0b" rx="2" />
+              <circle cx="33" cy="45" r="8" fill="#f59e0b" filter="url(#predictLensGlow)" />
+              <text x="20" y="150" fill="rgba(148,163,184,1)" fontSize="10">Candle</text>
+            </g>
+            <g className="lens">
+              <ellipse cx="200" cy="90" rx="8" ry="55" fill="url(#lensGrad)" stroke={colors.accent} strokeWidth="2" />
+              <text x="180" y="165" fill={colors.accent} fontSize="10" fontWeight="600">Lens</text>
+            </g>
+            <g className="screen">
+              <rect x="360" y="30" width="8" height="120" fill="#64748b" rx="2" />
+              <text x="345" y="165" fill="rgba(148,163,184,1)" fontSize="10">Screen</text>
+            </g>
+            <g className="rays">
+              <line x1="38" y1="60" x2="192" y2="60" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
+              <line x1="208" y1="60" x2="365" y2="120" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
+              <line x1="38" y1="120" x2="192" y2="120" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
+              <line x1="208" y1="120" x2="365" y2="60" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
+              <text x="340" y="25" fill="#34d399" fontSize="10">Image?</text>
+            </g>
+          </svg>
 
           {/* Options */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -870,8 +910,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -880,7 +920,9 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
         padding: '24px',
       }}>
@@ -1165,13 +1207,15 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        color: 'white',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1179,35 +1223,53 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             marginBottom: '24px',
             border: `1px solid ${colors.warning}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Object Inside Focal Length
+            <p style={{ fontSize: '14px', color: colors.warning, margin: 0, fontWeight: 600 }}>
+              New Variable: What happens when the object is INSIDE the focal length?
             </p>
           </div>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            What happens when you place an object CLOSER to a convex lens than its focal length?
+          <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.textPrimary, marginBottom: '24px' }}>
+            Think about using a magnifying glass. What do you expect to see?
           </h2>
 
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              Think about using a magnifying glass to examine a small insect...
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-              <div style={{ fontSize: '48px' }}>🐜</div>
-              <div style={{ color: colors.accent, fontSize: '24px' }}>&lt;-- f --&gt;</div>
-              <div style={{ fontSize: '48px' }}>🔍</div>
-              <div style={{ color: colors.textMuted, fontSize: '24px' }}>👁️</div>
-            </div>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
-              Object is INSIDE the focal length
-            </p>
-          </div>
+          <svg width="400" height="180" viewBox="0 0 400 180" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }}>
+            <defs>
+              <linearGradient id="twistLensGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={colors.accent} stopOpacity="0.2" />
+                <stop offset="50%" stopColor={colors.accent} stopOpacity="0.6" />
+                <stop offset="100%" stopColor={colors.accent} stopOpacity="0.2" />
+              </linearGradient>
+              <filter id="twistLensGlow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <g className="background"><rect x="0" y="0" width="400" height="180" fill="#0f172a" rx="12" /></g>
+            <g className="lens">
+              <ellipse cx="250" cy="90" rx="8" ry="55" fill="url(#twistLensGrad)" stroke={colors.accent} strokeWidth="2" />
+              <text x="235" y="165" fill={colors.accent} fontSize="10" fontWeight="600">Lens</text>
+              <line x1="250" y1="90" x2="310" y2="90" stroke={colors.accent} strokeWidth="1" strokeDasharray="3,3" />
+              <text x="265" y="85" fill={colors.accent} fontSize="9">f</text>
+            </g>
+            <g className="object">
+              <rect x="200" y="55" width="4" height="70" fill="#f59e0b" rx="2" />
+              <circle cx="202" cy="50" r="6" fill="#f59e0b" filter="url(#twistLensGlow)" />
+              <text x="185" y="145" fill="rgba(148,163,184,1)" fontSize="10">Object</text>
+              <text x="175" y="158" fill={colors.warning} fontSize="9">(inside f)</text>
+            </g>
+            <g className="eye">
+              <ellipse cx="370" cy="90" rx="15" ry="10" fill="none" stroke="#94a3b8" strokeWidth="1.5" />
+              <circle cx="370" cy="90" r="5" fill="#64748b" />
+              <text x="355" y="115" fill="rgba(148,163,184,1)" fontSize="10">Eye</text>
+            </g>
+            <g className="rays">
+              <line x1="202" y1="60" x2="242" y2="70" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
+              <line x1="258" y1="70" x2="360" y2="85" stroke="#fbbf24" strokeWidth="1.5" />
+              <line x1="202" y1="120" x2="242" y2="110" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="4,3" />
+              <line x1="258" y1="110" x2="360" y2="95" stroke="#fbbf24" strokeWidth="1.5" />
+              <text x="30" y="90" fill="#34d399" fontSize="10">Virtual image?</text>
+            </g>
+          </svg>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1253,8 +1315,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1548,7 +1610,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+            <p style={{ fontSize: '15px', color: '#94a3b8', marginBottom: '16px', lineHeight: 1.7 }}>
               {app.description}
             </p>
 
@@ -1558,18 +1620,47 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
               padding: '16px',
               marginBottom: '16px',
             }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+              <h4 style={{ fontSize: '13px', color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>
                 How Lens Physics Connects:
               </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
                 {app.connection}
               </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ fontSize: '13px', color: app.color, marginBottom: '8px', fontWeight: 700 }}>
+                How It Works:
+              </h4>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ fontSize: '13px', color: app.color, marginBottom: '8px', fontWeight: 700 }}>
+                Real Examples:
+              </h4>
+              <ul style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.8, paddingLeft: '20px' }}>
+                {app.examples.map((ex, j) => <li key={j}>{ex}</li>)}
+              </ul>
             </div>
 
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1579,10 +1670,46 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
                   textAlign: 'center',
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  <div style={{ fontSize: '18px', color: app.color, fontWeight: 700 }}>{stat.value}</div>
+                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+              {app.companies.map((company, i) => (
+                <span key={i} style={{
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  background: 'rgba(255,255,255,0.1)',
+                  color: '#94a3b8',
+                  fontSize: '11px',
+                }}>
+                  {company}
+                </span>
+              ))}
+            </div>
+
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.1)',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ fontSize: '13px', color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Future Impact:</h4>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                {app.futureImpact}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '12px',
+            }}>
+              <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                The global optics industry is valued at over $35 billion with camera autofocus achieving speeds of 20 ms. LASIK has a 96% success rate with 0.25 nm precision. Microscope objectives achieve 200 nm resolution at 100x magnification. The thin lens equation 1/f = 1/do + 1/di is fundamental to all optical engineering applications worldwide.
+              </p>
             </div>
           </div>
 

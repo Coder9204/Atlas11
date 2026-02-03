@@ -276,6 +276,7 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [confirmedQuestions, setConfirmedQuestions] = useState<Set<number>>(new Set());
 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
@@ -412,17 +413,21 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
         </defs>
 
         {/* Title */}
-        <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Light Bending at Water Surface
-        </text>
+        <g>
+          <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
+            Light Bending at Water Surface
+          </text>
+        </g>
 
         {/* Background grid */}
-        {Array.from({ length: 10 }).map((_, i) => (
-          <React.Fragment key={i}>
-            <line x1={i * (width/10)} y1="35" x2={i * (width/10)} y2={height - 20} stroke={colors.border} strokeWidth="1" opacity="0.3" />
-            <line x1="0" y1={35 + i * ((height - 55) / 10)} x2={width} y2={35 + i * ((height - 55) / 10)} stroke={colors.border} strokeWidth="1" opacity="0.3" />
-          </React.Fragment>
-        ))}
+        <g opacity="0.3">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <React.Fragment key={i}>
+              <line x1={i * (width/10)} y1="35" x2={i * (width/10)} y2={height - 20} stroke={colors.border} strokeWidth="1" />
+              <line x1="0" y1={35 + i * ((height - 55) / 10)} x2={width} y2={35 + i * ((height - 55) / 10)} stroke={colors.border} strokeWidth="1" />
+            </React.Fragment>
+          ))}
+        </g>
 
         {/* Glass container */}
         <rect
@@ -591,13 +596,9 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      flexShrink: 0,
     }}>
       <div style={{
         height: '100%',
@@ -608,6 +609,14 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
     </div>
   );
 
+  // Track highest phase reached for nav dot access control
+  const [highestPhaseIndex, setHighestPhaseIndex] = useState(() => phaseOrder.indexOf(getInitialPhase()));
+
+  useEffect(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    setHighestPhaseIndex(prev => Math.max(prev, currentIndex));
+  }, [phase]);
+
   // Navigation dots
   const renderNavDots = () => (
     <div style={{
@@ -616,24 +625,85 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
       gap: '8px',
       padding: '16px 0',
     }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
+      {phaseOrder.map((p, i) => {
+        const canClick = i <= highestPhaseIndex;
+        return (
+          <button
+            key={p}
+            onClick={() => { if (canClick) goToPhase(p); }}
+            style={{
+              width: phase === p ? '20px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              border: 'none',
+              background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+              cursor: canClick ? 'pointer' : 'default',
+              opacity: canClick ? 1 : 0.4,
+              transition: 'all 0.3s ease',
+            }}
+            aria-label={phaseLabels[p]}
+          />
+        );
+      })}
     </div>
   );
+
+  // Bottom navigation bar
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    // During test phase, disable Next unless quiz is submitted
+    const isTestPhaseIncomplete = phase === 'test' && !testSubmitted;
+    const nextDisabled = isLast || isTestPhaseIncomplete;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 24px',
+        borderTop: `1px solid ${colors.border}`,
+        background: colors.bgCard,
+        flexShrink: 0,
+      }}>
+        <button
+          onClick={() => { if (!isFirst) goToPhase(phaseOrder[currentIndex - 1]); }}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontWeight: 600,
+            fontSize: '14px',
+            background: colors.bgSecondary,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            opacity: isFirst ? 0.3 : 1,
+            minHeight: '44px',
+          }}
+        >{'\u2190'} Back</button>
+        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+        <button
+          onClick={() => { if (!nextDisabled) nextPhase(); }}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '8px',
+            fontWeight: 700,
+            fontSize: '14px',
+            background: nextDisabled ? colors.bgSecondary : `linear-gradient(135deg, ${colors.accent} 0%, #2563EB 100%)`,
+            color: nextDisabled ? colors.textMuted : colors.textPrimary,
+            border: 'none',
+            cursor: nextDisabled ? 'not-allowed' : 'pointer',
+            opacity: nextDisabled ? 0.4 : 1,
+            minHeight: '44px',
+          }}
+        >Next {'\u2192'}</button>
+      </div>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -657,61 +727,68 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
       }}>
         {renderProgressBar()}
-
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'pulse 2s infinite',
-        }}>
-          🥤💡
-        </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
-
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          The Broken Straw Illusion
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "Put a straw in water and it appears to <span style={{ color: colors.accent }}>bend or break</span> at the surface. Is this magic? An optical illusion? Or is something real happening to the light?"
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <RefractionVisualization />
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
-            Notice how the straw appears "broken" at the water line - the underwater part seems shifted from where it should be.
-          </p>
-        </div>
-
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Start Exploring
-        </button>
-
         {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            textAlign: 'center',
+            minHeight: '100%',
+          }}>
+            <div style={{
+              fontSize: '64px',
+              marginBottom: '24px',
+              animation: 'pulse 2s infinite',
+            }}>
+              🥤💡
+            </div>
+            <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+            <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+              The Broken Straw Illusion
+            </h1>
+
+            <p style={{
+              ...typo.body,
+              color: colors.textSecondary,
+              maxWidth: '600px',
+              marginBottom: '32px',
+            }}>
+              "Put a straw in water and it appears to <span style={{ color: colors.accent }}>bend or break</span> at the surface. Is this magic? An optical illusion? Or is something real happening to the light?"
+            </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '500px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <RefractionVisualization />
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
+                Notice how the straw appears "broken" at the water line - the underwater part seems shifted from where it should be.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('click'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              Start Exploring
+            </button>
+          </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -727,97 +804,99 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
+        {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <div style={{
+              background: `${colors.accent}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.accent}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+                Make Your Prediction
+              </p>
+            </div>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.accent}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.accent}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              Make Your Prediction
-            </p>
-          </div>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              Which action will change the apparent "break" in the straw MORE?
+            </h2>
 
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Which action will change the apparent "break" in the straw MORE?
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <RefractionVisualization />
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px' }}>🔄</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Move the cup</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px' }}>👀</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Move your head</p>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <RefractionVisualization />
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px' }}>🔄</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>Move the cup</p>
+                </div>
+                <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>vs</div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px' }}>👀</div>
+                  <p style={{ ...typo.small, color: colors.textMuted }}>Move your head</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                  style={{
+                    background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                    color: prediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {prediction && (
               <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setPrediction(opt.id); }}
-                style={{
-                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
-                  color: prediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
+                Test My Prediction
               </button>
-            ))}
+            )}
           </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -826,179 +905,181 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Explore Refraction
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the controls to see how viewing angle and material affect the apparent break.
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <RefractionVisualization showControls />
-            </div>
-
-            {/* Viewing angle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
-              </div>
-              <input
-                type="range"
-                min="-45"
-                max="45"
-                value={viewingAngle}
-                onChange={(e) => setViewingAngle(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Left (-45°)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Straight (0°)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Right (+45°)</span>
-              </div>
-            </div>
-
-            {/* Refractive index slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Refractive Index</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
-                  {refractiveIndex.toFixed(2)} ({refractiveIndex < 1.4 ? 'Water' : refractiveIndex < 1.5 ? 'Sugar Water' : 'Glass'})
-                </span>
-              </div>
-              <input
-                type="range"
-                min="1.0"
-                max="1.6"
-                step="0.01"
-                value={refractiveIndex}
-                onChange={(e) => setRefractiveIndex(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Water level slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Water Level</span>
-                <span style={{ ...typo.small, color: colors.water, fontWeight: 600 }}>{waterLevel}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="90"
-                value={waterLevel}
-                onChange={(e) => setWaterLevel(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Toggle ray paths */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <button
-                onClick={() => { playSound('click'); setShowRayPaths(!showRayPaths); }}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: showRayPaths ? colors.accent : colors.bgSecondary,
-                  color: 'white',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {showRayPaths ? 'Hide Ray Paths' : 'Show Ray Paths'}
-              </button>
-            </div>
-
-            {/* Stats display */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{viewingAngle}°</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Viewing Angle</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.success }}>{refractiveIndex.toFixed(2)}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Refractive Index</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{apparentShift.toFixed(1)}px</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Apparent Shift</div>
-              </div>
-            </div>
-          </div>
-
-          {Math.abs(viewingAngle) > 30 && (
-            <div style={{
-              background: `${colors.warning}22`,
-              border: `1px solid ${colors.warning}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
-                Notice how extreme viewing angles create the biggest apparent shift!
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
-        </div>
-
         {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Explore Refraction
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Adjust the controls to see how viewing angle and material affect the apparent break.
+            </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <RefractionVisualization showControls />
+              </div>
+
+              {/* Viewing angle slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
+                </div>
+                <input
+                  type="range"
+                  min="-45"
+                  max="45"
+                  value={viewingAngle}
+                  onChange={(e) => setViewingAngle(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Left (-45°)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Straight (0°)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Right (+45°)</span>
+                </div>
+              </div>
+
+              {/* Refractive index slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Refractive Index</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+                    {refractiveIndex.toFixed(2)} ({refractiveIndex < 1.4 ? 'Water' : refractiveIndex < 1.5 ? 'Sugar Water' : 'Glass'})
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1.0"
+                  max="1.6"
+                  step="0.01"
+                  value={refractiveIndex}
+                  onChange={(e) => setRefractiveIndex(parseFloat(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Water level slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Water Level</span>
+                  <span style={{ ...typo.small, color: colors.water, fontWeight: 600 }}>{waterLevel}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="90"
+                  value={waterLevel}
+                  onChange={(e) => setWaterLevel(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Toggle ray paths */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <button
+                  onClick={() => { playSound('click'); setShowRayPaths(!showRayPaths); }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: showRayPaths ? colors.accent : colors.bgSecondary,
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {showRayPaths ? 'Hide Ray Paths' : 'Show Ray Paths'}
+                </button>
+              </div>
+
+              {/* Stats display */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.accent }}>{viewingAngle}°</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Viewing Angle</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.success }}>{refractiveIndex.toFixed(2)}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Refractive Index</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.warning }}>{apparentShift.toFixed(1)}px</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Apparent Shift</div>
+                </div>
+              </div>
+            </div>
+
+            {Math.abs(viewingAngle) > 30 && (
+              <div style={{
+                background: `${colors.warning}22`,
+                border: `1px solid ${colors.warning}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                  Notice how extreme viewing angles create the biggest apparent shift!
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Physics
+            </button>
+          </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1007,76 +1088,78 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: prediction === 'b' ? `${colors.success}22` : `${colors.error}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${prediction === 'b' ? colors.success : colors.error}44`,
-          }}>
-            <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.error, margin: 0 }}>
-              {prediction === 'b' ? '✓ Correct! ' : '✗ Not quite! '}
-              Moving your viewing angle changes the apparent break more because it changes the path light takes through the refracting surface.
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Physics of Refraction
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Snell's Law: n₁ sin(θ₁) = n₂ sin(θ₂)</strong>
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                When light passes from one material to another with a different <span style={{ color: colors.accent }}>refractive index</span>, it changes direction. The refractive index tells us how much slower light travels in that material compared to vacuum.
-              </p>
-              <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: 2 }}>
-                <li>Air: n ≈ 1.00 (light travels near maximum speed)</li>
-                <li>Water: n ≈ 1.33 (light travels 25% slower)</li>
-                <li>Glass: n ≈ 1.50 (light travels 33% slower)</li>
-                <li>Diamond: n ≈ 2.42 (light travels 59% slower)</li>
-              </ul>
-            </div>
-          </div>
-
-          <div style={{
-            background: `${colors.accent}11`,
-            border: `1px solid ${colors.accent}33`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              Why Your Brain Gets Fooled
-            </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              Your brain assumes light always travels in straight lines. When light bends at the water surface, your brain traces the ray straight back - putting the underwater straw in the wrong position. The bigger the angle, the more bending, the bigger the illusion!
-            </p>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Different Materials
-          </button>
-        </div>
-
         {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <div style={{
+              background: prediction === 'b' ? `${colors.success}22` : `${colors.error}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${prediction === 'b' ? colors.success : colors.error}44`,
+            }}>
+              <p style={{ ...typo.body, color: prediction === 'b' ? colors.success : colors.error, margin: 0 }}>
+                {prediction === 'b' ? '✓ Correct! ' : '✗ Not quite! '}
+                Moving your viewing angle changes the apparent break more because it changes the path light takes through the refracting surface.
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Physics of Refraction
+            </h2>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '16px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Snell's Law: n₁ sin(θ₁) = n₂ sin(θ₂)</strong>
+                </p>
+                <p style={{ marginBottom: '16px' }}>
+                  When light passes from one material to another with a different <span style={{ color: colors.accent }}>refractive index</span>, it changes direction. The refractive index tells us how much slower light travels in that material compared to vacuum.
+                </p>
+                <ul style={{ margin: 0, paddingLeft: '20px', lineHeight: 2 }}>
+                  <li>Air: n ≈ 1.00 (light travels near maximum speed)</li>
+                  <li>Water: n ≈ 1.33 (light travels 25% slower)</li>
+                  <li>Glass: n ≈ 1.50 (light travels 33% slower)</li>
+                  <li>Diamond: n ≈ 2.42 (light travels 59% slower)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div style={{
+              background: `${colors.accent}11`,
+              border: `1px solid ${colors.accent}33`,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+                Why Your Brain Gets Fooled
+              </h3>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Your brain assumes light always travels in straight lines. When light bends at the water surface, your brain traces the ray straight back - putting the underwater straw in the wrong position. The bigger the angle, the more bending, the bigger the illusion!
+              </p>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Explore Different Materials
+            </button>
+          </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1092,99 +1175,138 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: `${colors.warning}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
-          }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              New Variable: Material Properties
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            What happens if we dissolve sugar in the water?
-          </h2>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              Sugar increases the density of water. How will this affect the "broken straw" effect?
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center', padding: '16px', background: colors.bgSecondary, borderRadius: '12px' }}>
-                <div style={{ fontSize: '36px' }}>💧</div>
-                <p style={{ ...typo.small, color: colors.textMuted, margin: '8px 0 0' }}>Plain Water</p>
-                <p style={{ ...typo.small, color: colors.water, fontWeight: 600 }}>n = 1.33</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted, alignSelf: 'center' }}>→</div>
-              <div style={{ textAlign: 'center', padding: '16px', background: colors.bgSecondary, borderRadius: '12px' }}>
-                <div style={{ fontSize: '36px' }}>🍬💧</div>
-                <p style={{ ...typo.small, color: colors.textMuted, margin: '8px 0 0' }}>Sugar Water</p>
-                <p style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>n = ???</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
-                style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 20px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
-                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '28px',
-                  marginRight: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.body }}>
-                  {opt.text}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Compare Materials
-            </button>
-          )}
-        </div>
-
         {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <div style={{
+              background: `${colors.warning}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${colors.warning}44`,
+            }}>
+              <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+                New Variable: Material Properties
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+              What happens if we dissolve sugar in the water?
+            </h2>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                Sugar increases the density of water. How will this affect the "broken straw" effect?
+              </p>
+              {/* SVG comparison diagram */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <svg width={isMobile ? 320 : 400} height={180} viewBox="0 0 400 180" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+                <defs>
+                  <linearGradient id="twistWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.6" />
+                  </linearGradient>
+                  <linearGradient id="twistSugarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#d97706" stopOpacity="0.6" />
+                  </linearGradient>
+                  <filter id="twistGlow">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <g>
+                  <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="600">Material Comparison</text>
+                </g>
+                {/* Plain water side */}
+                <g transform="translate(40, 35)">
+                  <rect x="0" y="0" width="130" height="130" rx="8" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+                  <rect x="2" y="50" width="126" height="78" rx="4" fill="url(#twistWaterGrad)" />
+                  <line x1="65" y1="10" x2="65" y2="50" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" />
+                  <line x1="65" y1="50" x2="65" y2="110" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" opacity="0.4" strokeDasharray="4,4" />
+                  <circle cx="65" cy="50" r="4" fill={colors.water} filter="url(#twistGlow)" />
+                  <text x="65" y="145" textAnchor="middle" fill={colors.textMuted} fontSize="11">Plain Water</text>
+                  <text x="65" y="158" textAnchor="middle" fill={colors.water} fontSize="10" fontWeight="600">n = 1.33</text>
+                </g>
+                {/* Arrow */}
+                <g transform="translate(185, 85)">
+                  <path d="M 0 0 L 25 0 L 20 -5 M 25 0 L 20 5" stroke={colors.textMuted} strokeWidth="2" fill="none" />
+                </g>
+                {/* Sugar water side */}
+                <g transform="translate(230, 35)">
+                  <rect x="0" y="0" width="130" height="130" rx="8" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+                  <rect x="2" y="50" width="126" height="78" rx="4" fill="url(#twistSugarGrad)" />
+                  <line x1="65" y1="10" x2="65" y2="50" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" />
+                  <line x1="65" y1="50" x2="80" y2="110" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" opacity="0.4" strokeDasharray="4,4" />
+                  <line x1="65" y1="50" x2="75" y2="110" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" filter="url(#twistGlow)" />
+                  <circle cx="65" cy="50" r="4" fill={colors.warning} filter="url(#twistGlow)" />
+                  <text x="65" y="145" textAnchor="middle" fill={colors.textMuted} fontSize="11">Sugar Water</text>
+                  <text x="65" y="158" textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="600">n = ???</text>
+                </g>
+              </svg>
+            </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+              {options.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                  style={{
+                    background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                    border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                    color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                    textAlign: 'center',
+                    lineHeight: '28px',
+                    marginRight: '12px',
+                    fontWeight: 700,
+                  }}>
+                    {opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.body }}>
+                    {opt.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {twistPrediction && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Compare Materials
+              </button>
+            )}
+          </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1200,136 +1322,138 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Compare Different Materials
-          </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Select different materials to see how refractive index affects the apparent break
-          </p>
-
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <RefractionVisualization showControls />
-            </div>
-
-            {/* Material selector */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              {materials.map((mat) => (
-                <button
-                  key={mat.id}
-                  onClick={() => {
-                    playSound('click');
-                    setMaterial(mat.id as typeof material);
-                    setRefractiveIndex(mat.n);
-                  }}
-                  style={{
-                    padding: '16px 8px',
-                    borderRadius: '12px',
-                    border: `2px solid ${material === mat.id ? mat.color : colors.border}`,
-                    background: material === mat.id ? `${mat.color}22` : colors.bgSecondary,
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{mat.name}</div>
-                  <div style={{ ...typo.small, color: mat.color, fontWeight: 700 }}>n = {mat.n}</div>
-                </button>
-              ))}
-            </div>
-
-            {/* Viewing angle slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
-              </div>
-              <input
-                type="range"
-                min="-45"
-                max="45"
-                value={viewingAngle}
-                onChange={(e) => setViewingAngle(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Comparison stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.water }}>
-                  {(Math.tan(viewingAngle * Math.PI / 180) * (1 - 1/1.33) * waterLevel * 0.5).toFixed(1)}px
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Water Shift</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: materials.find(m => m.id === material)?.color }}>
-                  {apparentShift.toFixed(1)}px
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>{materials.find(m => m.id === material)?.name} Shift</div>
-              </div>
-            </div>
-          </div>
-
-          {refractiveIndex > 1.4 && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                Higher refractive index = More bending = Bigger apparent shift!
-              </p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Pattern
-          </button>
-        </div>
-
         {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+              Compare Different Materials
+            </h2>
+            <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+              Select different materials to see how refractive index affects the apparent break
+            </p>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                <RefractionVisualization showControls />
+              </div>
+
+              {/* Material selector */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '12px',
+                marginBottom: '24px',
+              }}>
+                {materials.map((mat) => (
+                  <button
+                    key={mat.id}
+                    onClick={() => {
+                      playSound('click');
+                      setMaterial(mat.id as typeof material);
+                      setRefractiveIndex(mat.n);
+                    }}
+                    style={{
+                      padding: '16px 8px',
+                      borderRadius: '12px',
+                      border: `2px solid ${material === mat.id ? mat.color : colors.border}`,
+                      background: material === mat.id ? `${mat.color}22` : colors.bgSecondary,
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{mat.name}</div>
+                    <div style={{ ...typo.small, color: mat.color, fontWeight: 700 }}>n = {mat.n}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Viewing angle slider */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Viewing Angle</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{viewingAngle}°</span>
+                </div>
+                <input
+                  type="range"
+                  min="-45"
+                  max="45"
+                  value={viewingAngle}
+                  onChange={(e) => setViewingAngle(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Comparison stats */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+              }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: colors.water }}>
+                    {(Math.tan(viewingAngle * Math.PI / 180) * (1 - 1/1.33) * waterLevel * 0.5).toFixed(1)}px
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>Water Shift</div>
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ ...typo.h3, color: materials.find(m => m.id === material)?.color }}>
+                    {apparentShift.toFixed(1)}px
+                  </div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{materials.find(m => m.id === material)?.name} Shift</div>
+                </div>
+              </div>
+            </div>
+
+            {refractiveIndex > 1.4 && (
+              <div style={{
+                background: `${colors.success}22`,
+                border: `1px solid ${colors.success}`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                  Higher refractive index = More bending = Bigger apparent shift!
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Understand the Pattern
+            </button>
+          </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1338,98 +1462,100 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <div style={{
-            background: twistPrediction === 'b' ? `${colors.success}22` : `${colors.error}22`,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '24px',
-            border: `1px solid ${twistPrediction === 'b' ? colors.success : colors.error}44`,
-          }}>
-            <p style={{ ...typo.body, color: twistPrediction === 'b' ? colors.success : colors.error, margin: 0 }}>
-              {twistPrediction === 'b' ? '✓ Correct! ' : '✗ Actually, '}
-              Sugar water has a higher refractive index, causing MORE light bending and a bigger apparent break!
-            </p>
-          </div>
-
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Refractive Index Pattern
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔢</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>What Refractive Index Means</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                n = speed of light in vacuum / speed of light in material. Higher n means light travels slower in that material. When light slows down entering a denser medium, it bends toward the normal (perpendicular line).
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgCard,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.border}`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>📊</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Common Refractive Indices</h3>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '12px' }}>
-                {[
-                  { name: 'Air', n: '1.00', note: 'Reference' },
-                  { name: 'Water', n: '1.33', note: '25% slower' },
-                  { name: 'Sugar Water', n: '1.40-1.50', note: 'Varies with concentration' },
-                  { name: 'Glass', n: '1.50-1.90', note: 'Varies by type' },
-                  { name: 'Cubic Zirconia', n: '2.15', note: 'Fake diamond' },
-                  { name: 'Diamond', n: '2.42', note: 'Maximum sparkle' },
-                ].map((item, i) => (
-                  <div key={i} style={{ background: colors.bgSecondary, padding: '8px 12px', borderRadius: '8px' }}>
-                    <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{item.name}: {item.n}</div>
-                    <div style={{ ...typo.small, color: colors.textMuted }}>{item.note}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{
-              background: `${colors.success}11`,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${colors.success}33`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>💡</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Total Internal Reflection</h3>
-              </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                When light goes from high-n to low-n material at a steep enough angle (beyond the "critical angle"), it reflects completely instead of refracting. This is how fiber optics trap light inside glass fibers and how diamonds trap light for maximum sparkle!
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            See Real-World Applications
-          </button>
-        </div>
-
         {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            <div style={{
+              background: twistPrediction === 'b' ? `${colors.success}22` : `${colors.error}22`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              border: `1px solid ${twistPrediction === 'b' ? colors.success : colors.error}44`,
+            }}>
+              <p style={{ ...typo.body, color: twistPrediction === 'b' ? colors.success : colors.error, margin: 0 }}>
+                {twistPrediction === 'b' ? '✓ Correct! ' : '✗ Actually, '}
+                Sugar water has a higher refractive index, causing MORE light bending and a bigger apparent break!
+              </p>
+            </div>
+
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              The Refractive Index Pattern
+            </h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🔢</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>What Refractive Index Means</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  n = speed of light in vacuum / speed of light in material. Higher n means light travels slower in that material. When light slows down entering a denser medium, it bends toward the normal (perpendicular line).
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgCard,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.border}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>📊</span>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Common Refractive Indices</h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginTop: '12px' }}>
+                  {[
+                    { name: 'Air', n: '1.00', note: 'Reference' },
+                    { name: 'Water', n: '1.33', note: '25% slower' },
+                    { name: 'Sugar Water', n: '1.40-1.50', note: 'Varies with concentration' },
+                    { name: 'Glass', n: '1.50-1.90', note: 'Varies by type' },
+                    { name: 'Cubic Zirconia', n: '2.15', note: 'Fake diamond' },
+                    { name: 'Diamond', n: '2.42', note: 'Maximum sparkle' },
+                  ].map((item, i) => (
+                    <div key={i} style={{ background: colors.bgSecondary, padding: '8px 12px', borderRadius: '8px' }}>
+                      <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>{item.name}: {item.n}</div>
+                      <div style={{ ...typo.small, color: colors.textMuted }}>{item.note}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{
+                background: `${colors.success}11`,
+                borderRadius: '12px',
+                padding: '20px',
+                border: `1px solid ${colors.success}33`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>💡</span>
+                  <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Total Internal Reflection</h3>
+                </div>
+                <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                  When light goes from high-n to low-n material at a steep enough angle (beyond the "critical angle"), it reflects completely instead of refracting. This is how fiber optics trap light inside glass fibers and how diamonds trap light for maximum sparkle!
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              See Real-World Applications
+            </button>
+          </div>
+        </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1441,133 +1567,164 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
+        {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+            <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+              Real-World Applications
+            </h2>
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
-
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
+            {/* App selector */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                    const newCompleted = [...completedApps];
+                    newCompleted[i] = true;
+                    setCompletedApps(newCompleted);
+                  }}
+                  style={{
+                    background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                    border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                    borderRadius: '12px',
+                    padding: '16px 8px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {completedApps[i] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-6px',
+                      right: '-6px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: colors.success,
+                      color: 'white',
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                    }}>
+                      ✓
+                    </div>
+                  )}
+                  <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                  <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                    {a.title.split(' ').slice(0, 2).join(' ')}
                   </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${app.color}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '48px' }}>{app.icon}</span>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+                </div>
+              </div>
+
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                  How Refraction Connects:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+              }}>
+                <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                  How It Works:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.howItWorks}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '8px',
+                    padding: '12px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                    <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{
+                background: `${app.color}10`,
+                borderRadius: '8px',
+                padding: '16px',
+                borderLeft: `3px solid ${app.color}`,
+              }}>
+                <h4 style={{ ...typo.small, color: app.color, marginBottom: '8px', fontWeight: 600 }}>
+                  Future Impact:
+                </h4>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {app.futureImpact}
+                </p>
               </div>
             </div>
 
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
-              {app.description}
-            </p>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Refraction Connects:
-              </h4>
-              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
+            {allAppsCompleted && (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Take the Knowledge Test
+              </button>
+            )}
           </div>
-
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1578,220 +1735,363 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
           background: colors.bgPrimary,
-          padding: '24px',
         }}>
           {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🏆' : '📚'}
-            </div>
-            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
-            </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
-              {testScore} / 10
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand refraction and light bending!'
-                : 'Review the concepts and try again.'}
-            </p>
-
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
-          </div>
           {renderNavDots()}
+          <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '80px',
+                marginBottom: '24px',
+              }}>
+                {passed ? '🏆' : '📚'}
+              </div>
+              <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+                {passed
+                  ? 'You understand refraction and light bending!'
+                  : 'Review the concepts and try again.'}
+              </p>
+
+              {/* Answer Review */}
+              <div style={{ textAlign: 'left', marginBottom: '32px' }}>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+                  Answer Review
+                </h3>
+                {testQuestions.map((q, i) => {
+                  const correctId = q.options.find(o => o.correct)?.id;
+                  const userAnswer = testAnswers[i];
+                  const isCorrect = userAnswer === correctId;
+                  const userLabel = q.options.find(o => o.id === userAnswer)?.label;
+                  const correctLabel = q.options.find(o => o.correct)?.label;
+                  return (
+                    <div key={i} style={{
+                      background: colors.bgCard,
+                      borderRadius: '10px',
+                      padding: '14px 16px',
+                      marginBottom: '10px',
+                      borderLeft: `3px solid ${isCorrect ? colors.success : colors.error}`,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <span style={{
+                          color: isCorrect ? colors.success : colors.error,
+                          fontWeight: 700,
+                          fontSize: '16px',
+                        }}>
+                          {isCorrect ? '\u2713' : '\u2717'}
+                        </span>
+                        <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+                          Q{i + 1}: {q.question}
+                        </span>
+                      </div>
+                      <p style={{ ...typo.small, color: isCorrect ? colors.success : colors.error, margin: '4px 0 0 24px' }}>
+                        Your answer: {userLabel}
+                      </p>
+                      {!isCorrect && (
+                        <>
+                          <p style={{ ...typo.small, color: colors.success, margin: '4px 0 0 24px' }}>
+                            Correct answer: {correctLabel}
+                          </p>
+                          <p style={{ ...typo.small, color: colors.textMuted, margin: '4px 0 0 24px', fontStyle: 'italic' }}>
+                            {q.explanation}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Continue to Mastery
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    setConfirmedQuestions(new Set());
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review and Try Again
+                </button>
+              )}
+            </div>
+          </div>
+          {renderBottomBar()}
         </div>
       );
     }
 
     const question = testQuestions[currentQuestion];
+    const isConfirmed = confirmedQuestions.has(currentQuestion);
+    const selectedAnswer = testAnswers[currentQuestion];
+    const correctId = question.options.find(o => o.correct)?.id;
+    const isSelectedCorrect = selectedAnswer === correctId;
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
+        {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+            {/* Progress */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>
+                Question {currentQuestion + 1} of 10
+              </span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {testQuestions.map((_, i) => (
+                  <div key={i} style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: i === currentQuestion
+                      ? colors.accent
+                      : confirmedQuestions.has(i)
+                        ? (testAnswers[i] === testQuestions[i].options.find(o => o.correct)?.id ? colors.success : colors.error)
+                        : testAnswers[i]
+                          ? colors.warning
+                          : colors.border,
+                  }} />
+                ))}
+              </div>
+            </div>
 
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
-            <span style={{ ...typo.small, color: colors.textSecondary }}>
-              Question {currentQuestion + 1} of 10
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
-                }} />
-              ))}
+            {/* Scenario */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {question.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+              {question.question}
+            </h3>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+              {question.options.map(opt => {
+                const isSelected = selectedAnswer === opt.id;
+                const isCorrectOption = !!opt.correct;
+
+                let borderColor = colors.border;
+                let bgColor = colors.bgCard;
+
+                if (isConfirmed) {
+                  if (isCorrectOption) {
+                    borderColor = colors.success;
+                    bgColor = `${colors.success}22`;
+                  } else if (isSelected && !isCorrectOption) {
+                    borderColor = colors.error;
+                    bgColor = `${colors.error}22`;
+                  }
+                } else if (isSelected) {
+                  borderColor = colors.accent;
+                  bgColor = `${colors.accent}22`;
+                }
+
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      if (isConfirmed) return;
+                      playSound('click');
+                      const newAnswers = [...testAnswers];
+                      newAnswers[currentQuestion] = opt.id;
+                      setTestAnswers(newAnswers);
+                    }}
+                    style={{
+                      background: bgColor,
+                      border: `2px solid ${borderColor}`,
+                      borderRadius: '10px',
+                      padding: '14px 16px',
+                      textAlign: 'left',
+                      cursor: isConfirmed ? 'default' : 'pointer',
+                      opacity: isConfirmed && !isSelected && !isCorrectOption ? 0.5 : 1,
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <span style={{
+                      display: 'inline-block',
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: isConfirmed && isCorrectOption
+                        ? colors.success
+                        : isConfirmed && isSelected && !isCorrectOption
+                          ? colors.error
+                          : isSelected
+                            ? colors.accent
+                            : colors.bgSecondary,
+                      color: (isSelected || (isConfirmed && isCorrectOption)) ? 'white' : colors.textSecondary,
+                      textAlign: 'center',
+                      lineHeight: '24px',
+                      marginRight: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                    }}>
+                      {isConfirmed && isCorrectOption ? '\u2713' : isConfirmed && isSelected && !isCorrectOption ? '\u2717' : opt.id.toUpperCase()}
+                    </span>
+                    <span style={{ color: colors.textPrimary, ...typo.small }}>
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Feedback after confirmation */}
+            {isConfirmed && (
+              <div style={{
+                background: isSelectedCorrect ? `${colors.success}18` : `${colors.error}18`,
+                border: `1px solid ${isSelectedCorrect ? colors.success : colors.error}44`,
+                borderRadius: '10px',
+                padding: '14px 16px',
+                marginBottom: '16px',
+              }}>
+                <p style={{
+                  ...typo.body,
+                  color: isSelectedCorrect ? colors.success : colors.error,
+                  fontWeight: 700,
+                  margin: '0 0 8px 0',
+                }}>
+                  {isSelectedCorrect ? '\u2713 Correct!' : '\u2717 Incorrect'}
+                </p>
+                <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                  {question.explanation}
+                </p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {currentQuestion > 0 && isConfirmed && (
+                <button
+                  onClick={() => { setCurrentQuestion(currentQuestion - 1); }}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: `1px solid ${colors.border}`,
+                    background: 'transparent',
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+
+              {/* Check Answer button: shown when answer selected but not yet confirmed */}
+              {selectedAnswer && !isConfirmed && (
+                <button
+                  onClick={() => {
+                    setConfirmedQuestions(prev => new Set(prev).add(currentQuestion));
+                    playSound(selectedAnswer === correctId ? 'success' : 'failure');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+                  }}
+                >
+                  Check Answer
+                </button>
+              )}
+
+              {/* Next Question button: shown only after confirming */}
+              {isConfirmed && currentQuestion < 9 && (
+                <button
+                  onClick={() => {
+                    setCurrentQuestion(currentQuestion + 1);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: colors.accent,
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  Next Question
+                </button>
+              )}
+
+              {/* Submit Test button: shown on last question after confirming */}
+              {isConfirmed && currentQuestion === 9 && (
+                <button
+                  onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                  disabled={testAnswers.some(a => a === null)}
+                  style={{
+                    flex: 1,
+                    padding: '14px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                    color: 'white',
+                    cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                    fontWeight: 600,
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
             </div>
           </div>
-
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
-          </div>
-
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
-
-          {/* Options */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
         </div>
-
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1800,88 +2100,91 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({ onGameEvent, ga
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
       }}>
         {renderProgressBar()}
+        {renderNavDots()}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            textAlign: 'center',
+            minHeight: '100%',
+          }}>
+            <div style={{
+              fontSize: '100px',
+              marginBottom: '24px',
+              animation: 'bounce 1s infinite',
+            }}>
+              🏆
+            </div>
+            <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-        <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          🏆
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+            <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+              Refraction Master!
+            </h1>
 
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Refraction Master!
-        </h1>
+            <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+              You now understand how light bends at boundaries between materials and why our brain gets fooled by this phenomenon.
+            </p>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how light bends at boundaries between materials and why our brain gets fooled by this phenomenon.
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '400px',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            You Mastered:
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
-            {[
-              'Light changes speed in different materials',
-              'Speed change causes bending (Snell\'s Law)',
-              'Refractive index quantifies how much light slows',
-              'Your brain assumes straight-line paths (causing illusions)',
-              'Higher refractive index = more bending',
-              'Total internal reflection traps light',
-            ].map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '32px',
+              maxWidth: '400px',
+            }}>
+              <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+                You Mastered:
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+                {[
+                  'Light changes speed in different materials',
+                  'Speed change causes bending (Snell\'s Law)',
+                  'Refractive index quantifies how much light slows',
+                  'Your brain assumes straight-line paths (causing illusions)',
+                  'Higher refractive index = more bending',
+                  'Total internal reflection traps light',
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ color: colors.success }}>✓</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                Play Again
+              </button>
+              <button
+                onClick={() => { window.location.href = '/'; }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson
+              </button>
+            </div>
           </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Play Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
+        {renderBottomBar()}
       </div>
     );
   }

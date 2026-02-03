@@ -151,6 +151,9 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [confirmedQuestion, setConfirmedQuestion] = useState<number | null>(null);
+  const [testSubmitted, setTestSubmitted] = useState(false);
 
   // Simulation state
   const [hemisphere, setHemisphere] = useState<'north' | 'south'>('north');
@@ -503,10 +506,10 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
       connection: "Air rushing toward a hurricane's low-pressure center is deflected by Coriolis (right in NH, left in SH). This deflection prevents air from filling the low directly, instead causing it to spiral around the center - creating the characteristic counterclockwise rotation in the Northern Hemisphere.",
       howItWorks: "Warm ocean water evaporates, creating a low-pressure zone. Air rushes inward from all directions. Coriolis deflects this air to the right (NH), creating counterclockwise rotation. As air spirals inward and rises, more warm air is drawn in, intensifying the storm. The rotation creates the eye wall where the strongest winds occur.",
       stats: [
-        { value: "500km", label: "Typical diameter" },
-        { value: "250km/h", label: "Max wind speed" },
-        { value: "10-20", label: "Named storms/year" },
-        { value: "5°-20°", label: "Formation latitude" }
+        { value: "500 km", label: "Typical diameter" },
+        { value: "250 km/h", label: "Max wind speed" },
+        { value: "15 m tall", label: "Storm surge height" },
+        { value: "900 MB", label: "Min pressure" }
       ],
       examples: [
         "Hurricane prediction and tracking models",
@@ -887,23 +890,23 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
     switch (phase) {
       case 'hook':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '600px', padding: '48px 24px', textAlign: 'center' }}>
             {/* Premium badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-sky-500/10 border border-sky-500/20 rounded-full mb-8">
-              <span className="w-2 h-2 bg-sky-400 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-sky-400 tracking-wide">ATMOSPHERIC PHYSICS</span>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: '9999px', marginBottom: '32px' }}>
+              <span style={{ width: '8px', height: '8px', background: '#38bdf8', borderRadius: '50%' }} />
+              <span style={{ fontSize: '14px', fontWeight: 500, color: '#38bdf8', letterSpacing: '0.05em' }}>ATMOSPHERIC PHYSICS</span>
             </div>
 
-            {/* Main title with gradient */}
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-sky-100 to-cyan-200 bg-clip-text text-transparent">
+            {/* Main title */}
+            <h1 style={{ fontSize: '36px', fontWeight: 700, marginBottom: '16px', color: 'white', lineHeight: '1.2' }}>
               The Hurricane Spin Mystery
             </h1>
-            <p className="text-lg md:text-xl text-slate-400 max-w-xl mb-8 leading-relaxed">
+            <p style={{ fontSize: '18px', color: '#94a3b8', maxWidth: '560px', marginBottom: '32px', lineHeight: '1.6', fontWeight: 400 }}>
               Why do storms spin differently in each hemisphere?
             </p>
 
             {/* Premium card */}
-            <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-6 max-w-2xl border border-slate-700/50 shadow-2xl shadow-sky-500/5 mb-8">
+            <div style={{ background: 'linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.8))', borderRadius: '24px', padding: '24px', maxWidth: '640px', border: '1px solid rgba(51,65,85,0.5)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', marginBottom: '32px' }}>
               <div className="relative w-full max-w-md h-64 rounded-xl overflow-hidden mx-auto">
               <svg viewBox="0 0 400 300" className="w-full h-full">
                 {renderSvgDefs()}
@@ -976,28 +979,40 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             {/* Premium CTA button */}
             <button
               onClick={() => goToPhase('predict')}
-              style={{ zIndex: 10 }}
-              className="group relative px-8 py-4 bg-gradient-to-r from-sky-600 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98]"
+              style={{ padding: '16px 32px', background: 'linear-gradient(135deg, #0284c7, #06b6d4)', color: 'white', fontSize: '18px', fontWeight: 600, borderRadius: '16px', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 10px 25px rgba(2,132,199,0.25)' }}
             >
-              <span className="relative z-10 flex items-center gap-2">
-                Discover the Coriolis Effect
-                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
+              Discover the Coriolis Effect
             </button>
-            <p className="mt-6 text-sm text-slate-500">Explore Earth&apos;s rotation and atmospheric dynamics</p>
+            <p style={{ marginTop: '24px', fontSize: '14px', color: 'rgba(148,163,184,1)' }}>Explore Earth&apos;s rotation and atmospheric dynamics</p>
           </div>
         );
 
       case 'predict':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-sky-400 mb-6">Make Your Prediction</h2>
-            <p className="text-lg text-slate-200 mb-6 text-center max-w-lg">
-              Imagine you&apos;re on a spinning merry-go-round. You throw a ball <span className="text-cyan-400 font-bold">straight</span> to a friend standing across from you. What happens to the ball&apos;s path?
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#38bdf8', marginBottom: '24px' }}>Make Your Prediction</h2>
+            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+              <defs>
+                <filter id="predictGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                <linearGradient id="predictGrad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#8b5cf6" /></linearGradient>
+              </defs>
+              <rect width="400" height="200" fill="#0f172a" rx="8" />
+              <g transform="translate(200,100)">
+                <circle cx="0" cy="0" r="70" fill="none" stroke="#334155" strokeWidth="2" strokeDasharray="4 4" />
+                <circle cx="0" cy="0" r="8" fill="#475569" />
+                <g filter="url(#predictGlow)"><circle cx="0" cy="-55" r="12" fill="#3b82f6" /></g>
+                <g filter="url(#predictGlow)"><circle cx="0" cy="55" r="12" fill="#22c55e" /></g>
+                <line x1="0" y1="-40" x2="0" y2="40" stroke="#64748b" strokeWidth="1.5" strokeDasharray="6 4" />
+                <path d="M 0 -40 Q 30 0, 20 40" stroke="#f59e0b" strokeWidth="2.5" fill="none" />
+                <text x="-30" y="-55" fill="#94a3b8" fontSize="10" textAnchor="end">You</text>
+                <text x="-30" y="60" fill="#94a3b8" fontSize="10" textAnchor="end">Friend</text>
+              </g>
+              <text x="200" y="190" textAnchor="middle" fill="#64748b" fontSize="10">Spinning Merry-Go-Round (top view)</text>
+            </svg>
+            <p style={{ fontSize: '18px', color: '#e2e8f0', marginBottom: '24px', textAlign: 'center', maxWidth: '520px', lineHeight: '1.6' }}>
+              Imagine you&apos;re on a spinning merry-go-round. You throw a ball <span style={{ color: '#22d3ee', fontWeight: 700 }}>straight</span> to a friend standing across from you. What happens to the ball&apos;s path?
             </p>
-            <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
+            <div style={{ display: 'grid', gap: '12px', width: '100%', maxWidth: '450px', marginBottom: '24px' }}>
               {[
                 { id: 'straight', text: 'It goes in a straight line to your friend' },
                 { id: 'curves', text: 'It curves away from its intended path' },
@@ -1008,31 +1023,23 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   key={option.id}
                   onClick={() => handlePrediction(option.id)}
                   disabled={showPredictionFeedback}
-                  style={{ zIndex: 10 }}
-                  className={`p-4 rounded-xl text-left transition-all ${
-                    showPredictionFeedback && option.id === 'curves'
-                      ? 'bg-green-600 text-white ring-2 ring-green-400'
-                      : showPredictionFeedback && selectedPrediction === option.id
-                      ? 'bg-red-600 text-white'
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
-                  }`}
+                  style={{ padding: '16px', borderRadius: '12px', textAlign: 'left', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', background: showPredictionFeedback && option.id === 'curves' ? '#16a34a' : showPredictionFeedback && selectedPrediction === option.id ? '#dc2626' : '#334155', color: 'white', fontSize: '15px', lineHeight: '1.5' }}
                 >
                   {option.text}
                 </button>
               ))}
             </div>
             {showPredictionFeedback && (
-              <div className="bg-slate-800 p-5 rounded-xl mb-4 max-w-md">
-                <p className={`font-bold text-lg mb-2 ${selectedPrediction === 'curves' ? 'text-green-400' : 'text-sky-400'}`}>
+              <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', marginBottom: '16px', maxWidth: '450px', border: '1px solid #334155' }}>
+                <p style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px', color: selectedPrediction === 'curves' ? '#4ade80' : '#38bdf8' }}>
                   {selectedPrediction === 'curves' ? 'Excellent prediction!' : 'Think about the rotating platform!'}
                 </p>
-                <p className="text-slate-300 mb-3">
-                  The ball curves away from its intended path! From your rotating perspective, it appears to deflect - this is the <span className="text-sky-400 font-bold">Coriolis effect</span>.
+                <p style={{ color: '#cbd5e1', marginBottom: '12px', lineHeight: '1.5' }}>
+                  The ball curves away from its intended path! From your rotating perspective, it appears to deflect - this is the <span style={{ color: '#38bdf8', fontWeight: 700 }}>Coriolis effect</span>.
                 </p>
                 <button
                   onClick={() => goToPhase('play')}
-                  style={{ zIndex: 10 }}
-                  className="mt-2 px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors"
+                  style={{ marginTop: '8px', padding: '8px 24px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', fontWeight: 700, borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease' }}
                 >
                   See It In Action
                 </button>
@@ -1236,22 +1243,19 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             </div>
 
             {/* Controls */}
-            <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 w-full max-w-lg mb-4`}>
-              <div className="bg-slate-800 p-4 rounded-xl">
-                <label className="text-slate-300 text-sm block mb-2">Hemisphere</label>
-                <div className="flex gap-2">
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', width: '100%', maxWidth: '520px', marginBottom: '16px' }}>
+              <div style={{ background: '#1e293b', padding: '16px', borderRadius: '12px', border: '1px solid #334155' }}>
+                <label style={{ color: '#cbd5e1', fontSize: '14px', display: 'block', marginBottom: '8px' }}>Hemisphere</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => {
                       setHemisphere('north');
                       setBallLaunched(false);
                       onGameEvent?.({ type: 'hemisphere_changed', data: { hemisphere: 'north' } });
                     }}
-                    style={{ zIndex: 10 }}
-                    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                      hemisphere === 'north' ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                    }`}
+                    style={{ flex: 1, padding: '8px', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', background: hemisphere === 'north' ? '#0ea5e9' : '#334155', color: 'white' }}
                   >
-                    North
+                    Toggle North
                   </button>
                   <button
                     onClick={() => {
@@ -1259,12 +1263,9 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                       setBallLaunched(false);
                       onGameEvent?.({ type: 'hemisphere_changed', data: { hemisphere: 'south' } });
                     }}
-                    style={{ zIndex: 10 }}
-                    className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                      hemisphere === 'south' ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                    }`}
+                    style={{ flex: 1, padding: '8px', borderRadius: '8px', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', background: hemisphere === 'south' ? '#0ea5e9' : '#334155', color: 'white' }}
                   >
-                    South
+                    Toggle South
                   </button>
                 </div>
               </div>
@@ -1274,10 +1275,9 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   playSound('whoosh');
                   onGameEvent?.({ type: 'ball_launched', data: { hemisphere } });
                 }}
-                style={{ zIndex: 10 }}
-                className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold py-4 transition-all"
+                style={{ background: '#f59e0b', color: 'white', borderRadius: '12px', fontWeight: 700, padding: '16px', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', fontSize: '16px' }}
               >
-                Throw Ball!
+                Fire Ball!
               </button>
             </div>
 
@@ -1366,17 +1366,33 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
       case 'twist_predict':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist: Toilet Drains</h2>
-            <div className="bg-slate-800 p-5 rounded-xl mb-6 max-w-lg">
-              <p className="text-slate-200 text-center mb-4">
-                Popular myth says toilets and sinks drain in <span className="text-purple-400 font-bold">opposite directions</span> in each hemisphere due to the Coriolis effect.
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#a855f7', marginBottom: '24px' }}>The Twist: Toilet Drains</h2>
+            <svg viewBox="0 0 400 200" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+              <defs>
+                <filter id="twistGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                <radialGradient id="twistSinkGrad" cx="50%" cy="40%" r="60%"><stop offset="0%" stopColor="#475569" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
+              </defs>
+              <rect width="400" height="200" fill="#0f172a" rx="8" />
+              <g transform="translate(200,90)">
+                <ellipse cx="0" cy="0" rx="60" ry="35" fill="url(#twistSinkGrad)" stroke="#64748b" strokeWidth="1" />
+                <circle cx="0" cy="5" r="15" fill="#020617" stroke="#334155" strokeWidth="1" />
+                <g filter="url(#twistGlow)">
+                  <path d="M 0 2 Q 15 -5, 10 18 Q 0 28, -10 18 Q -15 -5, 0 2" stroke="#60a5fa" strokeWidth="2" fill="none" />
+                </g>
+                <text x="0" y="-50" textAnchor="middle" fill="#a855f7" fontSize="12" fontWeight="600">Does Coriolis affect this?</text>
+              </g>
+              <text x="200" y="185" textAnchor="middle" fill="#64748b" fontSize="10">Sink drain - small scale phenomenon</text>
+            </svg>
+            <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', marginBottom: '24px', maxWidth: '520px', border: '1px solid #334155' }}>
+              <p style={{ color: '#e2e8f0', textAlign: 'center', marginBottom: '16px', lineHeight: '1.5' }}>
+                Popular myth says toilets and sinks drain in <span style={{ color: '#a855f7', fontWeight: 700 }}>opposite directions</span> in each hemisphere due to the Coriolis effect.
               </p>
-              <p className="text-xl text-purple-300 text-center font-bold">
-                Is this actually true?
+              <p style={{ fontSize: '20px', color: '#c4b5fd', textAlign: 'center', fontWeight: 700 }}>
+                What do you predict? Is this actually true?
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
+            <div style={{ display: 'grid', gap: '12px', width: '100%', maxWidth: '450px', marginBottom: '24px' }}>
               {[
                 { id: 'yes_ccw', text: 'Yes - counterclockwise in Northern, clockwise in Southern' },
                 { id: 'yes_cw', text: 'Yes - clockwise in Northern, counterclockwise in Southern' },
@@ -1387,14 +1403,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                   key={option.id}
                   onClick={() => handleTwistPrediction(option.id)}
                   disabled={showTwistFeedback}
-                  style={{ zIndex: 10 }}
-                  className={`p-4 rounded-xl text-left transition-all ${
-                    showTwistFeedback && option.id === 'no_weak'
-                      ? 'bg-green-600 text-white ring-2 ring-green-400'
-                      : showTwistFeedback && twistPrediction === option.id
-                      ? 'bg-red-600 text-white'
-                      : 'bg-slate-700 hover:bg-slate-600 text-white'
-                  }`}
+                  style={{ padding: '16px', borderRadius: '12px', textAlign: 'left', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', background: showTwistFeedback && option.id === 'no_weak' ? '#16a34a' : showTwistFeedback && twistPrediction === option.id ? '#dc2626' : '#334155', color: 'white', fontSize: '15px', lineHeight: '1.5' }}
                 >
                   {option.text}
                 </button>
@@ -1591,73 +1600,77 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
       case 'transfer':
         return (
-          <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-green-400 mb-6">Real-World Applications</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#4ade80', marginBottom: '24px' }}>Real-World Applications</h2>
 
-            <div className="flex gap-2 mb-4 flex-wrap justify-center">
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
               {transferApps.map((app, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveAppTab(index)}
-                  style={{ zIndex: 10 }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    activeAppTab === index
-                      ? `bg-gradient-to-r ${app.color} text-white`
-                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                  }`}
+                  style={{ padding: '8px 16px', borderRadius: '8px', fontWeight: 500, border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', background: activeAppTab === index ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : '#334155', color: activeAppTab === index ? 'white' : '#cbd5e1' }}
                 >
                   {completedApps.has(index) && 'Done '}{app.short}
                 </button>
               ))}
             </div>
 
-            <div className={`bg-gradient-to-r ${transferApps[activeAppTab].color} p-1 rounded-xl w-full max-w-2xl`}>
-              <div className="bg-slate-900 p-6 rounded-lg">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-20 h-20 flex-shrink-0">
+            <div style={{ border: '1px solid #3b82f6', borderRadius: '12px', width: '100%', maxWidth: '640px' }}>
+              <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ width: '80px', height: '80px', flexShrink: 0 }}>
                     {transferApps[activeAppTab].icon}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white mb-1">{transferApps[activeAppTab].title}</h3>
-                    <p className="text-slate-400 text-sm italic">{transferApps[activeAppTab].tagline}</p>
+                    <h3 style={{ fontSize: '20px', fontWeight: 700, color: 'white', marginBottom: '4px' }}>{transferApps[activeAppTab].title}</h3>
+                    <p style={{ color: '#94a3b8', fontSize: '14px', fontStyle: 'italic' }}>{transferApps[activeAppTab].tagline}</p>
                   </div>
                 </div>
 
-                <p className="text-slate-300 mb-4">{transferApps[activeAppTab].description}</p>
+                <p style={{ color: '#cbd5e1', marginBottom: '16px', lineHeight: '1.6' }}>{transferApps[activeAppTab].description}</p>
 
-                <div className="bg-slate-800/50 p-4 rounded-lg mb-4">
-                  <h4 className="text-sky-400 font-bold mb-2">Physics Connection</h4>
-                  <p className="text-slate-300 text-sm">{transferApps[activeAppTab].connection}</p>
+                <div style={{ background: 'rgba(30,41,59,0.5)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #334155' }}>
+                  <h4 style={{ color: '#38bdf8', fontWeight: 700, marginBottom: '8px' }}>Physics Connection</h4>
+                  <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{transferApps[activeAppTab].connection}</p>
                 </div>
 
-                <div className="bg-slate-800/50 p-4 rounded-lg mb-4">
-                  <h4 className="text-cyan-400 font-bold mb-2">How It Works</h4>
-                  <p className="text-slate-300 text-sm">{transferApps[activeAppTab].howItWorks}</p>
+                <div style={{ background: 'rgba(30,41,59,0.5)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #334155' }}>
+                  <h4 style={{ color: '#06b6d4', fontWeight: 700, marginBottom: '8px' }}>How It Works</h4>
+                  <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{transferApps[activeAppTab].howItWorks}</p>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 mb-4">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
                   {transferApps[activeAppTab].stats.map((stat, i) => (
-                    <div key={i} className="bg-slate-800 p-2 rounded-lg text-center">
-                      <div className="text-white font-bold text-lg">{stat.value}</div>
-                      <div className="text-slate-400 text-xs">{stat.label}</div>
+                    <div key={i} style={{ background: '#1e293b', padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
+                      <div style={{ color: 'white', fontWeight: 700, fontSize: '18px' }}>{stat.value}</div>
+                      <div style={{ color: '#94a3b8', fontSize: '11px' }}>{stat.label}</div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mb-4">
-                  <h4 className="text-green-400 font-bold mb-2 text-sm">Applications</h4>
-                  <div className="flex flex-wrap gap-2">
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ color: '#4ade80', fontWeight: 700, marginBottom: '8px', fontSize: '14px' }}>Applications</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {transferApps[activeAppTab].examples.map((ex, i) => (
-                      <span key={i} className="bg-slate-800 px-2 py-1 rounded text-xs text-slate-300">{ex}</span>
+                      <span key={i} style={{ background: '#1e293b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', color: '#cbd5e1' }}>{ex}</span>
                     ))}
                   </div>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ color: '#f59e0b', fontWeight: 700, marginBottom: '8px', fontSize: '14px' }}>Industry Leaders</h4>
+                  <p style={{ color: '#94a3b8', fontSize: '13px' }}>{transferApps[activeAppTab].companies.join(', ')}</p>
+                </div>
+
+                <div style={{ background: 'rgba(30,41,59,0.5)', padding: '16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #334155' }}>
+                  <h4 style={{ color: '#a855f7', fontWeight: 700, marginBottom: '8px' }}>Future Impact</h4>
+                  <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{transferApps[activeAppTab].futureImpact}</p>
                 </div>
 
                 {!completedApps.has(activeAppTab) && (
                   <button
                     onClick={() => handleAppComplete(activeAppTab)}
-                    style={{ zIndex: 10 }}
-                    className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors"
+                    style={{ width: '100%', padding: '12px', background: '#16a34a', color: 'white', fontWeight: 700, borderRadius: '8px', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease' }}
                   >
                     Mark as Understood
                   </button>
@@ -1665,99 +1678,89 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               </div>
             </div>
 
-            <p className="text-slate-400 mt-4">
+            <p style={{ color: '#94a3b8', marginTop: '16px' }}>
               Completed: {completedApps.size} / {transferApps.length}
             </p>
-
-            {completedApps.size >= 3 && (
-              <button
-                onClick={() => goToPhase('test')}
-                style={{ zIndex: 10 }}
-                className="mt-4 px-8 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white font-bold rounded-xl transition-all"
-              >
-                Take the Knowledge Test
-              </button>
-            )}
           </div>
         );
 
-      case 'test':
+      case 'test': {
+        const q = testQuestions[currentQuestion];
+        const isConfirmed = confirmedQuestion === currentQuestion;
+        const selectedAnswer = testAnswers[currentQuestion];
         return (
-          <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-sky-400 mb-6">Knowledge Test</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', padding: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#38bdf8', marginBottom: '8px' }}>Knowledge Test</h2>
+            <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '24px' }}>Question {currentQuestion + 1} of 10</p>
 
-            <div className="w-full max-w-2xl space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-              {testQuestions.map((q, qIndex) => (
-                <div key={qIndex} className="bg-slate-800 p-4 rounded-xl">
-                  <p className="text-slate-400 text-sm mb-2 italic">{q.scenario}</p>
-                  <p className="text-slate-200 mb-3 font-medium">{qIndex + 1}. {q.question}</p>
-                  <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
+            {!testSubmitted ? (
+              <div style={{ width: '100%', maxWidth: '640px' }}>
+                <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', marginBottom: '16px', border: '1px solid #334155' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '8px', fontStyle: 'italic', lineHeight: '1.5' }}>{q.scenario}</p>
+                  <p style={{ color: '#e2e8f0', marginBottom: '16px', fontWeight: 500, fontSize: '16px', lineHeight: '1.5' }}>{q.question}</p>
+                  <div style={{ display: 'grid', gap: '8px' }}>
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onClick={() => handleTestAnswer(qIndex, oIndex)}
-                        disabled={showTestResults}
-                        style={{ zIndex: 10 }}
-                        className={`p-3 rounded-lg text-sm text-left transition-all ${
-                          showTestResults && option.correct
-                            ? 'bg-green-600 text-white'
-                            : showTestResults && testAnswers[qIndex] === oIndex && !option.correct
-                            ? 'bg-red-600 text-white'
-                            : testAnswers[qIndex] === oIndex
-                            ? 'bg-sky-600 text-white'
-                            : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-                        }`}
+                        onClick={() => !isConfirmed && handleTestAnswer(currentQuestion, oIndex)}
+                        style={{ padding: '12px 16px', borderRadius: '8px', fontSize: '14px', textAlign: 'left', border: 'none', cursor: isConfirmed ? 'default' : 'pointer', transition: 'all 0.3s ease', lineHeight: '1.5', background: isConfirmed && option.correct ? '#16a34a' : isConfirmed && selectedAnswer === oIndex && !option.correct ? '#dc2626' : selectedAnswer === oIndex ? '#2563eb' : '#334155', color: 'white' }}
                       >
-                        {option.text}
+                        {String.fromCharCode(65 + oIndex)}) {option.text}
                       </button>
                     ))}
                   </div>
-                  {showTestResults && (
-                    <div className="mt-3 p-3 bg-slate-700/50 rounded-lg">
-                      <p className="text-slate-300 text-sm">{q.explanation}</p>
+                  {isConfirmed && (
+                    <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(51,65,85,0.5)', borderRadius: '8px' }}>
+                      <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: '1.5' }}>{q.explanation}</p>
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-
-            {!showTestResults && testAnswers.every(a => a !== -1) && (
-              <button
-                onClick={() => {
-                  setShowTestResults(true);
-                  playSound('complete');
-                  onGameEvent?.({ type: 'test_completed', data: { score: calculateTestScore() } });
-                }}
-                style={{ zIndex: 10 }}
-                className="mt-6 px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors"
-              >
-                Submit Answers
-              </button>
-            )}
-
-            {showTestResults && (
-              <div className="mt-6 text-center">
-                <p className="text-3xl font-bold text-sky-400 mb-2">
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {!isConfirmed ? (
+                    <button
+                      onClick={() => { if (selectedAnswer !== -1) setConfirmedQuestion(currentQuestion); }}
+                      disabled={selectedAnswer === -1}
+                      style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: selectedAnswer !== -1 ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: selectedAnswer !== -1 ? 'pointer' : 'not-allowed', fontWeight: 600, transition: 'all 0.3s ease' }}
+                    >
+                      Check Answer
+                    </button>
+                  ) : currentQuestion < 9 ? (
+                    <button
+                      onClick={() => { setConfirmedQuestion(null); setCurrentQuestion(currentQuestion + 1); }}
+                      style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', cursor: 'pointer', fontWeight: 600, transition: 'all 0.3s ease' }}
+                    >
+                      Next Question
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setTestSubmitted(true);
+                        setShowTestResults(true);
+                        playSound('complete');
+                        onGameEvent?.({ type: 'test_completed', data: { score: calculateTestScore() } });
+                      }}
+                      style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', cursor: 'pointer', fontWeight: 600, transition: 'all 0.3s ease' }}
+                    >
+                      Submit Test
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '32px', fontWeight: 700, color: '#38bdf8', marginBottom: '8px' }}>
                   Score: {calculateTestScore()} / 10
                 </p>
-                <p className={`text-lg ${calculateTestScore() >= 7 ? 'text-green-400' : 'text-yellow-400'}`}>
+                <p style={{ fontSize: '18px', color: calculateTestScore() >= 7 ? '#4ade80' : '#fbbf24' }}>
                   {calculateTestScore() >= 9 ? 'Outstanding! You\'ve mastered the Coriolis effect!' :
                    calculateTestScore() >= 7 ? 'Great job! You understand the key concepts!' :
                    'Keep learning! Try reviewing the material again.'}
                 </p>
-                {calculateTestScore() >= 7 && (
-                  <button
-                    onClick={() => goToPhase('mastery')}
-                    style={{ zIndex: 10 }}
-                    className="mt-4 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold rounded-xl transition-all"
-                  >
-                    Claim Your Mastery Badge!
-                  </button>
-                )}
               </div>
             )}
           </div>
         );
+      }
 
       case 'mastery':
         return (
@@ -1820,43 +1823,44 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sky-600/3 rounded-full blur-3xl" />
+  const currentIndex = phaseOrder.indexOf(phase);
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === phaseOrder.length - 1;
+  const isTestPhase = phase === 'test';
+  const quizComplete = isTestPhase && testSubmitted;
+  const canGoNext = !isLast && (!isTestPhase || quizComplete);
 
-      {/* Premium progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-medium text-sky-400">Coriolis Effect</span>
-          <div className="flex gap-1.5">
-            {phaseOrder.map((p, i) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-gradient-to-r from-sky-400 to-cyan-400 w-6 shadow-lg shadow-sky-500/50'
-                    : phaseOrder.indexOf(phase) > i
-                    ? 'bg-emerald-500 w-2'
-                    : 'bg-slate-600 w-2 hover:bg-slate-500'
-                }`}
-                title={phaseNames[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm text-slate-400 font-medium">{phaseNames[phase]}</span>
-        </div>
+  const renderBottomBar = () => (
+    <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+      <button onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1, transition: 'all 0.3s ease', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+        ← Back
+      </button>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        {phaseOrder.map((p, i) => (
+          <div key={p} onClick={() => i <= currentIndex && goToPhase(p)} title={phaseNames[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#3b82f6' : i < currentIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+        ))}
+      </div>
+      <button onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4, transition: 'all 0.3s ease', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+        Next →
+      </button>
+    </div>
+  );
+
+  return (
+    <div style={{ height: '100vh', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+      {/* Top bar */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: '#3b82f6' }}>Coriolis Effect</span>
+        <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500 }}>{phaseNames[phase]} ({currentIndex + 1}/{phaseOrder.length})</span>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 pt-16 pb-8">
+      {/* Scrollable content */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         {renderPhaseContent()}
       </div>
+
+      {/* Bottom bar */}
+      {renderBottomBar()}
     </div>
   );
 };

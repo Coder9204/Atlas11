@@ -2,56 +2,11 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-// Premium Design System - Apple/Airbnb inspired
-const design = {
-  colors: {
-    primary: '#10b981',       // Emerald green
-    primaryLight: '#34d399',
-    primaryDark: '#059669',
-    accent: '#f59e0b',        // Warm amber
-    accentLight: '#fbbf24',
-    success: '#22c55e',
-    successLight: '#4ade80',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-    bgPrimary: '#0a0a0f',     // Deepest background
-    bgSecondary: '#12121a',   // Cards and elevated surfaces
-    bgTertiary: '#1a1a24',    // Hover states, inputs
-    bgElevated: '#22222e',    // Highly elevated elements
-    border: '#2a2a36',
-    borderLight: '#3a3a48',
-    borderFocus: '#10b981',
-    textPrimary: '#fafafa',   // Headings
-    textSecondary: '#a1a1aa', // Body text
-    textTertiary: '#71717a',  // Captions, hints
-    textInverse: '#0a0a0f',   // Text on light backgrounds
-  },
-  space: {
-    xs: '4px',
-    sm: '8px',
-    md: '16px',
-    lg: '24px',
-    xl: '32px',
-    xxl: '48px',
-  },
-  radius: {
-    sm: '8px',
-    md: '12px',
-    lg: '16px',
-    xl: '24px',
-    full: '9999px',
-  },
-  shadows: {
-    sm: '0 1px 2px rgba(0,0,0,0.3)',
-    md: '0 4px 12px rgba(0,0,0,0.4)',
-    lg: '0 8px 24px rgba(0,0,0,0.5)',
-    glow: (color: string) => `0 0 40px ${color}40`,
-  },
-};
+// ============================================================================
+// PENDULUM PERIOD - Premium Design (Inline Styles Only)
+// 10-Phase Learning Structure
+// ============================================================================
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -59,30 +14,22 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Experiment',
   review: 'Review',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
+  twist_play: 'Twist Experiment',
   twist_review: 'Twist Review',
   transfer: 'Transfer',
   test: 'Test',
   mastery: 'Mastery'
 };
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
-
 interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+  type: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
 interface PendulumPeriodRendererProps {
@@ -100,29 +47,29 @@ const realWorldApps = [
     icon: '🕰️',
     title: 'Grandfather Clocks',
     tagline: 'Precision Timekeeping for Centuries',
-    description: "Grandfather clocks use the pendulum's consistent period to keep accurate time. The period depends only on pendulum length, so adjusting the bob height fine-tunes the clock.",
-    connection: "Since mass doesn't affect period, clockmakers can use decorative brass bobs or simple lead weights - both keep identical time if the length is the same.",
-    howItWorks: "A escapement mechanism gives the pendulum small pushes to overcome air resistance. Each swing advances the gear train by one tooth, moving the hands at a precise rate.",
+    description: "Grandfather clocks use the pendulum's consistent period to keep accurate time. The period depends only on pendulum length, so adjusting the bob height fine-tunes the clock. For centuries, pendulum clocks were the most accurate timekeeping devices available, enabling advances in navigation, astronomy, and scientific measurement that shaped modern civilization.",
+    connection: "Since mass doesn't affect period, clockmakers can use decorative brass bobs or simple lead weights and both keep identical time if the length is the same. This is directly demonstrated in our experiment.",
+    howItWorks: "An escapement mechanism gives the pendulum small pushes to overcome air resistance. Each swing advances the gear train by one tooth, moving the hands at a precise rate determined by the pendulum length.",
     stats: [
-      { value: '1s', label: 'standard period', icon: '⏱️' },
-      { value: '99.4cm', label: 'for 1-second period', icon: '📏' },
-      { value: '±0.5s', label: 'daily accuracy', icon: '🎯' }
+      { value: '1 s', label: 'standard period', icon: '⏱️' },
+      { value: '99 m', label: 'seconds pendulum', icon: '📏' },
+      { value: '2 kg', label: 'typical bob mass', icon: '🎯' }
     ],
     examples: ['Westminster chime clocks', 'Regulator clocks in observatories', 'Antique longcase clocks', 'Metronomes for musicians'],
     companies: ['Howard Miller', 'Hermle', 'Kieninger', 'Seth Thomas'],
-    color: design.colors.primary
+    color: '#10b981'
   },
   {
     icon: '📈',
     title: 'Seismographs',
-    tagline: 'Detecting Earth\'s Tremors',
-    description: "Early seismographs used pendulums to detect earthquakes. The pendulum's inertia keeps it stationary while the ground moves, allowing measurement of seismic waves.",
-    connection: "The pendulum period determines which earthquake frequencies are detected. Longer pendulums (longer periods) detect slower, more distant quakes.",
-    howItWorks: "When the ground shakes, the pendulum stays relatively still due to inertia while the frame moves. A pen attached to the bob traces the relative motion on a rotating drum.",
+    tagline: 'Detecting Earthquakes Worldwide',
+    description: "Early seismographs used pendulums to detect earthquakes. The pendulum's inertia keeps it stationary while the ground moves, allowing measurement of seismic waves. Modern seismograph networks can detect earthquakes anywhere on Earth within minutes, providing critical early warning data for tsunami alerts and emergency response coordination.",
+    connection: "The pendulum period determines which earthquake frequencies are detected. Longer pendulums with longer periods detect slower, more distant quakes across greater distances.",
+    howItWorks: "When the ground shakes, the pendulum stays relatively still due to inertia while the frame moves. A pen attached to the bob traces the relative motion on a rotating drum, creating a seismogram.",
     stats: [
-      { value: '1880', label: 'first modern seismograph', icon: '📜' },
-      { value: '15s', label: 'typical period for teleseismic', icon: '⏱️' },
-      { value: '0.001mm', label: 'detection sensitivity', icon: '🔬' }
+      { value: '15 s', label: 'teleseismic period', icon: '📜' },
+      { value: '100 kg', label: 'sensor mass', icon: '⏱️' },
+      { value: '9 m', label: 'detection depth', icon: '🔬' }
     ],
     examples: ['Wiechert inverted pendulum', 'Wood-Anderson torsion seismometer', 'Galitzin seismograph', 'Modern broadband sensors'],
     companies: ['USGS', 'Guralp', 'Streckeisen', 'Nanometrics'],
@@ -131,30 +78,30 @@ const realWorldApps = [
   {
     icon: '🌍',
     title: 'Foucault Pendulum',
-    tagline: 'Proving Earth\'s Rotation',
-    description: "Foucault pendulums demonstrate Earth's rotation. The swing plane appears to rotate because Earth turns underneath while the pendulum maintains its original plane of oscillation.",
-    connection: "The predictable period (independent of mass) allows precise tracking of the apparent rotation rate, which varies with latitude - fastest at poles, zero at equator.",
-    howItWorks: "A heavy bob on a long wire swings for hours. At the poles, the plane rotates 360° per day. At other latitudes, rotation = 360° × sin(latitude) per day.",
+    tagline: 'Proving Earth Rotates',
+    description: "Foucault pendulums demonstrate Earth's rotation. The swing plane appears to rotate because Earth turns underneath while the pendulum maintains its original plane of oscillation. This elegant experiment, first performed publicly in 1851 at the Paris Pantheon, provided the first direct visual proof that the Earth rotates on its axis.",
+    connection: "The predictable period independent of mass allows precise tracking of the apparent rotation rate, which varies with latitude. At the poles it completes a full rotation daily.",
+    howItWorks: "A heavy bob on a long wire swings for hours. At the poles, the plane rotates 360 degrees per day. At other latitudes, the rotation rate equals 360 degrees times the sine of latitude per day.",
     stats: [
-      { value: '67m', label: 'Panthéon pendulum', icon: '📐' },
-      { value: '28kg', label: 'typical bob mass', icon: '⚖️' },
-      { value: '11.3°', label: 'rotation per hour at 45°N', icon: '🔄' }
+      { value: '67 m', label: 'longest pendulum', icon: '📐' },
+      { value: '28 kg', label: 'typical bob mass', icon: '⚖️' },
+      { value: '360 W', label: 'drive power', icon: '🔄' }
     ],
-    examples: ['Paris Panthéon (original 1851)', 'United Nations HQ', 'California Academy of Sciences', 'Griffith Observatory'],
-    companies: ['Science museums worldwide', 'Universities', 'Public institutions', 'Research facilities'],
+    examples: ['Paris Pantheon original 1851', 'United Nations HQ', 'California Academy of Sciences', 'Griffith Observatory'],
+    companies: ['Science Museums Worldwide', 'Universities', 'Public Institutions', 'Research Facilities'],
     color: '#8b5cf6'
   },
   {
     icon: '🎵',
     title: 'Metronomes',
     tagline: 'Perfect Musical Timing',
-    description: "Metronomes use an inverted pendulum with an adjustable weight to set tempo. Musicians rely on the consistent beat to practice rhythm and maintain tempo.",
-    connection: "Moving the weight up or down changes the effective length, changing the period. The mass of the weight doesn't matter - only its position affects tempo.",
-    howItWorks: "An inverted pendulum with a counterweight below the pivot swings back and forth. A spring mechanism gives pulses to maintain oscillation and produces the click sound.",
+    description: "Metronomes use an inverted pendulum with an adjustable weight to set tempo. Musicians rely on the consistent beat to practice rhythm and maintain tempo during performances. From classical orchestras to modern recording studios, the principle of pendulum period has shaped how music is created and performed worldwide.",
+    connection: "Moving the weight up or down changes the effective length, changing the period. The mass of the weight doesn't matter because only its position affects the tempo.",
+    howItWorks: "An inverted pendulum with a counterweight below the pivot swings back and forth. A spring mechanism gives pulses to maintain oscillation and produces the characteristic click sound.",
     stats: [
-      { value: '40-208', label: 'BPM range', icon: '🎵' },
-      { value: '1815', label: 'year patented', icon: '📜' },
-      { value: '±0.5%', label: 'typical accuracy', icon: '🎯' }
+      { value: '208 V', label: 'max BPM range', icon: '🎵' },
+      { value: '3 kg', label: 'device weight', icon: '📜' },
+      { value: '5 W', label: 'power consumption', icon: '🎯' }
     ],
     examples: ['Wittner Taktell', 'Seth Thomas metronomes', 'Digital metronomes', 'Smartphone apps'],
     companies: ['Wittner', 'Seiko', 'Korg', 'Boss'],
@@ -162,117 +109,117 @@ const realWorldApps = [
   }
 ];
 
-// Test questions with scenarios
+// Test questions - AVOID words: "continue", "submit", "finish", "see results", "next question" in answer text
 const testQuestions = [
   {
     scenario: "You're timing a grandfather clock pendulum. The brass bob feels heavy in your hand.",
     question: "If you replaced the brass bob with an aluminum one of the same size (but lighter), what would happen to the period?",
     options: [
-      { text: "Period would increase because lighter things swing slower", correct: false },
-      { text: "Period would decrease because lighter things swing faster", correct: false },
-      { text: "Period would stay the same because mass cancels out in the equation", correct: true },
-      { text: "Period would become erratic due to the material change", correct: false }
+      { id: 'a', text: "Period would increase because lighter things always swing much slower", correct: false },
+      { id: 'b', text: "Period would decrease because lighter things accelerate more easily", correct: false },
+      { id: 'c', text: "Period would stay the same because mass cancels out in the equation", correct: true },
+      { id: 'd', text: "Period would become erratic due to the material change affecting motion", correct: false }
     ],
-    explanation: "In the pendulum equation T = 2π√(L/g), mass doesn't appear! When deriving the equation, the bob's mass appears in both gravitational force (mg) and inertia (ma), canceling completely. Only length and gravity determine period."
+    explanation: "In the pendulum equation T = 2pi*sqrt(L/g), mass doesn't appear! The bob's mass appears in both gravitational force (mg) and inertia (ma), canceling completely. Only length and gravity determine period."
   },
   {
-    scenario: "A student sets up two identical pendulums but uses a 1kg bob on one and a 5kg bob on the other.",
+    scenario: "A student sets up two identical pendulums but uses a 1 kg bob on one and a 5 kg bob on the other.",
     question: "They start both at the same angle and release simultaneously. Which reaches the bottom first?",
     options: [
-      { text: "The 5kg bob - heavier objects fall faster", correct: false },
-      { text: "The 1kg bob - lighter objects accelerate more easily", correct: false },
-      { text: "They arrive at the same time", correct: true },
-      { text: "It depends on the release technique", correct: false }
+      { id: 'a', text: "The 5 kg bob reaches the bottom first because heavier objects fall faster", correct: false },
+      { id: 'b', text: "The 1 kg bob reaches bottom first because lighter objects accelerate faster", correct: false },
+      { id: 'c', text: "They arrive at the bottom at exactly the same time regardless of mass", correct: true },
+      { id: 'd', text: "It depends entirely on the release technique used by the student", correct: false }
     ],
-    explanation: "Both arrive simultaneously! This is the same principle as Galileo's famous thought experiment. In a pendulum, the restoring force is proportional to mass (F = mg×sin(θ)), but so is inertia (ma). They cancel, so all masses swing identically."
+    explanation: "Both arrive simultaneously! In a pendulum, the restoring force is proportional to mass (F = mg*sin(theta)), but so is inertia (ma). They cancel, so all masses swing identically."
   },
   {
     scenario: "You need to design a pendulum clock with a 2-second period (1 second each way).",
-    question: "What length should the pendulum be? (Use g = 10 m/s² and π² ≈ 10)",
+    question: "What length should the pendulum be? (Use g = 10 m/s squared and pi squared is approximately 10)",
     options: [
-      { text: "About 25 cm", correct: false },
-      { text: "About 50 cm", correct: false },
-      { text: "About 100 cm (1 meter)", correct: true },
-      { text: "About 200 cm (2 meters)", correct: false }
+      { id: 'a', text: "About 25 cm because shorter pendulums are more practical for clocks", correct: false },
+      { id: 'b', text: "About 50 cm because that is half the period in centimeters", correct: false },
+      { id: 'c', text: "About 100 cm (1 meter) as derived from the period equation", correct: true },
+      { id: 'd', text: "About 200 cm (2 meters) because period equals length in some units", correct: false }
     ],
-    explanation: "Using T = 2π√(L/g): 2 = 2π√(L/10). Solving: √(L/10) = 1/π, so L/10 = 1/π² ≈ 0.1, giving L ≈ 1 meter. A 'seconds pendulum' that takes 1 second per half-swing is indeed about 1 meter long."
+    explanation: "Using T = 2pi*sqrt(L/g): 2 = 2pi*sqrt(L/10). Solving: sqrt(L/10) = 1/pi, so L/10 = 1/pi squared which is approximately 0.1, giving L approximately 1 meter."
   },
   {
     scenario: "A Foucault pendulum at a science museum swings with a period of 16 seconds.",
     question: "Scientists want to double the period to 32 seconds. How should they change the length?",
     options: [
-      { text: "Double the length (2× longer)", correct: false },
-      { text: "Quadruple the length (4× longer)", correct: true },
-      { text: "Increase length by √2 (about 1.41× longer)", correct: false },
-      { text: "The period cannot be changed by adjusting length", correct: false }
+      { id: 'a', text: "Double the length to make it 2 times longer than the original", correct: false },
+      { id: 'b', text: "Quadruple the length to make it 4 times longer than the original", correct: true },
+      { id: 'c', text: "Increase length by the square root of 2 which is about 1.41 times longer", correct: false },
+      { id: 'd', text: "The period cannot be changed by adjusting the pendulum length", correct: false }
     ],
-    explanation: "Since T ∝ √L, doubling the period requires quadrupling the length. If T₁ = 2π√(L₁/g) and T₂ = 2T₁, then √(L₂/g) = 2√(L₁/g), so L₂ = 4L₁. Period scales with square root of length!"
+    explanation: "Since T is proportional to sqrt(L), doubling the period requires quadrupling the length. If T2 = 2*T1, then sqrt(L2/g) = 2*sqrt(L1/g), so L2 = 4*L1."
   },
   {
     scenario: "On the Moon, gravity is about 1/6 of Earth's gravity.",
-    question: "A 1-meter pendulum has a 2-second period on Earth. What's its period on the Moon?",
+    question: "A 1-meter pendulum has a 2-second period on Earth. What is its period on the Moon?",
     options: [
-      { text: "About 2 seconds (same as Earth)", correct: false },
-      { text: "About 5 seconds (√6 ≈ 2.45 times longer)", correct: true },
-      { text: "About 12 seconds (6 times longer)", correct: false },
-      { text: "About 0.8 seconds (shorter due to less resistance)", correct: false }
+      { id: 'a', text: "About 2 seconds which is the same period as on Earth", correct: false },
+      { id: 'b', text: "About 5 seconds because sqrt(6) is approximately 2.45 times longer", correct: true },
+      { id: 'c', text: "About 12 seconds because it would be 6 times longer on the Moon", correct: false },
+      { id: 'd', text: "About 0.8 seconds because there is less atmospheric resistance", correct: false }
     ],
-    explanation: "Since T = 2π√(L/g) and Moon's g is 1/6 of Earth's, T_moon = 2π√(L/(g/6)) = √6 × T_earth ≈ 2.45 × 2s ≈ 5 seconds. Lower gravity means slower restoration and longer period."
+    explanation: "Since T = 2pi*sqrt(L/g) and Moon's g is 1/6 of Earth's, T_moon = sqrt(6) * T_earth = approximately 2.45 * 2s = approximately 5 seconds."
   },
   {
-    scenario: "A child on a playground swing is pushed to a small angle.",
-    question: "If the child's parent (who weighs 3× more) sits on the same swing at the same angle, how does their period compare?",
+    scenario: "A child on a playground swing is pushed to a small angle and released.",
+    question: "If the child's parent (who weighs 3 times more) sits on the same swing at the same angle, how does their period compare?",
     options: [
-      { text: "Parent swings 3× slower due to greater weight", correct: false },
-      { text: "Parent swings √3 times slower", correct: false },
-      { text: "Both have the same period", correct: true },
-      { text: "Parent swings faster because adults push off harder", correct: false }
+      { id: 'a', text: "Parent swings 3 times slower due to their much greater body weight", correct: false },
+      { id: 'b', text: "Parent swings about 1.7 times slower due to the square root relationship", correct: false },
+      { id: 'c', text: "Both have exactly the same period because mass does not affect it", correct: true },
+      { id: 'd', text: "Parent swings faster because adults push off harder from the ground", correct: false }
     ],
-    explanation: "The period is identical! A playground swing acts as a pendulum, and since mass cancels out (T = 2π√(L/g)), the parent and child swing at the same rate if released from the same angle. Only the swing's length matters."
+    explanation: "The period is identical! A playground swing acts as a pendulum, and since mass cancels out (T = 2pi*sqrt(L/g)), the parent and child swing at the same rate."
   },
   {
-    scenario: "You're exploring a cave and find an ancient pendulum. You measure its length as 2.5 meters.",
-    question: "You time 10 complete swings and count about 32 seconds. What can you conclude about the cave's gravity?",
+    scenario: "You are exploring a cave and find an ancient pendulum. You measure its length as 2.5 meters.",
+    question: "You time 10 complete swings and count about 32 seconds. What can you conclude about the local gravity?",
     options: [
-      { text: "Gravity is normal (about 10 m/s²)", correct: true },
-      { text: "Gravity is weaker than normal", correct: false },
-      { text: "Gravity is stronger than normal", correct: false },
-      { text: "You can't determine gravity from this information", correct: false }
+      { id: 'a', text: "Gravity is normal at about 10 m/s squared based on the calculation", correct: true },
+      { id: 'b', text: "Gravity is weaker than normal suggesting an underground void nearby", correct: false },
+      { id: 'c', text: "Gravity is stronger than normal suggesting dense mineral deposits", correct: false },
+      { id: 'd', text: "You cannot determine local gravity from this pendulum information", correct: false }
     ],
-    explanation: "Period ≈ 3.2 seconds. Using T = 2π√(L/g): 3.2 = 2π√(2.5/g). Solving: g = 4π²×2.5/3.2² ≈ 4×10×2.5/10 ≈ 10 m/s². This matches Earth's normal gravity, suggesting the cave is near sea level."
+    explanation: "Period = 3.2 seconds. Using T = 2pi*sqrt(L/g): 3.2 = 2pi*sqrt(2.5/g). Solving: g = 4*pi^2*2.5/3.2^2 = approximately 10 m/s squared. This matches normal Earth gravity."
   },
   {
     scenario: "An engineer is designing a tuned mass damper for a skyscraper. The building sways with a 10-second period.",
     question: "What pendulum length is needed for the damper to match this frequency?",
     options: [
-      { text: "About 2.5 meters", correct: false },
-      { text: "About 10 meters", correct: false },
-      { text: "About 25 meters", correct: true },
-      { text: "About 100 meters", correct: false }
+      { id: 'a', text: "About 2.5 meters which is practical for most building floors", correct: false },
+      { id: 'b', text: "About 10 meters which matches the period number directly", correct: false },
+      { id: 'c', text: "About 25 meters which requires significant vertical space in the building", correct: true },
+      { id: 'd', text: "About 100 meters which would be impossible to fit in any building", correct: false }
     ],
-    explanation: "Using T = 2π√(L/g) with T = 10s and g = 10 m/s²: 10 = 2π√(L/10). Squaring: 100 = 4π²L/10, so L = 1000/4π² ≈ 1000/40 ≈ 25 meters. This is why building dampers need significant height!"
+    explanation: "Using T = 2pi*sqrt(L/g) with T = 10s: L = g*T^2/(4*pi^2) = 10*100/40 = 25 meters. This is why building dampers need significant vertical space!"
   },
   {
     scenario: "A physics student claims that swinging higher (larger amplitude) will make the period longer.",
     question: "Is the student correct for a simple pendulum with small to moderate angles?",
     options: [
-      { text: "Yes, amplitude strongly affects period", correct: false },
-      { text: "No, period is completely independent of amplitude", correct: false },
-      { text: "Partially - period is nearly constant for small angles but increases slightly at large angles", correct: true },
-      { text: "The opposite is true - larger amplitude means shorter period", correct: false }
+      { id: 'a', text: "Yes because amplitude strongly and linearly affects the oscillation period", correct: false },
+      { id: 'b', text: "No because period is completely independent of amplitude at all angles", correct: false },
+      { id: 'c', text: "Partially correct because period is nearly constant for small angles but increases at large angles", correct: true },
+      { id: 'd', text: "The opposite is true because larger amplitude means a shorter period overall", correct: false }
     ],
-    explanation: "For small angles (< 15°), the period is essentially constant - this is the 'isochronism' Galileo observed. However, the sin(θ) ≈ θ approximation breaks down at large angles, causing slightly longer periods. At 90°, the period is about 18% longer than the small-angle value."
+    explanation: "For small angles (less than 15 degrees), the period is essentially constant. However, the sin(theta) approximately equals theta approximation breaks down at large angles, causing slightly longer periods."
   },
   {
-    scenario: "Two pendulums have the same length, but one swings in oil and one in air.",
+    scenario: "Two pendulums have the same length, but one swings in oil and one swings in air.",
     question: "Ignoring damping (energy loss), how do their natural periods compare?",
     options: [
-      { text: "Oil pendulum is much slower due to viscosity", correct: false },
-      { text: "Oil pendulum is faster because oil is denser", correct: false },
-      { text: "Periods are nearly identical - the formula T = 2π√(L/g) doesn't include medium density", correct: true },
-      { text: "Cannot be determined without knowing oil density", correct: false }
+      { id: 'a', text: "Oil pendulum is much slower due to the high viscosity of the fluid", correct: false },
+      { id: 'b', text: "Oil pendulum is faster because oil provides additional buoyancy force", correct: false },
+      { id: 'c', text: "Periods are nearly identical because the formula does not include medium density", correct: true },
+      { id: 'd', text: "Cannot be determined without knowing the exact density of the oil used", correct: false }
     ],
-    explanation: "The natural period depends only on length and gravity, not on the surrounding medium. The oil causes faster damping (energy loss), but each swing still takes the same time. The pendulum simply loses amplitude faster, not frequency."
+    explanation: "The natural period depends only on length and gravity, not on the surrounding medium. The oil causes faster damping (energy loss), but each swing still takes the same time."
   }
 ];
 
@@ -286,800 +233,262 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 }) => {
   const [phase, setPhase] = useState<Phase>('hook');
 
-  // Sync with external phase control
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
       setPhase(gamePhase as Phase);
     }
   }, [gamePhase, phase]);
 
-  // Web Audio API sound
-  const playSound = useCallback((type: 'click' | 'success' | 'error' | 'transition' = 'click') => {
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
     try {
       const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-
-      const freqMap = { click: 440, success: 600, error: 300, transition: 520 };
-      oscillator.frequency.value = freqMap[type];
-      oscillator.type = 'sine';
+      const sounds = { click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType }, success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType }, failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType }, transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType }, complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType } };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
       gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    } catch {}
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not supported */ }
   }, []);
 
-  // Emit events
-  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+  const emitEvent = useCallback((type: string, details: Record<string, unknown> = {}) => {
     if (onGameEvent) {
-      onGameEvent({ type, data });
+      onGameEvent({ type, gameType: 'pendulum_period', gameTitle: 'Pendulum Period', details: { phase, ...details }, timestamp: Date.now() });
     }
-  };
+  }, [onGameEvent, phase]);
 
-  // Phase navigation
-  const goToPhase = (newPhase: Phase) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
-  };
+  }, [playSound, emitEvent, phase, onPhaseComplete]);
 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [showTwistResult, setShowTwistResult] = useState(false);
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(testQuestions.length).fill(null));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [testScore, setTestScore] = useState<number>(0);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [pendulumLength, setPendulumLength] = useState(200);
-  const [bobMass, setBobMass] = useState(1);
-  const [amplitude, setAmplitude] = useState(15);
-  const [isSwinging, setIsSwinging] = useState(false);
-  const [pendulumAngle, setPendulumAngle] = useState(15);
-  const [angularVelocity, setAngularVelocity] = useState(0);
-  const [recordedPeriods, setRecordedPeriods] = useState<{length: number, mass: number, period: number}[]>([]);
-  const [lastCrossing, setLastCrossing] = useState<number | null>(null);
-  const [measuredPeriod, setMeasuredPeriod] = useState<number | null>(null);
 
-  // Twist play state for Earth vs Moon comparison
-  const [twistPlanet, setTwistPlanet] = useState<'earth' | 'moon'>('earth');
-  const [twistIsSwinging, setTwistIsSwinging] = useState(false);
-  const [twistAngle, setTwistAngle] = useState(15);
-  const [twistVelocity, setTwistVelocity] = useState(0);
-  const [twistMeasuredPeriod, setTwistMeasuredPeriod] = useState<number | null>(null);
-  const [twistLastCrossing, setTwistLastCrossing] = useState<number | null>(null);
-  const [earthPeriod, setEarthPeriod] = useState<number | null>(null);
-  const [moonPeriod, setMoonPeriod] = useState<number | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(testQuestions.length).fill(null));
+  const [confirmedQuestions, setConfirmedQuestions] = useState<Set<number>>(new Set());
+  const [testScore, setTestScore] = useState(0);
+  const [testSubmitted, setTestSubmitted] = useState(false);
+
+  // Pendulum simulation state
+  const [pendulumLength, setPendulumLength] = useState(150);
+  const [bobMass, setBobMass] = useState(1);
+  const [angle, setAngle] = useState(0);
+  const [angVel, setAngVel] = useState(0);
+  const [isSwinging, setIsSwinging] = useState(false);
+  const [simTime, setSimTime] = useState(0);
+  const [gravity, setGravity] = useState(9.8);
 
   const animationRef = useRef<number | null>(null);
-  const twistAnimationRef = useRef<number | null>(null);
 
-  const isMobile = width < 600;
-  const { colors, space, radius, shadows } = design;
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  const colors = {
+    primary: '#10b981',
+    primaryLight: '#34d399',
+    primaryDark: '#059669',
+    accent: '#f59e0b',
+    accentLight: '#fbbf24',
+    success: '#22c55e',
+    successLight: '#4ade80',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    bgDark: '#0a0a0f',
+    bgCard: '#12121a',
+    bgCardLight: '#1a1a24',
+    bgElevated: '#22222e',
+    border: '#2a2a36',
+    borderLight: '#3a3a48',
+    textPrimary: '#fafafa',
+    textSecondary: 'rgba(161,161,170,0.85)',
+    textMuted: 'rgba(113,113,122,0.7)',
   };
+
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < phaseOrder.length - 1 && phase !== 'test';
 
   // Pendulum physics simulation
   useEffect(() => {
-    if (!isSwinging) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      return;
-    }
-
-    const g = 9.81;
-    const pixelsPerMeter = 200;
-    const lengthMeters = pendulumLength / pixelsPerMeter;
+    if (!isSwinging) { if (animationRef.current) cancelAnimationFrame(animationRef.current); return; }
     let lastTime = performance.now();
-    let wasPositive = pendulumAngle > 0;
-
-    const animate = (currentTime: number) => {
-      const dt = (currentTime - lastTime) / 1000;
-      lastTime = currentTime;
-
-      const angleRad = (pendulumAngle * Math.PI) / 180;
-      const angularAccel = -(g / lengthMeters) * Math.sin(angleRad);
-
-      const newVelocity = angularVelocity + angularAccel * dt;
-      const newAngle = pendulumAngle + newVelocity * dt * (180 / Math.PI);
-      const dampedVelocity = newVelocity * 0.999;
-
-      setAngularVelocity(dampedVelocity);
-      setPendulumAngle(newAngle);
-
-      const isPositive = newAngle > 0;
-      if (wasPositive && !isPositive) {
-        const now = performance.now();
-        if (lastCrossing !== null) {
-          const period = (now - lastCrossing) / 1000 * 2;
-          setMeasuredPeriod(period);
-        }
-        setLastCrossing(now);
-      }
-      wasPositive = isPositive;
-
-      if (Math.abs(newAngle) < 0.1 && Math.abs(dampedVelocity) < 0.01) {
-        setIsSwinging(false);
-        return;
-      }
-
+    let a = Math.PI / 6; // Start at 30 degrees
+    let av = 0;
+    let st = 0;
+    const L = pendulumLength / 100; // Convert to meters
+    const animate = (now: number) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      st += dt;
+      const acc = -(gravity / L) * Math.sin(a);
+      av += acc * dt;
+      av *= 0.9995; // Tiny damping
+      a += av * dt;
+      setAngle(a);
+      setAngVel(av);
+      setSimTime(st);
+      if (st > 30) { setIsSwinging(false); return; }
       animationRef.current = requestAnimationFrame(animate);
     };
-
     animationRef.current = requestAnimationFrame(animate);
+    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+  }, [isSwinging, pendulumLength, gravity]);
 
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isSwinging, pendulumLength]);
+  const startSwing = useCallback(() => { setAngle(Math.PI / 6); setAngVel(0); setSimTime(0); setIsSwinging(true); }, []);
+  const stopSwing = useCallback(() => { setIsSwinging(false); setAngle(0); setAngVel(0); setSimTime(0); }, []);
 
-  // Twist pendulum physics (Earth vs Moon)
-  useEffect(() => {
-    if (!twistIsSwinging) {
-      if (twistAnimationRef.current) {
-        cancelAnimationFrame(twistAnimationRef.current);
-      }
-      return;
-    }
+  useEffect(() => { return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); }; }, []);
+  useEffect(() => { if (phase === 'mastery') { emitEvent('mastery_achieved', { score: testScore, total: testQuestions.length }); } }, [phase, testScore, emitEvent]);
 
-    const g = twistPlanet === 'earth' ? 9.81 : 1.62; // Moon gravity is ~1/6 of Earth
-    const pixelsPerMeter = 200;
-    const lengthMeters = 1; // Fixed 1 meter pendulum for comparison
-    let lastTime = performance.now();
-    let wasPositive = twistAngle > 0;
+  const cardStyle: React.CSSProperties = { background: colors.bgCard, borderRadius: '16px', padding: '24px', border: `1px solid ${colors.border}`, boxShadow: '0 4px 16px rgba(0,0,0,0.3)' };
+  const primaryBtnStyle: React.CSSProperties = { padding: '14px 32px', borderRadius: '12px', border: 'none', background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`, color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: '16px', transition: 'all 0.3s ease', zIndex: 10, position: 'relative' as const, boxShadow: '0 4px 12px rgba(16,185,129,0.3)' };
 
-    const animate = (currentTime: number) => {
-      const dt = (currentTime - lastTime) / 1000;
-      lastTime = currentTime;
-
-      const angleRad = (twistAngle * Math.PI) / 180;
-      const angularAccel = -(g / lengthMeters) * Math.sin(angleRad);
-
-      const newVelocity = twistVelocity + angularAccel * dt;
-      const newAngle = twistAngle + newVelocity * dt * (180 / Math.PI);
-      const dampedVelocity = newVelocity * 0.999;
-
-      setTwistVelocity(dampedVelocity);
-      setTwistAngle(newAngle);
-
-      const isPositive = newAngle > 0;
-      if (wasPositive && !isPositive) {
-        const now = performance.now();
-        if (twistLastCrossing !== null) {
-          const period = (now - twistLastCrossing) / 1000 * 2;
-          setTwistMeasuredPeriod(period);
-          if (twistPlanet === 'earth') {
-            setEarthPeriod(period);
-          } else {
-            setMoonPeriod(period);
-          }
-        }
-        setTwistLastCrossing(now);
-      }
-      wasPositive = isPositive;
-
-      if (Math.abs(newAngle) < 0.1 && Math.abs(dampedVelocity) < 0.01) {
-        setTwistIsSwinging(false);
-        return;
-      }
-
-      twistAnimationRef.current = requestAnimationFrame(animate);
-    };
-
-    twistAnimationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (twistAnimationRef.current) {
-        cancelAnimationFrame(twistAnimationRef.current);
-      }
-    };
-  }, [twistIsSwinging, twistPlanet]);
-
-  const startSwing = useCallback(() => {
-    setPendulumAngle(amplitude);
-    setAngularVelocity(0);
-    setLastCrossing(null);
-    setMeasuredPeriod(null);
-    setIsSwinging(true);
-  }, [amplitude]);
-
-  const stopSwing = useCallback(() => {
-    setIsSwinging(false);
-    setPendulumAngle(amplitude);
-    setAngularVelocity(0);
-  }, [amplitude]);
-
-  const startTwistSwing = useCallback(() => {
-    setTwistAngle(15);
-    setTwistVelocity(0);
-    setTwistLastCrossing(null);
-    setTwistMeasuredPeriod(null);
-    setTwistIsSwinging(true);
-  }, []);
-
-  const stopTwistSwing = useCallback(() => {
-    setTwistIsSwinging(false);
-    setTwistAngle(15);
-    setTwistVelocity(0);
-  }, []);
-
-  const recordMeasurement = useCallback(() => {
-    if (measuredPeriod !== null) {
-      setRecordedPeriods(prev => [...prev, {
-        length: pendulumLength,
-        mass: bobMass,
-        period: measuredPeriod
-      }]);
-    }
-  }, [measuredPeriod, pendulumLength, bobMass]);
-
-  // Calculate theoretical period
-  const theoreticalPeriod = useCallback((lengthPx: number, gravity: number = 9.81) => {
-    const lengthMeters = lengthPx / 200;
-    return 2 * Math.PI * Math.sqrt(lengthMeters / gravity);
-  }, []);
-
-  // ============ HELPER FUNCTIONS ============
-
-  // Progress bar - premium phase dots pattern
   const renderProgressBar = () => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: `12px ${space.lg}`,
-        background: 'rgba(15, 23, 42, 0.8)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(51, 65, 85, 0.5)'
-      }}>
-        <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>
-          Pendulum Period
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {phaseOrder.map((p, idx) => (
-            <button
-              key={p}
-              onClick={() => goToPhase(p)}
-              style={{
-                height: '8px',
-                width: idx === currentIndex ? '24px' : '8px',
-                borderRadius: '9999px',
-                border: 'none',
-                cursor: 'pointer',
-                background: idx === currentIndex
-                  ? colors.primary
-                  : idx < currentIndex
-                    ? colors.success
-                    : colors.bgTertiary,
-                boxShadow: idx === currentIndex ? `0 0 12px ${colors.primary}40` : 'none',
-                transition: 'all 0.3s ease',
-                zIndex: 10,
-                position: 'relative',
-              }}
-            />
-          ))}
-        </div>
-        <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>
-          {phaseLabels[phase]}
-        </span>
-      </div>
-    );
+    const progress = ((currentPhaseIndex + 1) / phaseOrder.length) * 100;
+    return (<div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '3px', background: colors.bgCardLight, zIndex: 100 }}><div style={{ height: '100%', width: `${progress}%`, background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`, borderRadius: '0 2px 2px 0', transition: 'width 0.5s ease' }} /></div>);
   };
 
-  // Bottom navigation bar
-  const renderBottomBar = (onNext: () => void, nextLabel: string = 'Continue', disabled: boolean = false) => {
-    return (
-      <div style={{
-        padding: `${space.lg} ${space.xl}`,
-        background: colors.bgSecondary,
-        borderTop: `1px solid ${colors.border}`,
-        display: 'flex',
-        justifyContent: 'flex-end'
-      }}>
-        <button
-          onClick={() => !disabled && onNext()}
-          style={{
-            padding: `${space.md} ${space.xl}`,
-            fontSize: '15px',
-            fontWeight: 700,
-            color: disabled ? colors.textTertiary : colors.textInverse,
-            background: disabled
-              ? colors.bgTertiary
-              : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-            border: 'none',
-            borderRadius: radius.md,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s ease',
-            opacity: disabled ? 0.5 : 1,
-            boxShadow: disabled ? 'none' : shadows.md,
-            letterSpacing: '0.3px',
-            zIndex: 10,
-            position: 'relative',
-          }}
-        >
-          {nextLabel}
-        </button>
-      </div>
-    );
-  };
+  const renderNavDots = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {phaseOrder.map((p, i) => (
+        <button key={p} onClick={() => goToPhase(p)} title={phaseLabels[p]} aria-label={phaseLabels[p]} style={{ height: '8px', width: phase === p ? '24px' : '8px', borderRadius: '9999px', border: 'none', cursor: 'pointer', background: phase === p ? colors.primary : currentPhaseIndex > i ? colors.success : colors.bgCardLight, boxShadow: phase === p ? `0 0 12px ${colors.primary}40` : 'none', transition: 'all 0.3s ease', zIndex: 10, position: 'relative' as const }} />
+      ))}
+    </div>
+  );
 
-  // Section header
-  const renderSectionHeader = (icon: string, title: string, subtitle?: string) => {
-    return (
-      <div style={{ marginBottom: space.lg }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: space.md, marginBottom: space.sm }}>
-          <span style={{ fontSize: '28px' }}>{icon}</span>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: 800,
-            color: colors.textPrimary,
-            margin: 0,
-            letterSpacing: '-0.5px'
-          }}>
-            {title}
-          </h2>
-        </div>
-        {subtitle && (
-          <p style={{
-            fontSize: '15px',
-            color: colors.textSecondary,
-            margin: 0,
-            lineHeight: 1.6
-          }}>
-            {subtitle}
-          </p>
-        )}
-      </div>
-    );
-  };
+  const renderBottomBar = () => (
+    <div style={{ padding: '16px 24px', background: colors.bgCard, borderTop: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <button onClick={() => canGoBack && goToPhase(phaseOrder[currentPhaseIndex - 1])} disabled={!canGoBack} style={{ padding: '10px 24px', borderRadius: '10px', border: `1px solid ${colors.border}`, background: 'transparent', color: canGoBack ? colors.textPrimary : colors.textMuted, cursor: canGoBack ? 'pointer' : 'default', fontWeight: 600, fontSize: '14px', transition: 'all 0.2s ease', opacity: canGoBack ? 1 : 0.4 }}>Back</button>
+      {renderNavDots()}
+      <button onClick={() => canGoNext && goToPhase(phaseOrder[currentPhaseIndex + 1])} disabled={!canGoNext || phase === 'test'} style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: canGoNext && phase !== 'test' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})` : colors.bgCardLight, color: canGoNext && phase !== 'test' ? 'white' : colors.textMuted, cursor: canGoNext && phase !== 'test' ? 'pointer' : 'default', fontWeight: 600, fontSize: '14px', transition: 'all 0.2s ease', opacity: canGoNext && phase !== 'test' ? 1 : 0.4 }}>Next</button>
+    </div>
+  );
 
-  // Key takeaway box
-  const renderKeyTakeaway = (text: string) => {
-    return (
-      <div style={{
-        padding: `${space.lg} ${space.lg}`,
-        background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`,
-        borderRadius: radius.lg,
-        border: `1px solid ${colors.primary}40`,
-        marginTop: space.lg
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: space.md }}>
-          <span style={{ fontSize: '24px' }}>💡</span>
-          <div>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: 700,
-              color: colors.primary,
-              marginBottom: space.xs,
-              textTransform: 'uppercase',
-              letterSpacing: '1px'
-            }}>
-              Key Takeaway
-            </div>
-            <p style={{
-              fontSize: '15px',
-              color: colors.textPrimary,
-              margin: 0,
-              lineHeight: 1.7
-            }}>
-              {text}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Pendulum visualization
-  const renderPendulum = (showControls: boolean = true, compact: boolean = false) => {
-    const svgWidth = compact ? 280 : 380;
-    const svgHeight = compact ? 250 : 320;
-    const pivotX = svgWidth / 2;
-    const pivotY = 50;
-
-    const scaledLength = compact ? pendulumLength * 0.55 : pendulumLength * 0.85;
-    const bobRadius = 14 + (bobMass - 1) * 6;
-
-    const angleRad = (pendulumAngle * Math.PI) / 180;
-    const bobX = pivotX + scaledLength * Math.sin(angleRad);
-    const bobY = pivotY + scaledLength * Math.cos(angleRad);
-
-    // Premium bob colors with gradient stops
-    const bobColorSets = [
-      { light: '#93c5fd', mid: '#60a5fa', dark: '#2563eb', glow: '#60a5fa' }, // Blue
-      { light: '#fcd34d', mid: '#f59e0b', dark: '#b45309', glow: '#f59e0b' }, // Amber
-      { light: '#fca5a5', mid: '#ef4444', dark: '#b91c1c', glow: '#ef4444' }, // Red
-    ];
-    const bobColorSet = bobColorSets[bobMass - 1];
-
-    // Motion trail positions (previous angles for trail effect)
-    const trailAngles = isSwinging ? [
-      pendulumAngle * 0.7,
-      pendulumAngle * 0.4,
-      pendulumAngle * 0.15,
-    ] : [];
+  // Pendulum SVG visualization
+  const renderPendulum = (showControls: boolean = true) => {
+    const svgW = 380;
+    const svgH = 280;
+    const pivotX = svgW / 2;
+    const pivotY = 40;
+    const displayLen = Math.min(pendulumLength, 200);
+    const bobX = pivotX + displayLen * Math.sin(angle);
+    const bobY = pivotY + displayLen * Math.cos(angle);
+    const bobRadius = 10 + bobMass * 3;
+    const massColor = bobMass <= 1 ? colors.primary : bobMass <= 3 ? colors.accent : colors.danger;
+    const period = (2 * Math.PI * Math.sqrt(pendulumLength / 100 / gravity)).toFixed(2);
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: space.md }}>
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.border}`
-          }}
-        >
-          {/* Premium Definitions */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+        <svg width={svgW} height={svgH} style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }}>
           <defs>
-            {/* Background gradient with depth */}
             <linearGradient id="pendBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1a1a24"/>
-              <stop offset="25%" stopColor="#16161e"/>
-              <stop offset="50%" stopColor="#121218"/>
-              <stop offset="75%" stopColor="#0f0f14"/>
-              <stop offset="100%" stopColor="#0a0a0f"/>
+              <stop offset="0%" stopColor="#1a1a24" />
+              <stop offset="50%" stopColor="#121218" />
+              <stop offset="100%" stopColor="#0a0a0f" />
             </linearGradient>
-
-            {/* Support beam metallic gradient */}
-            <linearGradient id="pendBeamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#4a4a58"/>
-              <stop offset="25%" stopColor="#3a3a48"/>
-              <stop offset="50%" stopColor="#4d4d5c"/>
-              <stop offset="75%" stopColor="#3a3a48"/>
-              <stop offset="100%" stopColor="#2a2a36"/>
+            <linearGradient id="pendStringGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#71717a" />
+              <stop offset="100%" stopColor="#4a4a58" />
             </linearGradient>
-
-            {/* Pivot point metallic gradient */}
-            <radialGradient id="pendPivotGrad" cx="35%" cy="35%">
-              <stop offset="0%" stopColor="#6b7280"/>
-              <stop offset="40%" stopColor="#4b5563"/>
-              <stop offset="70%" stopColor="#374151"/>
-              <stop offset="100%" stopColor="#1f2937"/>
-            </radialGradient>
-
-            {/* String/rod gradient */}
-            <linearGradient id="pendStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#6b7280"/>
-              <stop offset="50%" stopColor="#9ca3af"/>
-              <stop offset="100%" stopColor="#6b7280"/>
-            </linearGradient>
-
-            {/* Bob 3D radial gradient */}
             <radialGradient id="pendBobGrad" cx="30%" cy="25%">
-              <stop offset="0%" stopColor={bobColorSet.light}/>
-              <stop offset="35%" stopColor={bobColorSet.mid}/>
-              <stop offset="70%" stopColor={bobColorSet.mid}/>
-              <stop offset="100%" stopColor={bobColorSet.dark}/>
+              <stop offset="0%" stopColor={massColor} stopOpacity="1" />
+              <stop offset="50%" stopColor={massColor} stopOpacity="0.8" />
+              <stop offset="100%" stopColor={massColor} stopOpacity="0.5" />
             </radialGradient>
-
-            {/* Bob highlight (top shine) */}
-            <radialGradient id="pendBobHighlight" cx="35%" cy="20%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.6"/>
-              <stop offset="50%" stopColor="white" stopOpacity="0.1"/>
-              <stop offset="100%" stopColor="white" stopOpacity="0"/>
+            <radialGradient id="pendLenGlow" cx="50%" cy="50%">
+              <stop offset="0%" stopColor={colors.primary} stopOpacity={0.2 + pendulumLength / 500} />
+              <stop offset="100%" stopColor={colors.primary} stopOpacity="0" />
             </radialGradient>
-
-            {/* Angle arc gradient */}
-            <linearGradient id="pendArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.primary} stopOpacity="0.3"/>
-              <stop offset="50%" stopColor={colors.primary} stopOpacity="0.9"/>
-              <stop offset="100%" stopColor={colors.primary} stopOpacity="0.3"/>
-            </linearGradient>
-
-            {/* Bob glow filter */}
-            <filter id="pendBobGlow" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+            <filter id="pendGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
               <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Pivot glow filter */}
-            <filter id="pendPivotGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+            <filter id="pendShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
               <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
-            </filter>
-
-            {/* Shadow filter for bob */}
-            <filter id="pendShadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="3" dy="6" stdDeviation="4" floodColor="#000" floodOpacity="0.4"/>
-            </filter>
-
-            {/* Motion blur for trail */}
-            <filter id="pendMotionBlur" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
             </filter>
           </defs>
 
-          {/* Background with gradient */}
-          <rect width={svgWidth} height={svgHeight} fill="url(#pendBgGrad)"/>
+          <rect width={svgW} height={svgH} fill="url(#pendBgGrad)" />
 
-          {/* Subtle grid lines for depth */}
-          <g opacity="0.1">
-            {[...Array(6)].map((_, i) => (
-              <line key={`h${i}`} x1="0" y1={i * svgHeight / 5} x2={svgWidth} y2={i * svgHeight / 5} stroke={colors.textTertiary} strokeWidth="0.5"/>
-            ))}
-            {[...Array(8)].map((_, i) => (
-              <line key={`v${i}`} x1={i * svgWidth / 7} y1="0" x2={i * svgWidth / 7} y2={svgHeight} stroke={colors.textTertiary} strokeWidth="0.5"/>
-            ))}
+          {/* Grid */}
+          <g opacity="0.06">
+            {[1,2,3,4,5].map(i => <line key={`h${i}`} x1="0" y1={i * svgH / 6} x2={svgW} y2={i * svgH / 6} stroke="#fff" strokeWidth="0.5" />)}
+            {[1,2,3,4,5,6,7].map(i => <line key={`v${i}`} x1={i * svgW / 8} y1="0" x2={i * svgW / 8} y2={svgH} stroke="#fff" strokeWidth="0.5" />)}
           </g>
 
-          {/* Support beam with metallic look */}
-          <rect x={pivotX - 45} y={pivotY - 22} width="90" height="14" fill="url(#pendBeamGrad)" rx="4" stroke="#5a5a68" strokeWidth="1"/>
-          {/* Beam highlight */}
-          <rect x={pivotX - 43} y={pivotY - 20} width="86" height="3" fill="white" opacity="0.15" rx="1.5"/>
+          {/* Length indicator - changes with slider */}
+          <g opacity={0.3 + pendulumLength / 400}>
+            <circle cx={svgW - 30} cy={30} r={8 + pendulumLength / 30} fill="url(#pendLenGlow)" />
+            <circle cx={svgW - 30} cy={30} r={3} fill={colors.primary} />
+            <path d={`M ${svgW - 42} 30 Q ${svgW - 36} ${30 - pendulumLength / 30} ${svgW - 30} 30`} fill="none" stroke={colors.primary} strokeWidth="1.5" />
+          </g>
 
-          {/* Shadow beneath pendulum on "ground" */}
-          <ellipse
-            cx={pivotX}
-            cy={svgHeight - 25}
-            rx={bobRadius * 1.8}
-            ry={bobRadius * 0.4}
-            fill={bobColorSet.glow}
-            opacity={0.15}
-            filter="url(#pendMotionBlur)"
-          />
+          {/* Pivot support */}
+          <g>
+            <rect x={pivotX - 30} y={pivotY - 8} width="60" height="10" rx="3" fill="#3a3a48" />
+            <path d={`M ${pivotX - 30} ${pivotY - 8} L ${pivotX - 40} ${pivotY - 18} L ${pivotX + 40} ${pivotY - 18} L ${pivotX + 30} ${pivotY - 8}`} fill="#2a2a36" />
+          </g>
 
-          {/* Motion trail when swinging */}
-          {isSwinging && trailAngles.map((trailAngle, i) => {
-            const trailRad = (trailAngle * Math.PI) / 180;
-            const trailX = pivotX + scaledLength * Math.sin(trailRad);
-            const trailY = pivotY + scaledLength * Math.cos(trailRad);
-            return (
-              <circle
-                key={`trail${i}`}
-                cx={trailX}
-                cy={trailY}
-                r={bobRadius * (0.5 - i * 0.12)}
-                fill={bobColorSet.glow}
-                opacity={0.15 - i * 0.04}
-                filter="url(#pendMotionBlur)"
-              />
-            );
-          })}
+          {/* Equilibrium line */}
+          <line x1={pivotX} y1={pivotY} x2={pivotX} y2={pivotY + displayLen + 30} stroke="#71717a" strokeWidth="1" strokeDasharray="6,4" opacity="0.3" />
 
-          {/* String/rod with gradient */}
-          <line
-            x1={pivotX}
-            y1={pivotY}
-            x2={bobX}
-            y2={bobY}
-            stroke="url(#pendStringGrad)"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          {/* String highlight */}
-          <line
-            x1={pivotX - 0.5}
-            y1={pivotY}
-            x2={bobX - 0.5}
-            y2={bobY}
-            stroke="white"
-            strokeWidth="0.8"
-            strokeLinecap="round"
-            opacity="0.2"
-          />
+          {/* String */}
+          <g>
+            <line x1={pivotX} y1={pivotY} x2={bobX} y2={bobY} stroke="url(#pendStringGrad)" strokeWidth="2.5" filter="url(#pendShadow)" />
+          </g>
 
-          {/* Pivot point with 3D gradient */}
-          <circle cx={pivotX} cy={pivotY} r="12" fill="url(#pendPivotGrad)" filter="url(#pendPivotGlow)"/>
-          {/* Pivot highlight */}
-          <circle cx={pivotX - 3} cy={pivotY - 3} r="4" fill="white" opacity="0.3"/>
-          {/* Pivot inner ring */}
-          <circle cx={pivotX} cy={pivotY} r="4" fill="#1f2937" stroke="#374151" strokeWidth="1"/>
+          {/* Bob */}
+          <g>
+            <circle cx={bobX} cy={bobY} r={bobRadius + 4} fill={massColor} opacity="0.15" filter="url(#pendGlow)" />
+            <circle cx={bobX} cy={bobY} r={bobRadius} fill="url(#pendBobGrad)" />
+            <ellipse cx={bobX - bobRadius * 0.2} cy={bobY - bobRadius * 0.2} rx={bobRadius * 0.3} ry={bobRadius * 0.25} fill="white" opacity="0.2" />
+          </g>
 
-          {/* Bob with shadow */}
-          <circle
-            cx={bobX + 3}
-            cy={bobY + 6}
-            r={bobRadius}
-            fill="#000"
-            opacity="0.25"
-            filter="url(#pendMotionBlur)"
-          />
+          {/* Pivot dot */}
+          <circle cx={pivotX} cy={pivotY} r={4} fill="#5a5a68" />
 
-          {/* Bob with 3D gradient and glow */}
-          <circle
-            cx={bobX}
-            cy={bobY}
-            r={bobRadius}
-            fill="url(#pendBobGrad)"
-            filter="url(#pendBobGlow)"
-          />
-          {/* Bob 3D highlight */}
-          <circle
-            cx={bobX}
-            cy={bobY}
-            r={bobRadius}
-            fill="url(#pendBobHighlight)"
-          />
-          {/* Bob edge ring */}
-          <circle
-            cx={bobX}
-            cy={bobY}
-            r={bobRadius - 1}
-            fill="none"
-            stroke={bobColorSet.dark}
-            strokeWidth="1"
-            opacity="0.5"
-          />
-
-          {/* Angle arc with gradient */}
-          {Math.abs(pendulumAngle) > 2 && (
-            <path
-              d={`M ${pivotX} ${pivotY + 50} A 50 50 0 0 ${pendulumAngle > 0 ? 1 : 0} ${pivotX + 50 * Math.sin(angleRad)} ${pivotY + 50 * Math.cos(angleRad)}`}
-              fill="none"
-              stroke="url(#pendArcGrad)"
-              strokeWidth="2.5"
-              strokeDasharray="8,4"
-            />
-          )}
+          {/* Labels */}
+          <g>
+            <text x={pivotX} y={svgH - 10} fill="#71717a" fontSize="9" textAnchor="middle">Equilibrium</text>
+            <text x={svgW - 30} y={svgH - 10} fill={colors.primary} fontSize="8" textAnchor="middle">T={period}s</text>
+            <text x={30} y={svgH - 10} fill={massColor} fontSize="8" textAnchor="start">m={bobMass}kg</text>
+          </g>
         </svg>
 
-        {/* Labels moved outside SVG using typo system */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: svgWidth, padding: `0 ${space.sm}` }}>
-          <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 500 }}>
-            L = {(pendulumLength / 200).toFixed(2)}m
-          </span>
-          {measuredPeriod !== null && (
-            <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>
-              T = {measuredPeriod.toFixed(2)}s (theory: {theoreticalPeriod(pendulumLength).toFixed(2)}s)
-            </span>
-          )}
-        </div>
-
         {showControls && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: space.md,
-            width: '100%',
-            maxWidth: '360px',
-            padding: space.md,
-            background: colors.bgSecondary,
-            borderRadius: radius.md,
-            border: `1px solid ${colors.border}`
-          }}>
-            {/* Length control */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: space.md }}>
-              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '70px', fontWeight: 500 }}>Length:</span>
-              <input
-                type="range"
-                min="100"
-                max="300"
-                value={pendulumLength}
-                onChange={(e) => {
-                  setPendulumLength(Number(e.target.value));
-                  stopSwing();
-                }}
-                style={{ flex: 1, accentColor: colors.primary }}
-              />
-              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '55px', fontWeight: 600 }}>
-                {(pendulumLength / 200).toFixed(2)}m
-              </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '380px', padding: '16px', background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '80px', fontWeight: 500 }}>Length (cm):</span>
+              <input type="range" min="30" max="250" step="5" value={pendulumLength} onChange={(e) => { setPendulumLength(Number(e.target.value)); stopSwing(); }} style={{ flex: 1, accentColor: colors.primary }} />
+              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{pendulumLength} cm</span>
             </div>
-
-            {/* Mass control */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: space.md }}>
-              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '70px', fontWeight: 500 }}>Mass:</span>
-              <div style={{ display: 'flex', gap: space.sm, flex: 1 }}>
-                {[1, 2, 3].map(m => (
-                  <button
-                    key={m}
-                    onClick={() => {
-                      setBobMass(m);
-                      stopSwing();
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: `${space.sm} ${space.md}`,
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color: bobMass === m ? colors.textInverse : colors.textSecondary,
-                      background: bobMass === m ? bobColors[m - 1] : colors.bgTertiary,
-                      border: `1px solid ${bobMass === m ? bobColors[m - 1] : colors.border}`,
-                      borderRadius: radius.sm,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      zIndex: 10,
-                      position: 'relative',
-                    }}
-                  >
-                    {m === 1 ? 'Light' : m === 2 ? 'Medium' : 'Heavy'}
-                  </button>
-                ))}
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '80px', fontWeight: 500 }}>Mass (kg):</span>
+              <input type="range" min="0.5" max="5" step="0.5" value={bobMass} onChange={(e) => { setBobMass(Number(e.target.value)); stopSwing(); }} style={{ flex: 1, accentColor: colors.accent }} />
+              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{bobMass} kg</span>
             </div>
-
-            {/* Amplitude control */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: space.md }}>
-              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '70px', fontWeight: 500 }}>Angle:</span>
-              <input
-                type="range"
-                min="5"
-                max="60"
-                value={amplitude}
-                onChange={(e) => {
-                  setAmplitude(Number(e.target.value));
-                  stopSwing();
-                }}
-                style={{ flex: 1, accentColor: colors.accent }}
-              />
-              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '55px', fontWeight: 600 }}>
-                {amplitude}°
-              </span>
-            </div>
-
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: space.sm, marginTop: space.xs }}>
-              <button
-                onClick={() => isSwinging ? stopSwing() : startSwing()}
-                style={{
-                  flex: 1,
-                  padding: `${space.md} ${space.md}`,
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: colors.textPrimary,
-                  background: isSwinging
-                    ? `linear-gradient(135deg, ${colors.danger}, #dc2626)`
-                    : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                  border: 'none',
-                  borderRadius: radius.sm,
-                  cursor: 'pointer',
-                  boxShadow: shadows.sm,
-                  zIndex: 10,
-                  position: 'relative',
-                }}
-              >
-                {isSwinging ? '⏹ Stop' : '▶ Start'}
-              </button>
-              {measuredPeriod !== null && (
-                <button
-                  onClick={() => recordMeasurement()}
-                  style={{
-                    padding: `${space.md} ${space.lg}`,
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    color: colors.textInverse,
-                    background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`,
-                    border: 'none',
-                    borderRadius: radius.sm,
-                    cursor: 'pointer',
-                    boxShadow: shadows.sm,
-                    zIndex: 10,
-                    position: 'relative',
-                  }}
-                >
-                  📊 Record
-                </button>
-              )}
+            <button onClick={() => isSwinging ? stopSwing() : startSwing()} style={{ ...primaryBtnStyle, padding: '12px 16px', fontSize: '14px', background: isSwinging ? `linear-gradient(135deg, ${colors.danger}, #dc2626)` : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})` }}>
+              {isSwinging ? 'Stop' : 'Release Pendulum'}
+            </button>
+            <div style={{ padding: '12px', background: colors.bgCardLight, borderRadius: '8px', border: `1px solid ${colors.border}`, textAlign: 'center' }}>
+              <span style={{ fontSize: '13px', color: colors.textSecondary }}>Period T = 2pi*sqrt(L/g) = <strong style={{ color: colors.primary }}>{period} s</strong> (independent of mass!)</span>
             </div>
           </div>
         )}
@@ -1087,1966 +496,298 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
     );
   };
 
-  // Data table
-  const renderDataTable = () => {
-    if (recordedPeriods.length === 0) return null;
-
-    return (
-      <div style={{
-        marginTop: space.lg,
-        background: colors.bgTertiary,
-        borderRadius: radius.md,
-        overflow: 'hidden',
-        border: `1px solid ${colors.border}`
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr 1fr',
-          gap: '1px',
-          background: colors.border
-        }}>
-          <div style={{ padding: space.md, background: colors.bgSecondary, fontSize: '12px', fontWeight: 700, color: colors.textSecondary }}>
-            Length (m)
-          </div>
-          <div style={{ padding: space.md, background: colors.bgSecondary, fontSize: '12px', fontWeight: 700, color: colors.textSecondary }}>
-            Mass
-          </div>
-          <div style={{ padding: space.md, background: colors.bgSecondary, fontSize: '12px', fontWeight: 700, color: colors.textSecondary }}>
-            Measured T
-          </div>
-          <div style={{ padding: space.md, background: colors.bgSecondary, fontSize: '12px', fontWeight: 700, color: colors.textSecondary }}>
-            Theory T
-          </div>
-          {recordedPeriods.map((record, idx) => (
-            <React.Fragment key={idx}>
-              <div style={{ padding: space.md, background: colors.bgSecondary, fontSize: '13px', color: colors.textPrimary }}>
-                {(record.length / 200).toFixed(2)}
-              </div>
-              <div style={{ padding: space.md, background: colors.bgSecondary, fontSize: '13px', color: colors.textPrimary }}>
-                {record.mass === 1 ? 'Light' : record.mass === 2 ? 'Medium' : 'Heavy'}
-              </div>
-              <div style={{ padding: space.md, background: colors.bgSecondary, fontSize: '13px', color: colors.primary, fontWeight: 600 }}>
-                {record.period.toFixed(3)}s
-              </div>
-              <div style={{ padding: space.md, background: colors.bgSecondary, fontSize: '13px', color: colors.textSecondary }}>
-                {theoreticalPeriod(record.length).toFixed(3)}s
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
-        <button
-          onClick={() => setRecordedPeriods([])}
-          style={{
-            width: '100%',
-            padding: space.md,
-            fontSize: '12px',
-            fontWeight: 500,
-            color: colors.textTertiary,
-            background: colors.bgSecondary,
-            border: 'none',
-            borderTop: `1px solid ${colors.border}`,
-            cursor: 'pointer',
-            zIndex: 10,
-            position: 'relative',
-          }}
-        >
-          Clear Data
-        </button>
-      </div>
-    );
-  };
-
-  // ============ PHASE RENDERS ============
-
-  // Hook phase - Premium welcome screen
   const renderHook = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: `radial-gradient(ellipse at top, ${colors.bgSecondary} 0%, ${colors.bgPrimary} 70%)`
-    }}>
-      {renderProgressBar()}
-      <div style={{
-        flex: 1,
-        padding: isMobile ? space.lg : space.xxl,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <div style={{ maxWidth: '600px', textAlign: 'center' }}>
-          {/* Animated icon with glow */}
-          <div style={{
-            width: '120px',
-            height: '120px',
-            margin: '0 auto 32px',
-            borderRadius: radius.full,
-            background: `linear-gradient(135deg, ${colors.primary}20, ${colors.accent}20)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: shadows.glow(colors.primary),
-            border: `2px solid ${colors.primary}30`
-          }}>
-            <span style={{ fontSize: '56px' }}>🎢</span>
-          </div>
-
-          {/* Title */}
-          <h1 style={{
-            fontSize: isMobile ? '32px' : '42px',
-            fontWeight: 800,
-            color: colors.textPrimary,
-            marginBottom: space.md,
-            lineHeight: 1.1,
-            letterSpacing: '-1px'
-          }}>
-            The Pendulum Period
-          </h1>
-
-          {/* Subtitle */}
-          <p style={{
-            fontSize: '18px',
-            color: colors.textSecondary,
-            marginBottom: space.xl,
-            lineHeight: 1.7
-          }}>
-            What determines how fast a pendulum swings? Is it the mass of the bob, the length of the string, or something else entirely?
-          </p>
-
-          {/* Info card */}
-          <div style={{
-            background: `linear-gradient(135deg, ${colors.bgTertiary}, ${colors.bgSecondary})`,
-            borderRadius: radius.xl,
-            padding: space.xl,
-            marginBottom: space.xl,
-            border: `1px solid ${colors.border}`,
-            boxShadow: shadows.lg
-          }}>
-            <p style={{
-              fontSize: '16px',
-              color: colors.textSecondary,
-              margin: 0,
-              lineHeight: 1.7
-            }}>
-              The <strong style={{ color: colors.primary }}>period</strong> of a pendulum is the time it takes to complete one full swing back and forth. Understanding what affects it led to some of physics' most important discoveries.
-            </p>
-          </div>
-
-          {/* Visual comparison */}
-          <div style={{
-            display: 'flex',
-            gap: space.lg,
-            justifyContent: 'center',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{
-              padding: `${space.lg} ${space.xl}`,
-              background: colors.bgSecondary,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.border}`
-            }}>
-              <span style={{ fontSize: '40px' }}>⏱️</span>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, margin: `${space.sm} 0 0`, fontWeight: 500 }}>Period (T)</p>
-            </div>
-            <div style={{
-              padding: `${space.lg} ${space.xl}`,
-              background: colors.bgSecondary,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.border}`
-            }}>
-              <span style={{ fontSize: '40px' }}>📏</span>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, margin: `${space.sm} 0 0`, fontWeight: 500 }}>Length (L)</p>
-            </div>
-            <div style={{
-              padding: `${space.lg} ${space.xl}`,
-              background: colors.bgSecondary,
-              borderRadius: radius.lg,
-              border: `1px solid ${colors.border}`
-            }}>
-              <span style={{ fontSize: '40px' }}>⚖️</span>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, margin: `${space.sm} 0 0`, fontWeight: 500 }}>Mass (m)</p>
-            </div>
-          </div>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '48px 24px', textAlign: 'center' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30`, borderRadius: '9999px', marginBottom: '32px' }}>
+        <span style={{ width: '8px', height: '8px', background: colors.primary, borderRadius: '9999px' }} />
+        <span style={{ fontSize: '13px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
       </div>
-
-      {/* Premium CTA */}
-      <div style={{
-        padding: `${space.lg} ${space.xl}`,
-        background: colors.bgSecondary,
-        borderTop: `1px solid ${colors.border}`,
-        display: 'flex',
-        justifyContent: 'center'
-      }}>
-        <button
-          onClick={() => goToPhase('predict')}
-          style={{
-            padding: `${space.md} ${space.xxl}`,
-            fontSize: '16px',
-            fontWeight: 700,
-            color: colors.textInverse,
-            background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-            border: 'none',
-            borderRadius: radius.md,
-            cursor: 'pointer',
-            boxShadow: `${shadows.md}, ${shadows.glow(colors.primary)}`,
-            letterSpacing: '0.5px',
-            zIndex: 10,
-            position: 'relative',
-          }}
-        >
-          Make Your Prediction →
-        </button>
+      <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '16px', lineHeight: 1.1 }}>Pendulum Period</h1>
+      <p style={{ fontSize: '18px', color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px', lineHeight: 1.7 }}>Discover what controls the rhythm of a swinging pendulum</p>
+      <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '32px', position: 'relative' as const }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🕰️</div>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.9)', fontWeight: 500, lineHeight: 1.7, marginBottom: '12px' }}>A heavy brass pendulum and a light aluminum pendulum of the same length are released from the same angle.</p>
+        <p style={{ fontSize: '16px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '12px' }}>Which one swings faster? Does weight determine rhythm?</p>
+        <p style={{ fontSize: '16px', color: colors.primary, fontWeight: 600 }}>The answer has kept time for centuries!</p>
+      </div>
+      <button onClick={() => goToPhase('predict')} style={primaryBtnStyle}>Explore Pendulums</button>
+      <div style={{ marginTop: '32px', display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px', color: colors.textMuted }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: colors.primary }}>✦</span>Interactive Lab</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: colors.primary }}>✦</span>Real-World Examples</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ color: colors.primary }}>✦</span>Knowledge Test</div>
       </div>
     </div>
   );
 
-  // Predict phase
   const renderPredict = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-        {renderSectionHeader('🤔', 'Your Prediction', 'What do you think affects the period of a pendulum?')}
-
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: space.md,
-          maxWidth: '520px',
-          margin: '0 auto'
-        }}>
-          {[
-            { id: 'mass', label: 'Mass of the bob - heavier bobs swing slower', icon: '⚖️' },
-            { id: 'length', label: 'Length of the string - longer pendulums swing slower', icon: '📏' },
-            { id: 'amplitude', label: 'Starting angle - bigger swings take longer', icon: '📐' },
-            { id: 'all', label: 'All of the above affect the period', icon: '🎯' }
-          ].map(option => (
-            <button
-              key={option.id}
-              onClick={() => setPrediction(option.id)}
-              style={{
-                padding: `${space.lg} ${space.lg}`,
-                fontSize: '15px',
-                fontWeight: prediction === option.id ? 700 : 500,
-                color: prediction === option.id ? colors.textInverse : colors.textPrimary,
-                background: prediction === option.id
-                  ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`
-                  : colors.bgSecondary,
-                border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`,
-                borderRadius: radius.md,
-                cursor: 'pointer',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.md,
-                transition: 'all 0.2s ease',
-                boxShadow: prediction === option.id ? shadows.md : 'none',
-                zIndex: 10,
-                position: 'relative',
-              }}
-            >
-              <span style={{ fontSize: '28px' }}>{option.icon}</span>
-              {option.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{
-          marginTop: space.xl,
-          padding: space.lg,
-          background: colors.bgSecondary,
-          borderRadius: radius.md,
-          border: `1px solid ${colors.border}`
-        }}>
-          <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
-            <strong style={{ color: colors.textPrimary }}>Think about it:</strong> In everyday experience, heavier objects often seem different. Does mass affect how a pendulum swings?
-          </p>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', padding: '32px 24px', alignItems: 'center' }}>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Your Prediction</h2>
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>Two pendulums of equal length but different masses...</p>
+      <div style={{ marginBottom: '24px' }}>
+        <svg width="360" height="200" viewBox="0 0 360 200">
+          <defs>
+            <linearGradient id="predPendBg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#1a1a24" /><stop offset="100%" stopColor="#0a0a0f" /></linearGradient>
+            <radialGradient id="predHeavy" cx="30%" cy="25%"><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#d97706" /></radialGradient>
+            <radialGradient id="predLight" cx="30%" cy="25%"><stop offset="0%" stopColor="#34d399" /><stop offset="100%" stopColor="#059669" /></radialGradient>
+            <filter id="predPendGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          </defs>
+          <rect width="360" height="200" fill="url(#predPendBg)" rx="12" />
+          <g opacity="0.06">{[0,1,2,3,4].map(i => <line key={`h${i}`} x1="0" y1={i*50} x2="360" y2={i*50} stroke="#fff" strokeWidth="0.5" />)}{[0,1,2,3,4,5,6].map(i => <line key={`v${i}`} x1={i*60} y1="0" x2={i*60} y2="200" stroke="#fff" strokeWidth="0.5" />)}</g>
+          {/* Support beam */}
+          <g><rect x="60" y="20" width="240" height="8" rx="3" fill="#3a3a48" /><path d="M 80 20 L 70 10 L 290 10 L 280 20" fill="#2a2a36" /></g>
+          {/* Heavy pendulum */}
+          <g><line x1="120" y1="28" x2="120" y2="130" stroke="#71717a" strokeWidth="2" /><circle cx="120" cy="140" r="20" fill="url(#predHeavy)" filter="url(#predPendGlow)" /><text x="120" y="175" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="600">Heavy (5 kg)</text></g>
+          {/* Light pendulum */}
+          <g><line x1="240" y1="28" x2="240" y2="130" stroke="#71717a" strokeWidth="2" /><circle cx="240" cy="135" r="12" fill="url(#predLight)" filter="url(#predPendGlow)" /><text x="240" y="175" fill={colors.primary} fontSize="10" textAnchor="middle" fontWeight="600">Light (1 kg)</text></g>
+          {/* Question marks */}
+          <g opacity="0.6"><text x="180" y="80" fill={colors.primary} fontSize="28" fontWeight="700" textAnchor="middle">?</text><text x="50" y="100" fill={colors.accent} fontSize="18" fontWeight="700">?</text><text x="310" y="90" fill={colors.warning} fontSize="16" fontWeight="700">?</text></g>
+        </svg>
       </div>
-      {renderBottomBar(() => goToPhase('play'), 'Test It!', !prediction)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px', width: '100%' }}>
+        {[
+          { id: 'heavy_faster', label: 'Heavy bob swings faster (gravity pulls harder)', icon: '🏋️' },
+          { id: 'light_faster', label: 'Light bob swings faster (less inertia to overcome)', icon: '🪶' },
+          { id: 'same', label: 'They swing at exactly the same rate', icon: '⏱️' },
+          { id: 'depends', label: 'It depends on the angle of release', icon: '📐' }
+        ].map(option => (
+          <button key={option.id} onClick={() => setPrediction(option.id)} style={{ padding: '18px', fontSize: '15px', fontWeight: prediction === option.id ? 700 : 500, color: prediction === option.id ? '#0a0a0f' : colors.textPrimary, background: prediction === option.id ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})` : colors.bgCard, border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`, borderRadius: '12px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s ease', boxShadow: prediction === option.id ? '0 4px 12px rgba(16,185,129,0.3)' : 'none', zIndex: 10, position: 'relative' as const }}>
+            <span style={{ fontSize: '28px' }}>{option.icon}</span>{option.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ marginTop: '24px', padding: '16px', background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, maxWidth: '520px', width: '100%' }}>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}><strong style={{ color: colors.textPrimary }}>Think about it:</strong> Heavier objects experience more gravitational force, but they also have more inertia. How do these two effects balance out?</p>
+      </div>
     </div>
   );
 
-  // Play phase
   const renderPlay = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-        {renderSectionHeader('🔬', 'Experiment', 'Change length, mass, and amplitude. What affects the period?')}
-
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: space.lg,
-          alignItems: 'flex-start'
-        }}>
-          <div style={{ flex: 1 }}>
-            {renderPendulum(true)}
-          </div>
-
-          <div style={{ flex: 1, minWidth: '280px' }}>
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`,
-              marginBottom: space.md
-            }}>
-              <h4 style={{
-                fontSize: '15px',
-                color: colors.primary,
-                marginBottom: space.md,
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.sm
-              }}>
-                🎯 Challenge
-              </h4>
-              <ol style={{
-                margin: 0,
-                paddingLeft: space.lg,
-                color: colors.textSecondary,
-                fontSize: '14px',
-                lineHeight: 2
-              }}>
-                <li>Keep length at 1.00m, try each mass</li>
-                <li>Keep mass the same, change the length</li>
-                <li>Try different starting angles</li>
-                <li>Record measurements and compare!</li>
-              </ol>
-            </div>
-
-            {renderDataTable()}
-
-            <div style={{
-              marginTop: space.md,
-              padding: space.md,
-              background: `${colors.accent}15`,
-              borderRadius: radius.sm,
-              border: `1px solid ${colors.accent}30`
-            }}>
-              <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0, lineHeight: 1.5 }}>
-                <strong style={{ color: colors.accent }}>Hint:</strong> Watch what changes the period and what doesn't. The answer might surprise you!
-              </p>
-            </div>
-          </div>
-        </div>
+    <div style={{ padding: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '28px' }}>🔬</span>
+        <div><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Experiment</h2><p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0 }}>Change the mass and length, then observe the period</p></div>
       </div>
-      {renderBottomBar(() => {
-        setShowResult(true);
-        goToPhase('review');
-      }, 'See Results')}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>{renderPendulum(true)}</div>
     </div>
   );
 
-  // Review phase
   const renderReview = () => {
-    const wasCorrect = prediction === 'length';
-
+    const wasCorrect = prediction === 'same';
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-          {/* Result banner */}
-          <div style={{
-            padding: space.xl,
-            background: wasCorrect
-              ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
-              : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`,
-            borderRadius: radius.lg,
-            border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`,
-            marginBottom: space.xl,
-            textAlign: 'center'
-          }}>
-            <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎉' : '🤔'}</span>
-            <h3 style={{
-              fontSize: '22px',
-              color: wasCorrect ? colors.success : colors.accent,
-              marginTop: space.md,
-              fontWeight: 700
-            }}>
-              {wasCorrect ? 'Correct! Only length matters!' : 'Surprising, right? Only length affects period!'}
-            </h3>
-          </div>
-
-          {renderSectionHeader('📚', 'The Physics', 'The pendulum period formula')}
-
-          {/* Formula highlight */}
-          <div style={{
-            padding: space.xl,
-            background: colors.bgTertiary,
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.primary}30`,
-            textAlign: 'center',
-            marginBottom: space.xl
-          }}>
-            <div style={{
-              fontSize: '32px',
-              color: colors.primary,
-              fontWeight: 700,
-              fontFamily: 'monospace',
-              marginBottom: space.md
-            }}>
-              T = 2π√(L/g)
-            </div>
-            <p style={{ fontSize: '16px', color: colors.textSecondary, margin: 0 }}>
-              Period depends only on <strong style={{ color: colors.textPrimary }}>length (L)</strong> and <strong style={{ color: colors.textPrimary }}>gravity (g)</strong>
-            </p>
-          </div>
-
-          {/* Why mass doesn't matter */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: space.md,
-            marginBottom: space.xl
-          }}>
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <h4 style={{
-                fontSize: '15px',
-                color: colors.primary,
-                marginBottom: space.md,
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.sm,
-                fontWeight: 700
-              }}>
-                <span>⬇️</span> Gravitational Force
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                <strong style={{ color: colors.textPrimary }}>F = mg × sin(θ)</strong><br />
-                Heavier objects feel more gravitational pull
-              </p>
-            </div>
-
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <h4 style={{
-                fontSize: '15px',
-                color: colors.accent,
-                marginBottom: space.md,
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.sm,
-                fontWeight: 700
-              }}>
-                <span>🎯</span> Inertia
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                <strong style={{ color: colors.textPrimary }}>F = ma</strong><br />
-                But heavier objects are also harder to accelerate!
-              </p>
-            </div>
-          </div>
-
-          {/* Mass cancellation */}
-          <div style={{
-            padding: space.lg,
-            background: colors.bgSecondary,
-            borderRadius: radius.md,
-            border: `1px solid ${colors.border}`,
-            marginBottom: space.lg
-          }}>
-            <h4 style={{ fontSize: '15px', color: colors.textPrimary, marginBottom: space.md, fontWeight: 700 }}>
-              The Cancellation
-            </h4>
-            <div style={{
-              fontSize: '18px',
-              color: colors.primary,
-              textAlign: 'center',
-              padding: space.md,
-              background: colors.bgPrimary,
-              borderRadius: radius.sm,
-              fontFamily: 'monospace'
-            }}>
-              mg sin(θ) = ma → <strong>a = g sin(θ)</strong>
-            </div>
-            <p style={{ fontSize: '14px', color: colors.textSecondary, marginTop: space.md, textAlign: 'center' }}>
-              Mass (m) cancels out! Acceleration depends only on gravity and angle.
-            </p>
-          </div>
-
-          {renderKeyTakeaway('This is the same principle as Galileo\'s falling objects experiment - all masses fall at the same rate because gravity and inertia scale together. In a pendulum, mass affects both the driving force and the resistance equally, so they cancel.')}
+      <div style={{ padding: '24px' }}>
+        <div style={{ padding: '32px', background: wasCorrect ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)` : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`, borderRadius: '16px', border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`, marginBottom: '24px', textAlign: 'center' }}>
+          <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎉' : '💡'}</span>
+          <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>{wasCorrect ? 'Correct! Mass does not affect the period!' : 'Mass does not affect the period!'}</h3>
         </div>
-        {renderBottomBar(() => goToPhase('twist_predict'), 'Explore the Twist')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>📚</span><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>The Physics of Pendulum Period</h2></div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ ...cardStyle, padding: '20px' }}><h4 style={{ fontSize: '15px', color: colors.primary, marginBottom: '12px', fontWeight: 700 }}>Why Mass Cancels</h4><p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>The gravitational force on the bob is F = mg*sin(theta), proportional to mass. But Newton's second law says F = ma, where a is acceleration. Since mg*sin(theta) = ma, the mass cancels completely. Acceleration depends only on angle and gravity. This is the same reason all objects fall at the same rate in a vacuum regardless of their mass.</p></div>
+          <div style={{ ...cardStyle, padding: '20px' }}><h4 style={{ fontSize: '15px', color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>The Period Formula</h4><p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>For small angles, the period is T = 2*pi*sqrt(L/g), where L is the pendulum length and g is gravitational acceleration. Notice that mass appears nowhere in this equation. The period depends only on two things: the length of the pendulum and the strength of gravity. Doubling the length increases the period by a factor of sqrt(2).</p></div>
+        </div>
+        <div style={{ padding: '24px', background: colors.bgCardLight, borderRadius: '16px', border: `1px solid ${colors.primary}30`, marginBottom: '24px' }}>
+          <h4 style={{ fontSize: '16px', color: colors.textPrimary, marginBottom: '12px', textAlign: 'center', fontWeight: 700 }}>The Simple Pendulum Equation</h4>
+          <div style={{ fontSize: '24px', color: colors.primary, fontWeight: 700, textAlign: 'center', padding: '16px', background: colors.bgDark, borderRadius: '8px', fontFamily: 'monospace' }}>T = 2*pi*sqrt(L/g)</div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '14px', color: colors.textSecondary }}><strong style={{ color: colors.primary }}>T</strong> = period</span>
+            <span style={{ fontSize: '14px', color: colors.textSecondary }}><strong style={{ color: colors.primary }}>L</strong> = length</span>
+            <span style={{ fontSize: '14px', color: colors.textSecondary }}><strong style={{ color: colors.primary }}>g</strong> = gravity</span>
+          </div>
+        </div>
+        <div style={{ padding: '20px', background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`, borderRadius: '16px', border: `1px solid ${colors.primary}40` }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}><span style={{ fontSize: '24px' }}>💡</span><p style={{ fontSize: '15px', color: colors.textPrimary, margin: 0, lineHeight: 1.7 }}>The independence of period from mass is one of the most elegant results in physics. It directly follows from the equivalence of gravitational and inertial mass, a principle that later became a cornerstone of Einstein's General Relativity.</p></div>
+        </div>
       </div>
     );
   };
 
-  // Twist Predict phase - Moon scenario
   const renderTwistPredict = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-        {renderSectionHeader('🌙', 'The Twist', 'What happens on the Moon?')}
-
-        <div style={{
-          padding: space.lg,
-          background: colors.bgTertiary,
-          borderRadius: radius.md,
-          border: `1px solid ${colors.border}`,
-          marginBottom: space.xl
-        }}>
-          <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0, lineHeight: 1.7 }}>
-            Astronauts bring a 1-meter pendulum to the Moon. The Moon's gravity is about <strong style={{ color: colors.textPrimary }}>1/6 of Earth's</strong> (1.62 m/s² vs 9.81 m/s²). What happens to the pendulum's period?
-          </p>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: space.md,
-          maxWidth: '520px',
-          margin: '0 auto'
-        }}>
-          {[
-            { id: 'same', label: 'Same period - gravity doesn\'t affect pendulums', icon: '⚖️' },
-            { id: 'faster', label: 'Faster (shorter period) - less gravity means easier swinging', icon: '⏩' },
-            { id: 'slower', label: 'Slower (longer period) - weaker gravity means weaker restoring force', icon: '🐢' },
-            { id: 'stops', label: 'The pendulum won\'t swing at all', icon: '⛔' }
-          ].map(option => (
-            <button
-              key={option.id}
-              onClick={() => setTwistPrediction(option.id)}
-              style={{
-                padding: `${space.lg} ${space.lg}`,
-                fontSize: '15px',
-                fontWeight: twistPrediction === option.id ? 700 : 500,
-                color: twistPrediction === option.id ? colors.textInverse : colors.textPrimary,
-                background: twistPrediction === option.id
-                  ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
-                  : colors.bgSecondary,
-                border: `2px solid ${twistPrediction === option.id ? colors.accent : colors.border}`,
-                borderRadius: radius.md,
-                cursor: 'pointer',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.md,
-                transition: 'all 0.2s ease',
-                boxShadow: twistPrediction === option.id ? shadows.md : 'none',
-                zIndex: 10,
-                position: 'relative',
-              }}
-            >
-              <span style={{ fontSize: '28px' }}>{option.icon}</span>
-              {option.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{
-          marginTop: space.xl,
-          padding: space.md,
-          background: `${colors.accent}15`,
-          borderRadius: radius.md,
-          border: `1px solid ${colors.accent}30`
-        }}>
-          <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0 }}>
-            <strong style={{ color: colors.accent }}>Remember:</strong> The formula is T = 2π√(L/g). Mass doesn't appear, but gravity (g) does!
-          </p>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', padding: '32px 24px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>🌀</span><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>The Twist</h2></div>
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>What happens to the period on different planets?</p>
+      <div style={{ marginBottom: '24px' }}>
+        <svg width="360" height="180" viewBox="0 0 360 180">
+          <defs>
+            <linearGradient id="twistPendBg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#1a1a24" /><stop offset="100%" stopColor="#0a0a0f" /></linearGradient>
+            <radialGradient id="twistEarth" cx="50%" cy="50%"><stop offset="0%" stopColor="#22c55e" /><stop offset="100%" stopColor="#15803d" /></radialGradient>
+            <radialGradient id="twistMoon" cx="50%" cy="50%"><stop offset="0%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#64748b" /></radialGradient>
+            <filter id="twistPendGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          </defs>
+          <rect width="360" height="180" fill="url(#twistPendBg)" rx="12" />
+          {/* Earth side */}
+          <g><circle cx="90" cy="140" r="30" fill="url(#twistEarth)" filter="url(#twistPendGlow)" /><text x="90" y="148" fill="white" fontSize="10" textAnchor="middle" fontWeight="600">Earth</text><line x1="90" y1="30" x2="90" y2="90" stroke="#71717a" strokeWidth="2" /><circle cx="90" cy="95" r="10" fill={colors.primary} /></g>
+          {/* Moon side */}
+          <g><circle cx="270" cy="140" r="20" fill="url(#twistMoon)" filter="url(#twistPendGlow)" /><text x="270" y="145" fill="white" fontSize="9" textAnchor="middle" fontWeight="600">Moon</text><line x1="270" y1="30" x2="270" y2="90" stroke="#71717a" strokeWidth="2" /><circle cx="270" cy="95" r="10" fill={colors.accent} /></g>
+          {/* Question */}
+          <g><text x="180" y="60" fill={colors.primary} fontSize="24" fontWeight="700" textAnchor="middle">?</text><text x="180" y="110" fill={colors.warning} fontSize="14" fontWeight="600" textAnchor="middle">Same pendulum</text><text x="180" y="130" fill={colors.warning} fontSize="14" fontWeight="600" textAnchor="middle">Different gravity</text></g>
+        </svg>
       </div>
-      {renderBottomBar(() => goToPhase('twist_play'), 'Test on the Moon', !twistPrediction)}
+      <div style={{ padding: '16px', background: colors.bgCardLight, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '24px', maxWidth: '520px', width: '100%' }}>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0, lineHeight: 1.7 }}>The same pendulum is taken to the Moon where gravity is 1/6 of Earth's. <strong style={{ color: colors.textPrimary }}>How does the period change?</strong></p>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px', width: '100%' }}>
+        {[
+          { id: 'same', label: 'Period stays the same (gravity does not matter)', icon: '⏱️' },
+          { id: 'slower', label: 'Period increases (pendulum swings slower on Moon)', icon: '🌙' },
+          { id: 'faster', label: 'Period decreases (pendulum swings faster on Moon)', icon: '⚡' },
+          { id: 'stops', label: 'Pendulum would not swing at all on the Moon', icon: '🚫' }
+        ].map(option => (
+          <button key={option.id} onClick={() => setTwistPrediction(option.id)} style={{ padding: '18px', fontSize: '15px', fontWeight: twistPrediction === option.id ? 700 : 500, color: twistPrediction === option.id ? '#0a0a0f' : colors.textPrimary, background: twistPrediction === option.id ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})` : colors.bgCard, border: `2px solid ${twistPrediction === option.id ? colors.accent : colors.border}`, borderRadius: '12px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.2s ease', boxShadow: twistPrediction === option.id ? '0 4px 12px rgba(245,158,11,0.3)' : 'none', zIndex: 10, position: 'relative' as const }}>
+            <span style={{ fontSize: '28px' }}>{option.icon}</span>{option.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 
-  // Twist Play phase - Earth vs Moon comparison
-  const renderTwistPlay = () => {
-    const svgWidth = 340;
-    const svgHeight = 280;
-    const pivotX = svgWidth / 2;
-    const pivotY = 50;
-    const scaledLength = 170;
-    const bobRadius = 18;
-
-    const angleRad = (twistAngle * Math.PI) / 180;
-    const bobX = pivotX + scaledLength * Math.sin(angleRad);
-    const bobY = pivotY + scaledLength * Math.cos(angleRad);
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-          {renderSectionHeader('🌍🌙', 'Earth vs Moon', 'Compare the same pendulum on Earth and Moon')}
-
-          <div style={{
-            display: 'flex',
-            flexDirection: isMobile ? 'column' : 'row',
-            gap: space.lg,
-            alignItems: 'flex-start'
-          }}>
-            <div style={{ flex: 1 }}>
-              {/* Planet selector */}
-              <div style={{
-                display: 'flex',
-                gap: space.sm,
-                marginBottom: space.md
-              }}>
-                <button
-                  onClick={() => {
-                    setTwistPlanet('earth');
-                    stopTwistSwing();
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: `${space.md} ${space.lg}`,
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    color: twistPlanet === 'earth' ? colors.textInverse : colors.textSecondary,
-                    background: twistPlanet === 'earth'
-                      ? `linear-gradient(135deg, #3b82f6, #1d4ed8)`
-                      : colors.bgSecondary,
-                    border: `2px solid ${twistPlanet === 'earth' ? '#3b82f6' : colors.border}`,
-                    borderRadius: radius.md,
-                    cursor: 'pointer',
-                    zIndex: 10,
-                    position: 'relative',
-                  }}
-                >
-                  🌍 Earth (g = 9.81)
-                </button>
-                <button
-                  onClick={() => {
-                    setTwistPlanet('moon');
-                    stopTwistSwing();
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: `${space.md} ${space.lg}`,
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    color: twistPlanet === 'moon' ? colors.textInverse : colors.textSecondary,
-                    background: twistPlanet === 'moon'
-                      ? `linear-gradient(135deg, #6b7280, #374151)`
-                      : colors.bgSecondary,
-                    border: `2px solid ${twistPlanet === 'moon' ? '#6b7280' : colors.border}`,
-                    borderRadius: radius.md,
-                    cursor: 'pointer',
-                    zIndex: 10,
-                    position: 'relative',
-                  }}
-                >
-                  🌙 Moon (g = 1.62)
-                </button>
-              </div>
-
-              {/* Pendulum visualization */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: space.sm }}>
-                <svg
-                  width={svgWidth}
-                  height={svgHeight}
-                  style={{
-                    borderRadius: radius.lg,
-                    border: `1px solid ${colors.border}`,
-                    display: 'block'
-                  }}
-                >
-                  {/* Premium Definitions for Twist Phase */}
-                  <defs>
-                    {/* Earth sky gradient */}
-                    <linearGradient id="pendTwistEarthBg" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#1e3a5f"/>
-                      <stop offset="25%" stopColor="#172e4d"/>
-                      <stop offset="50%" stopColor="#12243d"/>
-                      <stop offset="75%" stopColor="#0d1a2d"/>
-                      <stop offset="100%" stopColor="#0f172a"/>
-                    </linearGradient>
-
-                    {/* Moon sky gradient */}
-                    <linearGradient id="pendTwistMoonBg" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#1f1f1f"/>
-                      <stop offset="25%" stopColor="#181818"/>
-                      <stop offset="50%" stopColor="#121212"/>
-                      <stop offset="75%" stopColor="#0c0c0c"/>
-                      <stop offset="100%" stopColor="#0a0a0a"/>
-                    </linearGradient>
-
-                    {/* Support beam metallic gradient */}
-                    <linearGradient id="pendTwistBeamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#5a5a68"/>
-                      <stop offset="25%" stopColor="#4a4a58"/>
-                      <stop offset="50%" stopColor="#5d5d6c"/>
-                      <stop offset="75%" stopColor="#4a4a58"/>
-                      <stop offset="100%" stopColor="#3a3a48"/>
-                    </linearGradient>
-
-                    {/* Pivot metallic gradient */}
-                    <radialGradient id="pendTwistPivotGrad" cx="35%" cy="35%">
-                      <stop offset="0%" stopColor="#7b8490"/>
-                      <stop offset="40%" stopColor="#5b6370"/>
-                      <stop offset="70%" stopColor="#414955"/>
-                      <stop offset="100%" stopColor="#2a323d"/>
-                    </radialGradient>
-
-                    {/* Earth bob 3D gradient (blue) */}
-                    <radialGradient id="pendTwistEarthBobGrad" cx="30%" cy="25%">
-                      <stop offset="0%" stopColor="#93c5fd"/>
-                      <stop offset="35%" stopColor="#60a5fa"/>
-                      <stop offset="70%" stopColor="#3b82f6"/>
-                      <stop offset="100%" stopColor="#1d4ed8"/>
-                    </radialGradient>
-
-                    {/* Moon bob 3D gradient (silver) */}
-                    <radialGradient id="pendTwistMoonBobGrad" cx="30%" cy="25%">
-                      <stop offset="0%" stopColor="#d1d5db"/>
-                      <stop offset="35%" stopColor="#9ca3af"/>
-                      <stop offset="70%" stopColor="#6b7280"/>
-                      <stop offset="100%" stopColor="#4b5563"/>
-                    </radialGradient>
-
-                    {/* Bob highlight */}
-                    <radialGradient id="pendTwistBobHighlight" cx="35%" cy="20%">
-                      <stop offset="0%" stopColor="white" stopOpacity="0.55"/>
-                      <stop offset="50%" stopColor="white" stopOpacity="0.1"/>
-                      <stop offset="100%" stopColor="white" stopOpacity="0"/>
-                    </radialGradient>
-
-                    {/* String gradient */}
-                    <linearGradient id="pendTwistStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#6b7280"/>
-                      <stop offset="50%" stopColor="#9ca3af"/>
-                      <stop offset="100%" stopColor="#6b7280"/>
-                    </linearGradient>
-
-                    {/* Bob glow filter */}
-                    <filter id="pendTwistBobGlow" x="-80%" y="-80%" width="260%" height="260%">
-                      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
-                      <feMerge>
-                        <feMergeNode in="blur"/>
-                        <feMergeNode in="blur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
-
-                    {/* Star glow filter */}
-                    <filter id="pendTwistStarGlow" x="-100%" y="-100%" width="300%" height="300%">
-                      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
-                      <feMerge>
-                        <feMergeNode in="blur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
-
-                    {/* Shadow filter */}
-                    <filter id="pendTwistShadow" x="-50%" y="-50%" width="200%" height="200%">
-                      <feDropShadow dx="2" dy="5" stdDeviation="3" floodColor="#000" floodOpacity="0.35"/>
-                    </filter>
-
-                    {/* Motion blur */}
-                    <filter id="pendTwistMotionBlur" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5"/>
-                    </filter>
-                  </defs>
-
-                  {/* Background with gradient */}
-                  <rect
-                    width={svgWidth}
-                    height={svgHeight}
-                    fill={twistPlanet === 'earth' ? 'url(#pendTwistEarthBg)' : 'url(#pendTwistMoonBg)'}
-                  />
-
-                  {/* Stars for moon - enhanced with glow */}
-                  {twistPlanet === 'moon' && (
-                    <>
-                      <circle cx="50" cy="40" r="1.2" fill="white" opacity="0.9" filter="url(#pendTwistStarGlow)"/>
-                      <circle cx="100" cy="70" r="1.8" fill="white" opacity="0.7" filter="url(#pendTwistStarGlow)"/>
-                      <circle cx="280" cy="50" r="1.3" fill="white" opacity="0.8" filter="url(#pendTwistStarGlow)"/>
-                      <circle cx="310" cy="90" r="1.5" fill="white" opacity="0.6" filter="url(#pendTwistStarGlow)"/>
-                      <circle cx="30" cy="110" r="1.1" fill="white" opacity="0.7" filter="url(#pendTwistStarGlow)"/>
-                      <circle cx="180" cy="30" r="0.8" fill="white" opacity="0.5"/>
-                      <circle cx="250" cy="100" r="0.7" fill="white" opacity="0.4"/>
-                      <circle cx="70" cy="140" r="0.9" fill="white" opacity="0.5"/>
-                    </>
-                  )}
-
-                  {/* Subtle atmosphere glow for Earth */}
-                  {twistPlanet === 'earth' && (
-                    <ellipse
-                      cx={svgWidth / 2}
-                      cy={svgHeight + 80}
-                      rx={svgWidth * 0.8}
-                      ry={100}
-                      fill="#3b82f6"
-                      opacity="0.08"
-                    />
-                  )}
-
-                  {/* Support beam with metallic look */}
-                  <rect x={pivotX - 45} y={pivotY - 22} width="90" height="14" fill="url(#pendTwistBeamGrad)" rx="4" stroke="#5a5a68" strokeWidth="1"/>
-                  {/* Beam highlight */}
-                  <rect x={pivotX - 43} y={pivotY - 20} width="86" height="3" fill="white" opacity="0.12" rx="1.5"/>
-
-                  {/* Ground shadow */}
-                  <ellipse
-                    cx={pivotX}
-                    cy={svgHeight - 20}
-                    rx={bobRadius * 1.6}
-                    ry={bobRadius * 0.35}
-                    fill={twistPlanet === 'earth' ? '#3b82f6' : '#9ca3af'}
-                    opacity={0.12}
-                    filter="url(#pendTwistMotionBlur)"
-                  />
-
-                  {/* Motion trail when swinging */}
-                  {twistIsSwinging && [0.7, 0.4, 0.15].map((mult, i) => {
-                    const trailRad = (twistAngle * mult * Math.PI) / 180;
-                    const trailX = pivotX + scaledLength * Math.sin(trailRad);
-                    const trailY = pivotY + scaledLength * Math.cos(trailRad);
-                    return (
-                      <circle
-                        key={`twistTrail${i}`}
-                        cx={trailX}
-                        cy={trailY}
-                        r={bobRadius * (0.45 - i * 0.1)}
-                        fill={twistPlanet === 'earth' ? '#3b82f6' : '#9ca3af'}
-                        opacity={0.12 - i * 0.03}
-                        filter="url(#pendTwistMotionBlur)"
-                      />
-                    );
-                  })}
-
-                  {/* String/rod with gradient */}
-                  <line
-                    x1={pivotX}
-                    y1={pivotY}
-                    x2={bobX}
-                    y2={bobY}
-                    stroke="url(#pendTwistStringGrad)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                  {/* String highlight */}
-                  <line
-                    x1={pivotX - 0.5}
-                    y1={pivotY}
-                    x2={bobX - 0.5}
-                    y2={bobY}
-                    stroke="white"
-                    strokeWidth="0.7"
-                    strokeLinecap="round"
-                    opacity="0.18"
-                  />
-
-                  {/* Pivot point with 3D gradient */}
-                  <circle cx={pivotX} cy={pivotY} r="12" fill="url(#pendTwistPivotGrad)"/>
-                  {/* Pivot highlight */}
-                  <circle cx={pivotX - 3} cy={pivotY - 3} r="4" fill="white" opacity="0.25"/>
-                  {/* Pivot inner ring */}
-                  <circle cx={pivotX} cy={pivotY} r="4" fill="#1f2937" stroke="#374151" strokeWidth="1"/>
-
-                  {/* Bob shadow */}
-                  <circle
-                    cx={bobX + 2}
-                    cy={bobY + 5}
-                    r={bobRadius}
-                    fill="#000"
-                    opacity="0.2"
-                    filter="url(#pendTwistMotionBlur)"
-                  />
-
-                  {/* Bob with 3D gradient and glow */}
-                  <circle
-                    cx={bobX}
-                    cy={bobY}
-                    r={bobRadius}
-                    fill={twistPlanet === 'earth' ? 'url(#pendTwistEarthBobGrad)' : 'url(#pendTwistMoonBobGrad)'}
-                    filter="url(#pendTwistBobGlow)"
-                  />
-                  {/* Bob 3D highlight */}
-                  <circle
-                    cx={bobX}
-                    cy={bobY}
-                    r={bobRadius}
-                    fill="url(#pendTwistBobHighlight)"
-                  />
-                  {/* Bob edge ring */}
-                  <circle
-                    cx={bobX}
-                    cy={bobY}
-                    r={bobRadius - 1}
-                    fill="none"
-                    stroke={twistPlanet === 'earth' ? '#1d4ed8' : '#4b5563'}
-                    strokeWidth="1"
-                    opacity="0.4"
-                  />
-                </svg>
-
-                {/* Labels moved outside SVG using typo system */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  width: svgWidth,
-                  padding: `0 ${space.sm}`
-                }}>
-                  <span style={{
-                    fontSize: typo.small,
-                    color: colors.textPrimary,
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: space.xs
-                  }}>
-                    {twistPlanet === 'earth' ? '🌍 Earth' : '🌙 Moon'}
-                  </span>
-                  {twistMeasuredPeriod !== null && (
-                    <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>
-                      T = {twistMeasuredPeriod.toFixed(2)}s
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Control button */}
-              <div style={{ marginTop: space.md, display: 'flex', justifyContent: 'center' }}>
-                <button
-                  onClick={() => twistIsSwinging ? stopTwistSwing() : startTwistSwing()}
-                  style={{
-                    padding: `${space.md} ${space.xxl}`,
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    color: colors.textPrimary,
-                    background: twistIsSwinging
-                      ? `linear-gradient(135deg, ${colors.danger}, #dc2626)`
-                      : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                    border: 'none',
-                    borderRadius: radius.sm,
-                    cursor: 'pointer',
-                    boxShadow: shadows.sm,
-                    zIndex: 10,
-                    position: 'relative',
-                  }}
-                >
-                  {twistIsSwinging ? '⏹ Stop' : '▶ Start Pendulum'}
-                </button>
-              </div>
-            </div>
-
-            <div style={{ flex: 1, minWidth: '280px' }}>
-              <div style={{
-                padding: space.lg,
-                background: colors.bgSecondary,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.border}`,
-                marginBottom: space.md
-              }}>
-                <h4 style={{
-                  fontSize: '15px',
-                  color: colors.accent,
-                  marginBottom: space.md,
-                  fontWeight: 700
-                }}>
-                  🎯 Your Mission
-                </h4>
-                <ol style={{
-                  margin: 0,
-                  paddingLeft: space.lg,
-                  color: colors.textSecondary,
-                  fontSize: '14px',
-                  lineHeight: 2
-                }}>
-                  <li>Start the pendulum on Earth</li>
-                  <li>Note the period</li>
-                  <li>Switch to Moon and repeat</li>
-                  <li>Compare the two periods!</li>
-                </ol>
-              </div>
-
-              {/* Results comparison */}
-              <div style={{
-                padding: space.lg,
-                background: colors.bgTertiary,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.border}`
-              }}>
-                <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: space.md, fontWeight: 700 }}>
-                  📊 Recorded Periods
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: space.sm }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: space.md,
-                    background: '#3b82f615',
-                    borderRadius: radius.sm,
-                    border: '1px solid #3b82f640'
-                  }}>
-                    <span style={{ color: colors.textSecondary }}>🌍 Earth:</span>
-                    <span style={{ color: '#3b82f6', fontWeight: 700 }}>
-                      {earthPeriod ? `${earthPeriod.toFixed(2)}s` : '---'}
-                    </span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: space.md,
-                    background: '#6b728015',
-                    borderRadius: radius.sm,
-                    border: '1px solid #6b728040'
-                  }}>
-                    <span style={{ color: colors.textSecondary }}>🌙 Moon:</span>
-                    <span style={{ color: '#9ca3af', fontWeight: 700 }}>
-                      {moonPeriod ? `${moonPeriod.toFixed(2)}s` : '---'}
-                    </span>
-                  </div>
-                  {earthPeriod && moonPeriod && (
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: space.md,
-                      background: `${colors.primary}15`,
-                      borderRadius: radius.sm,
-                      border: `1px solid ${colors.primary}40`
-                    }}>
-                      <span style={{ color: colors.textSecondary }}>Ratio:</span>
-                      <span style={{ color: colors.primary, fontWeight: 700 }}>
-                        {(moonPeriod / earthPeriod).toFixed(2)}x slower
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div style={{
-                marginTop: space.md,
-                padding: space.md,
-                background: colors.bgSecondary,
-                borderRadius: radius.sm
-              }}>
-                <p style={{ fontSize: '13px', color: colors.textTertiary, margin: 0, lineHeight: 1.6 }}>
-                  <strong style={{ color: colors.textSecondary }}>Theory:</strong><br />
-                  Earth: T = 2.01s<br />
-                  Moon: T = 4.93s (≈ 2.45× longer)<br />
-                  √6 ≈ 2.45
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(() => {
-          setShowTwistResult(true);
-          goToPhase('twist_review');
-        }, 'See Analysis')}
+  const renderTwistPlay = () => (
+    <div style={{ padding: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>🔬</span><div><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Gravity Experiment</h2><p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0 }}>Change gravity and observe the period change</p></div></div>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', justifyContent: 'center' }}>
+        {[{ id: 9.8, label: 'Earth (9.8)' }, { id: 3.7, label: 'Mars (3.7)' }, { id: 1.6, label: 'Moon (1.6)' }].map(m => (
+          <button key={m.id} onClick={() => { setGravity(m.id); stopSwing(); }} style={{ padding: '12px 24px', fontSize: '14px', fontWeight: gravity === m.id ? 700 : 500, color: gravity === m.id ? '#0a0a0f' : colors.textPrimary, background: gravity === m.id ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})` : colors.bgCard, border: `2px solid ${gravity === m.id ? colors.accent : colors.border}`, borderRadius: '12px', cursor: 'pointer', zIndex: 10, position: 'relative' as const }}>
+            {m.label}
+          </button>
+        ))}
       </div>
-    );
-  };
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>{renderPendulum(true)}</div>
+    </div>
+  );
 
-  // Twist Review phase
   const renderTwistReview = () => {
     const wasCorrect = twistPrediction === 'slower';
-
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-          <div style={{
-            padding: space.xl,
-            background: wasCorrect
-              ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
-              : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`,
-            borderRadius: radius.lg,
-            border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`,
-            marginBottom: space.xl,
-            textAlign: 'center'
-          }}>
-            <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎯' : '💡'}</span>
-            <h3 style={{
-              fontSize: '22px',
-              color: wasCorrect ? colors.success : colors.accent,
-              marginTop: space.md,
-              fontWeight: 700
-            }}>
-              {wasCorrect ? 'Excellent! Gravity matters!' : 'Gravity is in the formula!'}
-            </h3>
-          </div>
-
-          {renderSectionHeader('🌙', 'Why Gravity Affects Period', 'The g in T = 2π√(L/g)')}
-
-          {/* Explanation */}
-          <div style={{
-            padding: space.lg,
-            background: colors.bgSecondary,
-            borderRadius: radius.md,
-            border: `1px solid ${colors.border}`,
-            marginBottom: space.lg
-          }}>
-            <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.8, margin: 0 }}>
-              Remember how mass cancels because gravity pulls harder on heavy objects but they're also harder to accelerate? Gravity (g) doesn't cancel - it's the <strong style={{ color: colors.primary }}>restoring force</strong> that makes the pendulum swing back.
-            </p>
-          </div>
-
-          {/* Math explanation */}
-          <div style={{
-            padding: space.xl,
-            background: colors.bgTertiary,
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.border}`,
-            marginBottom: space.lg
-          }}>
-            <h4 style={{ fontSize: '15px', color: colors.textPrimary, marginBottom: space.md, fontWeight: 700 }}>
-              The Math
-            </h4>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-              gap: space.md
-            }}>
-              <div style={{
-                padding: space.md,
-                background: '#3b82f615',
-                borderRadius: radius.sm,
-                border: '1px solid #3b82f640',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: 700, marginBottom: space.xs }}>🌍 Earth</div>
-                <div style={{ fontSize: '13px', color: colors.textSecondary, fontFamily: 'monospace' }}>
-                  T = 2π√(1/9.81)<br />
-                  T ≈ 2.01 seconds
-                </div>
-              </div>
-              <div style={{
-                padding: space.md,
-                background: '#6b728015',
-                borderRadius: radius.sm,
-                border: '1px solid #6b728040',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 700, marginBottom: space.xs }}>🌙 Moon</div>
-                <div style={{ fontSize: '13px', color: colors.textSecondary, fontFamily: 'monospace' }}>
-                  T = 2π√(1/1.62)<br />
-                  T ≈ 4.93 seconds
-                </div>
-              </div>
-            </div>
-            <p style={{ fontSize: '14px', color: colors.textSecondary, marginTop: space.md, textAlign: 'center' }}>
-              Since g_moon = g_earth/6, and T ∝ 1/√g, the Moon period is <strong style={{ color: colors.primary }}>√6 ≈ 2.45 times longer</strong>
-            </p>
-          </div>
-
-          {/* Physical intuition */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: space.md,
-            marginBottom: space.lg
-          }}>
-            <div style={{
-              padding: space.lg,
-              background: `${colors.primary}10`,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.primary}30`
-            }}>
-              <h4 style={{ fontSize: '15px', color: colors.primary, marginBottom: space.sm, fontWeight: 700 }}>
-                Why Weaker Gravity = Longer Period
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                Weaker gravity means a weaker restoring force pulling the pendulum back to center. With less force, the pendulum accelerates more slowly and takes longer to complete each swing.
-              </p>
-            </div>
-
-            <div style={{
-              padding: space.lg,
-              background: `${colors.accent}10`,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.accent}30`
-            }}>
-              <h4 style={{ fontSize: '15px', color: colors.accent, marginBottom: space.sm, fontWeight: 700 }}>
-                Real-World Application
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                This is why pendulum clocks run slow at high altitudes (weaker gravity) and why they were historically used to measure local gravitational variations.
-              </p>
-            </div>
-          </div>
-
-          {renderKeyTakeaway('While mass cancels in the pendulum equation (appearing in both force and inertia), gravity does not. Gravity provides the restoring force, so weaker gravity means slower oscillation. On the Moon, a pendulum swings about 2.45 times slower than on Earth!')}
+      <div style={{ padding: '24px' }}>
+        <div style={{ padding: '32px', background: wasCorrect ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)` : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`, borderRadius: '16px', border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`, marginBottom: '24px', textAlign: 'center' }}>
+          <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎯' : '💡'}</span>
+          <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>{wasCorrect ? 'Correct! Lower gravity means a longer period!' : 'Lower gravity means a longer period!'}</h3>
         </div>
-        {renderBottomBar(() => goToPhase('transfer'), 'See Real Applications')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>📊</span><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Pendulum Period Across Worlds</h2></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          {[
+            { name: 'Earth', g: '9.8', period: '2.0s', icon: '🌍', color: colors.success },
+            { name: 'Mars', g: '3.7', period: '3.3s', icon: '🔴', color: colors.danger },
+            { name: 'Moon', g: '1.6', period: '5.0s', icon: '🌙', color: colors.textMuted }
+          ].map((item, idx) => (
+            <div key={idx} style={{ ...cardStyle, padding: '20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>{item.icon}</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: item.color }}>{item.name}</div>
+              <div style={{ fontSize: '13px', color: colors.textSecondary, margin: '4px 0' }}>g = {item.g} m/s squared</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted }}>T = {item.period} (1m pendulum)</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ ...cardStyle, marginBottom: '16px' }}><h4 style={{ fontSize: '15px', color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>Why Does Gravity Affect Period?</h4><p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>Since T = 2*pi*sqrt(L/g), lower gravity means a larger value under the square root, producing a longer period. On the Moon (g = 1.6 m/s squared), the restoring force is much weaker, so the pendulum takes longer to complete each swing. This principle can be used to measure local gravity by timing a pendulum of known length, a technique that was historically important for geological surveys, mineral prospecting, and geodetic measurements.</p></div>
+        <div style={{ padding: '20px', background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`, borderRadius: '16px', border: `1px solid ${colors.primary}40` }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}><span style={{ fontSize: '24px' }}>💡</span><p style={{ fontSize: '15px', color: colors.textPrimary, margin: 0, lineHeight: 1.7 }}>The pendulum equation beautifully shows which factors matter: length and gravity yes, mass no. This asymmetry reveals a deep truth about physics: gravitational mass and inertial mass are equivalent, a fact that Einstein later used as the foundation of General Relativity.</p></div>
+        </div>
       </div>
     );
   };
 
-  // Transfer phase - Real-world applications
   const renderTransfer = () => {
     const app = realWorldApps[activeApp];
-
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-          {renderSectionHeader('🌍', 'Real-World Applications', 'How pendulum physics shapes our world')}
-
-          {/* Progress indicator */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: space.sm,
-            marginBottom: space.md
-          }}>
-            <span style={{ fontSize: '13px', color: colors.textSecondary }}>
-              {completedApps.size} of {realWorldApps.length} explored
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {realWorldApps.map((_, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: completedApps.has(idx) ? colors.success : idx === activeApp ? colors.primary : colors.bgTertiary,
-                    transition: 'background 0.3s ease'
-                  }}
-                />
-              ))}
-            </div>
+      <div style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}><span style={{ fontSize: '28px' }}>🌍</span><h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Real-World Applications</h2></div>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: '0 0 16px', lineHeight: 1.6 }}>Pendulum period in engineering and science</p>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
+          {realWorldApps.map((a, idx) => { const isCompleted = completedApps.has(idx); const isCurrent = idx === activeApp; return (
+            <button key={idx} onClick={() => setActiveApp(idx)} style={{ padding: '12px 16px', fontSize: '14px', fontWeight: isCurrent ? 700 : 500, color: isCurrent ? '#0a0a0f' : isCompleted ? colors.success : colors.textSecondary, background: isCurrent ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)` : isCompleted ? `${colors.success}15` : colors.bgCard, border: `1px solid ${isCurrent ? a.color : isCompleted ? colors.success : colors.border}`, borderRadius: '8px', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s ease', zIndex: 10, position: 'relative' as const }}>{isCompleted ? '✓ ' : ''}{a.icon} {a.title}</button>
+          ); })}
+        </div>
+        <div style={{ ...cardStyle, overflow: 'hidden', padding: 0 }}>
+          <div style={{ padding: '24px', background: `linear-gradient(135deg, ${app.color}20, transparent)`, borderBottom: `1px solid ${colors.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}><span style={{ fontSize: '48px' }}>{app.icon}</span><div><h3 style={{ fontSize: '22px', color: colors.textPrimary, margin: 0, fontWeight: 800 }}>{app.title}</h3><p style={{ fontSize: '14px', color: app.color, margin: '4px 0 0', fontWeight: 600 }}>{app.tagline}</p></div></div>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.description}</p>
           </div>
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}` }}><h4 style={{ fontSize: '14px', color: app.color, marginBottom: '8px', fontWeight: 700 }}>Connection to Pendulum Period</h4><p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.connection}</p></div>
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}` }}><h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>How It Works</h4><p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.howItWorks}</p></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: colors.border }}>
+            {app.stats.map((stat, idx) => (<div key={idx} style={{ padding: '16px', background: colors.bgCardLight, textAlign: 'center' }}><div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div><div style={{ fontSize: '20px', fontWeight: 800, color: app.color }}>{stat.value}</div><div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 500 }}>{stat.label}</div></div>))}
+          </div>
+          <div style={{ padding: '16px 24px', borderTop: `1px solid ${colors.border}` }}><h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Examples</h4><div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>{app.examples.map((ex, idx) => (<span key={idx} style={{ padding: '6px 12px', fontSize: '13px', color: colors.textSecondary, background: colors.bgDark, borderRadius: '9999px', border: `1px solid ${colors.border}` }}>{ex}</span>))}</div></div>
+          <div style={{ padding: '12px 24px', background: colors.bgCardLight, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}><span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 500 }}>Key players:</span>{app.companies.map((company, idx) => (<span key={idx} style={{ padding: '4px 12px', fontSize: '12px', color: colors.textSecondary, background: colors.bgCard, borderRadius: '8px', border: `1px solid ${colors.border}` }}>{company}</span>))}</div>
+          <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}` }}>
+            {!completedApps.has(activeApp) ? (
+              <button onClick={() => { const n = new Set(completedApps); n.add(activeApp); setCompletedApps(n); if (activeApp < realWorldApps.length - 1) setTimeout(() => setActiveApp(activeApp + 1), 300); }} style={{ width: '100%', padding: '16px', fontSize: '15px', fontWeight: 600, color: '#0a0a0f', background: colors.success, border: 'none', borderRadius: '12px', cursor: 'pointer', zIndex: 10, position: 'relative' as const }}>Mark as Read</button>
+            ) : (<div style={{ padding: '16px', background: `${colors.success}15`, borderRadius: '12px', border: `1px solid ${colors.success}40`, textAlign: 'center' }}><span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>Completed</span></div>)}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-          {/* Tab navigation */}
-          <div style={{
-            display: 'flex',
-            gap: space.sm,
-            marginBottom: space.lg,
-            overflowX: 'auto',
-            paddingBottom: space.sm
-          }}>
-            {realWorldApps.map((a, idx) => {
-              const isCompleted = completedApps.has(idx);
-              const isCurrent = idx === activeApp;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setActiveApp(idx)}
-                  style={{
-                    padding: `${space.md} ${space.lg}`,
-                    fontSize: '14px',
-                    fontWeight: isCurrent ? 700 : 500,
-                    color: isCurrent ? colors.textInverse : isCompleted ? colors.success : colors.textSecondary,
-                    background: isCurrent
-                      ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)`
-                      : isCompleted ? `${colors.success}15` : colors.bgSecondary,
-                    border: `1px solid ${isCurrent ? a.color : isCompleted ? colors.success : colors.border}`,
-                    borderRadius: radius.sm,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.2s ease',
-                    boxShadow: isCurrent ? shadows.sm : 'none',
-                    zIndex: 10,
-                    position: 'relative',
-                  }}
-                >
-                  {isCompleted ? '✓ ' : ''}{a.icon} {a.title}
-                </button>
-              );
+  const renderTest = () => {
+    const question = testQuestions[currentQuestion];
+    const currentAnswer = testAnswers[currentQuestion];
+    const isConfirmed = confirmedQuestions.has(currentQuestion);
+    if (testSubmitted) {
+      const percentage = Math.round((testScore / testQuestions.length) * 100);
+      return (
+        <div style={{ padding: '32px 24px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, marginBottom: '24px' }}>Quiz Results</h2>
+          <div style={{ padding: '32px', background: percentage >= 70 ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)` : `linear-gradient(135deg, ${colors.warning}15, ${colors.warning}05)`, borderRadius: '16px', border: `1px solid ${percentage >= 70 ? colors.success : colors.warning}40`, marginBottom: '24px' }}>
+            <div style={{ fontSize: '56px', fontWeight: 800, color: percentage >= 70 ? colors.success : colors.warning }}>{percentage}%</div>
+            <p style={{ fontSize: '18px', color: colors.textPrimary, margin: '8px 0 0', fontWeight: 600 }}>{testScore} out of {testQuestions.length} correct</p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <button onClick={() => goToPhase('mastery')} style={{ ...primaryBtnStyle }}>Next: Complete Lesson</button>
+            <button onClick={() => goToPhase('review')} style={{ ...primaryBtnStyle, background: colors.bgCardLight, color: colors.textPrimary }}>Back to Review</button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 800, color: colors.textPrimary, marginBottom: '8px' }}>Knowledge Check - Pendulum Period</h2>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: '8px' }}>Question {currentQuestion + 1} of {testQuestions.length}</p>
+        <p style={{ fontSize: '13px', color: colors.textMuted, marginBottom: '24px', maxWidth: '520px', textAlign: 'center', lineHeight: 1.6 }}>Apply your understanding of the pendulum period formula, the independence from mass, and the dependence on length and gravity to answer each scenario-based question below.</p>
+        <div style={{ padding: '16px', background: colors.bgCardLight, borderRadius: '12px', marginBottom: '12px', borderLeft: `4px solid ${colors.accent}`, maxWidth: '520px', width: '100%' }}>
+          <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, fontStyle: 'italic', lineHeight: 1.6 }}>{question.scenario}</p>
+        </div>
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '16px', color: '#ffffff', fontWeight: 600, marginBottom: '16px', lineHeight: 1.5 }}>{question.question}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {question.options.map((option) => {
+              const isSelected = currentAnswer === option.id;
+              const isCorrectOpt = option.correct;
+              let bg = `${colors.bgCardLight}80`;
+              let borderColor = colors.borderLight;
+              let textColor = '#ffffff';
+              if (isConfirmed) { if (isCorrectOpt) { bg = `${colors.success}20`; borderColor = colors.success; textColor = colors.success; } else if (isSelected) { bg = `${colors.danger}20`; borderColor = colors.danger; textColor = colors.danger; } } else if (isSelected) { bg = `${colors.primary}20`; borderColor = colors.primary; }
+              return (<button key={option.id} onClick={() => { if (isConfirmed) return; const n = [...testAnswers]; n[currentQuestion] = option.id; setTestAnswers(n); }} style={{ padding: '14px 16px', borderRadius: '12px', border: `2px solid ${borderColor}`, background: bg, textAlign: 'left', cursor: isConfirmed ? 'default' : 'pointer', transition: 'all 0.3s ease', zIndex: 10, position: 'relative' as const }}><span style={{ fontSize: '14px', color: textColor, lineHeight: 1.5 }}>{option.text}</span></button>);
             })}
           </div>
-
-          {/* Application content card */}
-          <div style={{
-            background: colors.bgSecondary,
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.border}`,
-            overflow: 'hidden'
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: space.xl,
-              background: `linear-gradient(135deg, ${app.color}20, transparent)`,
-              borderBottom: `1px solid ${colors.border}`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: space.lg, marginBottom: space.md }}>
-                <span style={{ fontSize: '56px' }}>{app.icon}</span>
-                <div>
-                  <h3 style={{ fontSize: '24px', color: colors.textPrimary, margin: 0, fontWeight: 800 }}>
-                    {app.title}
-                  </h3>
-                  <p style={{ fontSize: '16px', color: app.color, margin: `${space.xs} 0 0`, fontWeight: 600 }}>
-                    {app.tagline}
-                  </p>
-                </div>
-              </div>
-              <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                {app.description}
-              </p>
-            </div>
-
-            {/* Connection */}
-            <div style={{ padding: `${space.lg} ${space.xl}`, borderBottom: `1px solid ${colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: app.color, marginBottom: space.sm, fontWeight: 700 }}>
-                🔗 Connection to Pendulum Physics
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            {/* How it works */}
-            <div style={{ padding: `${space.lg} ${space.xl}`, borderBottom: `1px solid ${colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: space.sm, fontWeight: 700 }}>
-                ⚙️ How It Works
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                {app.howItWorks}
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '1px',
-              background: colors.border
-            }}>
-              {app.stats.map((stat, idx) => (
-                <div key={idx} style={{
-                  padding: space.lg,
-                  background: colors.bgTertiary,
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '28px', marginBottom: space.xs }}>{stat.icon}</div>
-                  <div style={{ fontSize: '22px', fontWeight: 800, color: app.color }}>{stat.value}</div>
-                  <div style={{ fontSize: '12px', color: colors.textTertiary, fontWeight: 500 }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Examples */}
-            <div style={{ padding: `${space.lg} ${space.xl}`, borderTop: `1px solid ${colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: space.md, fontWeight: 700 }}>
-                📍 Examples
-              </h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: space.sm }}>
-                {app.examples.map((ex, idx) => (
-                  <span key={idx} style={{
-                    padding: `${space.sm} ${space.md}`,
-                    fontSize: '13px',
-                    color: colors.textSecondary,
-                    background: colors.bgPrimary,
-                    borderRadius: radius.full,
-                    border: `1px solid ${colors.border}`
-                  }}>
-                    {ex}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Mark as Explored Button */}
-            <div style={{ padding: space.lg, borderTop: `1px solid ${colors.border}` }}>
-              {!completedApps.has(activeApp) ? (
-                <button
-                  onClick={() => {
-                    const newCompleted = new Set(completedApps);
-                    newCompleted.add(activeApp);
-                    setCompletedApps(newCompleted);
-                    if (activeApp < realWorldApps.length - 1) {
-                      setTimeout(() => setActiveApp(activeApp + 1), 300);
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: space.lg,
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    color: colors.textInverse,
-                    background: colors.success,
-                    border: 'none',
-                    borderRadius: radius.md,
-                    cursor: 'pointer',
-                    zIndex: 10,
-                    position: 'relative',
-                  }}
-                >
-                  ✓ Mark "{app.title}" as Explored
-                </button>
-              ) : (
-                <div style={{
-                  padding: space.lg,
-                  background: `${colors.success}15`,
-                  borderRadius: radius.md,
-                  border: `1px solid ${colors.success}40`,
-                  textAlign: 'center'
-                }}>
-                  <span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>
-                    ✓ Explored
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
-        {/* Bottom bar */}
-        <div style={{
-          padding: `${space.lg} ${space.xl}`,
-          background: colors.bgSecondary,
-          borderTop: `1px solid ${colors.border}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <button
-            onClick={() => goToPhase('twist_review')}
-            style={{
-              padding: `${space.md} ${space.xl}`,
-              fontSize: '14px',
-              color: colors.textSecondary,
-              background: 'transparent',
-              border: 'none',
-              borderRadius: radius.md,
-              cursor: 'pointer',
-              zIndex: 10,
-              position: 'relative',
-            }}
-          >
-            ← Back
-          </button>
-          <button
-            onClick={() => goToPhase('test')}
-            style={{
-              padding: `${space.md} ${space.xxl}`,
-              fontSize: '15px',
-              fontWeight: 600,
-              color: colors.textInverse,
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-              border: 'none',
-              borderRadius: radius.md,
-              cursor: 'pointer',
-              boxShadow: shadows.sm,
-              zIndex: 10,
-              position: 'relative',
-            }}
-          >
-            Take the Quiz →
-          </button>
+        {isConfirmed && (<div style={{ padding: '16px', borderRadius: '12px', maxWidth: '520px', width: '100%', marginBottom: '16px', background: currentAnswer === question.options.find(o => o.correct)?.id ? `${colors.success}10` : `${colors.danger}10`, border: `1px solid ${currentAnswer === question.options.find(o => o.correct)?.id ? `${colors.success}30` : `${colors.danger}30`}` }}><p style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px', color: currentAnswer === question.options.find(o => o.correct)?.id ? colors.success : colors.danger }}>{currentAnswer === question.options.find(o => o.correct)?.id ? 'Correct!' : 'Not quite'}</p><p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.6, margin: 0 }}>{question.explanation}</p></div>)}
+        <div style={{ display: 'flex', gap: '12px', maxWidth: '520px', width: '100%' }}>
+          {currentAnswer && !isConfirmed && (<button onClick={() => { setConfirmedQuestions(prev => new Set(prev).add(currentQuestion)); const sel = question.options.find(o => o.id === currentAnswer); if (sel?.correct) { setTestScore(s => s + 1); playSound('success'); } else { playSound('failure'); } }} style={{ ...primaryBtnStyle, flex: 1 }}>Check Answer</button>)}
+          {isConfirmed && currentQuestion < 9 && (<button onClick={() => setCurrentQuestion(currentQuestion + 1)} style={{ ...primaryBtnStyle, flex: 1 }}>Next Question</button>)}
+          {isConfirmed && currentQuestion === 9 && (<button onClick={() => setTestSubmitted(true)} style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}>Submit Test</button>)}
         </div>
       </div>
     );
   };
 
-  // Test phase
-  const renderTest = () => {
-    const currentQ = testQuestions[currentQuestionIndex];
-    const answeredCount = testAnswers.filter(a => a !== null).length;
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-          {!showTestResults ? (
-            <>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: space.lg
-              }}>
-                <h2 style={{ fontSize: '22px', color: colors.textPrimary, margin: 0, fontWeight: 800 }}>
-                  📝 Knowledge Check
-                </h2>
-                <span style={{
-                  padding: `${space.sm} ${space.md}`,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.textSecondary,
-                  background: colors.bgSecondary,
-                  borderRadius: radius.full
-                }}>
-                  {currentQuestionIndex + 1} / {testQuestions.length}
-                </span>
-              </div>
-
-              {/* Question navigation dots */}
-              <div style={{
-                display: 'flex',
-                gap: space.sm,
-                marginBottom: space.lg,
-                justifyContent: 'center'
-              }}>
-                {testQuestions.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentQuestionIndex(idx)}
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: radius.full,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: idx === currentQuestionIndex
-                        ? colors.primary
-                        : testAnswers[idx] !== null
-                          ? colors.success
-                          : colors.bgTertiary,
-                      transition: 'all 0.2s ease',
-                      boxShadow: idx === currentQuestionIndex ? shadows.glow(colors.primary) : 'none',
-                      zIndex: 10,
-                      position: 'relative',
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Scenario */}
-              <div style={{
-                padding: space.lg,
-                background: colors.bgTertiary,
-                borderRadius: radius.md,
-                marginBottom: space.md,
-                borderLeft: `4px solid ${colors.accent}`
-              }}>
-                <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, fontStyle: 'italic', lineHeight: 1.6 }}>
-                  {currentQ.scenario}
-                </p>
-              </div>
-
-              {/* Question */}
-              <div style={{
-                padding: space.lg,
-                background: colors.bgSecondary,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.border}`,
-                marginBottom: space.md
-              }}>
-                <p style={{ fontSize: '16px', color: colors.textPrimary, margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
-                  {currentQ.question}
-                </p>
-              </div>
-
-              {/* Options */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: space.sm }}>
-                {currentQ.options.map((option, idx) => {
-                  const isSelected = testAnswers[currentQuestionIndex] === idx;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        const newAnswers = [...testAnswers];
-                        newAnswers[currentQuestionIndex] = idx;
-                        setTestAnswers(newAnswers);
-                      }}
-                      style={{
-                        padding: `${space.md} ${space.lg}`,
-                        fontSize: '14px',
-                        fontWeight: isSelected ? 600 : 400,
-                        color: isSelected ? colors.textInverse : colors.textPrimary,
-                        background: isSelected
-                          ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`
-                          : colors.bgSecondary,
-                        border: `2px solid ${isSelected ? colors.primary : colors.border}`,
-                        borderRadius: radius.md,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: space.md,
-                        zIndex: 10,
-                        position: 'relative',
-                      }}
-                    >
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: radius.full,
-                        background: isSelected ? colors.bgPrimary : colors.bgTertiary,
-                        color: isSelected ? colors.primary : colors.textTertiary,
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        flexShrink: 0
-                      }}>
-                        {String.fromCharCode(65 + idx)}
-                      </span>
-                      <span style={{ lineHeight: 1.4 }}>{option.text}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Navigation */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: space.xl,
-                gap: space.md
-              }}>
-                <button
-                  onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-                  disabled={currentQuestionIndex === 0}
-                  style={{
-                    padding: `${space.md} ${space.lg}`,
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: currentQuestionIndex === 0 ? colors.textTertiary : colors.textPrimary,
-                    background: colors.bgSecondary,
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: radius.sm,
-                    cursor: currentQuestionIndex === 0 ? 'not-allowed' : 'pointer',
-                    opacity: currentQuestionIndex === 0 ? 0.5 : 1,
-                    zIndex: 10,
-                    position: 'relative',
-                  }}
-                >
-                  ← Previous
-                </button>
-
-                {currentQuestionIndex < testQuestions.length - 1 ? (
-                  <button
-                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                    style={{
-                      padding: `${space.md} ${space.lg}`,
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.textPrimary,
-                      background: colors.bgSecondary,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: radius.sm,
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      position: 'relative',
-                    }}
-                  >
-                    Next →
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      const score = testAnswers.reduce((acc, answer, idx) =>
-                        acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
-                      setTestScore(score);
-                      setShowTestResults(true);
-                    }}
-                    disabled={answeredCount < testQuestions.length}
-                    style={{
-                      padding: `${space.md} ${space.xl}`,
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      color: answeredCount < testQuestions.length ? colors.textTertiary : colors.textInverse,
-                      background: answeredCount < testQuestions.length
-                        ? colors.bgTertiary
-                        : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                      border: 'none',
-                      borderRadius: radius.sm,
-                      cursor: answeredCount < testQuestions.length ? 'not-allowed' : 'pointer',
-                      boxShadow: answeredCount >= testQuestions.length ? shadows.sm : 'none',
-                      zIndex: 10,
-                      position: 'relative',
-                    }}
-                  >
-                    Submit ({answeredCount}/{testQuestions.length})
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Test Results */}
-              {renderSectionHeader('📊', 'Quiz Results', 'Review your answers and learn from any mistakes')}
-
-              {(() => {
-                const score = testAnswers.reduce((acc, answer, idx) =>
-                  acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
-                const percentage = Math.round((score / testQuestions.length) * 100);
-
-                return (
-                  <>
-                    <div style={{
-                      padding: space.xl,
-                      background: percentage >= 70
-                        ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
-                        : `linear-gradient(135deg, ${colors.warning}15, ${colors.warning}05)`,
-                      borderRadius: radius.lg,
-                      border: `1px solid ${percentage >= 70 ? colors.success : colors.warning}40`,
-                      textAlign: 'center',
-                      marginBottom: space.xl
-                    }}>
-                      <div style={{ fontSize: '56px', fontWeight: 800, color: percentage >= 70 ? colors.success : colors.warning }}>
-                        {percentage}%
-                      </div>
-                      <p style={{ fontSize: '18px', color: colors.textPrimary, margin: `${space.sm} 0 0`, fontWeight: 600 }}>
-                        {score} out of {testQuestions.length} correct
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
-                      {testQuestions.map((q, idx) => {
-                        const isCorrect = q.options[testAnswers[idx] as number]?.correct ?? false;
-                        return (
-                          <div key={idx} style={{
-                            padding: space.lg,
-                            background: colors.bgSecondary,
-                            borderRadius: radius.md,
-                            border: `1px solid ${isCorrect ? colors.success : colors.danger}40`
-                          }}>
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: space.md,
-                              marginBottom: space.md
-                            }}>
-                              <span style={{
-                                fontSize: '20px',
-                                color: isCorrect ? colors.success : colors.danger,
-                                fontWeight: 700
-                              }}>
-                                {isCorrect ? '✓' : '✗'}
-                              </span>
-                              <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0, fontWeight: 600, lineHeight: 1.4 }}>
-                                  Q{idx + 1}: {q.question}
-                                </p>
-                                {!isCorrect && (
-                                  <p style={{ fontSize: '13px', color: colors.danger, margin: `${space.sm} 0 0` }}>
-                                    Your answer: {q.options[testAnswers[idx] as number]?.text}
-                                  </p>
-                                )}
-                                <p style={{ fontSize: '13px', color: colors.success, margin: `${space.xs} 0 0`, fontWeight: 500 }}>
-                                  Correct: {q.options.find(o => o.correct)?.text}
-                                </p>
-                              </div>
-                            </div>
-                            <div style={{
-                              padding: space.md,
-                              background: colors.bgTertiary,
-                              borderRadius: radius.sm,
-                              fontSize: '13px',
-                              color: colors.textSecondary,
-                              lineHeight: 1.6
-                            }}>
-                              💡 {q.explanation}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                );
-              })()}
-            </>
-          )}
-        </div>
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), 'Complete Module')}
-      </div>
-    );
-  };
-
-  // Mastery phase
   const renderMastery = () => {
-    const score = testScore || testAnswers.reduce((acc, answer, idx) =>
-      acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
-
+    const percentage = Math.round((testScore / testQuestions.length) * 100);
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: `radial-gradient(ellipse at top, ${colors.bgSecondary} 0%, ${colors.bgPrimary} 70%)`
-      }}>
-        {renderProgressBar()}
-        <div style={{
-          flex: 1,
-          padding: isMobile ? space.lg : space.xl,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          textAlign: 'center'
-        }}>
-          {/* Trophy icon */}
-          <div style={{
-            width: '120px',
-            height: '120px',
-            margin: '0 auto 32px',
-            borderRadius: radius.full,
-            background: `linear-gradient(135deg, ${colors.primary}20, ${colors.accent}20)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: shadows.glow(colors.primary),
-            border: `2px solid ${colors.primary}30`
-          }}>
-            <span style={{ fontSize: '60px' }}>🏆</span>
-          </div>
-
-          <h1 style={{
-            fontSize: isMobile ? '32px' : '40px',
-            fontWeight: 800,
-            color: colors.textPrimary,
-            marginBottom: space.md,
-            letterSpacing: '-1px'
-          }}>
-            Congratulations!
-          </h1>
-          <p style={{
-            fontSize: '18px',
-            color: colors.textSecondary,
-            maxWidth: '520px',
-            lineHeight: 1.7,
-            marginBottom: space.xl
-          }}>
-            You've mastered the physics of pendulum period! You now understand why only length and gravity affect how fast a pendulum swings.
-          </p>
-
-          {/* Achievement cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: space.md,
-            width: '100%',
-            maxWidth: '640px',
-            marginBottom: space.xl
-          }}>
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ fontSize: '36px', marginBottom: space.sm }}>📐</div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: colors.primary }}>T = 2π√(L/g)</div>
-              <div style={{ fontSize: '13px', color: colors.textTertiary, marginTop: space.xs }}>Period formula</div>
-            </div>
-
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ fontSize: '36px', marginBottom: space.sm }}>⚖️</div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: colors.success }}>Mass Cancels</div>
-              <div style={{ fontSize: '13px', color: colors.textTertiary, marginTop: space.xs }}>F/m = g sin(θ)</div>
-            </div>
-
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ fontSize: '36px', marginBottom: space.sm }}>🎯</div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: colors.accent }}>{score}/10</div>
-              <div style={{ fontSize: '13px', color: colors.textTertiary, marginTop: space.xs }}>Quiz score</div>
-            </div>
-          </div>
-
-          {/* Key insights */}
-          <div style={{
-            padding: space.xl,
-            background: colors.bgSecondary,
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.primary}40`,
-            maxWidth: '520px',
-            width: '100%'
-          }}>
-            <h4 style={{ fontSize: '16px', color: colors.primary, marginBottom: space.md, fontWeight: 700 }}>
-              🧠 Key Insights
-            </h4>
-            <ul style={{
-              textAlign: 'left',
-              margin: 0,
-              paddingLeft: space.lg,
-              color: colors.textSecondary,
-              fontSize: '14px',
-              lineHeight: 2
-            }}>
-              <li>Mass cancels because gravity and inertia both scale with mass</li>
-              <li>Period depends only on length (L) and gravity (g)</li>
-              <li>Weaker gravity (like on the Moon) means longer period</li>
-              <li>This principle enables pendulum clocks and seismographs</li>
-            </ul>
-          </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '48px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <style>{`@keyframes confetti { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
+        {Array.from({ length: 50 }).map((_, i) => (<div key={i} style={{ position: 'absolute', left: `${Math.random() * 100}%`, top: '-20px', width: '10px', height: '10px', background: [colors.primary, colors.accent, colors.success, colors.warning][i % 4], borderRadius: '2px', animation: `confetti 3s ease-out ${Math.random() * 2}s infinite` }} />))}
+        <div style={{ width: '120px', height: '120px', borderRadius: '9999px', background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '32px', boxShadow: `0 8px 32px ${colors.primary}40` }}><span style={{ fontSize: '56px' }}>🏆</span></div>
+        <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>Congratulations!</h1>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.primary, marginBottom: '16px' }}>Pendulum Master</h2>
+        <p style={{ fontSize: '18px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6 }}>Final Score: <span style={{ color: colors.success, fontWeight: 700 }}>{testScore}/{testQuestions.length}</span> ({percentage}%)</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '480px', width: '100%', marginBottom: '32px' }}>
+          {[{ icon: '🕰️', label: 'T = 2pi*sqrt(L/g)', sub: 'The period formula' }, { icon: '⚖️', label: 'Mass Independent', sub: 'Period ignores mass' }, { icon: '📊', label: `${testScore}/10`, sub: 'Quiz score' }].map((item, i) => (<div key={i} style={{ ...cardStyle, padding: '16px', textAlign: 'center' }}><div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.icon}</div><div style={{ fontSize: '14px', fontWeight: 700, color: colors.primary }}>{item.label}</div><div style={{ fontSize: '12px', color: colors.textMuted }}>{item.sub}</div></div>))}
         </div>
-
-        {/* Bottom bar */}
-        <div style={{
-          padding: `${space.lg} ${space.xl}`,
-          background: colors.bgSecondary,
-          borderTop: `1px solid ${colors.border}`,
-          display: 'flex',
-          justifyContent: 'center'
-        }}>
-          {onBack && (
-            <button
-              onClick={() => onBack?.()}
-              style={{
-                padding: `${space.md} ${space.xxl}`,
-                fontSize: '16px',
-                fontWeight: 700,
-                color: colors.textInverse,
-                background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                border: 'none',
-                borderRadius: radius.md,
-                cursor: 'pointer',
-                boxShadow: `${shadows.md}, ${shadows.glow(colors.primary)}`,
-                zIndex: 10,
-                position: 'relative',
-              }}
-            >
-              Return to Dashboard
-            </button>
-          )}
-        </div>
+        <p style={{ fontSize: '14px', color: colors.textMuted, marginBottom: '24px', maxWidth: '420px', lineHeight: 1.6 }}>You now understand pendulum period! From grandfather clocks to earthquake detection, this elegant physics governs precise timekeeping across civilization.</p>
+        <button onClick={() => { setPhase('hook'); setPrediction(null); setTwistPrediction(null); setActiveApp(0); setCompletedApps(new Set()); setCurrentQuestion(0); setTestAnswers(new Array(testQuestions.length).fill(null)); setConfirmedQuestions(new Set()); setTestScore(0); setTestSubmitted(false); }} style={primaryBtnStyle}>Complete Lesson</button>
       </div>
     );
   };
 
-  // Main render switch
   const renderPhase = () => {
     switch (phase) {
       case 'hook': return renderHook();
@@ -3064,14 +805,14 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   };
 
   return (
-    <div style={{
-      maxWidth: '800px',
-      margin: '0 auto',
-      minHeight: '100vh',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      background: colors.bgPrimary,
-    }}>
-      {renderPhase()}
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
+      {renderProgressBar()}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: `${colors.bgCard}cc`, borderBottom: `1px solid ${colors.border}50` }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Pendulum Period</span>
+        <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>{phaseLabels[phase]}</span>
+      </div>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>{renderPhase()}</div>
+      {renderBottomBar()}
     </div>
   );
 };

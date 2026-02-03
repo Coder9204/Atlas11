@@ -32,10 +32,10 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   'hook': 'Hook',
   'predict': 'Predict',
-  'play': 'Lab',
+  'play': 'Experiment',
   'review': 'Review',
   'twist_predict': 'Twist Predict',
-  'twist_play': 'Twist Lab',
+  'twist_play': 'Twist Experiment',
   'twist_review': 'Twist Review',
   'transfer': 'Transfer',
   'test': 'Test',
@@ -326,6 +326,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [confirmedQuestions, setConfirmedQuestions] = useState<Set<number>>(new Set());
 
   // Mobile detection
   useEffect(() => {
@@ -353,7 +354,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: 'rgba(156,163,175,0.8)',
     textMuted: '#6B7280',
     border: '#2a2a3a',
   };
@@ -678,6 +679,40 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
             Why does a balloon zoom forward when you let it go?
           </h2>
 
+          {/* Predict SVG visualization */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+            <svg width="100%" height="160" viewBox="0 0 600 160" style={{ display: 'block' }}>
+              <defs>
+                <radialGradient id="predBalloon" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </radialGradient>
+                <linearGradient id="predArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#22d3ee" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+                <filter id="predGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <rect width="600" height="160" fill="#030712" rx="8" />
+              <g transform="translate(200, 80)">
+                <ellipse cx="0" cy="0" rx="35" ry="28" fill="url(#predBalloon)" />
+                <path d="M-30,8 Q-38,14 -42,22 L-42,-22 Q-38,-14 -30,-8" fill="#dc2626" />
+                <circle cx="-50" cy="0" r="4" fill="#67e8f9" opacity="0.7" />
+                <circle cx="-58" cy="-6" r="3" fill="#67e8f9" opacity="0.5" />
+                <circle cx="-55" cy="8" r="3.5" fill="#67e8f9" opacity="0.6" />
+              </g>
+              <g filter="url(#predGlow)">
+                <line x1="260" y1="80" x2="340" y2="80" stroke="url(#predArrow)" strokeWidth="3" />
+                <polygon points="340,74 354,80 340,86" fill="#22d3ee" />
+              </g>
+              <text x="370" y="85" fill="#e2e8f0" fontSize="14" fontFamily="system-ui">Which way? Why?</text>
+              <text x="300" y="140" textAnchor="middle" fill="#64748b" fontSize="11">Make your prediction below</text>
+            </svg>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
               <button
@@ -759,13 +794,41 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                   <stop offset="50%" stopColor="#6b7280" />
                   <stop offset="100%" stopColor="#374151" />
                 </linearGradient>
+                <linearGradient id="actionArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#22d3ee" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+                <linearGradient id="reactionArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#fb923c" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+                <filter id="glowFilter">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter id="shadowFilter">
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
+                </filter>
+                <radialGradient id="particleGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+                </radialGradient>
               </defs>
 
               {/* Background */}
-              <rect width="700" height="200" fill="#030712" />
+              <g>
+                <rect width="700" height="200" fill="#030712" />
+                <rect x="0" y="180" width="700" height="20" fill="#111827" />
+              </g>
 
               {/* Track */}
-              <rect x="40" y="95" width="640" height="8" rx="4" fill="url(#trackGrad)" />
+              <g filter="url(#shadowFilter)">
+                <rect x="40" y="95" width="640" height="8" rx="4" fill="url(#trackGrad)" />
+                <line x1="40" y1="103" x2="680" y2="103" stroke="#1f2937" strokeWidth="1" />
+              </g>
 
               {/* Distance markers */}
               {[0, 100, 200, 300, 400, 500, 600].map(d => (
@@ -900,7 +963,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     const reviewContent = [
       {
         title: "Newton's Third Law",
-        content: `${wasCorrect ? "Excellent! You got it! " : ""}For every ACTION, there is an equal and opposite REACTION.\n\nWhen the balloon pushes air OUT (action), the air pushes the balloon FORWARD (reaction). These forces are equal in strength but opposite in direction!`,
+        content: `${wasCorrect ? "Excellent! You got it! " : ""}For every ACTION, there is an equal and opposite REACTION. This is one of the most fundamental principles in all of physics, governing every interaction in the universe.\n\nWhen the balloon pushes air OUT (action), the air pushes the balloon FORWARD (reaction). These forces are equal in strength but opposite in direction! This principle explains how rockets fly, how swimmers propel themselves through water, and why you feel a kick when firing a gun. The key insight is that forces always come in pairs acting on different objects simultaneously.`,
         highlight: wasCorrect,
       },
       {
@@ -1024,6 +1087,42 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             If we race a small balloon against a large balloon, which travels farther?
           </h2>
+
+          {/* Twist predict SVG */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+            <svg width="100%" height="140" viewBox="0 0 600 140" style={{ display: 'block' }}>
+              <defs>
+                <radialGradient id="twpSmall" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#93c5fd" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </radialGradient>
+                <radialGradient id="twpLarge" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </radialGradient>
+                <filter id="twpGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <rect width="600" height="140" fill="#030712" rx="8" />
+              <g transform="translate(120, 40)">
+                <text x="-60" y="5" fill="#93c5fd" fontSize="12" fontWeight="bold">SMALL</text>
+                <ellipse cx="0" cy="0" rx="15" ry="12" fill="url(#twpSmall)" />
+                <rect x="20" y="-2" width="150" height="4" rx="2" fill="#374151" />
+                <text x="190" y="5" fill="#64748b" fontSize="11">?</text>
+              </g>
+              <g transform="translate(120, 100)">
+                <text x="-60" y="5" fill="#fca5a5" fontSize="12" fontWeight="bold">LARGE</text>
+                <ellipse cx="0" cy="0" rx="28" ry="22" fill="url(#twpLarge)" />
+                <rect x="35" y="-2" width="135" height="4" rx="2" fill="#374151" />
+                <text x="190" y="5" fill="#64748b" fontSize="11">?</text>
+              </g>
+              <g filter="url(#twpGlow)">
+                <text x="400" y="75" fill="#fbbf24" fontSize="16" textAnchor="middle" fontWeight="bold">Which wins?</text>
+              </g>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1413,6 +1512,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1426,6 +1526,30 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                   <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>How It Works:</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.howItWorks}</p>
+            </div>
+
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>Real Examples:</h4>
+              <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                {app.examples.map((ex, i) => (
+                  <li key={i} style={{ ...typo.small, color: colors.textSecondary, marginBottom: '4px' }}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px', marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>Industry Leaders:</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.companies.join(', ')}</p>
+            </div>
+
+            <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '16px' }}>
+              <h4 style={{ ...typo.small, color: '#a855f7', marginBottom: '8px', fontWeight: 600 }}>Future Impact:</h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{app.futureImpact}</p>
             </div>
           </div>
 
@@ -1446,23 +1570,16 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
   // TEST PHASE
   const renderTest = () => {
+    const selectedAnswer = testAnswers[currentQuestion];
+    const isConfirmed = confirmedQuestions.has(currentQuestion);
+
     if (testSubmitted) {
       const passed = testScore >= 7;
       return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
+        <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
           {renderProgressBar()}
-
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
-              {passed ? '🏆' : '📚'}
-            </div>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
             </h2>
@@ -1470,32 +1587,14 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
               {testScore} / 10
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? "You've mastered Newton's Third Law!"
-                : 'Review the concepts and try again.'}
+              {passed ? "You've mastered Newton's Third Law!" : 'Review the concepts and try again.'}
             </p>
-
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
-                }}
-                style={primaryButtonStyle}
-              >
-                Review and Try Again
-              </button>
-            )}
+            <button
+              onClick={() => { passed ? nextPhase() : goToPhase('hook'); }}
+              style={primaryButtonStyle}
+            >
+              {passed ? 'Complete Lesson' : 'Review and Try Again'}
+            </button>
           </div>
           {renderNavDots()}
         </div>
@@ -1503,138 +1602,102 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     }
 
     const question = testQuestions[currentQuestion];
+    const correctId = question.options.find(o => o.correct)?.id;
 
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
+      <div style={{ minHeight: '100vh', background: colors.bgPrimary, padding: '24px' }}>
         {renderProgressBar()}
-
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-          }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <span style={{ ...typo.small, color: colors.textSecondary }}>
               Question {currentQuestion + 1} of 10
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               {testQuestions.map((_, i) => (
                 <div key={i} style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
+                  width: '8px', height: '8px', borderRadius: '50%',
+                  background: i === currentQuestion ? colors.accent : confirmedQuestions.has(i) ? colors.success : colors.border,
                 }} />
               ))}
             </div>
           </div>
 
-          {/* Scenario */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '12px',
-            padding: '16px',
-            marginBottom: '16px',
-            borderLeft: `3px solid ${colors.accent}`,
-          }}>
-            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              {question.scenario}
-            </p>
+          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px', borderLeft: `3px solid ${colors.accent}` }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{question.scenario}</p>
           </div>
 
-          {/* Question */}
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
-            {question.question}
-          </h3>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>{question.question}</h3>
 
-          {/* Options */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-            {question.options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  playSound('click');
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = opt.id;
-                  setTestAnswers(newAnswers);
-                }}
-                style={{
-                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
-                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
-                  borderRadius: '10px',
-                  padding: '14px 16px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{
-                  display: 'inline-block',
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
-                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
-                  textAlign: 'center',
-                  lineHeight: '24px',
-                  marginRight: '10px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}>
-                  {opt.id.toUpperCase()}
-                </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
-              </button>
-            ))}
+            {question.options.map(opt => {
+              const isSelected = selectedAnswer === opt.id;
+              const isCorrectOption = opt.id === correctId;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    if (isConfirmed) return;
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    background: isConfirmed && isCorrectOption ? 'rgba(34,197,94,0.2)'
+                      : isConfirmed && isSelected && !isCorrectOption ? 'rgba(239,68,68,0.2)'
+                      : isSelected ? `${colors.accent}22` : colors.bgCard,
+                    border: `2px solid ${isConfirmed && isCorrectOption ? colors.success
+                      : isConfirmed && isSelected && !isCorrectOption ? colors.error
+                      : isSelected ? colors.accent : colors.border}`,
+                    borderRadius: '10px', padding: '14px 16px', textAlign: 'left',
+                    cursor: isConfirmed ? 'default' : 'pointer',
+                    opacity: isConfirmed && !isSelected && !isCorrectOption ? 0.5 : 1,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-block', width: '24px', height: '24px', borderRadius: '50%',
+                    background: isConfirmed && isCorrectOption ? colors.success
+                      : isConfirmed && isSelected && !isCorrectOption ? colors.error
+                      : isSelected ? colors.accent : colors.bgSecondary,
+                    color: (isSelected || (isConfirmed && isCorrectOption)) ? 'white' : colors.textSecondary,
+                    textAlign: 'center', lineHeight: '24px', marginRight: '10px', fontSize: '12px', fontWeight: 700,
+                  }}>
+                    {isConfirmed && isCorrectOption ? '\u2713' : isConfirmed && isSelected && !isCorrectOption ? '\u2717' : opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ color: colors.textPrimary, ...typo.small }}>{opt.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Navigation */}
+          {isConfirmed && (
+            <div style={{ background: 'rgba(34,197,94,0.1)', borderRadius: '12px', padding: '16px', marginBottom: '16px', border: '1px solid rgba(34,197,94,0.3)' }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>{question.explanation}</p>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
+            {selectedAnswer && !isConfirmed && (
               <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
+                onClick={() => setConfirmedQuestions(prev => new Set(prev).add(currentQuestion))}
+                style={{ flex: 1, padding: '14px', borderRadius: '10px', border: 'none',
+                  background: `linear-gradient(135deg, ${colors.accent}, #DC2626)`, color: 'white',
+                  cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s ease' }}
               >
-                Previous
+                Check Answer
               </button>
             )}
-            {currentQuestion < 9 ? (
+            {isConfirmed && currentQuestion < 9 && (
               <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
+                onClick={() => setCurrentQuestion(currentQuestion + 1)}
+                style={{ flex: 1, padding: '14px', borderRadius: '10px', border: 'none',
+                  background: `linear-gradient(135deg, ${colors.accent}, #DC2626)`, color: 'white',
+                  cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s ease' }}
               >
-                Next
+                Next Question
               </button>
-            ) : (
+            )}
+            {isConfirmed && currentQuestion === 9 && (
               <button
                 onClick={() => {
                   const score = testAnswers.reduce((acc, ans, i) => {
@@ -1643,26 +1706,16 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                   }, 0);
                   setTestScore(score);
                   setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
                 }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
+                style={{ flex: 1, padding: '14px', borderRadius: '10px', border: 'none',
+                  background: `linear-gradient(135deg, ${colors.success}, #059669)`, color: 'white',
+                  cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s ease' }}
               >
                 Submit Test
               </button>
             )}
           </div>
         </div>
-
         {renderNavDots()}
       </div>
     );

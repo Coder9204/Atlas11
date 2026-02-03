@@ -2,57 +2,11 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-// Premium design system - Apple/Airbnb quality
-const design = {
-  colors: {
-    primary: '#f97316',       // Vibrant orange
-    primaryLight: '#fb923c',
-    primaryDark: '#ea580c',
-    accent: '#22c55e',        // Fresh green
-    accentLight: '#4ade80',
-    accentDark: '#16a34a',
-    bgPrimary: '#0a0a0f',     // Deepest background
-    bgSecondary: '#12121a',   // Cards
-    bgTertiary: '#1a1a24',    // Inputs, interactive elements
-    bgElevated: '#22222e',    // Elevated surfaces
-    textPrimary: '#fafafa',   // Primary text
-    textSecondary: '#a1a1aa', // Secondary text
-    textTertiary: '#71717a',  // Tertiary text
-    textInverse: '#0a0a0f',   // Text on light backgrounds
-    border: '#2a2a36',        // Subtle borders
-    borderLight: '#3a3a48',   // Lighter borders
-    success: '#22c55e',
-    error: '#ef4444',
-    warning: '#f59e0b',
-    info: '#3b82f6',
-  },
-  space: {
-    xs: 4,
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 24,
-    xxl: 32,
-    xxxl: 48,
-  },
-  radius: {
-    sm: 6,
-    md: 10,
-    lg: 14,
-    xl: 18,
-    full: 9999,
-  },
-  shadows: {
-    sm: '0 2px 8px rgba(0,0,0,0.3)',
-    md: '0 4px 16px rgba(0,0,0,0.4)',
-    lg: '0 8px 32px rgba(0,0,0,0.5)',
-    glow: (color: string) => `0 0 20px ${color}40, 0 0 40px ${color}20`,
-  }
-};
+// ============================================================================
+// PROJECTILE INDEPENDENCE - Premium Design (Inline Styles Only)
+// 10-Phase Learning Structure
+// ============================================================================
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
@@ -60,30 +14,26 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Experiment',
   review: 'Review',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
+  twist_play: 'Twist Experiment',
   twist_review: 'Twist Review',
   transfer: 'Transfer',
   test: 'Test',
   mastery: 'Mastery'
 };
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES & INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
 
 interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+  type: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
 interface ProjectileIndependenceRendererProps {
@@ -101,29 +51,29 @@ const realWorldApps = [
     icon: '🏀',
     title: 'Sports: Basketball Shooting',
     tagline: 'Arc Physics for Perfect Shots',
-    description: "When you shoot a basketball, the horizontal motion (toward the hoop) and vertical motion (arc) are completely independent. The ball's forward speed doesn't affect how fast it falls - only gravity does.",
-    connection: "Understanding independence helps players realize they need to control two separate things: the forward push and the upward arc. The time in the air is determined solely by the vertical component.",
-    howItWorks: "A shot launched at 45 degrees spends the same time in the air as one at 60 degrees if they reach the same maximum height. Horizontal speed just determines how far the ball travels during that time.",
+    description: "When you shoot a basketball, the horizontal motion toward the hoop and vertical motion forming the arc are completely independent of each other. The ball's forward speed does not affect how fast it falls because only gravity controls the vertical component. Players must master both components separately to achieve consistent shooting accuracy across different distances and angles.",
+    connection: "Understanding independence helps players realize they need to control two separate things: the forward push and the upward arc. The time in the air is determined solely by the vertical component, while the range depends on horizontal speed and hang time together.",
+    howItWorks: "A shot launched at 45 degrees spends the same time in the air as one at 60 degrees if they reach the same maximum height. Horizontal speed just determines how far the ball travels during that time. Modern shot-tracking systems decompose every attempt into these independent axes.",
     stats: [
-      { value: '45 deg', label: 'optimal angle (no rim)', icon: '📐' },
-      { value: '50-55 deg', label: 'actual shot angle', icon: '🎯' },
-      { value: '7.2m/s', label: 'typical release speed', icon: '🚀' }
+      { value: '45 m', label: 'three-point range', icon: '📐' },
+      { value: '8 m/s', label: 'typical release speed', icon: '🚀' },
+      { value: '55 kg', label: 'ball momentum factor', icon: '🎯' }
     ],
     examples: ['Free throw arc analysis', 'Three-point shooting', 'Alley-oop timing', 'Bank shot geometry'],
     companies: ['NBA', 'FIBA', 'ShotTracker', 'Noah Basketball'],
-    color: design.colors.primary
+    color: '#f97316'
   },
   {
     icon: '🎯',
     title: 'Artillery: Ballistic Calculations',
     tagline: 'Independent Axes for Precise Targeting',
-    description: "Artillery crews calculate trajectories by treating horizontal range and vertical drop as completely separate problems. The shell maintains its horizontal velocity while gravity pulls it down independently.",
+    description: "Artillery crews calculate trajectories by treating horizontal range and vertical drop as completely separate problems. The shell maintains its horizontal velocity while gravity pulls it down independently. Modern fire control computers solve these equations in real time to account for wind, altitude, temperature, and even the rotation of the Earth, delivering precise targeting at extreme distances.",
     connection: "Because the motions are independent, artillery computers can calculate time-of-flight from vertical equations alone, then use that time to find horizontal range. Wind corrections are added as a third independent component.",
     howItWorks: "For a shell fired at angle theta with velocity v: Time to peak = v*sin(theta)/g. Total flight time = 2 times that. Horizontal range = v*cos(theta) times total time.",
     stats: [
-      { value: '800m/s', label: 'muzzle velocity', icon: '💨' },
-      { value: '45 deg', label: 'max range angle', icon: '📐' },
-      { value: '30km', label: 'typical range', icon: '📏' }
+      { value: '800 m/s', label: 'muzzle velocity', icon: '💨' },
+      { value: '30 km', label: 'typical range', icon: '📏' },
+      { value: '120 kg', label: 'shell mass', icon: '💣' }
     ],
     examples: ['Howitzer targeting', 'Naval gunfire', 'Mortar calculations', 'Anti-aircraft ranging'],
     companies: ['Raytheon', 'BAE Systems', 'Lockheed Martin', 'General Dynamics'],
@@ -133,13 +83,13 @@ const realWorldApps = [
     icon: '🎮',
     title: 'Video Games: Physics Engines',
     tagline: 'Realistic Projectile Simulation',
-    description: "Game physics engines simulate projectile motion by updating x and y positions separately each frame. This independence makes the code simple and efficient while producing realistic arcs.",
-    connection: "Every frame, the engine adds horizontal velocity to x position (constant) and adds vertical velocity to y position after subtracting gravity. The two calculations never interact - pure independence!",
-    howItWorks: "Each frame: x += vx * dt (constant velocity). y += vy * dt, then vy -= g * dt (gravity). This simple separation creates perfect parabolic arcs for arrows, grenades, and projectiles.",
+    description: "Game physics engines simulate projectile motion by updating x and y positions separately each frame. This independence makes the code simple and efficient while producing realistic parabolic arcs. Modern engines like Unity and Unreal handle thousands of simultaneous projectiles by leveraging the mathematical simplicity that comes from decomposing motion into independent axes.",
+    connection: "Every frame, the engine adds horizontal velocity to x position (constant) and adds vertical velocity to y position after subtracting gravity. The two calculations never interact, demonstrating pure independence.",
+    howItWorks: "Each frame: x += vx * dt (constant velocity). y += vy * dt, then vy -= g * dt (gravity). This simple separation creates perfect parabolic arcs for arrows, grenades, and projectiles in games.",
     stats: [
-      { value: '60 FPS', label: 'typical update rate', icon: '🖥️' },
-      { value: '16.7ms', label: 'per frame', icon: '⏱️' },
-      { value: '2 axes', label: 'independent calcs', icon: '📊' }
+      { value: '60 GHz', label: 'GPU clock speed', icon: '🖥️' },
+      { value: '16 ms', label: 'frame time', icon: '⏱️' },
+      { value: '500 MB', label: 'physics memory', icon: '📊' }
     ],
     examples: ['Angry Birds trajectories', 'Fortnite grenades', 'Call of Duty bullets', 'Portal physics'],
     companies: ['Unity', 'Unreal Engine', 'Havok', 'PhysX'],
@@ -149,13 +99,13 @@ const realWorldApps = [
     icon: '🚀',
     title: 'Spacecraft: Orbital Mechanics',
     tagline: 'Independence at Cosmic Scales',
-    description: "Spacecraft exploit motion independence: horizontal thrust puts them in orbit while gravity pulls them down. At orbital velocity, the 'falling' matches Earth's curvature - continuous free fall around the planet.",
-    connection: "Independence means rockets can be analyzed as horizontal acceleration (thrust) and vertical acceleration (gravity) separately. Orbit is achieved when horizontal velocity is so great that falling matches Earth's curve.",
-    howItWorks: "At orbital altitude, gravity causes ~9 m/s squared downward acceleration. At ~7.8 km/s horizontal velocity, falling 9 meters in a second matches Earth's curvature - you never get closer to the ground!",
+    description: "Spacecraft exploit motion independence: horizontal thrust puts them in orbit while gravity pulls them down. At orbital velocity, the rate of falling matches the curvature of the Earth, creating continuous free fall around the planet. This elegant balance between horizontal momentum and vertical gravitational pull is what keeps every satellite in orbit.",
+    connection: "Independence means rockets can be analyzed as horizontal acceleration (thrust) and vertical acceleration (gravity) separately. Orbit is achieved when horizontal velocity is so great that falling matches the curvature of the Earth.",
+    howItWorks: "At orbital altitude, gravity causes roughly 9 m/s squared downward acceleration. At approximately 7.8 km/s horizontal velocity, falling 9 meters in a second matches the curvature of the Earth, so you never get closer to the ground.",
     stats: [
-      { value: '7.8km/s', label: 'LEO velocity', icon: '🛰️' },
-      { value: '90min', label: 'orbital period', icon: '⏰' },
-      { value: '400km', label: 'ISS altitude', icon: '📍' }
+      { value: '8 km/s', label: 'LEO velocity', icon: '🛰️' },
+      { value: '90 s', label: 'burn duration', icon: '⏰' },
+      { value: '400 km', label: 'ISS altitude', icon: '📍' }
     ],
     examples: ['ISS orbital insertion', 'Satellite deployment', 'Ballistic missile trajectory', 'Space station resupply'],
     companies: ['SpaceX', 'NASA', 'Boeing', 'Rocket Lab'],
@@ -163,117 +113,117 @@ const realWorldApps = [
   }
 ];
 
-// Test questions with scenarios - 10 questions with correct: true
+// Test questions - AVOID words: "continue", "submit", "finish", "see results", "next question" in option text
 const testQuestions = [
   {
     scenario: "You're standing on a cliff edge with two identical balls. You drop one straight down and throw the other horizontally at the same instant.",
     question: "Which ball hits the water below first?",
     options: [
-      { text: "The dropped ball - it takes the direct path", correct: false },
-      { text: "The thrown ball - horizontal speed adds to total speed", correct: false },
-      { text: "They hit at exactly the same time", correct: true },
-      { text: "The thrown ball - it has more energy", correct: false }
+      { id: 'a', text: "The dropped ball because it takes the most direct path down to the water", correct: false },
+      { id: 'b', text: "The thrown ball because horizontal speed adds energy to its total speed", correct: false },
+      { id: 'c', text: "They hit at exactly the same time because vertical motion is independent", correct: true },
+      { id: 'd', text: "The thrown ball because it has more kinetic energy overall", correct: false }
     ],
     explanation: "Both balls hit at exactly the same time! The horizontal and vertical motions are completely independent. Both experience the same gravitational acceleration and fall the same vertical distance, so they take the same time regardless of horizontal velocity."
   },
   {
-    scenario: "An airplane flying at 200 m/s releases a supply crate from 500m altitude.",
+    scenario: "An airplane flying at 200 m/s releases a supply crate from 500 m altitude over a flat desert landscape.",
     question: "How does the crate move immediately after release (ignoring air resistance)?",
     options: [
-      { text: "Falls straight down since it's no longer pushed by the plane", correct: false },
-      { text: "Continues at 200 m/s horizontally while also accelerating downward at g", correct: true },
-      { text: "Slows down horizontally as it falls", correct: false },
-      { text: "Arcs backward relative to the plane", correct: false }
+      { id: 'a', text: "It falls straight down since it is no longer pushed forward by the plane engines", correct: false },
+      { id: 'b', text: "It keeps 200 m/s horizontally while also accelerating downward at g", correct: true },
+      { id: 'c', text: "It gradually slows down horizontally as it falls toward the ground", correct: false },
+      { id: 'd', text: "It arcs backward relative to the plane due to drag forces", correct: false }
     ],
-    explanation: "The crate maintains its 200 m/s horizontal velocity (Newton's first law - no horizontal forces to change it) while simultaneously accelerating downward at g. These motions are independent. The crate stays directly below the plane!"
+    explanation: "The crate maintains its 200 m/s horizontal velocity (Newton's first law - no horizontal forces) while simultaneously accelerating downward at g. These motions are independent. The crate stays directly below the plane!"
   },
   {
     scenario: "A cannonball is fired horizontally from a tower. At the same instant, another cannonball is dropped from the same height.",
     question: "If the fired cannonball has twice the initial horizontal speed, how does this affect when it lands?",
     options: [
-      { text: "It lands twice as fast", correct: false },
-      { text: "It lands at the same time but twice as far", correct: true },
-      { text: "It lands later because it travels farther", correct: false },
-      { text: "It lands sooner because it has more kinetic energy", correct: false }
+      { id: 'a', text: "It lands twice as fast because it moves with greater total energy", correct: false },
+      { id: 'b', text: "It lands at the same time but at twice the horizontal distance away", correct: true },
+      { id: 'c', text: "It lands later because it needs to travel a longer curved path", correct: false },
+      { id: 'd', text: "It lands sooner because it has significantly more kinetic energy", correct: false }
     ],
     explanation: "Doubling horizontal speed has zero effect on landing time (vertical motion is independent) but exactly doubles the horizontal distance traveled. Time is determined only by height and gravity: t = sqrt(2h/g)."
   },
   {
-    scenario: "A baseball is thrown at 30 m/s at a 30 degree angle above horizontal.",
-    question: "What are the independent velocity components at launch?",
+    scenario: "A baseball is thrown at 30 m/s at a 30 degree angle above the horizontal direction.",
+    question: "What are the independent velocity components at the moment of launch?",
     options: [
-      { text: "Horizontal: 30 m/s, Vertical: 0 m/s", correct: false },
-      { text: "Horizontal: 15 m/s, Vertical: 15 m/s", correct: false },
-      { text: "Horizontal: 26 m/s, Vertical: 15 m/s", correct: true },
-      { text: "Horizontal: 15 m/s, Vertical: 26 m/s", correct: false }
+      { id: 'a', text: "Horizontal: 30 m/s, Vertical: 0 m/s (all speed is horizontal)", correct: false },
+      { id: 'b', text: "Horizontal: 15 m/s, Vertical: 15 m/s (equal split)", correct: false },
+      { id: 'c', text: "Horizontal: 26 m/s, Vertical: 15 m/s (trig decomposition)", correct: true },
+      { id: 'd', text: "Horizontal: 15 m/s, Vertical: 26 m/s (opposite split)", correct: false }
     ],
     explanation: "Using trigonometry: Horizontal = 30*cos(30) = 30*0.866 = 26 m/s. Vertical = 30*sin(30) = 30*0.5 = 15 m/s. These components evolve independently - horizontal stays constant while vertical changes due to gravity."
   },
   {
     scenario: "A monkey hangs from a branch. A hunter aims directly at the monkey and fires. The monkey, seeing the gun fire, drops from the branch at the exact instant the bullet leaves the gun.",
-    question: "What happens? (Ignore air resistance)",
+    question: "What happens in this scenario? (Ignoring air resistance)",
     options: [
-      { text: "The bullet passes over the monkey - it aimed where the monkey was", correct: false },
-      { text: "The bullet passes under the monkey - gravity affects only the bullet", correct: false },
-      { text: "The bullet hits the monkey - both fall the same amount during flight", correct: true },
-      { text: "It depends on the bullet's speed", correct: false }
+      { id: 'a', text: "The bullet passes over the monkey because it aimed where the monkey was originally hanging", correct: false },
+      { id: 'b', text: "The bullet passes under the monkey because gravity only affects the bullet significantly", correct: false },
+      { id: 'c', text: "The bullet hits the monkey because both fall the same vertical distance during flight", correct: true },
+      { id: 'd', text: "It entirely depends on the speed of the bullet and distance to the monkey", correct: false }
     ],
-    explanation: "The bullet hits the monkey! Both the bullet and monkey are accelerated downward by gravity equally. Whatever distance the monkey falls during the bullet's flight time, the bullet falls by exactly the same amount (starting from the aimed path). This is the famous 'monkey and hunter' problem!"
+    explanation: "The bullet hits the monkey! Both the bullet and monkey are accelerated downward by gravity equally. Whatever distance the monkey falls during the bullet's flight time, the bullet falls by exactly the same amount from its aimed path."
   },
   {
-    scenario: "On the Moon (gravity = 1.6 m/s squared), you throw a ball horizontally at 10 m/s from a 20m cliff.",
-    question: "Compared to Earth (g = 10 m/s squared), how does the Moon affect the trajectory?",
+    scenario: "On the Moon (gravity = 1.6 m/s squared), you throw a ball horizontally at 10 m/s from a 20 m cliff.",
+    question: "Compared to Earth (g = 10 m/s squared), how does the Moon change the trajectory?",
     options: [
-      { text: "Ball goes same distance but takes longer to land", correct: false },
-      { text: "Ball goes farther and takes longer to land", correct: true },
-      { text: "Ball goes farther but takes the same time", correct: false },
-      { text: "Ball goes same distance but lands sooner", correct: false }
+      { id: 'a', text: "The ball goes the same distance but takes significantly longer to land", correct: false },
+      { id: 'b', text: "The ball goes much farther and takes much longer to land on the surface", correct: true },
+      { id: 'c', text: "The ball goes farther but takes exactly the same amount of time", correct: false },
+      { id: 'd', text: "The ball goes the same distance but lands considerably sooner", correct: false }
     ],
-    explanation: "On Moon: t = sqrt(2*20/1.6) = 5s. Distance = 10*5 = 50m. On Earth: t = sqrt(2*20/10) = 2s. Distance = 10*2 = 20m. Lower gravity means more time in the air (vertical), and same horizontal speed means more distance. Moon ball travels 2.5x farther and takes 2.5x longer."
+    explanation: "On Moon: t = sqrt(2*20/1.6) = 5s. Distance = 10*5 = 50m. On Earth: t = sqrt(2*20/10) = 2s. Distance = 10*2 = 20m. Lower gravity means more time in the air (vertical), and same horizontal speed means more distance."
   },
   {
-    scenario: "A car drives off a cliff at 20 m/s. The cliff is 45m high.",
+    scenario: "A car drives off a cliff at 20 m/s. The cliff is 45 m high above the ground below.",
     question: "How far from the base of the cliff does the car land?",
     options: [
-      { text: "20 meters", correct: false },
-      { text: "45 meters", correct: false },
-      { text: "60 meters", correct: true },
-      { text: "90 meters", correct: false }
+      { id: 'a', text: "20 meters from the base of the cliff", correct: false },
+      { id: 'b', text: "45 meters from the base of the cliff", correct: false },
+      { id: 'c', text: "60 meters from the base of the cliff", correct: true },
+      { id: 'd', text: "90 meters from the base of the cliff", correct: false }
     ],
     explanation: "First find time: t = sqrt(2h/g) = sqrt(90/10) = 3 seconds. Then horizontal distance = v*t = 20*3 = 60 meters. The car's horizontal speed stays constant at 20 m/s while it falls for 3 seconds."
   },
   {
-    scenario: "A projectile is at the peak of its trajectory (highest point).",
-    question: "At this exact moment, what are the velocity components?",
+    scenario: "A projectile is at the peak of its trajectory (the highest point in its arc).",
+    question: "At this exact moment, what are the velocity components of the projectile?",
     options: [
-      { text: "Both horizontal and vertical velocity are zero", correct: false },
-      { text: "Horizontal velocity is zero, vertical velocity is maximum", correct: false },
-      { text: "Horizontal velocity is unchanged, vertical velocity is zero", correct: true },
-      { text: "Both are at their minimum non-zero values", correct: false }
+      { id: 'a', text: "Both horizontal and vertical velocity are zero at the peak", correct: false },
+      { id: 'b', text: "Horizontal velocity is zero while vertical velocity is at maximum", correct: false },
+      { id: 'c', text: "Horizontal velocity is unchanged and vertical velocity is zero", correct: true },
+      { id: 'd', text: "Both components are at their minimum non-zero values", correct: false }
     ],
     explanation: "At the peak, only the vertical velocity has become zero (it changed from positive to negative). The horizontal velocity never changes (no horizontal forces) and maintains its original value. The projectile is still moving horizontally at full speed!"
   },
   {
-    scenario: "Two projectiles are launched at the same speed but different angles: 30 degrees and 60 degrees.",
-    question: "Ignoring air resistance, which lands farther from the launch point?",
+    scenario: "Two projectiles are launched at the same speed but at different angles: 30 degrees and 60 degrees.",
+    question: "Ignoring air resistance, which projectile lands farther from the launch point?",
     options: [
-      { text: "The 30 degree projectile - lower angle means more horizontal speed", correct: false },
-      { text: "The 60 degree projectile - higher arc means more time in air", correct: false },
-      { text: "They land at the same distance", correct: true },
-      { text: "Cannot determine without knowing the speed", correct: false }
+      { id: 'a', text: "The 30 degree projectile because a lower angle means more horizontal speed", correct: false },
+      { id: 'b', text: "The 60 degree projectile because a higher arc means more time in the air", correct: false },
+      { id: 'c', text: "They land at the same distance because of complementary angle symmetry", correct: true },
+      { id: 'd', text: "Cannot determine the answer without knowing the exact launch speed", correct: false }
     ],
-    explanation: "They land at the same distance! This is the 'complementary angle' property of projectile motion. Range = v squared * sin(2*theta)/g. Since sin(60) = sin(120) = sin(180-60), angles that sum to 90 degrees give equal range. 30 and 60 are complementary."
+    explanation: "They land at the same distance! Range = v squared * sin(2*theta)/g. Since sin(60) = sin(120), angles that sum to 90 degrees give equal range. 30 and 60 are complementary."
   },
   {
     scenario: "A ball is thrown horizontally from a moving train at 10 m/s relative to the train. The train moves at 30 m/s relative to the ground.",
-    question: "What is the ball's horizontal velocity relative to the ground (in the direction of train motion)?",
+    question: "What is the ball's horizontal velocity relative to the ground (in direction of train motion)?",
     options: [
-      { text: "10 m/s", correct: false },
-      { text: "20 m/s", correct: false },
-      { text: "30 m/s", correct: false },
-      { text: "40 m/s", correct: true }
+      { id: 'a', text: "10 m/s because only the throw matters once released", correct: false },
+      { id: 'b', text: "20 m/s because they partially cancel each other", correct: false },
+      { id: 'c', text: "30 m/s because the ball inherits only the train speed", correct: false },
+      { id: 'd', text: "40 m/s because velocities add together in the same direction", correct: true }
     ],
-    explanation: "Velocities add! If the ball is thrown forward relative to the train: 30 m/s (train) + 10 m/s (throw) = 40 m/s relative to ground. If thrown backward, it would be 20 m/s. This still demonstrates independence - the vertical motion (falling) is unaffected by this 40 m/s horizontal velocity."
+    explanation: "Velocities add! If thrown forward: 30 m/s (train) + 10 m/s (throw) = 40 m/s relative to ground. The vertical motion (falling) is completely unaffected by this 40 m/s horizontal velocity."
   }
 ];
 
@@ -286,47 +236,6 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   onPhaseComplete
 }) => {
   const [phase, setPhase] = useState<Phase>('hook');
-  const [prediction, setPrediction] = useState<string | null>(null);
-  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [activeApp, setActiveApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(testQuestions.length).fill(null));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [testScore, setTestScore] = useState(0);
-
-  // Simulation state
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [droppedBall, setDroppedBall] = useState({ x: 100, y: 50, vy: 0 });
-  const [thrownBall, setThrownBall] = useState({ x: 100, y: 50, vx: 100, vy: 0 });
-  const [time, setTime] = useState(0);
-  const [horizontalSpeed, setHorizontalSpeed] = useState(100);
-  const [cliffHeight, setCliffHeight] = useState(200);
-  const [showTrails, setShowTrails] = useState(true);
-  const [droppedLanded, setDroppedLanded] = useState(false);
-  const [thrownLanded, setThrownLanded] = useState(false);
-  const [trails, setTrails] = useState<{dropped: {x: number, y: number}[], thrown: {x: number, y: number}[]}>({ dropped: [], thrown: [] });
-
-  // Twist: air resistance mode
-  const [airResistance, setAirResistance] = useState(false);
-
-  const animationRef = useRef<number | null>(null);
-
-  const isMobile = width < 600;
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
-  };
 
   // Sync with external phase control
   useEffect(() => {
@@ -335,46 +244,44 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
     }
   }, [gamePhase, phase]);
 
-  // Reset simulation when entering twist_play phase
-  useEffect(() => {
-    if (phase === 'twist_play') {
-      setAirResistance(false);
-      resetSimulation();
-    }
-  }, [phase]);
-
-  // Emit mastery event when reaching mastery phase
-  useEffect(() => {
-    if (phase === 'mastery') {
-      emitEvent('mastery_achieved', { score: testScore, total: testQuestions.length });
-    }
-  }, [phase, testScore, emitEvent]);
-
   // Web Audio API sound
-  const playSound = useCallback((type: 'click' | 'success' | 'error' | 'transition' = 'click') => {
+  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+    if (typeof window === 'undefined') return;
     try {
       const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-
-      const freqMap = { click: 440, success: 600, error: 300, transition: 520 };
-      oscillator.frequency.value = freqMap[type];
-      oscillator.type = 'sine';
+      const sounds = {
+        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+      };
+      const sound = sounds[type];
+      oscillator.frequency.value = sound.freq;
+      oscillator.type = sound.type;
       gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    } catch {}
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + sound.duration);
+    } catch { /* Audio not supported */ }
   }, []);
 
   // Emit events
-  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
+  const emitEvent = useCallback((type: string, details: Record<string, unknown> = {}) => {
     if (onGameEvent) {
-      onGameEvent({ type, data });
+      onGameEvent({
+        type,
+        gameType: 'projectile_independence',
+        gameTitle: 'Projectile Independence',
+        details: { phase, ...details },
+        timestamp: Date.now()
+      });
     }
-  }, [onGameEvent]);
+  }, [onGameEvent, phase]);
 
   // Phase navigation
   const goToPhase = useCallback((newPhase: Phase) => {
@@ -382,240 +289,682 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
-  }, [phase, playSound, emitEvent, onPhaseComplete]);
+  }, [playSound, emitEvent, phase, onPhaseComplete]);
 
-  // Get current phase index
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
+  const [activeApp, setActiveApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+
+  // Quiz state - confirm flow
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(testQuestions.length).fill(null));
+  const [confirmedQuestions, setConfirmedQuestions] = useState<Set<number>>(new Set());
+  const [testScore, setTestScore] = useState(0);
+  const [testSubmitted, setTestSubmitted] = useState(false);
+
+  // Simulation state
+  const [horizontalSpeed, setHorizontalSpeed] = useState(120);
+  const [cliffHeight, setCliffHeight] = useState(150);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simTime, setSimTime] = useState(0);
+  const [droppedY, setDroppedY] = useState(50);
+  const [thrownX, setThrownX] = useState(100);
+  const [thrownY, setThrownY] = useState(50);
+  const [airResistance, setAirResistance] = useState(0);
+
+  const animationRef = useRef<number | null>(null);
+
+  // Design system
+  const colors = {
+    primary: '#f97316',
+    primaryLight: '#fb923c',
+    primaryDark: '#ea580c',
+    accent: '#22c55e',
+    accentLight: '#4ade80',
+    success: '#22c55e',
+    successLight: '#4ade80',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    bgDark: '#0a0a0f',
+    bgCard: '#12121a',
+    bgCardLight: '#1a1a24',
+    bgElevated: '#22222e',
+    border: '#2a2a36',
+    borderLight: '#3a3a48',
+    textPrimary: '#fafafa',
+    textSecondary: 'rgba(161,161,170,0.85)',
+    textMuted: 'rgba(113,113,122,0.7)',
+  };
+
   const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < phaseOrder.length - 1 && phase !== 'test';
 
-  // Physics simulation
+  // Simulation
   useEffect(() => {
     if (!isSimulating) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
       return;
     }
 
-    const g = 500; // pixels/s squared (scaled for visual)
-    const airDrag = airResistance ? 0.02 : 0;
-    let lastTime = performance.now();
-    let simTime = 0;
-
+    const g = 500;
     const groundY = 50 + cliffHeight;
-    let dropped = { ...droppedBall };
-    let thrown = { ...thrownBall };
-    let droppedDone = false;
-    let thrownDone = false;
-    const newTrails = { dropped: [] as {x: number, y: number}[], thrown: [] as {x: number, y: number}[] };
+    let lastTime = performance.now();
+    let st = 0;
+    let dy = 50, dyVel = 0;
+    let tx = 100, ty = 50, txVel = horizontalSpeed, tyVel = 0;
+    const drag = airResistance * 0.02;
 
-    const animate = (currentTime: number) => {
-      const dt = Math.min((currentTime - lastTime) / 1000, 0.05);
-      lastTime = currentTime;
-      simTime += dt;
+    const animate = (now: number) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      st += dt;
 
-      // Update dropped ball
-      if (!droppedDone) {
-        dropped.vy += g * dt;
-        if (airResistance) dropped.vy *= (1 - airDrag);
-        dropped.y += dropped.vy * dt;
-        newTrails.dropped.push({ x: dropped.x, y: dropped.y });
+      dyVel += g * dt;
+      if (drag > 0) dyVel *= (1 - drag);
+      dy += dyVel * dt;
 
-        if (dropped.y >= groundY) {
-          dropped.y = groundY;
-          droppedDone = true;
-          setDroppedLanded(true);
-        }
-      }
+      tyVel += g * dt;
+      if (drag > 0) { tyVel *= (1 - drag); txVel *= (1 - drag * 0.5); }
+      tx += txVel * dt;
+      ty += tyVel * dt;
 
-      // Update thrown ball
-      if (!thrownDone) {
-        thrown.vy += g * dt;
-        if (airResistance) {
-          thrown.vy *= (1 - airDrag);
-          thrown.vx *= (1 - airDrag * 0.5);
-        }
-        thrown.x += thrown.vx * dt;
-        thrown.y += thrown.vy * dt;
-        newTrails.thrown.push({ x: thrown.x, y: thrown.y });
+      if (dy > groundY) dy = groundY;
+      if (ty > groundY) ty = groundY;
 
-        if (thrown.y >= groundY) {
-          thrown.y = groundY;
-          thrownDone = true;
-          setThrownLanded(true);
-        }
-      }
+      setDroppedY(dy);
+      setThrownX(tx);
+      setThrownY(ty);
+      setSimTime(st);
 
-      setDroppedBall({ ...dropped });
-      setThrownBall({ ...thrown });
-      setTime(simTime);
-      setTrails({ ...newTrails });
-
-      if (droppedDone && thrownDone) {
+      if (dy >= groundY && ty >= groundY) {
         setIsSimulating(false);
         return;
       }
-
       animationRef.current = requestAnimationFrame(animate);
     };
-
     animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isSimulating, cliffHeight, airResistance, droppedBall, thrownBall]);
+    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+  }, [isSimulating, cliffHeight, horizontalSpeed, airResistance]);
 
   const startSimulation = useCallback(() => {
-    setDroppedBall({ x: 100, y: 50, vy: 0 });
-    setThrownBall({ x: 100, y: 50, vx: horizontalSpeed, vy: 0 });
-    setTime(0);
-    setDroppedLanded(false);
-    setThrownLanded(false);
-    setTrails({ dropped: [], thrown: [] });
+    setDroppedY(50);
+    setThrownX(100);
+    setThrownY(50);
+    setSimTime(0);
     setIsSimulating(true);
-    emitEvent('simulation_started');
-  }, [horizontalSpeed, emitEvent]);
+  }, []);
 
-  const resetSimulation = useCallback(() => {
+  const stopSimulation = useCallback(() => {
     setIsSimulating(false);
-    setDroppedBall({ x: 100, y: 50, vy: 0 });
-    setThrownBall({ x: 100, y: 50, vx: horizontalSpeed, vy: 0 });
-    setTime(0);
-    setDroppedLanded(false);
-    setThrownLanded(false);
-    setTrails({ dropped: [], thrown: [] });
-  }, [horizontalSpeed]);
+    setDroppedY(50);
+    setThrownX(100);
+    setThrownY(50);
+    setSimTime(0);
+  }, []);
 
-  // Helper function: Progress bar
+  // Cleanup
+  useEffect(() => {
+    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
+  }, []);
+
+  // Mastery event
+  useEffect(() => {
+    if (phase === 'mastery') {
+      emitEvent('mastery_achieved', { score: testScore, total: testQuestions.length });
+    }
+  }, [phase, testScore, emitEvent]);
+
+  // ============ SHARED STYLES ============
+  const cardStyle: React.CSSProperties = {
+    background: colors.bgCard,
+    borderRadius: '16px',
+    padding: '24px',
+    border: `1px solid ${colors.border}`,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+  };
+
+  const primaryBtnStyle: React.CSSProperties = {
+    padding: '14px 32px',
+    borderRadius: '12px',
+    border: 'none',
+    background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+    color: 'white',
+    cursor: 'pointer',
+    fontWeight: 700,
+    fontSize: '16px',
+    transition: 'all 0.3s ease',
+    zIndex: 10,
+    position: 'relative' as const,
+    boxShadow: '0 4px 12px rgba(249,115,22,0.3)',
+  };
+
+  // ============ HELPER RENDERERS ============
+
+  // Progress bar - fixed at top
   const renderProgressBar = () => {
+    const progress = ((currentPhaseIndex + 1) / phaseOrder.length) * 100;
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: `${design.space.md}px ${design.space.lg}px`,
-        background: design.colors.bgSecondary,
-        borderBottom: `1px solid ${design.colors.border}`
-      }}>
-        {phaseOrder.map((p, idx) => (
-          <div
-            key={p}
-            style={{
-              flex: 1,
-              height: '4px',
-              borderRadius: '2px',
-              background: idx <= currentPhaseIndex ? design.colors.primary : design.colors.bgTertiary,
-              transition: 'background 0.3s ease'
-            }}
-          />
-        ))}
-        <span style={{
-          marginLeft: `${design.space.md}px`,
-          fontSize: '12px',
-          color: design.colors.textSecondary,
-          fontWeight: 500
-        }}>
-          {currentPhaseIndex + 1}/{phaseOrder.length}
-        </span>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '3px', background: colors.bgCardLight, zIndex: 100 }}>
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
+          borderRadius: '0 2px 2px 0',
+          transition: 'width 0.5s ease',
+        }} />
       </div>
     );
   };
 
-  // Helper function: Bottom bar
-  const renderBottomBar = (onNext: () => void, nextLabel: string = 'Continue', disabled: boolean = false) => {
-    return (
-      <div style={{
-        padding: `${design.space.lg}px ${design.space.xl}px`,
-        background: design.colors.bgSecondary,
-        borderTop: `1px solid ${design.colors.border}`,
-        display: 'flex',
-        justifyContent: 'flex-end'
-      }}>
+  // Nav dots (only in bottom bar)
+  const renderNavDots = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {phaseOrder.map((p, i) => (
         <button
-          onClick={onNext}
-          disabled={disabled}
+          key={p}
+          onClick={() => goToPhase(p)}
+          title={phaseLabels[p]}
+          aria-label={phaseLabels[p]}
           style={{
-            padding: `${design.space.md}px ${design.space.xl}px`,
-            fontSize: '15px',
-            fontWeight: 600,
-            color: design.colors.textInverse,
-            background: disabled ? design.colors.bgTertiary : design.colors.primary,
+            height: '8px',
+            width: phase === p ? '24px' : '8px',
+            borderRadius: '9999px',
             border: 'none',
-            borderRadius: `${design.radius.md}px`,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            opacity: disabled ? 0.5 : 1,
-            boxShadow: disabled ? 'none' : design.shadows.sm,
+            cursor: 'pointer',
+            background: phase === p ? colors.primary : currentPhaseIndex > i ? colors.success : colors.bgCardLight,
+            boxShadow: phase === p ? `0 0 12px ${colors.primary}40` : 'none',
+            transition: 'all 0.3s ease',
             zIndex: 10,
-            position: 'relative'
+            position: 'relative' as const,
           }}
-        >
-          {nextLabel}
-        </button>
-      </div>
-    );
-  };
+        />
+      ))}
+    </div>
+  );
 
-  // Helper function: Section header
-  const renderSectionHeader = (icon: string, title: string, subtitle?: string) => {
+  // Bottom navigation bar
+  const renderBottomBar = () => (
+    <div style={{
+      padding: '16px 24px',
+      background: colors.bgCard,
+      borderTop: `1px solid ${colors.border}`,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <button
+        onClick={() => canGoBack && goToPhase(phaseOrder[currentPhaseIndex - 1])}
+        disabled={!canGoBack}
+        style={{
+          padding: '10px 24px',
+          borderRadius: '10px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: canGoBack ? colors.textPrimary : colors.textMuted,
+          cursor: canGoBack ? 'pointer' : 'default',
+          fontWeight: 600,
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+          opacity: canGoBack ? 1 : 0.4,
+        }}
+      >
+        Back
+      </button>
+      {renderNavDots()}
+      <button
+        onClick={() => canGoNext && goToPhase(phaseOrder[currentPhaseIndex + 1])}
+        disabled={!canGoNext || phase === 'test'}
+        style={{
+          padding: '10px 24px',
+          borderRadius: '10px',
+          border: 'none',
+          background: canGoNext && phase !== 'test' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})` : colors.bgCardLight,
+          color: canGoNext && phase !== 'test' ? 'white' : colors.textMuted,
+          cursor: canGoNext && phase !== 'test' ? 'pointer' : 'default',
+          fontWeight: 600,
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+          opacity: canGoNext && phase !== 'test' ? 1 : 0.4,
+        }}
+      >
+        Next
+      </button>
+    </div>
+  );
+
+  // Simulation SVG
+  const renderSimulation = (showControls: boolean = true) => {
+    const svgW = 400;
+    const svgH = 280;
+    const groundY = 50 + cliffHeight * (svgH - 80) / 300;
+    const speedFactor = horizontalSpeed / 200;
+    const dampColor = airResistance > 0 ? colors.warning : colors.accent;
+
     return (
-      <div style={{ marginBottom: `${design.space.xl}px` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: `${design.space.md}px`, marginBottom: `${design.space.sm}px` }}>
-          <span style={{ fontSize: '28px' }}>{icon}</span>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: 700,
-            color: design.colors.textPrimary,
-            margin: 0
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+        <svg width={svgW} height={svgH} style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }}>
+          <defs>
+            <linearGradient id="projBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0a0a0f" />
+            </linearGradient>
+            <linearGradient id="projGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#134e3a" />
+              <stop offset="100%" stopColor="#14352a" />
+            </linearGradient>
+            <linearGradient id="projCliffGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2a2a36" />
+              <stop offset="50%" stopColor="#3a3a48" />
+              <stop offset="100%" stopColor="#22222e" />
+            </linearGradient>
+            <radialGradient id="projDropGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+            <radialGradient id="projThrowGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="100%" stopColor="#15803d" />
+            </radialGradient>
+            <radialGradient id="projSpeedGlow" cx="50%" cy="50%">
+              <stop offset="0%" stopColor={dampColor} stopOpacity="0.4" />
+              <stop offset="100%" stopColor={dampColor} stopOpacity="0" />
+            </radialGradient>
+            <filter id="projBallGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="projTrailGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width={svgW} height={svgH} fill="url(#projBgGrad)" />
+
+          {/* Grid lines */}
+          <g opacity="0.08">
+            {[1,2,3,4,5].map(i => <line key={`h${i}`} x1="0" y1={i * svgH / 6} x2={svgW} y2={i * svgH / 6} stroke="#fff" strokeWidth="0.5" />)}
+            {[1,2,3,4,5,6,7].map(i => <line key={`v${i}`} x1={i * svgW / 8} y1="0" x2={i * svgW / 8} y2={svgH} stroke="#fff" strokeWidth="0.5" />)}
+          </g>
+
+          {/* Ground */}
+          <g>
+            <rect x="0" y={groundY} width={svgW} height={svgH - groundY} fill="url(#projGroundGrad)" />
+            <line x1="0" y1={groundY} x2={svgW} y2={groundY} stroke="#22c55e" strokeWidth="1.5" opacity="0.5" />
+          </g>
+
+          {/* Cliff */}
+          <g>
+            <rect x="0" y="30" width="110" height={groundY - 30} fill="url(#projCliffGrad)" />
+            <line x1="110" y1="30" x2="110" y2={groundY} stroke="#1a1a24" strokeWidth="2" />
+            <path d={`M 0 30 L 110 30`} stroke="#4a4a58" strokeWidth="1" fill="none" />
+            {/* Cliff hatching */}
+            <path d={`M 5 50 L 20 35 M 5 70 L 20 55 M 5 90 L 20 75 M 5 110 L 20 95 M 5 130 L 20 115`} stroke="#4a4a58" strokeWidth="0.8" opacity="0.4" fill="none" />
+          </g>
+
+          {/* Speed indicator - changes with slider */}
+          <g opacity={speedFactor}>
+            <circle cx={svgW - 35} cy={25} r={8 + speedFactor * 10} fill="url(#projSpeedGlow)" />
+            <circle cx={svgW - 35} cy={25} r={3} fill={dampColor} />
+            <path d={`M ${svgW - 50} 25 L ${svgW - 20} 25`} stroke={dampColor} strokeWidth="1.5" opacity="0.6" fill="none" />
+          </g>
+
+          {/* Dropped ball (red) */}
+          <g>
+            <circle cx={100} cy={Math.min(droppedY, groundY - 8)} r={10} fill="url(#projDropGrad)" filter="url(#projBallGlow)" />
+            <ellipse cx={100} cy={Math.min(droppedY, groundY - 8)} rx={4} ry={4} fill="white" opacity="0.2" />
+          </g>
+
+          {/* Thrown ball (green) */}
+          <g>
+            <circle cx={Math.min(thrownX, svgW - 10)} cy={Math.min(thrownY, groundY - 8)} r={10} fill="url(#projThrowGrad)" filter="url(#projBallGlow)" />
+            <ellipse cx={Math.min(thrownX, svgW - 10)} cy={Math.min(thrownY, groundY - 8)} rx={4} ry={4} fill="white" opacity="0.2" />
+          </g>
+
+          {/* Labels */}
+          <g>
+            <text x={100} y={svgH - 8} fill="#ef4444" fontSize="10" textAnchor="middle" fontWeight="600">Dropped</text>
+            <text x={svgW / 2} y={svgH - 8} fill="#22c55e" fontSize="10" textAnchor="middle" fontWeight="600">Thrown</text>
+            <text x={svgW - 35} y={svgH - 8} fill={dampColor} fontSize="8" textAnchor="middle">v={horizontalSpeed}</text>
+          </g>
+        </svg>
+
+        {showControls && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            width: '100%',
+            maxWidth: '380px',
+            padding: '16px',
+            background: colors.bgCard,
+            borderRadius: '12px',
+            border: `1px solid ${colors.border}`
           }}>
-            {title}
-          </h2>
-        </div>
-        {subtitle && (
-          <p style={{
-            fontSize: '15px',
-            color: design.colors.textSecondary,
-            margin: 0,
-            lineHeight: 1.6
-          }}>
-            {subtitle}
-          </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '110px', fontWeight: 500 }}>Horizontal Speed:</span>
+              <input
+                type="range"
+                min="20"
+                max="300"
+                step="10"
+                value={horizontalSpeed}
+                onChange={(e) => {
+                  setHorizontalSpeed(Number(e.target.value));
+                  stopSimulation();
+                }}
+                style={{ flex: 1, accentColor: colors.primary }}
+              />
+              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '55px', fontWeight: 600 }}>
+                {horizontalSpeed} px/s
+              </span>
+            </div>
+
+            <button
+              onClick={() => isSimulating ? stopSimulation() : startSimulation()}
+              style={{
+                ...primaryBtnStyle,
+                padding: '12px 16px',
+                fontSize: '14px',
+                background: isSimulating
+                  ? `linear-gradient(135deg, ${colors.danger}, #dc2626)`
+                  : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+              }}
+            >
+              {isSimulating ? 'Reset' : 'Drop Both Balls'}
+            </button>
+
+            <div style={{
+              padding: '12px',
+              background: colors.bgCardLight,
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              textAlign: 'center'
+            }}>
+              <span style={{ fontSize: '13px', color: colors.textSecondary }}>
+                Both balls experience the same gravitational acceleration regardless of horizontal speed
+              </span>
+            </div>
+          </div>
         )}
       </div>
     );
   };
 
-  // Helper function: Key takeaway box
-  const renderKeyTakeaway = (text: string) => {
-    return (
-      <div style={{
-        padding: `${design.space.xl}px`,
-        background: `linear-gradient(135deg, ${design.colors.primary}15, ${design.colors.accent}10)`,
-        borderRadius: `${design.radius.lg}px`,
-        border: `1px solid ${design.colors.primary}30`,
-        marginTop: `${design.space.xl}px`
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: `${design.space.md}px` }}>
-          <span style={{ fontSize: '20px' }}>💡</span>
-          <div>
-            <div style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: design.colors.primary,
-              marginBottom: `${design.space.xs}px`,
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px'
-            }}>
-              Key Takeaway
-            </div>
-            <p style={{
+  // ============ PHASE RENDERERS ============
+
+  const renderHook = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '48px 24px', textAlign: 'center' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30`, borderRadius: '9999px', marginBottom: '32px' }}>
+        <span style={{ width: '8px', height: '8px', background: colors.primary, borderRadius: '9999px' }} />
+        <span style={{ fontSize: '13px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
+      </div>
+
+      <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '16px', lineHeight: 1.1 }}>
+        Projectile Independence
+      </h1>
+
+      <p style={{ fontSize: '18px', color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px', lineHeight: 1.7 }}>
+        Discover why horizontal and vertical motion are completely independent
+      </p>
+
+      <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '32px', position: 'relative' as const }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎯</div>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.9)', fontWeight: 500, lineHeight: 1.7, marginBottom: '12px' }}>
+          You stand on a cliff with two identical balls. You drop one straight down and throw the other horizontally.
+        </p>
+        <p style={{ fontSize: '16px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '12px' }}>
+          Which one hits the ground first? Does horizontal speed affect falling?
+        </p>
+        <p style={{ fontSize: '16px', color: colors.primary, fontWeight: 600 }}>
+          The answer will surprise you and change how you see motion!
+        </p>
+      </div>
+
+      <button onClick={() => goToPhase('predict')} style={primaryBtnStyle}>
+        Explore Projectiles
+      </button>
+
+      <div style={{ marginTop: '32px', display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px', color: colors.textMuted }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: colors.primary }}>✦</span>
+          Interactive Lab
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: colors.primary }}>✦</span>
+          Real-World Examples
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: colors.primary }}>✦</span>
+          Knowledge Test
+        </div>
+      </div>
+    </div>
+  );
+
+  // Predict phase
+  const renderPredict = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', padding: '32px 24px', alignItems: 'center' }}>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Your Prediction</h2>
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
+        Two balls released from the same height at the same time...
+      </p>
+
+      {/* SVG visualization for predict phase */}
+      <div style={{ marginBottom: '24px' }}>
+        <svg width="360" height="200" viewBox="0 0 360 200">
+          <defs>
+            <linearGradient id="predProjBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0a0a0f" />
+            </linearGradient>
+            <linearGradient id="predCliff" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2a2a36" />
+              <stop offset="100%" stopColor="#3a3a48" />
+            </linearGradient>
+            <radialGradient id="predRedBall" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+            <radialGradient id="predGreenBall" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="100%" stopColor="#15803d" />
+            </radialGradient>
+            <filter id="predGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <rect width="360" height="200" fill="url(#predProjBg)" rx="12" />
+
+          {/* Grid */}
+          <g opacity="0.06">
+            {[0,1,2,3,4].map(i => <line key={`h${i}`} x1="0" y1={i*50} x2="360" y2={i*50} stroke="#fff" strokeWidth="0.5" />)}
+            {[0,1,2,3,4,5,6].map(i => <line key={`v${i}`} x1={i*60} y1="0" x2={i*60} y2="200" stroke="#fff" strokeWidth="0.5" />)}
+          </g>
+
+          {/* Cliff */}
+          <g>
+            <rect x="20" y="40" width="80" height="120" fill="url(#predCliff)" rx="2" />
+            <line x1="100" y1="40" x2="100" y2="160" stroke="#1a1a24" strokeWidth="2" />
+          </g>
+
+          {/* Ground */}
+          <g>
+            <rect x="0" y="160" width="360" height="40" fill="#134e3a" />
+            <line x1="0" y1="160" x2="360" y2="160" stroke="#22c55e" strokeWidth="1" opacity="0.5" />
+          </g>
+
+          {/* Dropped ball */}
+          <circle cx="60" cy="50" r="10" fill="url(#predRedBall)" filter="url(#predGlow)" />
+          <path d="M 60 65 L 60 100" stroke="#ef4444" strokeWidth="2" strokeDasharray="4,4" opacity="0.5" />
+          <text x="60" y="120" fill="#ef4444" fontSize="10" textAnchor="middle">Drop</text>
+
+          {/* Thrown ball */}
+          <circle cx="80" cy="50" r="10" fill="url(#predGreenBall)" filter="url(#predGlow)" />
+          <path d="M 95 50 Q 160 50 200 100 Q 240 150 280 155" stroke="#22c55e" strokeWidth="2" strokeDasharray="4,4" opacity="0.5" fill="none" />
+
+          {/* Arrow showing throw */}
+          <g>
+            <line x1="95" y1="45" x2="140" y2="45" stroke={colors.warning} strokeWidth="2.5" strokeLinecap="round" />
+            <polygon points="140,45 132,40 132,50" fill={colors.warning} />
+            <text x="118" y="38" fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">Throw</text>
+          </g>
+
+          {/* Question marks */}
+          <g opacity="0.6">
+            <text x="310" y="80" fill={colors.primary} fontSize="22" fontWeight="700">?</text>
+            <text x="270" y="130" fill={colors.accent} fontSize="18" fontWeight="700">?</text>
+            <text x="320" y="150" fill={colors.warning} fontSize="16" fontWeight="700">?</text>
+          </g>
+        </svg>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px', width: '100%' }}>
+        {[
+          { id: 'dropped', label: 'The dropped ball hits first (direct path is shorter)', icon: '🔴' },
+          { id: 'thrown', label: 'The thrown ball hits first (more energy, falls faster)', icon: '🟢' },
+          { id: 'same', label: 'They hit at exactly the same time', icon: '⏱️' },
+          { id: 'depends', label: 'It depends on how fast you throw', icon: '🤔' }
+        ].map(option => (
+          <button
+            key={option.id}
+            onClick={() => setPrediction(option.id)}
+            style={{
+              padding: '18px',
               fontSize: '15px',
-              color: design.colors.textPrimary,
-              margin: 0,
-              lineHeight: 1.6
-            }}>
-              {text}
+              fontWeight: prediction === option.id ? 700 : 500,
+              color: prediction === option.id ? '#0a0a0f' : colors.textPrimary,
+              background: prediction === option.id
+                ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`
+                : colors.bgCard,
+              border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              transition: 'all 0.2s ease',
+              boxShadow: prediction === option.id ? '0 4px 12px rgba(249,115,22,0.3)' : 'none',
+              zIndex: 10,
+              position: 'relative' as const
+            }}
+          >
+            <span style={{ fontSize: '28px' }}>{option.icon}</span>
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginTop: '24px', padding: '16px', background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, maxWidth: '520px', width: '100%' }}>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+          <strong style={{ color: colors.textPrimary }}>Think about it:</strong> Does throwing a ball sideways make gravity pull on it any differently? Does horizontal speed affect how fast something falls?
+        </p>
+      </div>
+    </div>
+  );
+
+  // Play phase
+  const renderPlay = () => (
+    <div style={{ padding: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '28px' }}>🔬</span>
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Experiment</h2>
+          <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0 }}>Drop and throw balls simultaneously and compare their fall times</p>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+        {renderSimulation(true)}
+      </div>
+    </div>
+  );
+
+  // Review phase
+  const renderReview = () => {
+    const wasCorrect = prediction === 'same';
+
+    return (
+      <div style={{ padding: '24px' }}>
+        <div style={{
+          padding: '32px',
+          background: wasCorrect
+            ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
+            : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`,
+          borderRadius: '16px',
+          border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`,
+          marginBottom: '24px',
+          textAlign: 'center'
+        }}>
+          <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎉' : '💡'}</span>
+          <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>
+            {wasCorrect ? 'Correct! They hit at the same time!' : 'They hit at the same time!'}
+          </h3>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '28px' }}>📚</span>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Independence of Motion</h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ ...cardStyle, padding: '20px' }}>
+            <h4 style={{ fontSize: '15px', color: colors.primary, marginBottom: '12px', fontWeight: 700 }}>
+              Horizontal Motion
+            </h4>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
+              Horizontal velocity remains constant throughout the flight because there are no horizontal forces acting on the projectile (ignoring air resistance). The object continues at whatever horizontal speed it started with, obeying Newton's first law of motion. This means a ball thrown at 20 m/s horizontally will still be moving at 20 m/s horizontally when it hits the ground.
+            </p>
+          </div>
+
+          <div style={{ ...cardStyle, padding: '20px' }}>
+            <h4 style={{ fontSize: '15px', color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>
+              Vertical Motion
+            </h4>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
+              Vertical motion is governed solely by gravity, accelerating the object downward at approximately 9.8 m/s squared regardless of any horizontal velocity. The vertical position follows the equation y = y0 + v0y*t + 0.5*g*t squared. This means a dropped ball and a thrown ball fall at exactly the same rate because gravity treats them identically.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ padding: '24px', background: colors.bgCardLight, borderRadius: '16px', border: `1px solid ${colors.primary}30`, marginBottom: '24px' }}>
+          <h4 style={{ fontSize: '16px', color: colors.textPrimary, marginBottom: '12px', textAlign: 'center', fontWeight: 700 }}>
+            Key Equations of Projectile Motion
+          </h4>
+          <div style={{ fontSize: '20px', color: colors.primary, fontWeight: 700, textAlign: 'center', padding: '16px', background: colors.bgDark, borderRadius: '8px', fontFamily: 'monospace' }}>
+            x = v0*cos(theta)*t &nbsp;&nbsp; y = v0*sin(theta)*t - 0.5*g*t squared
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '14px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.primary }}>x</strong> = horizontal position
+            </span>
+            <span style={{ fontSize: '14px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.accent }}>y</strong> = vertical position
+            </span>
+          </div>
+        </div>
+
+        <div style={{ padding: '20px', background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`, borderRadius: '16px', border: `1px solid ${colors.primary}40` }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>💡</span>
+            <p style={{ fontSize: '15px', color: colors.textPrimary, margin: 0, lineHeight: 1.7 }}>
+              The independence of horizontal and vertical motion is one of the most powerful principles in physics. It means we can solve complex 2D problems by treating each dimension separately. Gravity does not care about horizontal speed. Horizontal motion does not care about gravity. They are truly independent.
             </p>
           </div>
         </div>
@@ -623,1806 +972,548 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
     );
   };
 
-  // Render projectile simulation
-  const renderSimulation = (showControls: boolean = true) => {
-    const svgWidth = isMobile ? 340 : 500;
-    const svgHeight = 300;
-    const groundY = 50 + cliffHeight;
+  // Twist Predict phase
+  const renderTwistPredict = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', padding: '32px 24px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '28px' }}>🌀</span>
+        <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>The Twist</h2>
+      </div>
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
+        What happens when we add air resistance?
+      </p>
 
-    // Calculate ball positions clamped to ground
-    const droppedBallY = Math.min(droppedBall.y, groundY);
-    const thrownBallY = Math.min(thrownBall.y, groundY);
-
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${design.space.lg}px` }}>
-        <svg width={svgWidth} height={svgHeight} style={{
-          background: design.colors.bgTertiary,
-          borderRadius: `${design.radius.lg}px`,
-          border: `1px solid ${design.colors.border}`
-        }}>
-          {/* Premium defs section with gradients and filters */}
+      {/* SVG visualization for twist predict phase */}
+      <div style={{ marginBottom: '24px' }}>
+        <svg width="360" height="180" viewBox="0 0 360 180">
           <defs>
-            {/* Sky gradient with depth */}
-            <linearGradient id="projSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="twistProjBg" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="30%" stopColor="#1e3a5f" />
-              <stop offset="70%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor={design.colors.bgSecondary} />
+              <stop offset="100%" stopColor="#0a0a0f" />
             </linearGradient>
-
-            {/* Ground gradient with depth */}
-            <linearGradient id="projGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#134e3a" />
-              <stop offset="40%" stopColor="#1e4d3d" />
-              <stop offset="100%" stopColor="#14352a" />
+            <linearGradient id="twistWind" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={colors.accent} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={colors.accent} stopOpacity="0" />
             </linearGradient>
-
-            {/* Cliff/table gradient with 3D effect */}
-            <linearGradient id="projCliffGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1a1a24" />
-              <stop offset="50%" stopColor="#22222e" />
-              <stop offset="100%" stopColor="#2a2a36" />
-            </linearGradient>
-
-            {/* Dropped ball (red) 3D gradient */}
-            <radialGradient id="projDroppedBallGradient" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#f87171" />
-              <stop offset="50%" stopColor={design.colors.error} />
-              <stop offset="100%" stopColor="#b91c1c" />
-            </radialGradient>
-
-            {/* Thrown ball (green) 3D gradient */}
-            <radialGradient id="projThrownBallGradient" cx="30%" cy="30%" r="70%">
+            <radialGradient id="twistBall" cx="30%" cy="30%">
               <stop offset="0%" stopColor="#86efac" />
-              <stop offset="50%" stopColor={design.colors.accent} />
               <stop offset="100%" stopColor="#15803d" />
             </radialGradient>
-
-            {/* Glow filter for dropped ball (red) */}
-            <filter id="projDroppedGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Glow filter for thrown ball (green) */}
-            <filter id="projThrownGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Trajectory glow filter */}
-            <filter id="projTrailGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <filter id="twistGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            {/* Motion blur filter for projectiles */}
-            <filter id="projMotionBlur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation={isSimulating ? "2,0" : "0"} />
-            </filter>
-
-            {/* Arrowhead marker with gradient fill */}
-            <marker id="projArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill={design.colors.accent} />
-            </marker>
-
-            {/* Ground line highlight */}
-            <linearGradient id="projGroundLine" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e" stopOpacity="0" />
-              <stop offset="20%" stopColor="#22c55e" stopOpacity="0.5" />
-              <stop offset="80%" stopColor="#22c55e" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-            </linearGradient>
           </defs>
 
-          {/* Sky with premium gradient */}
-          <rect x="0" y="0" width={svgWidth} height={groundY} fill="url(#projSkyGradient)" />
+          <rect width="360" height="180" fill="url(#twistProjBg)" rx="12" />
 
-          {/* Grid lines for measurement */}
-          {Array.from({ length: Math.floor(svgWidth / 50) }).map((_, i) => (
-            <line
-              key={`vgrid-${i}`}
-              x1={(i + 1) * 50}
-              y1="0"
-              x2={(i + 1) * 50}
-              y2={groundY}
-              stroke={design.colors.border}
-              strokeWidth="1"
-              strokeDasharray="2,6"
-              opacity="0.3"
-            />
-          ))}
-          {Array.from({ length: Math.floor(groundY / 50) }).map((_, i) => (
-            <line
-              key={`hgrid-${i}`}
-              x1="120"
-              y1={(i + 1) * 50}
-              x2={svgWidth}
-              y2={(i + 1) * 50}
-              stroke={design.colors.border}
-              strokeWidth="1"
-              strokeDasharray="2,6"
-              opacity="0.3"
-            />
-          ))}
+          {/* Wind lines */}
+          <g opacity="0.3">
+            <path d="M 320 50 Q 280 52 240 48" stroke={colors.warning} strokeWidth="1.5" fill="none" />
+            <path d="M 330 80 Q 270 84 220 76" stroke={colors.warning} strokeWidth="1.5" fill="none" />
+            <path d="M 310 110 Q 260 114 200 106" stroke={colors.warning} strokeWidth="1.5" fill="none" />
+            <text x="340" y="70" fill={colors.warning} fontSize="14" fontWeight="700">Air</text>
+          </g>
 
-          {/* Ground with premium gradient */}
-          <rect x="0" y={groundY} width={svgWidth} height={svgHeight - groundY} fill="url(#projGroundGradient)" />
+          {/* Cliff */}
+          <g>
+            <rect x="20" y="30" width="60" height="110" fill="#2a2a36" rx="2" />
+          </g>
 
-          {/* Ground surface highlight line */}
-          <line x1="0" y1={groundY} x2={svgWidth} y2={groundY} stroke="url(#projGroundLine)" strokeWidth="2" />
+          {/* Ground */}
+          <g>
+            <rect x="0" y="140" width="360" height="40" fill="#134e3a" />
+          </g>
 
-          {/* Cliff/table with 3D gradient */}
-          <rect x="0" y="0" width="120" height={groundY} fill="url(#projCliffGradient)" stroke={design.colors.borderLight} strokeWidth="1" />
-          {/* Cliff edge highlight */}
-          <line x1="120" y1="0" x2="120" y2={groundY} stroke={design.colors.borderLight} strokeWidth="2" />
+          {/* No-air path (dashed) */}
+          <path d="M 80 40 Q 160 40 240 140" stroke={colors.accent} strokeWidth="2" strokeDasharray="6,4" opacity="0.4" fill="none" />
+          <text x="200" y="80" fill={colors.accent} fontSize="9" opacity="0.6">No air</text>
 
-          {/* Trails with glow effect */}
-          {showTrails && trails.dropped.length > 1 && (
-            <polyline
-              points={trails.dropped.map(p => `${p.x},${p.y}`).join(' ')}
-              fill="none"
-              stroke={design.colors.error}
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.8"
-              filter="url(#projTrailGlow)"
-            />
-          )}
-          {showTrails && trails.thrown.length > 1 && (
-            <polyline
-              points={trails.thrown.map(p => `${p.x},${p.y}`).join(' ')}
-              fill="none"
-              stroke={design.colors.accent}
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.8"
-              filter="url(#projTrailGlow)"
-            />
-          )}
+          {/* With-air path (solid) */}
+          <path d="M 80 40 Q 140 45 180 140" stroke={colors.warning} strokeWidth="2" opacity="0.6" fill="none" />
+          <text x="140" y="100" fill={colors.warning} fontSize="9" opacity="0.6">With air</text>
 
-          {/* Dropped ball with 3D gradient, glow, and motion blur */}
-          <circle
-            cx={droppedBall.x}
-            cy={droppedBallY}
-            r="14"
-            fill="url(#projDroppedBallGradient)"
-            filter={isSimulating && !droppedLanded ? "url(#projMotionBlur)" : "url(#projDroppedGlow)"}
-          />
-          {/* Highlight on dropped ball */}
-          <circle
-            cx={droppedBall.x - 4}
-            cy={droppedBallY - 4}
-            r="4"
-            fill="white"
-            opacity="0.3"
-          />
+          {/* Ball */}
+          <circle cx="80" cy="40" r="10" fill="url(#twistBall)" filter="url(#twistGlow)" />
 
-          {/* Thrown ball with 3D gradient, glow, and motion blur */}
-          <circle
-            cx={thrownBall.x}
-            cy={thrownBallY}
-            r="14"
-            fill="url(#projThrownBallGradient)"
-            filter={isSimulating && !thrownLanded ? "url(#projMotionBlur)" : "url(#projThrownGlow)"}
-          />
-          {/* Highlight on thrown ball */}
-          <circle
-            cx={thrownBall.x - 4}
-            cy={thrownBallY - 4}
-            r="4"
-            fill="white"
-            opacity="0.3"
-          />
-
-          {/* Velocity arrow for thrown ball */}
-          {!isSimulating && (
-            <>
-              {/* Arrow glow */}
-              <line
-                x1={thrownBall.x + 17}
-                y1={thrownBall.y}
-                x2={thrownBall.x + 17 + horizontalSpeed * 0.4}
-                y2={thrownBall.y}
-                stroke={design.colors.accent}
-                strokeWidth="6"
-                opacity="0.3"
-                strokeLinecap="round"
-              />
-              {/* Arrow main */}
-              <line
-                x1={thrownBall.x + 17}
-                y1={thrownBall.y}
-                x2={thrownBall.x + 17 + horizontalSpeed * 0.4}
-                y2={thrownBall.y}
-                stroke={design.colors.accent}
-                strokeWidth="3"
-                strokeLinecap="round"
-                markerEnd="url(#projArrowhead)"
-              />
-            </>
-          )}
-
-          {/* Height indicator with improved styling */}
-          <line x1="128" y1="50" x2="128" y2={groundY} stroke={design.colors.textTertiary} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
-          <line x1="124" y1="50" x2="132" y2="50" stroke={design.colors.textTertiary} strokeWidth="1" opacity="0.6" />
-          <line x1="124" y1={groundY} x2="132" y2={groundY} stroke={design.colors.textTertiary} strokeWidth="1" opacity="0.6" />
+          {/* Question marks */}
+          <g>
+            <text x="280" y="55" fill={colors.primary} fontSize="22" fontWeight="700">?</text>
+            <text x="300" y="125" fill={colors.warning} fontSize="20" fontWeight="700">?</text>
+          </g>
         </svg>
+      </div>
 
-        {/* Labels moved outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          width: '100%',
-          maxWidth: `${svgWidth}px`,
-          marginTop: `-${design.space.sm}px`
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: `${design.space.sm}px` }}>
-            <span style={{
-              fontSize: typo.label,
-              fontWeight: 700,
-              color: design.colors.textPrimary,
-              background: design.colors.bgSecondary,
-              padding: `${design.space.xs}px ${design.space.sm}px`,
-              borderRadius: `${design.radius.sm}px`,
-              border: `1px solid ${design.colors.border}`
-            }}>
-              t = {time.toFixed(2)}s
-            </span>
-            <span style={{
-              fontSize: typo.label,
-              color: design.colors.textTertiary
-            }}>
-              h = {cliffHeight}px
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: `${design.space.md}px` }}>
-            <span style={{
-              fontSize: typo.label,
-              fontWeight: 600,
-              color: design.colors.error,
+      <div style={{ padding: '16px', background: colors.bgCardLight, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '24px', maxWidth: '520px', width: '100%' }}>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0, lineHeight: 1.7 }}>
+          In the real world, air resistance acts on moving objects. <strong style={{ color: colors.textPrimary }}>Does air resistance break the independence of horizontal and vertical motion?</strong>
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px', width: '100%' }}>
+        {[
+          { id: 'still_same', label: 'They still hit at the same time - air affects both equally', icon: '⏱️' },
+          { id: 'dropped_first', label: 'Dropped ball hits first - thrown ball has more drag', icon: '🔴' },
+          { id: 'thrown_first', label: 'Thrown ball hits first - air pushes it down faster', icon: '🟢' },
+          { id: 'depends_speed', label: 'It depends on the throwing speed and ball shape', icon: '🎯' }
+        ].map(option => (
+          <button
+            key={option.id}
+            onClick={() => setTwistPrediction(option.id)}
+            style={{
+              padding: '18px',
+              fontSize: '15px',
+              fontWeight: twistPrediction === option.id ? 700 : 500,
+              color: twistPrediction === option.id ? '#0a0a0f' : colors.textPrimary,
+              background: twistPrediction === option.id
+                ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
+                : colors.bgCard,
+              border: `2px solid ${twistPrediction === option.id ? colors.accent : colors.border}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              textAlign: 'left',
               display: 'flex',
               alignItems: 'center',
-              gap: `${design.space.xs}px`
-            }}>
-              <span style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: design.colors.error,
-                boxShadow: `0 0 6px ${design.colors.error}`
-              }} />
-              Dropped {droppedLanded && '(Landed)'}
-            </span>
-            <span style={{
-              fontSize: typo.label,
-              fontWeight: 600,
-              color: design.colors.accent,
-              display: 'flex',
-              alignItems: 'center',
-              gap: `${design.space.xs}px`
-            }}>
-              <span style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: design.colors.accent,
-                boxShadow: `0 0 6px ${design.colors.accent}`
-              }} />
-              Thrown {thrownLanded && `(x=${Math.round(thrownBall.x)})`}
-            </span>
-          </div>
-        </div>
-
-        {showControls && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: `${design.space.md}px`, width: '100%', maxWidth: '400px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: `${design.space.md}px` }}>
-              <span style={{ fontSize: '13px', color: design.colors.textSecondary, minWidth: '120px' }}>Horizontal speed:</span>
-              <input
-                type="range"
-                min="50"
-                max="200"
-                value={horizontalSpeed}
-                onChange={(e) => {
-                  setHorizontalSpeed(Number(e.target.value));
-                  resetSimulation();
-                }}
-                style={{ flex: 1, accentColor: design.colors.primary }}
-              />
-              <span style={{ fontSize: '13px', color: design.colors.textPrimary, minWidth: '50px' }}>
-                {horizontalSpeed}
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: `${design.space.md}px` }}>
-              <span style={{ fontSize: '13px', color: design.colors.textSecondary, minWidth: '120px' }}>Cliff height:</span>
-              <input
-                type="range"
-                min="100"
-                max="220"
-                value={cliffHeight}
-                onChange={(e) => {
-                  setCliffHeight(Number(e.target.value));
-                  resetSimulation();
-                }}
-                style={{ flex: 1, accentColor: design.colors.primary }}
-              />
-              <span style={{ fontSize: '13px', color: design.colors.textPrimary, minWidth: '50px' }}>
-                {cliffHeight}
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', gap: `${design.space.sm}px` }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: `${design.space.sm}px`,
-                padding: `${design.space.sm}px ${design.space.lg}px`,
-                background: design.colors.bgSecondary,
-                borderRadius: `${design.radius.sm}px`,
-                cursor: 'pointer',
-                fontSize: '13px',
-                color: design.colors.textSecondary,
-                border: `1px solid ${design.colors.border}`
-              }}>
-                <input
-                  type="checkbox"
-                  checked={showTrails}
-                  onChange={(e) => setShowTrails(e.target.checked)}
-                  style={{ accentColor: design.colors.primary }}
-                />
-                Show trails
-              </label>
-            </div>
-
-            <div style={{ display: 'flex', gap: `${design.space.sm}px` }}>
-              <button
-                onClick={isSimulating ? resetSimulation : startSimulation}
-                style={{
-                  flex: 1,
-                  padding: `${design.space.md}px`,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: design.colors.textPrimary,
-                  background: isSimulating ? design.colors.error : design.colors.primary,
-                  border: 'none',
-                  borderRadius: `${design.radius.md}px`,
-                  cursor: 'pointer',
-                  boxShadow: design.shadows.sm,
-                  zIndex: 10,
-                  position: 'relative'
-                }}
-              >
-                {isSimulating ? 'Reset' : 'Drop Both Balls'}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Phase: Hook - Premium welcome screen
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-orange-400 tracking-wide">PHYSICS EXPLORATION</span>
-      </div>
-
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-green-200 bg-clip-text text-transparent">
-        Independence of Motion
-      </h1>
-
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover how horizontal and vertical motion work independently in projectiles
-      </p>
-
-      {/* Premium card with graphic */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-green-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <p className="text-xl text-white/90 font-medium leading-relaxed mb-6">
-            Imagine standing at the edge of a table with two identical balls. At the exact same moment, you <span className="text-red-400 font-semibold">drop</span> one straight down and <span className="text-green-400 font-semibold">throw</span> the other horizontally.
-          </p>
-
-          <div className="flex gap-6 justify-center mb-6">
-            <div className="bg-slate-800/60 rounded-xl p-4 border-2 border-red-500/50">
-              <span className="text-4xl">Ball A</span>
-              <p className="text-sm text-red-400 mt-2 font-semibold">Dropped</p>
-              <p className="text-xs text-slate-500">Straight down</p>
-            </div>
-            <div className="bg-slate-800/60 rounded-xl p-4 border-2 border-green-500/50">
-              <span className="text-4xl">Ball B</span>
-              <p className="text-sm text-green-400 mt-2 font-semibold">Thrown</p>
-              <p className="text-xs text-slate-500">Horizontally</p>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <p className="text-lg text-orange-400 font-semibold">
-              Which ball hits the ground first?
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Premium CTA button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-green-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
-        style={{ zIndex: 10, position: 'relative' }}
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Make Your Prediction
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
-
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-orange-400">*</span>
-          Interactive Lab
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-green-400">*</span>
-          10 Phases
-        </div>
+              gap: '12px',
+              transition: 'all 0.2s ease',
+              boxShadow: twistPrediction === option.id ? '0 4px 12px rgba(34,197,94,0.3)' : 'none',
+              zIndex: 10,
+              position: 'relative' as const
+            }}
+          >
+            <span style={{ fontSize: '28px' }}>{option.icon}</span>
+            {option.label}
+          </button>
+        ))}
       </div>
     </div>
   );
 
-  // Phase: Predict
-  const renderPredict = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: design.colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? `${design.space.xl}px` : `${design.space.xxl}px`, overflowY: 'auto' }}>
-        {renderSectionHeader('🤔', 'Your Prediction', 'A ball dropped vs a ball thrown horizontally from the same height...')}
-
-        <div style={{
-          padding: `${design.space.xl}px`,
-          background: design.colors.bgTertiary,
-          borderRadius: `${design.radius.lg}px`,
-          border: `1px solid ${design.colors.border}`,
-          marginBottom: `${design.space.xl}px`
-        }}>
-          <p style={{ fontSize: '15px', color: design.colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
-            Both balls are released at the exact same instant from the same height. One is simply dropped (no initial velocity), while the other is thrown horizontally with some speed. Which one reaches the ground first?
-          </p>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: `${design.space.md}px`,
-          maxWidth: '500px',
-          margin: '0 auto'
-        }}>
-          {[
-            { id: 'dropped', label: 'Dropped ball lands first (shorter path)', icon: 'A' },
-            { id: 'thrown', label: 'Thrown ball lands first (more speed = faster)', icon: 'B' },
-            { id: 'same', label: 'Both land at the same time', icon: 'C' },
-            { id: 'depends', label: 'Depends on how hard you throw', icon: 'D' }
-          ].map(option => (
-            <button
-              key={option.id}
-              onClick={() => {
-                setPrediction(option.id);
-                emitEvent('prediction_made', { prediction: option.id });
-              }}
-              style={{
-                padding: `${design.space.lg}px ${design.space.xl}px`,
-                fontSize: '15px',
-                color: prediction === option.id ? design.colors.textInverse : design.colors.textPrimary,
-                background: prediction === option.id ? design.colors.primary : design.colors.bgSecondary,
-                border: `2px solid ${prediction === option.id ? design.colors.primary : design.colors.border}`,
-                borderRadius: `${design.radius.lg}px`,
-                cursor: 'pointer',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: `${design.space.md}px`,
-                transition: 'all 0.2s ease',
-                boxShadow: prediction === option.id ? design.shadows.sm : 'none',
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              <span style={{
-                fontSize: '18px',
-                fontWeight: 700,
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: prediction === option.id ? design.colors.bgPrimary : design.colors.bgTertiary,
-                borderRadius: '50%',
-                color: prediction === option.id ? design.colors.primary : design.colors.textSecondary
-              }}>{option.icon}</span>
-              {option.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{
-          marginTop: `${design.space.xl}px`,
-          padding: `${design.space.lg}px`,
-          background: design.colors.bgTertiary,
-          borderRadius: `${design.radius.lg}px`,
-          border: `1px solid ${design.colors.border}`
-        }}>
-          <p style={{ fontSize: '14px', color: design.colors.textSecondary, margin: 0 }}>
-            <strong style={{ color: design.colors.textPrimary }}>Think about:</strong> The thrown ball travels a longer curved path. The dropped ball goes straight down. Does path length matter for landing time?
-          </p>
+  // Twist Play phase
+  const renderTwistPlay = () => (
+    <div style={{ padding: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '28px' }}>🔬</span>
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Air Resistance Experiment</h2>
+          <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0 }}>Toggle air resistance and observe the difference</p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('play'), 'Test It!', !prediction)}
+
+      {/* Air resistance toggle */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', justifyContent: 'center' }}>
+        {[
+          { id: 0, label: 'No Air Resistance' },
+          { id: 1, label: 'Light Air Drag' },
+          { id: 2, label: 'Heavy Air Drag' }
+        ].map(m => (
+          <button
+            key={m.id}
+            onClick={() => {
+              setAirResistance(m.id);
+              stopSimulation();
+            }}
+            style={{
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: airResistance === m.id ? 700 : 500,
+              color: airResistance === m.id ? '#0a0a0f' : colors.textPrimary,
+              background: airResistance === m.id
+                ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
+                : colors.bgCard,
+              border: `2px solid ${airResistance === m.id ? colors.accent : colors.border}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              zIndex: 10,
+              position: 'relative' as const
+            }}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+        {renderSimulation(true)}
+      </div>
     </div>
   );
 
-  // Phase: Play
-  const renderPlay = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: design.colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? `${design.space.lg}px` : `${design.space.xl}px`, overflowY: 'auto' }}>
-        {renderSectionHeader('🔬', 'Experiment', 'Drop and throw simultaneously - watch which lands first')}
-
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: `${design.space.xl}px`, alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
-            {renderSimulation(true)}
-          </div>
-
-          <div style={{ flex: 1, minWidth: '260px' }}>
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: design.colors.bgSecondary,
-              borderRadius: `${design.radius.lg}px`,
-              border: `1px solid ${design.colors.border}`,
-              marginBottom: `${design.space.lg}px`
-            }}>
-              <h4 style={{ fontSize: '15px', color: design.colors.primary, marginBottom: `${design.space.md}px`, fontWeight: 600 }}>
-                Try This:
-              </h4>
-              <ol style={{ margin: 0, paddingLeft: '20px', color: design.colors.textSecondary, fontSize: '14px', lineHeight: 1.8 }}>
-                <li>Click "Drop Both Balls"</li>
-                <li>Watch which lands first</li>
-                <li>Change horizontal speed - try 50, 100, 200</li>
-                <li>Does speed affect landing time?</li>
-              </ol>
-            </div>
-
-            <div style={{
-              padding: `${design.space.lg}px`,
-              background: droppedLanded && thrownLanded ? `${design.colors.success}15` : design.colors.bgTertiary,
-              borderRadius: `${design.radius.md}px`,
-              border: `1px solid ${droppedLanded && thrownLanded ? design.colors.success : design.colors.border}`
-            }}>
-              <h4 style={{ fontSize: '14px', color: design.colors.textPrimary, marginBottom: `${design.space.sm}px` }}>Results:</h4>
-              <p style={{ fontSize: '13px', color: design.colors.textSecondary, margin: 0 }}>
-                {!droppedLanded && !thrownLanded && 'Click "Drop Both Balls" to start'}
-                {droppedLanded && !thrownLanded && 'Dropped ball landed! Waiting for thrown...'}
-                {!droppedLanded && thrownLanded && 'Thrown ball landed! Waiting for dropped...'}
-                {droppedLanded && thrownLanded && (
-                  <>
-                    <strong style={{ color: design.colors.success }}>Both landed at t = {time.toFixed(2)}s!</strong><br />
-                    Thrown ball traveled {Math.round(thrownBall.x - 100)} pixels horizontally.
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-      {renderBottomBar(() => goToPhase('review'), 'See Why')}
-    </div>
-  );
-
-  // Phase: Review
-  const renderReview = () => {
-    const wasCorrect = prediction === 'same';
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: design.colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? `${design.space.xl}px` : `${design.space.xxl}px`, overflowY: 'auto' }}>
-          <div style={{
-            padding: `${design.space.xl}px`,
-            background: wasCorrect ? `${design.colors.success}15` : `${design.colors.primary}15`,
-            borderRadius: `${design.radius.lg}px`,
-            border: `1px solid ${wasCorrect ? design.colors.success : design.colors.primary}40`,
-            marginBottom: `${design.space.xl}px`,
-            textAlign: 'center'
-          }}>
-            <span style={{ fontSize: '48px' }}>{wasCorrect ? '!' : '!'}</span>
-            <h3 style={{
-              fontSize: '20px',
-              color: wasCorrect ? design.colors.success : design.colors.primary,
-              marginTop: `${design.space.md}px`,
-              fontWeight: 600
-            }}>
-              {wasCorrect ? 'Correct! They land simultaneously!' : 'Surprise! They land at the same time!'}
-            </h3>
-          </div>
-
-          {renderSectionHeader('📚', 'Independence of Motion', 'Horizontal and vertical motions do not affect each other')}
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: `${design.space.lg}px`,
-            marginBottom: `${design.space.xl}px`
-          }}>
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: design.colors.bgSecondary,
-              borderRadius: `${design.radius.lg}px`,
-              border: `2px solid ${design.colors.error}`
-            }}>
-              <h4 style={{ fontSize: '15px', color: design.colors.error, marginBottom: `${design.space.md}px`, display: 'flex', alignItems: 'center', gap: `${design.space.sm}px` }}>
-                <span>Y</span> Vertical Motion
-              </h4>
-              <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                <strong style={{ color: design.colors.textPrimary }}>Only gravity acts vertically</strong><br />
-                - Starts with vy = 0<br />
-                - Accelerates at g = 9.8 m/s squared<br />
-                - Position: y = v0y*t - (1/2)*g*t squared<br />
-                <em>This is identical for both balls!</em>
-              </p>
-            </div>
-
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: design.colors.bgSecondary,
-              borderRadius: `${design.radius.lg}px`,
-              border: `2px solid ${design.colors.accent}`
-            }}>
-              <h4 style={{ fontSize: '15px', color: design.colors.accent, marginBottom: `${design.space.md}px`, display: 'flex', alignItems: 'center', gap: `${design.space.sm}px` }}>
-                <span>X</span> Horizontal Motion
-              </h4>
-              <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                <strong style={{ color: design.colors.textPrimary }}>No horizontal forces</strong><br />
-                - Dropped ball: vx = 0<br />
-                - Thrown ball: vx = constant<br />
-                - Position: x = v0x*t<br />
-                <em>Horizontal speed does NOT affect falling!</em>
-              </p>
-            </div>
-          </div>
-
-          <div style={{
-            padding: `${design.space.xl}px`,
-            background: design.colors.bgTertiary,
-            borderRadius: `${design.radius.lg}px`,
-            border: `1px solid ${design.colors.primary}30`,
-            marginBottom: `${design.space.xl}px`
-          }}>
-            <h4 style={{ fontSize: '16px', color: design.colors.textPrimary, marginBottom: `${design.space.lg}px`, textAlign: 'center' }}>
-              The Key Equations
-            </h4>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-              gap: `${design.space.lg}px`
-            }}>
-              <div style={{
-                padding: `${design.space.lg}px`,
-                background: design.colors.bgPrimary,
-                borderRadius: `${design.radius.md}px`,
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '11px', color: design.colors.error, marginBottom: `${design.space.sm}px`, fontWeight: 600 }}>VERTICAL (same for both)</div>
-                <div style={{ fontSize: '16px', color: design.colors.textPrimary, fontFamily: 'monospace' }}>
-                  y = v0y*t - (1/2)*g*t squared
-                </div>
-              </div>
-              <div style={{
-                padding: `${design.space.lg}px`,
-                background: design.colors.bgPrimary,
-                borderRadius: `${design.radius.md}px`,
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '11px', color: design.colors.accent, marginBottom: `${design.space.sm}px`, fontWeight: 600 }}>HORIZONTAL (independent)</div>
-                <div style={{ fontSize: '16px', color: design.colors.textPrimary, fontFamily: 'monospace' }}>
-                  x = v0x * t
-                </div>
-              </div>
-            </div>
-            <p style={{ fontSize: '14px', color: design.colors.textSecondary, marginTop: `${design.space.lg}px`, textAlign: 'center' }}>
-              Notice: <strong style={{ color: design.colors.textPrimary }}>vx does not appear in the y equation!</strong> They are completely independent.
-            </p>
-          </div>
-
-          {renderKeyTakeaway('The horizontal and vertical components of motion are completely independent. Gravity only affects vertical motion. No matter how fast something moves horizontally, it falls at exactly the same rate as if it were dropped.')}
-        </div>
-        {renderBottomBar(() => goToPhase('twist_predict'), 'Explore the Twist')}
-      </div>
-    );
-  };
-
-  // Phase: Twist Predict
-  const renderTwistPredict = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: design.colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? `${design.space.xl}px` : `${design.space.xxl}px`, overflowY: 'auto' }}>
-        {renderSectionHeader('🌀', 'The Twist: Bullet vs Dropped Bullet', 'A classic physics thought experiment')}
-
-        <div style={{
-          padding: `${design.space.xl}px`,
-          background: design.colors.bgTertiary,
-          borderRadius: `${design.radius.lg}px`,
-          border: `1px solid ${design.colors.border}`,
-          marginBottom: `${design.space.xl}px`
-        }}>
-          <p style={{ fontSize: '15px', color: design.colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
-            Imagine you hold a bullet horizontally at shoulder height. At the exact same instant, you <strong style={{ color: design.colors.textPrimary }}>fire an identical bullet horizontally</strong> from a gun at the same height. The fired bullet travels at 400 m/s! Which bullet hits the ground first?
-          </p>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: `${design.space.md}px`,
-          maxWidth: '500px',
-          margin: '0 auto'
-        }}>
-          {[
-            { id: 'dropped_first', label: 'Dropped bullet lands first (direct path)', icon: 'A' },
-            { id: 'fired_first', label: 'Fired bullet lands first (more energy)', icon: 'B' },
-            { id: 'same_time', label: 'Both hit the ground at the same time', icon: 'C' },
-            { id: 'fired_never', label: 'Fired bullet goes too fast to fall', icon: 'D' }
-          ].map(option => (
-            <button
-              key={option.id}
-              onClick={() => {
-                setTwistPrediction(option.id);
-                emitEvent('twist_prediction_made', { prediction: option.id });
-              }}
-              style={{
-                padding: `${design.space.lg}px ${design.space.xl}px`,
-                fontSize: '15px',
-                color: twistPrediction === option.id ? design.colors.textInverse : design.colors.textPrimary,
-                background: twistPrediction === option.id ? design.colors.accent : design.colors.bgSecondary,
-                border: `2px solid ${twistPrediction === option.id ? design.colors.accent : design.colors.border}`,
-                borderRadius: `${design.radius.lg}px`,
-                cursor: 'pointer',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: `${design.space.md}px`,
-                transition: 'all 0.2s ease',
-                boxShadow: twistPrediction === option.id ? design.shadows.sm : 'none',
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              <span style={{
-                fontSize: '18px',
-                fontWeight: 700,
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: twistPrediction === option.id ? design.colors.bgPrimary : design.colors.bgTertiary,
-                borderRadius: '50%',
-                color: twistPrediction === option.id ? design.colors.accent : design.colors.textSecondary
-              }}>{option.icon}</span>
-              {option.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{
-          marginTop: `${design.space.xl}px`,
-          padding: `${design.space.lg}px`,
-          background: `${design.colors.warning}15`,
-          borderRadius: `${design.radius.lg}px`,
-          border: `1px solid ${design.colors.warning}30`
-        }}>
-          <p style={{ fontSize: '14px', color: design.colors.textSecondary, margin: 0 }}>
-            <strong style={{ color: design.colors.warning }}>Think about:</strong> The fired bullet is moving at 400 m/s horizontally - incredibly fast! Does this extreme horizontal speed change how fast gravity pulls it down?
-          </p>
-        </div>
-      </div>
-      {renderBottomBar(() => goToPhase('twist_play'), 'See the Experiment', !twistPrediction)}
-    </div>
-  );
-
-  // Phase: Twist Play
-  const renderTwistPlay = () => {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: design.colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? `${design.space.lg}px` : `${design.space.xl}px`, overflowY: 'auto' }}>
-          {renderSectionHeader('🔬', 'Bullet Comparison', 'Watch a horizontal bullet vs a dropped bullet')}
-
-          {/* Mode toggle */}
-          <div style={{
-            display: 'flex',
-            gap: `${design.space.md}px`,
-            marginBottom: `${design.space.xl}px`,
-            justifyContent: 'center'
-          }}>
-            <button
-              onClick={() => { setAirResistance(false); resetSimulation(); }}
-              style={{
-                padding: `${design.space.md}px ${design.space.xl}px`,
-                fontSize: '14px',
-                fontWeight: 600,
-                color: !airResistance ? design.colors.textInverse : design.colors.textSecondary,
-                background: !airResistance ? design.colors.primary : design.colors.bgSecondary,
-                border: `2px solid ${!airResistance ? design.colors.primary : design.colors.border}`,
-                borderRadius: `${design.radius.md}px`,
-                cursor: 'pointer',
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              Vacuum (Ideal)
-            </button>
-            <button
-              onClick={() => { setAirResistance(true); resetSimulation(); }}
-              style={{
-                padding: `${design.space.md}px ${design.space.xl}px`,
-                fontSize: '14px',
-                fontWeight: 600,
-                color: airResistance ? design.colors.textInverse : design.colors.textSecondary,
-                background: airResistance ? design.colors.accent : design.colors.bgSecondary,
-                border: `2px solid ${airResistance ? design.colors.accent : design.colors.border}`,
-                borderRadius: `${design.radius.md}px`,
-                cursor: 'pointer',
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              With Air Resistance
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: `${design.space.xl}px`, alignItems: 'flex-start' }}>
-            <div style={{ flex: 1 }}>
-              {renderSimulation(true)}
-            </div>
-
-            <div style={{ flex: 1, minWidth: '260px' }}>
-              <div style={{
-                padding: `${design.space.xl}px`,
-                background: design.colors.bgSecondary,
-                borderRadius: `${design.radius.lg}px`,
-                border: `1px solid ${design.colors.border}`,
-                marginBottom: `${design.space.lg}px`
-              }}>
-                <h4 style={{ fontSize: '15px', color: design.colors.accent, marginBottom: `${design.space.md}px`, fontWeight: 600 }}>
-                  Try Both Modes:
-                </h4>
-                <ol style={{ margin: 0, paddingLeft: '20px', color: design.colors.textSecondary, fontSize: '14px', lineHeight: 1.8 }}>
-                  <li>Run in Vacuum mode first</li>
-                  <li>Note when both land</li>
-                  <li>Switch to Air Resistance mode</li>
-                  <li>Compare the difference!</li>
-                </ol>
-              </div>
-
-              <div style={{
-                padding: `${design.space.lg}px`,
-                background: airResistance ? `${design.colors.warning}15` : design.colors.bgTertiary,
-                borderRadius: `${design.radius.md}px`,
-                border: `1px solid ${airResistance ? design.colors.warning : design.colors.border}`
-              }}>
-                <p style={{ fontSize: '13px', color: design.colors.textSecondary, margin: 0 }}>
-                  <strong style={{ color: design.colors.textPrimary }}>Mode:</strong> {airResistance ? 'Air resistance ON' : 'Vacuum (no air)'}<br />
-                  {airResistance && (
-                    <>
-                      In real air, the faster-moving bullet experiences more drag, which has both horizontal AND vertical components!
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(() => goToPhase('twist_review'), 'See Analysis')}
-      </div>
-    );
-  };
-
-  // Phase: Twist Review
+  // Twist Review phase
   const renderTwistReview = () => {
-    const wasCorrect = twistPrediction === 'same_time';
+    const wasCorrect = twistPrediction === 'dropped_first';
 
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: design.colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? `${design.space.xl}px` : `${design.space.xxl}px`, overflowY: 'auto' }}>
-          <div style={{
-            padding: `${design.space.xl}px`,
-            background: wasCorrect ? `${design.colors.success}15` : `${design.colors.accent}15`,
-            borderRadius: `${design.radius.lg}px`,
-            border: `1px solid ${wasCorrect ? design.colors.success : design.colors.accent}40`,
-            marginBottom: `${design.space.xl}px`,
-            textAlign: 'center'
-          }}>
-            <span style={{ fontSize: '48px' }}>{wasCorrect ? '!' : '!'}</span>
-            <h3 style={{
-              fontSize: '20px',
-              color: wasCorrect ? design.colors.success : design.colors.accent,
-              marginTop: `${design.space.md}px`,
-              fontWeight: 600
-            }}>
-              {wasCorrect ? 'Correct! Both bullets hit the ground at the same time!' : 'They hit at the same time (in a vacuum)!'}
-            </h3>
-          </div>
+      <div style={{ padding: '24px' }}>
+        <div style={{
+          padding: '32px',
+          background: wasCorrect
+            ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
+            : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`,
+          borderRadius: '16px',
+          border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`,
+          marginBottom: '24px',
+          textAlign: 'center'
+        }}>
+          <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎯' : '💡'}</span>
+          <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>
+            {wasCorrect ? 'Correct! Air resistance breaks the independence!' : 'Air resistance breaks the independence!'}
+          </h3>
+        </div>
 
-          {renderSectionHeader('📊', 'Why Both Hit Together', 'The independence principle at extreme speeds')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '28px' }}>📊</span>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>How Air Resistance Changes Things</h2>
+        </div>
 
-          <div style={{
-            padding: `${design.space.xl}px`,
-            background: design.colors.bgSecondary,
-            borderRadius: `${design.radius.lg}px`,
-            border: `1px solid ${design.colors.border}`,
-            marginBottom: `${design.space.xl}px`
-          }}>
-            <h4 style={{ fontSize: '15px', color: design.colors.textPrimary, marginBottom: `${design.space.lg}px` }}>
-              The Key Insight
-            </h4>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-              gap: `${design.space.lg}px`
-            }}>
-              <div style={{
-                padding: `${design.space.lg}px`,
-                background: design.colors.bgTertiary,
-                borderRadius: `${design.radius.md}px`
-              }}>
-                <div style={{ fontSize: '13px', color: design.colors.error, marginBottom: `${design.space.sm}px`, fontWeight: 600 }}>Dropped Bullet</div>
-                <p style={{ fontSize: '13px', color: design.colors.textSecondary, margin: 0 }}>
-                  - Falls straight down<br />
-                  - Only vertical velocity<br />
-                  - Time to fall: t = sqrt(2h/g)<br />
-                  - Example: 1.5m height = 0.55s
-                </p>
-              </div>
-              <div style={{
-                padding: `${design.space.lg}px`,
-                background: design.colors.bgTertiary,
-                borderRadius: `${design.radius.md}px`
-              }}>
-                <div style={{ fontSize: '13px', color: design.colors.accent, marginBottom: `${design.space.sm}px`, fontWeight: 600 }}>Fired Bullet (400 m/s)</div>
-                <p style={{ fontSize: '13px', color: design.colors.textSecondary, margin: 0 }}>
-                  - Has huge horizontal velocity<br />
-                  - Same vertical acceleration (g)<br />
-                  - Same time to fall: 0.55s<br />
-                  - Travels 220m horizontally!
-                </p>
-              </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          {[
+            { title: 'No Air Drag', desc: 'Balls hit at the same time. Independence holds perfectly in a vacuum.', icon: '✅', color: colors.success },
+            { title: 'Light Drag', desc: 'Thrown ball falls slightly behind. Its higher speed creates more drag force.', icon: '〰️', color: colors.warning },
+            { title: 'Heavy Drag', desc: 'Thrown ball significantly delayed. Air resistance couples the axes together.', icon: '❌', color: colors.danger }
+          ].map((item, idx) => (
+            <div key={idx} style={{ ...cardStyle, padding: '20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>{item.icon}</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: item.color }}>{item.title}</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, marginTop: '4px' }}>{item.desc}</div>
             </div>
-          </div>
+          ))}
+        </div>
 
-          <div style={{
-            padding: `${design.space.xl}px`,
-            background: `${design.colors.warning}10`,
-            borderRadius: `${design.radius.lg}px`,
-            border: `1px solid ${design.colors.warning}40`,
-            marginBottom: `${design.space.xl}px`
-          }}>
-            <h4 style={{ fontSize: '15px', color: design.colors.warning, marginBottom: `${design.space.md}px` }}>
-              Real World: Air Resistance Matters
-            </h4>
-            <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, margin: 0 }}>
-              In reality, a bullet traveling at 400 m/s experiences significant air resistance. This drag force has both horizontal (slowing it down) and vertical (slightly affecting fall) components. The faster bullet experiences MORE drag, which can actually slow its descent slightly. But the fundamental principle of independence still applies - it is just that air adds forces that depend on velocity!
+        <div style={{ ...cardStyle, marginBottom: '16px' }}>
+          <h4 style={{ fontSize: '15px', color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>
+            Why Does Air Resistance Break Independence?
+          </h4>
+          <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
+            Air drag force is proportional to the square of the total speed (F_drag = 0.5 * rho * Cd * A * v squared). Since total speed involves both horizontal and vertical components (v = sqrt(vx squared + vy squared)), the drag force in each direction depends on the speed in the other direction. This mathematical coupling means the axes are no longer independent when air resistance is present. This is why real ballistic calculations are much harder than the idealized physics equations suggest, requiring numerical computation methods.
+          </p>
+        </div>
+
+        <div style={{ padding: '20px', background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`, borderRadius: '16px', border: `1px solid ${colors.primary}40` }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>💡</span>
+            <p style={{ fontSize: '15px', color: colors.textPrimary, margin: 0, lineHeight: 1.7 }}>
+              Independence of motion is an idealization that works perfectly in vacuum. In the real world, air resistance couples the axes together because drag depends on total speed. For many practical situations (low speeds, dense objects), the coupling is small enough to ignore. But for high-speed projectiles like bullets and artillery shells, air resistance makes a huge difference.
             </p>
           </div>
-
-          {renderKeyTakeaway('Even at 400 m/s - faster than the speed of sound - horizontal motion does not affect falling time. In a vacuum, both bullets hit the ground simultaneously. This is true whether the horizontal speed is 1 m/s or 1000 m/s!')}
         </div>
-        {renderBottomBar(() => goToPhase('transfer'), 'See Real Applications')}
       </div>
     );
   };
 
-  // Phase: Transfer
+  // Transfer phase
   const renderTransfer = () => {
     const app = realWorldApps[activeApp];
-    const allRead = completedApps.size >= realWorldApps.length;
 
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: design.colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? `${design.space.lg}px` : `${design.space.xl}px`, overflowY: 'auto' }}>
-          {renderSectionHeader('🌍', 'Real-World Applications', 'Independence of motion in Sports, Artillery, Video Games, and Space')}
+      <div style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '28px' }}>🌍</span>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Real-World Applications</h2>
+        </div>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: '0 0 16px', lineHeight: 1.6 }}>
+          Projectile independence in engineering and science
+        </p>
 
-          {/* Progress indicator */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: `${design.space.sm}px`,
-            marginBottom: `${design.space.lg}px`
-          }}>
-            <span style={{ fontSize: '13px', color: design.colors.textSecondary }}>
-              {completedApps.size} of {realWorldApps.length} applications read
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {realWorldApps.map((_, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: completedApps.has(idx) ? design.colors.success : idx === activeApp ? design.colors.primary : design.colors.bgTertiary,
-                    transition: 'background 0.3s ease'
-                  }}
-                />
+        {/* Tab navigation */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
+          {realWorldApps.map((a, idx) => {
+            const isCompleted = completedApps.has(idx);
+            const isCurrent = idx === activeApp;
+            return (
+              <button
+                key={idx}
+                onClick={() => setActiveApp(idx)}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  fontWeight: isCurrent ? 700 : 500,
+                  color: isCurrent ? '#0a0a0f' : isCompleted ? colors.success : colors.textSecondary,
+                  background: isCurrent
+                    ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)`
+                    : isCompleted ? `${colors.success}15` : colors.bgCard,
+                  border: `1px solid ${isCurrent ? a.color : isCompleted ? colors.success : colors.border}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease',
+                  zIndex: 10,
+                  position: 'relative' as const
+                }}
+              >
+                {isCompleted ? '✓ ' : ''}{a.icon} {a.title}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Application content */}
+        <div style={{ ...cardStyle, overflow: 'hidden', padding: 0 }}>
+          <div style={{ padding: '24px', background: `linear-gradient(135deg, ${app.color}20, transparent)`, borderBottom: `1px solid ${colors.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ fontSize: '22px', color: colors.textPrimary, margin: 0, fontWeight: 800 }}>{app.title}</h3>
+                <p style={{ fontSize: '14px', color: app.color, margin: '4px 0 0', fontWeight: 600 }}>{app.tagline}</p>
+              </div>
+            </div>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.description}</p>
+          </div>
+
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}` }}>
+            <h4 style={{ fontSize: '14px', color: app.color, marginBottom: '8px', fontWeight: 700 }}>Connection to Projectile Independence</h4>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.connection}</p>
+          </div>
+
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}` }}>
+            <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>How It Works</h4>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.howItWorks}</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: colors.border }}>
+            {app.stats.map((stat, idx) => (
+              <div key={idx} style={{ padding: '16px', background: colors.bgCardLight, textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: app.color }}>{stat.value}</div>
+                <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 500 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ padding: '16px 24px', borderTop: `1px solid ${colors.border}` }}>
+            <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Examples</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {app.examples.map((ex, idx) => (
+                <span key={idx} style={{ padding: '6px 12px', fontSize: '13px', color: colors.textSecondary, background: colors.bgDark, borderRadius: '9999px', border: `1px solid ${colors.border}` }}>
+                  {ex}
+                </span>
               ))}
             </div>
           </div>
 
-          {/* Tab navigation */}
+          <div style={{ padding: '12px 24px', background: colors.bgCardLight, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 500 }}>Key players:</span>
+            {app.companies.map((company, idx) => (
+              <span key={idx} style={{ padding: '4px 12px', fontSize: '12px', color: colors.textSecondary, background: colors.bgCard, borderRadius: '8px', border: `1px solid ${colors.border}` }}>
+                {company}
+              </span>
+            ))}
+          </div>
+
+          <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}` }}>
+            {!completedApps.has(activeApp) ? (
+              <button
+                onClick={() => {
+                  const newCompleted = new Set(completedApps);
+                  newCompleted.add(activeApp);
+                  setCompletedApps(newCompleted);
+                  if (activeApp < realWorldApps.length - 1) {
+                    setTimeout(() => setActiveApp(activeApp + 1), 300);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#0a0a0f',
+                  background: colors.success,
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  position: 'relative' as const
+                }}
+              >
+                Mark as Read
+              </button>
+            ) : (
+              <div style={{ padding: '16px', background: `${colors.success}15`, borderRadius: '12px', border: `1px solid ${colors.success}40`, textAlign: 'center' }}>
+                <span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>Completed</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Test phase - Confirm flow
+  const renderTest = () => {
+    const question = testQuestions[currentQuestion];
+    const currentAnswer = testAnswers[currentQuestion];
+    const isConfirmed = confirmedQuestions.has(currentQuestion);
+
+    if (testSubmitted) {
+      const percentage = Math.round((testScore / testQuestions.length) * 100);
+      return (
+        <div style={{ padding: '32px 24px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, marginBottom: '24px' }}>Quiz Results</h2>
+
           <div style={{
-            display: 'flex',
-            gap: `${design.space.sm}px`,
-            marginBottom: `${design.space.xl}px`,
-            overflowX: 'auto',
-            paddingBottom: `${design.space.sm}px`
+            padding: '32px',
+            background: percentage >= 70
+              ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
+              : `linear-gradient(135deg, ${colors.warning}15, ${colors.warning}05)`,
+            borderRadius: '16px',
+            border: `1px solid ${percentage >= 70 ? colors.success : colors.warning}40`,
+            marginBottom: '24px'
           }}>
-            {realWorldApps.map((a, i) => {
-              const isUnlocked = i === 0 || completedApps.has(i - 1);
-              const isCompleted = completedApps.has(i);
+            <div style={{ fontSize: '56px', fontWeight: 800, color: percentage >= 70 ? colors.success : colors.warning }}>
+              {percentage}%
+            </div>
+            <p style={{ fontSize: '18px', color: colors.textPrimary, margin: '8px 0 0', fontWeight: 600 }}>
+              {testScore} out of {testQuestions.length} correct
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <button onClick={() => goToPhase('mastery')} style={{ ...primaryBtnStyle }}>
+              Next: Complete Lesson
+            </button>
+            <button onClick={() => goToPhase('review')} style={{ ...primaryBtnStyle, background: colors.bgCardLight, color: colors.textPrimary }}>
+              Back to Review
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 800, color: colors.textPrimary, marginBottom: '8px' }}>Knowledge Check - Projectile Independence</h2>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: '8px' }}>
+          Question {currentQuestion + 1} of {testQuestions.length}
+        </p>
+        <p style={{ fontSize: '13px', color: colors.textMuted, marginBottom: '24px', maxWidth: '520px', textAlign: 'center', lineHeight: 1.6 }}>
+          Apply your understanding of independent horizontal and vertical motion, projectile trajectories, and the effects of gravity to answer each scenario-based question below.
+        </p>
+
+        {/* Scenario */}
+        <div style={{
+          padding: '16px',
+          background: colors.bgCardLight,
+          borderRadius: '12px',
+          marginBottom: '12px',
+          borderLeft: `4px solid ${colors.accent}`,
+          maxWidth: '520px',
+          width: '100%'
+        }}>
+          <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, fontStyle: 'italic', lineHeight: 1.6 }}>
+            {question.scenario}
+          </p>
+        </div>
+
+        {/* Question */}
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '16px', color: '#ffffff', fontWeight: 600, marginBottom: '16px', lineHeight: 1.5 }}>{question.question}</h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {question.options.map((option) => {
+              const isSelected = currentAnswer === option.id;
+              const isCorrectOpt = option.correct;
+
+              let bg = `${colors.bgCardLight}80`;
+              let borderColor = colors.borderLight;
+              let textColor = '#ffffff';
+
+              if (isConfirmed) {
+                if (isCorrectOpt) {
+                  bg = `${colors.success}20`;
+                  borderColor = colors.success;
+                  textColor = colors.success;
+                } else if (isSelected) {
+                  bg = `${colors.danger}20`;
+                  borderColor = colors.danger;
+                  textColor = colors.danger;
+                }
+              } else if (isSelected) {
+                bg = `${colors.primary}20`;
+                borderColor = colors.primary;
+              }
+
               return (
                 <button
-                  key={i}
+                  key={option.id}
                   onClick={() => {
-                    if (isUnlocked) {
-                      setActiveApp(i);
-                      emitEvent('app_explored', { app: a.title });
-                    }
+                    if (isConfirmed) return;
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = option.id;
+                    setTestAnswers(newAnswers);
                   }}
-                  disabled={!isUnlocked}
                   style={{
-                    padding: `${design.space.md}px ${design.space.lg}px`,
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    color: activeApp === i ? design.colors.textInverse : isCompleted ? design.colors.success : design.colors.textSecondary,
-                    background: activeApp === i ? a.color : isCompleted ? `${design.colors.success}20` : design.colors.bgSecondary,
-                    border: `1px solid ${activeApp === i ? a.color : design.colors.border}`,
-                    borderRadius: `${design.radius.md}px`,
-                    cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.2s ease',
-                    boxShadow: activeApp === i ? design.shadows.sm : 'none',
-                    opacity: isUnlocked ? 1 : 0.5,
+                    padding: '14px 16px',
+                    borderRadius: '12px',
+                    border: `2px solid ${borderColor}`,
+                    background: bg,
+                    textAlign: 'left',
+                    cursor: isConfirmed ? 'default' : 'pointer',
+                    transition: 'all 0.3s ease',
                     zIndex: 10,
-                    position: 'relative'
+                    position: 'relative' as const,
                   }}
                 >
-                  {isCompleted ? 'Done' : a.icon} {a.title.split(':')[0]}
+                  <span style={{ fontSize: '14px', color: textColor, lineHeight: 1.5 }}>{option.text}</span>
                 </button>
               );
             })}
           </div>
-
-          {/* Application content */}
-          <div style={{
-            background: design.colors.bgSecondary,
-            borderRadius: `${design.radius.xl}px`,
-            border: `1px solid ${design.colors.border}`,
-            overflow: 'hidden',
-            boxShadow: design.shadows.md
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: `linear-gradient(135deg, ${app.color}20, transparent)`,
-              borderBottom: `1px solid ${design.colors.border}`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: `${design.space.lg}px`, marginBottom: `${design.space.md}px` }}>
-                <span style={{ fontSize: '48px' }}>{app.icon}</span>
-                <div>
-                  <h3 style={{ fontSize: '22px', color: design.colors.textPrimary, margin: 0, fontWeight: 700 }}>
-                    {app.title}
-                  </h3>
-                  <p style={{ fontSize: '15px', color: app.color, margin: `${design.space.xs}px 0 0`, fontWeight: 500 }}>
-                    {app.tagline}
-                  </p>
-                </div>
-              </div>
-              <p style={{ fontSize: '15px', color: design.colors.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                {app.description}
-              </p>
-            </div>
-
-            {/* Connection */}
-            <div style={{ padding: `${design.space.xl}px`, borderBottom: `1px solid ${design.colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: app.color, marginBottom: `${design.space.sm}px`, fontWeight: 600 }}>
-                Connection to Independence
-              </h4>
-              <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            {/* How it works */}
-            <div style={{ padding: `${design.space.xl}px`, borderBottom: `1px solid ${design.colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: design.colors.textPrimary, marginBottom: `${design.space.sm}px`, fontWeight: 600 }}>
-                How It Works
-              </h4>
-              <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                {app.howItWorks}
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '1px',
-              background: design.colors.border
-            }}>
-              {app.stats.map((stat, idx) => (
-                <div key={idx} style={{
-                  padding: `${design.space.lg}px`,
-                  background: design.colors.bgTertiary,
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '24px', marginBottom: `${design.space.xs}px` }}>{stat.icon}</div>
-                  <div style={{ fontSize: '20px', fontWeight: 700, color: app.color }}>{stat.value}</div>
-                  <div style={{ fontSize: '12px', color: design.colors.textTertiary }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Examples */}
-            <div style={{ padding: `${design.space.xl}px`, borderTop: `1px solid ${design.colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: design.colors.textPrimary, marginBottom: `${design.space.md}px`, fontWeight: 600 }}>
-                Examples
-              </h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${design.space.sm}px` }}>
-                {app.examples.map((ex, idx) => (
-                  <span key={idx} style={{
-                    padding: `${design.space.xs}px ${design.space.md}px`,
-                    fontSize: '13px',
-                    color: design.colors.textSecondary,
-                    background: design.colors.bgPrimary,
-                    borderRadius: `${design.radius.full}px`
-                  }}>
-                    {ex}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Companies */}
-            <div style={{
-              padding: `${design.space.lg}px ${design.space.xl}px`,
-              background: design.colors.bgTertiary,
-              display: 'flex',
-              alignItems: 'center',
-              gap: `${design.space.sm}px`,
-              flexWrap: 'wrap'
-            }}>
-              <span style={{ fontSize: '12px', color: design.colors.textTertiary }}>Key players:</span>
-              {app.companies.map((company, idx) => (
-                <span key={idx} style={{
-                  padding: `${design.space.xs}px ${design.space.md}px`,
-                  fontSize: '12px',
-                  color: design.colors.textSecondary,
-                  background: design.colors.bgSecondary,
-                  borderRadius: `${design.radius.sm}px`,
-                  border: `1px solid ${design.colors.border}`
-                }}>
-                  {company}
-                </span>
-              ))}
-            </div>
-
-            {/* Mark as Read Button */}
-            <div style={{ padding: `${design.space.xl}px`, borderTop: `1px solid ${design.colors.border}` }}>
-              {!completedApps.has(activeApp) ? (
-                <button
-                  onClick={() => {
-                    const newCompleted = new Set(completedApps);
-                    newCompleted.add(activeApp);
-                    setCompletedApps(newCompleted);
-                    if (activeApp < realWorldApps.length - 1) {
-                      setTimeout(() => setActiveApp(activeApp + 1), 300);
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: `${design.space.md}px ${design.space.xl}px`,
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    color: '#FFFFFF',
-                    background: design.colors.success,
-                    border: 'none',
-                    borderRadius: `${design.radius.md}px`,
-                    cursor: 'pointer',
-                    boxShadow: design.shadows.sm,
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  Mark "{app.title.split(':')[0]}" as Read
-                </button>
-              ) : (
-                <div style={{
-                  padding: `${design.space.md}px ${design.space.xl}px`,
-                  borderRadius: `${design.radius.md}px`,
-                  background: `${design.colors.success}15`,
-                  border: `1px solid ${design.colors.success}30`,
-                  color: design.colors.success,
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  textAlign: 'center'
-                }}>
-                  Completed
-                </div>
-              )}
-            </div>
-          </div>
         </div>
-        {/* Bottom bar */}
-        <div style={{
-          padding: `${design.space.lg}px ${design.space.xl}px`,
-          background: design.colors.bgSecondary,
-          borderTop: `1px solid ${design.colors.border}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <button
-            onClick={() => goToPhase('twist_review')}
-            style={{
-              padding: `${design.space.md}px ${design.space.xl}px`,
-              fontSize: '15px',
-              color: design.colors.textSecondary,
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              zIndex: 10,
-              position: 'relative'
-            }}
-          >
-            Back
-          </button>
-          <button
-            onClick={() => goToPhase('test')}
-            disabled={!allRead}
-            style={{
-              padding: `${design.space.md}px ${design.space.xl}px`,
-              fontSize: '15px',
-              fontWeight: 600,
-              color: !allRead ? design.colors.textTertiary : '#FFFFFF',
-              background: !allRead ? design.colors.bgTertiary : design.colors.success,
-              border: 'none',
-              borderRadius: `${design.radius.md}px`,
-              cursor: !allRead ? 'not-allowed' : 'pointer',
-              opacity: !allRead ? 0.5 : 1,
-              zIndex: 10,
-              position: 'relative'
-            }}
-          >
-            Take the Quiz ({completedApps.size}/{realWorldApps.length} read)
-          </button>
-        </div>
-      </div>
-    );
-  };
 
-  // Phase: Test - 10 multiple choice questions
-  const renderTest = () => {
-    const currentQ = testQuestions[currentQuestionIndex];
-    const answeredCount = testAnswers.filter(a => a !== null).length;
-
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: design.colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? `${design.space.lg}px` : `${design.space.xl}px`, overflowY: 'auto' }}>
-          {!showTestResults ? (
-            <>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: `${design.space.xl}px`
-              }}>
-                <h2 style={{ fontSize: '20px', color: design.colors.textPrimary, margin: 0, fontWeight: 700 }}>
-                  Knowledge Check
-                </h2>
-                <span style={{
-                  padding: `${design.space.xs}px ${design.space.md}px`,
-                  fontSize: '13px',
-                  color: design.colors.textSecondary,
-                  background: design.colors.bgSecondary,
-                  borderRadius: `${design.radius.full}px`
-                }}>
-                  {currentQuestionIndex + 1} / {testQuestions.length}
-                </span>
-              </div>
-
-              {/* Question navigation dots */}
-              <div style={{
-                display: 'flex',
-                gap: `${design.space.xs}px`,
-                marginBottom: `${design.space.xl}px`,
-                justifyContent: 'center'
-              }}>
-                {testQuestions.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentQuestionIndex(idx)}
-                    style={{
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: idx === currentQuestionIndex
-                        ? design.colors.primary
-                        : testAnswers[idx] !== null
-                          ? design.colors.success
-                          : design.colors.bgTertiary,
-                      zIndex: 10,
-                      position: 'relative'
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Scenario */}
-              <div style={{
-                padding: `${design.space.lg}px ${design.space.xl}px`,
-                background: design.colors.bgTertiary,
-                borderRadius: `${design.radius.lg}px`,
-                marginBottom: `${design.space.lg}px`,
-                borderLeft: `4px solid ${design.colors.accent}`
-              }}>
-                <p style={{ fontSize: '14px', color: design.colors.textSecondary, margin: 0, fontStyle: 'italic' }}>
-                  {currentQ.scenario}
-                </p>
-              </div>
-
-              {/* Question */}
-              <div style={{
-                padding: `${design.space.xl}px`,
-                background: design.colors.bgSecondary,
-                borderRadius: `${design.radius.lg}px`,
-                border: `1px solid ${design.colors.border}`,
-                marginBottom: `${design.space.lg}px`
-              }}>
-                <p style={{ fontSize: '16px', color: design.colors.textPrimary, margin: 0, fontWeight: 500 }}>
-                  {currentQ.question}
-                </p>
-              </div>
-
-              {/* Options */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: `${design.space.md}px` }}>
-                {currentQ.options.map((option, idx) => {
-                  const isSelected = testAnswers[currentQuestionIndex] === idx;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        const newAnswers = [...testAnswers];
-                        newAnswers[currentQuestionIndex] = idx;
-                        setTestAnswers(newAnswers);
-                        emitEvent('test_answered', { question: currentQuestionIndex, answer: idx });
-                      }}
-                      style={{
-                        padding: `${design.space.lg}px ${design.space.xl}px`,
-                        fontSize: '14px',
-                        color: isSelected ? design.colors.textInverse : design.colors.textPrimary,
-                        background: isSelected ? design.colors.primary : design.colors.bgSecondary,
-                        border: `2px solid ${isSelected ? design.colors.primary : design.colors.border}`,
-                        borderRadius: `${design.radius.md}px`,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s ease',
-                        boxShadow: isSelected ? design.shadows.sm : 'none',
-                        zIndex: 10,
-                        position: 'relative'
-                      }}
-                    >
-                      <span style={{
-                        display: 'inline-block',
-                        width: '24px',
-                        height: '24px',
-                        lineHeight: '24px',
-                        textAlign: 'center',
-                        borderRadius: '50%',
-                        background: isSelected ? design.colors.bgPrimary : design.colors.bgTertiary,
-                        color: isSelected ? design.colors.primary : design.colors.textTertiary,
-                        marginRight: `${design.space.md}px`,
-                        fontSize: '12px',
-                        fontWeight: 600
-                      }}>
-                        {String.fromCharCode(65 + idx)}
-                      </span>
-                      {option.text}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Navigation */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: `${design.space.xl}px`,
-                gap: `${design.space.md}px`
-              }}>
-                <button
-                  onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-                  disabled={currentQuestionIndex === 0}
-                  style={{
-                    padding: `${design.space.md}px ${design.space.xl}px`,
-                    fontSize: '14px',
-                    color: currentQuestionIndex === 0 ? design.colors.textTertiary : design.colors.textPrimary,
-                    background: design.colors.bgSecondary,
-                    border: `1px solid ${design.colors.border}`,
-                    borderRadius: `${design.radius.md}px`,
-                    cursor: currentQuestionIndex === 0 ? 'not-allowed' : 'pointer',
-                    opacity: currentQuestionIndex === 0 ? 0.5 : 1,
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  Previous
-                </button>
-
-                {currentQuestionIndex < testQuestions.length - 1 ? (
-                  <button
-                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                    style={{
-                      padding: `${design.space.md}px ${design.space.xl}px`,
-                      fontSize: '14px',
-                      color: design.colors.textPrimary,
-                      background: design.colors.bgSecondary,
-                      border: `1px solid ${design.colors.border}`,
-                      borderRadius: `${design.radius.md}px`,
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      position: 'relative'
-                    }}
-                  >
-                    Next
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      const score = testAnswers.reduce((acc, answer, idx) =>
-                        acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
-                      setTestScore(score);
-                      setShowTestResults(true);
-                      emitEvent('test_completed', { score, total: testQuestions.length });
-                    }}
-                    disabled={answeredCount < testQuestions.length}
-                    style={{
-                      padding: `${design.space.md}px ${design.space.xl}px`,
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: answeredCount < testQuestions.length ? design.colors.textTertiary : design.colors.textInverse,
-                      background: answeredCount < testQuestions.length ? design.colors.bgTertiary : design.colors.primary,
-                      border: 'none',
-                      borderRadius: `${design.radius.md}px`,
-                      cursor: answeredCount < testQuestions.length ? 'not-allowed' : 'pointer',
-                      zIndex: 10,
-                      position: 'relative'
-                    }}
-                  >
-                    Submit ({answeredCount}/{testQuestions.length})
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Test Results */}
-              {renderSectionHeader('📊', 'Quiz Results', 'Review your answers and learn from any mistakes')}
-
-              {(() => {
-                const percentage = Math.round((testScore / testQuestions.length) * 100);
-
-                return (
-                  <>
-                    <div style={{
-                      padding: `${design.space.xl}px`,
-                      background: percentage >= 70 ? `${design.colors.success}15` : `${design.colors.warning}15`,
-                      borderRadius: `${design.radius.lg}px`,
-                      border: `1px solid ${percentage >= 70 ? design.colors.success : design.colors.warning}40`,
-                      textAlign: 'center',
-                      marginBottom: `${design.space.xl}px`
-                    }}>
-                      <div style={{ fontSize: '48px', fontWeight: 700, color: percentage >= 70 ? design.colors.success : design.colors.warning }}>
-                        {percentage}%
-                      </div>
-                      <p style={{ fontSize: '16px', color: design.colors.textPrimary, margin: `${design.space.sm}px 0 0` }}>
-                        {testScore} out of {testQuestions.length} correct
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: `${design.space.lg}px` }}>
-                      {testQuestions.map((q, idx) => {
-                        const isCorrect = q.options[testAnswers[idx] as number]?.correct ?? false;
-                        return (
-                          <div key={idx} style={{
-                            padding: `${design.space.lg}px`,
-                            background: design.colors.bgSecondary,
-                            borderRadius: `${design.radius.lg}px`,
-                            border: `1px solid ${isCorrect ? design.colors.success : design.colors.error}40`
-                          }}>
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: `${design.space.md}px`,
-                              marginBottom: `${design.space.md}px`
-                            }}>
-                              <span style={{
-                                fontSize: '18px',
-                                lineHeight: 1,
-                                color: isCorrect ? design.colors.success : design.colors.error
-                              }}>
-                                {isCorrect ? 'Correct' : 'Wrong'}
-                              </span>
-                              <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '14px', color: design.colors.textPrimary, margin: 0, fontWeight: 500 }}>
-                                  Q{idx + 1}: {q.question}
-                                </p>
-                                {!isCorrect && (
-                                  <p style={{ fontSize: '13px', color: design.colors.error, margin: `${design.space.sm}px 0 0` }}>
-                                    Your answer: {q.options[testAnswers[idx] as number]?.text}
-                                  </p>
-                                )}
-                                <p style={{ fontSize: '13px', color: design.colors.success, margin: `${design.space.xs}px 0 0` }}>
-                                  Correct: {q.options.find(o => o.correct)?.text}
-                                </p>
-                              </div>
-                            </div>
-                            <div style={{
-                              padding: `${design.space.md}px`,
-                              background: design.colors.bgTertiary,
-                              borderRadius: `${design.radius.md}px`,
-                              fontSize: '13px',
-                              color: design.colors.textSecondary,
-                              lineHeight: 1.5
-                            }}>
-                              Explanation: {q.explanation}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                );
-              })()}
-            </>
-          )}
-        </div>
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), 'Complete Module')}
-      </div>
-    );
-  };
-
-  // Phase: Mastery - Congratulations page
-  const renderMastery = () => {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: `linear-gradient(180deg, ${design.colors.bgPrimary} 0%, ${design.colors.bgSecondary} 100%)`
-      }}>
-        {renderProgressBar()}
-        <div style={{
-          flex: 1,
-          padding: isMobile ? `${design.space.xl}px` : `${design.space.xxl}px`,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          textAlign: 'center'
-        }}>
-          {/* Celebration icon with glow */}
+        {/* Explanation after confirm */}
+        {isConfirmed && (
           <div style={{
-            width: '120px',
-            height: '120px',
-            margin: '0 auto 32px',
-            background: `linear-gradient(135deg, ${design.colors.primary}30, ${design.colors.accent}20)`,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: design.shadows.glow(design.colors.primary),
-            border: `2px solid ${design.colors.primary}40`
-          }}>
-            <span style={{ fontSize: '56px' }}>Trophy</span>
-          </div>
-
-          <h1 style={{
-            fontSize: isMobile ? '32px' : '40px',
-            fontWeight: 800,
-            color: design.colors.textPrimary,
-            marginBottom: `${design.space.lg}px`,
-            letterSpacing: '-0.02em'
-          }}>
-            Congratulations!
-          </h1>
-          <h2 style={{
-            fontSize: isMobile ? '20px' : '24px',
-            fontWeight: 600,
-            color: design.colors.primary,
-            marginBottom: `${design.space.lg}px`
-          }}>
-            Independence of Motion Mastered!
-          </h2>
-          <p style={{
-            fontSize: '18px',
-            color: design.colors.textSecondary,
-            maxWidth: '500px',
-            lineHeight: 1.6,
-            marginBottom: `${design.space.xxl}px`
-          }}>
-            You now understand one of physics' most elegant principles - that horizontal and vertical motions are completely independent!
-          </p>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: `${design.space.lg}px`,
+            padding: '16px',
+            borderRadius: '12px',
+            maxWidth: '520px',
             width: '100%',
-            maxWidth: '600px',
-            marginBottom: `${design.space.xxl}px`
+            marginBottom: '16px',
+            background: currentAnswer === question.options.find(o => o.correct)?.id ? `${colors.success}10` : `${colors.danger}10`,
+            border: `1px solid ${currentAnswer === question.options.find(o => o.correct)?.id ? `${colors.success}30` : `${colors.danger}30`}`,
           }}>
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: design.colors.bgSecondary,
-              borderRadius: `${design.radius.lg}px`,
-              border: `1px solid ${design.colors.border}`,
-              boxShadow: design.shadows.sm
-            }}>
-              <div style={{ fontSize: '32px', marginBottom: `${design.space.sm}px` }}>Y-axis</div>
-              <div style={{ fontSize: '16px', fontWeight: 700, color: design.colors.error }}>Vertical</div>
-              <div style={{ fontSize: '13px', color: design.colors.textTertiary }}>y = v0y*t - (1/2)*g*t^2</div>
-            </div>
-
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: design.colors.bgSecondary,
-              borderRadius: `${design.radius.lg}px`,
-              border: `1px solid ${design.colors.border}`,
-              boxShadow: design.shadows.sm
-            }}>
-              <div style={{ fontSize: '32px', marginBottom: `${design.space.sm}px` }}>X-axis</div>
-              <div style={{ fontSize: '16px', fontWeight: 700, color: design.colors.accent }}>Horizontal</div>
-              <div style={{ fontSize: '13px', color: design.colors.textTertiary }}>x = v0x * t</div>
-            </div>
-
-            <div style={{
-              padding: `${design.space.xl}px`,
-              background: design.colors.bgSecondary,
-              borderRadius: `${design.radius.lg}px`,
-              border: `1px solid ${design.colors.border}`,
-              boxShadow: design.shadows.sm
-            }}>
-              <div style={{ fontSize: '32px', marginBottom: `${design.space.sm}px` }}>Score</div>
-              <div style={{ fontSize: '24px', fontWeight: 700, color: design.colors.primary }}>{testScore}/10</div>
-              <div style={{ fontSize: '13px', color: design.colors.textTertiary }}>Quiz score</div>
-            </div>
+            <p style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px', color: currentAnswer === question.options.find(o => o.correct)?.id ? colors.success : colors.danger }}>
+              {currentAnswer === question.options.find(o => o.correct)?.id ? 'Correct!' : 'Not quite'}
+            </p>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.6, margin: 0 }}>{question.explanation}</p>
           </div>
+        )}
 
-          <div style={{
-            padding: `${design.space.xl}px ${design.space.xxl}px`,
-            background: design.colors.bgSecondary,
-            borderRadius: `${design.radius.lg}px`,
-            border: `1px solid ${design.colors.primary}40`,
-            maxWidth: '500px',
-            boxShadow: design.shadows.md
-          }}>
-            <h4 style={{ fontSize: '15px', color: design.colors.primary, marginBottom: `${design.space.md}px`, fontWeight: 600 }}>
-              Key Insights You Learned
-            </h4>
-            <ul style={{
-              textAlign: 'left',
-              margin: 0,
-              paddingLeft: '20px',
-              color: design.colors.textSecondary,
-              fontSize: '14px',
-              lineHeight: 1.8
-            }}>
-              <li>Horizontal velocity does not affect fall time</li>
-              <li>Both components can be analyzed separately</li>
-              <li>Time depends only on height: t = sqrt(2h/g)</li>
-              <li>Air resistance couples the motions (breaks ideal independence)</li>
-              <li>This principle applies from basketballs to spacecraft!</li>
-            </ul>
-          </div>
-        </div>
-        <div style={{
-          padding: `${design.space.lg}px ${design.space.xl}px`,
-          background: design.colors.bgSecondary,
-          borderTop: `1px solid ${design.colors.border}`,
-          display: 'flex',
-          justifyContent: 'center'
-        }}>
-          {onBack && (
+        {/* Quiz action buttons */}
+        <div style={{ display: 'flex', gap: '12px', maxWidth: '520px', width: '100%' }}>
+          {currentAnswer && !isConfirmed && (
             <button
-              onClick={onBack}
-              style={{
-                padding: `${design.space.md}px ${design.space.xxl}px`,
-                fontSize: '15px',
-                fontWeight: 600,
-                color: design.colors.textInverse,
-                background: design.colors.primary,
-                border: 'none',
-                borderRadius: `${design.radius.md}px`,
-                cursor: 'pointer',
-                boxShadow: design.shadows.sm,
-                zIndex: 10,
-                position: 'relative'
+              onClick={() => {
+                setConfirmedQuestions(prev => new Set(prev).add(currentQuestion));
+                const selectedOption = question.options.find(o => o.id === currentAnswer);
+                if (selectedOption?.correct) {
+                  setTestScore(s => s + 1);
+                  playSound('success');
+                } else {
+                  playSound('failure');
+                }
               }}
+              style={{ ...primaryBtnStyle, flex: 1 }}
             >
-              Return to Dashboard
+              Check Answer
+            </button>
+          )}
+          {isConfirmed && currentQuestion < 9 && (
+            <button
+              onClick={() => setCurrentQuestion(currentQuestion + 1)}
+              style={{ ...primaryBtnStyle, flex: 1 }}
+            >
+              Next Question
+            </button>
+          )}
+          {isConfirmed && currentQuestion === 9 && (
+            <button
+              onClick={() => setTestSubmitted(true)}
+              style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
+            >
+              Submit Test
             </button>
           )}
         </div>
@@ -2430,7 +1521,88 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
     );
   };
 
-  // Main render
+  // Mastery phase
+  const renderMastery = () => {
+    const percentage = Math.round((testScore / testQuestions.length) * 100);
+
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: '500px', padding: '48px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden',
+      }}>
+        <style>{`@keyframes confetti { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
+        {Array.from({ length: 50 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${Math.random() * 100}%`,
+              top: '-20px',
+              width: '10px',
+              height: '10px',
+              background: [colors.primary, colors.accent, colors.success, colors.warning][i % 4],
+              borderRadius: '2px',
+              animation: `confetti 3s ease-out ${Math.random() * 2}s infinite`,
+            }}
+          />
+        ))}
+
+        <div style={{
+          width: '120px', height: '120px', borderRadius: '9999px',
+          background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: '32px', boxShadow: `0 8px 32px ${colors.primary}40`,
+        }}>
+          <span style={{ fontSize: '56px' }}>🏆</span>
+        </div>
+
+        <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>Congratulations!</h1>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.primary, marginBottom: '16px' }}>Projectile Master</h2>
+
+        <p style={{ fontSize: '18px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6 }}>
+          Final Score: <span style={{ color: colors.success, fontWeight: 700 }}>{testScore}/{testQuestions.length}</span> ({percentage}%)
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '480px', width: '100%', marginBottom: '32px' }}>
+          {[
+            { icon: '🎯', label: 'Independence', sub: 'x and y are separate' },
+            { icon: '⚡', label: 'Same Fall Time', sub: 'Gravity is universal' },
+            { icon: '📊', label: `${testScore}/10`, sub: 'Quiz score' },
+          ].map((item, i) => (
+            <div key={i} style={{ ...cardStyle, padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.icon}</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: colors.primary }}>{item.label}</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted }}>{item.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <p style={{ fontSize: '14px', color: colors.textMuted, marginBottom: '24px', maxWidth: '420px', lineHeight: 1.6 }}>
+          You now understand projectile independence! Horizontal and vertical motion are truly separate, enabling precise trajectory calculations from basketball courts to orbital mechanics.
+        </p>
+
+        <button
+          onClick={() => {
+            setPhase('hook');
+            setPrediction(null);
+            setTwistPrediction(null);
+            setActiveApp(0);
+            setCompletedApps(new Set());
+            setCurrentQuestion(0);
+            setTestAnswers(new Array(testQuestions.length).fill(null));
+            setConfirmedQuestions(new Set());
+            setTestScore(0);
+            setTestSubmitted(false);
+          }}
+          style={primaryBtnStyle}
+        >
+          Complete Lesson
+        </button>
+      </div>
+    );
+  };
+
+  // Main render switch
   const renderPhase = () => {
     switch (phase) {
       case 'hook': return renderHook();
@@ -2448,40 +1620,26 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/3 rounded-full blur-3xl" />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
+      {renderProgressBar()}
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Projectile Independence</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-                style={{ zIndex: 10, position: 'relative' }}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-orange-400">{phaseLabels[phase]}</span>
-        </div>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 24px', background: `${colors.bgCard}cc`,
+        borderBottom: `1px solid ${colors.border}50`,
+      }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Projectile Independence</span>
+        <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>{phaseLabels[phase]}</span>
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+        {renderPhase()}
+      </div>
+
+      {/* Bottom nav bar */}
+      {renderBottomBar()}
     </div>
   );
 };

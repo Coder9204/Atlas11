@@ -16,10 +16,10 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Experiment',
   review: 'Review',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
+  twist_play: 'Twist Experiment',
   twist_review: 'Twist Review',
   transfer: 'Transfer',
   test: 'Test',
@@ -188,7 +188,7 @@ const testQuestions = [
     question: "What caused the coffee cup to fly forward when the car stopped?",
     options: [
       { text: "The brakes pushed the cup forward", correct: false },
-      { text: "The cup's inertia caused it to continue moving forward while the car decelerated", correct: true },
+      { text: "The cup's inertia kept it moving forward at its original speed while the car decelerated beneath it", correct: true },
       { text: "The windshield created suction pulling the cup", correct: false },
       { text: "Gravity shifted due to the car's sudden stop", correct: false }
     ],
@@ -242,7 +242,7 @@ const testQuestions = [
     scenario: "NASA's Voyager 1 spacecraft, launched in 1977, is now over 15 billion miles from Earth and still traveling at about 38,000 mph despite not having used its engines for decades.",
     question: "How can Voyager 1 keep traveling without any propulsion?",
     options: [
-      { text: "Solar wind continues to push it outward", correct: false },
+      { text: "Solar wind propels it further into deep space", correct: false },
       { text: "In the vacuum of space with virtually no external forces, its inertia keeps it moving at a constant velocity indefinitely", correct: true },
       { text: "Gravity from distant stars pulls it forward", correct: false },
       { text: "Its nuclear power source provides continuous thrust", correct: false }
@@ -254,7 +254,6 @@ const testQuestions = [
 export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, onPhaseComplete }: InertiaRendererProps) {
   // Core State
   const [phase, setPhase] = useState<Phase>('hook');
-  const [isMobile, setIsMobile] = useState(false);
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);
@@ -290,54 +289,30 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   // Transfer phase
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   // Test phase
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(testQuestions.length).fill(null));
+  const [confirmedQuestions, setConfirmedQuestions] = useState<Set<number>>(new Set());
   const [testScore, setTestScore] = useState(0);
-  const [testComplete, setTestComplete] = useState(false);
+  const [testSubmitted, setTestSubmitted] = useState(false);
 
-  // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Premium Design System
+  // Design System
   const colors = {
-    primary: '#f59e0b',       // amber-500
-    primaryDark: '#d97706',   // amber-600
-    accent: '#6366f1',        // indigo-500
-    secondary: '#22c55e',     // green-500
-    success: '#10b981',       // emerald-500
-    danger: '#ef4444',        // red-500
-    warning: '#f59e0b',       // amber-500
-    bgDark: '#0a0f1a',        // custom dark
-    bgCard: '#0f172a',        // slate-900
-    bgCardLight: '#1e293b',   // slate-800
-    textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
-    border: '#334155',        // slate-700
-    borderLight: '#475569',   // slate-600
-  };
-
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+    primary: '#f59e0b',
+    primaryDark: '#d97706',
+    accent: '#6366f1',
+    secondary: '#22c55e',
+    success: '#10b981',
+    danger: '#ef4444',
+    bgDark: '#0a0f1a',
+    bgCard: '#0f172a',
+    bgCardLight: '#1e293b',
+    textPrimary: '#f8fafc',
+    textSecondary: 'rgba(148,163,184,0.8)',
+    textMuted: 'rgba(100,116,139,0.7)',
+    border: '#334155',
+    borderLight: '#475569',
   };
 
   // Sync with external phase
@@ -391,7 +366,6 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     emitEvent('phase_change', { from: phase, to: newPhase });
     onPhaseComplete?.(phase);
 
-    // Reset state for play phases
     if (newPhase === 'play') {
       setObjectPosition(50);
       setHasAppliedForce(false);
@@ -405,6 +379,10 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
       setShowCrashResult(false);
     }
   }, [phase, playSound, emitEvent, onPhaseComplete]);
+
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < phaseOrder.length - 1 && phase !== 'test';
 
   // Apply force animation for play phase
   const applyForce = useCallback(() => {
@@ -445,12 +423,10 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
       setCarPosition(pos);
 
       if (pos >= 250) {
-        // Crash!
         setHasCrashed(true);
         setCarSpeed(0);
 
         if (!seatbeltOn) {
-          // Passenger continues moving due to inertia
           let passengerPos = 0;
           const passengerAnimate = () => {
             passengerPos += 8;
@@ -484,57 +460,126 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     };
   }, []);
 
-  // Handle test answer
-  const handleTestAnswer = useCallback((answerIndex: number) => {
-    if (showExplanation) return;
-
-    setSelectedAnswer(answerIndex);
-    setShowExplanation(true);
-
-    if (testQuestions[currentQuestion].options[answerIndex]?.correct) {
-      setTestScore(s => s + 1);
-      playSound('success');
-    } else {
-      playSound('failure');
+  // Mastery effect
+  useEffect(() => {
+    if (phase === 'mastery') {
+      emitEvent('mastery_achieved', { score: testScore, total: testQuestions.length });
     }
-  }, [currentQuestion, showExplanation, playSound]);
+  }, [phase, testScore, emitEvent]);
 
-  // Progress bar renderer
+  // Shared styles
+  const cardStyle: React.CSSProperties = {
+    background: colors.bgCard,
+    borderRadius: '16px',
+    padding: '24px',
+    border: `1px solid ${colors.border}`,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+  };
+
+  const primaryBtnStyle: React.CSSProperties = {
+    padding: '14px 32px',
+    borderRadius: '12px',
+    border: 'none',
+    background: `linear-gradient(135deg, ${colors.primary}, #ea580c)`,
+    color: 'white',
+    cursor: 'pointer',
+    fontWeight: 700,
+    fontSize: '16px',
+    transition: 'all 0.3s ease',
+    zIndex: 10,
+    position: 'relative' as const,
+    boxShadow: '0 4px 12px rgba(245,158,11,0.3)',
+  };
+
+  // Progress bar
   const renderProgressBar = () => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
-
+    const progress = ((currentPhaseIndex + 1) / phaseOrder.length) * 100;
     return (
-      <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`
-          }}
-        />
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '3px', background: colors.bgCardLight, zIndex: 100 }}>
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
+          borderRadius: '0 2px 2px 0',
+          transition: 'width 0.5s ease',
+        }} />
       </div>
     );
   };
 
-  // Navigation dots renderer
+  // Navigation dots
   const renderNavDots = () => (
-    <div className="flex items-center gap-1.5">
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
       {phaseOrder.map((p, i) => (
         <button
           key={p}
           onClick={() => goToPhase(p)}
-          style={{ zIndex: 10 }}
-          className={`h-2 rounded-full transition-all duration-300 ${
-            phase === p
-              ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
-              : phaseOrder.indexOf(phase) > i
-                ? 'bg-emerald-500 w-2'
-                : 'bg-slate-700 w-2 hover:bg-slate-600'
-          }`}
           title={phaseLabels[p]}
+          aria-label={phaseLabels[p]}
+          style={{
+            height: '8px',
+            width: phase === p ? '24px' : '8px',
+            borderRadius: '9999px',
+            border: 'none',
+            cursor: 'pointer',
+            background: phase === p ? colors.primary : currentPhaseIndex > i ? colors.success : colors.bgCardLight,
+            boxShadow: phase === p ? `0 0 12px ${colors.primary}40` : 'none',
+            transition: 'all 0.3s ease',
+            zIndex: 10,
+            position: 'relative' as const,
+          }}
         />
       ))}
+    </div>
+  );
+
+  // Bottom navigation bar
+  const renderBottomBar = () => (
+    <div style={{
+      padding: '16px 24px',
+      background: colors.bgCard,
+      borderTop: `1px solid ${colors.border}`,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <button
+        onClick={() => canGoBack && goToPhase(phaseOrder[currentPhaseIndex - 1])}
+        disabled={!canGoBack}
+        style={{
+          padding: '10px 24px',
+          borderRadius: '10px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: canGoBack ? colors.textPrimary : colors.textMuted,
+          cursor: canGoBack ? 'pointer' : 'default',
+          fontWeight: 600,
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+          opacity: canGoBack ? 1 : 0.4,
+        }}
+      >
+        Back
+      </button>
+      {renderNavDots()}
+      <button
+        onClick={() => canGoNext && goToPhase(phaseOrder[currentPhaseIndex + 1])}
+        disabled={!canGoNext || phase === 'test'}
+        style={{
+          padding: '10px 24px',
+          borderRadius: '10px',
+          border: 'none',
+          background: canGoNext && phase !== 'test' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})` : colors.bgCardLight,
+          color: canGoNext && phase !== 'test' ? 'white' : colors.textMuted,
+          cursor: canGoNext && phase !== 'test' ? 'pointer' : 'default',
+          fontWeight: 600,
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+          opacity: canGoNext && phase !== 'test' ? 1 : 0.4,
+        }}
+      >
+        Next
+      </button>
     </div>
   );
 
@@ -545,58 +590,52 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
       {
         title: "Newton's First Law of Motion",
         content: "Have you ever wondered why you lurch forward when a car suddenly stops? Or why it's harder to push a heavy shopping cart than an empty one?",
-        visual: "\u2696\uFE0F",
       },
       {
         title: "Objects Resist Change",
         content: "Isaac Newton discovered something amazing: Objects 'want' to keep doing what they're doing. If they're still, they want to stay still. If they're moving, they want to keep moving!",
-        visual: "\uD83D\uDCA1",
       },
       {
         title: "This is Called INERTIA",
         content: "Inertia is the resistance of any object to any change in its motion. The more mass an object has, the more inertia it has - and the harder it is to change its motion.",
-        visual: "\uD83C\uDFCB\uFE0F",
       },
     ];
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-        {/* Premium badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full mb-8">
-          <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-          <span className="text-sm font-medium text-amber-400 tracking-wide">PHYSICS EXPLORATION</span>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '48px 24px', textAlign: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30`, borderRadius: '9999px', marginBottom: '32px' }}>
+          <span style={{ width: '8px', height: '8px', background: colors.primary, borderRadius: '9999px' }} />
+          <span style={{ fontSize: '13px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
         </div>
 
-        {/* Main visual */}
-        <div className="text-7xl mb-6" style={{ filter: 'drop-shadow(0 8px 24px rgba(245, 158, 11, 0.4))' }}>
-          {hookContent[hookStep].visual}
-        </div>
-
-        {/* Title */}
-        <h1 style={{ fontSize: typo.title }} className="font-bold text-white mb-4">
+        <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '16px', lineHeight: 1.1 }}>
           {hookContent[hookStep].title}
         </h1>
 
-        {/* Content */}
-        <p style={{ fontSize: typo.bodyLarge }} className="text-slate-400 max-w-md mb-8 leading-relaxed">
+        <p style={{ fontSize: '18px', color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px', lineHeight: 1.7 }}>
           {hookContent[hookStep].content}
         </p>
 
-        {/* Step indicators */}
-        <div className="flex gap-2 mb-8">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
           {hookContent.map((_, i) => (
             <button
               key={i}
               onClick={() => setHookStep(i)}
-              style={{ zIndex: 10 }}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === hookStep ? 'w-8 bg-amber-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
-              }`}
+              style={{
+                height: '8px',
+                width: i === hookStep ? '32px' : '8px',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                background: i === hookStep ? colors.primary : colors.bgCardLight,
+                transition: 'all 0.3s ease',
+                zIndex: 10,
+                position: 'relative' as const,
+              }}
             />
           ))}
         </div>
 
-        {/* CTA Button */}
         <button
           onClick={() => {
             if (hookStep < hookContent.length - 1) {
@@ -605,50 +644,88 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               goToPhase('predict');
             }
           }}
-          style={{ zIndex: 10 }}
-          className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          style={primaryBtnStyle}
         >
-          <span className="relative z-10 flex items-center gap-3">
-            {hookStep < hookContent.length - 1 ? 'Continue' : 'Make a Prediction'}
-            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </span>
+          {hookStep < hookContent.length - 1 ? 'Continue' : 'Make Your Prediction'}
         </button>
-
-        {/* Feature hints */}
-        <div className="mt-12 flex items-center gap-8 text-sm text-slate-500 flex-wrap justify-center">
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400">{'\u2726'}</span>
-            Interactive Lab
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400">{'\u2726'}</span>
-            Real-World Examples
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-amber-400">{'\u2726'}</span>
-            Knowledge Test
-          </div>
-        </div>
       </div>
     );
   };
 
   const renderPredict = () => {
     const predictions = [
-      { id: 'heavy_harder', label: 'The heavy object will be harder to move', icon: '\uD83C\uDFCB\uFE0F' },
-      { id: 'same_speed', label: 'Both objects will move at the same speed', icon: '\u2194\uFE0F' },
-      { id: 'light_slower', label: 'The light object will be slower', icon: '\uD83E\uDEB6' },
-      { id: 'no_difference', label: 'There will be no difference', icon: '\u2753' },
+      { id: 'heavy_harder', label: 'The heavy object will be harder to move', icon: '🏋️' },
+      { id: 'same_speed', label: 'Both objects will move at the same speed', icon: '↔️' },
+      { id: 'light_slower', label: 'The light object will be slower', icon: '🪶' },
+      { id: 'no_difference', label: 'There will be no difference', icon: '❓' },
     ];
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2">Make Your Prediction</h2>
-        <p style={{ fontSize: typo.body }} className="text-slate-400 mb-8">If you push a light object and a heavy object with the same force, what happens?</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Make Your Prediction</h2>
+        <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
+          If you push a light object and a heavy object with the same force, what happens?
+        </p>
 
-        <div className="flex flex-col gap-3 w-full max-w-md mb-8">
+        {/* SVG visualization for predict phase */}
+        <div style={{ marginBottom: '24px' }}>
+          <svg width="360" height="180" viewBox="0 0 360 180">
+            <defs>
+              <linearGradient id="predBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
+              <radialGradient id="predLightObj" cx="35%" cy="30%" r="65%">
+                <stop offset="0%" stopColor="#93c5fd" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#1d4ed8" />
+              </radialGradient>
+              <linearGradient id="predHeavyObj" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fdba74" />
+                <stop offset="50%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#c2410c" />
+              </linearGradient>
+              <linearGradient id="predArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#16a34a" />
+              </linearGradient>
+              <filter id="predGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="predShadow">
+                <feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
+              </filter>
+            </defs>
+            <rect width="360" height="180" fill="url(#predBg)" rx="12" />
+            <g>
+              <rect x="0" y="140" width="360" height="40" fill="#334155" />
+              <line x1="0" y1="140" x2="360" y2="140" stroke="#475569" strokeWidth="2" />
+            </g>
+            <g filter="url(#predShadow)">
+              <text x="90" y="65" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">Light (1kg)</text>
+              <circle cx="90" cy="110" r="20" fill="url(#predLightObj)" filter="url(#predGlow)" />
+              <ellipse cx="86" cy="104" rx="6" ry="4" fill="rgba(255,255,255,0.25)" />
+            </g>
+            <g filter="url(#predShadow)">
+              <text x="270" y="65" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">Heavy (10kg)</text>
+              <rect x="240" y="90" width="60" height="50" fill="url(#predHeavyObj)" rx="4" filter="url(#predGlow)" />
+              <rect x="244" y="94" width="52" height="8" fill="rgba(255,255,255,0.15)" rx="2" />
+            </g>
+            <g>
+              <line x1="30" y1="110" x2="55" y2="110" stroke="url(#predArrow)" strokeWidth="4" />
+              <polygon points="55,104 65,110 55,116" fill="#22c55e" />
+              <line x1="210" y1="115" x2="230" y2="115" stroke="url(#predArrow)" strokeWidth="4" />
+              <polygon points="230,109 240,115 230,121" fill="#22c55e" />
+            </g>
+            <text x="180" y="172" fill={colors.textMuted} fontSize="11" textAnchor="middle">Same force applied to both objects</text>
+          </svg>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '420px', marginBottom: '24px' }}>
           {predictions.map((pred) => (
             <button
               key={pred.id}
@@ -657,26 +734,29 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
                 playSound(pred.id === 'heavy_harder' ? 'success' : 'click');
                 emitEvent('prediction_made', { prediction: pred.id });
               }}
-              style={{ zIndex: 10 }}
-              className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
-                prediction === pred.id
-                  ? 'border-amber-500 bg-amber-500/20'
-                  : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
-              }`}
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                border: `2px solid ${prediction === pred.id ? colors.primary : colors.border}`,
+                background: prediction === pred.id ? `${colors.primary}20` : `${colors.bgCardLight}80`,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                transition: 'all 0.3s ease',
+                zIndex: 10,
+                position: 'relative' as const,
+              }}
             >
-              <span className="text-2xl">{pred.icon}</span>
-              <span className="text-white font-medium text-left">{pred.label}</span>
+              <span style={{ fontSize: '24px' }}>{pred.icon}</span>
+              <span style={{ color: '#ffffff', fontWeight: 500, textAlign: 'left', fontSize: '15px' }}>{pred.label}</span>
             </button>
           ))}
         </div>
 
         {prediction && (
-          <button
-            onClick={() => goToPhase('play')}
-            style={{ zIndex: 10 }}
-            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
-          >
-            Test My Prediction {'\u2192'}
+          <button onClick={() => goToPhase('play')} style={primaryBtnStyle}>
+            Test My Prediction →
           </button>
         )}
       </div>
@@ -684,23 +764,19 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   };
 
   const renderPlay = () => (
-    <div className="flex flex-col items-center px-6 py-8">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2">Inertia Experiment</h2>
-      <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6">Apply the same force to objects with different masses and observe!</p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Inertia Experiment</h2>
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px' }}>Apply the same force to objects with different masses and observe!</p>
 
-      {/* Simulation */}
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 border border-slate-700/50">
-        <svg width={isMobile ? 320 : 400} height={isMobile ? 160 : 200} className="mx-auto">
+      <div style={{ ...cardStyle, marginBottom: '24px', padding: '16px' }}>
+        <svg width="400" height="200">
           <defs>
-            {/* Premium background gradient */}
             <linearGradient id="inerBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
               <stop offset="30%" stopColor="#0f172a" />
               <stop offset="70%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-
-            {/* Ground gradient */}
             <linearGradient id="inerGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#475569" />
               <stop offset="25%" stopColor="#374151" />
@@ -708,8 +784,6 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               <stop offset="75%" stopColor="#374151" />
               <stop offset="100%" stopColor="#1f2937" />
             </linearGradient>
-
-            {/* Light object gradient (blue sphere) */}
             <radialGradient id="inerLightObjGradient" cx="35%" cy="30%" r="65%">
               <stop offset="0%" stopColor="#93c5fd" />
               <stop offset="25%" stopColor="#60a5fa" />
@@ -717,8 +791,6 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               <stop offset="75%" stopColor="#2563eb" />
               <stop offset="100%" stopColor="#1d4ed8" />
             </radialGradient>
-
-            {/* Heavy object gradient (orange block) */}
             <linearGradient id="inerHeavyObjGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#fdba74" />
               <stop offset="25%" stopColor="#fb923c" />
@@ -726,23 +798,17 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               <stop offset="75%" stopColor="#ea580c" />
               <stop offset="100%" stopColor="#c2410c" />
             </linearGradient>
-
-            {/* Force arrow gradient */}
             <linearGradient id="inerForceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#22c55e" />
               <stop offset="40%" stopColor="#4ade80" />
               <stop offset="70%" stopColor="#22c55e" />
               <stop offset="100%" stopColor="#16a34a" />
             </linearGradient>
-
-            {/* Motion trail gradient */}
             <linearGradient id="inerTrailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} stopOpacity="0" />
               <stop offset="50%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} stopOpacity="0.3" />
               <stop offset="100%" stopColor={selectedMass === 'light' ? '#3b82f6' : '#f97316'} stopOpacity="0.6" />
             </linearGradient>
-
-            {/* Glow filters */}
             <filter id="inerObjectGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
@@ -751,7 +817,6 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
             <filter id="inerForceGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -759,67 +824,55 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
             <filter id="inerShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
             </filter>
-
-            {/* Arrow marker */}
             <marker id="inerArrowForce" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
               <path d="M0,0 L0,8 L12,4 z" fill="url(#inerForceGradient)" />
             </marker>
           </defs>
 
-          {/* Background */}
           <rect width="100%" height="100%" fill="url(#inerBgGradient)" rx="12" />
 
-          {/* Ground with grid pattern */}
-          <rect x="0" y={isMobile ? 128 : 160} width="100%" height={isMobile ? 32 : 40} fill="url(#inerGroundGradient)" />
-          <line x1="0" y1={isMobile ? 128 : 160} x2="100%" y2={isMobile ? 128 : 160} stroke="#64748b" strokeWidth="2" />
-          {/* Grid lines on ground */}
-          {[50, 100, 150, 200, 250, 300, 350].filter(x => x < (isMobile ? 320 : 400)).map(x => (
-            <line key={x} x1={x} y1={isMobile ? 130 : 162} x2={x} y2={isMobile ? 160 : 200} stroke="#4b5563" strokeWidth="1" strokeOpacity="0.5" />
-          ))}
+          <g>
+            <rect x="0" y="160" width="100%" height="40" fill="url(#inerGroundGradient)" />
+            <line x1="0" y1="160" x2="100%" y2="160" stroke="#64748b" strokeWidth="2" />
+            {[50, 100, 150, 200, 250, 300, 350].map(x => (
+              <line key={x} x1={x} y1="162" x2={x} y2="200" stroke="#4b5563" strokeWidth="1" strokeOpacity="0.5" />
+            ))}
+          </g>
 
-          {/* Motion trail when moving */}
           {isMoving && (
             <rect
               x={40}
-              y={selectedMass === 'light' ? (isMobile ? 96 : 120) : (isMobile ? 88 : 110)}
-              width={Math.max(0, objectPosition * (isMobile ? 0.8 : 1) - 40)}
-              height={selectedMass === 'light' ? (isMobile ? 32 : 40) : (isMobile ? 40 : 50)}
+              y={selectedMass === 'light' ? 120 : 110}
+              width={Math.max(0, objectPosition - 40)}
+              height={selectedMass === 'light' ? 40 : 50}
               fill="url(#inerTrailGradient)"
               rx="4"
             />
           )}
 
-          {/* Object */}
-          <g transform={`translate(${objectPosition * (isMobile ? 0.8 : 1)}, ${isMobile ? 80 : 100})`} filter="url(#inerShadow)">
+          <g transform={`translate(${objectPosition}, 100)`} filter="url(#inerShadow)">
             {selectedMass === 'light' ? (
-              // Light object - 3D sphere with highlight
               <>
-                <ellipse cx="20" cy={isMobile ? 46 : 58} rx={isMobile ? 14 : 18} ry={isMobile ? 3 : 4} fill="rgba(0,0,0,0.3)" />
-                <circle cx="20" cy={isMobile ? 32 : 40} r={isMobile ? 16 : 20} fill="url(#inerLightObjGradient)" filter="url(#inerObjectGlow)" />
-                <ellipse cx={isMobile ? 15 : 14} cy={isMobile ? 27 : 34} rx={isMobile ? 5 : 6} ry={isMobile ? 3 : 4} fill="rgba(255,255,255,0.3)" />
+                <ellipse cx="20" cy="58" rx="18" ry="4" fill="rgba(0,0,0,0.3)" />
+                <circle cx="20" cy="40" r="20" fill="url(#inerLightObjGradient)" filter="url(#inerObjectGlow)" />
+                <ellipse cx="14" cy="34" rx="6" ry="4" fill="rgba(255,255,255,0.3)" />
               </>
             ) : (
-              // Heavy object - 3D block with shading
               <>
-                <ellipse cx={isMobile ? 24 : 30} cy={isMobile ? 50 : 62} rx={isMobile ? 22 : 28} ry={isMobile ? 4 : 5} fill="rgba(0,0,0,0.3)" />
-                <rect x="0" y={isMobile ? 8 : 10} width={isMobile ? 48 : 60} height={isMobile ? 40 : 50} fill="url(#inerHeavyObjGradient)" rx="4" filter="url(#inerObjectGlow)" />
-                {/* Top highlight */}
-                <rect x={isMobile ? 3 : 4} y={isMobile ? 11 : 14} width={isMobile ? 42 : 52} height={isMobile ? 6 : 8} fill="rgba(255,255,255,0.15)" rx="2" />
-                {/* Side shadow */}
-                <rect x={isMobile ? 42 : 52} y={isMobile ? 11 : 14} width={isMobile ? 5 : 6} height={isMobile ? 34 : 42} fill="rgba(0,0,0,0.2)" rx="2" />
+                <ellipse cx="30" cy="62" rx="28" ry="5" fill="rgba(0,0,0,0.3)" />
+                <rect x="0" y="10" width="60" height="50" fill="url(#inerHeavyObjGradient)" rx="4" filter="url(#inerObjectGlow)" />
+                <rect x="4" y="14" width="52" height="8" fill="rgba(255,255,255,0.15)" rx="2" />
+                <rect x="52" y="14" width="6" height="42" fill="rgba(0,0,0,0.2)" rx="2" />
               </>
             )}
           </g>
 
-          {/* Force arrow with glow */}
           {!hasAppliedForce && (
-            <g transform={`translate(${isMobile ? 16 : 20}, ${isMobile ? 96 : 120})`} filter="url(#inerForceGlow)">
-              <line x1="0" y1="0" x2={isMobile ? 24 : 30} y2="0" stroke="url(#inerForceGradient)" strokeWidth="4" markerEnd="url(#inerArrowForce)" />
-              {/* Pulsing force indicator */}
+            <g transform="translate(20, 120)" filter="url(#inerForceGlow)">
+              <line x1="0" y1="0" x2="30" y2="0" stroke="url(#inerForceGradient)" strokeWidth="4" markerEnd="url(#inerArrowForce)" />
               <circle cx="0" cy="0" r="5" fill="#22c55e" opacity="0.6">
                 <animate attributeName="r" values="5;8;5" dur="1s" repeatCount="indefinite" />
                 <animate attributeName="opacity" values="0.6;0.3;0.6" dur="1s" repeatCount="indefinite" />
@@ -827,10 +880,9 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
             </g>
           )}
 
-          {/* Velocity indicator when moving */}
           {isMoving && (
-            <g transform={`translate(${(objectPosition * (isMobile ? 0.8 : 1)) + (selectedMass === 'light' ? (isMobile ? 36 : 45) : (isMobile ? 52 : 65))}, ${isMobile ? 96 : 120})`}>
-              <line x1="0" y1="0" x2={isMobile ? 16 : 20} y2="0" stroke="#fbbf24" strokeWidth="3" strokeDasharray="4 2">
+            <g transform={`translate(${objectPosition + (selectedMass === 'light' ? 45 : 65)}, 120)`}>
+              <line x1="0" y1="0" x2="20" y2="0" stroke="#fbbf24" strokeWidth="3" strokeDasharray="4 2">
                 <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="0.3s" repeatCount="indefinite" />
               </line>
             </g>
@@ -838,53 +890,71 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
         </svg>
       </div>
 
-      {/* Labels outside SVG using typo system */}
-      <div className="text-center mb-4">
-        <p style={{ fontSize: typo.body }} className="text-slate-400">
+      <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+        <p style={{ fontSize: '16px', color: colors.textSecondary }}>
           {isMoving ? 'Accelerating...' : hasAppliedForce ? 'Stopped!' : 'Ready to push'}
         </p>
         {hasAppliedForce && !isMoving && (
-          <p style={{ fontSize: typo.small }} className="text-amber-400 mt-1">
+          <p style={{ fontSize: '14px', color: colors.primary, marginTop: '4px' }}>
             {selectedMass === 'light' ? 'Light object: Fast acceleration!' : 'Heavy object: Slow acceleration (more inertia)!'}
           </p>
         )}
       </div>
 
-      {/* Controls */}
-      <div className="w-full max-w-sm">
-        <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
-          <h4 style={{ fontSize: typo.body }} className="text-white font-medium mb-3">Select Object Mass</h4>
-          <div className="flex gap-2">
+      <div style={{ width: '100%', maxWidth: '380px' }}>
+        <div style={{ ...cardStyle, marginBottom: '16px', padding: '16px' }}>
+          <h4 style={{ fontSize: '16px', color: '#ffffff', fontWeight: 600, marginBottom: '12px' }}>Select Object Mass</h4>
+          <div style={{ display: 'flex', gap: '8px' }}>
             {(['light', 'heavy'] as const).map(mass => (
               <button
                 key={mass}
-                onClick={() => {
-                  if (!hasAppliedForce) setSelectedMass(mass);
+                onClick={() => { if (!hasAppliedForce) setSelectedMass(mass); }}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: selectedMass === mass ? colors.primary : colors.bgCardLight,
+                  color: selectedMass === mass ? '#ffffff' : colors.textSecondary,
+                  zIndex: 10,
+                  position: 'relative' as const,
                 }}
-                style={{ zIndex: 10 }}
-                className={`flex-1 py-3 rounded-lg font-medium transition-all ${
-                  selectedMass === mass
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
               >
-                {mass === 'light' ? '\uD83D\uDFE6 Light (1kg)' : '\uD83D\uDFE7 Heavy (10kg)'}
+                {mass === 'light' ? '🟦 Light (1kg)' : '🟧 Heavy (10kg)'}
               </button>
             ))}
           </div>
         </div>
 
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={hasAppliedForce ? 100 : 0}
+          onChange={() => { if (!hasAppliedForce) applyForce(); }}
+          style={{
+            width: '100%',
+            marginBottom: '12px',
+            accentColor: colors.primary,
+            cursor: 'pointer',
+          }}
+        />
+
         <button
           onClick={() => { if (!hasAppliedForce) applyForce(); }}
           disabled={hasAppliedForce && isMoving}
-          style={{ zIndex: 10 }}
-          className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-            hasAppliedForce
-              ? 'bg-slate-700 text-slate-400'
-              : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25'
-          }`}
+          style={{
+            ...primaryBtnStyle,
+            width: '100%',
+            background: hasAppliedForce ? colors.bgCardLight : `linear-gradient(135deg, ${colors.primary}, #ea580c)`,
+            color: hasAppliedForce ? colors.textMuted : 'white',
+            boxShadow: hasAppliedForce ? 'none' : '0 4px 12px rgba(245,158,11,0.3)',
+          }}
         >
-          {hasAppliedForce ? '\u2713 Force Applied!' : '\uD83D\uDC49 Apply Force!'}
+          {hasAppliedForce ? '✓ Force Applied!' : '👉 Apply Force!'}
         </button>
 
         {hasAppliedForce && !isMoving && (
@@ -894,24 +964,26 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               setHasAppliedForce(false);
               setIsMoving(false);
             }}
-            style={{ zIndex: 10 }}
-            className="w-full mt-3 py-3 bg-slate-700 text-slate-300 rounded-lg font-medium hover:bg-slate-600"
+            style={{
+              width: '100%',
+              marginTop: '12px',
+              padding: '12px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: colors.bgCardLight,
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+            }}
           >
-            {'\uD83D\uDD04'} Try Again
+            🔄 Try Again
           </button>
         )}
-
-        <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-          <p style={{ fontSize: typo.small }} className="text-amber-400">{'\uD83D\uDCA1'} Try both masses to see how inertia affects acceleration!</p>
-        </div>
       </div>
 
-      <button
-        onClick={() => goToPhase('review')}
-        style={{ zIndex: 10 }}
-        className="mt-6 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
-      >
-        Understand Results {'\u2192'}
+      <button onClick={() => goToPhase('review')} style={{ ...primaryBtnStyle, marginTop: '24px' }}>
+        Understand Results →
       </button>
     </div>
   );
@@ -921,44 +993,48 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     const reviewContent = [
       {
         title: "What is Inertia?",
-        content: `${wasCorrect ? "You predicted correctly! " : ""}Inertia is the resistance of any object to a change in its state of motion.\n\nThis includes:\n- Objects at rest resisting being moved\n- Objects in motion resisting being stopped\n- Objects resisting changes in direction`,
-        highlight: wasCorrect,
+        content: `${wasCorrect ? "You predicted correctly! " : ""}Inertia is the resistance of any object to a change in its state of motion. This fundamental property of matter means that objects at rest tend to stay at rest, and objects in motion tend to stay in motion, unless acted upon by an unbalanced external force. This principle, known as Newton's First Law of Motion, is one of the cornerstones of classical mechanics and has profound implications for everything from vehicle safety to space travel.`,
       },
       {
         title: "Mass and Inertia",
-        content: "The more mass an object has, the more inertia it has.\n\n- Heavy objects are harder to start moving\n- Heavy objects are harder to stop\n- Heavy objects are harder to change direction\n\nThis is why pushing a car is harder than pushing a bicycle!",
+        content: "The more mass an object has, the more inertia it has. Heavy objects are harder to start moving, harder to stop once moving, and harder to change direction. This is why pushing a car is so much harder than pushing a bicycle - the car has enormously more mass and therefore enormously more inertia. This relationship between mass and inertia is linear: double the mass means double the inertia, requiring double the force for the same acceleration.",
       },
       {
         title: "F = ma Explains It",
-        content: "Newton's Second Law (F = ma) shows us why:\n\nFor the same Force:\n- Light object (small m) = Large acceleration\n- Heavy object (large m) = Small acceleration\n\nMore inertia means less response to the same force!",
+        content: "Newton's Second Law (F = ma) quantifies the relationship between force, mass, and acceleration. For the same applied force, a light object (small m) experiences large acceleration, while a heavy object (large m) experiences small acceleration. This mathematical relationship precisely describes what we observed in the experiment: inertia is the quantitative resistance to acceleration, directly proportional to mass. This equation is the foundation of all mechanical engineering and physics.",
       },
     ];
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">Understanding Inertia</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '24px' }}>Understanding Inertia</h2>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
-          <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-amber-400 mb-4">{reviewContent[reviewStep].title}</h3>
-          <p style={{ fontSize: typo.body }} className="text-slate-300 whitespace-pre-line leading-relaxed">{reviewContent[reviewStep].content}</p>
-
-          {reviewContent[reviewStep].highlight && (
-            <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
-              <p style={{ fontSize: typo.small }} className="text-emerald-400">{'\u2713'} Great prediction! You correctly understood that heavier objects are harder to move.</p>
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 700, color: colors.primary, marginBottom: '16px' }}>{reviewContent[reviewStep].title}</h3>
+          <p style={{ fontSize: '16px', color: colors.textSecondary, whiteSpace: 'pre-line', lineHeight: 1.7 }}>{reviewContent[reviewStep].content}</p>
+          {reviewContent[reviewStep].title === "What is Inertia?" && wasCorrect && (
+            <div style={{ marginTop: '16px', padding: '12px', background: `${colors.success}20`, border: `1px solid ${colors.success}40`, borderRadius: '12px' }}>
+              <p style={{ fontSize: '14px', color: colors.success }}>✓ Great prediction! You correctly understood that heavier objects are harder to move.</p>
             </div>
           )}
         </div>
 
-        {/* Step indicators */}
-        <div className="flex gap-2 mb-6">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
           {reviewContent.map((_, i) => (
             <button
               key={i}
               onClick={() => setReviewStep(i)}
-              style={{ zIndex: 10 }}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === reviewStep ? 'w-8 bg-amber-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
-              }`}
+              style={{
+                height: '8px',
+                width: i === reviewStep ? '32px' : '8px',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                background: i === reviewStep ? colors.primary : colors.bgCardLight,
+                transition: 'all 0.3s ease',
+                zIndex: 10,
+                position: 'relative' as const,
+              }}
             />
           ))}
         </div>
@@ -971,10 +1047,9 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               goToPhase('twist_predict');
             }
           }}
-          style={{ zIndex: 10 }}
-          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
+          style={primaryBtnStyle}
         >
-          {reviewStep < reviewContent.length - 1 ? 'Continue \u2192' : 'Try a New Scenario \u2192'}
+          {reviewStep < reviewContent.length - 1 ? 'Continue →' : 'Try a New Scenario →'}
         </button>
       </div>
     );
@@ -982,19 +1057,77 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
 
   const renderTwistPredict = () => {
     const predictions = [
-      { id: 'seatbelt_stops', label: 'The seatbelt will stop the passenger safely', icon: '\u2705' },
-      { id: 'passenger_flies', label: 'Without seatbelt, the passenger keeps moving forward', icon: '\uD83D\uDCA8' },
-      { id: 'both_stop', label: 'Both car and passenger stop at the same time', icon: '\uD83D\uDED1' },
-      { id: 'nothing_happens', label: 'Nothing happens to the passenger', icon: '\u2753' },
+      { id: 'seatbelt_stops', label: 'The seatbelt will stop the passenger safely', icon: '✅' },
+      { id: 'passenger_flies', label: 'Without seatbelt, the passenger keeps moving forward', icon: '💨' },
+      { id: 'both_stop', label: 'Both car and passenger stop at the same time', icon: '🛑' },
+      { id: 'nothing_happens', label: 'Nothing happens to the passenger', icon: '❓' },
     ];
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="text-5xl mb-4">{'\uD83D\uDE97'}</div>
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-indigo-400 mb-2">The Twist: Sudden Stop</h2>
-        <p style={{ fontSize: typo.body }} className="text-slate-400 mb-8 text-center max-w-md">A car is moving fast and suddenly crashes into a wall. What happens to the passenger inside?</p>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.accent, marginBottom: '8px' }}>The Twist: Sudden Stop</h2>
+        <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center', maxWidth: '460px' }}>
+          A car is moving fast and suddenly crashes into a wall. What happens to the passenger inside?
+        </p>
 
-        <div className="flex flex-col gap-3 w-full max-w-md mb-8">
+        {/* SVG for twist predict */}
+        <div style={{ marginBottom: '24px' }}>
+          <svg width="360" height="160" viewBox="0 0 360 160">
+            <defs>
+              <linearGradient id="twPredBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
+              <linearGradient id="twPredCar" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#93c5fd" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#1d4ed8" />
+              </linearGradient>
+              <linearGradient id="twPredWall" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#f87171" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#dc2626" />
+              </linearGradient>
+              <filter id="twPredGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="twPredShadow">
+                <feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
+              </filter>
+            </defs>
+            <rect width="360" height="160" fill="url(#twPredBg)" rx="12" />
+            <g>
+              <rect x="0" y="120" width="360" height="40" fill="#334155" />
+              <line x1="0" y1="120" x2="360" y2="120" stroke="#475569" strokeWidth="2" />
+              <line x1="0" y1="140" x2="360" y2="140" stroke="#fbbf24" strokeWidth="2" strokeDasharray="20,15" />
+            </g>
+            <g filter="url(#twPredShadow)">
+              <rect x="300" y="60" width="20" height="60" fill="url(#twPredWall)" rx="2" filter="url(#twPredGlow)" />
+            </g>
+            <g transform="translate(120, 75)" filter="url(#twPredShadow)">
+              <rect x="0" y="16" width="70" height="25" fill="url(#twPredCar)" rx="4" />
+              <rect x="10" y="4" width="40" height="18" fill="#60a5fa" rx="3" />
+              <circle cx="15" cy="43" r="7" fill="#374151" />
+              <circle cx="15" cy="43" r="3.5" fill="#6b7280" />
+              <circle cx="55" cy="43" r="7" fill="#374151" />
+              <circle cx="55" cy="43" r="3.5" fill="#6b7280" />
+              <circle cx="35" cy="12" r="6" fill="#fde047" />
+            </g>
+            <g>
+              <line x1="200" y1="88" x2="250" y2="88" stroke="#f59e0b" strokeWidth="3" strokeDasharray="6 3">
+                <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="0.4s" repeatCount="indefinite" />
+              </line>
+              <polygon points="250,82 262,88 250,94" fill="#f59e0b" />
+            </g>
+            <text x="180" y="152" fill={colors.textMuted} fontSize="11" textAnchor="middle">What happens to the passenger?</text>
+          </svg>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '420px', marginBottom: '24px' }}>
           {predictions.map((pred) => (
             <button
               key={pred.id}
@@ -1003,26 +1136,29 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
                 playSound((pred.id === 'seatbelt_stops' || pred.id === 'passenger_flies') ? 'success' : 'click');
                 emitEvent('twist_prediction_made', { twistPrediction: pred.id });
               }}
-              style={{ zIndex: 10 }}
-              className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
-                twistPrediction === pred.id
-                  ? 'border-indigo-500 bg-indigo-500/20'
-                  : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700/50'
-              }`}
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                border: `2px solid ${twistPrediction === pred.id ? colors.accent : colors.border}`,
+                background: twistPrediction === pred.id ? `${colors.accent}20` : `${colors.bgCardLight}80`,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                transition: 'all 0.3s ease',
+                zIndex: 10,
+                position: 'relative' as const,
+              }}
             >
-              <span className="text-2xl">{pred.icon}</span>
-              <span className="text-white font-medium text-left">{pred.label}</span>
+              <span style={{ fontSize: '24px' }}>{pred.icon}</span>
+              <span style={{ color: '#ffffff', fontWeight: 500, textAlign: 'left', fontSize: '15px' }}>{pred.label}</span>
             </button>
           ))}
         </div>
 
         {twistPrediction && (
-          <button
-            onClick={() => goToPhase('twist_play')}
-            style={{ zIndex: 10 }}
-            className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
-          >
-            Test It {'\u2192'}
+          <button onClick={() => goToPhase('twist_play')} style={{ ...primaryBtnStyle, background: `linear-gradient(135deg, ${colors.accent}, #7c3aed)` }}>
+            Test It →
           </button>
         )}
       </div>
@@ -1030,88 +1166,59 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   };
 
   const renderTwistPlay = () => (
-    <div className="flex flex-col items-center px-6 py-8">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-indigo-400 mb-2">Car Crash Simulation</h2>
-      <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6">See how inertia affects passengers during a sudden stop!</p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.accent, marginBottom: '8px' }}>Car Crash Simulation</h2>
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px' }}>See how inertia affects passengers during a sudden stop!</p>
 
-      {/* Simulation */}
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 border border-slate-700/50">
-        <svg width={isMobile ? 320 : 400} height={isMobile ? 144 : 180} className="mx-auto">
+      <div style={{ ...cardStyle, marginBottom: '24px', padding: '16px' }}>
+        <svg width="400" height="180">
           <defs>
-            {/* Premium background gradient */}
             <linearGradient id="inerTwistBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" />
               <stop offset="30%" stopColor="#0f172a" />
               <stop offset="70%" stopColor="#1e293b" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-
-            {/* Road gradient */}
             <linearGradient id="inerRoadGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#475569" />
-              <stop offset="25%" stopColor="#374151" />
               <stop offset="50%" stopColor="#334155" />
-              <stop offset="75%" stopColor="#374151" />
               <stop offset="100%" stopColor="#1f2937" />
             </linearGradient>
-
-            {/* Wall gradient (danger) */}
             <linearGradient id="inerWallGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#fca5a5" />
-              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="0%" stopColor="#f87171" />
               <stop offset="50%" stopColor="#ef4444" />
-              <stop offset="75%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#dc2626" />
             </linearGradient>
-
-            {/* Car body gradient */}
             <linearGradient id="inerCarBodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#93c5fd" />
-              <stop offset="25%" stopColor="#60a5fa" />
               <stop offset="50%" stopColor="#3b82f6" />
-              <stop offset="75%" stopColor="#2563eb" />
               <stop offset="100%" stopColor="#1d4ed8" />
             </linearGradient>
-
-            {/* Car roof gradient */}
             <linearGradient id="inerCarRoofGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#bfdbfe" />
-              <stop offset="30%" stopColor="#93c5fd" />
-              <stop offset="70%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#93c5fd" />
               <stop offset="100%" stopColor="#3b82f6" />
             </linearGradient>
-
-            {/* Passenger gradient (head) */}
             <radialGradient id="inerPassengerGradient" cx="35%" cy="30%" r="65%">
               <stop offset="0%" stopColor="#fef08a" />
-              <stop offset="30%" stopColor="#fde047" />
-              <stop offset="60%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor="#fde047" />
               <stop offset="100%" stopColor="#fbbf24" />
             </radialGradient>
-
-            {/* Seatbelt gradient */}
             <linearGradient id="inerSeatbeltGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#f87171" />
               <stop offset="50%" stopColor="#ef4444" />
               <stop offset="100%" stopColor="#dc2626" />
             </linearGradient>
-
-            {/* Wheel gradient */}
             <radialGradient id="inerWheelGradient" cx="40%" cy="40%" r="60%">
               <stop offset="0%" stopColor="#4b5563" />
-              <stop offset="40%" stopColor="#374151" />
-              <stop offset="70%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#374151" />
               <stop offset="100%" stopColor="#111827" />
             </radialGradient>
-
-            {/* Speed trail gradient */}
             <linearGradient id="inerSpeedTrailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
               <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.2" />
               <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />
             </linearGradient>
-
-            {/* Glow filters */}
             <filter id="inerCarGlow" x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
@@ -1119,7 +1226,6 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
             <filter id="inerWallGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
@@ -1128,151 +1234,125 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-
-            <filter id="inerPassengerGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
             <filter id="inerCarShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="3" dy="5" stdDeviation="4" floodColor="#000" floodOpacity="0.5" />
             </filter>
           </defs>
 
-          {/* Background */}
           <rect width="100%" height="100%" fill="url(#inerTwistBgGradient)" rx="12" />
 
-          {/* Road with markings */}
-          <rect x="0" y={isMobile ? 104 : 130} width="100%" height={isMobile ? 40 : 50} fill="url(#inerRoadGradient)" />
-          {/* Road edge line */}
-          <line x1="0" y1={isMobile ? 104 : 130} x2="100%" y2={isMobile ? 104 : 130} stroke="#64748b" strokeWidth="2" />
-          {/* Center line (animated dashes) */}
-          <line x1="0" y1={isMobile ? 124 : 155} x2="100%" y2={isMobile ? 124 : 155} stroke="#fbbf24" strokeWidth="3" strokeDasharray="20,15">
-            {carSpeed > 0 && !hasCrashed && (
-              <animate attributeName="stroke-dashoffset" from="0" to="-35" dur="0.2s" repeatCount="indefinite" />
-            )}
-          </line>
-
-          {/* Speed trail when moving */}
-          {carSpeed > 0 && !hasCrashed && (
-            <rect x={isMobile ? 16 : 20} y={isMobile ? 84 : 105} width={Math.max(0, carPosition * (isMobile ? 0.8 : 1) - (isMobile ? 16 : 20))} height={isMobile ? 32 : 40} fill="url(#inerSpeedTrailGradient)" rx="4" />
-          )}
-
-          {/* Wall with glow */}
-          <g filter={hasCrashed ? "url(#inerWallGlow)" : undefined}>
-            <rect x={isMobile ? 256 : 320} y={isMobile ? 56 : 70} width={isMobile ? 16 : 20} height={isMobile ? 48 : 60} fill="url(#inerWallGradient)" rx="2" />
-            {/* Wall texture lines */}
-            <line x1={isMobile ? 260 : 325} y1={isMobile ? 60 : 75} x2={isMobile ? 260 : 325} y2={isMobile ? 100 : 125} stroke="rgba(0,0,0,0.3)" strokeWidth="2" />
-            <line x1={isMobile ? 264 : 330} y1={isMobile ? 60 : 75} x2={isMobile ? 264 : 330} y2={isMobile ? 100 : 125} stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
-            <line x1={isMobile ? 268 : 335} y1={isMobile ? 60 : 75} x2={isMobile ? 268 : 335} y2={isMobile ? 100 : 125} stroke="rgba(0,0,0,0.3)" strokeWidth="2" />
+          <g>
+            <rect x="0" y="130" width="100%" height="50" fill="url(#inerRoadGradient)" />
+            <line x1="0" y1="130" x2="100%" y2="130" stroke="#64748b" strokeWidth="2" />
+            <line x1="0" y1="155" x2="100%" y2="155" stroke="#fbbf24" strokeWidth="3" strokeDasharray="20,15">
+              {carSpeed > 0 && !hasCrashed && (
+                <animate attributeName="stroke-dashoffset" from="0" to="-35" dur="0.2s" repeatCount="indefinite" />
+              )}
+            </line>
           </g>
 
-          {/* Car with premium styling */}
-          <g transform={`translate(${carPosition * (isMobile ? 0.8 : 1)}, ${isMobile ? 68 : 85})`} filter="url(#inerCarShadow)">
-            {/* Car shadow on ground */}
-            <ellipse cx={isMobile ? 28 : 35} cy={isMobile ? 48 : 60} rx={isMobile ? 26 : 32} ry={isMobile ? 4 : 5} fill="rgba(0,0,0,0.3)" />
+          {carSpeed > 0 && !hasCrashed && (
+            <rect x="20" y="105" width={Math.max(0, carPosition - 20)} height="40" fill="url(#inerSpeedTrailGradient)" rx="4" />
+          )}
 
-            {/* Car body */}
-            <rect x="0" y={isMobile ? 16 : 20} width={isMobile ? 56 : 70} height={isMobile ? 20 : 25} fill="url(#inerCarBodyGradient)" rx="4" filter="url(#inerCarGlow)" />
-            {/* Body highlight */}
-            <rect x={isMobile ? 2 : 3} y={isMobile ? 18 : 23} width={isMobile ? 51 : 64} height={isMobile ? 5 : 6} fill="rgba(255,255,255,0.15)" rx="2" />
+          <g filter={hasCrashed ? "url(#inerWallGlow)" : undefined}>
+            <rect x="320" y="70" width="20" height="60" fill="url(#inerWallGradient)" rx="2" />
+            <line x1="325" y1="75" x2="325" y2="125" stroke="rgba(0,0,0,0.3)" strokeWidth="2" />
+            <line x1="335" y1="75" x2="335" y2="125" stroke="rgba(0,0,0,0.3)" strokeWidth="2" />
+          </g>
 
-            {/* Car roof */}
-            <rect x={isMobile ? 8 : 10} y={isMobile ? 4 : 5} width={isMobile ? 32 : 40} height={isMobile ? 16 : 20} fill="url(#inerCarRoofGradient)" rx="3" />
+          <g transform={`translate(${carPosition}, 85)`} filter="url(#inerCarShadow)">
+            <ellipse cx="35" cy="60" rx="32" ry="5" fill="rgba(0,0,0,0.3)" />
+            <rect x="0" y="20" width="70" height="25" fill="url(#inerCarBodyGradient)" rx="4" filter="url(#inerCarGlow)" />
+            <rect x="3" y="23" width="64" height="6" fill="rgba(255,255,255,0.15)" rx="2" />
+            <rect x="10" y="5" width="40" height="20" fill="url(#inerCarRoofGradient)" rx="3" />
+            <rect x="15" y="8" width="12" height="14" fill="#1e3a5a" rx="2" />
+            <rect x="33" y="8" width="12" height="14" fill="#1e3a5a" rx="2" />
+            <ellipse cx="68" cy="32" rx="3" ry="4" fill="#fef08a" />
+            <circle cx="15" cy="47" r="8" fill="url(#inerWheelGradient)" />
+            <circle cx="15" cy="47" r="4" fill="#6b7280" />
+            <circle cx="55" cy="47" r="8" fill="url(#inerWheelGradient)" />
+            <circle cx="55" cy="47" r="4" fill="#6b7280" />
 
-            {/* Windows with reflections */}
-            <rect x={isMobile ? 12 : 15} y={isMobile ? 6 : 8} width={isMobile ? 10 : 12} height={isMobile ? 11 : 14} fill="#1e3a5a" rx="2" />
-            <rect x={isMobile ? 12 : 15} y={isMobile ? 6 : 8} width={isMobile ? 3 : 4} height={isMobile ? 11 : 14} fill="rgba(255,255,255,0.1)" rx="1" />
-            <rect x={isMobile ? 26 : 33} y={isMobile ? 6 : 8} width={isMobile ? 10 : 12} height={isMobile ? 11 : 14} fill="#1e3a5a" rx="2" />
-            <rect x={isMobile ? 26 : 33} y={isMobile ? 6 : 8} width={isMobile ? 3 : 4} height={isMobile ? 11 : 14} fill="rgba(255,255,255,0.1)" rx="1" />
-
-            {/* Headlights */}
-            <ellipse cx={isMobile ? 54 : 68} cy={isMobile ? 26 : 32} rx={isMobile ? 2 : 3} ry={isMobile ? 3 : 4} fill="#fef08a" />
-            <ellipse cx={isMobile ? 54 : 68} cy={isMobile ? 26 : 32} rx={isMobile ? 1.5 : 2} ry={isMobile ? 1.5 : 2} fill="#fef9c3" />
-
-            {/* Wheels with 3D gradient */}
-            <circle cx={isMobile ? 12 : 15} cy={isMobile ? 38 : 47} r={isMobile ? 6 : 8} fill="url(#inerWheelGradient)" />
-            <circle cx={isMobile ? 12 : 15} cy={isMobile ? 38 : 47} r={isMobile ? 3 : 4} fill="#6b7280" />
-            <circle cx={isMobile ? 44 : 55} cy={isMobile ? 38 : 47} r={isMobile ? 6 : 8} fill="url(#inerWheelGradient)" />
-            <circle cx={isMobile ? 44 : 55} cy={isMobile ? 38 : 47} r={isMobile ? 3 : 4} fill="#6b7280" />
-
-            {/* Passenger */}
-            <g transform={`translate(${passengerPosition * (isMobile ? 0.8 : 1)}, 0)`} filter="url(#inerPassengerGlow)">
-              <circle cx={isMobile ? 30 : 38} cy={isMobile ? 12 : 15} r={isMobile ? 6 : 7} fill="url(#inerPassengerGradient)" />
-              {/* Face features */}
-              <circle cx={isMobile ? 29 : 36} cy={isMobile ? 10 : 13} r={isMobile ? 0.8 : 1} fill="#374151" />
-              <circle cx={isMobile ? 32 : 40} cy={isMobile ? 10 : 13} r={isMobile ? 0.8 : 1} fill="#374151" />
-              {/* Seatbelt with gradient */}
+            <g transform={`translate(${passengerPosition}, 0)`}>
+              <circle cx="38" cy="15" r="7" fill="url(#inerPassengerGradient)" />
+              <circle cx="36" cy="13" r="1" fill="#374151" />
+              <circle cx="40" cy="13" r="1" fill="#374151" />
               {seatbeltOn && !hasCrashed && (
-                <line x1={isMobile ? 24 : 30} y1={isMobile ? 8 : 10} x2={isMobile ? 36 : 45} y2={isMobile ? 20 : 25} stroke="url(#inerSeatbeltGradient)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="30" y1="10" x2="45" y2="25" stroke="url(#inerSeatbeltGradient)" strokeWidth="3" strokeLinecap="round" />
               )}
             </g>
 
-            {/* Impact effect when crashed */}
             {hasCrashed && (
-              <>
-                <circle cx={isMobile ? 56 : 70} cy={isMobile ? 24 : 30} r={isMobile ? 6 : 8} fill="none" stroke="#fbbf24" strokeWidth="2" opacity="0.7">
-                  <animate attributeName="r" values={isMobile ? "6;16;6" : "8;20;8"} dur="0.5s" repeatCount="3" />
-                  <animate attributeName="opacity" values="0.7;0;0.7" dur="0.5s" repeatCount="3" />
-                </circle>
-              </>
+              <circle cx="70" cy="30" r="8" fill="none" stroke="#fbbf24" strokeWidth="2" opacity="0.7">
+                <animate attributeName="r" values="8;20;8" dur="0.5s" repeatCount="3" />
+                <animate attributeName="opacity" values="0.7;0;0.7" dur="0.5s" repeatCount="3" />
+              </circle>
             )}
           </g>
         </svg>
       </div>
 
-      {/* Labels outside SVG using typo system */}
-      <div className="flex justify-between w-full max-w-sm mb-4 px-2">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-amber-400 animate-pulse" />
-          <span style={{ fontSize: typo.small }} className="text-slate-400">
-            Speed: <span className="text-white font-semibold">{carSpeed} mph</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '380px', marginBottom: '16px', padding: '0 8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '10px', height: '10px', borderRadius: '9999px', background: colors.primary }} />
+          <span style={{ fontSize: '14px', color: colors.textSecondary }}>
+            Speed: <span style={{ color: '#ffffff', fontWeight: 600 }}>{carSpeed} mph</span>
           </span>
         </div>
-        <div className={`px-3 py-1 rounded-full text-white font-semibold ${seatbeltOn ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-gradient-to-r from-red-500 to-red-600'}`}
-             style={{ fontSize: typo.label }}>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '9999px',
+          color: '#ffffff',
+          fontWeight: 600,
+          fontSize: '12px',
+          background: seatbeltOn ? `linear-gradient(135deg, ${colors.success}, #059669)` : `linear-gradient(135deg, ${colors.danger}, #dc2626)`,
+        }}>
           {seatbeltOn ? 'BELT ON' : 'NO BELT'}
         </div>
       </div>
 
-      {/* Result message */}
       {showCrashResult && (
-        <div className={`mb-4 px-4 py-2 rounded-xl ${seatbeltOn ? 'bg-emerald-500/20 border border-emerald-500/50' : 'bg-red-500/20 border border-red-500/50'}`}>
-          <p style={{ fontSize: typo.body }} className={`font-semibold ${seatbeltOn ? 'text-emerald-400' : 'text-red-400'}`}>
-            {seatbeltOn ? '\u2713 SAFE! Seatbelt stopped passenger!' : '\u26A0 DANGER! Passenger kept moving!'}
+        <div style={{
+          marginBottom: '16px',
+          padding: '12px 16px',
+          borderRadius: '12px',
+          background: seatbeltOn ? `${colors.success}15` : `${colors.danger}15`,
+          border: `1px solid ${seatbeltOn ? `${colors.success}50` : `${colors.danger}50`}`,
+        }}>
+          <p style={{ fontSize: '16px', fontWeight: 600, color: seatbeltOn ? colors.success : colors.danger }}>
+            {seatbeltOn ? '✓ SAFE! Seatbelt stopped passenger!' : '⚠ DANGER! Passenger kept moving!'}
           </p>
         </div>
       )}
 
-      {/* Controls */}
-      <div className="w-full max-w-sm">
-        <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
-          <h4 style={{ fontSize: typo.body }} className="text-white font-medium mb-3">Seatbelt</h4>
-          <div className="flex gap-2">
+      <div style={{ width: '100%', maxWidth: '380px' }}>
+        <div style={{ ...cardStyle, marginBottom: '16px', padding: '16px' }}>
+          <h4 style={{ fontSize: '16px', color: '#ffffff', fontWeight: 600, marginBottom: '12px' }}>Seatbelt</h4>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => { if (!hasCrashed) setSeatbeltOn(true); }}
-              style={{ zIndex: 10 }}
-              className={`flex-1 py-3 rounded-lg font-medium transition-all ${
-                seatbeltOn
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
+              style={{
+                flex: 1, padding: '12px', borderRadius: '10px', border: 'none',
+                fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s ease',
+                background: seatbeltOn ? colors.success : colors.bgCardLight,
+                color: seatbeltOn ? '#ffffff' : colors.textSecondary,
+                zIndex: 10, position: 'relative' as const,
+              }}
             >
-              {'\u2705'} Belt On
+              ✅ Belt On
             </button>
             <button
               onClick={() => { if (!hasCrashed) setSeatbeltOn(false); }}
-              style={{ zIndex: 10 }}
-              className={`flex-1 py-3 rounded-lg font-medium transition-all ${
-                !seatbeltOn
-                  ? 'bg-red-500 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
+              style={{
+                flex: 1, padding: '12px', borderRadius: '10px', border: 'none',
+                fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s ease',
+                background: !seatbeltOn ? colors.danger : colors.bgCardLight,
+                color: !seatbeltOn ? '#ffffff' : colors.textSecondary,
+                zIndex: 10, position: 'relative' as const,
+              }}
             >
-              {'\u274C'} No Belt
+              ❌ No Belt
             </button>
           </div>
         </div>
@@ -1280,14 +1360,15 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
         <button
           onClick={() => { if (!hasCrashed) startDriving(); }}
           disabled={hasCrashed}
-          style={{ zIndex: 10 }}
-          className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-            hasCrashed
-              ? 'bg-slate-700 text-slate-400'
-              : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:shadow-lg hover:shadow-indigo-500/25'
-          }`}
+          style={{
+            ...primaryBtnStyle,
+            width: '100%',
+            background: hasCrashed ? colors.bgCardLight : `linear-gradient(135deg, ${colors.accent}, #7c3aed)`,
+            color: hasCrashed ? colors.textMuted : 'white',
+            boxShadow: hasCrashed ? 'none' : `0 4px 12px ${colors.accent}40`,
+          }}
         >
-          {hasCrashed ? '\u2713 Crashed!' : '\uD83D\uDE97 Start Driving'}
+          {hasCrashed ? '✓ Crashed!' : '🚗 Start Driving'}
         </button>
 
         {showCrashResult && (
@@ -1299,24 +1380,20 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               setHasCrashed(false);
               setShowCrashResult(false);
             }}
-            style={{ zIndex: 10 }}
-            className="w-full mt-3 py-3 bg-slate-700 text-slate-300 rounded-lg font-medium hover:bg-slate-600"
+            style={{
+              width: '100%', marginTop: '12px', padding: '12px', borderRadius: '10px',
+              border: `1px solid ${colors.border}`, background: colors.bgCardLight,
+              color: colors.textSecondary, cursor: 'pointer', fontWeight: 600,
+              transition: 'all 0.2s ease',
+            }}
           >
-            {'\uD83D\uDD04'} Try Again
+            🔄 Try Again
           </button>
         )}
-
-        <div className="mt-4 p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl">
-          <p style={{ fontSize: typo.small }} className="text-indigo-400">{'\uD83D\uDCA1'} Try with and without seatbelt to see the difference!</p>
-        </div>
       </div>
 
-      <button
-        onClick={() => goToPhase('twist_review')}
-        style={{ zIndex: 10 }}
-        className="mt-6 px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl"
-      >
-        Understand Results {'\u2192'}
+      <button onClick={() => goToPhase('twist_review')} style={{ ...primaryBtnStyle, marginTop: '24px', background: `linear-gradient(135deg, ${colors.accent}, #7c3aed)` }}>
+        Understand Results →
       </button>
     </div>
   );
@@ -1325,37 +1402,43 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     const twistReviewContent = [
       {
         title: "Why Seatbelts Save Lives",
-        content: "When a car suddenly stops (crash), the car's motion stops immediately. But YOUR body has inertia - it 'wants' to keep moving forward at the same speed!\n\nWithout a seatbelt, you continue forward and hit the dashboard, steering wheel, or windshield.",
+        content: "When a car suddenly stops (crash), the car's motion stops immediately. But YOUR body has inertia - it 'wants' to keep moving forward at the same speed! Without a seatbelt, you continue forward and hit the dashboard, steering wheel, or windshield. This is a direct consequence of Newton's First Law of Motion: an object in motion stays in motion unless acted on by an external force. The forces involved in a crash are enormous - at highway speeds, the human body experiences deceleration forces of 30-60g, which can be fatal without proper restraint systems.",
       },
       {
         title: "The Seatbelt's Job",
-        content: "A seatbelt provides the EXTERNAL FORCE needed to stop your body's motion.\n\nNewton's First Law: An object in motion stays in motion UNLESS acted upon by an external force.\n\nThe seatbelt is that external force - it stops your inertia safely!",
+        content: "A seatbelt provides the EXTERNAL FORCE needed to stop your body's motion safely. Newton's First Law states: An object in motion stays in motion UNLESS acted upon by an external force. The seatbelt is that external force - it distributes the deceleration force across the strongest parts of your body (pelvis and ribcage) over a longer time period, dramatically reducing peak forces. Modern seatbelts include pretensioners that tighten before impact and load limiters that allow controlled stretching to further reduce injury risk.",
       },
       {
         title: "The Numbers Are Clear",
-        content: "At 30 mph, an unbelted passenger hits the dashboard with the same force as falling from a 3-story building!\n\nSeatbelts:\n- Reduce fatal injuries by 45%\n- Reduce serious injuries by 50%\n- Have saved over 300,000 lives since 1975",
+        content: "At 30 mph, an unbelted passenger hits the dashboard with the same force as falling from a 3-story building! Seatbelts reduce fatal injuries by 45%, reduce serious injuries by 50%, and have saved over 300,000 lives since 1975. Combined with airbags, the reduction in fatalities exceeds 60%. These safety systems all work by managing inertia - extending the deceleration time and distributing forces to prevent catastrophic injury.",
       },
     ];
 
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-indigo-400 mb-6">The Physics of Safety</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.accent, marginBottom: '24px' }}>The Physics of Safety</h2>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
-          <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-indigo-400 mb-4">{twistReviewContent[twistReviewStep].title}</h3>
-          <p style={{ fontSize: typo.body }} className="text-slate-300 whitespace-pre-line leading-relaxed">{twistReviewContent[twistReviewStep].content}</p>
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 700, color: colors.accent, marginBottom: '16px' }}>{twistReviewContent[twistReviewStep].title}</h3>
+          <p style={{ fontSize: '16px', color: colors.textSecondary, whiteSpace: 'pre-line', lineHeight: 1.7 }}>{twistReviewContent[twistReviewStep].content}</p>
         </div>
 
-        {/* Step indicators */}
-        <div className="flex gap-2 mb-6">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
           {twistReviewContent.map((_, i) => (
             <button
               key={i}
               onClick={() => setTwistReviewStep(i)}
-              style={{ zIndex: 10 }}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                i === twistReviewStep ? 'w-8 bg-indigo-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
-              }`}
+              style={{
+                height: '8px',
+                width: i === twistReviewStep ? '32px' : '8px',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                background: i === twistReviewStep ? colors.accent : colors.bgCardLight,
+                transition: 'all 0.3s ease',
+                zIndex: 10,
+                position: 'relative' as const,
+              }}
             />
           ))}
         </div>
@@ -1368,10 +1451,9 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               goToPhase('transfer');
             }
           }}
-          style={{ zIndex: 10 }}
-          className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl"
+          style={{ ...primaryBtnStyle, background: `linear-gradient(135deg, ${colors.accent}, #7c3aed)` }}
         >
-          {twistReviewStep < twistReviewContent.length - 1 ? 'Continue \u2192' : 'Real-World Examples \u2192'}
+          {twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →'}
         </button>
       </div>
     );
@@ -1382,164 +1464,118 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     const allAppsCompleted = completedApps.size >= realWorldApps.length;
 
     return (
-      <div className="flex flex-col items-center px-4 py-8">
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2">Inertia in the Real World</h2>
-        <p style={{ fontSize: typo.small }} className="text-slate-400 mb-6 text-center">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 16px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Inertia in the Real World</h2>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
           Explore all {realWorldApps.length} applications to unlock the quiz
         </p>
 
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6 flex-wrap justify-center">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {realWorldApps.map((a, index) => (
             <button
               key={index}
-              onClick={() => {
-                setActiveApp(index);
-                setExpandedSection(null);
-              }}
-              style={{ zIndex: 10 }}
-              className={`px-4 py-2 rounded-full font-medium text-sm transition-all flex items-center gap-2 ${
-                activeApp === index
-                  ? 'text-white shadow-lg'
+              onClick={() => { setActiveApp(index); }}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '9999px',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                border: 'none',
+                transition: 'all 0.3s ease',
+                background: activeApp === index
+                  ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)`
                   : completedApps.has(index)
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-              {...(activeApp === index ? { style: { zIndex: 10, background: `linear-gradient(135deg, ${a.color}, ${a.color}dd)` } } : {})}
+                    ? `${colors.success}20`
+                    : colors.bgCardLight,
+                color: activeApp === index ? '#ffffff'
+                  : completedApps.has(index) ? colors.success
+                  : colors.textSecondary,
+                zIndex: 10,
+                position: 'relative' as const,
+              }}
             >
-              {completedApps.has(index) && '\u2713 '}{a.icon}
-              {!isMobile && <span>{a.short}</span>}
+              {completedApps.has(index) && '✓ '}{a.icon} {a.short}
             </button>
           ))}
         </div>
 
-        {/* Application Content */}
-        <div
-          className="rounded-2xl p-6 max-w-2xl w-full border mb-6"
-          style={{
-            background: `linear-gradient(135deg, ${app.color}15, ${app.color}05)`,
-            borderColor: `${app.color}40`
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-start gap-4 mb-6">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-              style={{ background: `linear-gradient(135deg, ${app.color}30, ${app.color}10)` }}
-            >
+        <div style={{
+          borderRadius: '16px',
+          padding: '24px',
+          maxWidth: '640px',
+          width: '100%',
+          border: `1px solid ${app.color}40`,
+          marginBottom: '24px',
+          background: `linear-gradient(135deg, ${app.color}15, ${app.color}05)`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '14px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '28px', background: `linear-gradient(135deg, ${app.color}30, ${app.color}10)`,
+            }}>
               {app.icon}
             </div>
-            <div className="flex-1">
-              <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-white">{app.title}</h3>
-              <p style={{ fontSize: typo.small }} className="text-slate-400">{app.tagline}</p>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>{app.title}</h3>
+              <p style={{ fontSize: '13px', color: colors.textSecondary }}>{app.tagline}</p>
             </div>
           </div>
 
-          {/* Description */}
-          <p style={{ fontSize: typo.body }} className="text-slate-300 leading-relaxed mb-6">{app.description}</p>
+          <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '20px' }}>{app.description}</p>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
+          {/* How it works - always visible */}
+          <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '12px', background: `${app.color}10`, border: `1px solid ${app.color}20` }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>How It Works</h4>
+            <p style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.6 }}>{app.howItWorks}</p>
+          </div>
+
+          {/* Stats - always visible with numeric values */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
             {app.stats.map((stat, i) => (
-              <div
-                key={i}
-                className="rounded-xl p-3 text-center"
-                style={{ background: `${app.color}15` }}
-              >
-                <div style={{ fontSize: typo.bodyLarge, color: app.color }} className="font-bold">{stat.val}</div>
-                <div style={{ fontSize: typo.label }} className="text-slate-400">{stat.label}</div>
+              <div key={i} style={{ borderRadius: '12px', padding: '12px', textAlign: 'center', background: `${app.color}15` }}>
+                <div style={{ fontSize: '18px', fontWeight: 700, color: app.color }}>{stat.val}</div>
+                <div style={{ fontSize: '11px', color: colors.textSecondary, lineHeight: 1.3 }}>{stat.label}</div>
               </div>
             ))}
           </div>
 
-          {/* Expandable Sections */}
-          <div className="space-y-3">
-            {/* Connection to Experiment */}
-            <button
-              onClick={() => setExpandedSection(expandedSection === 'connection' ? null : 'connection')}
-              style={{ zIndex: 10 }}
-              className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-left transition-all hover:bg-slate-700/50"
-            >
-              <div className="flex items-center justify-between">
-                <span style={{ fontSize: typo.body }} className="text-white font-medium">Connection to Our Experiment</span>
-                <span className={`transition-transform ${expandedSection === 'connection' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
-              </div>
-              {expandedSection === 'connection' && (
-                <p style={{ fontSize: typo.small }} className="text-slate-400 mt-3 leading-relaxed">{app.connection}</p>
-              )}
-            </button>
-
-            {/* How It Works */}
-            <button
-              onClick={() => setExpandedSection(expandedSection === 'howItWorks' ? null : 'howItWorks')}
-              style={{ zIndex: 10 }}
-              className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-left transition-all hover:bg-slate-700/50"
-            >
-              <div className="flex items-center justify-between">
-                <span style={{ fontSize: typo.body }} className="text-white font-medium">How It Works</span>
-                <span className={`transition-transform ${expandedSection === 'howItWorks' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
-              </div>
-              {expandedSection === 'howItWorks' && (
-                <p style={{ fontSize: typo.small }} className="text-slate-400 mt-3 leading-relaxed">{app.howItWorks}</p>
-              )}
-            </button>
-
-            {/* Examples */}
-            <button
-              onClick={() => setExpandedSection(expandedSection === 'examples' ? null : 'examples')}
-              style={{ zIndex: 10 }}
-              className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-left transition-all hover:bg-slate-700/50"
-            >
-              <div className="flex items-center justify-between">
-                <span style={{ fontSize: typo.body }} className="text-white font-medium">Real Examples</span>
-                <span className={`transition-transform ${expandedSection === 'examples' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
-              </div>
-              {expandedSection === 'examples' && (
-                <ul className="mt-3 space-y-2">
-                  {app.examples.map((ex, i) => (
-                    <li key={i} style={{ fontSize: typo.small }} className="text-slate-400 flex items-start gap-2">
-                      <span style={{ color: app.color }}>{'\u2022'}</span>
-                      {ex}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </button>
-
-            {/* Future Impact */}
-            <button
-              onClick={() => setExpandedSection(expandedSection === 'future' ? null : 'future')}
-              style={{ zIndex: 10 }}
-              className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-left transition-all hover:bg-slate-700/50"
-            >
-              <div className="flex items-center justify-between">
-                <span style={{ fontSize: typo.body }} className="text-white font-medium">Future Impact</span>
-                <span className={`transition-transform ${expandedSection === 'future' ? 'rotate-180' : ''}`}>{'\u25BC'}</span>
-              </div>
-              {expandedSection === 'future' && (
-                <p style={{ fontSize: typo.small }} className="text-slate-400 mt-3 leading-relaxed">{app.futureImpact}</p>
-              )}
-            </button>
+          {/* Examples - always visible */}
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Real Examples</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {app.examples.map((ex, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: app.color, fontSize: '14px' }}>•</span>
+                  <span style={{ fontSize: '13px', color: colors.textSecondary }}>{ex}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Companies */}
-          <div className="mt-6 pt-4 border-t border-slate-700/50">
-            <p style={{ fontSize: typo.label }} className="text-slate-500 mb-2">Leading Companies</p>
-            <div className="flex flex-wrap gap-2">
+          <div style={{ marginBottom: '20px', paddingTop: '16px', borderTop: `1px solid ${colors.border}` }}>
+            <p style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '8px' }}>Leading Companies</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {app.companies.map((company, i) => (
-                <span
-                  key={i}
-                  style={{ fontSize: typo.label }}
-                  className="px-3 py-1 rounded-full bg-slate-800/50 text-slate-400"
-                >
+                <span key={i} style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '9999px', background: `${colors.bgCardLight}80`, color: colors.textSecondary }}>
                   {company}
                 </span>
               ))}
             </div>
           </div>
 
-          {/* Mark as complete button */}
-          {!completedApps.has(activeApp) && (
+          {/* Future impact */}
+          <div style={{ padding: '16px', borderRadius: '12px', background: `${app.color}08`, border: `1px solid ${app.color}15` }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Future Impact</h4>
+            <p style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.6 }}>{app.futureImpact}</p>
+          </div>
+
+          {!completedApps.has(activeApp) ? (
             <button
               onClick={() => {
                 const newCompleted = new Set(completedApps);
@@ -1548,66 +1584,63 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
                 playSound('complete');
                 emitEvent('app_explored', { app: app.title });
                 if (activeApp < realWorldApps.length - 1) {
-                  setTimeout(() => {
-                    setActiveApp(activeApp + 1);
-                    setExpandedSection(null);
-                  }, 300);
+                  setTimeout(() => setActiveApp(activeApp + 1), 300);
                 }
               }}
-              style={{ zIndex: 10, background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)` }}
-              className="w-full mt-6 py-3 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+              style={{
+                width: '100%', marginTop: '20px', padding: '12px', borderRadius: '12px',
+                border: 'none', fontWeight: 600, cursor: 'pointer',
+                background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                color: '#ffffff', transition: 'all 0.3s ease',
+                boxShadow: `0 4px 12px ${app.color}30`,
+                zIndex: 10, position: 'relative' as const,
+              }}
             >
-              {'\u2713'} Mark as Complete
+              ✓ Mark as Complete
             </button>
-          )}
-
-          {completedApps.has(activeApp) && (
-            <div className="mt-6 py-3 bg-emerald-500/10 rounded-xl text-center border border-emerald-500/30">
-              <span style={{ fontSize: typo.body }} className="text-emerald-400 font-medium">{'\u2713'} Completed</span>
+          ) : (
+            <div style={{ marginTop: '20px', padding: '12px', borderRadius: '12px', textAlign: 'center', background: `${colors.success}15`, border: `1px solid ${colors.success}30` }}>
+              <span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>✓ Completed</span>
             </div>
           )}
         </div>
 
-        <p style={{ fontSize: typo.small }} className="text-slate-500 mb-4">
+        <p style={{ fontSize: '14px', color: colors.textMuted, marginBottom: '16px' }}>
           {completedApps.size} of {realWorldApps.length} applications explored
         </p>
 
         {allAppsCompleted ? (
-          <button
-            onClick={() => goToPhase('test')}
-            style={{ zIndex: 10 }}
-            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
-          >
-            Take the Quiz {'\u2192'}
+          <button onClick={() => goToPhase('test')} style={primaryBtnStyle}>
+            Take the Quiz →
           </button>
         ) : (
-          <span style={{ fontSize: typo.small }} className="text-slate-500">Explore {realWorldApps.length - completedApps.size} more to continue</span>
+          <span style={{ fontSize: '14px', color: colors.textMuted }}>
+            Explore {realWorldApps.length - completedApps.size} more to continue
+          </span>
         )}
       </div>
     );
   };
 
   const renderTest = () => {
-    const question = testQuestions[currentQuestion];
-
-    if (testComplete) {
+    if (testSubmitted) {
       const percentage = Math.round((testScore / testQuestions.length) * 100);
       const passed = percentage >= 70;
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8 text-center">
-          <div className="text-7xl mb-6">{passed ? '\uD83C\uDF89' : '\uD83D\uDCDA'}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '32px 24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '72px', marginBottom: '24px' }}>{passed ? '🎉' : '📚'}</div>
 
-          <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-4">
+          <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#ffffff', marginBottom: '16px' }}>
             {passed ? 'Excellent Work!' : 'Keep Learning!'}
           </h2>
 
-          <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 mb-4">
-            {testScore}/{testQuestions.length}
+          <div style={{ fontSize: '48px', fontWeight: 800, marginBottom: '16px' }}>
+            <span style={{ color: colors.primary }}>{testScore}/{testQuestions.length}</span>
           </div>
 
-          <p style={{ fontSize: typo.bodyLarge }} className="text-slate-400 mb-8">
-            {passed ? 'You have mastered the Law of Inertia!' : 'Review the material and try again.'}
+          <p style={{ fontSize: '18px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6 }}>
+            Score: {percentage}% - {passed ? 'You have mastered the Law of Inertia!' : 'Review the material and try again.'}
           </p>
 
           <button
@@ -1615,116 +1648,166 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               if (passed) {
                 goToPhase('mastery');
               } else {
-                setTestComplete(false);
+                setTestSubmitted(false);
                 setCurrentQuestion(0);
                 setTestScore(0);
-                setSelectedAnswer(null);
-                setShowExplanation(false);
+                setTestAnswers(new Array(testQuestions.length).fill(null));
+                setConfirmedQuestions(new Set());
                 goToPhase('review');
               }
             }}
-            style={{ zIndex: 10 }}
-            className={`px-8 py-4 font-semibold rounded-xl ${
-              passed
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white'
-                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-            }`}
+            style={{
+              ...primaryBtnStyle,
+              background: passed
+                ? `linear-gradient(135deg, ${colors.success}, #059669)`
+                : `linear-gradient(135deg, ${colors.primary}, #ea580c)`,
+            }}
           >
-            {passed ? 'Continue to Mastery \u2192' : 'Review Material'}
+            {passed ? 'Next: Complete Lesson' : 'Back to Review'}
           </button>
         </div>
       );
     }
 
+    const question = testQuestions[currentQuestion];
+    const currentAnswer = testAnswers[currentQuestion];
+    const isConfirmed = confirmedQuestions.has(currentQuestion);
+
     return (
-      <div className="flex flex-col items-center px-6 py-8">
-        <div className="flex justify-between items-center w-full max-w-lg mb-4">
-          <span style={{ fontSize: typo.small }} className="text-slate-400 bg-slate-800 px-3 py-1 rounded-full">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '520px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '13px', color: colors.textSecondary, background: colors.bgCardLight, padding: '6px 12px', borderRadius: '9999px' }}>
             Question {currentQuestion + 1} of {testQuestions.length}
           </span>
-          <span style={{ fontSize: typo.small }} className="font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full">
+          <span style={{ fontSize: '13px', fontWeight: 700, color: colors.success, background: `${colors.success}20`, padding: '6px 12px', borderRadius: '9999px' }}>
             Score: {testScore}
           </span>
         </div>
 
-        {/* Progress bar */}
-        <div className="w-full max-w-lg h-1 bg-slate-700 rounded-full mb-6 overflow-hidden">
-          <div
-            className="h-full bg-amber-500 rounded-full transition-all duration-300"
-            style={{ width: `${((currentQuestion + 1) / testQuestions.length) * 100}%` }}
-          />
+        <div style={{ width: '100%', maxWidth: '520px', height: '4px', background: colors.bgCardLight, borderRadius: '9999px', marginBottom: '24px', overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            background: colors.primary,
+            borderRadius: '9999px',
+            transition: 'width 0.3s ease',
+            width: `${((currentQuestion + 1) / testQuestions.length) * 100}%`,
+          }} />
         </div>
 
-        {/* Scenario */}
-        <div className="bg-slate-800/30 rounded-xl p-4 max-w-lg w-full mb-4 border border-slate-700/50">
-          <p style={{ fontSize: typo.small }} className="text-slate-400 leading-relaxed">{question.scenario}</p>
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '16px', padding: '16px', background: `${colors.bgCardLight}50` }}>
+          <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.6 }}>{question.scenario}</p>
         </div>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
-          <h3 style={{ fontSize: typo.body }} className="text-white font-semibold mb-4 leading-relaxed">{question.question}</h3>
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '24px' }}>
+          <h3 style={{ fontSize: '16px', color: '#ffffff', fontWeight: 600, marginBottom: '16px', lineHeight: 1.5 }}>{question.question}</h3>
 
-          <div className="flex flex-col gap-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {question.options.map((option, index) => {
-              let bgClass = 'bg-slate-700/50 border-slate-600 hover:bg-slate-600/50';
-              let textClass = 'text-white';
+              const optId = String.fromCharCode(97 + index);
+              const isSelected = currentAnswer === optId;
+              const isCorrectOpt = option.correct;
 
-              if (showExplanation) {
-                if (option.correct) {
-                  bgClass = 'bg-emerald-500/20 border-emerald-500';
-                  textClass = 'text-emerald-400';
-                } else if (index === selectedAnswer) {
-                  bgClass = 'bg-red-500/20 border-red-500';
-                  textClass = 'text-red-400';
+              let bg = `${colors.bgCardLight}80`;
+              let borderColor = colors.borderLight;
+              let textColor = '#ffffff';
+
+              if (isConfirmed) {
+                if (isCorrectOpt) {
+                  bg = `${colors.success}20`;
+                  borderColor = colors.success;
+                  textColor = colors.success;
+                } else if (isSelected) {
+                  bg = `${colors.danger}20`;
+                  borderColor = colors.danger;
+                  textColor = colors.danger;
                 }
+              } else if (isSelected) {
+                bg = `${colors.primary}20`;
+                borderColor = colors.primary;
               }
 
               return (
                 <button
-                  key={index}
-                  onClick={() => handleTestAnswer(index)}
-                  disabled={showExplanation}
-                  style={{ zIndex: 10 }}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${bgClass}`}
+                  key={optId}
+                  onClick={() => {
+                    if (isConfirmed) return;
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = optId;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: '12px',
+                    border: `2px solid ${borderColor}`,
+                    background: bg,
+                    textAlign: 'left',
+                    cursor: isConfirmed ? 'default' : 'pointer',
+                    transition: 'all 0.3s ease',
+                    zIndex: 10,
+                    position: 'relative' as const,
+                  }}
                 >
-                  <span style={{ fontSize: typo.small }} className={textClass}>{option.text}</span>
+                  <span style={{ fontSize: '14px', color: textColor, lineHeight: 1.5 }}>{option.text}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {showExplanation && (
-          <div className={`p-4 rounded-xl max-w-lg w-full mb-6 ${
-            testQuestions[currentQuestion].options[selectedAnswer!]?.correct
-              ? 'bg-emerald-500/10 border border-emerald-500/30'
-              : 'bg-red-500/10 border border-red-500/30'
-          }`}>
-            <p style={{ fontSize: typo.body }} className={`font-semibold mb-2 ${
-              testQuestions[currentQuestion].options[selectedAnswer!]?.correct ? 'text-emerald-400' : 'text-red-400'
-            }`}>
-              {testQuestions[currentQuestion].options[selectedAnswer!]?.correct ? '\u2713 Correct!' : '\u2717 Not quite'}
+        {isConfirmed && (
+          <div style={{
+            padding: '16px',
+            borderRadius: '12px',
+            maxWidth: '520px',
+            width: '100%',
+            marginBottom: '24px',
+            background: question.options.find(o => o.correct)?.correct && currentAnswer === String.fromCharCode(97 + question.options.findIndex(o => o.correct)) ? `${colors.success}10` : `${colors.danger}10`,
+            border: `1px solid ${question.options.find(o => o.correct)?.correct && currentAnswer === String.fromCharCode(97 + question.options.findIndex(o => o.correct)) ? `${colors.success}30` : `${colors.danger}30`}`,
+          }}>
+            <p style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px', color: currentAnswer === String.fromCharCode(97 + question.options.findIndex(o => o.correct)) ? colors.success : colors.danger }}>
+              {currentAnswer === String.fromCharCode(97 + question.options.findIndex(o => o.correct)) ? '✓ Correct!' : '✗ Not quite'}
             </p>
-            <p style={{ fontSize: typo.small }} className="text-slate-300">{question.explanation}</p>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.6 }}>{question.explanation}</p>
           </div>
         )}
 
-        {showExplanation && (
-          <button
-            onClick={() => {
-              if (currentQuestion < testQuestions.length - 1) {
-                setCurrentQuestion(c => c + 1);
-                setSelectedAnswer(null);
-                setShowExplanation(false);
-              } else {
-                setTestComplete(true);
-              }
-            }}
-            style={{ zIndex: 10 }}
-            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
-          >
-            {currentQuestion < testQuestions.length - 1 ? 'Next Question \u2192' : 'See Results \u2192'}
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {currentAnswer && !isConfirmed && (
+            <button
+              onClick={() => {
+                setConfirmedQuestions(prev => new Set(prev).add(currentQuestion));
+                const answerIndex = currentAnswer.charCodeAt(0) - 97;
+                if (question.options[answerIndex]?.correct) {
+                  setTestScore(s => s + 1);
+                  playSound('success');
+                } else {
+                  playSound('failure');
+                }
+              }}
+              style={{ ...primaryBtnStyle, flex: 1 }}
+            >
+              Check Answer
+            </button>
+          )}
+          {isConfirmed && currentQuestion < 9 && (
+            <button
+              onClick={() => setCurrentQuestion(currentQuestion + 1)}
+              style={{ ...primaryBtnStyle, flex: 1 }}
+            >
+              Next Question
+            </button>
+          )}
+          {isConfirmed && currentQuestion === 9 && (
+            <button
+              onClick={() => {
+                setTestSubmitted(true);
+              }}
+              style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
+            >
+              Submit Test
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -1733,14 +1816,11 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
     const percentage = Math.round((testScore / testQuestions.length) * 100);
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center relative overflow-hidden">
-        {/* Confetti effect */}
-        <style>{`
-          @keyframes confetti {
-            0% { transform: translateY(0) rotate(0); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-          }
-        `}</style>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: '500px', padding: '48px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden',
+      }}>
+        <style>{`@keyframes confetti { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
         {Array.from({ length: 50 }).map((_, i) => (
           <div
             key={i}
@@ -1757,40 +1837,42 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
           />
         ))}
 
-        {/* Trophy */}
-        <div className="w-32 h-32 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center mb-8 shadow-lg shadow-amber-500/30">
-          <span className="text-6xl">{'\uD83C\uDFC6'}</span>
+        <div style={{
+          width: '120px', height: '120px', borderRadius: '9999px',
+          background: `linear-gradient(135deg, ${colors.primary}, #ea580c)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: '32px', boxShadow: `0 8px 32px ${colors.primary}40`,
+        }}>
+          <span style={{ fontSize: '56px' }}>🏆</span>
         </div>
 
-        <h1 style={{ fontSize: typo.title }} className="font-bold text-white mb-2">Congratulations!</h1>
-        <h2 style={{ fontSize: typo.heading }} className="text-amber-400 mb-4">Inertia Master</h2>
+        <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>Congratulations!</h1>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.primary, marginBottom: '16px' }}>Inertia Master</h2>
 
-        <p style={{ fontSize: typo.bodyLarge }} className="text-slate-400 mb-8">
-          Final Score: <span className="text-emerald-400 font-bold">{testScore}/{testQuestions.length}</span> ({percentage}%)
+        <p style={{ fontSize: '18px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6 }}>
+          Final Score: <span style={{ color: colors.success, fontWeight: 700 }}>{testScore}/{testQuestions.length}</span> ({percentage}%)
         </p>
 
-        {/* Key concepts */}
-        <div className="grid grid-cols-2 gap-4 max-w-md w-full mb-8">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', maxWidth: '400px', width: '100%', marginBottom: '32px' }}>
           {[
-            { icon: '\u2696\uFE0F', label: 'Objects Resist Change' },
-            { icon: '\uD83C\uDFCB\uFE0F', label: 'More Mass = More Inertia' },
-            { icon: '\uD83D\uDE97', label: 'Seatbelts Save Lives' },
-            { icon: '\uD83D\uDE80', label: 'Motion Continues Forever' },
+            { icon: '⚖️', label: 'Objects Resist Change' },
+            { icon: '🏋️', label: 'More Mass = More Inertia' },
+            { icon: '🚗', label: 'Seatbelts Save Lives' },
+            { icon: '🚀', label: 'Motion Continues Forever' },
           ].map((item, i) => (
-            <div key={i} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
-              <div className="text-3xl mb-2">{item.icon}</div>
-              <div style={{ fontSize: typo.small }} className="text-slate-400">{item.label}</div>
+            <div key={i} style={{ ...cardStyle, padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.icon}</div>
+              <div style={{ fontSize: '14px', color: colors.textSecondary }}>{item.label}</div>
             </div>
           ))}
         </div>
 
-        <p style={{ fontSize: typo.small }} className="text-slate-500 mb-6 max-w-md">
+        <p style={{ fontSize: '14px', color: colors.textMuted, marginBottom: '24px', maxWidth: '420px', lineHeight: 1.6 }}>
           You now understand Newton's First Law of Motion - the Law of Inertia. Objects at rest stay at rest, and objects in motion stay in motion, unless acted upon by an external force!
         </p>
 
         <button
           onClick={() => {
-            // Reset all state for replay
             setPhase('hook');
             setHookStep(0);
             setPrediction(null);
@@ -1809,18 +1891,16 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
             setTwistReviewStep(0);
             setActiveApp(0);
             setCompletedApps(new Set());
-            setExpandedSection(null);
             setCurrentQuestion(0);
-            setSelectedAnswer(null);
-            setShowExplanation(false);
+            setTestAnswers(new Array(testQuestions.length).fill(null));
+            setConfirmedQuestions(new Set());
             setTestScore(0);
-            setTestComplete(false);
+            setTestSubmitted(false);
             onComplete?.();
           }}
-          style={{ zIndex: 10 }}
-          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
+          style={primaryBtnStyle}
         >
-          Complete Lesson {'\u2713'}
+          Complete Lesson ✓
         </button>
       </div>
     );
@@ -1844,25 +1924,26 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/3 rounded-full blur-3xl" />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
+      {renderProgressBar()}
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-4 md:px-6 py-3 max-w-4xl mx-auto">
-          <span style={{ fontSize: typo.small }} className="font-semibold text-white/80 tracking-wide">Inertia</span>
-          {renderNavDots()}
-          <span style={{ fontSize: typo.small }} className="font-medium text-amber-400">{phaseLabels[phase]}</span>
-        </div>
-        {renderProgressBar()}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 24px', background: `${colors.bgCard}cc`,
+        borderBottom: `1px solid ${colors.border}50`,
+      }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Inertia</span>
+        <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>{phaseLabels[phase]}</span>
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+        {renderPhase()}
+      </div>
+
+      {/* Bottom nav bar */}
+      {renderBottomBar()}
     </div>
   );
 }

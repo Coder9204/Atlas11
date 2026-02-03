@@ -12,15 +12,15 @@ type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_p
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
+  hook: 'Introduction',
   predict: 'Predict',
-  play: 'Lab',
-  review: 'Review',
+  play: 'Explore',
+  review: 'Understanding',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
+  twist_play: 'Twist Play',
   twist_review: 'Twist Review',
-  transfer: 'Transfer',
-  test: 'Test',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
   mastery: 'Mastery'
 };
 
@@ -863,69 +863,147 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
   // HOOK PHASE
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-blue-400 tracking-wide">FLUID DYNAMICS</span>
-      </div>
-
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent">
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '600px',
+      padding: '48px 24px',
+      textAlign: 'center',
+    }}>
+      <h1 style={{
+        fontSize: '36px',
+        fontWeight: 800,
+        lineHeight: 1.2,
+        color: colors.textPrimary,
+        marginBottom: '16px',
+      }}>
         Why Do Airplanes Fly?
       </h1>
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        How does a 500-ton metal machine stay in the air? The answer lies in one of physics' most elegant principles.
+      <p style={{
+        fontSize: '17px',
+        fontWeight: 400,
+        lineHeight: 1.6,
+        color: colors.textSecondary,
+        maxWidth: '600px',
+        marginBottom: '32px',
+      }}>
+        How does a <span style={{ color: colors.accent }}>500-ton metal machine</span> stay in the air? The answer lies in one of physics' most elegant principles - Bernoulli's equation.
       </p>
 
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
-        <div className="relative">
-          <div className="text-7xl mb-6">✈️</div>
-          <div className="bg-slate-900/50 rounded-xl p-4 mb-6">
-            <span className="text-xl font-mono text-blue-300">P + (1/2)pv^2 + pgh = constant</span>
-          </div>
-          <p className="text-xl text-white/90 font-medium leading-relaxed">
-            In 1738, Daniel Bernoulli discovered that <span className="text-blue-400">faster-moving fluid has lower pressure</span>. This simple insight explains flight, curveballs, and countless everyday phenomena!
-          </p>
+      <div style={{
+        background: colors.bgCard,
+        borderRadius: '16px',
+        padding: '24px',
+        marginBottom: '32px',
+        maxWidth: '500px',
+        border: `1px solid ${colors.border}`,
+        boxShadow: '0 4px 20px rgba(59,130,246,0.1)',
+      }}>
+        <div style={{ fontSize: '64px', marginBottom: '16px' }}>✈️</div>
+        <div style={{
+          background: colors.bgDark,
+          borderRadius: '12px',
+          padding: '12px',
+          marginBottom: '16px',
+        }}>
+          <span style={{ fontSize: '18px', fontFamily: 'monospace', color: '#93c5fd' }}>P + (1/2)pv² + pgh = constant</span>
         </div>
+        <p style={{
+          fontSize: '16px',
+          fontWeight: 500,
+          lineHeight: 1.6,
+          color: 'rgba(255,255,255,0.9)',
+        }}>
+          In 1738, Daniel Bernoulli discovered that <span style={{ color: '#60a5fa' }}>faster-moving fluid has lower pressure</span>. This insight explains flight, curveballs, and more!
+        </p>
       </div>
 
       <button
         onClick={() => goToPhase('predict')}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{
+          background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+          color: 'white',
+          border: 'none',
+          padding: '16px 32px',
+          borderRadius: '12px',
+          fontSize: '18px',
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(59,130,246,0.3)',
+          transition: 'all 0.2s ease',
+        }}
       >
-        <span className="relative z-10 flex items-center gap-3">
-          Start Learning
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+        Start Learning
       </button>
 
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2"><span className="text-blue-400">*</span>Wing Simulation</div>
-        <div className="flex items-center gap-2"><span className="text-blue-400">*</span>Magnus Effect</div>
-        <div className="flex items-center gap-2"><span className="text-blue-400">*</span>Real Applications</div>
+      <div style={{
+        marginTop: '32px',
+        display: 'flex',
+        gap: '24px',
+        fontSize: '14px',
+        fontWeight: 400,
+        lineHeight: 1.5,
+        color: colors.textMuted,
+      }}>
+        <div>Wing Simulation</div>
+        <div>Magnus Effect</div>
+        <div>Real Applications</div>
       </div>
     </div>
   );
 
   // PREDICT PHASE
   const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <p className="text-xs font-black text-blue-400 mb-2 tracking-widest">STEP 1 - MAKE YOUR PREDICTION</p>
-      <h2 className="text-2xl font-bold text-white mb-6">The Paper Strip Challenge</h2>
+    <div style={{ padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+      <p style={{ fontSize: '12px', fontWeight: 800, color: colors.primary, marginBottom: '8px', letterSpacing: '2px' }}>STEP 1 - MAKE YOUR PREDICTION</p>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, lineHeight: 1.3, color: colors.textPrimary, marginBottom: '24px' }}>The Paper Strip Challenge</h2>
 
-      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6">
-        <div className="text-6xl text-center mb-2">📄💨</div>
-        <p className="text-center text-slate-400 text-sm">Hold a strip of paper below your lips...</p>
+      {/* SVG diagram */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+        <svg width="440" height="220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+          <defs>
+            <linearGradient id="predAirflow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
+            </linearGradient>
+            <filter id="predGlow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          {/* Person blowing */}
+          <circle cx="80" cy="100" r="30" fill="#334155" stroke="#64748b" strokeWidth="2" />
+          <circle cx="72" cy="93" r="3" fill="#94a3b8" />
+          <path d="M90,105 Q100,103 110,105" fill="none" stroke="#94a3b8" strokeWidth="2" />
+          {/* Air stream above paper */}
+          <g filter="url(#predGlow)">
+            <path d="M100,95 Q200,85 350,90" fill="none" stroke="url(#predAirflow)" strokeWidth="3" strokeDasharray="8,4" />
+            <path d="M100,100 Q200,92 350,95" fill="none" stroke="url(#predAirflow)" strokeWidth="2" strokeDasharray="6,3" />
+          </g>
+          {/* Paper strip */}
+          <rect x="110" y="110" width="200" height="4" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
+          {/* Labels */}
+          <text x="220" y="80" textAnchor="middle" fill="#60a5fa" fontSize="12" fontWeight="bold">Fast air → Low pressure</text>
+          <text x="220" y="145" textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="bold">Still air → High pressure</text>
+          {/* Question mark */}
+          <text x="350" y="130" textAnchor="middle" fill={colors.accent} fontSize="24" fontWeight="bold">?</text>
+          <text x="220" y="200" textAnchor="middle" fill={colors.textMuted} fontSize="11">What happens to the paper?</text>
+          {/* Pressure arrows */}
+          <path d="M200,140 L200,120" stroke="#fbbf24" strokeWidth="2" />
+          <polygon points="196,122 204,122 200,114" fill="#fbbf24" />
+          <path d="M260,140 L260,120" stroke="#fbbf24" strokeWidth="2" />
+          <polygon points="256,122 264,122 260,114" fill="#fbbf24" />
+        </svg>
       </div>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-slate-700/50">
-        <p className="text-lg text-slate-300">You hold a strip of paper below your lips and blow across the TOP of it (not under it). What happens to the paper?</p>
+      <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
+        <p style={{ fontSize: '16px', fontWeight: 400, lineHeight: 1.6, color: '#cbd5e1' }}>You hold a strip of paper below your lips and blow across the TOP of it (not under it). What happens to the paper?</p>
       </div>
 
-      <div className="grid gap-3 w-full max-w-xl">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
         {[
           { id: 'A', text: 'It bends downward from the force of air' },
           { id: 'B', text: 'It rises up toward the airflow' },
@@ -941,24 +1019,32 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               onGameEvent?.({ type: 'prediction_made', data: { prediction: option.id, correct: option.id === 'B' } });
             }}
             disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
+            style={{
+              padding: '16px',
+              borderRadius: '12px',
+              textAlign: 'left',
+              border: `2px solid ${showPredictionFeedback && selectedPrediction === option.id
+                ? option.id === 'B' ? colors.success : colors.danger
+                : showPredictionFeedback && option.id === 'B' ? colors.success
+                : selectedPrediction === option.id ? colors.primary : colors.border}`,
+              background: showPredictionFeedback && (selectedPrediction === option.id || option.id === 'B')
+                ? option.id === 'B' ? `${colors.success}22` : `${colors.danger}22`
+                : colors.bgCard,
+              cursor: showPredictionFeedback ? 'default' : 'pointer',
+              transition: 'all 0.2s ease',
+            }}
           >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
+            <span style={{ fontWeight: 700, color: 'white' }}>{option.id}.</span>
+            <span style={{ color: '#e2e8f0', marginLeft: '8px' }}>{option.text}</span>
           </button>
         ))}
       </div>
 
       {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
-          <p className="text-emerald-400 font-semibold mb-2">{selectedPrediction === 'B' ? 'Correct!' : 'Not quite!'}</p>
-          <p className="text-slate-300 text-sm">The paper rises! When you blow across the top, you create fast-moving air above and still air below. According to Bernoulli's principle, faster-moving air has LOWER pressure. The higher pressure below pushes the paper up into the low-pressure zone above. This is exactly how airplane wings generate lift!</p>
-          <button onClick={() => goToPhase('play')} className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
+        <div style={{ marginTop: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
+          <p style={{ color: colors.success, fontWeight: 600, marginBottom: '8px' }}>{selectedPrediction === 'B' ? 'Correct!' : 'Not quite!'}</p>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>The paper rises! Fast air above creates low pressure by Bernoulli's principle. Higher pressure below pushes the paper up - exactly how airplane wings generate lift!</p>
+          <button onClick={() => goToPhase('play')} style={{ marginTop: '12px', padding: '12px 24px', background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`, color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'all 0.2s ease' }}>
             Explore the Physics
           </button>
         </div>
@@ -1016,17 +1102,17 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       <div className="grid md:grid-cols-2 gap-4 w-full max-w-lg mb-6">
         <div className="bg-slate-800/50 rounded-xl p-4 border border-blue-500/30">
           <label className="text-blue-400 text-sm block mb-2">Airspeed: {airSpeed} m/s</label>
-          <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} className="w-full accent-blue-500" />
+          <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} className="w-full accent-blue-500" style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#3b82f6' }} />
         </div>
         {simulationMode === 'wing' ? (
           <div className="bg-slate-800/50 rounded-xl p-4 border border-amber-500/30">
             <label className="text-amber-400 text-sm block mb-2">Wing Angle: {angleOfAttack} deg {angleOfAttack > 12 && <span className="text-pink-400">Near stall!</span>}</label>
-            <input type="range" min={0} max={20} value={angleOfAttack} onChange={(e) => setAngleOfAttack(Number(e.target.value))} className="w-full accent-amber-500" />
+            <input type="range" min={0} max={20} value={angleOfAttack} onChange={(e) => setAngleOfAttack(Number(e.target.value))} className="w-full accent-amber-500" style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#f59e0b' }} />
           </div>
         ) : (
           <div className="bg-slate-800/50 rounded-xl p-4 border border-pink-500/30">
             <label className="text-pink-400 text-sm block mb-2">Ball Spin: {ballSpin} RPM</label>
-            <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} className="w-full accent-pink-500" />
+            <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} className="w-full accent-pink-500" style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#ec4899' }} />
           </div>
         )}
       </div>
@@ -1113,20 +1199,55 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
   // TWIST PREDICT PHASE
   const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <p className="text-xs font-black text-amber-400 mb-2 tracking-widest">STEP 4 - NEW VARIABLE</p>
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Curveball Mystery</h2>
+    <div style={{ padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+      <p style={{ fontSize: '12px', fontWeight: 800, color: colors.warning, marginBottom: '8px', letterSpacing: '2px' }}>NEW TWIST: SPINNING OBJECTS</p>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, lineHeight: 1.3, color: colors.warning, marginBottom: '24px' }}>The Curveball Mystery</h2>
 
-      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-amber-700/30 mb-6">
-        <div className="text-6xl text-center mb-2">⚾🔄</div>
-        <p className="text-center text-slate-400 text-sm">A spinning baseball curves through the air...</p>
+      {/* SVG diagram */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+        <svg width="440" height="220" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+          <defs>
+            <radialGradient id="twistBallGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
+            <filter id="twistGlow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          {/* Baseball */}
+          <g filter="url(#twistGlow)">
+            <circle cx="200" cy="110" r="30" fill="url(#twistBallGrad)" />
+            <path d="M185,90 Q200,110 185,130" fill="none" stroke="#dc2626" strokeWidth="2" />
+            <path d="M215,90 Q200,110 215,130" fill="none" stroke="#dc2626" strokeWidth="2" />
+          </g>
+          {/* Spin arrow */}
+          <path d="M170,80 Q200,65 230,80" fill="none" stroke="#fbbf24" strokeWidth="2" />
+          <polygon points="228,75 235,82 225,83" fill="#fbbf24" />
+          <text x="200" y="60" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">SPIN</text>
+          {/* Fast air side */}
+          <path d="M80,95 Q140,85 170,90" fill="none" stroke="#60a5fa" strokeWidth="2" strokeDasharray="6,3" />
+          <path d="M80,105 Q140,95 170,100" fill="none" stroke="#60a5fa" strokeWidth="2" strokeDasharray="6,3" />
+          <text x="100" y="80" fill="#60a5fa" fontSize="11" fontWeight="bold">Fast air</text>
+          <text x="100" y="145" fill="#60a5fa" fontSize="10">Low pressure</text>
+          {/* Slow air side */}
+          <path d="M230,120 Q290,125 350,120" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="6,3" />
+          <path d="M230,130 Q290,135 350,130" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="6,3" />
+          <text x="320" y="110" fill="#fbbf24" fontSize="11" fontWeight="bold">Slow air</text>
+          <text x="320" y="155" fill="#fbbf24" fontSize="10">High pressure</text>
+          {/* Curve arrow */}
+          <path d="M200,150 Q180,170 160,180" fill="none" stroke={colors.accent} strokeWidth="3" />
+          <polygon points="164,176 156,184 168,182" fill={colors.accent} />
+          <text x="200" y="200" textAnchor="middle" fill={colors.textMuted} fontSize="11">Which way does it curve?</text>
+        </svg>
       </div>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-amber-700/30">
-        <p className="text-lg text-slate-300">A baseball pitcher throws a curveball. The ball spins as it travels, creating faster airflow on one side than the other. Which way does the ball curve?</p>
+      <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '24px', border: `1px solid ${colors.border}` }}>
+        <p style={{ fontSize: '16px', fontWeight: 400, lineHeight: 1.6, color: '#cbd5e1' }}>A baseball pitcher throws a curveball. The ball spins as it travels, creating faster airflow on one side than the other. What do you predict happens?</p>
       </div>
 
-      <div className="grid gap-3 w-full max-w-xl">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
         {[
           { id: 'A', text: 'Toward the side with faster-moving air (lower pressure)' },
           { id: 'B', text: 'Away from the side with faster-moving air' },
@@ -1142,24 +1263,32 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               onGameEvent?.({ type: 'twist_prediction_made', data: { prediction: option.id, correct: option.id === 'A' } });
             }}
             disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'A' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'A' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
+            style={{
+              padding: '16px',
+              borderRadius: '12px',
+              textAlign: 'left',
+              border: `2px solid ${showTwistFeedback && twistPrediction === option.id
+                ? option.id === 'A' ? colors.success : colors.danger
+                : showTwistFeedback && option.id === 'A' ? colors.success
+                : twistPrediction === option.id ? colors.warning : colors.border}`,
+              background: showTwistFeedback && (twistPrediction === option.id || option.id === 'A')
+                ? option.id === 'A' ? `${colors.success}22` : `${colors.danger}22`
+                : colors.bgCard,
+              cursor: showTwistFeedback ? 'default' : 'pointer',
+              transition: 'all 0.2s ease',
+            }}
           >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
+            <span style={{ fontWeight: 700, color: 'white' }}>{option.id}.</span>
+            <span style={{ color: '#e2e8f0', marginLeft: '8px' }}>{option.text}</span>
           </button>
         ))}
       </div>
 
       {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
-          <p className="text-emerald-400 font-semibold mb-2">{twistPrediction === 'A' ? 'Excellent!' : 'Not quite!'}</p>
-          <p className="text-slate-300 text-sm">The ball curves toward the low-pressure side! Spin drags air faster on one side (lower pressure) and slower on the other (higher pressure). The ball is pushed from high to low pressure - this is the Magnus effect! It's Bernoulli's principle applied to spinning objects.</p>
-          <button onClick={() => goToPhase('twist_play')} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        <div style={{ marginTop: '16px', padding: '16px', background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}` }}>
+          <p style={{ color: colors.success, fontWeight: 600, marginBottom: '8px' }}>{twistPrediction === 'A' ? 'Excellent!' : 'Not quite!'}</p>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>The ball curves toward the low-pressure side! Spin drags air faster on one side (lower pressure) and slower on the other (higher pressure). This is the Magnus effect - Bernoulli's principle applied to spinning objects.</p>
+          <button onClick={() => goToPhase('twist_play')} style={{ marginTop: '12px', padding: '12px 24px', background: `linear-gradient(135deg, ${colors.warning}, #ea580c)`, color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'all 0.2s ease' }}>
             Explore the Magnus Effect
           </button>
         </div>
@@ -1194,11 +1323,11 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       <div className="grid md:grid-cols-2 gap-4 w-full max-w-lg mb-6">
         <div className="bg-slate-800/50 rounded-xl p-4 border border-blue-500/30">
           <label className="text-blue-400 text-sm block mb-2">Pitch Speed: {airSpeed} m/s</label>
-          <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} className="w-full accent-blue-500" />
+          <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} className="w-full accent-blue-500" style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#3b82f6' }} />
         </div>
         <div className="bg-slate-800/50 rounded-xl p-4 border border-pink-500/30">
           <label className="text-pink-400 text-sm block mb-2">Ball Spin: {ballSpin} RPM</label>
-          <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} className="w-full accent-pink-500" />
+          <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} className="w-full accent-pink-500" style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#ec4899' }} />
           <div className="flex justify-between text-xs text-slate-500 mt-1">
             <span>Backspin (up)</span>
             <span>Topspin (down)</span>
@@ -1419,36 +1548,25 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   };
 
   // TEST PHASE
+  const [showTestExplanation, setShowTestExplanation] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
   const renderTest = () => {
     if (testSubmitted) {
-      const score = testAnswers.reduce((acc, ans, i) => {
-        if (ans === null) return acc;
-        return acc + (testQuestions[i].options[ans]?.correct ? 1 : 0);
-      }, 0);
-      const percentage = Math.round((score / testQuestions.length) * 100);
-      const passed = percentage >= 70;
+      const passed = testScore >= 7;
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-          <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${passed ? 'bg-emerald-500' : 'bg-amber-500'}`}
-            style={{ boxShadow: `0 0 40px ${passed ? '#10b98150' : '#f59e0b50'}` }}>
-            <span className="text-5xl">{passed ? '🏆' : '📚'}</span>
-          </div>
-
-          <h2 className="text-3xl font-bold text-white mb-2">
-            {percentage >= 90 ? 'Outstanding!' : percentage >= 70 ? 'Great Job!' : 'Keep Learning!'}
+        <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ fontSize: '80px', marginBottom: '24px' }}>{passed ? '🏆' : '📚'}</div>
+          <h2 style={{ fontSize: '28px', fontWeight: 700, lineHeight: 1.3, color: passed ? colors.success : colors.warning, marginBottom: '16px' }}>
+            {passed ? 'Excellent Work!' : 'Keep Learning!'}
           </h2>
-
-          <p className="text-5xl font-black text-blue-400 mb-4">{score}/{testQuestions.length}</p>
-
-          <p className="text-slate-300 mb-8 max-w-md">
-            {percentage >= 90
-              ? "You've completely mastered Bernoulli's principle and the Magnus effect!"
-              : percentage >= 70
-              ? "Solid understanding of fluid dynamics! You're ready to advance."
-              : "Review the concepts and try again. You've got this!"}
+          <p style={{ fontSize: '36px', fontWeight: 800, lineHeight: 1.2, color: colors.textPrimary, margin: '16px 0' }}>
+            {testScore} / 10
           </p>
-
+          <p style={{ fontSize: '16px', fontWeight: 400, lineHeight: 1.6, color: colors.textSecondary, marginBottom: '32px' }}>
+            {passed ? "You have mastered Bernoulli's principle!" : 'Review the concepts and try again.'}
+          </p>
           <button
             onClick={() => {
               if (passed) {
@@ -1457,12 +1575,22 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                 setTestSubmitted(false);
                 setTestIndex(0);
                 setTestAnswers(Array(10).fill(null));
+                setShowTestExplanation(false);
                 goToPhase('review');
               }
             }}
-            className={`px-8 py-4 rounded-xl font-semibold text-white ${passed ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-blue-600 to-indigo-600'}`}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '12px',
+              border: 'none',
+              background: passed ? `linear-gradient(135deg, ${colors.success}, #0d9488)` : `linear-gradient(135deg, ${colors.primary}, #6366f1)`,
+              color: 'white',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
           >
-            {passed ? 'Claim Your Mastery Badge' : 'Review & Try Again'}
+            {passed ? 'Next: Achieve Mastery' : 'Back to Review'}
           </button>
         </div>
       );
@@ -1470,95 +1598,160 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
     const q = testQuestions[testIndex];
     const selected = testAnswers[testIndex];
+    const isCorrect = selected !== null && q.options[selected]?.correct;
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <p className="text-xs font-black text-blue-400 mb-2 tracking-widest">STEP 8 - KNOWLEDGE TEST</p>
-
-        {/* Progress */}
-        <div className="flex items-center gap-4 mb-6">
-          <span className="text-slate-400">Question {testIndex + 1} of {testQuestions.length}</span>
-          <div className="flex gap-1">
+      <div style={{ padding: '24px', maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <span style={{ fontSize: '14px', fontWeight: 400, lineHeight: 1.5, color: colors.textSecondary }}>
+            Question {testIndex + 1} of 10
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
             {testQuestions.map((_, i) => (
-              <div
-                key={i}
-                className={`w-2 h-2 rounded-full ${
-                  testAnswers[i] !== null ? 'bg-emerald-500' : i === testIndex ? 'bg-blue-500' : 'bg-slate-600'
-                }`}
-              />
+              <div key={i} style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: i === testIndex ? colors.primary : testAnswers[i] !== null ? colors.success : colors.border,
+              }} />
             ))}
           </div>
         </div>
 
-        <div className="max-w-2xl w-full">
-          {/* Scenario */}
-          <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
-            <p className="text-xs font-bold text-amber-400 mb-2">SCENARIO</p>
-            <p className="text-slate-300">{q.scenario}</p>
-          </div>
+        {/* Scenario */}
+        <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px', marginBottom: '16px', borderLeft: `3px solid ${colors.primary}` }}>
+          <p style={{ fontSize: '14px', fontWeight: 400, lineHeight: 1.5, color: colors.textSecondary, margin: 0, fontStyle: 'italic' }}>{q.scenario}</p>
+        </div>
 
-          {/* Question */}
-          <h3 className="text-xl font-bold text-white mb-4">{q.question}</h3>
+        <h3 style={{ fontSize: '20px', fontWeight: 700, lineHeight: 1.3, color: colors.textPrimary, marginBottom: '20px' }}>{q.question}</h3>
 
-          {/* Options */}
-          <div className="space-y-3 mb-6">
-            {q.options.map((opt, i) => (
+        {/* Options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+          {q.options.map((opt, i) => {
+            let borderColor = colors.border;
+            let bgColor = colors.bgCard;
+            if (showTestExplanation) {
+              if (opt.correct) { borderColor = colors.success; bgColor = `${colors.success}22`; }
+              else if (selected === i && !opt.correct) { borderColor = colors.danger; bgColor = `${colors.danger}22`; }
+            } else if (selected === i) {
+              borderColor = colors.primary; bgColor = `${colors.primary}22`;
+            }
+            return (
               <button
                 key={i}
                 onClick={() => {
-                  const newAnswers = [...testAnswers];
-                  newAnswers[testIndex] = i;
-                  setTestAnswers(newAnswers);
-                }}
-                className={`w-full p-4 rounded-xl text-left transition-all ${
-                  selected === i
-                    ? 'bg-blue-600/40 border-2 border-blue-400'
-                    : 'bg-slate-700/50 border-2 border-transparent hover:bg-slate-600/50'
-                }`}
-              >
-                <span className="text-slate-200">{opt.text}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Navigation */}
-          <div className="flex justify-between">
-            <button
-              onClick={() => testIndex > 0 && setTestIndex(testIndex - 1)}
-              disabled={testIndex === 0}
-              className={`px-6 py-3 rounded-xl font-medium ${testIndex === 0 ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
-            >
-              Previous
-            </button>
-
-            {testIndex < testQuestions.length - 1 ? (
-              <button
-                onClick={() => selected !== null && setTestIndex(testIndex + 1)}
-                disabled={selected === null}
-                className={`px-6 py-3 rounded-xl font-medium ${selected === null ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500'}`}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  if (testAnswers.every(a => a !== null)) {
-                    setTestSubmitted(true);
-                    playSound('complete');
-                    const score = testAnswers.reduce((acc, ans, i) => {
-                      if (ans === null) return acc;
-                      return acc + (testQuestions[i].options[ans]?.correct ? 1 : 0);
-                    }, 0);
-                    onGameEvent?.({ type: 'test_completed', data: { score, total: testQuestions.length } });
+                  if (!showTestExplanation) {
+                    playSound('click');
+                    const newAnswers = [...testAnswers];
+                    newAnswers[testIndex] = i;
+                    setTestAnswers(newAnswers);
                   }
                 }}
-                disabled={!testAnswers.every(a => a !== null)}
-                className={`px-6 py-3 rounded-xl font-medium ${!testAnswers.every(a => a !== null) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-500'}`}
+                disabled={showTestExplanation}
+                style={{
+                  background: bgColor,
+                  border: `2px solid ${borderColor}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: showTestExplanation ? 'default' : 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
               >
-                Submit Test
+                <span style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: 400, lineHeight: 1.5 }}>{opt.text}</span>
               </button>
-            )}
+            );
+          })}
+        </div>
+
+        {/* Explanation */}
+        {showTestExplanation && (
+          <div style={{
+            background: isCorrect ? `${colors.success}22` : `${colors.danger}22`,
+            border: `1px solid ${isCorrect ? colors.success : colors.danger}`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: isCorrect ? colors.success : colors.danger, marginBottom: '8px' }}>
+              {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+            </p>
+            <p style={{ fontSize: '14px', fontWeight: 400, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>{q.explanation}</p>
           </div>
+        )}
+
+        {/* Navigation */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {!showTestExplanation && selected !== null && (
+            <button
+              onClick={() => {
+                playSound(isCorrect ? 'success' : 'failure');
+                setShowTestExplanation(true);
+              }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: colors.primary,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Check Answer
+            </button>
+          )}
+
+          {showTestExplanation && testIndex < 9 && (
+            <button
+              onClick={() => {
+                setTestIndex(testIndex + 1);
+                setShowTestExplanation(false);
+              }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: colors.primary,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Next Question
+            </button>
+          )}
+
+          {showTestExplanation && testIndex === 9 && (
+            <button
+              onClick={() => {
+                const score = testAnswers.reduce((acc, ans, i) => {
+                  if (ans === null) return acc;
+                  return acc + (testQuestions[i].options[ans]?.correct ? 1 : 0);
+                }, 0);
+                setTestScore(score);
+                setTestSubmitted(true);
+                playSound(score >= 7 ? 'complete' : 'failure');
+              }}
+              style={{
+                flex: 1,
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: colors.success,
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 600,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              See Results
+            </button>
+          )}
         </div>
       </div>
     );
@@ -1687,28 +1880,109 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     }
   };
 
+  // Bottom bar with Back/Next and nav dots
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const isFirstPhase = currentPhaseIndex === 0;
+  const isLastPhase = currentPhaseIndex === phaseOrder.length - 1;
+  const canAdvance = !isLastPhase && phase !== 'test';
+
+  const renderBottomBar = () => (
+    <div style={{
+      flexShrink: 0,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '12px 20px',
+      borderTop: '1px solid rgba(255,255,255,0.1)',
+      background: 'rgba(0,0,0,0.3)',
+    }}>
+      <button
+        onClick={() => !isFirstPhase && goToPhase(phaseOrder[currentPhaseIndex - 1])}
+        style={{
+          padding: '8px 20px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: 'transparent',
+          color: isFirstPhase ? 'rgba(255,255,255,0.3)' : 'white',
+          cursor: isFirstPhase ? 'not-allowed' : 'pointer',
+          opacity: isFirstPhase ? 0.4 : 1,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        ← Back
+      </button>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        {phaseOrder.map((p, i) => (
+          <div
+            key={p}
+            onClick={() => i <= currentPhaseIndex && goToPhase(p)}
+            title={phaseLabels[p]}
+            style={{
+              width: p === phase ? '20px' : '10px',
+              height: '10px',
+              borderRadius: '5px',
+              background: p === phase ? '#3b82f6' : i < currentPhaseIndex ? '#10b981' : 'rgba(255,255,255,0.2)',
+              cursor: i <= currentPhaseIndex ? 'pointer' : 'default',
+              transition: 'all 0.3s ease',
+            }}
+          />
+        ))}
+      </div>
+      <button
+        onClick={() => canAdvance && goToPhase(phaseOrder[currentPhaseIndex + 1])}
+        style={{
+          padding: '8px 20px',
+          borderRadius: '8px',
+          border: 'none',
+          background: canAdvance ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)',
+          color: 'white',
+          cursor: canAdvance ? 'pointer' : 'not-allowed',
+          opacity: canAdvance ? 1 : 0.4,
+          transition: 'all 0.3s ease',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+        }}
+      >
+        Next →
+      </button>
+    </div>
+  );
+
   // Main render
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/3 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Bernoulli's Principle</span>
-          {renderNavDots()}
-          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
-        </div>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #0a0a0f 0%, #12121a 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      color: 'white',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif',
+    }}>
+      <style>{`.muted-secondary { color: #94a3b8; } .muted-dim { color: #6B7280; } @keyframes confetti-fall { 0% { transform: translateY(-10px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } } @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }`}</style>
+      {/* Progress bar */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: colors.bgCard,
+        zIndex: 100,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`,
+          background: 'linear-gradient(90deg, #3b82f6, #06b6d4)',
+          transition: 'width 0.3s ease',
+        }} />
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12">
+      <div style={{ flex: 1, overflow: 'auto', paddingTop: '8px' }}>
         {renderPhase()}
       </div>
+
+      {renderBottomBar()}
     </div>
   );
 };

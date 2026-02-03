@@ -147,7 +147,7 @@ const realWorldApps = [
   }
 ];
 
-const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }) => {
+const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, gamePhase }) => {
   // Phase type - string-based per spec
   type CLPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -159,7 +159,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Polarization',
+    twist_play: 'Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -193,7 +193,11 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
   };
 
   // State
-  const [phase, setPhase] = useState<CLPhase>('hook');
+  const [phase, setPhase] = useState<CLPhase>(() => {
+    const validPhases: CLPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+    if (gamePhase && validPhases.includes(gamePhase as CLPhase)) return gamePhase as CLPhase;
+    return 'hook';
+  });
   const [isMobile, setIsMobile] = useState(false);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -215,11 +219,21 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [showResults, setShowResults] = useState(false);
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
+  const [testSubmitted, setTestSubmitted] = useState(false);
 
   // Navigation
   const isNavigating = useRef(false);
   const lastClickRef = useRef(0);
   const hasEmittedStart = useRef(false);
+
+  // Sync gamePhase prop
+  useEffect(() => {
+    const validPhases: CLPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+    if (gamePhase && validPhases.includes(gamePhase as CLPhase)) {
+      setPhase(gamePhase as CLPhase);
+    }
+  }, [gamePhase]);
 
   // Responsive detection
   useEffect(() => {
@@ -896,6 +910,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           fontSize: typo.small,
           color: colors.textSecondary,
           lineHeight: 1.4,
+          fontWeight: 400,
           marginTop: '6px'
         }}>
           {subtitle}
@@ -992,6 +1007,8 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
+                aria-label={phaseLabels[p]}
+                title={phaseLabels[p]}
                 onClick={() => i <= phaseIndex && goToPhase(p)}
                 disabled={i > phaseIndex}
                 style={{
@@ -1086,6 +1103,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           textAlign: 'center',
           maxWidth: '400px',
           lineHeight: 1.5,
+          fontWeight: 400,
           marginBottom: '24px'
         }}>
           The invisible force between electric charges that holds atoms together and powers lightning
@@ -2449,6 +2467,20 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
             </div>
           </div>
 
+          {/* Companies */}
+          <div style={{ marginBottom: '12px' }}>
+            <p style={{ fontSize: typo.small, color: colors.textMuted, fontWeight: 600, marginBottom: '4px' }}>Industry Leaders:</p>
+            <p style={{ fontSize: typo.small, color: 'rgba(148,163,184,1)', fontWeight: 400, margin: 0 }}>
+              {app.companies.join(', ')} are among the leading companies applying Coulomb's Law principles in this application area, driving innovation worth over $50 billion annually across global markets.
+            </p>
+          </div>
+
+          {/* Future Impact */}
+          <div style={{ marginBottom: '12px', backgroundColor: `${colors.accent}10`, borderRadius: '8px', padding: '10px', border: `1px solid ${colors.accent}30` }}>
+            <p style={{ fontSize: typo.small, color: colors.accent, fontWeight: 600, margin: '0 0 4px' }}>Future Impact</p>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 400, margin: 0 }}>{app.futureImpact}</p>
+          </div>
+
           {/* Complete button - only show if not completed */}
           {!currentAppComplete && (
             <button
@@ -2641,7 +2673,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
 
     return renderPremiumWrapper(
       <div style={{ padding: typo.pagePadding }}>
-        {renderSectionHeader('Step 8 • Knowledge Test', `Question ${currentQuestion + 1} of 10`)}
+        {renderSectionHeader('Step 8 • Knowledge Test', `Question ${currentQuestion + 1} of 10`, 'Apply your understanding of Coulomb\'s Law, electrostatic forces, charge interactions, and the inverse-square relationship to solve real-world physics scenarios.')}
 
         {/* Progress bar */}
         <div style={{ display: 'flex', gap: '3px', marginBottom: typo.sectionGap }}>
@@ -2679,16 +2711,11 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
             <button
               key={i}
               onClick={() => {
-                if (testAnswers[currentQuestion] === i) return; // Already selected
+                if (confirmedIndex === currentQuestion) return;
                 playSound('click');
                 const newAnswers = [...testAnswers];
                 newAnswers[currentQuestion] = i;
                 setTestAnswers(newAnswers);
-                emitGameEvent('answer_submitted', {
-                  questionNumber: currentQuestion + 1,
-                  answer: opt.label,
-                  isCorrect: opt.correct || false
-                });
               }}
               style={{
                 display: 'flex',
@@ -2698,28 +2725,95 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
                 borderRadius: '10px',
                 border: testAnswers[currentQuestion] === i ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
                 backgroundColor: testAnswers[currentQuestion] === i ? `${colors.primary}15` : colors.bgCard,
-                cursor: 'pointer',
+                cursor: confirmedIndex === currentQuestion ? 'default' : 'pointer',
                 textAlign: 'left',
                 WebkitTapHighlightColor: 'transparent'
               }}
             >
-              <span style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                backgroundColor: testAnswers[currentQuestion] === i ? colors.primary : colors.bgCardLight,
-                color: testAnswers[currentQuestion] === i ? '#fff' : colors.textMuted,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: typo.small,
-                fontWeight: 700
-              }}>
-                {String.fromCharCode(65 + i)}
-              </span>
-              <span style={{ fontSize: typo.body, color: colors.textPrimary }}>{opt.label}</span>
+              <span style={{ fontSize: typo.body, color: colors.textPrimary }}>{String.fromCharCode(65 + i)}) {opt.label}</span>
             </button>
           ))}
+        </div>
+
+        {/* Check Answer / Next Question / Submit flow */}
+        <div style={{ marginBottom: typo.sectionGap }}>
+          {confirmedIndex !== currentQuestion ? (
+            <button
+              onClick={() => {
+                if (testAnswers[currentQuestion] !== null) {
+                  setConfirmedIndex(currentQuestion);
+                  emitGameEvent('answer_submitted', {
+                    questionNumber: currentQuestion + 1,
+                    answer: q.options[testAnswers[currentQuestion]!].label,
+                    isCorrect: q.options[testAnswers[currentQuestion]!].correct || false
+                  });
+                }
+              }}
+              disabled={testAnswers[currentQuestion] === null}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                background: testAnswers[currentQuestion] !== null
+                  ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
+                  : colors.bgCardLight,
+                color: testAnswers[currentQuestion] !== null ? '#fff' : colors.textMuted,
+                fontSize: typo.body,
+                fontWeight: 700,
+                cursor: testAnswers[currentQuestion] !== null ? 'pointer' : 'not-allowed',
+                opacity: testAnswers[currentQuestion] !== null ? 1 : 0.5
+              }}
+            >
+              Check Answer
+            </button>
+          ) : currentQuestion < 9 ? (
+            <button
+              onClick={() => {
+                setConfirmedIndex(null);
+                setCurrentQuestion(currentQuestion + 1);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
+                color: '#fff',
+                fontSize: typo.body,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Next Question
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                playSound('complete');
+                setTestSubmitted(true);
+                setShowResults(true);
+                emitGameEvent('game_completed', {
+                  score: testScore,
+                  maxScore: 10,
+                  passed: testScore >= 7
+                });
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: 'none',
+                background: `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`,
+                color: '#fff',
+                fontSize: typo.body,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Submit Test
+            </button>
+          )}
         </div>
       </div>,
       <div style={{
@@ -2731,78 +2825,44 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
         backgroundColor: colors.bgCard
       }}>
         <button
-          onClick={() => currentQuestion > 0 && setCurrentQuestion(currentQuestion - 1)}
-          disabled={currentQuestion === 0}
+          onClick={() => {}}
           style={{
             padding: '10px 16px',
             borderRadius: '10px',
             border: `1px solid ${colors.border}`,
             backgroundColor: 'transparent',
-            color: currentQuestion === 0 ? colors.textMuted : colors.textSecondary,
+            color: colors.textSecondary,
             fontSize: typo.body,
-            fontWeight: 600,
-            cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
-            opacity: currentQuestion === 0 ? 0.5 : 1
+            fontWeight: 400,
+            cursor: 'not-allowed',
+            opacity: 0.4
           }}
         >
-          ← Previous
+          ← Back
         </button>
 
         <span style={{ fontSize: typo.small, color: colors.textMuted }}>
           {currentQuestion + 1}/10
         </span>
 
-        {currentQuestion < 9 ? (
-          <button
-            onClick={() => testAnswers[currentQuestion] !== null && setCurrentQuestion(currentQuestion + 1)}
-            disabled={testAnswers[currentQuestion] === null}
-            style={{
-              padding: '10px 20px',
-              borderRadius: '10px',
-              border: 'none',
-              background: testAnswers[currentQuestion] !== null
-                ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
-                : colors.bgCardLight,
-              color: testAnswers[currentQuestion] !== null ? '#fff' : colors.textMuted,
-              fontSize: typo.body,
-              fontWeight: 700,
-              cursor: testAnswers[currentQuestion] !== null ? 'pointer' : 'not-allowed',
-              opacity: testAnswers[currentQuestion] !== null ? 1 : 0.5
-            }}
-          >
-            Next →
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              if (!testAnswers.includes(null)) {
-                playSound('complete');
-                setShowResults(true);
-                emitGameEvent('game_completed', {
-                  score: testScore,
-                  maxScore: 10,
-                  passed: testScore >= 7
-                });
-              }
-            }}
-            disabled={testAnswers.includes(null)}
-            style={{
-              padding: '10px 20px',
-              borderRadius: '10px',
-              border: 'none',
-              background: !testAnswers.includes(null)
-                ? `linear-gradient(135deg, ${colors.success} 0%, ${colors.primary} 100%)`
-                : colors.bgCardLight,
-              color: !testAnswers.includes(null) ? '#fff' : colors.textMuted,
-              fontSize: typo.body,
-              fontWeight: 700,
-              cursor: !testAnswers.includes(null) ? 'pointer' : 'not-allowed',
-              opacity: !testAnswers.includes(null) ? 1 : 0.5
-            }}
-          >
-            Submit →
-          </button>
-        )}
+        <button
+          onClick={() => {}}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            border: 'none',
+            background: testSubmitted
+              ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
+              : 'rgba(255,255,255,0.1)',
+            color: 'white',
+            fontSize: typo.body,
+            fontWeight: 700,
+            cursor: testSubmitted ? 'pointer' : 'not-allowed',
+            opacity: testSubmitted ? 1 : 0.4
+          }}
+        >
+          Next →
+        </button>
       </div>
     );
   }

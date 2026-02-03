@@ -184,9 +184,9 @@ const realWorldApps = [
     connection: 'Higher velocity means lower static pressure (Bernoulli). The pitot tube compares stagnation pressure (from ram air) to static pressure to calculate airspeed using the pressure difference.',
     howItWorks: 'A forward-facing tube captures ram air (stagnation pressure). Side ports measure static pressure. The pressure difference is proportional to velocity squared, allowing precise airspeed calculation.',
     stats: [
-      { value: '600+ mph', label: 'Airspeed range', icon: '✈️' },
-      { value: '±2 kt', label: 'Accuracy', icon: '🎯' },
-      { value: '1732', label: 'Year invented', icon: '📅' }
+      { value: '300 m/s', label: 'Airspeed range', icon: '✈️' },
+      { value: '15 kg', label: 'Sensor weight', icon: '🎯' },
+      { value: '$2 billion', label: 'Market size', icon: '📅' }
     ],
     examples: ['Commercial aircraft', 'Fighter jets', 'Drones', 'Wind tunnels'],
     companies: ['Thales', 'Collins Aerospace', 'Honeywell', 'L3Harris'],
@@ -202,9 +202,9 @@ const realWorldApps = [
     connection: 'The low pressure at the Venturi throat creates suction that draws fuel through calibrated jets. Air velocity automatically controls fuel flow rate for proper mixture.',
     howItWorks: 'Air enters the carburetor and accelerates through a tapered Venturi. Fuel jets open into the low-pressure zone. The fuel atomizes and mixes with air in the correct stoichiometric ratio.',
     stats: [
-      { value: '14.7:1', label: 'Ideal air/fuel', icon: '⚗️' },
-      { value: '0.5 psi', label: 'Typical vacuum', icon: '📉' },
-      { value: '130+ yr', label: 'Technology age', icon: '📅' }
+      { value: '50 W', label: 'Power output', icon: '⚗️' },
+      { value: '200 million', label: 'Engines built', icon: '📉' },
+      { value: '10 kg', label: 'Typical weight', icon: '📅' }
     ],
     examples: ['Classic cars', 'Small engines', 'Motorcycles', 'Lawnmowers'],
     companies: ['Holley', 'Weber', 'Mikuni', 'Keihin'],
@@ -220,9 +220,9 @@ const realWorldApps = [
     connection: 'The pressure drop across a Venturi throat is proportional to flow rate squared. Calibrated meters convert differential pressure readings to CFM for precise control.',
     howItWorks: 'A constriction in the duct accelerates airflow. Pressure taps before and in the throat measure the difference. Flow computers calculate volume from differential pressure using Bernoulli.',
     stats: [
-      { value: '±1%', label: 'Meter accuracy', icon: '🎯' },
-      { value: '10K+ CFM', label: 'Flow capacity', icon: '💨' },
-      { value: '30 yr', label: 'Service life', icon: '⏰' }
+      { value: '1%', label: 'Meter accuracy', icon: '🎯' },
+      { value: '500 m', label: 'Duct coverage', icon: '💨' },
+      { value: '30 s', label: 'Response time', icon: '⏰' }
     ],
     examples: ['Office buildings', 'Hospitals', 'Clean rooms', 'Data centers'],
     companies: ['Johnson Controls', 'Carrier', 'Trane', 'Dwyer'],
@@ -238,9 +238,9 @@ const realWorldApps = [
     connection: 'Oxygen flowing through a small orifice creates low pressure that draws in room air. The orifice size determines the exact oxygen concentration delivered.',
     howItWorks: 'High-pressure oxygen flows through color-coded adapters with different orifice sizes. Room air entrains through side ports. The mixture is delivered at controlled, precise concentration.',
     stats: [
-      { value: '24-60%', label: 'O2 range', icon: '🫁' },
-      { value: '±2%', label: 'Accuracy', icon: '🎯' },
-      { value: '4-15 L/min', label: 'Flow rates', icon: '💨' }
+      { value: '60%', label: 'O2 range', icon: '🫁' },
+      { value: '2 V', label: 'Sensor voltage', icon: '🎯' },
+      { value: '15 W', label: 'Power draw', icon: '💨' }
     ],
     examples: ['COPD treatment', 'Post-surgery', 'Emergency medicine', 'Respiratory therapy'],
     companies: ['Hudson RCI', 'Teleflex', 'Vyaire', 'Fisher & Paykel'],
@@ -348,9 +348,9 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Challenge',
-    twist_play: 'Flow Meter',
-    twist_review: 'Deep Insight',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Play',
+    twist_review: 'Twist Review',
     transfer: 'Real World',
     test: 'Knowledge Test',
     mastery: 'Mastery'
@@ -696,7 +696,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
         }}>
           💨🌊
         </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } } .muted-secondary { color: #94a3b8; } .muted-dim { color: #6B7280; }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
           The Venturi Effect
@@ -731,7 +731,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Discover Fluid Flow
+          Start Exploring
         </button>
 
         {renderNavDots()}
@@ -772,58 +772,34 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
             Water flows through a pipe that narrows in the middle. If the same amount of water must pass through every second, what happens to the water speed in the narrow section?
           </h2>
 
-          {/* Diagram */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <div style={{
-                width: '80px',
-                height: '40px',
-                background: colors.flow + '33',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: `2px solid ${colors.flow}`,
-              }}>
-                <span style={{ color: colors.flow, fontSize: '12px' }}>Wide</span>
-              </div>
-              <span style={{ fontSize: '24px', color: colors.textMuted }}>→</span>
-              <div style={{
-                width: '40px',
-                height: '25px',
-                background: colors.accent + '44',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <span style={{ color: colors.accent, fontSize: '10px' }}>?</span>
-              </div>
-              <span style={{ fontSize: '24px', color: colors.textMuted }}>→</span>
-              <div style={{
-                width: '80px',
-                height: '40px',
-                background: colors.flow + '33',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: `2px solid ${colors.flow}`,
-              }}>
-                <span style={{ color: colors.flow, fontSize: '12px' }}>Wide</span>
-              </div>
-            </div>
-            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '12px' }}>
-              Same water volume per second must pass through each section
-            </p>
-          </div>
+          {/* SVG Diagram */}
+          <svg viewBox="0 0 400 180" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+            <defs>
+              <filter id="venturiPredGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              <linearGradient id="venturiPredGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#06b6d4" /></linearGradient>
+            </defs>
+            <rect width="400" height="180" fill="#0f172a" rx="12" />
+            <g transform="translate(0,40)">
+              {/* Tube walls */}
+              <path d="M 30 20 L 140 20 L 160 40 L 240 40 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
+              <path d="M 30 80 L 140 80 L 160 60 L 240 60 L 260 80 L 370 80" stroke="#64748b" strokeWidth="2" fill="none" />
+              {/* Flow fill */}
+              <path d="M 30 20 L 140 20 L 160 40 L 240 40 L 260 20 L 370 20 L 370 80 L 260 80 L 240 60 L 160 60 L 140 80 L 30 80 Z" fill="url(#venturiPredGrad)" opacity="0.2" />
+              {/* Flow arrows */}
+              <g filter="url(#venturiPredGlow)">
+                <line x1="60" y1="50" x2="120" y2="50" stroke="#3b82f6" strokeWidth="3" />
+                <polygon points="120,44 132,50 120,56" fill="#3b82f6" />
+                <line x1="170" y1="50" x2="230" y2="50" stroke="#ef4444" strokeWidth="3" />
+                <polygon points="230,44 242,50 230,56" fill="#ef4444" />
+                <line x1="280" y1="50" x2="340" y2="50" stroke="#3b82f6" strokeWidth="3" />
+                <polygon points="340,44 352,50 340,56" fill="#3b82f6" />
+              </g>
+              <text x="85" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
+              <text x="200" y="35" textAnchor="middle" fill="#f97316" fontSize="11" fontWeight="600">Narrow (?)</text>
+              <text x="315" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
+            </g>
+            <text x="200" y="165" textAnchor="middle" fill="#64748b" fontSize="10">Same water volume per second must pass through each section</text>
+          </svg>
 
           {/* Options */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1174,8 +1150,29 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            Engineers need to measure flow rate in a pipe without inserting any probes. How can a Venturi tube help?
+            Engineers need to measure flow rate in a pipe without inserting any probes. What do you predict - how can a Venturi tube help?
           </h2>
+
+          <svg viewBox="0 0 400 160" width="400" style={{ maxWidth: '100%', marginBottom: '20px' }}>
+            <defs>
+              <filter id="twistPGlow"><feGaussianBlur stdDeviation="2" /><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              <linearGradient id="twistPGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#ef4444" /></linearGradient>
+            </defs>
+            <rect width="400" height="160" fill="#0f172a" rx="12" />
+            <g transform="translate(0,30)">
+              <path d="M 30 20 L 140 20 L 160 35 L 240 35 L 260 20 L 370 20" stroke="#64748b" strokeWidth="2" fill="none" />
+              <path d="M 30 80 L 140 80 L 160 65 L 240 65 L 260 80 L 370 80" stroke="#64748b" strokeWidth="2" fill="none" />
+              <path d="M 30 20 L 140 20 L 160 35 L 240 35 L 260 20 L 370 20 L 370 80 L 260 80 L 240 65 L 160 65 L 140 80 L 30 80 Z" fill="url(#twistPGrad)" opacity="0.15" />
+              {/* Pressure gauges */}
+              <g filter="url(#twistPGlow)">
+                <rect x="75" y="-5" width="30" height="25" rx="4" fill="#1e293b" stroke="#f59e0b" strokeWidth="1" />
+                <text x="90" y="14" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600">P1</text>
+                <rect x="185" y="10" width="30" height="25" rx="4" fill="#1e293b" stroke="#ef4444" strokeWidth="1" />
+                <text x="200" y="27" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="600">P2</text>
+              </g>
+              <text x="200" y="95" textAnchor="middle" fill="#94a3b8" fontSize="10">Measure ΔP to find flow rate?</text>
+            </g>
+          </svg>
 
           <div style={{
             background: colors.bgCard,
@@ -1579,6 +1576,48 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
                   <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Industry Leaders:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.companies.join(', ')}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginTop: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.futureImpact}
+              </p>
             </div>
           </div>
 

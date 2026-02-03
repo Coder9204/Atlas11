@@ -386,15 +386,15 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
 
   // Phase navigation
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Hook',
+    hook: 'Introduction',
     predict: 'Predict',
-    play: 'Lab',
+    play: 'Experiment',
     review: 'Review',
-    twist_predict: 'Twist',
-    twist_play: 'Demo',
-    twist_review: 'Discovery',
-    transfer: 'Apply',
-    test: 'Test',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
     mastery: 'Mastery'
   };
 
@@ -507,6 +507,8 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
           <button
             key={p}
             onClick={() => goToPhase(p)}
+            aria-label={phaseLabels[p]}
+            title={phaseLabels[p]}
             style={{
               width: '10px',
               height: '10px',
@@ -519,6 +521,32 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
             }}
           />
         ))}
+      </div>
+    );
+  };
+
+  // Bottom navigation bar
+  const phaseNames: Record<string, string> = phaseLabels;
+  const renderBottomBar = () => {
+    const currentIndex = validPhases.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === validPhases.length - 1;
+    const isTestPhase = phase === 'test';
+    const quizComplete = isTestPhase && testSubmitted;
+    const canGoNext = !isLast && (!isTestPhase || quizComplete);
+    return (
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        <button onClick={() => !isFirst && goToPhase(validPhases[currentIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1 }}>
+          Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {validPhases.map((p, i) => (
+            <div key={p} onClick={() => i <= currentIndex && goToPhase(p)} title={phaseNames[p] || p} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#3b82f6' : i < currentIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
+        </div>
+        <button onClick={() => canGoNext && goToPhase(validPhases[currentIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4 }}>
+          Next
+        </button>
       </div>
     );
   };
@@ -550,8 +578,16 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
             <stop offset="0%" stopColor="#22c55e" />
             <stop offset="100%" stopColor="#15803d" />
           </linearGradient>
+          <filter id="catGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
+        <g>
         <rect x="0" y="0" width={size} height={size} fill="url(#skyGrad)" rx="10" />
 
         {showLabels && (
@@ -623,7 +659,14 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
           )}
         </g>
 
-        <rect x="0" y={size - 12} width={size} height="12" fill="url(#groundGrad)" />
+        </g>
+        <g>
+          <rect x="0" y={size - 12} width={size} height="12" fill="url(#groundGrad)" />
+          <text x={size / 2} y={size - 2} textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="8">Ground</text>
+        </g>
+        <g filter="url(#catGlow)">
+          <circle cx={size - 20} cy={20} r="8" fill="rgba(249,115,22,0.4)" />
+        </g>
       </svg>
     );
   };
@@ -1211,6 +1254,24 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         <p style={{ ...typo.body, color: colors.purple, fontWeight: 500 }}>
           Can they rotate to face a different direction without grabbing anything?
         </p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+          <svg width="200" height="120">
+            <defs>
+              <radialGradient id="stationGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#334155" />
+                <stop offset="100%" stopColor="#1e293b" />
+              </radialGradient>
+            </defs>
+            <g>
+              <rect x="20" y="30" width="160" height="60" rx="10" fill="url(#stationGrad)" stroke="#475569" strokeWidth="1" />
+              <circle cx="100" cy="60" r="12" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
+              <text x="100" y="64" textAnchor="middle" fill="#334155" fontSize="10">?</text>
+              <path d="M75,55 Q65,40 55,55" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4" />
+              <path d="M125,55 Q135,40 145,55" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4" />
+            </g>
+            <text x="100" y="110" textAnchor="middle" fill="#94a3b8" fontSize="10">Astronaut in space station</text>
+          </svg>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
@@ -2087,7 +2148,9 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
       backgroundColor: colors.bgPrimary,
       color: colors.textPrimary,
       position: 'relative',
@@ -2105,6 +2168,8 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
       {renderProgressBar()}
 
       <div style={{
+        flex: 1,
+        overflowY: 'auto',
         position: 'relative',
         zIndex: 10,
         paddingTop: '70px',
@@ -2112,6 +2177,8 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
       }}>
         {renderPhase()}
       </div>
+
+      {renderBottomBar()}
 
       <style>{`
         @keyframes pulse {

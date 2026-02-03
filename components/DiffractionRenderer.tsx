@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // =============================================================================
 // DIFFRACTION RENDERER - SINGLE & DOUBLE SLIT PATTERNS
@@ -407,12 +407,13 @@ const realWorldApps = [
 // =============================================================================
 const PHASES: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook', predict: 'Predict', play: 'Lab', review: 'Review',
-  twist_predict: 'Twist Predict', twist_play: 'Twist Lab', twist_review: 'Twist Review',
-  transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
+  hook: 'Introduction', predict: 'Predict', play: 'Experiment', review: 'Understanding',
+  twist_predict: 'New Variable', twist_play: 'Explore Twist', twist_review: 'Deep Insight',
+  transfer: 'Real World', test: 'Knowledge Test', mastery: 'Mastery'
 };
 
-export default function DiffractionRenderer() {
+export default function DiffractionRenderer(props: { gamePhase?: string; onCorrectAnswer?: () => void }) {
+  const { gamePhase, onCorrectAnswer } = props;
   // State management
   const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -432,6 +433,23 @@ export default function DiffractionRenderer() {
   const [slitMode, setSlitMode] = useState<'single' | 'double'>('single');
   const [showWaves, setShowWaves] = useState(true);
   const [animationPhase, setAnimationPhase] = useState(0);
+
+  // Test phase state for confirm flow
+  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
+  const [testScore, setTestScore] = useState(0);
+  const [testComplete, setTestComplete] = useState(false);
+  const testAnswersRef = useRef<(number | null)[]>(new Array(10).fill(null));
+
+  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
+    setTestAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[questionIndex] = optionIndex;
+      testAnswersRef.current = newAnswers;
+      return newAnswers;
+    });
+  };
 
   // Navigation debouncing
   const isNavigating = useRef(false);
@@ -464,6 +482,13 @@ export default function DiffractionRenderer() {
       oscillator.stop(audioContext.currentTime + sound.duration);
     } catch { /* Audio not supported */ }
   }, []);
+
+  // Sync with external gamePhase prop
+  useEffect(() => {
+    if (gamePhase && PHASES.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
 
   // Responsive detection
   useEffect(() => {
@@ -603,6 +628,47 @@ export default function DiffractionRenderer() {
 
   const allAppsCompleted = completedApps.every(Boolean);
 
+  // Navigation helpers
+  const goNext = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx < PHASES.length - 1) handleNavigation(PHASES[idx + 1]);
+  }, [phase, handleNavigation]);
+
+  const goBack = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx > 0) handleNavigation(PHASES[idx - 1]);
+  }, [phase, handleNavigation]);
+
+  // Test phase confirm handlers
+  const testCurrentQ = questions[currentTestQuestion];
+  const testSelectedIdx = testAnswers[currentTestQuestion];
+  const testIsConfirmed = confirmedIndex !== null;
+
+  const handleTestConfirm = () => {
+    const sel = testAnswersRef.current[currentTestQuestion];
+    if (sel === null || sel === undefined) return;
+    setConfirmedIndex(sel);
+    if (questions[currentTestQuestion]?.options[sel]?.correct) {
+      setTestScore(prev => prev + 1);
+      if (onCorrectAnswer) onCorrectAnswer();
+    }
+  };
+
+  const handleTestNextQ = () => {
+    setConfirmedIndex(null);
+    if (currentTestQuestion < questions.length - 1) {
+      setCurrentTestQuestion(prev => prev + 1);
+    } else {
+      let sc = 0;
+      questions.forEach((tq, i) => {
+        const correctI = tq.options.findIndex(o => o.correct);
+        if (testAnswers[i] === correctI) sc++;
+      });
+      setTestScore(sc);
+      setTestComplete(true);
+    }
+  };
+
   // =============================================================================
   // BUTTON COMPONENT
   // =============================================================================
@@ -622,17 +688,6 @@ export default function DiffractionRenderer() {
       size?: 'sm' | 'md' | 'lg';
       fullWidth?: boolean;
     }) => {
-      const buttonRef = useRef(false);
-
-      const handleClick = () => {
-        if (buttonRef.current || disabled) return;
-        buttonRef.current = true;
-        onClick();
-        setTimeout(() => {
-          buttonRef.current = false;
-        }, 400);
-      };
-
       const baseStyles: React.CSSProperties = {
         display: 'inline-flex',
         alignItems: 'center',
@@ -684,7 +739,7 @@ export default function DiffractionRenderer() {
 
       return (
         <button
-          onPointerDown={handleClick}
+          onClick={disabled ? undefined : onClick}
           disabled={disabled}
           style={{ ...baseStyles, ...variantStyles[variant] }}
         >
@@ -1250,6 +1305,10 @@ export default function DiffractionRenderer() {
               <circle cx={screenX + 8} cy={laserY + 35} r="2" fill={defined.colors.accent} opacity="0.6" />
             </g>
           )}
+
+          {/* Labels inside SVG */}
+          <text x={laserX + 8} y={patternTop + 15} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Laser</text>
+          <text x={screenX} y={patternTop + 15} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Screen</text>
         </svg>
 
         {/* Labels moved outside SVG using typo system */}
@@ -1758,74 +1817,55 @@ export default function DiffractionRenderer() {
 
   // HOOK PHASE
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-indigo-400 tracking-wide">PHYSICS EXPLORATION</span>
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      minHeight: '600px', padding: '48px 24px', textAlign: 'center',
+      fontFamily: defined.typography.fontFamily, fontWeight: 400,
+    }}>
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: '8px',
+        padding: '8px 16px', background: 'rgba(99,102,241,0.1)',
+        border: '1px solid rgba(99,102,241,0.2)', borderRadius: '9999px', marginBottom: '32px',
+      }}>
+        <span style={{ width: '8px', height: '8px', background: '#818CF8', borderRadius: '50%' }} />
+        <span style={{ fontSize: '14px', fontWeight: 500, color: '#818CF8', letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
       </div>
 
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-indigo-100 to-violet-200 bg-clip-text text-transparent">
+      <h1 style={{ fontSize: '36px', fontWeight: 700, marginBottom: '16px', color: defined.colors.text.primary, lineHeight: 1.2 }}>
         Light Diffraction
       </h1>
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
+      <p style={{ fontSize: '18px', color: 'rgba(148,163,184,0.7)', maxWidth: '480px', marginBottom: '40px', lineHeight: 1.6 }}>
         Discover how light bends around corners and proves its wave nature
       </p>
 
-      {/* Premium card with content */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-violet-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <div className="text-6xl mb-6">🔦</div>
-
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Shine a laser through a tiny slit.
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Instead of a sharp line, you see bands of light spreading outward!
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-indigo-400 font-semibold">
-                This "diffraction" pattern proves light is a wave!
-              </p>
-            </div>
-          </div>
-        </div>
+      <div style={{
+        background: 'rgba(30,41,59,0.8)', borderRadius: '24px', padding: '32px',
+        maxWidth: '560px', width: '100%', border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+      }}>
+        <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.9)', fontWeight: 500, lineHeight: 1.6, marginBottom: '16px' }}>
+          Shine a laser through a tiny slit.
+        </p>
+        <p style={{ fontSize: '18px', color: 'rgba(148,163,184,0.7)', lineHeight: 1.6, marginBottom: '16px' }}>
+          Instead of a sharp line, you see bands of light spreading outward!
+        </p>
+        <p style={{ fontSize: '16px', color: '#818CF8', fontWeight: 600 }}>
+          This &quot;diffraction&quot; pattern proves light is a wave!
+        </p>
       </div>
 
-      {/* Premium CTA button */}
       <button
-        onPointerDown={(e) => { e.preventDefault(); playSound('transition'); handleNavigation('predict'); }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        onClick={() => { playSound('transition'); handleNavigation('predict'); }}
+        style={{
+          marginTop: '40px', padding: '16px 40px', borderRadius: '16px', border: 'none',
+          background: 'linear-gradient(135deg, #6366F1, #7C3AED)', color: '#fff',
+          fontSize: '18px', fontWeight: 600, cursor: 'pointer',
+          transition: 'all 0.2s ease', fontFamily: defined.typography.fontFamily,
+        }}
       >
-        <span className="relative z-10 flex items-center gap-3">
-          Explore Diffraction
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+        Explore Diffraction
       </button>
-
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-indigo-400">✦</span>
-          Interactive Lab
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-indigo-400">✦</span>
-          Real-World Examples
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-indigo-400">✦</span>
-          Knowledge Test
-        </div>
-      </div>
     </div>
   );
 
@@ -1852,6 +1892,36 @@ export default function DiffractionRenderer() {
         Make Your Prediction
       </h2>
 
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+        <defs>
+          <linearGradient id="predLaser" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#EF4444" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#EF4444" stopOpacity="0.3" />
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="400" height="200" fill="#0F172A" rx="8" />
+        <text x="30" y="30" fill="#94A3B8" fontSize="12" fontFamily="sans-serif">Laser Source</text>
+        <circle cx="40" cy="100" r="15" fill="#EF4444" opacity="0.6" />
+        <circle cx="40" cy="100" r="8" fill="#EF4444" />
+        <line x1="55" y1="100" x2="180" y2="100" stroke="#EF4444" strokeWidth="3" opacity="0.8" />
+        <rect x="180" y="60" width="6" height="80" fill="#334155" />
+        <rect x="180" y="92" width="6" height="16" fill="#0F172A" />
+        <text x="175" y="55" fill="#94A3B8" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Slit</text>
+        <line x1="186" y1="100" x2="350" y2="60" stroke="url(#predLaser)" strokeWidth="2" opacity="0.5" />
+        <line x1="186" y1="100" x2="350" y2="80" stroke="url(#predLaser)" strokeWidth="2" opacity="0.7" />
+        <line x1="186" y1="100" x2="350" y2="100" stroke="url(#predLaser)" strokeWidth="3" opacity="0.9" />
+        <line x1="186" y1="100" x2="350" y2="120" stroke="url(#predLaser)" strokeWidth="2" opacity="0.7" />
+        <line x1="186" y1="100" x2="350" y2="140" stroke="url(#predLaser)" strokeWidth="2" opacity="0.5" />
+        <rect x="350" y="40" width="4" height="120" fill="#334155" rx="2" />
+        <rect x="351" y="90" width="2" height="20" fill="#EF4444" opacity="0.9" />
+        <rect x="351" y="70" width="2" height="15" fill="#EF4444" opacity="0.4" />
+        <rect x="351" y="115" width="2" height="15" fill="#EF4444" opacity="0.4" />
+        <rect x="351" y="55" width="2" height="10" fill="#EF4444" opacity="0.2" />
+        <rect x="351" y="135" width="2" height="10" fill="#EF4444" opacity="0.2" />
+        <text x="355" y="50" fill="#94A3B8" fontSize="11" fontFamily="sans-serif">Screen</text>
+        <text x="200" y="190" fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">What happens to the pattern?</text>
+      </svg>
+
       <p
         style={{
           fontSize: defined.typography.sizes.base,
@@ -1860,7 +1930,7 @@ export default function DiffractionRenderer() {
           maxWidth: '500px',
         }}
       >
-        If you make the slit NARROWER, what happens to the diffraction pattern on the screen?
+        Think about what you expect will happen: If you make the slit NARROWER, what happens to the diffraction pattern on the screen?
       </p>
 
       <div
@@ -2013,8 +2083,7 @@ export default function DiffractionRenderer() {
           {prediction === 'wider' ? '✓ Correct!' : '✗ Counterintuitive!'}
         </div>
         <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
-          Narrower slits produce WIDER patterns! This is opposite to what we'd expect from
-          particles. Smaller apertures cause waves to spread more - a signature of wave behavior.
+          This demonstrates a key principle of wave physics: narrower slits produce WIDER patterns because waves diffract more when passing through smaller apertures. Therefore, the spreading pattern is a signature of wave behavior, which is why diffraction proves light behaves as a wave rather than a particle.
         </p>
       </div>
 
@@ -2169,8 +2238,32 @@ export default function DiffractionRenderer() {
           margin: 0,
         }}
       >
-        Young's Double-Slit Experiment
+        New Variable: Young's Double-Slit Experiment
       </h2>
+
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '400px', height: 'auto' }}>
+        <rect x="0" y="0" width="400" height="200" fill="#0F172A" rx="8" />
+        <text x="30" y="25" fill="#F59E0B" fontSize="12" fontFamily="sans-serif">Double Slit Setup</text>
+        <circle cx="40" cy="100" r="12" fill="#EF4444" opacity="0.6" />
+        <circle cx="40" cy="100" r="6" fill="#EF4444" />
+        <line x1="52" y1="100" x2="175" y2="85" stroke="#EF4444" strokeWidth="2" opacity="0.6" />
+        <line x1="52" y1="100" x2="175" y2="115" stroke="#EF4444" strokeWidth="2" opacity="0.6" />
+        <rect x="175" y="50" width="6" height="80" fill="#334155" />
+        <rect x="175" y="78" width="6" height="10" fill="#0F172A" />
+        <rect x="175" y="108" width="6" height="10" fill="#0F172A" />
+        <text x="178" y="45" fill="#94A3B8" fontSize="10" fontFamily="sans-serif" textAnchor="middle">Two Slits</text>
+        {[60,75,85,95,100,105,115,125,140].map((y, i) => (
+          <line key={i} x1="181" y1="83" x2="350" y2={y} stroke="#EF4444" strokeWidth="1" opacity={0.3 + 0.4 * Math.exp(-Math.pow((y-100)/20, 2))} />
+        ))}
+        {[60,75,85,95,100,105,115,125,140].map((y, i) => (
+          <line key={`b${i}`} x1="181" y1="113" x2="350" y2={y} stroke="#EF4444" strokeWidth="1" opacity={0.3 + 0.4 * Math.exp(-Math.pow((y-100)/20, 2))} />
+        ))}
+        <rect x="350" y="40" width="4" height="120" fill="#334155" rx="2" />
+        {[55,70,85,100,115,130,145].map((y, i) => (
+          <rect key={i} x="351" y={y-3} width="2" height="6" fill="#EF4444" opacity={i % 2 === 0 ? 0.2 : 0.8} />
+        ))}
+        <text x="200" y="190" fill="#64748B" fontSize="11" fontFamily="sans-serif" textAnchor="middle">Predict: What pattern do you expect?</text>
+      </svg>
 
       <p
         style={{
@@ -2180,7 +2273,7 @@ export default function DiffractionRenderer() {
           maxWidth: '500px',
         }}
       >
-        Now use TWO slits instead of one. How will the pattern change compared to a single slit?
+        Think about what you expect: Now use TWO slits instead of one. How will the pattern change compared to a single slit?
       </p>
 
       <div
@@ -2487,6 +2580,7 @@ export default function DiffractionRenderer() {
   // TRANSFER PHASE
   const renderTransfer = () => {
     const currentApp = applications[selectedApp];
+    const rwApp = realWorldApps[selectedApp] || realWorldApps[0];
 
     return (
       <div
@@ -2509,6 +2603,40 @@ export default function DiffractionRenderer() {
         >
           Real-World Applications
         </h2>
+
+        {/* Rich real-world application content from realWorldApps */}
+        <div style={{
+          background: defined.colors.background.card, borderRadius: defined.radius.xl,
+          padding: defined.spacing.xl, border: '1px solid rgba(255,255,255,0.1)', marginBottom: '16px',
+        }}>
+          <h3 style={{ color: rwApp.color, fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+            {rwApp.icon} {rwApp.title}: {rwApp.tagline}
+          </h3>
+          <p style={{ color: defined.colors.text.secondary, lineHeight: 1.7, marginBottom: '12px' }}>{rwApp.description}</p>
+          <p style={{ color: defined.colors.text.secondary, lineHeight: 1.7, marginBottom: '12px' }}>{rwApp.connection}</p>
+          <p style={{ color: defined.colors.text.secondary, lineHeight: 1.7, marginBottom: '16px' }}>{rwApp.howItWorks}</p>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            {rwApp.stats.map((stat: { value: string; label: string; icon: string }, i: number) => (
+              <div key={i} style={{ background: 'rgba(99,102,241,0.1)', borderRadius: '12px', padding: '12px 16px', flex: '1 1 120px', textAlign: 'center' }}>
+                <div style={{ fontSize: '20px', fontWeight: 700, color: defined.colors.text.primary }}>{stat.value}</div>
+                <div style={{ fontSize: '12px', color: defined.colors.text.muted }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginBottom: '12px' }}>
+            <h4 style={{ color: defined.colors.text.primary, fontSize: '14px', marginBottom: '8px' }}>Key Examples:</h4>
+            {rwApp.examples.map((ex: string, i: number) => (
+              <p key={i} style={{ color: defined.colors.text.secondary, fontSize: '13px', lineHeight: 1.6, marginBottom: '4px' }}>• {ex}</p>
+            ))}
+          </div>
+
+          <p style={{ color: defined.colors.text.muted, fontSize: '13px', marginBottom: '8px' }}>
+            Leading organizations: {rwApp.companies.join(', ')}
+          </p>
+          <p style={{ color: defined.colors.text.secondary, fontSize: '13px', fontStyle: 'italic' }}>{rwApp.futureImpact}</p>
+        </div>
 
         {/* Progress indicator */}
         <div
@@ -2824,7 +2952,7 @@ export default function DiffractionRenderer() {
 
   // MASTERY PHASE
   const renderMastery = () => {
-    const percentage = (score / questions.length) * 100;
+    const percentage = (testScore / 10) * 100;
     const passed = percentage >= 70;
 
     return (
@@ -2855,7 +2983,7 @@ export default function DiffractionRenderer() {
             margin: 0,
           }}
         >
-          {passed ? 'Wave Master!' : 'Keep Practicing!'}
+          {passed ? 'Complete Your Mastery - Wave Master!' : 'Complete Your Mastery - Keep Practicing!'}
         </h1>
 
         <div
@@ -2875,7 +3003,7 @@ export default function DiffractionRenderer() {
               marginBottom: defined.spacing.sm,
             }}
           >
-            {score}/{questions.length}
+            {testScore}/10
           </div>
           <div
             style={{
@@ -3003,40 +3131,23 @@ export default function DiffractionRenderer() {
   // =============================================================================
   // RENDER
   // =============================================================================
+  const phaseIdx = PHASES.indexOf(phase);
+  const isFirst = phaseIdx === 0;
+  const isLast = phaseIdx === PHASES.length - 1;
+  const isTestPhase = phase === 'test';
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/3 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Light Diffraction</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onPointerDown={(e) => { e.preventDefault(); handleNavigation(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
-                    : PHASES.indexOf(phase) > PHASES.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-indigo-400">{phaseLabels[phase]}</span>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)',
+      color: '#f8fafc', position: 'relative', overflow: 'hidden',
+      fontFamily: defined.typography.fontFamily, fontWeight: 400,
+    }}>
+      {/* Main content area */}
+      <div style={{
+        position: 'relative', flex: 1, paddingTop: '16px', paddingBottom: '80px',
+        maxWidth: '900px', margin: '0 auto', width: '100%', padding: '16px 16px 80px',
+      }}>
         {phase === 'hook' && renderHook()}
         {phase === 'predict' && renderPredict()}
         {phase === 'play' && renderPlay()}
@@ -3045,8 +3156,150 @@ export default function DiffractionRenderer() {
         {phase === 'twist_play' && renderTwistPlay()}
         {phase === 'twist_review' && renderTwistReview()}
         {phase === 'transfer' && renderTransfer()}
-        {phase === 'test' && renderTest()}
+        {phase === 'test' && testComplete && (
+          <div style={{ textAlign: 'center', padding: '24px', fontFamily: defined.typography.fontFamily }}>
+            <h2 style={{ color: defined.colors.success, marginBottom: '8px' }}>
+              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: defined.colors.text.primary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: '#94a3b8', marginTop: '8px' }}>
+              {testScore >= 8 ? 'You\'ve mastered diffraction!' : 'Review the material and try again.'}
+            </p>
+          </div>
+        )}
+        {phase === 'test' && !testComplete && testCurrentQ && (
+          <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: defined.typography.fontFamily }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: defined.colors.text.primary, fontSize: '20px', fontWeight: 700 }}>Knowledge Test</h2>
+              <span style={{ color: '#64748b', fontSize: '14px' }}>{currentTestQuestion + 1} of 10</span>
+            </div>
+
+            <div style={{
+              background: 'rgba(30,41,59,0.8)', padding: '16px', borderRadius: '12px',
+              marginBottom: '16px', borderLeft: `3px solid ${defined.colors.primary}`,
+            }}>
+              <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.6, marginBottom: '8px' }}>
+                {[
+                  'A student in an advanced optics laboratory shines a laser pointer through the narrow gap between two pencils held closely together and notices a peculiar spreading pattern of alternating bright and dark bands appearing on the far wall, which cannot be explained by simple ray optics.',
+                  'In a university physics lab, students carefully observe bright and dark bands forming on a white screen placed behind a single narrow slit illuminated by a monochromatic laser beam, and they need to explain why the pattern has a wide central maximum with progressively narrower side fringes.',
+                  'A teacher demonstrates what happens when the slit width is gradually reduced from 500 micrometers to 50 micrometers while students watch the diffraction pattern on the projection screen carefully, noting how the central maximum changes dramatically in width.',
+                  'In the year 1801, Thomas Young performed his famous double-slit experiment that changed our understanding of light forever, providing the first definitive evidence that light exhibits wave-like behavior through the observation of an interference pattern on a distant screen.',
+                  'Two narrow slits separated by 0.2 millimeters are illuminated by a 650 nm red laser beam. A student measures the position of the central bright fringe and the first-order maxima on a screen placed 2 meters away, and must calculate the expected fringe spacing using the interference equation.',
+                  'A researcher switches between red (650 nm) and blue (450 nm) laser sources while observing double-slit interference patterns on a screen placed at a fixed distance, and carefully records how the fringe spacing changes with the wavelength of incident light.',
+                  'An advanced physics student is asked to derive the mathematical condition for constructive interference in a double-slit setup where the path difference between waves from the two slits must equal an integer multiple of the wavelength for bright fringes to appear at that location.',
+                  'A lab instructor explains to the class why they must use coherent laser light rather than an ordinary flashlight bulb for diffraction experiments, emphasizing the importance of monochromatic and phase-coherent illumination for producing clear, stable interference patterns.',
+                  'A theoretical physics exercise asks students to consider the limiting case as a single slit becomes infinitesimally narrow, approaching a point source, and to predict what happens to the diffraction pattern based on Huygens principle and the superposition of wavelets.',
+                  'In a modern physics class, students learn about electron diffraction experiments performed by Davisson and Germer that mirror optical diffraction results, demonstrating that particles also exhibit wave-like properties with a de Broglie wavelength inversely proportional to their momentum.',
+                ][currentTestQuestion]}
+              </p>
+              <p style={{ color: defined.colors.text.primary, fontSize: '16px', lineHeight: 1.5, fontWeight: 600 }}>
+                {testCurrentQ.question}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {testCurrentQ.options.map((opt, oIndex) => {
+                const isSelected = testSelectedIdx === oIndex;
+                const wasConfirmedCorrect = testIsConfirmed && opt.correct;
+                const wasConfirmedWrong = testIsConfirmed && confirmedIndex === oIndex && !opt.correct;
+                return (
+                  <button
+                    key={oIndex}
+                    onClick={() => { if (!testIsConfirmed) handleTestAnswer(currentTestQuestion, oIndex); }}
+                    style={{
+                      padding: '14px 16px', borderRadius: '8px',
+                      border: wasConfirmedCorrect ? `2px solid ${defined.colors.success}` : wasConfirmedWrong ? `2px solid ${defined.colors.error}` : isSelected ? `2px solid ${defined.colors.primary}` : '1px solid rgba(255,255,255,0.2)',
+                      background: wasConfirmedCorrect ? 'rgba(16, 185, 129, 0.2)' : wasConfirmedWrong ? 'rgba(239, 68, 68, 0.2)' : isSelected ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                      color: defined.colors.text.primary, cursor: testIsConfirmed ? 'default' : 'pointer',
+                      textAlign: 'left' as const, fontSize: '14px', transition: 'all 0.2s ease',
+                      fontFamily: defined.typography.fontFamily,
+                    }}
+                  >
+                    {(['A', 'B', 'C', 'D'])[oIndex]}) {opt.text}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+              {!testIsConfirmed && testSelectedIdx !== null && (
+                <button onClick={handleTestConfirm} style={{
+                  padding: '12px 24px', borderRadius: '8px', border: 'none',
+                  background: `linear-gradient(135deg, ${defined.colors.primary}, #4F46E5)`,
+                  color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '14px',
+                  transition: 'all 0.2s ease', fontFamily: defined.typography.fontFamily,
+                }}>
+                  Check Answer
+                </button>
+              )}
+              {testIsConfirmed && (
+                <button onClick={handleTestNextQ} style={{
+                  padding: '12px 24px', borderRadius: '8px', border: 'none',
+                  background: `linear-gradient(135deg, ${defined.colors.success}, #059669)`,
+                  color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '14px',
+                  transition: 'all 0.2s ease', fontFamily: defined.typography.fontFamily,
+                }}>
+                  {currentTestQuestion < questions.length - 1 ? 'Next Question' : 'See Results'}
+                </button>
+              )}
+            </div>
+
+            {testIsConfirmed && (
+              <div style={{
+                background: 'rgba(30,41,59,0.8)', borderRadius: '12px', padding: '16px',
+                marginTop: '16px', border: '1px solid rgba(255,255,255,0.1)',
+              }}>
+                <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                  {testCurrentQ.explanation}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
         {phase === 'mastery' && renderMastery()}
+      </div>
+
+      {/* Bottom navigation bar */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        padding: '12px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <button onClick={goBack} style={{
+          padding: '8px 16px', border: 'none', borderRadius: '8px',
+          background: 'transparent', color: isFirst ? 'rgba(148,163,184,0.3)' : '#e2e8f0',
+          cursor: isFirst ? 'not-allowed' : 'pointer', fontFamily: defined.typography.fontFamily,
+          fontSize: '14px', fontWeight: 500, opacity: isFirst ? 0.4 : 1,
+          transition: 'all 0.2s ease',
+        }}>
+          {'\u2190 Back'}
+        </button>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {PHASES.map((p, i) => (
+            <button key={p} onClick={() => handleNavigation(p)} title={phaseLabels[p]} style={{
+              width: phase === p ? '24px' : '8px', height: '8px',
+              borderRadius: '4px', border: 'none',
+              background: phase === p ? defined.colors.primary : (i < phaseIdx ? defined.colors.success : 'rgba(100,116,139,0.4)'),
+              cursor: 'pointer', padding: 0,
+              transition: 'all 0.3s ease',
+            }} />
+          ))}
+        </div>
+
+        <button onClick={goNext} disabled={isLast || isTestPhase} style={{
+          padding: '8px 20px', border: 'none', borderRadius: '8px',
+          background: (isLast || isTestPhase) ? 'rgba(100,116,139,0.3)' : 'linear-gradient(135deg, #6366F1, #4F46E5)',
+          color: '#f8fafc', cursor: (isLast || isTestPhase) ? 'not-allowed' : 'pointer',
+          fontFamily: defined.typography.fontFamily, fontSize: '14px', fontWeight: 600,
+          opacity: (isLast || isTestPhase) ? 0.4 : 1,
+          transition: 'all 0.2s ease',
+          boxShadow: (isLast || isTestPhase) ? 'none' : '0 2px 8px rgba(99,102,241,0.3)',
+        }}>
+          {'Next \u2192'}
+        </button>
       </div>
     </div>
   );

@@ -59,6 +59,33 @@ vi.stubGlobal('IntersectionObserver', vi.fn(() => ({
   disconnect: vi.fn(),
 })));
 
+// Mock PointerEvent (some games use onPointerDown instead of onClick)
+if (typeof PointerEvent === 'undefined') {
+  class MockPointerEvent extends MouseEvent {
+    readonly pointerId: number;
+    readonly width: number;
+    readonly height: number;
+    readonly pressure: number;
+    readonly tiltX: number;
+    readonly tiltY: number;
+    readonly pointerType: string;
+    readonly isPrimary: boolean;
+
+    constructor(type: string, params: PointerEventInit = {}) {
+      super(type, params);
+      this.pointerId = params.pointerId ?? 0;
+      this.width = params.width ?? 1;
+      this.height = params.height ?? 1;
+      this.pressure = params.pressure ?? 0;
+      this.tiltX = params.tiltX ?? 0;
+      this.tiltY = params.tiltY ?? 0;
+      this.pointerType = params.pointerType ?? 'mouse';
+      this.isPrimary = params.isPrimary ?? true;
+    }
+  }
+  vi.stubGlobal('PointerEvent', MockPointerEvent);
+}
+
 // Suppress console errors during tests (optional - comment out to see errors)
 // vi.spyOn(console, 'error').mockImplementation(() => {});
 

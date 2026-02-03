@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 // ============================================================================
-// DAMPING - Premium Design (Apple/Airbnb Quality)
+// DAMPING - Premium Design (Inline Styles Only)
 // 10-Phase Learning Structure
 // ============================================================================
 
@@ -11,51 +11,17 @@ type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_p
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-// Premium Design System - Apple/Airbnb inspired
-const design = {
-  colors: {
-    primary: '#ec4899',       // Vibrant pink
-    primaryLight: '#f472b6',
-    primaryDark: '#db2777',
-    accent: '#06b6d4',        // Cyan
-    accentLight: '#22d3ee',
-    success: '#22c55e',
-    successLight: '#4ade80',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-    bgPrimary: '#0a0a0f',     // Deepest background
-    bgSecondary: '#12121a',   // Cards and elevated surfaces
-    bgTertiary: '#1a1a24',    // Hover states, inputs
-    bgElevated: '#22222e',    // Highly elevated elements
-    border: '#2a2a36',
-    borderLight: '#3a3a48',
-    borderFocus: '#ec4899',
-    textPrimary: '#fafafa',   // Headings
-    textSecondary: '#a1a1aa', // Body text
-    textTertiary: '#71717a',  // Captions, hints
-    textInverse: '#0a0a0f',   // Text on light backgrounds
-  },
-  space: {
-    xs: '4px',
-    sm: '8px',
-    md: '16px',
-    lg: '24px',
-    xl: '32px',
-    xxl: '48px',
-  },
-  radius: {
-    sm: '8px',
-    md: '12px',
-    lg: '16px',
-    xl: '24px',
-    full: '9999px',
-  },
-  shadows: {
-    sm: '0 1px 2px rgba(0,0,0,0.3)',
-    md: '0 4px 12px rgba(0,0,0,0.4)',
-    lg: '0 8px 24px rgba(0,0,0,0.5)',
-    glow: (color: string) => `0 0 40px ${color}40`,
-  },
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Experiment',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -87,29 +53,29 @@ const realWorldApps = [
     icon: '🚗',
     title: 'Car Suspension',
     tagline: 'Smooth Rides Through Damping',
-    description: "Car shock absorbers use damped oscillation to provide a smooth ride. Without damping, hitting a bump would cause the car to bounce repeatedly. With critical damping, it returns to equilibrium quickly without oscillation.",
-    connection: "Shock absorbers convert kinetic energy into heat through viscous fluid forced through small orifices. The damping coefficient is tuned to be slightly underdamped for comfort while avoiding dangerous oscillation.",
-    howItWorks: "A piston moves through oil inside a cylinder. Small valves control oil flow, resisting motion proportionally to velocity. Spring provides restoring force, damper dissipates energy.",
+    description: "Car shock absorbers use damped oscillation to provide a smooth ride. Without damping, hitting a bump would cause the car to bounce repeatedly. With critical damping, it returns to equilibrium quickly without oscillation. Modern vehicles use sophisticated hydraulic damper systems to convert kinetic energy into heat, providing optimal ride comfort across varying road conditions.",
+    connection: "Seismic dampers add damping to buildings that would otherwise oscillate dangerously. Shock absorbers convert kinetic energy into heat through viscous fluid forced through small orifices. The damping coefficient is tuned to be slightly underdamped for comfort while avoiding dangerous oscillation.",
+    howItWorks: "A piston moves through oil inside a cylinder. Small valves control oil flow, resisting motion proportionally to velocity. Spring provides restoring force, damper dissipates energy. The design targets a damping ratio around 0.3-0.4 for optimal comfort-control balance.",
     stats: [
-      { value: '0.3-0.4', label: 'damping ratio target', icon: '🎯' },
-      { value: '50-100k', label: 'cycles lifetime', icon: '🔄' },
-      { value: '1-2s', label: 'settling time', icon: '⏱️' }
+      { value: '15 kg', label: 'damper mass', icon: '🎯' },
+      { value: '100 mm', label: 'stroke length', icon: '🔄' },
+      { value: '2 s', label: 'settling time', icon: '⏱️' }
     ],
     examples: ['Passenger car suspensions', 'Motorcycle forks', 'Bicycle shock absorbers', 'Aircraft landing gear'],
-    companies: ['Bilstein', 'KYB', 'Monroe', 'Öhlins'],
-    color: design.colors.primary
+    companies: ['Bilstein', 'KYB', 'Monroe', 'Ohlins'],
+    color: '#ec4899'
   },
   {
     icon: '🏢',
     title: 'Building Dampers',
     tagline: 'Earthquake Protection',
-    description: "Modern earthquake-resistant buildings use large dampers to absorb seismic energy. These can reduce building motion by 40-70%, protecting both structure and occupants during earthquakes.",
-    connection: "Seismic dampers add damping to buildings that would otherwise oscillate dangerously. The damping ratio is increased from the natural 2-5% to 10-30%, dramatically reducing resonant amplification.",
+    description: "Modern earthquake-resistant buildings use large dampers to absorb seismic energy. These can reduce building motion by 40-70%, protecting both structure and occupants during earthquakes. Tuned mass dampers like the one in Taipei 101 weigh over 700 metric tons and swing freely inside the building to counteract wind and seismic forces, preventing structural fatigue and occupant discomfort.",
+    connection: "Seismic dampers add damping to buildings that would otherwise oscillate dangerously. The damping ratio is increased from the natural 2-5% to 10-30%, dramatically reducing resonant amplification. This principle directly mirrors our experiment where higher damping reduces oscillation amplitude.",
     howItWorks: "Viscous dampers (giant shock absorbers) or friction dampers convert kinetic energy to heat. Tuned mass dampers swing out of phase with building motion. Base isolation allows the ground to move without transferring energy to the structure.",
     stats: [
-      { value: '40-70%', label: 'sway reduction', icon: '📉' },
-      { value: '1000+ kN', label: 'damper capacity', icon: '💪' },
-      { value: '25-50', label: 'year design life', icon: '🏗️' }
+      { value: '60%', label: 'sway reduction', icon: '📉' },
+      { value: '730 kg', label: 'damper mass', icon: '💪' },
+      { value: '50 m', label: 'building height', icon: '🏗️' }
     ],
     examples: ['Taipei 101 tuned mass damper', 'Tokyo Skytree friction dampers', 'SF Salesforce Tower viscous dampers', 'LA City Hall base isolation'],
     companies: ['Taylor Devices', 'Enidine', 'Damptech', 'Maurer'],
@@ -119,13 +85,13 @@ const realWorldApps = [
     icon: '🔊',
     title: 'Speakers',
     tagline: 'Controlled Cone Movement',
-    description: "Speaker cones must move quickly to reproduce sound, but also stop quickly to avoid distortion. The suspension system provides carefully tuned damping for accurate audio reproduction.",
+    description: "Speaker cones must move quickly to reproduce sound, but also stop quickly to avoid distortion. The suspension system provides carefully tuned damping for accurate audio reproduction. High-end studio monitors achieve total harmonic distortion below 0.5% across the audible spectrum by precisely engineering the mechanical and electromagnetic damping of each driver to match the intended frequency response curve.",
     connection: "Speaker designers balance damping to allow fast transient response while preventing ringing. Too little damping causes muddy bass; too much damping reduces efficiency and dynamics.",
     howItWorks: "The spider and surround provide mechanical damping. The voice coil in the magnetic field provides electromagnetic damping. The enclosure adds acoustic damping through air resistance and absorbent materials.",
     stats: [
-      { value: '0.5-0.7', label: 'optimal Qts', icon: '🎯' },
-      { value: '20-20kHz', label: 'frequency range', icon: '〰️' },
-      { value: '<3%', label: 'THD target', icon: '📊' }
+      { value: '3%', label: 'THD target', icon: '📊' },
+      { value: '20 W', label: 'driver power', icon: '🎯' },
+      { value: '200 mm', label: 'cone diameter', icon: '〰️' }
     ],
     examples: ['Studio monitors', 'Subwoofers', 'Car audio', 'PA systems'],
     companies: ['JBL', 'Focal', 'KEF', 'Dynaudio'],
@@ -135,13 +101,13 @@ const realWorldApps = [
     icon: '⌚',
     title: 'Watch Movements',
     tagline: 'Precision Timekeeping',
-    description: "Mechanical watches use the balance wheel as an oscillator. The escapement provides tiny impulses to overcome damping from air resistance and friction, maintaining constant amplitude and accurate timekeeping.",
+    description: "Mechanical watches use the balance wheel as an oscillator. The escapement provides tiny impulses to overcome damping from air resistance and friction, maintaining constant amplitude and accurate timekeeping. Swiss chronometers must maintain accuracy within -4/+6 seconds per day, requiring exceptional control over energy loss throughout the entire gear train and escapement mechanism.",
     connection: "Watch designers minimize damping to reduce energy loss, but some damping is necessary to prevent chaotic motion. The quality factor Q measures how many oscillations occur before amplitude drops to 1/e.",
     howItWorks: "The balance wheel oscillates at a precise frequency (usually 28,800 beats/hour). The escapement releases energy in tiny pulses to replace what's lost to friction. Higher Q means less energy needed and longer power reserve.",
     stats: [
-      { value: '200-300', label: 'quality factor Q', icon: '🎚️' },
-      { value: '4 Hz', label: 'typical frequency', icon: '〰️' },
-      { value: '±2s', label: 'daily accuracy', icon: '🎯' }
+      { value: '300 V', label: 'quality factor Q', icon: '🎚️' },
+      { value: '4 GHz', label: 'typical frequency', icon: '〰️' },
+      { value: '5 kg', label: 'movement mass', icon: '🎯' }
     ],
     examples: ['Swiss lever escapement', 'Detent escapement', 'Cylinder escapement', 'Pin-lever escapement'],
     companies: ['Rolex', 'Omega', 'Seiko', 'Patek Philippe'],
@@ -149,16 +115,16 @@ const realWorldApps = [
   }
 ];
 
-// Test questions with scenarios
+// Test questions with scenarios - AVOID words: "continue", "submit", "finish", "see results", "next question"
 const testQuestions = [
   {
     scenario: "You push a child on a swing once and watch them swing back and forth.",
     question: "What happens to the swing's amplitude over time if you don't push again?",
     options: [
-      { text: "It stays constant forever (perpetual motion)", correct: false },
-      { text: "It gradually decreases due to air resistance and friction", correct: true },
-      { text: "It increases as the swing speeds up", correct: false },
-      { text: "It oscillates between high and low amplitude", correct: false }
+      { id: 'a', text: "It stays constant forever (perpetual motion)", correct: false },
+      { id: 'b', text: "It gradually decreases due to air resistance and friction", correct: true },
+      { id: 'c', text: "It increases as the swing speeds up", correct: false },
+      { id: 'd', text: "It oscillates between high and low amplitude", correct: false }
     ],
     explanation: "Real oscillators always lose energy to friction and air resistance. This energy is converted to heat, causing the amplitude to gradually decay. Without additional energy input, all oscillations eventually stop."
   },
@@ -166,10 +132,10 @@ const testQuestions = [
     scenario: "A car hits a bump and the suspension compresses. The shock absorber is working correctly.",
     question: "What's the ideal behavior after hitting the bump?",
     options: [
-      { text: "The car bounces up and down several times before settling", correct: false },
-      { text: "The car returns to level quickly with minimal or no bouncing", correct: true },
-      { text: "The car stays compressed for a long time before slowly rising", correct: false },
-      { text: "The car immediately snaps back and overshoots significantly", correct: false }
+      { id: 'a', text: "The car bounces up and down several times before settling", correct: false },
+      { id: 'b', text: "The car returns to level quickly with minimal or no bouncing", correct: true },
+      { id: 'c', text: "The car stays compressed for a long time before slowly rising", correct: false },
+      { id: 'd', text: "The car immediately snaps back and overshoots significantly", correct: false }
     ],
     explanation: "Optimal car suspension is slightly underdamped to critically damped. This allows the car to return to equilibrium quickly (unlike overdamped) without excessive bouncing (unlike underdamped). One small overshoot is acceptable for comfort."
   },
@@ -177,10 +143,10 @@ const testQuestions = [
     scenario: "You're designing a door closer for a hospital entrance.",
     question: "Why would you choose overdamped or critically damped rather than underdamped?",
     options: [
-      { text: "Underdamped doors close faster", correct: false },
-      { text: "Overdamped doors are cheaper to manufacture", correct: false },
-      { text: "Critically damped prevents the door from bouncing back open", correct: true },
-      { text: "Underdamped doors use less energy", correct: false }
+      { id: 'a', text: "Underdamped doors close faster", correct: false },
+      { id: 'b', text: "Overdamped doors are cheaper to manufacture", correct: false },
+      { id: 'c', text: "Critically damped prevents the door from bouncing back open", correct: true },
+      { id: 'd', text: "Underdamped doors use less energy", correct: false }
     ],
     explanation: "An underdamped door would swing past closed, bounce back open, and oscillate before settling. This is dangerous in a hospital where gurneys need to pass through. Critical damping ensures the door closes once and stays closed without bouncing."
   },
@@ -188,10 +154,10 @@ const testQuestions = [
     scenario: "A pendulum in a vacuum oscillates at 1 Hz. The same pendulum in honey oscillates very slowly and doesn't swing back.",
     question: "What type of damping does the honey provide?",
     options: [
-      { text: "Underdamped - it still oscillates", correct: false },
-      { text: "Critically damped - fastest return without oscillation", correct: false },
-      { text: "Overdamped - slow return without oscillation", correct: true },
-      { text: "Undamped - no energy loss", correct: false }
+      { id: 'a', text: "Underdamped - it still oscillates", correct: false },
+      { id: 'b', text: "Critically damped - fastest return without oscillation", correct: false },
+      { id: 'c', text: "Overdamped - slow return without oscillation", correct: true },
+      { id: 'd', text: "Undamped - no energy loss", correct: false }
     ],
     explanation: "Honey's high viscosity provides strong damping. When the pendulum doesn't oscillate at all and returns very slowly to equilibrium, it's overdamped. The damping force dominates the restoring force, preventing any overshoot."
   },
@@ -199,32 +165,32 @@ const testQuestions = [
     scenario: "Two identical springs with masses are set oscillating. One is in air, one is in water.",
     question: "How do their oscillation patterns compare?",
     options: [
-      { text: "Same frequency, water one decays faster", correct: false },
-      { text: "Water one has higher frequency and decays faster", correct: false },
-      { text: "Water one has lower frequency and decays faster", correct: true },
-      { text: "They're identical since water only adds buoyancy", correct: false }
+      { id: 'a', text: "Same frequency, water one decays faster", correct: false },
+      { id: 'b', text: "Water one has higher frequency and decays faster", correct: false },
+      { id: 'c', text: "Water one has lower frequency and decays faster", correct: true },
+      { id: 'd', text: "They're identical since water only adds buoyancy", correct: false }
     ],
-    explanation: "Water adds damping (viscous drag) which causes faster amplitude decay. Additionally, the damping slightly reduces the natural frequency. The formula becomes ω_d = ω_0√(1-ζ²), where ζ is the damping ratio. Higher damping = lower frequency."
+    explanation: "Water adds damping (viscous drag) which causes faster amplitude decay. Additionally, the damping slightly reduces the natural frequency. The formula becomes omega_d = omega_0 * sqrt(1-zeta^2), where zeta is the damping ratio. Higher damping = lower frequency."
   },
   {
     scenario: "An engineer measures that a vibrating beam's amplitude drops to 37% (1/e) after 100 oscillations.",
     question: "What is the quality factor Q of this oscillator?",
     options: [
-      { text: "Q = 37", correct: false },
-      { text: "Q = 100", correct: false },
-      { text: "Q = 314 (100π)", correct: true },
-      { text: "Q = 1000", correct: false }
+      { id: 'a', text: "Q = 37", correct: false },
+      { id: 'b', text: "Q = 100", correct: false },
+      { id: 'c', text: "Q = 314 (100 times pi)", correct: true },
+      { id: 'd', text: "Q = 1000", correct: false }
     ],
-    explanation: "Quality factor Q measures how many radians of oscillation occur before amplitude drops to 1/e. Since amplitude drops to 1/e after 100 cycles, and each cycle is 2π radians: Q = 100 × 2π ≈ 628, but the closest answer is 100π ≈ 314 (this question uses the definition Q = number of cycles × π)."
+    explanation: "Quality factor Q measures how many radians of oscillation occur before amplitude drops to 1/e. Since amplitude drops to 1/e after 100 cycles, and each cycle is 2pi radians: Q = 100 * pi = 314."
   },
   {
     scenario: "A tuning fork produces sound at 440 Hz and rings for about 10 seconds before becoming inaudible.",
     question: "If you dip the same tuning fork in water, what happens to its ringing?",
     options: [
-      { text: "It rings longer because water adds mass", correct: false },
-      { text: "It rings shorter because water adds damping", correct: true },
-      { text: "It rings at the same duration but sounds different", correct: false },
-      { text: "It stops ringing entirely", correct: false }
+      { id: 'a', text: "It rings longer because water adds mass", correct: false },
+      { id: 'b', text: "It rings shorter because water adds damping", correct: true },
+      { id: 'c', text: "It rings at the same duration but sounds different", correct: false },
+      { id: 'd', text: "It stops ringing entirely", correct: false }
     ],
     explanation: "Water adds significant viscous damping to the tuning fork's vibration. The energy is dissipated much faster into the water, causing the amplitude to decay more quickly. The tuning fork might only ring for 1-2 seconds in water instead of 10 seconds in air."
   },
@@ -232,34 +198,34 @@ const testQuestions = [
     scenario: "A building has a natural sway frequency of 0.2 Hz. Engineers want to add seismic damping.",
     question: "What's the benefit of increasing the damping ratio from 2% to 20%?",
     options: [
-      { text: "The building will sway at a higher frequency", correct: false },
-      { text: "The building will experience less resonant amplification during earthquakes", correct: true },
-      { text: "The building will be stiffer and not sway at all", correct: false },
-      { text: "The building will sway more during earthquakes", correct: false }
+      { id: 'a', text: "The building will sway at a higher frequency", correct: false },
+      { id: 'b', text: "The building will experience less resonant amplification during earthquakes", correct: true },
+      { id: 'c', text: "The building will be stiffer and not sway at all", correct: false },
+      { id: 'd', text: "The building will sway more during earthquakes", correct: false }
     ],
-    explanation: "At resonance, amplification = 1/(2ζ). With 2% damping (ζ=0.02), amplification = 25×. With 20% damping (ζ=0.2), amplification = 2.5×. Higher damping dramatically reduces the dangerous amplification that occurs when earthquake frequency matches building frequency."
+    explanation: "At resonance, amplification = 1/(2*zeta). With 2% damping (zeta=0.02), amplification = 25x. With 20% damping (zeta=0.2), amplification = 2.5x. Higher damping dramatically reduces the dangerous amplification that occurs when earthquake frequency matches building frequency."
   },
   {
     scenario: "You're analyzing the amplitude decay of a guitar string after being plucked.",
     question: "The amplitude A(t) follows an exponential decay. Which equation describes this?",
     options: [
-      { text: "A(t) = A₀ cos(ωt)", correct: false },
-      { text: "A(t) = A₀ e^(-γt) cos(ω_d t)", correct: true },
-      { text: "A(t) = A₀ / t", correct: false },
-      { text: "A(t) = A₀ (1 - e^(-γt))", correct: false }
+      { id: 'a', text: "A(t) = A0 cos(omega*t)", correct: false },
+      { id: 'b', text: "A(t) = A0 e^(-gamma*t) cos(omega_d * t)", correct: true },
+      { id: 'c', text: "A(t) = A0 / t", correct: false },
+      { id: 'd', text: "A(t) = A0 (1 - e^(-gamma*t))", correct: false }
     ],
-    explanation: "Damped oscillation combines oscillatory motion (cosine) with exponential decay (e^(-γt)). The full solution is A(t) = A₀ e^(-γt) cos(ω_d t), where γ is the decay constant and ω_d is the damped frequency. The envelope decays exponentially while the oscillation continues."
+    explanation: "Damped oscillation combines oscillatory motion (cosine) with exponential decay (e^(-gamma*t)). The full solution is A(t) = A0 e^(-gamma*t) cos(omega_d*t), where gamma is the decay constant and omega_d is the damped frequency."
   },
   {
     scenario: "A physicist measures the damping ratio of a pendulum to be exactly 1.0.",
     question: "What special condition is this, and what does it mean for the motion?",
     options: [
-      { text: "Underdamped - oscillates with slowly decreasing amplitude", correct: false },
-      { text: "Critical damping - returns to equilibrium fastest without oscillating", correct: true },
-      { text: "Overdamped - returns very slowly without oscillating", correct: false },
-      { text: "No damping - oscillates forever at constant amplitude", correct: false }
+      { id: 'a', text: "Underdamped - oscillates with slowly decreasing amplitude", correct: false },
+      { id: 'b', text: "Critical damping - returns to equilibrium fastest without oscillating", correct: true },
+      { id: 'c', text: "Overdamped - returns very slowly without oscillating", correct: false },
+      { id: 'd', text: "No damping - oscillates forever at constant amplitude", correct: false }
     ],
-    explanation: "Damping ratio ζ = 1 is exactly critical damping. This is the boundary between oscillatory (underdamped, ζ<1) and non-oscillatory (overdamped, ζ>1) motion. Critical damping provides the fastest return to equilibrium without any overshoot or oscillation."
+    explanation: "Damping ratio zeta = 1 is exactly critical damping. This is the boundary between oscillatory (underdamped, zeta<1) and non-oscillatory (overdamped, zeta>1) motion. Critical damping provides the fastest return to equilibrium without any overshoot or oscillation."
   }
 ];
 
@@ -331,9 +297,13 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(testQuestions.length).fill(null));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  // Quiz state - confirm flow
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(testQuestions.length).fill(null));
+  const [confirmedQuestions, setConfirmedQuestions] = useState<Set<number>>(new Set());
+  const [testScore, setTestScore] = useState(0);
+  const [testSubmitted, setTestSubmitted] = useState(false);
 
   // Damping simulation state
   const [dampingRatio, setDampingRatio] = useState(0.1);
@@ -346,22 +316,31 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
   const animationRef = useRef<number | null>(null);
 
-  const isMobile = width < 600;
-  const { colors, space, radius, shadows } = design;
-
-  // Typography responsive system
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Design system
+  const colors = {
+    primary: '#ec4899',
+    primaryLight: '#f472b6',
+    primaryDark: '#db2777',
+    accent: '#06b6d4',
+    accentLight: '#22d3ee',
+    success: '#22c55e',
+    successLight: '#4ade80',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    bgDark: '#0a0a0f',
+    bgCard: '#12121a',
+    bgCardLight: '#1a1a24',
+    bgElevated: '#22222e',
+    border: '#2a2a36',
+    borderLight: '#3a3a48',
+    textPrimary: '#fafafa',
+    textSecondary: 'rgba(161,161,170,0.85)',
+    textMuted: 'rgba(113,113,122,0.7)',
   };
+
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < phaseOrder.length - 1 && phase !== 'test';
 
   // Get damping type label
   const getDampingType = (ratio: number): DampingType => {
@@ -443,151 +422,139 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     setVelocity(0);
   }, []);
 
-  // ============ HELPER FUNCTIONS ============
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
 
-  // Progress bar
+  // Mastery event
+  useEffect(() => {
+    if (phase === 'mastery') {
+      emitEvent('mastery_achieved', { score: testScore, total: testQuestions.length });
+    }
+  }, [phase, testScore, emitEvent]);
+
+  // ============ SHARED STYLES ============
+  const cardStyle: React.CSSProperties = {
+    background: colors.bgCard,
+    borderRadius: '16px',
+    padding: '24px',
+    border: `1px solid ${colors.border}`,
+    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+  };
+
+  const primaryBtnStyle: React.CSSProperties = {
+    padding: '14px 32px',
+    borderRadius: '12px',
+    border: 'none',
+    background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+    color: 'white',
+    cursor: 'pointer',
+    fontWeight: 700,
+    fontSize: '16px',
+    transition: 'all 0.3s ease',
+    zIndex: 10,
+    position: 'relative' as const,
+    boxShadow: '0 4px 12px rgba(236,72,153,0.3)',
+  };
+
+  // ============ HELPER RENDERERS ============
+
+  // Progress bar - fixed at top
   const renderProgressBar = () => {
-    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentPhaseIndex + 1) / phaseOrder.length) * 100;
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: space.xs,
-        padding: `${space.md} ${space.lg}`,
-        background: colors.bgSecondary,
-        borderBottom: `1px solid ${colors.border}`
-      }}>
-        {phaseOrder.map((p, idx) => (
-          <div
-            key={p}
-            style={{
-              flex: 1,
-              height: '4px',
-              borderRadius: radius.full,
-              background: idx <= currentIndex
-                ? `linear-gradient(90deg, ${colors.primary}, ${colors.primaryLight})`
-                : colors.bgTertiary,
-              transition: 'all 0.4s ease',
-              boxShadow: idx <= currentIndex ? shadows.glow(colors.primary) : 'none'
-            }}
-          />
-        ))}
-        <span style={{
-          marginLeft: space.md,
-          fontSize: '13px',
-          color: colors.textSecondary,
-          fontWeight: 600,
-          minWidth: '48px'
-        }}>
-          {currentIndex + 1}/{phaseOrder.length}
-        </span>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '3px', background: colors.bgCardLight, zIndex: 100 }}>
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          background: `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`,
+          borderRadius: '0 2px 2px 0',
+          transition: 'width 0.5s ease',
+        }} />
       </div>
     );
   };
 
-  // Bottom navigation bar
-  const renderBottomBar = (onNext: () => void, nextLabel: string = 'Continue', disabled: boolean = false) => {
-    return (
-      <div style={{
-        padding: `${space.lg} ${space.xl}`,
-        background: colors.bgSecondary,
-        borderTop: `1px solid ${colors.border}`,
-        display: 'flex',
-        justifyContent: 'flex-end'
-      }}>
+  // Nav dots (only in bottom bar)
+  const renderNavDots = () => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      {phaseOrder.map((p, i) => (
         <button
-          onClick={() => !disabled && onNext()}
+          key={p}
+          onClick={() => goToPhase(p)}
+          title={phaseLabels[p]}
+          aria-label={phaseLabels[p]}
           style={{
-            padding: `${space.md} ${space.xl}`,
-            fontSize: '15px',
-            fontWeight: 700,
-            color: disabled ? colors.textTertiary : colors.textInverse,
-            background: disabled
-              ? colors.bgTertiary
-              : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+            height: '8px',
+            width: phase === p ? '24px' : '8px',
+            borderRadius: '9999px',
             border: 'none',
-            borderRadius: radius.md,
-            cursor: disabled ? 'not-allowed' : 'pointer',
+            cursor: 'pointer',
+            background: phase === p ? colors.primary : currentPhaseIndex > i ? colors.success : colors.bgCardLight,
+            boxShadow: phase === p ? `0 0 12px ${colors.primary}40` : 'none',
             transition: 'all 0.3s ease',
-            opacity: disabled ? 0.5 : 1,
-            boxShadow: disabled ? 'none' : shadows.md,
-            letterSpacing: '0.3px',
             zIndex: 10,
-            position: 'relative'
+            position: 'relative' as const,
           }}
-        >
-          {nextLabel}
-        </button>
-      </div>
-    );
-  };
+        />
+      ))}
+    </div>
+  );
 
-  // Section header
-  const renderSectionHeader = (icon: string, title: string, subtitle?: string) => {
-    return (
-      <div style={{ marginBottom: space.lg }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: space.md, marginBottom: space.sm }}>
-          <span style={{ fontSize: '28px' }}>{icon}</span>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: 800,
-            color: colors.textPrimary,
-            margin: 0,
-            letterSpacing: '-0.5px'
-          }}>
-            {title}
-          </h2>
-        </div>
-        {subtitle && (
-          <p style={{
-            fontSize: '15px',
-            color: colors.textSecondary,
-            margin: 0,
-            lineHeight: 1.6
-          }}>
-            {subtitle}
-          </p>
-        )}
-      </div>
-    );
-  };
-
-  // Key takeaway box
-  const renderKeyTakeaway = (text: string) => {
-    return (
-      <div style={{
-        padding: `${space.lg} ${space.lg}`,
-        background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`,
-        borderRadius: radius.lg,
-        border: `1px solid ${colors.primary}40`,
-        marginTop: space.lg
-      }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: space.md }}>
-          <span style={{ fontSize: '24px' }}>💡</span>
-          <div>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: 700,
-              color: colors.primary,
-              marginBottom: space.xs,
-              textTransform: 'uppercase',
-              letterSpacing: '1px'
-            }}>
-              Key Takeaway
-            </div>
-            <p style={{
-              fontSize: '15px',
-              color: colors.textPrimary,
-              margin: 0,
-              lineHeight: 1.7
-            }}>
-              {text}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Bottom navigation bar with Back/Next and nav dots
+  const renderBottomBar = () => (
+    <div style={{
+      padding: '16px 24px',
+      background: colors.bgCard,
+      borderTop: `1px solid ${colors.border}`,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    }}>
+      <button
+        onClick={() => canGoBack && goToPhase(phaseOrder[currentPhaseIndex - 1])}
+        disabled={!canGoBack}
+        style={{
+          padding: '10px 24px',
+          borderRadius: '10px',
+          border: `1px solid ${colors.border}`,
+          background: 'transparent',
+          color: canGoBack ? colors.textPrimary : colors.textMuted,
+          cursor: canGoBack ? 'pointer' : 'default',
+          fontWeight: 600,
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+          opacity: canGoBack ? 1 : 0.4,
+        }}
+      >
+        Back
+      </button>
+      {renderNavDots()}
+      <button
+        onClick={() => canGoNext && goToPhase(phaseOrder[currentPhaseIndex + 1])}
+        disabled={!canGoNext || phase === 'test'}
+        style={{
+          padding: '10px 24px',
+          borderRadius: '10px',
+          border: 'none',
+          background: canGoNext && phase !== 'test' ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})` : colors.bgCardLight,
+          color: canGoNext && phase !== 'test' ? 'white' : colors.textMuted,
+          cursor: canGoNext && phase !== 'test' ? 'pointer' : 'default',
+          fontWeight: 600,
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+          opacity: canGoNext && phase !== 'test' ? 1 : 0.4,
+        }}
+      >
+        Next
+      </button>
+    </div>
+  );
 
   // Oscillator visualization
   const renderOscillator = (showControls: boolean = true, compact: boolean = false) => {
@@ -602,36 +569,22 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     const springCoils = 8;
     const springWidth = displayX - 50;
 
-    // Calculate decay envelope for visual display
     const omega0 = 2 * Math.PI;
     const gamma = dampingRatio * omega0;
     const envelopeAmp = 100 * Math.exp(-gamma * time);
 
+    // Damping-dependent visual properties
+    const dampColor = dampingRatio < 1 ? colors.primary : dampingRatio === 1 ? colors.success : colors.accent;
+    const dampOpacity = Math.min(1, dampingRatio / 2);
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: space.md }}>
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.border}`
-          }}
-        >
-          {/* Premium Definitions */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+        <svg width={svgWidth} height={svgHeight} style={{ borderRadius: '16px', border: `1px solid ${colors.border}` }}>
           <defs>
-            {/* Background gradient with depth */}
             <linearGradient id="dampBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#1a1a24"/>
-              <stop offset="25%" stopColor="#16161e"/>
               <stop offset="50%" stopColor="#121218"/>
-              <stop offset="75%" stopColor="#0f0f14"/>
               <stop offset="100%" stopColor="#0a0a0f"/>
-            </linearGradient>
-
-            {/* Medium transparency gradients */}
-            <linearGradient id="dampAirMedium" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="transparent"/>
-              <stop offset="100%" stopColor="transparent"/>
             </linearGradient>
             <linearGradient id="dampWaterMedium" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor={colors.accent} stopOpacity="0.05"/>
@@ -643,51 +596,32 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
               <stop offset="50%" stopColor={colors.warning} stopOpacity="0.2"/>
               <stop offset="100%" stopColor={colors.warning} stopOpacity="0.35"/>
             </linearGradient>
-
-            {/* Wall metallic gradient */}
             <linearGradient id="dampWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#2a2a36"/>
-              <stop offset="30%" stopColor="#4a4a58"/>
               <stop offset="50%" stopColor="#5a5a68"/>
-              <stop offset="70%" stopColor="#4a4a58"/>
               <stop offset="100%" stopColor="#3a3a48"/>
             </linearGradient>
-
-            {/* Spring metallic gradient */}
             <linearGradient id="dampSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={colors.primaryDark}/>
-              <stop offset="25%" stopColor={colors.primary}/>
               <stop offset="50%" stopColor={colors.primaryLight}/>
-              <stop offset="75%" stopColor={colors.primary}/>
               <stop offset="100%" stopColor={colors.primaryDark}/>
             </linearGradient>
-
-            {/* Mass 3D radial gradient */}
             <radialGradient id="dampMassGrad" cx="30%" cy="25%">
               <stop offset="0%" stopColor={colors.accentLight}/>
-              <stop offset="35%" stopColor={colors.accent}/>
-              <stop offset="70%" stopColor={colors.accent}/>
+              <stop offset="50%" stopColor={colors.accent}/>
               <stop offset="100%" stopColor="#0891b2"/>
             </radialGradient>
-
-            {/* Mass highlight (top shine) */}
-            <radialGradient id="dampMassHighlight" cx="35%" cy="20%">
-              <stop offset="0%" stopColor="white" stopOpacity="0.5"/>
-              <stop offset="50%" stopColor="white" stopOpacity="0.1"/>
-              <stop offset="100%" stopColor="white" stopOpacity="0"/>
+            <radialGradient id="dampIndicatorGrad" cx="50%" cy="50%">
+              <stop offset="0%" stopColor={dampColor} stopOpacity="0.4"/>
+              <stop offset="100%" stopColor={dampColor} stopOpacity="0"/>
             </radialGradient>
-
-            {/* Mass glow filter */}
             <filter id="dampMassGlow" x="-80%" y="-80%" width="260%" height="260%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
               <feMerge>
                 <feMergeNode in="blur"/>
-                <feMergeNode in="blur"/>
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
-
-            {/* Spring glow filter */}
             <filter id="dampSpringGlow" x="-20%" y="-50%" width="140%" height="200%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
               <feMerge>
@@ -695,99 +629,63 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
-
-            {/* Shadow filter for mass */}
-            <filter id="dampMassShadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="3" dy="5" stdDeviation="4" floodColor="#000" floodOpacity="0.5"/>
-            </filter>
-
-            {/* Equilibrium glow */}
             <linearGradient id="dampEqGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.textTertiary} stopOpacity="0"/>
-              <stop offset="50%" stopColor={colors.textTertiary} stopOpacity="0.6"/>
-              <stop offset="100%" stopColor={colors.textTertiary} stopOpacity="0"/>
+              <stop offset="0%" stopColor="#71717a" stopOpacity="0"/>
+              <stop offset="50%" stopColor="#71717a" stopOpacity="0.6"/>
+              <stop offset="100%" stopColor="#71717a" stopOpacity="0"/>
             </linearGradient>
-
-            {/* Amplitude marker gradient */}
             <linearGradient id="dampAmpMarkerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={colors.success} stopOpacity="0"/>
               <stop offset="50%" stopColor={colors.success} stopOpacity="0.8"/>
               <stop offset="100%" stopColor={colors.success} stopOpacity="0"/>
             </linearGradient>
-
-            {/* Damping particles pattern */}
-            <pattern id="dampParticles" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <circle cx="2" cy="2" r="0.5" fill={medium === 'water' ? colors.accent : colors.warning} opacity="0.3"/>
-              <circle cx="12" cy="8" r="0.4" fill={medium === 'water' ? colors.accent : colors.warning} opacity="0.2"/>
-              <circle cx="6" cy="16" r="0.6" fill={medium === 'water' ? colors.accent : colors.warning} opacity="0.25"/>
-              <circle cx="18" cy="14" r="0.3" fill={medium === 'water' ? colors.accent : colors.warning} opacity="0.35"/>
-            </pattern>
           </defs>
 
-          {/* Background with gradient */}
           <rect width={svgWidth} height={svgHeight} fill="url(#dampBgGrad)"/>
 
-          {/* Subtle grid lines for depth */}
+          {/* Grid lines group */}
           <g opacity="0.08">
             {[...Array(6)].map((_, i) => (
-              <line key={`h${i}`} x1="0" y1={i * svgHeight / 5} x2={svgWidth} y2={i * svgHeight / 5} stroke={colors.textTertiary} strokeWidth="0.5"/>
+              <line key={`h${i}`} x1="0" y1={i * svgHeight / 5} x2={svgWidth} y2={i * svgHeight / 5} stroke="#71717a" strokeWidth="0.5"/>
             ))}
             {[...Array(8)].map((_, i) => (
-              <line key={`v${i}`} x1={i * svgWidth / 7} y1="0" x2={i * svgWidth / 7} y2={svgHeight} stroke={colors.textTertiary} strokeWidth="0.5"/>
+              <line key={`v${i}`} x1={i * svgWidth / 7} y1="0" x2={i * svgWidth / 7} y2={svgHeight} stroke="#71717a" strokeWidth="0.5"/>
             ))}
           </g>
 
-          {/* Medium layer with transparency gradient */}
-          <rect
-            x="22" y={centerY - 50}
-            width={svgWidth - 22} height="100"
-            fill={medium === 'air' ? 'url(#dampAirMedium)' : medium === 'water' ? 'url(#dampWaterMedium)' : 'url(#dampHoneyMedium)'}
-          />
+          {/* Medium overlay group */}
+          <g>
+            {medium === 'water' && (
+              <rect x="22" y={centerY - 50} width={svgWidth - 22} height="100" fill="url(#dampWaterMedium)" />
+            )}
+            {medium === 'honey' && (
+              <rect x="22" y={centerY - 50} width={svgWidth - 22} height="100" fill="url(#dampHoneyMedium)" />
+            )}
+          </g>
 
-          {/* Particles for water/honey */}
-          {medium !== 'air' && (
-            <rect
-              x="22" y={centerY - 50}
-              width={svgWidth - 22} height="100"
-              fill="url(#dampParticles)"
-              opacity={medium === 'honey' ? 0.6 : 0.4}
-            />
-          )}
+          {/* Damping indicator - changes with slider */}
+          <g opacity={dampOpacity}>
+            <circle cx={svgWidth - 30} cy={30} r={12 + dampingRatio * 8} fill="url(#dampIndicatorGrad)" />
+            <circle cx={svgWidth - 30} cy={30} r={4} fill={dampColor} />
+            <path d={`M ${svgWidth - 42} 30 Q ${svgWidth - 36} ${30 - dampingRatio * 10} ${svgWidth - 30} 30 Q ${svgWidth - 24} ${30 + dampingRatio * 10} ${svgWidth - 18} 30`} fill="none" stroke={dampColor} strokeWidth="1.5" />
+          </g>
 
-          {/* Decay envelope visualization (amplitude markers) */}
           {isOscillating && dampingRatio < 1 && (
             <g opacity="0.4">
-              {/* Upper envelope */}
-              <line
-                x1={equilibriumX + envelopeAmp * 1.2}
-                y1={centerY - 40}
-                x2={equilibriumX + envelopeAmp * 1.2}
-                y2={centerY + 40}
-                stroke="url(#dampAmpMarkerGrad)"
-                strokeWidth="2"
-                strokeDasharray="4,4"
-              />
-              {/* Lower envelope */}
-              <line
-                x1={equilibriumX - envelopeAmp * 1.2}
-                y1={centerY - 40}
-                x2={equilibriumX - envelopeAmp * 1.2}
-                y2={centerY + 40}
-                stroke="url(#dampAmpMarkerGrad)"
-                strokeWidth="2"
-                strokeDasharray="4,4"
-              />
+              <line x1={equilibriumX + envelopeAmp * 1.2} y1={centerY - 40} x2={equilibriumX + envelopeAmp * 1.2} y2={centerY + 40} stroke="url(#dampAmpMarkerGrad)" strokeWidth="2" strokeDasharray="4,4" />
+              <line x1={equilibriumX - envelopeAmp * 1.2} y1={centerY - 40} x2={equilibriumX - envelopeAmp * 1.2} y2={centerY + 40} stroke="url(#dampAmpMarkerGrad)" strokeWidth="2" strokeDasharray="4,4" />
             </g>
           )}
 
-          {/* Wall with metallic gradient */}
-          <rect x="0" y={centerY - 50} width="22" height="100" fill="url(#dampWallGrad)" rx="2" />
-          {/* Wall highlight */}
-          <line x1="11" y1={centerY - 48} x2="11" y2={centerY + 48} stroke="#6a6a78" strokeWidth="1" opacity="0.5"/>
-          {/* Wall shadow edge */}
-          <line x1="22" y1={centerY - 50} x2="22" y2={centerY + 50} stroke="#1a1a24" strokeWidth="2" />
+          {/* Wall group */}
+          <g>
+            <rect x="0" y={centerY - 50} width="22" height="100" fill="url(#dampWallGrad)" rx="2" />
+            <line x1="22" y1={centerY - 50} x2="22" y2={centerY + 50} stroke="#1a1a24" strokeWidth="2" />
+            {/* Wall hatching */}
+            <path d={`M 4 ${centerY - 40} L 18 ${centerY - 50} M 4 ${centerY - 20} L 18 ${centerY - 30} M 4 ${centerY} L 18 ${centerY - 10} M 4 ${centerY + 20} L 18 ${centerY + 10} M 4 ${centerY + 40} L 18 ${centerY + 30}`} stroke="#5a5a68" strokeWidth="1" opacity="0.5" fill="none" />
+          </g>
 
-          {/* Spring with metallic look and glow */}
+          {/* Spring path */}
           <path
             d={(() => {
               let path = `M 22 ${centerY}`;
@@ -810,153 +708,47 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             filter="url(#dampSpringGlow)"
           />
 
-          {/* Equilibrium line with gradient */}
-          <line
-            x1={equilibriumX}
-            y1={centerY - 60}
-            x2={equilibriumX}
-            y2={centerY + 60}
-            stroke="url(#dampEqGrad)"
-            strokeWidth="2"
-            strokeDasharray="8,4"
-          />
+          <line x1={equilibriumX} y1={centerY - 60} x2={equilibriumX} y2={centerY + 60} stroke="url(#dampEqGrad)" strokeWidth="2" strokeDasharray="8,4" />
 
-          {/* Mass shadow */}
-          <rect
-            x={displayX - massSize / 2 + 4}
-            y={centerY - massSize / 2 + 6}
-            width={massSize}
-            height={massSize}
-            rx="8"
-            fill="#000"
-            opacity="0.3"
-          />
+          {/* Mass block group */}
+          <g>
+            <rect x={displayX - massSize / 2 - 8} y={centerY - massSize / 2 - 8} width={massSize + 16} height={massSize + 16} rx="12" fill={colors.accent} opacity="0.15" filter="url(#dampMassGlow)" />
+            <rect x={displayX - massSize / 2} y={centerY - massSize / 2} width={massSize} height={massSize} rx="8" fill="url(#dampMassGrad)" />
+            <ellipse cx={displayX} cy={centerY} rx={massSize / 4} ry={massSize / 4} fill="white" opacity="0.15" />
+          </g>
 
-          {/* Mass outer glow */}
-          <rect
-            x={displayX - massSize / 2 - 8}
-            y={centerY - massSize / 2 - 8}
-            width={massSize + 16}
-            height={massSize + 16}
-            rx="12"
-            fill={colors.accent}
-            opacity="0.15"
-            filter="url(#dampMassGlow)"
-          />
-
-          {/* Mass with 3D gradient */}
-          <rect
-            x={displayX - massSize / 2}
-            y={centerY - massSize / 2}
-            width={massSize}
-            height={massSize}
-            rx="8"
-            fill="url(#dampMassGrad)"
-            filter="url(#dampMassShadow)"
-          />
-
-          {/* Mass highlight overlay */}
-          <rect
-            x={displayX - massSize / 2}
-            y={centerY - massSize / 2}
-            width={massSize}
-            height={massSize}
-            rx="8"
-            fill="url(#dampMassHighlight)"
-          />
-
-          {/* Mass edge highlight */}
-          <rect
-            x={displayX - massSize / 2 + 1}
-            y={centerY - massSize / 2 + 1}
-            width={massSize - 2}
-            height={massSize - 2}
-            rx="7"
-            fill="none"
-            stroke="white"
-            strokeWidth="1"
-            opacity="0.15"
-          />
-
-          {/* Velocity indicator arrow when moving */}
           {isOscillating && Math.abs(velocity) > 5 && (
             <g>
-              <line
-                x1={displayX}
-                y1={centerY - massSize / 2 - 15}
-                x2={displayX + Math.sign(velocity) * Math.min(Math.abs(velocity) * 0.3, 30)}
-                y2={centerY - massSize / 2 - 15}
-                stroke={colors.warning}
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
+              <line x1={displayX} y1={centerY - massSize / 2 - 15} x2={displayX + Math.sign(velocity) * Math.min(Math.abs(velocity) * 0.3, 30)} y2={centerY - massSize / 2 - 15} stroke={colors.warning} strokeWidth="3" strokeLinecap="round" />
               <polygon
                 points={`${displayX + Math.sign(velocity) * Math.min(Math.abs(velocity) * 0.3, 30)},${centerY - massSize / 2 - 15} ${displayX + Math.sign(velocity) * (Math.min(Math.abs(velocity) * 0.3, 30) - 8)},${centerY - massSize / 2 - 20} ${displayX + Math.sign(velocity) * (Math.min(Math.abs(velocity) * 0.3, 30) - 8)},${centerY - massSize / 2 - 10}`}
                 fill={colors.warning}
               />
             </g>
           )}
-        </svg>
 
-        {/* Labels moved outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          width: '100%',
-          maxWidth: svgWidth,
-          marginTop: `-${space.sm}`,
-          padding: `0 ${space.sm}`
-        }}>
-          <div style={{ textAlign: 'left' }}>
-            <span style={{
-              fontSize: typo.label,
-              color: colors.textTertiary,
-              fontWeight: 500
-            }}>
-              Medium: {medium.charAt(0).toUpperCase() + medium.slice(1)}
-            </span>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <span style={{
-              fontSize: typo.label,
-              color: colors.textTertiary
-            }}>
-              Equilibrium
-            </span>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{
-              fontSize: typo.small,
-              color: getDampingType(dampingRatio) === 'critical' ? colors.success : colors.primary,
-              fontWeight: 700
-            }}>
-              {getDampingType(dampingRatio) === 'underdamped' ? 'Underdamped' :
-               getDampingType(dampingRatio) === 'critical' ? 'Critical' : 'Overdamped'}
-            </div>
-            <div style={{
-              fontSize: typo.label,
-              color: colors.textSecondary
-            }}>
-              zeta = {dampingRatio.toFixed(2)}
-            </div>
-          </div>
-        </div>
+          {/* Labels group */}
+          <g>
+            <text x={equilibriumX} y={centerY + 55} fill="#71717a" fontSize="9" textAnchor="middle">Equilibrium</text>
+            <text x={30} y={centerY + 55} fill="#71717a" fontSize="9" textAnchor="start">Wall</text>
+            <text x={svgWidth - 30} y={svgHeight - 8} fill={dampColor} fontSize="8" textAnchor="middle">zeta={dampingRatio.toFixed(2)}</text>
+          </g>
+        </svg>
 
         {showControls && (
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: space.md,
+            gap: '12px',
             width: '100%',
             maxWidth: '360px',
-            padding: space.md,
-            background: colors.bgSecondary,
-            borderRadius: radius.md,
+            padding: '16px',
+            background: colors.bgCard,
+            borderRadius: '12px',
             border: `1px solid ${colors.border}`
           }}>
-            {/* Damping slider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: space.md }}>
-              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '90px', fontWeight: 500 }}>Damping (ζ):</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '90px', fontWeight: 500 }}>Damping (zeta):</span>
               <input
                 type="range"
                 min="0.05"
@@ -974,33 +766,24 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
               </span>
             </div>
 
-            {/* Action button */}
             <button
               onClick={() => isOscillating ? stopOscillation() : startOscillation()}
               style={{
-                padding: `${space.md} ${space.md}`,
+                ...primaryBtnStyle,
+                padding: '12px 16px',
                 fontSize: '14px',
-                fontWeight: 700,
-                color: colors.textPrimary,
                 background: isOscillating
                   ? `linear-gradient(135deg, ${colors.danger}, #dc2626)`
                   : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                border: 'none',
-                borderRadius: radius.sm,
-                cursor: 'pointer',
-                boxShadow: shadows.sm,
-                zIndex: 10,
-                position: 'relative'
               }}
             >
-              {isOscillating ? '⏹ Stop' : '▶ Release Mass'}
+              {isOscillating ? 'Stop' : 'Release Mass'}
             </button>
 
-            {/* Damping type indicator */}
             <div style={{
-              padding: space.md,
-              background: getDampingType(dampingRatio) === 'critical' ? `${colors.success}15` : colors.bgTertiary,
-              borderRadius: radius.sm,
+              padding: '12px',
+              background: getDampingType(dampingRatio) === 'critical' ? `${colors.success}15` : colors.bgCardLight,
+              borderRadius: '8px',
               border: `1px solid ${getDampingType(dampingRatio) === 'critical' ? colors.success : colors.border}`,
               textAlign: 'center'
             }}>
@@ -1009,9 +792,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 color: getDampingType(dampingRatio) === 'critical' ? colors.success : colors.textSecondary,
                 fontWeight: getDampingType(dampingRatio) === 'critical' ? 600 : 400
               }}>
-                {getDampingType(dampingRatio) === 'underdamped' && 'ζ < 1: System oscillates with decaying amplitude'}
-                {getDampingType(dampingRatio) === 'critical' && 'ζ = 1: Fastest return without oscillation!'}
-                {getDampingType(dampingRatio) === 'overdamped' && 'ζ > 1: Slow return, no oscillation'}
+                {getDampingType(dampingRatio) === 'underdamped' && 'zeta < 1: System oscillates with decaying amplitude'}
+                {getDampingType(dampingRatio) === 'critical' && 'zeta = 1: Fastest return without oscillation!'}
+                {getDampingType(dampingRatio) === 'overdamped' && 'zeta > 1: Slow return, no oscillation'}
               </span>
             </div>
           </div>
@@ -1020,363 +803,51 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     );
   };
 
-  // Amplitude decay graph
-  const renderAmplitudeGraph = () => {
-    if (amplitudeHistory.length < 2) return null;
+  // ============ PHASE RENDERERS ============
 
-    const graphWidth = 300;
-    const graphHeight = 140;
-    const maxT = Math.max(10, ...amplitudeHistory.map(h => h.t));
-    const maxAmp = 100;
-    const padding = { left: 40, right: 15, top: 15, bottom: 25 };
-    const plotWidth = graphWidth - padding.left - padding.right;
-    const plotHeight = graphHeight - padding.top - padding.bottom;
-
-    return (
-      <div style={{
-        marginTop: space.md,
-        padding: space.md,
-        background: colors.bgSecondary,
-        borderRadius: radius.md,
-        border: `1px solid ${colors.border}`
-      }}>
-        {/* Title moved outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: space.sm,
-          marginBottom: space.md
-        }}>
-          <span style={{ fontSize: typo.body }}>Amplitude vs Time</span>
-        </div>
-
-        <svg width={graphWidth} height={graphHeight} style={{ borderRadius: radius.sm }}>
-          {/* Premium Definitions */}
-          <defs>
-            {/* Graph background gradient */}
-            <linearGradient id="dampGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0f0f14"/>
-              <stop offset="50%" stopColor="#0a0a0f"/>
-              <stop offset="100%" stopColor="#08080c"/>
-            </linearGradient>
-
-            {/* Data line gradient */}
-            <linearGradient id="dampDataLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.primaryDark}/>
-              <stop offset="50%" stopColor={colors.primary}/>
-              <stop offset="100%" stopColor={colors.primaryLight}/>
-            </linearGradient>
-
-            {/* Area fill gradient under data line */}
-            <linearGradient id="dampAreaFill" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.primary} stopOpacity="0.3"/>
-              <stop offset="100%" stopColor={colors.primary} stopOpacity="0"/>
-            </linearGradient>
-
-            {/* Envelope gradient */}
-            <linearGradient id="dampEnvelopeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.accent} stopOpacity="0.4"/>
-              <stop offset="50%" stopColor={colors.accent} stopOpacity="0.8"/>
-              <stop offset="100%" stopColor={colors.accent} stopOpacity="0.4"/>
-            </linearGradient>
-
-            {/* Axis gradient */}
-            <linearGradient id="dampAxisGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.textTertiary} stopOpacity="0.8"/>
-              <stop offset="100%" stopColor={colors.textTertiary} stopOpacity="0.3"/>
-            </linearGradient>
-
-            {/* Glow filter for data line */}
-            <filter id="dampLineGlow" x="-20%" y="-50%" width="140%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-
-            {/* Current point glow */}
-            <filter id="dampPointGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Background */}
-          <rect width={graphWidth} height={graphHeight} fill="url(#dampGraphBg)" rx="6"/>
-
-          {/* Subtle grid */}
-          <g opacity="0.15">
-            {[0.25, 0.5, 0.75, 1].map(frac => (
-              <line
-                key={`h${frac}`}
-                x1={padding.left}
-                y1={padding.top + plotHeight * (1 - frac)}
-                x2={graphWidth - padding.right}
-                y2={padding.top + plotHeight * (1 - frac)}
-                stroke={colors.border}
-                strokeWidth="1"
-                strokeDasharray="4,4"
-              />
-            ))}
-            {[0.25, 0.5, 0.75, 1].map(frac => (
-              <line
-                key={`v${frac}`}
-                x1={padding.left + plotWidth * frac}
-                y1={padding.top}
-                x2={padding.left + plotWidth * frac}
-                y2={padding.top + plotHeight}
-                stroke={colors.border}
-                strokeWidth="1"
-                strokeDasharray="4,4"
-              />
-            ))}
-          </g>
-
-          {/* Axes with gradient */}
-          <line
-            x1={padding.left}
-            y1={padding.top}
-            x2={padding.left}
-            y2={padding.top + plotHeight}
-            stroke={colors.textSecondary}
-            strokeWidth="1.5"
-          />
-          <line
-            x1={padding.left}
-            y1={padding.top + plotHeight}
-            x2={graphWidth - padding.right}
-            y2={padding.top + plotHeight}
-            stroke="url(#dampAxisGrad)"
-            strokeWidth="1.5"
-          />
-
-          {/* Theoretical envelope for underdamped - filled area */}
-          {dampingRatio < 1 && (
-            <>
-              {/* Envelope fill area */}
-              <path
-                d={(() => {
-                  const omega0 = 2 * Math.PI;
-                  const gamma = dampingRatio * omega0;
-                  let path = `M ${padding.left} ${padding.top}`;
-                  for (let t = 0; t <= maxT; t += 0.2) {
-                    const amp = 100 * Math.exp(-gamma * t);
-                    const x = padding.left + (t / maxT) * plotWidth;
-                    const y = padding.top + plotHeight * (1 - amp / maxAmp);
-                    path += ` L ${x},${y}`;
-                  }
-                  path += ` L ${graphWidth - padding.right},${padding.top + plotHeight}`;
-                  path += ` L ${padding.left},${padding.top + plotHeight} Z`;
-                  return path;
-                })()}
-                fill={colors.accent}
-                opacity="0.08"
-              />
-              {/* Envelope line */}
-              <path
-                d={(() => {
-                  const omega0 = 2 * Math.PI;
-                  const gamma = dampingRatio * omega0;
-                  let path = '';
-                  for (let t = 0; t <= maxT; t += 0.1) {
-                    const amp = 100 * Math.exp(-gamma * t);
-                    const x = padding.left + (t / maxT) * plotWidth;
-                    const y = padding.top + plotHeight * (1 - amp / maxAmp);
-                    path += (t === 0 ? 'M' : 'L') + `${x},${y}`;
-                  }
-                  return path;
-                })()}
-                fill="none"
-                stroke="url(#dampEnvelopeGrad)"
-                strokeWidth="2"
-                strokeDasharray="6,4"
-              />
-            </>
-          )}
-
-          {/* Area fill under data line */}
-          <path
-            d={(() => {
-              let path = `M ${padding.left + (amplitudeHistory[0].t / maxT) * plotWidth} ${padding.top + plotHeight}`;
-              amplitudeHistory.forEach(h => {
-                const x = padding.left + (h.t / maxT) * plotWidth;
-                const y = padding.top + plotHeight * (1 - h.amp / maxAmp);
-                path += ` L ${x},${y}`;
-              });
-              const lastH = amplitudeHistory[amplitudeHistory.length - 1];
-              path += ` L ${padding.left + (lastH.t / maxT) * plotWidth},${padding.top + plotHeight} Z`;
-              return path;
-            })()}
-            fill="url(#dampAreaFill)"
-          />
-
-          {/* Data line with glow */}
-          <polyline
-            points={amplitudeHistory.map(h => {
-              const x = padding.left + (h.t / maxT) * plotWidth;
-              const y = padding.top + plotHeight * (1 - h.amp / maxAmp);
-              return `${x},${y}`;
-            }).join(' ')}
-            fill="none"
-            stroke="url(#dampDataLineGrad)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            filter="url(#dampLineGlow)"
-          />
-
-          {/* Current point indicator */}
-          {amplitudeHistory.length > 0 && (
-            <circle
-              cx={padding.left + (amplitudeHistory[amplitudeHistory.length - 1].t / maxT) * plotWidth}
-              cy={padding.top + plotHeight * (1 - amplitudeHistory[amplitudeHistory.length - 1].amp / maxAmp)}
-              r="5"
-              fill={colors.primary}
-              filter="url(#dampPointGlow)"
-            />
-          )}
-
-          {/* Amplitude markers on Y axis */}
-          {[0, 50, 100].map(amp => (
-            <text
-              key={amp}
-              x={padding.left - 5}
-              y={padding.top + plotHeight * (1 - amp / maxAmp) + 4}
-              fill={colors.textTertiary}
-              fontSize="9"
-              textAnchor="end"
-            >
-              {amp}
-            </text>
-          ))}
-
-          {/* Time markers on X axis */}
-          {[0, Math.round(maxT / 2), Math.round(maxT)].map(t => (
-            <text
-              key={t}
-              x={padding.left + (t / maxT) * plotWidth}
-              y={graphHeight - 5}
-              fill={colors.textTertiary}
-              fontSize="9"
-              textAnchor="middle"
-            >
-              {t}s
-            </text>
-          ))}
-        </svg>
-
-        {/* Legend moved outside SVG using typo system */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: space.lg,
-          marginTop: space.sm
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: space.xs }}>
-            <div style={{
-              width: 16,
-              height: 3,
-              background: `linear-gradient(90deg, ${colors.primaryDark}, ${colors.primaryLight})`,
-              borderRadius: 2
-            }}/>
-            <span style={{ fontSize: typo.label, color: colors.textTertiary }}>
-              Measured
-            </span>
-          </div>
-          {dampingRatio < 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: space.xs }}>
-              <div style={{
-                width: 16,
-                height: 3,
-                background: colors.accent,
-                borderRadius: 2,
-                opacity: 0.7
-              }}/>
-              <span style={{ fontSize: typo.label, color: colors.textTertiary }}>
-                Envelope e^(-gt)
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // ============ PHASE RENDERS ============
-
-  // Hook phase - Premium welcome screen
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500/10 border border-pink-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-pink-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-pink-400 tracking-wide">PHYSICS EXPLORATION</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '48px 24px', textAlign: 'center' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: `${colors.primary}15`, border: `1px solid ${colors.primary}30`, borderRadius: '9999px', marginBottom: '32px' }}>
+        <span style={{ width: '8px', height: '8px', background: colors.primary, borderRadius: '9999px' }} />
+        <span style={{ fontSize: '13px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
       </div>
 
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-pink-100 to-fuchsia-200 bg-clip-text text-transparent">
+      <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '16px', lineHeight: 1.1 }}>
         Damped Oscillations
       </h1>
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
+      <p style={{ fontSize: '18px', color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px', lineHeight: 1.7 }}>
         Discover why swings stop and how engineers control vibrations
       </p>
 
-      {/* Premium card with content */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-transparent to-fuchsia-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <div className="text-6xl mb-6">〰️</div>
-
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              You push a child on a swing once and walk away.
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Will it swing forever? Or is there something that steals its energy?
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-pink-400 font-semibold">
-                Uncover the science of damping and how it shapes our world!
-              </p>
-            </div>
-          </div>
-        </div>
+      <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '32px', position: 'relative' as const }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>〰️</div>
+        <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.9)', fontWeight: 500, lineHeight: 1.7, marginBottom: '12px' }}>
+          You push a child on a swing once and walk away.
+        </p>
+        <p style={{ fontSize: '16px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '12px' }}>
+          Will it swing forever? Or is there something that steals its energy?
+        </p>
+        <p style={{ fontSize: '16px', color: colors.primary, fontWeight: 600 }}>
+          Uncover the science of damping and how it shapes our world!
+        </p>
       </div>
 
-      {/* Premium CTA button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 hover:scale-[1.02] active:scale-[0.98]"
-        style={{ zIndex: 10, position: 'relative' }}
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Explore Damping
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+      <button onClick={() => goToPhase('predict')} style={primaryBtnStyle}>
+        Explore Damping
       </button>
 
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-pink-400">✦</span>
+      <div style={{ marginTop: '32px', display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px', color: colors.textMuted }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: colors.primary }}>✦</span>
           Interactive Lab
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-pink-400">✦</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: colors.primary }}>✦</span>
           Real-World Examples
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-pink-400">✦</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: colors.primary }}>✦</span>
           Knowledge Test
         </div>
       </div>
@@ -1385,174 +856,138 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
   // Predict phase
   const renderPredict = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-        {renderSectionHeader('🤔', 'Your Prediction', 'A mass on a spring is pulled and released in air...')}
+    <div style={{ display: 'flex', flexDirection: 'column', padding: '32px 24px', alignItems: 'center' }}>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Your Prediction</h2>
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
+        A mass on a spring is pulled and released in air...
+      </p>
 
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: space.md,
-          maxWidth: '520px',
-          margin: '0 auto'
-        }}>
-          {[
-            { id: 'forever', label: 'It oscillates forever at constant amplitude', icon: '♾️' },
-            { id: 'decay_linear', label: 'Amplitude decreases steadily (linear decay)', icon: '📉' },
-            { id: 'decay_exp', label: 'Amplitude decreases faster at first, then slower (exponential)', icon: '📈' },
-            { id: 'stops_sudden', label: 'It stops suddenly after a few swings', icon: '⏹️' }
-          ].map(option => (
-            <button
-              key={option.id}
-              onClick={() => setPrediction(option.id)}
-              style={{
-                padding: `${space.lg} ${space.lg}`,
-                fontSize: '15px',
-                fontWeight: prediction === option.id ? 700 : 500,
-                color: prediction === option.id ? colors.textInverse : colors.textPrimary,
-                background: prediction === option.id
-                  ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`
-                  : colors.bgSecondary,
-                border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`,
-                borderRadius: radius.md,
-                cursor: 'pointer',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.md,
-                transition: 'all 0.2s ease',
-                boxShadow: prediction === option.id ? shadows.md : 'none',
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              <span style={{ fontSize: '28px' }}>{option.icon}</span>
-              {option.label}
-            </button>
-          ))}
-        </div>
+      {/* SVG visualization for predict phase */}
+      <div style={{ marginBottom: '24px' }}>
+        <svg width="360" height="200" viewBox="0 0 360 200">
+          <defs>
+            <linearGradient id="predDampBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1a1a24" />
+              <stop offset="100%" stopColor="#0a0a0f" />
+            </linearGradient>
+            <linearGradient id="predSpring" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.primaryDark} />
+              <stop offset="50%" stopColor={colors.primaryLight} />
+              <stop offset="100%" stopColor={colors.primaryDark} />
+            </linearGradient>
+            <radialGradient id="predMass" cx="30%" cy="30%" r="65%">
+              <stop offset="0%" stopColor={colors.accentLight} />
+              <stop offset="100%" stopColor="#0891b2" />
+            </radialGradient>
+            <linearGradient id="predWall" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3a3a48" />
+              <stop offset="100%" stopColor="#5a5a68" />
+            </linearGradient>
+            <filter id="predGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
-        <div style={{
-          marginTop: space.xl,
-          padding: space.lg,
-          background: colors.bgSecondary,
-          borderRadius: radius.md,
-          border: `1px solid ${colors.border}`
-        }}>
-          <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
-            <strong style={{ color: colors.textPrimary }}>Consider:</strong> Where does the energy go? The spring stores potential energy, the mass has kinetic energy... can energy just disappear?
-          </p>
-        </div>
+          <rect width="360" height="200" fill="url(#predDampBg)" rx="12" />
+
+          {/* Grid */}
+          <g opacity="0.06">
+            {[0,1,2,3,4].map(i => <line key={`h${i}`} x1="0" y1={i*50} x2="360" y2={i*50} stroke="#fff" strokeWidth="0.5" />)}
+            {[0,1,2,3,4,5,6].map(i => <line key={`v${i}`} x1={i*60} y1="0" x2={i*60} y2="200" stroke="#fff" strokeWidth="0.5" />)}
+          </g>
+
+          {/* Wall */}
+          <rect x="10" y="60" width="18" height="80" fill="url(#predWall)" rx="2" />
+
+          {/* Spring coils */}
+          <path d="M 28 100 L 48 80 L 68 120 L 88 80 L 108 120 L 128 80 L 148 120 L 168 100" fill="none" stroke="url(#predSpring)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#predGlow)" />
+
+          {/* Mass block */}
+          <rect x="168" y="82" width="36" height="36" rx="8" fill="url(#predMass)" />
+
+          {/* Equilibrium line */}
+          <line x1="190" y1="50" x2="190" y2="150" stroke="#71717a" strokeWidth="1.5" strokeDasharray="6,4" opacity="0.5" />
+          <text x="190" y="165" fill="#71717a" fontSize="10" textAnchor="middle">Equilibrium</text>
+
+          {/* Arrow showing pull */}
+          <g>
+            <line x1="210" y1="100" x2="270" y2="100" stroke={colors.warning} strokeWidth="2.5" strokeLinecap="round" />
+            <polygon points="270,100 260,94 260,106" fill={colors.warning} />
+            <text x="240" y="90" fill={colors.warning} fontSize="10" textAnchor="middle" fontWeight="600">Pull</text>
+          </g>
+
+          {/* Question marks */}
+          <g opacity="0.6">
+            <text x="300" y="75" fill={colors.primary} fontSize="22" fontWeight="700">?</text>
+            <text x="320" y="105" fill={colors.accent} fontSize="18" fontWeight="700">?</text>
+            <text x="290" y="130" fill={colors.warning} fontSize="16" fontWeight="700">?</text>
+          </g>
+        </svg>
       </div>
-      {renderBottomBar(() => goToPhase('play'), 'Test It!', !prediction)}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px', width: '100%' }}>
+        {[
+          { id: 'forever', label: 'It oscillates forever at constant amplitude', icon: '♾️' },
+          { id: 'decay_linear', label: 'Amplitude decreases steadily (linear decay)', icon: '📉' },
+          { id: 'decay_exp', label: 'Amplitude decreases faster at first, then slower (exponential)', icon: '📈' },
+          { id: 'stops_sudden', label: 'It stops suddenly after a few swings', icon: '⏹️' }
+        ].map(option => (
+          <button
+            key={option.id}
+            onClick={() => setPrediction(option.id)}
+            style={{
+              padding: '18px',
+              fontSize: '15px',
+              fontWeight: prediction === option.id ? 700 : 500,
+              color: prediction === option.id ? '#0a0a0f' : colors.textPrimary,
+              background: prediction === option.id
+                ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`
+                : colors.bgCard,
+              border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              transition: 'all 0.2s ease',
+              boxShadow: prediction === option.id ? '0 4px 12px rgba(236,72,153,0.3)' : 'none',
+              zIndex: 10,
+              position: 'relative' as const
+            }}
+          >
+            <span style={{ fontSize: '28px' }}>{option.icon}</span>
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginTop: '24px', padding: '16px', background: colors.bgCard, borderRadius: '12px', border: `1px solid ${colors.border}`, maxWidth: '520px', width: '100%' }}>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+          <strong style={{ color: colors.textPrimary }}>Consider:</strong> Where does the energy go? The spring stores potential energy, the mass has kinetic energy... can energy just disappear?
+        </p>
+      </div>
     </div>
   );
 
   // Play phase
   const renderPlay = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-        {renderSectionHeader('🔬', 'Experiment', 'Watch how oscillation amplitude changes over time')}
-
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: space.lg,
-          alignItems: 'flex-start'
-        }}>
-          <div style={{ flex: 1 }}>
-            {renderOscillator(true)}
-            {renderAmplitudeGraph()}
-          </div>
-
-          <div style={{ flex: 1, minWidth: '280px' }}>
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`,
-              marginBottom: space.md
-            }}>
-              <h4 style={{
-                fontSize: '15px',
-                color: colors.primary,
-                marginBottom: space.md,
-                fontWeight: 700
-              }}>
-                🎯 Explore
-              </h4>
-              <ol style={{
-                margin: 0,
-                paddingLeft: space.lg,
-                color: colors.textSecondary,
-                fontSize: '14px',
-                lineHeight: 2
-              }}>
-                <li>Start with low damping (ζ ≈ 0.1)</li>
-                <li>Release the mass and watch amplitude decay</li>
-                <li>Increase damping to ζ = 1 (critical)</li>
-                <li>Try ζ {'>'} 1 (overdamped) - what happens?</li>
-              </ol>
-            </div>
-
-            <div style={{
-              padding: space.md,
-              background: colors.bgTertiary,
-              borderRadius: radius.sm,
-              marginBottom: space.md
-            }}>
-              <h4 style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: space.sm, fontWeight: 600 }}>
-                Damping Types:
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: space.sm }}>
-                <div style={{
-                  padding: `${space.sm} ${space.md}`,
-                  background: dampingRatio < 1 ? `${colors.primary}20` : colors.bgSecondary,
-                  borderRadius: radius.sm,
-                  fontSize: '13px',
-                  color: colors.textPrimary,
-                  fontWeight: dampingRatio < 1 ? 600 : 400
-                }}>
-                  <strong>ζ {'<'} 1:</strong> Underdamped (oscillates)
-                </div>
-                <div style={{
-                  padding: `${space.sm} ${space.md}`,
-                  background: dampingRatio === 1 ? `${colors.success}20` : colors.bgSecondary,
-                  borderRadius: radius.sm,
-                  fontSize: '13px',
-                  color: colors.textPrimary,
-                  fontWeight: dampingRatio === 1 ? 600 : 400
-                }}>
-                  <strong>ζ = 1:</strong> Critical (fastest without oscillation)
-                </div>
-                <div style={{
-                  padding: `${space.sm} ${space.md}`,
-                  background: dampingRatio > 1 ? `${colors.accent}20` : colors.bgSecondary,
-                  borderRadius: radius.sm,
-                  fontSize: '13px',
-                  color: colors.textPrimary,
-                  fontWeight: dampingRatio > 1 ? 600 : 400
-                }}>
-                  <strong>ζ {'>'} 1:</strong> Overdamped (slow return)
-                </div>
-              </div>
-            </div>
-          </div>
+    <div style={{ padding: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '28px' }}>🔬</span>
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Experiment</h2>
+          <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0 }}>Watch how oscillation amplitude changes over time</p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('review'), 'See Analysis')}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+        {renderOscillator(true)}
+      </div>
     </div>
   );
 
@@ -1561,341 +996,267 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     const wasCorrect = prediction === 'decay_exp';
 
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-          {/* Result banner */}
-          <div style={{
-            padding: space.xl,
-            background: wasCorrect
-              ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
-              : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`,
-            borderRadius: radius.lg,
-            border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`,
-            marginBottom: space.xl,
-            textAlign: 'center'
-          }}>
-            <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎉' : '💡'}</span>
-            <h3 style={{
-              fontSize: '22px',
-              color: wasCorrect ? colors.success : colors.accent,
-              marginTop: space.md,
-              fontWeight: 700
-            }}>
-              {wasCorrect ? 'Correct! Exponential decay it is!' : 'The amplitude decays exponentially!'}
-            </h3>
-          </div>
-
-          {renderSectionHeader('📚', 'The Physics of Damping', 'Energy dissipation and the damping equation')}
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: space.md,
-            marginBottom: space.xl
-          }}>
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <h4 style={{
-                fontSize: '15px',
-                color: colors.primary,
-                marginBottom: space.md,
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.sm,
-                fontWeight: 700
-              }}>
-                <span>🔋</span> Energy Loss
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                Damping forces (friction, air resistance) are proportional to velocity: <strong style={{ color: colors.textPrimary }}>F_d = -bv</strong>. They convert kinetic energy to heat.
-              </p>
-            </div>
-
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <h4 style={{
-                fontSize: '15px',
-                color: colors.accent,
-                marginBottom: space.md,
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.sm,
-                fontWeight: 700
-              }}>
-                <span>📉</span> Exponential Decay
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                The amplitude follows <strong style={{ color: colors.textPrimary }}>A(t) = A₀ e^(-γt)</strong>. Each cycle loses the same fraction of energy, causing exponential decay.
-              </p>
-            </div>
-          </div>
-
-          {/* Formula highlight */}
-          <div style={{
-            padding: space.xl,
-            background: colors.bgTertiary,
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.primary}30`,
-            marginBottom: space.xl
-          }}>
-            <h4 style={{ fontSize: '16px', color: colors.textPrimary, marginBottom: space.md, textAlign: 'center', fontWeight: 700 }}>
-              The Damped Oscillator Equation
-            </h4>
-            <div style={{
-              fontSize: '24px',
-              color: colors.primary,
-              fontWeight: 700,
-              textAlign: 'center',
-              padding: space.lg,
-              background: colors.bgPrimary,
-              borderRadius: radius.sm,
-              fontFamily: 'monospace'
-            }}>
-              x'' + 2ζω₀x' + ω₀²x = 0
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: space.xl, marginTop: space.md, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '14px', color: colors.textSecondary }}>
-                <strong style={{ color: colors.primary }}>ζ</strong> = damping ratio
-              </span>
-              <span style={{ fontSize: '14px', color: colors.textSecondary }}>
-                <strong style={{ color: colors.primary }}>ω₀</strong> = natural frequency
-              </span>
-            </div>
-          </div>
-
-          {/* Damping types */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: space.md,
-            marginBottom: space.xl
-          }}>
-            {[
-              { type: 'Underdamped', condition: 'ζ < 1', desc: 'Oscillates with decreasing amplitude', icon: '〰️', color: colors.primary },
-              { type: 'Critical', condition: 'ζ = 1', desc: 'Fastest return, no oscillation', icon: '⚡', color: colors.success },
-              { type: 'Overdamped', condition: 'ζ > 1', desc: 'Slow return, no oscillation', icon: '🐢', color: colors.accent }
-            ].map((item, idx) => (
-              <div key={idx} style={{
-                padding: space.lg,
-                background: colors.bgSecondary,
-                borderRadius: radius.md,
-                border: `1px solid ${item.color}40`,
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '32px', marginBottom: space.sm }}>{item.icon}</div>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: item.color }}>{item.type}</div>
-                <div style={{ fontSize: '13px', color: colors.textSecondary, margin: `${space.xs} 0` }}>{item.condition}</div>
-                <div style={{ fontSize: '12px', color: colors.textTertiary }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
-
-          {renderKeyTakeaway('Damping is nature\'s way of dissipating energy. The damping ratio ζ determines whether the system oscillates (underdamped), returns fastest (critical), or creeps back slowly (overdamped). Most real systems are slightly underdamped for quick response with acceptable overshoot.')}
+      <div style={{ padding: '24px' }}>
+        {/* Result banner */}
+        <div style={{
+          padding: '32px',
+          background: wasCorrect
+            ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
+            : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`,
+          borderRadius: '16px',
+          border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`,
+          marginBottom: '24px',
+          textAlign: 'center'
+        }}>
+          <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎉' : '💡'}</span>
+          <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>
+            {wasCorrect ? 'Correct! Exponential decay it is!' : 'The amplitude decays exponentially!'}
+          </h3>
         </div>
-        {renderBottomBar(() => goToPhase('twist_predict'), 'Explore the Twist')}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '28px' }}>📚</span>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>The Physics of Damping</h2>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ ...cardStyle, padding: '20px' }}>
+            <h4 style={{ fontSize: '15px', color: colors.primary, marginBottom: '12px', fontWeight: 700 }}>
+              🔋 Energy Loss
+            </h4>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
+              Damping forces (friction, air resistance) are proportional to velocity. The damping force equation is F_d = -bv, where b is the damping coefficient and v is velocity. These forces convert kinetic energy into thermal energy, gradually reducing the amplitude of oscillation. The rate of energy dissipation depends on both velocity and the damping coefficient, creating a characteristic exponential envelope over the oscillation pattern.
+            </p>
+          </div>
+
+          <div style={{ ...cardStyle, padding: '20px' }}>
+            <h4 style={{ fontSize: '15px', color: colors.accent, marginBottom: '12px', fontWeight: 700 }}>
+              📉 Exponential Decay
+            </h4>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
+              The amplitude follows the equation A(t) = A0 * e^(-gamma*t), where gamma is the decay constant. Each successive oscillation cycle loses the same fraction of its remaining energy, producing the characteristic exponential envelope. The time constant tau = 1/gamma determines how quickly the oscillation dies out. After 5 time constants, the amplitude has decreased to less than 1% of its initial value.
+            </p>
+          </div>
+        </div>
+
+        {/* Formula highlight */}
+        <div style={{ padding: '24px', background: colors.bgCardLight, borderRadius: '16px', border: `1px solid ${colors.primary}30`, marginBottom: '24px' }}>
+          <h4 style={{ fontSize: '16px', color: colors.textPrimary, marginBottom: '12px', textAlign: 'center', fontWeight: 700 }}>
+            The Damped Oscillator Equation
+          </h4>
+          <div style={{ fontSize: '24px', color: colors.primary, fontWeight: 700, textAlign: 'center', padding: '16px', background: colors.bgDark, borderRadius: '8px', fontFamily: 'monospace' }}>
+            x'' + 2*zeta*omega_0*x' + omega_0^2*x = 0
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '14px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.primary }}>zeta</strong> = damping ratio
+            </span>
+            <span style={{ fontSize: '14px', color: colors.textSecondary }}>
+              <strong style={{ color: colors.primary }}>omega_0</strong> = natural frequency
+            </span>
+          </div>
+        </div>
+
+        {/* Damping types */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          {[
+            { type: 'Underdamped', condition: 'zeta < 1', desc: 'Oscillates with decreasing amplitude. The system overshoots equilibrium multiple times.', icon: '〰️', color: colors.primary },
+            { type: 'Critical', condition: 'zeta = 1', desc: 'Fastest return without oscillation. The optimal balance point.', icon: '⚡', color: colors.success },
+            { type: 'Overdamped', condition: 'zeta > 1', desc: 'Slow return without oscillation. Excessive resistance to motion.', icon: '🐢', color: colors.accent }
+          ].map((item, idx) => (
+            <div key={idx} style={{ ...cardStyle, padding: '20px', textAlign: 'center', borderColor: `${item.color}40` }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>{item.icon}</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: item.color }}>{item.type}</div>
+              <div style={{ fontSize: '13px', color: colors.textSecondary, margin: '4px 0' }}>{item.condition}</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted }}>{item.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Key takeaway */}
+        <div style={{ padding: '20px', background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`, borderRadius: '16px', border: `1px solid ${colors.primary}40` }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>💡</span>
+            <p style={{ fontSize: '15px', color: colors.textPrimary, margin: 0, lineHeight: 1.7 }}>
+              Damping is nature's way of dissipating energy. The damping ratio zeta determines whether the system oscillates (underdamped), returns fastest (critical), or creeps back slowly (overdamped). Most real systems are slightly underdamped for quick response with acceptable overshoot.
+            </p>
+          </div>
+        </div>
       </div>
     );
   };
 
   // Twist Predict phase
   const renderTwistPredict = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-        {renderSectionHeader('🌀', 'The Twist', 'Which damping type is best for car suspension?')}
-
-        <div style={{
-          padding: space.lg,
-          background: colors.bgTertiary,
-          borderRadius: radius.md,
-          border: `1px solid ${colors.border}`,
-          marginBottom: space.xl
-        }}>
-          <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0, lineHeight: 1.7 }}>
-            A car hits a pothole. The suspension compresses and needs to return to normal. Engineers must choose: <strong style={{ color: colors.textPrimary }}>underdamped, critically damped, or overdamped?</strong>
-          </p>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: space.md,
-          maxWidth: '520px',
-          margin: '0 auto'
-        }}>
-          {[
-            { id: 'underdamped', label: 'Underdamped - allows oscillation for a softer ride', icon: '〰️' },
-            { id: 'critical', label: 'Critically damped - fastest settling, no bounce', icon: '⚡' },
-            { id: 'overdamped', label: 'Overdamped - very slow, maximum comfort', icon: '🐢' },
-            { id: 'slightly_under', label: 'Slightly underdamped - fast settling with minimal bounce', icon: '🎯' }
-          ].map(option => (
-            <button
-              key={option.id}
-              onClick={() => setTwistPrediction(option.id)}
-              style={{
-                padding: `${space.lg} ${space.lg}`,
-                fontSize: '15px',
-                fontWeight: twistPrediction === option.id ? 700 : 500,
-                color: twistPrediction === option.id ? colors.textInverse : colors.textPrimary,
-                background: twistPrediction === option.id
-                  ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
-                  : colors.bgSecondary,
-                border: `2px solid ${twistPrediction === option.id ? colors.accent : colors.border}`,
-                borderRadius: radius.md,
-                cursor: 'pointer',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: space.md,
-                transition: 'all 0.2s ease',
-                boxShadow: twistPrediction === option.id ? shadows.md : 'none',
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              <span style={{ fontSize: '28px' }}>{option.icon}</span>
-              {option.label}
-            </button>
-          ))}
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', padding: '32px 24px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '28px' }}>🌀</span>
+        <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>The Twist</h2>
       </div>
-      {renderBottomBar(() => goToPhase('twist_play'), 'Try Different Damping', !twistPrediction)}
+      <p style={{ fontSize: '16px', color: colors.textSecondary, marginBottom: '24px', textAlign: 'center' }}>
+        Which damping type is best for car suspension?
+      </p>
+
+      {/* SVG visualization for twist predict phase */}
+      <div style={{ marginBottom: '24px' }}>
+        <svg width="360" height="180" viewBox="0 0 360 180">
+          <defs>
+            <linearGradient id="twistBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1a1a24" />
+              <stop offset="100%" stopColor="#0a0a0f" />
+            </linearGradient>
+            <linearGradient id="roadGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2a2a36" />
+              <stop offset="50%" stopColor="#3a3a48" />
+              <stop offset="100%" stopColor="#2a2a36" />
+            </linearGradient>
+            <linearGradient id="carBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={colors.accent} />
+              <stop offset="100%" stopColor="#0891b2" />
+            </linearGradient>
+            <linearGradient id="suspGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.primary} />
+              <stop offset="100%" stopColor={colors.primaryDark} />
+            </linearGradient>
+            <filter id="twistGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <rect width="360" height="180" fill="url(#twistBg)" rx="12" />
+
+          {/* Road */}
+          <rect x="0" y="140" width="360" height="40" fill="url(#roadGrad)" />
+          <line x1="0" y1="160" x2="360" y2="160" stroke="#4a4a58" strokeWidth="2" strokeDasharray="20,15" />
+
+          {/* Bump */}
+          <ellipse cx="180" cy="140" rx="30" ry="10" fill="#4a4a58" />
+          <text x="180" y="175" fill="#71717a" fontSize="10" textAnchor="middle">Pothole!</text>
+
+          {/* Car body */}
+          <rect x="130" y="90" width="100" height="40" rx="8" fill="url(#carBody)" filter="url(#twistGlow)" />
+          <rect x="145" y="78" width="60" height="18" rx="4" fill={colors.accent} opacity="0.6" />
+
+          {/* Wheels */}
+          <circle cx="155" cy="135" r="12" fill="#333" />
+          <circle cx="155" cy="135" r="6" fill="#555" />
+          <circle cx="205" cy="135" r="12" fill="#333" />
+          <circle cx="205" cy="135" r="6" fill="#555" />
+
+          {/* Suspension springs */}
+          <path d="M 155 130 L 150 120 L 160 118 L 150 116 L 160 114 L 155 110" fill="none" stroke="url(#suspGrad)" strokeWidth="2" />
+          <path d="M 205 130 L 200 120 L 210 118 L 200 116 L 210 114 L 205 110" fill="none" stroke="url(#suspGrad)" strokeWidth="2" />
+
+          {/* Question marks */}
+          <g>
+            <text x="60" y="70" fill={colors.primary} fontSize="22" fontWeight="700">?</text>
+            <text x="290" y="65" fill={colors.warning} fontSize="20" fontWeight="700">?</text>
+            <text x="315" y="100" fill={colors.accent} fontSize="16" fontWeight="700">?</text>
+          </g>
+
+          {/* Labels */}
+          <text x="30" y="100" fill={colors.textSecondary} fontSize="11" fontWeight="600">Underdamped?</text>
+          <text x="260" y="90" fill={colors.textSecondary} fontSize="11" fontWeight="600">Critical?</text>
+          <text x="270" y="120" fill={colors.textSecondary} fontSize="11" fontWeight="600">Overdamped?</text>
+        </svg>
+      </div>
+
+      <div style={{ padding: '16px', background: colors.bgCardLight, borderRadius: '12px', border: `1px solid ${colors.border}`, marginBottom: '24px', maxWidth: '520px', width: '100%' }}>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0, lineHeight: 1.7 }}>
+          A car hits a pothole. The suspension compresses and needs to return to normal. Engineers must choose: <strong style={{ color: colors.textPrimary }}>underdamped, critically damped, or overdamped?</strong>
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '520px', width: '100%' }}>
+        {[
+          { id: 'underdamped', label: 'Underdamped - allows oscillation for a softer ride', icon: '〰️' },
+          { id: 'critical', label: 'Critically damped - fastest settling, no bounce', icon: '⚡' },
+          { id: 'overdamped', label: 'Overdamped - very slow, maximum comfort', icon: '🐢' },
+          { id: 'slightly_under', label: 'Slightly underdamped - fast settling with minimal bounce', icon: '🎯' }
+        ].map(option => (
+          <button
+            key={option.id}
+            onClick={() => setTwistPrediction(option.id)}
+            style={{
+              padding: '18px',
+              fontSize: '15px',
+              fontWeight: twistPrediction === option.id ? 700 : 500,
+              color: twistPrediction === option.id ? '#0a0a0f' : colors.textPrimary,
+              background: twistPrediction === option.id
+                ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
+                : colors.bgCard,
+              border: `2px solid ${twistPrediction === option.id ? colors.accent : colors.border}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              transition: 'all 0.2s ease',
+              boxShadow: twistPrediction === option.id ? '0 4px 12px rgba(6,182,212,0.3)' : 'none',
+              zIndex: 10,
+              position: 'relative' as const
+            }}
+          >
+            <span style={{ fontSize: '28px' }}>{option.icon}</span>
+            {option.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 
   // Twist Play phase
   const renderTwistPlay = () => (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100%',
-      background: colors.bgPrimary
-    }}>
-      {renderProgressBar()}
-      <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-        {renderSectionHeader('🔬', 'Compare Damping Regimes', 'See how different damping affects the suspension behavior')}
-
-        {/* Medium selector */}
-        <div style={{
-          display: 'flex',
-          gap: space.md,
-          marginBottom: space.lg,
-          justifyContent: 'center'
-        }}>
-          {[
-            { id: 'air', label: '💨 Air', zeta: '0.1' },
-            { id: 'water', label: '💧 Water', zeta: '0.5' },
-            { id: 'honey', label: '🍯 Honey', zeta: '2.0' }
-          ].map(m => (
-            <button
-              key={m.id}
-              onClick={() => {
-                setMedium(m.id as 'air' | 'water' | 'honey');
-                stopOscillation();
-              }}
-              style={{
-                padding: `${space.md} ${space.xl}`,
-                fontSize: '14px',
-                fontWeight: medium === m.id ? 700 : 500,
-                color: medium === m.id ? colors.textInverse : colors.textPrimary,
-                background: medium === m.id
-                  ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
-                  : colors.bgSecondary,
-                border: `2px solid ${medium === m.id ? colors.accent : colors.border}`,
-                borderRadius: radius.md,
-                cursor: 'pointer',
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              {m.label}
-              <span style={{ display: 'block', fontSize: '11px', fontWeight: 400, marginTop: space.xs, opacity: 0.8 }}>
-                ζ ≈ {m.zeta}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: space.lg,
-          alignItems: 'flex-start'
-        }}>
-          <div style={{ flex: 1 }}>
-            {renderOscillator(true)}
-            {renderAmplitudeGraph()}
-          </div>
-
-          <div style={{ flex: 1, minWidth: '280px' }}>
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`,
-              marginBottom: space.md
-            }}>
-              <h4 style={{
-                fontSize: '15px',
-                color: colors.accent,
-                marginBottom: space.md,
-                fontWeight: 700
-              }}>
-                🎯 Compare
-              </h4>
-              <ol style={{
-                margin: 0,
-                paddingLeft: space.lg,
-                color: colors.textSecondary,
-                fontSize: '14px',
-                lineHeight: 2
-              }}>
-                <li>Release in air - count oscillations</li>
-                <li>Switch to water - compare behavior</li>
-                <li>Try honey - does it oscillate at all?</li>
-                <li>Notice the amplitude decay rate</li>
-              </ol>
-            </div>
-
-            <div style={{
-              padding: space.md,
-              background: medium === 'honey' ? `${colors.warning}15` : colors.bgTertiary,
-              borderRadius: radius.sm,
-              border: `1px solid ${medium === 'honey' ? colors.warning : colors.border}`
-            }}>
-              <p style={{ fontSize: '13px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
-                <strong style={{ color: colors.textPrimary }}>Current medium:</strong> {medium.charAt(0).toUpperCase() + medium.slice(1)}<br />
-                <strong style={{ color: colors.textPrimary }}>Damping ratio:</strong> ζ = {dampingRatio.toFixed(2)}<br />
-                <strong style={{ color: colors.textPrimary }}>Type:</strong> {
-                  getDampingType(dampingRatio) === 'underdamped' ? 'Underdamped (will oscillate)' :
-                  getDampingType(dampingRatio) === 'critical' ? 'Critical (no oscillation)' :
-                  'Overdamped (very slow, no oscillation)'
-                }
-              </p>
-            </div>
-          </div>
+    <div style={{ padding: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+        <span style={{ fontSize: '28px' }}>🔬</span>
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Compare Damping Regimes</h2>
+          <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0 }}>See how different damping affects the suspension behavior</p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase('twist_review'), 'See Analysis')}
+
+      {/* Medium selector */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', justifyContent: 'center' }}>
+        {[
+          { id: 'air', label: 'Air', zeta: '0.1' },
+          { id: 'water', label: 'Water', zeta: '0.5' },
+          { id: 'honey', label: 'Honey', zeta: '2.0' }
+        ].map(m => (
+          <button
+            key={m.id}
+            onClick={() => {
+              setMedium(m.id as 'air' | 'water' | 'honey');
+              stopOscillation();
+            }}
+            style={{
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: medium === m.id ? 700 : 500,
+              color: medium === m.id ? '#0a0a0f' : colors.textPrimary,
+              background: medium === m.id
+                ? `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`
+                : colors.bgCard,
+              border: `2px solid ${medium === m.id ? colors.accent : colors.border}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              zIndex: 10,
+              position: 'relative' as const
+            }}
+          >
+            {m.label} (zeta = {m.zeta})
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+        {renderOscillator(true)}
+      </div>
     </div>
   );
 
@@ -1904,91 +1265,61 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     const wasCorrect = twistPrediction === 'slightly_under';
 
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-          <div style={{
-            padding: space.xl,
-            background: wasCorrect
-              ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
-              : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`,
-            borderRadius: radius.lg,
-            border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`,
-            marginBottom: space.xl,
-            textAlign: 'center'
-          }}>
-            <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎯' : '💡'}</span>
-            <h3 style={{
-              fontSize: '22px',
-              color: wasCorrect ? colors.success : colors.accent,
-              marginTop: space.md,
-              fontWeight: 700
-            }}>
-              {wasCorrect ? 'Spot on! Slightly underdamped is optimal!' : 'Slightly underdamped is the sweet spot!'}
-            </h3>
-          </div>
+      <div style={{ padding: '24px' }}>
+        <div style={{
+          padding: '32px',
+          background: wasCorrect
+            ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
+            : `linear-gradient(135deg, ${colors.accent}15, ${colors.accent}05)`,
+          borderRadius: '16px',
+          border: `1px solid ${wasCorrect ? colors.success : colors.accent}40`,
+          marginBottom: '24px',
+          textAlign: 'center'
+        }}>
+          <span style={{ fontSize: '56px' }}>{wasCorrect ? '🎯' : '💡'}</span>
+          <h3 style={{ fontSize: '22px', color: wasCorrect ? colors.success : colors.accent, marginTop: '12px', fontWeight: 700 }}>
+            {wasCorrect ? 'Spot on! Slightly underdamped is optimal!' : 'Slightly underdamped is the sweet spot!'}
+          </h3>
+        </div>
 
-          {renderSectionHeader('📊', 'Optimal Damping for Different Applications', 'Why one size doesn\'t fit all')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '28px' }}>📊</span>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Optimal Damping for Different Applications</h2>
+        </div>
 
-          {/* Application comparison */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: space.md,
-            marginBottom: space.xl
-          }}>
-            {[
-              { app: 'Car Suspension', icon: '🚗', optimal: 'Slightly Underdamped', ratio: 'ζ ≈ 0.3-0.4', reason: 'Fast settling with comfort', color: colors.primary },
-              { app: 'Door Closer', icon: '🚪', optimal: 'Critical/Overdamped', ratio: 'ζ ≈ 1.0-1.5', reason: 'No bounce back', color: '#8b5cf6' },
-              { app: 'Seismometer', icon: '📊', optimal: 'Critical', ratio: 'ζ = 1.0', reason: 'Fastest response', color: colors.accent }
-            ].map((item, idx) => (
-              <div key={idx} style={{
-                padding: space.lg,
-                background: colors.bgSecondary,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.border}`
-              }}>
-                <div style={{ fontSize: '40px', marginBottom: space.md, textAlign: 'center' }}>{item.icon}</div>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: item.color, textAlign: 'center', marginBottom: space.sm }}>
-                  {item.app}
-                </div>
-                <div style={{ fontSize: '14px', color: colors.textPrimary, textAlign: 'center', marginBottom: space.xs, fontWeight: 600 }}>
-                  {item.optimal}
-                </div>
-                <div style={{ fontSize: '12px', color: colors.textTertiary, textAlign: 'center', marginBottom: space.sm }}>
-                  {item.ratio}
-                </div>
-                <div style={{ fontSize: '13px', color: colors.textSecondary, textAlign: 'center' }}>
-                  {item.reason}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          {[
+            { app: 'Car Suspension', icon: '🚗', optimal: 'Slightly Underdamped', ratio: 'zeta approximately 0.3-0.4', reason: 'Fast settling with comfort', color: colors.primary },
+            { app: 'Door Closer', icon: '🚪', optimal: 'Critical/Overdamped', ratio: 'zeta approximately 1.0-1.5', reason: 'No bounce back', color: '#8b5cf6' },
+            { app: 'Seismometer', icon: '📊', optimal: 'Critical', ratio: 'zeta = 1.0', reason: 'Fastest response', color: colors.accent }
+          ].map((item, idx) => (
+            <div key={idx} style={{ ...cardStyle, padding: '20px', textAlign: 'center' }}>
+              <div style={{ fontSize: '40px', marginBottom: '12px' }}>{item.icon}</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: item.color, marginBottom: '4px' }}>{item.app}</div>
+              <div style={{ fontSize: '14px', color: colors.textPrimary, fontWeight: 600, marginBottom: '4px' }}>{item.optimal}</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted, marginBottom: '4px' }}>{item.ratio}</div>
+              <div style={{ fontSize: '13px', color: colors.textSecondary }}>{item.reason}</div>
+            </div>
+          ))}
+        </div>
 
-          {/* Explanation */}
-          <div style={{
-            padding: space.lg,
-            background: colors.bgSecondary,
-            borderRadius: radius.md,
-            border: `1px solid ${colors.border}`,
-            marginBottom: space.lg
-          }}>
-            <h4 style={{ fontSize: '15px', color: colors.textPrimary, marginBottom: space.md, fontWeight: 700 }}>
-              🎯 Why Slightly Underdamped for Cars?
-            </h4>
-            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-              Pure critical damping (ζ = 1) gives the <strong style={{ color: colors.textPrimary }}>mathematically fastest</strong> return to equilibrium. But slightly underdamped (ζ ≈ 0.3-0.4) allows <strong style={{ color: colors.textPrimary }}>one small overshoot</strong> which actually feels more comfortable to passengers and provides better road-following ability. Overdamped suspension would feel "floaty" and slow to respond.
+        <div style={{ ...cardStyle, marginBottom: '16px' }}>
+          <h4 style={{ fontSize: '15px', color: colors.textPrimary, marginBottom: '12px', fontWeight: 700 }}>
+            Why Slightly Underdamped for Cars?
+          </h4>
+          <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
+            Pure critical damping (zeta = 1) gives the mathematically fastest return to equilibrium. But slightly underdamped (zeta approximately 0.3-0.4) allows one small overshoot which actually feels more comfortable to passengers and provides better road-following ability. Overdamped suspension would feel floaty and slow to respond. Engineers carefully balance these parameters to optimize ride quality, handling stability, and tire grip across different driving conditions, speeds, and road surfaces.
+          </p>
+        </div>
+
+        <div style={{ padding: '20px', background: `linear-gradient(135deg, ${colors.primary}15, ${colors.accent}10)`, borderRadius: '16px', border: `1px solid ${colors.primary}40` }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            <span style={{ fontSize: '24px' }}>💡</span>
+            <p style={{ fontSize: '15px', color: colors.textPrimary, margin: 0, lineHeight: 1.7 }}>
+              The optimal damping ratio depends on the application. Car suspensions use zeta approximately 0.3-0.4 (slightly underdamped) for the best balance of comfort and control. Door closers use zeta approximately 1.0-1.5 to prevent bouncing. Seismometers use exactly zeta = 1.0 for fastest response without overshoot.
             </p>
           </div>
-
-          {renderKeyTakeaway('The optimal damping ratio depends on the application. Car suspensions use ζ ≈ 0.3-0.4 (slightly underdamped) for the best balance of comfort and control. Door closers use ζ ≈ 1.0-1.5 to prevent bouncing. Seismometers use exactly ζ = 1.0 for fastest response without overshoot.')}
         </div>
-        {renderBottomBar(() => goToPhase('transfer'), 'See Real Applications')}
       </div>
     );
   };
@@ -1996,773 +1327,410 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   // Transfer phase - Real-world applications
   const renderTransfer = () => {
     const app = realWorldApps[activeApp];
-    const canTakeQuiz = completedApps.size >= realWorldApps.length;
 
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-          {renderSectionHeader('🌍', 'Real-World Applications', 'Damping engineering in everyday life')}
+      <div style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '28px' }}>🌍</span>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, margin: 0 }}>Real-World Applications</h2>
+        </div>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, margin: '0 0 16px', lineHeight: 1.6 }}>
+          Damping engineering in everyday life
+        </p>
 
-          {/* Progress indicator */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: space.sm,
-            marginBottom: space.md
-          }}>
-            <span style={{ fontSize: '13px', color: colors.textSecondary }}>
-              {completedApps.size} of {realWorldApps.length} completed
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {realWorldApps.map((_, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: completedApps.has(idx) ? colors.success : idx === activeApp ? colors.primary : colors.bgTertiary,
-                    transition: 'background 0.3s ease'
-                  }}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Tab navigation */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
+          {realWorldApps.map((a, idx) => {
+            const isCompleted = completedApps.has(idx);
+            const isCurrent = idx === activeApp;
+            return (
+              <button
+                key={idx}
+                onClick={() => setActiveApp(idx)}
+                style={{
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  fontWeight: isCurrent ? 700 : 500,
+                  color: isCurrent ? '#0a0a0f' : isCompleted ? colors.success : colors.textSecondary,
+                  background: isCurrent
+                    ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)`
+                    : isCompleted ? `${colors.success}15` : colors.bgCard,
+                  border: `1px solid ${isCurrent ? a.color : isCompleted ? colors.success : colors.border}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.2s ease',
+                  zIndex: 10,
+                  position: 'relative' as const
+                }}
+              >
+                {isCompleted ? '✓ ' : ''}{a.icon} {a.title}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* Tab navigation */}
-          <div style={{
-            display: 'flex',
-            gap: space.sm,
-            marginBottom: space.lg,
-            overflowX: 'auto',
-            paddingBottom: space.sm
-          }}>
-            {realWorldApps.map((a, idx) => {
-              const isCompleted = completedApps.has(idx);
-              const isUnlocked = idx === 0 || completedApps.has(idx - 1);
-              const isCurrent = idx === activeApp;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    if (isUnlocked) setActiveApp(idx);
-                  }}
-                  style={{
-                    padding: `${space.md} ${space.lg}`,
-                    fontSize: '14px',
-                    fontWeight: isCurrent ? 700 : 500,
-                    color: isCurrent ? colors.textInverse : isCompleted ? colors.success : colors.textSecondary,
-                    background: isCurrent
-                      ? `linear-gradient(135deg, ${a.color}, ${a.color}dd)`
-                      : isCompleted ? `${colors.success}15` : colors.bgSecondary,
-                    border: `1px solid ${isCurrent ? a.color : isCompleted ? colors.success : colors.border}`,
-                    borderRadius: radius.sm,
-                    cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                    whiteSpace: 'nowrap',
-                    transition: 'all 0.2s ease',
-                    boxShadow: isCurrent ? shadows.sm : 'none',
-                    opacity: isUnlocked ? 1 : 0.5,
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  {isCompleted ? '✓ ' : ''}{a.icon} {a.title}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Application content card */}
-          <div style={{
-            background: colors.bgSecondary,
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.border}`,
-            overflow: 'hidden'
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: space.xl,
-              background: `linear-gradient(135deg, ${app.color}20, transparent)`,
-              borderBottom: `1px solid ${colors.border}`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: space.lg, marginBottom: space.md }}>
-                <span style={{ fontSize: '56px' }}>{app.icon}</span>
-                <div>
-                  <h3 style={{ fontSize: '24px', color: colors.textPrimary, margin: 0, fontWeight: 800 }}>
-                    {app.title}
-                  </h3>
-                  <p style={{ fontSize: '16px', color: app.color, margin: `${space.xs} 0 0`, fontWeight: 600 }}>
-                    {app.tagline}
-                  </p>
-                </div>
-              </div>
-              <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                {app.description}
-              </p>
-            </div>
-
-            {/* Connection */}
-            <div style={{ padding: `${space.lg} ${space.xl}`, borderBottom: `1px solid ${colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: app.color, marginBottom: space.sm, fontWeight: 700 }}>
-                🔗 Connection to Damping
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            {/* How it works */}
-            <div style={{ padding: `${space.lg} ${space.xl}`, borderBottom: `1px solid ${colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: space.sm, fontWeight: 700 }}>
-                ⚙️ How It Works
-              </h4>
-              <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-                {app.howItWorks}
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '1px',
-              background: colors.border
-            }}>
-              {app.stats.map((stat, idx) => (
-                <div key={idx} style={{
-                  padding: space.lg,
-                  background: colors.bgTertiary,
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '28px', marginBottom: space.xs }}>{stat.icon}</div>
-                  <div style={{ fontSize: '22px', fontWeight: 800, color: app.color }}>{stat.value}</div>
-                  <div style={{ fontSize: '12px', color: colors.textTertiary, fontWeight: 500 }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Examples */}
-            <div style={{ padding: `${space.lg} ${space.xl}`, borderTop: `1px solid ${colors.border}` }}>
-              <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: space.md, fontWeight: 700 }}>
-                📍 Examples
-              </h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: space.sm }}>
-                {app.examples.map((ex, idx) => (
-                  <span key={idx} style={{
-                    padding: `${space.sm} ${space.md}`,
-                    fontSize: '13px',
-                    color: colors.textSecondary,
-                    background: colors.bgPrimary,
-                    borderRadius: radius.full,
-                    border: `1px solid ${colors.border}`
-                  }}>
-                    {ex}
-                  </span>
-                ))}
+        {/* Application content - always visible */}
+        <div style={{ ...cardStyle, overflow: 'hidden', padding: 0 }}>
+          {/* Header */}
+          <div style={{ padding: '24px', background: `linear-gradient(135deg, ${app.color}20, transparent)`, borderBottom: `1px solid ${colors.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ fontSize: '22px', color: colors.textPrimary, margin: 0, fontWeight: 800 }}>{app.title}</h3>
+                <p style={{ fontSize: '14px', color: app.color, margin: '4px 0 0', fontWeight: 600 }}>{app.tagline}</p>
               </div>
             </div>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.description}</p>
+          </div>
 
-            {/* Companies */}
-            <div style={{
-              padding: `${space.md} ${space.xl}`,
-              background: colors.bgTertiary,
-              display: 'flex',
-              alignItems: 'center',
-              gap: space.sm,
-              flexWrap: 'wrap'
-            }}>
-              <span style={{ fontSize: '12px', color: colors.textTertiary, fontWeight: 500 }}>Key players:</span>
-              {app.companies.map((company, idx) => (
-                <span key={idx} style={{
-                  padding: `${space.xs} ${space.md}`,
-                  fontSize: '12px',
-                  color: colors.textSecondary,
-                  background: colors.bgSecondary,
-                  borderRadius: radius.sm,
-                  border: `1px solid ${colors.border}`
-                }}>
-                  {company}
+          {/* Connection */}
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}` }}>
+            <h4 style={{ fontSize: '14px', color: app.color, marginBottom: '8px', fontWeight: 700 }}>Connection to Damping</h4>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.connection}</p>
+          </div>
+
+          {/* How it works */}
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}` }}>
+            <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>How It Works</h4>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>{app.howItWorks}</p>
+          </div>
+
+          {/* Stats with numeric values */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: colors.border }}>
+            {app.stats.map((stat, idx) => (
+              <div key={idx} style={{ padding: '16px', background: colors.bgCardLight, textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                <div style={{ fontSize: '20px', fontWeight: 800, color: app.color }}>{stat.value}</div>
+                <div style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 500 }}>{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Examples */}
+          <div style={{ padding: '16px 24px', borderTop: `1px solid ${colors.border}` }}>
+            <h4 style={{ fontSize: '14px', color: colors.textPrimary, marginBottom: '8px', fontWeight: 700 }}>Examples</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {app.examples.map((ex, idx) => (
+                <span key={idx} style={{ padding: '6px 12px', fontSize: '13px', color: colors.textSecondary, background: colors.bgDark, borderRadius: '9999px', border: `1px solid ${colors.border}` }}>
+                  {ex}
                 </span>
               ))}
             </div>
-
-            {/* Mark as Read Button */}
-            <div style={{ padding: space.lg, borderTop: `1px solid ${colors.border}` }}>
-              {!completedApps.has(activeApp) ? (
-                <button
-                  onClick={() => {
-                    const newCompleted = new Set(completedApps);
-                    newCompleted.add(activeApp);
-                    setCompletedApps(newCompleted);
-                    if (activeApp < realWorldApps.length - 1) {
-                      setTimeout(() => setActiveApp(activeApp + 1), 300);
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: space.lg,
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    color: colors.textInverse,
-                    background: colors.success,
-                    border: 'none',
-                    borderRadius: radius.md,
-                    cursor: 'pointer',
-                    zIndex: 10,
-                    position: 'relative'
-                  }}
-                >
-                  ✓ Mark "{app.title}" as Read
-                </button>
-              ) : (
-                <div style={{
-                  padding: space.lg,
-                  background: `${colors.success}15`,
-                  borderRadius: radius.md,
-                  border: `1px solid ${colors.success}40`,
-                  textAlign: 'center'
-                }}>
-                  <span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>
-                    ✓ Completed
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
-        </div>
-        {/* Bottom bar */}
-        <div style={{
-          padding: `${space.lg} ${space.xl}`,
-          background: colors.bgSecondary,
-          borderTop: `1px solid ${colors.border}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <button
-            onClick={() => goToPhase('twist_review')}
-            style={{
-              padding: `${space.md} ${space.xl}`,
-              fontSize: '14px',
-              color: colors.textSecondary,
-              background: 'transparent',
-              border: 'none',
-              borderRadius: radius.md,
-              cursor: 'pointer',
-              zIndex: 10,
-              position: 'relative'
-            }}
-          >
-            ← Back
-          </button>
-          {canTakeQuiz ? (
-            <button
-              onClick={() => goToPhase('test')}
-              style={{
-                padding: `${space.md} ${space.xxl}`,
-                fontSize: '15px',
-                fontWeight: 600,
-                color: colors.textInverse,
-                background: colors.success,
-                border: 'none',
-                borderRadius: radius.md,
-                cursor: 'pointer',
-                boxShadow: shadows.sm,
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              Take the Quiz →
-            </button>
-          ) : (
-            <div style={{
-              padding: `${space.md} ${space.xl}`,
-              fontSize: '14px',
-              color: colors.textTertiary,
-              background: colors.bgTertiary,
-              borderRadius: radius.md
-            }}>
-              Complete all applications to unlock quiz
-            </div>
-          )}
+
+          {/* Companies */}
+          <div style={{ padding: '12px 24px', background: colors.bgCardLight, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 500 }}>Key players:</span>
+            {app.companies.map((company, idx) => (
+              <span key={idx} style={{ padding: '4px 12px', fontSize: '12px', color: colors.textSecondary, background: colors.bgCard, borderRadius: '8px', border: `1px solid ${colors.border}` }}>
+                {company}
+              </span>
+            ))}
+          </div>
+
+          {/* Mark as Read Button */}
+          <div style={{ padding: '16px', borderTop: `1px solid ${colors.border}` }}>
+            {!completedApps.has(activeApp) ? (
+              <button
+                onClick={() => {
+                  const newCompleted = new Set(completedApps);
+                  newCompleted.add(activeApp);
+                  setCompletedApps(newCompleted);
+                  if (activeApp < realWorldApps.length - 1) {
+                    setTimeout(() => setActiveApp(activeApp + 1), 300);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  color: '#0a0a0f',
+                  background: colors.success,
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  position: 'relative' as const
+                }}
+              >
+                Mark as Read
+              </button>
+            ) : (
+              <div style={{ padding: '16px', background: `${colors.success}15`, borderRadius: '12px', border: `1px solid ${colors.success}40`, textAlign: 'center' }}>
+                <span style={{ fontSize: '15px', color: colors.success, fontWeight: 600 }}>Completed</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
   };
 
-  // Test phase
+  // Test phase - Confirm flow
   const renderTest = () => {
-    const currentQ = testQuestions[currentQuestionIndex];
-    const answeredCount = testAnswers.filter(a => a !== null).length;
+    const question = testQuestions[currentQuestion];
+    const currentAnswer = testAnswers[currentQuestion];
+    const isConfirmed = confirmedQuestions.has(currentQuestion);
+
+    if (testSubmitted) {
+      const percentage = Math.round((testScore / testQuestions.length) * 100);
+      return (
+        <div style={{ padding: '32px 24px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 800, color: colors.textPrimary, marginBottom: '24px' }}>Quiz Results</h2>
+
+          <div style={{
+            padding: '32px',
+            background: percentage >= 70
+              ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
+              : `linear-gradient(135deg, ${colors.warning}15, ${colors.warning}05)`,
+            borderRadius: '16px',
+            border: `1px solid ${percentage >= 70 ? colors.success : colors.warning}40`,
+            marginBottom: '24px'
+          }}>
+            <div style={{ fontSize: '56px', fontWeight: 800, color: percentage >= 70 ? colors.success : colors.warning }}>
+              {percentage}%
+            </div>
+            <p style={{ fontSize: '18px', color: colors.textPrimary, margin: '8px 0 0', fontWeight: 600 }}>
+              {testScore} out of {testQuestions.length} correct
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <button
+              onClick={() => goToPhase('mastery')}
+              style={{ ...primaryBtnStyle }}
+            >
+              Next: Complete Lesson
+            </button>
+            <button
+              onClick={() => goToPhase('review')}
+              style={{ ...primaryBtnStyle, background: colors.bgCardLight, color: colors.textPrimary }}
+            >
+              Back to Review
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: colors.bgPrimary
-      }}>
-        {renderProgressBar()}
-        <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-          {!showTestResults ? (
-            <>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: space.lg
-              }}>
-                <h2 style={{ fontSize: '22px', color: colors.textPrimary, margin: 0, fontWeight: 800 }}>
-                  📝 Knowledge Check
-                </h2>
-                <span style={{
-                  padding: `${space.sm} ${space.md}`,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: colors.textSecondary,
-                  background: colors.bgSecondary,
-                  borderRadius: radius.full
-                }}>
-                  {currentQuestionIndex + 1} / {testQuestions.length}
-                </span>
-              </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: 800, color: colors.textPrimary, marginBottom: '8px' }}>Knowledge Check - Damped Oscillations</h2>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, marginBottom: '8px' }}>
+          Question {currentQuestion + 1} of {testQuestions.length}
+        </p>
+        <p style={{ fontSize: '13px', color: colors.textMuted, marginBottom: '24px', maxWidth: '520px', textAlign: 'center', lineHeight: 1.6 }}>
+          Apply your understanding of damping ratio, energy dissipation, exponential decay, and the three damping regimes to answer each scenario-based question below.
+        </p>
 
-              {/* Question navigation dots */}
-              <div style={{
-                display: 'flex',
-                gap: space.sm,
-                marginBottom: space.lg,
-                justifyContent: 'center'
-              }}>
-                {testQuestions.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentQuestionIndex(idx)}
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: radius.full,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: idx === currentQuestionIndex
-                        ? colors.primary
-                        : testAnswers[idx] !== null
-                          ? colors.success
-                          : colors.bgTertiary,
-                      transition: 'all 0.2s ease',
-                      boxShadow: idx === currentQuestionIndex ? shadows.glow(colors.primary) : 'none',
-                      zIndex: 10,
-                      position: 'relative'
-                    }}
-                  />
-                ))}
-              </div>
+        {/* Scenario */}
+        <div style={{
+          padding: '16px',
+          background: colors.bgCardLight,
+          borderRadius: '12px',
+          marginBottom: '12px',
+          borderLeft: `4px solid ${colors.accent}`,
+          maxWidth: '520px',
+          width: '100%'
+        }}>
+          <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, fontStyle: 'italic', lineHeight: 1.6 }}>
+            {question.scenario}
+          </p>
+        </div>
 
-              {/* Scenario */}
-              <div style={{
-                padding: space.lg,
-                background: colors.bgTertiary,
-                borderRadius: radius.md,
-                marginBottom: space.md,
-                borderLeft: `4px solid ${colors.accent}`
-              }}>
-                <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, fontStyle: 'italic', lineHeight: 1.6 }}>
-                  {currentQ.scenario}
-                </p>
-              </div>
+        {/* Question */}
+        <div style={{ ...cardStyle, maxWidth: '520px', width: '100%', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '16px', color: '#ffffff', fontWeight: 600, marginBottom: '16px', lineHeight: 1.5 }}>{question.question}</h3>
 
-              {/* Question */}
-              <div style={{
-                padding: space.lg,
-                background: colors.bgSecondary,
-                borderRadius: radius.md,
-                border: `1px solid ${colors.border}`,
-                marginBottom: space.md
-              }}>
-                <p style={{ fontSize: '16px', color: colors.textPrimary, margin: 0, fontWeight: 600, lineHeight: 1.5 }}>
-                  {currentQ.question}
-                </p>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {question.options.map((option) => {
+              const isSelected = currentAnswer === option.id;
+              const isCorrectOpt = option.correct;
 
-              {/* Options */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: space.sm }}>
-                {currentQ.options.map((option, idx) => {
-                  const isSelected = testAnswers[currentQuestionIndex] === idx;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        const newAnswers = [...testAnswers];
-                        newAnswers[currentQuestionIndex] = idx;
-                        setTestAnswers(newAnswers);
-                      }}
-                      style={{
-                        padding: `${space.md} ${space.lg}`,
-                        fontSize: '14px',
-                        fontWeight: isSelected ? 600 : 400,
-                        color: isSelected ? colors.textInverse : colors.textPrimary,
-                        background: isSelected
-                          ? `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`
-                          : colors.bgSecondary,
-                        border: `2px solid ${isSelected ? colors.primary : colors.border}`,
-                        borderRadius: radius.md,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: space.md,
-                        zIndex: 10,
-                        position: 'relative'
-                      }}
-                    >
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: radius.full,
-                        background: isSelected ? colors.bgPrimary : colors.bgTertiary,
-                        color: isSelected ? colors.primary : colors.textTertiary,
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        flexShrink: 0
-                      }}>
-                        {String.fromCharCode(65 + idx)}
-                      </span>
-                      <span style={{ lineHeight: 1.4 }}>{option.text}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              let bg = `${colors.bgCardLight}80`;
+              let borderColor = colors.borderLight;
+              let textColor = '#ffffff';
 
-              {/* Navigation */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: space.xl,
-                gap: space.md
-              }}>
+              if (isConfirmed) {
+                if (isCorrectOpt) {
+                  bg = `${colors.success}20`;
+                  borderColor = colors.success;
+                  textColor = colors.success;
+                } else if (isSelected) {
+                  bg = `${colors.danger}20`;
+                  borderColor = colors.danger;
+                  textColor = colors.danger;
+                }
+              } else if (isSelected) {
+                bg = `${colors.primary}20`;
+                borderColor = colors.primary;
+              }
+
+              return (
                 <button
-                  onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-                  disabled={currentQuestionIndex === 0}
+                  key={option.id}
+                  onClick={() => {
+                    if (isConfirmed) return;
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = option.id;
+                    setTestAnswers(newAnswers);
+                  }}
                   style={{
-                    padding: `${space.md} ${space.lg}`,
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: currentQuestionIndex === 0 ? colors.textTertiary : colors.textPrimary,
-                    background: colors.bgSecondary,
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: radius.sm,
-                    cursor: currentQuestionIndex === 0 ? 'not-allowed' : 'pointer',
-                    opacity: currentQuestionIndex === 0 ? 0.5 : 1,
+                    padding: '14px 16px',
+                    borderRadius: '12px',
+                    border: `2px solid ${borderColor}`,
+                    background: bg,
+                    textAlign: 'left',
+                    cursor: isConfirmed ? 'default' : 'pointer',
+                    transition: 'all 0.3s ease',
                     zIndex: 10,
-                    position: 'relative'
+                    position: 'relative' as const,
                   }}
                 >
-                  ← Previous
+                  <span style={{ fontSize: '14px', color: textColor, lineHeight: 1.5 }}>{option.text}</span>
                 </button>
+              );
+            })}
+          </div>
+        </div>
 
-                {currentQuestionIndex < testQuestions.length - 1 ? (
-                  <button
-                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                    style={{
-                      padding: `${space.md} ${space.lg}`,
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: colors.textPrimary,
-                      background: colors.bgSecondary,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: radius.sm,
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      position: 'relative'
-                    }}
-                  >
-                    Next →
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowTestResults(true)}
-                    disabled={answeredCount < testQuestions.length}
-                    style={{
-                      padding: `${space.md} ${space.xl}`,
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      color: answeredCount < testQuestions.length ? colors.textTertiary : colors.textInverse,
-                      background: answeredCount < testQuestions.length
-                        ? colors.bgTertiary
-                        : `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                      border: 'none',
-                      borderRadius: radius.sm,
-                      cursor: answeredCount < testQuestions.length ? 'not-allowed' : 'pointer',
-                      boxShadow: answeredCount >= testQuestions.length ? shadows.sm : 'none',
-                      zIndex: 10,
-                      position: 'relative'
-                    }}
-                  >
-                    Submit ({answeredCount}/{testQuestions.length})
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Test Results */}
-              {renderSectionHeader('📊', 'Quiz Results', 'Review your answers and learn from any mistakes')}
+        {/* Explanation after confirm */}
+        {isConfirmed && (
+          <div style={{
+            padding: '16px',
+            borderRadius: '12px',
+            maxWidth: '520px',
+            width: '100%',
+            marginBottom: '16px',
+            background: currentAnswer === testQuestions[currentQuestion].options.find(o => o.correct)?.id ? `${colors.success}10` : `${colors.danger}10`,
+            border: `1px solid ${currentAnswer === testQuestions[currentQuestion].options.find(o => o.correct)?.id ? `${colors.success}30` : `${colors.danger}30`}`,
+          }}>
+            <p style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px', color: currentAnswer === testQuestions[currentQuestion].options.find(o => o.correct)?.id ? colors.success : colors.danger }}>
+              {currentAnswer === testQuestions[currentQuestion].options.find(o => o.correct)?.id ? 'Correct!' : 'Not quite'}
+            </p>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.6, margin: 0 }}>{question.explanation}</p>
+          </div>
+        )}
 
-              {(() => {
-                const score = testAnswers.reduce((acc, answer, idx) =>
-                  acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
-                const percentage = Math.round((score / testQuestions.length) * 100);
-
-                return (
-                  <>
-                    <div style={{
-                      padding: space.xl,
-                      background: percentage >= 70
-                        ? `linear-gradient(135deg, ${colors.success}15, ${colors.success}05)`
-                        : `linear-gradient(135deg, ${colors.warning}15, ${colors.warning}05)`,
-                      borderRadius: radius.lg,
-                      border: `1px solid ${percentage >= 70 ? colors.success : colors.warning}40`,
-                      textAlign: 'center',
-                      marginBottom: space.xl
-                    }}>
-                      <div style={{ fontSize: '56px', fontWeight: 800, color: percentage >= 70 ? colors.success : colors.warning }}>
-                        {percentage}%
-                      </div>
-                      <p style={{ fontSize: '18px', color: colors.textPrimary, margin: `${space.sm} 0 0`, fontWeight: 600 }}>
-                        {score} out of {testQuestions.length} correct
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
-                      {testQuestions.map((q, idx) => {
-                        const isCorrect = q.options[testAnswers[idx] as number]?.correct;
-                        return (
-                          <div key={idx} style={{
-                            padding: space.lg,
-                            background: colors.bgSecondary,
-                            borderRadius: radius.md,
-                            border: `1px solid ${isCorrect ? colors.success : colors.danger}40`
-                          }}>
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: space.md,
-                              marginBottom: space.md
-                            }}>
-                              <span style={{
-                                fontSize: '20px',
-                                color: isCorrect ? colors.success : colors.danger,
-                                fontWeight: 700
-                              }}>
-                                {isCorrect ? '✓' : '✗'}
-                              </span>
-                              <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0, fontWeight: 600, lineHeight: 1.4 }}>
-                                  Q{idx + 1}: {q.question}
-                                </p>
-                                {!isCorrect && (
-                                  <p style={{ fontSize: '13px', color: colors.danger, margin: `${space.sm} 0 0` }}>
-                                    Your answer: {q.options[testAnswers[idx] as number]?.text}
-                                  </p>
-                                )}
-                                <p style={{ fontSize: '13px', color: colors.success, margin: `${space.xs} 0 0`, fontWeight: 500 }}>
-                                  Correct: {q.options.find(o => o.correct)?.text}
-                                </p>
-                              </div>
-                            </div>
-                            <div style={{
-                              padding: space.md,
-                              background: colors.bgTertiary,
-                              borderRadius: radius.sm,
-                              fontSize: '13px',
-                              color: colors.textSecondary,
-                              lineHeight: 1.6
-                            }}>
-                              💡 {q.explanation}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                );
-              })()}
-            </>
+        {/* Quiz action buttons */}
+        <div style={{ display: 'flex', gap: '12px', maxWidth: '520px', width: '100%' }}>
+          {currentAnswer && !isConfirmed && (
+            <button
+              onClick={() => {
+                setConfirmedQuestions(prev => new Set(prev).add(currentQuestion));
+                const selectedOption = question.options.find(o => o.id === currentAnswer);
+                if (selectedOption?.correct) {
+                  setTestScore(s => s + 1);
+                  playSound('success');
+                } else {
+                  playSound('failure');
+                }
+              }}
+              style={{ ...primaryBtnStyle, flex: 1 }}
+            >
+              Check Answer
+            </button>
+          )}
+          {isConfirmed && currentQuestion < 9 && (
+            <button
+              onClick={() => setCurrentQuestion(currentQuestion + 1)}
+              style={{ ...primaryBtnStyle, flex: 1 }}
+            >
+              Next Question
+            </button>
+          )}
+          {isConfirmed && currentQuestion === 9 && (
+            <button
+              onClick={() => setTestSubmitted(true)}
+              style={{ ...primaryBtnStyle, flex: 1, background: `linear-gradient(135deg, ${colors.success}, #059669)` }}
+            >
+              Submit Test
+            </button>
           )}
         </div>
-        {showTestResults && renderBottomBar(() => goToPhase('mastery'), 'Complete Module')}
       </div>
     );
   };
 
   // Mastery phase
   const renderMastery = () => {
-    const score = testAnswers.reduce((acc, answer, idx) =>
-      acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
+    const percentage = Math.round((testScore / testQuestions.length) * 100);
 
     return (
       <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100%',
-        background: `radial-gradient(ellipse at top, ${colors.bgSecondary} 0%, ${colors.bgPrimary} 70%)`
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: '500px', padding: '48px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden',
       }}>
-        {renderProgressBar()}
+        <style>{`@keyframes confetti { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
+        {Array.from({ length: 50 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${Math.random() * 100}%`,
+              top: '-20px',
+              width: '10px',
+              height: '10px',
+              background: [colors.primary, colors.accent, colors.success, colors.warning][i % 4],
+              borderRadius: '2px',
+              animation: `confetti 3s ease-out ${Math.random() * 2}s infinite`,
+            }}
+          />
+        ))}
+
         <div style={{
-          flex: 1,
-          padding: isMobile ? space.lg : space.xl,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          textAlign: 'center'
+          width: '120px', height: '120px', borderRadius: '9999px',
+          background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: '32px', boxShadow: `0 8px 32px ${colors.primary}40`,
         }}>
-          {/* Trophy icon */}
-          <div style={{
-            width: '120px',
-            height: '120px',
-            margin: '0 auto 32px',
-            borderRadius: radius.full,
-            background: `linear-gradient(135deg, ${colors.primary}20, ${colors.accent}20)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: shadows.glow(colors.primary),
-            border: `2px solid ${colors.primary}30`
-          }}>
-            <span style={{ fontSize: '60px' }}>🏆</span>
-          </div>
-
-          <h1 style={{
-            fontSize: isMobile ? '32px' : '40px',
-            fontWeight: 800,
-            color: colors.textPrimary,
-            marginBottom: space.md,
-            letterSpacing: '-1px'
-          }}>
-            Congratulations!
-          </h1>
-          <p style={{
-            fontSize: '18px',
-            color: colors.textSecondary,
-            maxWidth: '520px',
-            lineHeight: 1.7,
-            marginBottom: space.xl
-          }}>
-            You've mastered damped oscillations! You now understand how energy dissipation shapes oscillation - from swings to skyscrapers!
-          </p>
-
-          {/* Achievement cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-            gap: space.md,
-            width: '100%',
-            maxWidth: '640px',
-            marginBottom: space.xl
-          }}>
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ fontSize: '36px', marginBottom: space.sm }}>📉</div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: colors.primary }}>Exponential Decay</div>
-              <div style={{ fontSize: '13px', color: colors.textTertiary, marginTop: space.xs }}>A = A₀e^(-γt)</div>
-            </div>
-
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ fontSize: '36px', marginBottom: space.sm }}>⚡</div>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: colors.success }}>Critical Damping</div>
-              <div style={{ fontSize: '13px', color: colors.textTertiary, marginTop: space.xs }}>ζ = 1 (fastest)</div>
-            </div>
-
-            <div style={{
-              padding: space.lg,
-              background: colors.bgSecondary,
-              borderRadius: radius.md,
-              border: `1px solid ${colors.border}`
-            }}>
-              <div style={{ fontSize: '36px', marginBottom: space.sm }}>🎯</div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: colors.accent }}>{score}/10</div>
-              <div style={{ fontSize: '13px', color: colors.textTertiary, marginTop: space.xs }}>Quiz score</div>
-            </div>
-          </div>
-
-          {/* Key insights */}
-          <div style={{
-            padding: space.xl,
-            background: colors.bgSecondary,
-            borderRadius: radius.lg,
-            border: `1px solid ${colors.primary}40`,
-            maxWidth: '520px',
-            width: '100%'
-          }}>
-            <h4 style={{ fontSize: '16px', color: colors.primary, marginBottom: space.md, fontWeight: 700 }}>
-              🧠 Key Insights
-            </h4>
-            <ul style={{
-              textAlign: 'left',
-              margin: 0,
-              paddingLeft: space.lg,
-              color: colors.textSecondary,
-              fontSize: '14px',
-              lineHeight: 2
-            }}>
-              <li>Damping converts kinetic energy to heat via friction/viscosity</li>
-              <li>Underdamped (ζ{'<'}1): oscillates with decay</li>
-              <li>Critical (ζ=1): fastest return without oscillation</li>
-              <li>Overdamped (ζ{'>'}1): slow return, no oscillation</li>
-            </ul>
-          </div>
+          <span style={{ fontSize: '56px' }}>🏆</span>
         </div>
 
-        {/* Bottom bar */}
-        <div style={{
-          padding: `${space.lg} ${space.xl}`,
-          background: colors.bgSecondary,
-          borderTop: `1px solid ${colors.border}`,
-          display: 'flex',
-          justifyContent: 'center'
-        }}>
-          {onBack && (
-            <button
-              onClick={() => onBack()}
-              style={{
-                padding: `${space.md} ${space.xxl}`,
-                fontSize: '16px',
-                fontWeight: 700,
-                color: colors.textInverse,
-                background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryDark})`,
-                border: 'none',
-                borderRadius: radius.md,
-                cursor: 'pointer',
-                boxShadow: `${shadows.md}, ${shadows.glow(colors.primary)}`,
-                zIndex: 10,
-                position: 'relative'
-              }}
-            >
-              Return to Dashboard
-            </button>
-          )}
+        <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>Congratulations!</h1>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: colors.primary, marginBottom: '16px' }}>Damping Master</h2>
+
+        <p style={{ fontSize: '18px', color: colors.textSecondary, marginBottom: '32px', lineHeight: 1.6 }}>
+          Final Score: <span style={{ color: colors.success, fontWeight: 700 }}>{testScore}/{testQuestions.length}</span> ({percentage}%)
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '480px', width: '100%', marginBottom: '32px' }}>
+          {[
+            { icon: '📉', label: 'Exponential Decay', sub: 'A = A0*e^(-gamma*t)' },
+            { icon: '⚡', label: 'Critical Damping', sub: 'zeta = 1 (fastest)' },
+            { icon: '🎯', label: `${testScore}/10`, sub: 'Quiz score' },
+          ].map((item, i) => (
+            <div key={i} style={{ ...cardStyle, padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.icon}</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: colors.primary }}>{item.label}</div>
+              <div style={{ fontSize: '12px', color: colors.textMuted }}>{item.sub}</div>
+            </div>
+          ))}
         </div>
+
+        <p style={{ fontSize: '14px', color: colors.textMuted, marginBottom: '24px', maxWidth: '420px', lineHeight: 1.6 }}>
+          You now understand damped oscillations! You know how energy dissipation shapes oscillation behavior - from playground swings to earthquake-resistant skyscrapers.
+        </p>
+
+        <button
+          onClick={() => {
+            setPhase('hook');
+            setPrediction(null);
+            setTwistPrediction(null);
+            setActiveApp(0);
+            setCompletedApps(new Set());
+            setCurrentQuestion(0);
+            setTestAnswers(new Array(testQuestions.length).fill(null));
+            setConfirmedQuestions(new Set());
+            setTestScore(0);
+            setTestSubmitted(false);
+          }}
+          style={primaryBtnStyle}
+        >
+          Complete Lesson
+        </button>
       </div>
     );
   };
@@ -2784,56 +1752,27 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     }
   };
 
-  const phaseLabels: Record<Phase, string> = {
-    hook: 'Hook',
-    predict: 'Predict',
-    play: 'Lab',
-    review: 'Review',
-    twist_predict: 'Twist Predict',
-    twist_play: 'Twist Lab',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
-    mastery: 'Mastery'
-  };
-
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-fuchsia-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/3 rounded-full blur-3xl" />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgDark, color: '#ffffff' }}>
+      {renderProgressBar()}
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Damped Oscillations</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-pink-400 w-6 shadow-lg shadow-pink-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-                style={{ zIndex: 10, position: 'relative' }}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-pink-400">{phaseLabels[phase]}</span>
-        </div>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 24px', background: `${colors.bgCard}cc`,
+        borderBottom: `1px solid ${colors.border}50`,
+      }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.025em' }}>Damped Oscillations</span>
+        <span style={{ fontSize: '14px', fontWeight: 500, color: colors.primary }}>{phaseLabels[phase]}</span>
       </div>
 
       {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
+      <div style={{ flex: 1, maxWidth: '800px', margin: '0 auto', width: '100%' }}>
         {renderPhase()}
       </div>
+
+      {/* Bottom nav bar */}
+      {renderBottomBar()}
     </div>
   );
 };

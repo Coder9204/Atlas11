@@ -259,9 +259,9 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     predict: 'Predict',
     play: 'Play',
     review: 'Review',
-    twist_predict: 'Twist',
+    twist_predict: 'Twist Predict',
     twist_play: 'Explore',
-    twist_review: 'Explain',
+    twist_review: 'Deep Insight',
     transfer: 'Transfer',
     test: 'Test',
     mastery: 'Mastery',
@@ -284,7 +284,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   const lastClickRef = useRef(0);
 
   // Simulation state
-  const [incidentAngle, setIncidentAngle] = useState(45);
+  const [incidentAngle, setIncidentAngle] = useState(30);
   const [showNormal, setShowNormal] = useState(true);
   const [showAngles, setShowAngles] = useState(true);
   const [showVirtualImage, setShowVirtualImage] = useState(false);
@@ -553,10 +553,11 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             cursor: canBack ? 'pointer' : 'not-allowed',
             opacity: canBack ? 1 : 0.3,
             minHeight: '44px',
+            transition: 'all 0.2s ease',
           }}
           disabled={!canBack}
         >
-          Back
+          ← Back
         </button>
 
         <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
@@ -578,6 +579,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             opacity: canProceed ? 1 : 0.4,
             boxShadow: canProceed ? `0 2px 12px ${colors.accentGlow}` : 'none',
             minHeight: '44px',
+            transition: 'all 0.2s ease',
           }}
         >
           {buttonText}
@@ -597,6 +599,9 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
       flexDirection: 'column',
       background: colors.bgPrimary,
       color: colors.textPrimary,
+      fontWeight: 400,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      minHeight: '100vh',
     }}>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
       <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
@@ -630,21 +635,37 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     };
 
     return (
-      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto', background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="mirrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#88c0d0" />
             <stop offset="50%" stopColor="#5e81ac" />
             <stop offset="100%" stopColor="#88c0d0" />
           </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="2" result="blur" />
+          <linearGradient id="incidentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#d97706" />
+          </linearGradient>
+          <linearGradient id="reflectedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+          <radialGradient id="hitGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+          </radialGradient>
+          <filter id="glowFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
+
+        <g className="background">
+          <rect x="0" y="0" width={width} height={height} fill="#1a1a24" rx="12" />
+        </g>
 
         {/* Title */}
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
@@ -660,6 +681,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
         )}
 
         {/* Mirror surface */}
+        <g className="mirror-surface">
         <rect x={50} y={mirrorY - 3} width={width - 100} height={6} fill="url(#mirrorGrad)" />
         <rect x={50} y={mirrorY + 3} width={width - 100} height={8} fill="#4c566a" />
         <text x={width/2} y={mirrorY + 25} textAnchor="middle" fill={colors.accent} fontSize="11">Mirror Surface</text>
@@ -696,7 +718,9 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           </>
         )}
 
+        </g>
         {/* Incident ray */}
+        <g className="rays">
         <line x1={incidentStart.x} y1={incidentStart.y} x2={hitPoint.x} y2={hitPoint.y}
           stroke={colors.incident} strokeWidth={3} filter="url(#glowFilter)" />
 
@@ -735,15 +759,20 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           />
         )}
 
+        </g>
         {/* Labels */}
+        <g className="labels">
         <text x={incidentStart.x - 30} y={incidentStart.y} fill={colors.incident} fontSize="11" fontWeight="500">Incident</text>
         <text x={reflectedEnd.x + 5} y={reflectedEnd.y} fill={colors.reflected} fontSize="11" fontWeight="500">Reflected</text>
+        </g>
 
         {/* Formula */}
+        <g className="formula">
         <rect x={width/2 - 80} y={height - 45} width={160} height={35} rx="8" fill="rgba(30, 41, 59, 0.9)" />
         <text x={width/2} y={height - 22} textAnchor="middle" fill={colors.accent} fontSize="16" fontWeight="700" fontFamily="monospace">
           theta_i = theta_r
         </text>
+        </g>
       </svg>
     );
   };
@@ -757,30 +786,48 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     const cornerX = width / 2 + 30;
     const cornerY = height / 2 + 30;
 
-    // Calculate ray path for corner reflector
+    // Calculate ray path for corner reflector using incidentAngle
     const entryAngle = incidentAngle * Math.PI / 180;
-    const rayStart = { x: 60, y: cornerY - 80 };
-    const hit1 = { x: cornerX - 50, y: cornerY };
-    const hit2 = { x: cornerX, y: cornerY - 50 };
+    const hitOffset = Math.min(90, 30 + incidentAngle * 0.7);
+    const hit1 = { x: cornerX - hitOffset, y: cornerY };
+    const rayStart = { x: 60, y: cornerY - hitOffset - 20 };
+    const hit2 = { x: cornerX, y: cornerY - hitOffset };
     const rayEnd = { x: 60, y: hit2.y };
 
     return (
-      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto', background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', margin: '0 auto', background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          <linearGradient id="cornerMirrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#88c0d0" />
+            <stop offset="100%" stopColor="#5e81ac" />
+          </linearGradient>
+          <filter id="cornerGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        <g className="background">
+          <rect x="0" y="0" width={width} height={height} fill="#1a1a24" rx="12" />
+        </g>
+        <g className="title">
         <text x={width/2} y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="600">
-          Corner Reflector - Light Returns to Source
+          Corner Reflector - Angle: {incidentAngle} degrees
         </text>
+        </g>
 
         {/* Horizontal mirror */}
-        <rect x={cornerX - 120} y={cornerY - 3} width={120} height={6} fill="url(#mirrorGrad)" />
+        <g className="mirrors">
+        <rect x={cornerX - 120} y={cornerY - 3} width={120} height={6} fill="url(#cornerMirrorGrad)" />
         <rect x={cornerX - 120} y={cornerY + 3} width={120} height={6} fill="#4c566a" />
 
         {/* Vertical mirror */}
-        <rect x={cornerX - 3} y={cornerY - 100} width={6} height={100} fill="url(#mirrorGrad)" />
+        <rect x={cornerX - 3} y={cornerY - 100} width={6} height={100} fill="url(#cornerMirrorGrad)" />
         <rect x={cornerX + 3} y={cornerY - 100} width={6} height={100} fill="#4c566a" />
 
         {/* Corner point */}
         <circle cx={cornerX} cy={cornerY} r={5} fill="#f472b6" />
         <text x={cornerX + 12} y={cornerY + 5} fill="#f472b6" fontSize="10">90deg</text>
+        </g>
 
         {/* Normal lines */}
         {showNormal && (
@@ -874,6 +921,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               color: colors.textPrimary,
               cursor: 'pointer',
               fontSize: typo.small,
+              transition: 'all 0.2s ease',
             }}
           >
             {angle}deg
@@ -991,7 +1039,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           </div>
         </div>
       </div>,
-      renderBottomBar(true, 'Make a Prediction')
+      renderBottomBar(true, 'Start Exploring')
     );
   }
 
@@ -1014,9 +1062,40 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               You shine a flashlight at a flat mirror at a <strong style={{ color: colors.incident }}>30 degree angle</strong> from the vertical (normal line).
             </p>
             <p style={{ color: colors.accent, fontWeight: 'bold', fontSize: typo.body }}>
-              At what angle will the light bounce off?
+              What angle will the reflected beam make with the normal?
             </p>
           </div>
+
+          <svg width="360" height="200" viewBox="0 0 360 200" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }}>
+            <defs>
+              <linearGradient id="predictMirrorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#88c0d0" />
+                <stop offset="100%" stopColor="#5e81ac" />
+              </linearGradient>
+              <filter id="predictGlow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <g className="background">
+              <rect x="0" y="0" width="360" height="200" fill="#1a1a24" rx="12" />
+            </g>
+            <g className="mirror">
+              <rect x="60" y="140" width="240" height="8" fill="url(#predictMirrorGrad)" rx="2" />
+              <line x1="180" y1="60" x2="180" y2="140" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="6,4" />
+              <text x="186" y="75" fill="#94a3b8" fontSize="10">Normal</text>
+            </g>
+            <g className="rays">
+              <line x1="110" y1="60" x2="180" y2="140" stroke="#fbbf24" strokeWidth="3" filter="url(#predictGlow)" />
+              <text x="100" y="55" fill="#fbbf24" fontSize="11" fontWeight="600">30deg</text>
+              <line x1="180" y1="140" x2="250" y2="60" stroke="#34d399" strokeWidth="3" strokeDasharray="8,4" filter="url(#predictGlow)" />
+              <text x="248" y="55" fill="#34d399" fontSize="11" fontWeight="600">?</text>
+            </g>
+            <g className="labels">
+              <text x="90" y="190" fill="#fbbf24" fontSize="10">Incident Ray</text>
+              <text x="230" y="190" fill="#34d399" fontSize="10">Reflected Ray</text>
+            </g>
+          </svg>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {predictions.map((p) => (
@@ -1188,6 +1267,35 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               What happens to the outgoing beam?
             </p>
           </div>
+
+          <svg width="360" height="200" viewBox="0 0 360 200" style={{ display: 'block', margin: '0 auto 20px', maxWidth: '100%' }}>
+            <defs>
+              <linearGradient id="twistMirrorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#88c0d0" />
+                <stop offset="100%" stopColor="#5e81ac" />
+              </linearGradient>
+              <filter id="twistGlow">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <g className="background">
+              <rect x="0" y="0" width="360" height="200" fill="#1a1a24" rx="12" />
+            </g>
+            <g className="mirrors">
+              <rect x="200" y="50" width="8" height="120" fill="url(#twistMirrorGrad)" rx="2" />
+              <rect x="80" y="162" width="128" height="8" fill="url(#twistMirrorGrad)" rx="2" />
+              <circle cx="208" cy="166" r="5" fill="#f472b6" />
+              <text x="215" y="172" fill="#f472b6" fontSize="10">90deg</text>
+            </g>
+            <g className="rays">
+              <line x1="50" y1="80" x2="160" y2="162" stroke="#fbbf24" strokeWidth="3" filter="url(#twistGlow)" />
+              <line x1="160" y1="162" x2="200" y2="110" stroke="#818cf8" strokeWidth="3" filter="url(#twistGlow)" />
+              <line x1="200" y1="110" x2="50" y2="110" stroke="#34d399" strokeWidth="3" strokeDasharray="8,4" filter="url(#twistGlow)" />
+              <text x="30" y="75" fill="#fbbf24" fontSize="10">In</text>
+              <text x="30" y="107" fill="#34d399" fontSize="10">Out = ?</text>
+            </g>
+          </svg>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {twistPredictions.map((p) => (
@@ -1411,10 +1519,34 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               borderRadius: '8px',
               marginBottom: '16px',
             }}>
-              <h4 style={{ color: app.color, marginBottom: '8px', fontSize: typo.small }}>How Reflection Applies:</h4>
-              <p style={{ color: colors.textSecondary, fontSize: typo.small, margin: 0, lineHeight: 1.6 }}>
+              <h4 style={{ color: app.color, marginBottom: '8px', fontSize: typo.small, fontWeight: 700 }}>How Reflection Applies:</h4>
+              <p style={{ color: 'rgba(148,163,184,1)', fontSize: typo.small, margin: 0, lineHeight: 1.6 }}>
                 {app.connection}
               </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(30, 41, 59, 0.5)',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ color: app.color, marginBottom: '8px', fontSize: typo.small, fontWeight: 700 }}>How It Works:</h4>
+              <p style={{ color: 'rgba(148,163,184,1)', fontSize: typo.small, margin: 0, lineHeight: 1.6 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: 'rgba(30, 41, 59, 0.5)',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ color: app.color, marginBottom: '8px', fontSize: typo.small, fontWeight: 700 }}>Real Examples:</h4>
+              <ul style={{ color: 'rgba(148,163,184,1)', fontSize: typo.small, margin: 0, lineHeight: 1.8, paddingLeft: '20px' }}>
+                {app.examples.map((ex, j) => <li key={j}>{ex}</li>)}
+              </ul>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
@@ -1432,7 +1564,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               ))}
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
               {app.companies.map((company, i) => (
                 <span key={i} style={{
                   padding: '4px 10px',
@@ -1444,6 +1576,17 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
                   {company}
                 </span>
               ))}
+            </div>
+
+            <div style={{
+              background: 'rgba(16, 185, 129, 0.1)',
+              padding: '12px',
+              borderRadius: '8px',
+            }}>
+              <h4 style={{ color: colors.success, marginBottom: '8px', fontSize: typo.small, fontWeight: 700 }}>Future Impact:</h4>
+              <p style={{ color: 'rgba(148,163,184,1)', fontSize: typo.small, margin: 0, lineHeight: 1.6 }}>
+                {app.futureImpact}
+              </p>
             </div>
           </div>
         </div>

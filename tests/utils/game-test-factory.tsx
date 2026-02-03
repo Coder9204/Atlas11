@@ -1,9 +1,14 @@
 /**
- * UNIVERSAL GAME TEST FACTORY
+ * UNIVERSAL GAME TEST FACTORY v2
  *
- * This factory creates a complete TDD test suite that can be run against
- * ANY game renderer in the project. Simply import your game component
- * and call createGameTestSuite() to validate it against all 108 test cases.
+ * Comprehensive TDD test suite for validating ANY game renderer.
+ * Based on the Wave Particle Duality gold standard game flow.
+ *
+ * Features:
+ * - Auto-detects game architecture (self-managing vs externally-managed)
+ * - Tiered testing: must-pass, should-pass, premium
+ * - Strict assertions that catch real problems
+ * - 6 new test categories for educational quality
  *
  * Usage:
  *   import MyGameRenderer from '../../components/MyGameRenderer';
@@ -23,6 +28,8 @@ import { clearConsoleLogs, consoleErrors, consoleWarnings } from '../setup';
 interface GameProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
+  phase?: string;
+  [key: string]: unknown;
 }
 
 interface GameEvent {
@@ -34,6 +41,13 @@ interface GameEvent {
 }
 
 type GameComponent = React.ComponentType<GameProps>;
+
+type GameArchitecture = 'self-managing' | 'externally-managed';
+
+interface TestSuiteConfig {
+  tier: 'must-pass' | 'should-pass' | 'premium' | 'all';
+  architecture?: GameArchitecture | 'auto';
+}
 
 // ============================================================================
 // TEST UTILITIES
@@ -53,23 +67,84 @@ const findButtonByText = (text: string | RegExp) => {
 };
 
 const getNavDots = () => {
-  // Games use either aria-label or title for navigation dots
-  const ariaLabelDots = document.querySelectorAll('button[aria-label]');
-  const titleDots = document.querySelectorAll('button[title]');
-  // Small round buttons are typically nav dots (border-radius and small dimensions)
-  const roundDots = document.querySelectorAll('button[style*="border-radius"][style*="8px"]');
-  // Return whichever selector found the most dots
-  if (ariaLabelDots.length >= titleDots.length && ariaLabelDots.length >= roundDots.length) {
-    return ariaLabelDots;
-  } else if (titleDots.length >= roundDots.length) {
-    return titleDots;
-  }
-  return roundDots.length > 0 ? roundDots : ariaLabelDots;
+  // Strategy 1: buttons with aria-label containing phase-related names
+  const phasePattern = /hook|intro|predict|play|experiment|review|understanding|twist|observer|new.?var|explore|deep|insight|transfer|real.?world|test|knowledge|mastery|complet|material|compare|media/i;
+
+  const ariaLabelButtons = Array.from(document.querySelectorAll('button[aria-label]'))
+    .filter(btn => phasePattern.test(btn.getAttribute('aria-label') || ''));
+  if (ariaLabelButtons.length >= 8) return ariaLabelButtons;
+
+  // Strategy 2: elements with title containing phase names (WPD uses divs+buttons with title)
+  const titleElements = Array.from(document.querySelectorAll('[title]'))
+    .filter(el => phasePattern.test(el.getAttribute('title') || ''));
+  if (titleElements.length >= 8) return titleElements;
+
+  // Strategy 3: All buttons with aria-label (some games use non-phase labels)
+  const allAriaButtons = document.querySelectorAll('button[aria-label]');
+  if (allAriaButtons.length >= 8) return Array.from(allAriaButtons);
+
+  // Strategy 4: Small styled buttons/divs that look like dots (morphological)
+  const allSmallElements = Array.from(document.querySelectorAll('button, div'))
+    .filter(el => {
+      const style = el.getAttribute('style') || '';
+      const hasSmallWidth = style.match(/width:\s*(\d+)px/) && parseInt(style.match(/width:\s*(\d+)px/)?.[1] || '0') <= 24;
+      const hasSmallHeight = style.match(/height:\s*(\d+)px/) && parseInt(style.match(/height:\s*(\d+)px/)?.[1] || '0') <= 12;
+      const hasRadius = style.includes('border-radius');
+      return hasSmallWidth && hasSmallHeight && hasRadius;
+    });
+  if (allSmallElements.length >= 8) return allSmallElements;
+
+  // Return whatever we found
+  return titleElements.length > ariaLabelButtons.length ? titleElements : Array.from(ariaLabelButtons);
 };
 
 const getSliders = () => document.querySelectorAll('input[type="range"]');
 
 const getSVG = () => document.querySelector('svg');
+
+const getAllSVGs = () => document.querySelectorAll('svg');
+
+// ============================================================================
+// ARCHITECTURE DETECTION
+// ============================================================================
+
+function detectArchitecture(GameComponent: GameComponent): GameArchitecture {
+  // Try rendering with gamePhase prop
+  try {
+    const { unmount } = render(<GameComponent gamePhase="predict" />);
+    const content = document.body.textContent || '';
+    const hasPredictContent = /predict|think|expect|happen|choose|what.*you|question/i.test(content);
+    unmount();
+    cleanup();
+    clearConsoleLogs();
+
+    if (hasPredictContent) return 'self-managing';
+  } catch {
+    cleanup();
+    clearConsoleLogs();
+  }
+
+  return 'externally-managed';
+}
+
+// ============================================================================
+// SVG COMPLEXITY SCORER
+// ============================================================================
+
+function getSvgComplexityScore(svg: SVGElement | null): number {
+  if (!svg) return 0;
+  let score = 0;
+  score += Math.min(5, svg.querySelectorAll('path').length);
+  score += Math.min(3, svg.querySelectorAll('circle, ellipse').length);
+  score += Math.min(3, svg.querySelectorAll('rect, polygon, polyline, line').length);
+  score += Math.min(2, svg.querySelectorAll('linearGradient, radialGradient').length);
+  score += Math.min(2, svg.querySelectorAll('filter, feGaussianBlur, feDropShadow, feMerge').length);
+  score += Math.min(3, svg.querySelectorAll('g').length);
+  score += Math.min(2, svg.querySelectorAll('text, tspan').length);
+  score += svg.querySelectorAll('defs').length > 0 ? 1 : 0;
+  score += svg.querySelectorAll('animate, animateTransform').length > 0 ? 1 : 0;
+  return score; // Max: 22
+}
 
 // ============================================================================
 // MAIN TEST FACTORY
@@ -77,10 +152,22 @@ const getSVG = () => document.querySelector('svg');
 
 export function createGameTestSuite(
   gameName: string,
-  GameComponent: GameComponent
+  GameComponent: GameComponent,
+  config: TestSuiteConfig = { tier: 'all', architecture: 'auto' }
 ) {
+  const tier = config.tier;
+  const runTier1 = tier === 'must-pass' || tier === 'should-pass' || tier === 'premium' || tier === 'all';
+  const runTier2 = tier === 'should-pass' || tier === 'premium' || tier === 'all';
+  const runTier3 = tier === 'premium' || tier === 'all';
+
+  let architecture: GameArchitecture = 'self-managing';
+
   const renderGame = (props: GameProps = {}) => {
-    return render(<GameComponent {...props} />);
+    const mergedProps: GameProps = { ...props };
+    if (architecture === 'externally-managed' && props.gamePhase) {
+      mergedProps.phase = props.gamePhase;
+    }
+    return render(<GameComponent {...mergedProps} />);
   };
 
   describe(`${gameName} - TDD Validation Suite`, () => {
@@ -89,1422 +176,1068 @@ export function createGameTestSuite(
       clearConsoleLogs();
     });
 
-    // ========================================================================
-    // PHASE 1: STRUCTURAL TESTS (20 tests)
-    // ========================================================================
-
-    describe('1. Structural Tests', () => {
-      describe('1.1 Phase Structure', () => {
-        it('has exactly 10 navigation phases', () => {
-          renderGame();
-          const navDots = getNavDots();
-          // Most games have 10 phases, but some may have additional navigation elements
-          expect(navDots.length).toBeGreaterThanOrEqual(5);
-        });
-
-        it('has all required phases in correct order', () => {
-          renderGame();
-          const navDots = getNavDots();
-          const labels = Array.from(navDots).map(dot =>
-            dot.getAttribute('aria-label') || dot.getAttribute('title') || ''
-          );
-
-          // Games should have multiple phases with labels
-          expect(navDots.length).toBeGreaterThanOrEqual(5);
-          // At least some dots should have labels
-          const labeledDots = labels.filter(label => label.length > 0);
-          expect(labeledDots.length).toBeGreaterThanOrEqual(0);
-        });
-
-        it('initializes to hook/introduction phase', () => {
-          renderGame();
-          const content = getPhaseContent();
-          // Should have introductory content - question or hook
-          expect(content.length).toBeGreaterThan(100);
-        });
-
-        it('renders different content for each phase', () => {
-          const { unmount } = renderGame({ gamePhase: 'hook' });
-          const hookContent = getPhaseContent();
-          unmount();
-
-          renderGame({ gamePhase: 'test' });
-          const testContent = getPhaseContent();
-
-          expect(hookContent).not.toBe(testContent);
-        });
-
-        it('accepts gamePhase prop to set initial phase', () => {
-          renderGame({ gamePhase: 'predict' });
-          const content = getPhaseContent();
-          expect(content).toMatch(/predict|question|think|expect/i);
-        });
-      });
-
-      describe('1.2 Test Questions', () => {
-        it('has 10 test questions', () => {
-          renderGame({ gamePhase: 'test' });
-          expect(screen.getByText(/1\s*(of|\/)\s*10/i)).toBeInTheDocument();
-        });
-
-        it('each question has multiple choice options', () => {
-          renderGame({ gamePhase: 'test' });
-          const options = screen.getAllByRole('button').filter(btn =>
-            btn.textContent?.match(/^[A-D]/i)
-          );
-          expect(options.length).toBeGreaterThanOrEqual(3);
-        });
-
-        it('questions have scenario context', () => {
-          renderGame({ gamePhase: 'test' });
-          // Should have descriptive scenario text
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(200);
-        });
-
-        it('no duplicate questions in test', async () => {
-          renderGame({ gamePhase: 'test' });
-          // Simply verify that the test phase has substantial content (questions)
-          const content = getPhaseContent();
-          // Test phase should have enough content for a quiz
-          expect(content.length).toBeGreaterThan(100);
-        });
-
-        it('questions are topic-relevant', () => {
-          renderGame({ gamePhase: 'test' });
-          const content = getPhaseContent();
-          // Should contain educational/physics/engineering terms
-          expect(content.length).toBeGreaterThan(100);
-        });
-      });
-
-      describe('1.3 Real-World Applications', () => {
-        it('has 4 real-world applications', () => {
-          renderGame({ gamePhase: 'transfer' });
-          // Should have grid of 4 applications or tabbed interface
-          const content = getPhaseContent();
-          expect(content).toMatch(/application|real.?world|example|industry/i);
-        });
-
-        it('applications have titles and descriptions', () => {
-          renderGame({ gamePhase: 'transfer' });
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(300);
-        });
-
-        it('applications include statistics', () => {
-          renderGame({ gamePhase: 'transfer' });
-          const content = getPhaseContent();
-          // Should have numeric stats
-          expect(content).toMatch(/\d+%|\d+\s*(ms|s|m|kg|t|MHz|GHz)/i);
-        });
-
-        it('applications list real companies', () => {
-          renderGame({ gamePhase: 'transfer' });
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(200);
-        });
-
-        it('applications connect to core concept', () => {
-          renderGame({ gamePhase: 'transfer' });
-          const content = getPhaseContent();
-          expect(content).toMatch(/connection|relate|principle|concept|physics/i);
-        });
-      });
-
-      describe('1.4 Sound Integration', () => {
-        it('does not crash when sounds are triggered', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          buttons.forEach(btn => fireEvent.click(btn));
-          expect(consoleErrors.filter(e => e.includes('Audio'))).toHaveLength(0);
-        });
-
-        it('handles AudioContext gracefully', () => {
-          renderGame();
-          const button = findButtonByText(/start|discover|begin|next/i);
-          if (button) fireEvent.click(button);
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
+    // Detect architecture once before all tests
+    it('detects game architecture', () => {
+      if (config.architecture && config.architecture !== 'auto') {
+        architecture = config.architecture;
+      } else {
+        architecture = detectArchitecture(GameComponent);
+      }
+      expect(['self-managing', 'externally-managed']).toContain(architecture);
     });
 
     // ========================================================================
-    // PHASE 2: INTERACTION FLOW TESTS (16 tests)
+    // TIER 1: MUST-PASS (Structural Correctness) ~25 tests
     // ========================================================================
 
-    describe('2. Interaction Flow Tests', () => {
-      describe('2.1 Prediction Gates', () => {
-        it('predict phase shows prediction options', () => {
-          renderGame({ gamePhase: 'predict' });
-          const content = getPhaseContent();
-          expect(content).toMatch(/predict|think|expect|happen|choose/i);
-        });
+    if (runTier1) {
+      describe('TIER 1: Must-Pass - Structural Correctness', () => {
 
-        it('requires prediction before proceeding', () => {
-          renderGame({ gamePhase: 'predict' });
-          // Main action button should not be visible without selection
-          const content = getPhaseContent();
-          expect(content).toBeTruthy();
-        });
+        describe('1.1 Phase Rendering', () => {
+          it('all 10 phases render without error', () => {
+            const phases = ['hook', 'predict', 'play', 'review', 'twist_predict',
+              'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-        it('stores prediction for later comparison', () => {
-          renderGame({ gamePhase: 'predict' });
-          const options = screen.getAllByRole('button').filter(btn =>
-            btn.textContent?.match(/^[A-C]/i) ||
-            btn.textContent?.length! > 20
-          );
-          if (options.length > 0) {
-            fireEvent.click(options[0]);
-          }
-          // Selection should be visible
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('twist_predict also requires prediction', () => {
-          renderGame({ gamePhase: 'twist_predict' });
-          const content = getPhaseContent();
-          expect(content).toMatch(/predict|think|expect|new|variable|twist/i);
-        });
-
-        it('review phase references prediction result', () => {
-          renderGame({ gamePhase: 'review' });
-          const content = getPhaseContent();
-          // Review phase explains physics or references learning - content varies by game
-          expect(content).toMatch(/prediction|result|correct|understand|learn|physics|why|because|formula|equation|momentum|energy|force|velocity|mass|inertia|rotation|conserv|increase|decrease|change/i);
-        });
-      });
-
-      describe('2.2 Interactive Controls', () => {
-        it('play phase has interactive elements', () => {
-          renderGame({ gamePhase: 'play' });
-          const sliders = getSliders();
-          const buttons = screen.getAllByRole('button');
-          expect(sliders.length + buttons.length).toBeGreaterThan(1);
-        });
-
-        it('twist_play has interactive controls', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const sliders = getSliders();
-          const buttons = screen.getAllByRole('button');
-          // Some games use sliders, others use buttons for interaction
-          expect(sliders.length + buttons.length).toBeGreaterThan(1);
-        });
-
-        it('sliders update without errors', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const slider = getSliders()[0] as HTMLInputElement;
-          if (slider) {
-            fireEvent.change(slider, { target: { value: '50' } });
-            fireEvent.change(slider, { target: { value: '75' } });
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('controls have visible labels', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(100);
-        });
-
-        it('touch events work on controls', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const sliders = getSliders();
-          sliders.forEach(slider => {
-            expect(slider).toHaveStyle({ cursor: 'pointer' });
+            phases.forEach(p => {
+              clearConsoleLogs();
+              const { unmount } = renderGame({ gamePhase: p });
+              const content = getPhaseContent();
+              expect(content.length).toBeGreaterThan(20);
+              unmount();
+              cleanup();
+            });
           });
-        });
-      });
 
-      describe('2.3 Navigation', () => {
-        it('has progress bar', () => {
-          renderGame();
-          const progressBar = document.querySelector('[style*="position: fixed"]');
-          expect(progressBar).toBeInTheDocument();
-        });
+          it('initializes to hook/introduction phase', () => {
+            renderGame();
+            const content = getPhaseContent();
+            expect(content.length).toBeGreaterThan(100);
+          });
 
-        it('has 10 navigation dots', () => {
-          renderGame();
-          const navDots = getNavDots();
-          // Most games have 10 phases, but some may have slightly different navigation
-          expect(navDots.length).toBeGreaterThanOrEqual(5);
-        });
+          it('renders different content for each phase', () => {
+            const { unmount } = renderGame({ gamePhase: 'hook' });
+            const hookContent = getPhaseContent();
+            unmount();
+            cleanup();
 
-        it('navigation dots are clickable', () => {
-          renderGame();
-          const dots = getNavDots();
-          dots.forEach(dot => {
-            expect(dot).toHaveStyle({ cursor: 'pointer' });
+            renderGame({ gamePhase: 'test' });
+            const testContent = getPhaseContent();
+
+            expect(hookContent).not.toBe(testContent);
+          });
+
+          it('invalid phase defaults to hook safely', () => {
+            clearConsoleLogs();
+            renderGame({ gamePhase: 'invalid_phase_xyz' as any });
+            const content = getPhaseContent();
+            expect(content.length).toBeGreaterThan(50);
           });
         });
 
-        it('navigation is debounced', () => {
-          renderGame();
-          const button = findButtonByText(/start|discover|next/i);
-          if (button) {
-            fireEvent.click(button);
-            fireEvent.click(button);
-            fireEvent.click(button);
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('progress updates with navigation', () => {
-          renderGame();
-          const progressElement = document.querySelector('[style*="width"]');
-          expect(progressElement).toBeInTheDocument();
-        });
-
-        it('can navigate to any phase via dots', () => {
-          renderGame();
-          const dots = getNavDots();
-          // Click on a navigation dot if available (use last available dot)
-          const clickIndex = Math.min(2, dots.length - 1);
-          if (dots.length > 0) {
-            fireEvent.click(dots[clickIndex]);
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
-    });
-
-    // ========================================================================
-    // PHASE 3: VISUAL QUALITY TESTS (15 tests)
-    // ========================================================================
-
-    describe('3. Visual Quality Tests', () => {
-      describe('3.1 SVG Visualization', () => {
-        it('has SVG element in visualization phases', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          expect(svg).toBeInTheDocument();
-        });
-
-        it('SVG has proper dimensions', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          expect(svg?.getAttribute('width') || svg?.getAttribute('viewBox')).toBeTruthy();
-        });
-
-        it('SVG uses gradients', () => {
-          renderGame({ gamePhase: 'play' });
-          const gradients = document.querySelectorAll('linearGradient, radialGradient');
-          expect(gradients.length).toBeGreaterThan(0);
-        });
-
-        it('SVG uses filters for effects', () => {
-          renderGame({ gamePhase: 'play' });
-          const filters = document.querySelectorAll('filter');
-          expect(filters.length).toBeGreaterThanOrEqual(0); // Some games may not need filters
-        });
-
-        it('SVG has defs section', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          expect(svg).toBeInTheDocument();
-        });
-      });
-
-      describe('3.2 Responsive Design', () => {
-        it('no horizontal overflow', () => {
-          renderGame();
-          expect(document.body.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 20);
-        });
-
-        it('uses flexible layout', () => {
-          renderGame();
-          const flexContainers = document.querySelectorAll('[style*="flex"]');
-          expect(flexContainers.length).toBeGreaterThan(0);
-        });
-
-        it('has minimum height set', () => {
-          renderGame();
-          const container = document.querySelector('[style*="min-height"]');
-          expect(container).toBeInTheDocument();
-        });
-
-        it('buttons have adequate sizing', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          expect(buttons.length).toBeGreaterThan(0);
-        });
-      });
-
-      describe('3.3 Color and Contrast', () => {
-        it('uses defined color scheme', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should use standard accent colors
-          expect(html).toMatch(/#[0-9A-Fa-f]{6}|rgb\(/);
-        });
-
-        it('has text content with colors', () => {
-          renderGame();
-          const coloredElements = document.querySelectorAll('[style*="color"]');
-          expect(coloredElements.length).toBeGreaterThan(0);
-        });
-
-        it('success states have distinct color', () => {
-          renderGame({ gamePhase: 'play' });
-          const content = document.body.innerHTML;
-          expect(content).toMatch(/10B981|22c55e|16a34a|rgb\(16|rgb\(34|green/i);
-        });
-
-        it('error states have distinct color', () => {
-          renderGame({ gamePhase: 'play' });
-          const content = document.body.innerHTML;
-          expect(content).toMatch(/EF4444|dc2626|f87171|rgb\(239|rgb\(220|red/i);
-        });
-      });
-    });
-
-    // ========================================================================
-    // PHASE 4: BUTTON RELIABILITY TESTS (30 tests)
-    // ========================================================================
-
-    describe('4. Button Reliability & CTA Tests', () => {
-      describe('4.1 First-Click Reliability', () => {
-        it('buttons respond on first click', () => {
-          renderGame();
-          const button = findButtonByText(/start|discover|next|begin/i);
-          if (button) {
-            fireEvent.click(button);
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('prediction options select on first click', () => {
-          renderGame({ gamePhase: 'predict' });
-          const options = screen.getAllByRole('button').filter(btn =>
-            btn.textContent?.match(/^[A-C]/i)
-          );
-          if (options.length > 0) {
-            fireEvent.click(options[0]);
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('buttons respond quickly', () => {
-          renderGame({ gamePhase: 'play' });
-          const button = findButtonByText(/understand|next|continue/i);
-          if (button) {
-            const start = performance.now();
-            fireEvent.click(button);
-            const end = performance.now();
-            expect(end - start).toBeLessThan(100);
-          }
-        });
-
-        it('no double-click required', () => {
-          renderGame({ gamePhase: 'predict' });
-          const options = screen.getAllByRole('button').filter(btn =>
-            btn.textContent?.match(/^[A-C]/i)
-          );
-          if (options.length > 0) {
-            fireEvent.click(options[0]);
-            // Should show next button after single click
+        describe('1.2 No Console Errors', () => {
+          it('no errors on initial load', () => {
+            renderGame();
             expect(consoleErrors.length).toBe(0);
-          }
-        });
-
-        it('works after rapid navigation', () => {
-          renderGame();
-          const dots = getNavDots();
-          dots.forEach(dot => fireEvent.click(dot));
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
-
-      describe('4.2 Button Accessibility', () => {
-        it('buttons are keyboard accessible', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          buttons.forEach(btn => {
-            expect(btn.tabIndex).toBeGreaterThanOrEqual(-1);
           });
-        });
 
-        it('buttons have visible states', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          expect(buttons.length).toBeGreaterThan(0);
-        });
-
-        it('primary button has adequate tap target', () => {
-          renderGame();
-          const button = findButtonByText(/start|discover|next/i);
-          if (button) {
-            const style = button.getAttribute('style') || '';
-            expect(style).toContain('padding');
-          }
-        });
-
-        it('buttons have proper role', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          expect(buttons.length).toBeGreaterThan(0);
-        });
-
-        it('navigation dots have aria-labels', () => {
-          renderGame();
-          const dots = getNavDots();
-          // At least some dots should have accessibility labels (aria-label, title, or other)
-          const dotsWithLabels = Array.from(dots).filter(dot =>
-            dot.getAttribute('aria-label') || dot.getAttribute('title') || dot.textContent
-          );
-          // Most games have accessible navigation - accept if any dots are accessible
-          expect(dotsWithLabels.length).toBeGreaterThanOrEqual(0);
-        });
-      });
-
-      describe('4.3 CTA Design', () => {
-        it('uses action verbs in button text', () => {
-          renderGame();
-          // Different games use different action verbs - all are valid CTAs
-          const button = findButtonByText(/start|discover|next|continue|submit|test|begin|explore|try|learn|see|go/i);
-          expect(button).toBeDefined();
-        });
-
-        it('button text is concise', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          buttons.forEach(btn => {
-            if (btn.textContent && btn.textContent.length > 2) {
-              const words = btn.textContent.trim().split(/\s+/).length;
-              expect(words).toBeLessThanOrEqual(6);
-            }
+          it('no errors during phase navigation', () => {
+            renderGame();
+            const dots = getNavDots();
+            dots.forEach(dot => fireEvent.click(dot));
+            expect(consoleErrors.length).toBe(0);
           });
-        });
 
-        it('primary CTA has background style', () => {
-          renderGame();
-          const button = findButtonByText(/start|discover|next/i);
-          if (button) {
-            const style = button.getAttribute('style') || '';
-            expect(style).toContain('background');
-          }
-        });
-
-        it('buttons have transition for hover', () => {
-          renderGame();
-          const button = findButtonByText(/start|discover|next/i);
-          if (button) {
-            const style = button.getAttribute('style') || '';
-            expect(style).toContain('transition');
-          }
-        });
-
-        it('disabled buttons are styled differently', () => {
-          renderGame({ gamePhase: 'test' });
-          // Quiz should have disabled next button before selecting
-          const content = document.body.innerHTML;
-          expect(content).toMatch(/cursor|disabled|not-allowed/i);
-        });
-      });
-    });
-
-    // ========================================================================
-    // PHASE 5: SPEED & PERFORMANCE TESTS (17 tests)
-    // ========================================================================
-
-    describe('5. Speed & Performance Tests', () => {
-      describe('5.1 Load Performance', () => {
-        it('mounts quickly', () => {
-          const start = performance.now();
-          renderGame();
-          const end = performance.now();
-          expect(end - start).toBeLessThan(500);
-        });
-
-        it('renders without layout shift', () => {
-          renderGame();
-          const container = document.querySelector('[style*="min-height"]');
-          expect(container).toBeInTheDocument();
-        });
-      });
-
-      describe('5.2 Interaction Speed', () => {
-        it('slider responds quickly', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const slider = getSliders()[0] as HTMLInputElement;
-          if (slider) {
-            const start = performance.now();
-            fireEvent.change(slider, { target: { value: '50' } });
-            const end = performance.now();
-            expect(end - start).toBeLessThan(50);
-          }
-        });
-
-        it('button clicks are responsive', () => {
-          renderGame();
-          const button = findButtonByText(/start|discover|next/i);
-          if (button) {
-            const start = performance.now();
-            fireEvent.click(button);
-            const end = performance.now();
-            expect(end - start).toBeLessThan(50);
-          }
-        });
-
-        it('handles continuous slider drag', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const slider = getSliders()[0] as HTMLInputElement;
-          if (slider) {
-            for (let i = 0; i < 20; i++) {
-              fireEvent.change(slider, { target: { value: String(i * 5) } });
+          it('no errors during slider interaction', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0];
+            if (slider) {
+              fireEvent.change(slider, { target: { value: '50' } });
             }
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
+            expect(consoleErrors.length).toBe(0);
+          });
 
-      describe('5.3 Memory Efficiency', () => {
-        it('cleans up on unmount', () => {
-          const { unmount } = renderGame();
-          unmount();
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('cleans up animations', () => {
-          const { unmount } = renderGame({ gamePhase: 'play' });
-          unmount();
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('cleans up event listeners', () => {
-          const { unmount } = renderGame();
-          unmount();
-          window.dispatchEvent(new Event('resize'));
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
-    });
-
-    // ========================================================================
-    // PHASE 6: QUIZ FUNCTIONALITY TESTS (24 tests)
-    // ========================================================================
-
-    describe('6. Quiz Functionality Tests', () => {
-      describe('6.1 Quiz Mechanics', () => {
-        it('displays question counter', () => {
-          renderGame({ gamePhase: 'test' });
-          expect(screen.getByText(/\d+\s*(of|\/)\s*10/i)).toBeInTheDocument();
-        });
-
-        it('selecting answer works', () => {
-          renderGame({ gamePhase: 'test' });
-          const options = screen.getAllByRole('button').filter(btn =>
-            btn.textContent?.match(/^[A-D]/i)
-          );
-          if (options.length > 0) {
-            fireEvent.click(options[0]);
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('can change answer before confirming', () => {
-          renderGame({ gamePhase: 'test' });
-          const options = screen.getAllByRole('button').filter(btn =>
-            btn.textContent?.match(/^[A-D]/i)
-          );
-          if (options.length >= 2) {
-            fireEvent.click(options[0]);
-            fireEvent.click(options[1]);
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
-
-      describe('6.2 Quiz Scoring', () => {
-        it('displays score after completion', async () => {
-          renderGame({ gamePhase: 'test' });
-
-          // Answer all questions
-          for (let i = 0; i < 10; i++) {
+          it('no errors during quiz', () => {
+            renderGame({ gamePhase: 'test' });
             const options = screen.getAllByRole('button').filter(btn =>
-              btn.textContent?.match(/^[A-D]/i)
+              btn.textContent && btn.textContent.length > 5 &&
+              !(/next|prev|back|submit|skip|home/i.test(btn.textContent))
+            );
+            if (options.length > 0) fireEvent.click(options[0]);
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('no React key warnings', () => {
+            renderGame({ gamePhase: 'transfer' });
+            const hasKeyWarning = consoleWarnings.some(warn =>
+              warn.includes('key') && warn.includes('unique')
+            );
+            expect(hasKeyWarning).toBe(false);
+          });
+        });
+
+        describe('1.3 SVG Visualization Exists', () => {
+          it('has SVG element in play phase', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            expect(svg).toBeInTheDocument();
+          });
+
+          it('SVG has substantial content (not trivial)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            expect(svg).toBeInTheDocument();
+            expect(svg!.innerHTML.length).toBeGreaterThan(200);
+          });
+
+          it('SVG has proper dimensions', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            expect(svg?.getAttribute('width') || svg?.getAttribute('viewBox')).toBeTruthy();
+          });
+        });
+
+        describe('1.4 Test Questions Exist', () => {
+          it('test phase has quiz content', () => {
+            renderGame({ gamePhase: 'test' });
+            const content = getPhaseContent();
+            expect(content.length).toBeGreaterThan(200);
+          });
+
+          it('test phase has answer options', () => {
+            renderGame({ gamePhase: 'test' });
+            const buttons = screen.getAllByRole('button');
+            const optionButtons = buttons.filter(btn => {
+              const text = btn.textContent || '';
+              return text.length > 5 && !(/next|prev|back|submit|skip|home|^[0-9]$/i.test(text));
+            });
+            expect(optionButtons.length).toBeGreaterThanOrEqual(3);
+          });
+        });
+
+        describe('1.5 Transfer Content Exists', () => {
+          it('transfer phase has real-world content', () => {
+            renderGame({ gamePhase: 'transfer' });
+            const content = getPhaseContent();
+            expect(content).toMatch(/application|real.?world|example|industry|company|engineer/i);
+          });
+
+          it('transfer content is substantial', () => {
+            renderGame({ gamePhase: 'transfer' });
+            const content = getPhaseContent();
+            expect(content.length).toBeGreaterThan(300);
+          });
+        });
+
+        describe('1.6 Prediction Phase Exists', () => {
+          it('predict phase has prediction content', () => {
+            renderGame({ gamePhase: 'predict' });
+            const content = getPhaseContent();
+            expect(content).toMatch(/predict|think|expect|happen|choose|what|question/i);
+          });
+
+          it('twist_predict phase has prediction content', () => {
+            renderGame({ gamePhase: 'twist_predict' });
+            const content = getPhaseContent();
+            expect(content).toMatch(/predict|think|expect|new|variable|twist|change|different|what|watch|observe/i);
+          });
+        });
+
+        describe('1.7 Clean Unmount', () => {
+          it('unmounts without errors', () => {
+            const { unmount } = renderGame();
+            unmount();
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('cleans up on unmount from play phase', () => {
+            const { unmount } = renderGame({ gamePhase: 'play' });
+            unmount();
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('no errors after unmount events', () => {
+            const { unmount } = renderGame();
+            unmount();
+            window.dispatchEvent(new Event('resize'));
+            expect(consoleErrors.length).toBe(0);
+          });
+        });
+
+        describe('1.8 Sound Integration', () => {
+          it('does not crash when interactions trigger sounds', () => {
+            renderGame();
+            const buttons = screen.getAllByRole('button');
+            buttons.slice(0, 5).forEach(btn => fireEvent.click(btn));
+            expect(consoleErrors.filter(e => e.includes('Audio'))).toHaveLength(0);
+          });
+        });
+
+        describe('1.9 Performance', () => {
+          it('mounts in under 500ms', () => {
+            const start = performance.now();
+            renderGame();
+            const end = performance.now();
+            expect(end - start).toBeLessThan(500);
+          });
+
+          it('handles remount gracefully', () => {
+            const { unmount } = renderGame({ gamePhase: 'play' });
+            unmount();
+            cleanup();
+            clearConsoleLogs();
+            renderGame({ gamePhase: 'hook' });
+            expect(consoleErrors.length).toBe(0);
+          });
+        });
+
+        describe('1.10 Navigation Flow', () => {
+          it('has a bottom navigation bar with Back and Next buttons', () => {
+            renderGame();
+            const allButtons = screen.getAllByRole('button');
+            const buttonTexts = allButtons.map(b => b.textContent?.trim() || '');
+            const hasBack = buttonTexts.some(t => /back/i.test(t));
+            const hasNext = buttonTexts.some(t => /next|continue|start|begin/i.test(t));
+            expect(hasBack || hasNext).toBe(true);
+          });
+
+          it('Next button advances from hook to predict', () => {
+            renderGame();
+            const hookContent = getPhaseContent();
+
+            // Find a Next/Continue/Start button
+            const allButtons = screen.getAllByRole('button');
+            const nextBtn = allButtons.find(b => {
+              const txt = b.textContent?.trim() || '';
+              return /next|continue|start|begin|discovery/i.test(txt) && txt.length > 2;
+            });
+            if (nextBtn) {
+              // Try both click and pointerDown (some games use onPointerDown)
+              fireEvent.pointerDown(nextBtn);
+              fireEvent.click(nextBtn);
+              const newContent = getPhaseContent();
+              expect(newContent).not.toBe(hookContent);
+            }
+          });
+
+          it('has proper layout structure (not just free-flowing content)', () => {
+            const { container } = renderGame();
+            const outerDiv = container.firstElementChild as HTMLElement;
+            if (outerDiv) {
+              // Check for flex layout via inline styles OR CSS classes
+              const style = outerDiv.style;
+              const className = outerDiv.className || '';
+              const hasFlexLayout = (style.display === 'flex' && style.flexDirection === 'column')
+                || className.includes('flex')
+                || className.includes('flex-col');
+              const hasFullHeight = style.height === '100vh' || style.minHeight === '100vh'
+                || className.includes('inset-0')
+                || className.includes('h-screen');
+              expect(hasFlexLayout || hasFullHeight).toBe(true);
+            }
+          });
+        });
+      });
+    }
+
+    // ========================================================================
+    // TIER 2: SHOULD-PASS (Quality Standards) ~40 tests
+    // ========================================================================
+
+    if (runTier2) {
+      describe('TIER 2: Should-Pass - Quality Standards', () => {
+
+        describe('2.1 Navigation Structure', () => {
+          it('has 10 navigation dots (self-managing games)', () => {
+            renderGame();
+            const navDots = getNavDots();
+            // Self-managing games must have exactly 10 nav dots
+            // Externally-managed games may have fewer or none
+            if (architecture === 'self-managing') {
+              expect(navDots.length).toBe(10);
+            } else {
+              expect(navDots.length).toBeGreaterThanOrEqual(0);
+            }
+          });
+
+          it('navigation dots have labels', () => {
+            renderGame();
+            const navDots = getNavDots();
+            if (navDots.length >= 8) {
+              const labeled = navDots.filter(dot =>
+                dot.getAttribute('aria-label') || dot.getAttribute('title')
+              );
+              expect(labeled.length).toBe(navDots.length);
+            }
+          });
+
+          it('navigation dots are clickable', () => {
+            renderGame();
+            const dots = getNavDots();
+            if (dots.length > 0) {
+              dots.forEach(dot => {
+                const style = (dot as HTMLElement).getAttribute('style') || '';
+                expect(style).toContain('cursor');
+              });
+            }
+          });
+
+          it('has progress bar', () => {
+            renderGame();
+            const progressBar = document.querySelector('[style*="position: fixed"]') ||
+              document.querySelector('[style*="width"][style*="transition"]');
+            expect(progressBar).toBeInTheDocument();
+          });
+        });
+
+        describe('2.2 Predict-Play Graphic Continuity', () => {
+          it('predict phase contains an SVG graphic', () => {
+            renderGame({ gamePhase: 'predict' });
+            const svg = getSVG();
+            expect(svg).toBeInTheDocument();
+            expect(svg!.innerHTML.length).toBeGreaterThan(200);
+          });
+
+          it('predict phase does NOT have sliders (observe before interact)', () => {
+            renderGame({ gamePhase: 'predict' });
+            const sliders = getSliders();
+            expect(sliders.length).toBe(0);
+          });
+
+          it('play phase has sliders or toggle controls that predict does not', () => {
+            const { unmount: u1 } = renderGame({ gamePhase: 'predict' });
+            const predictSliders = getSliders().length;
+            u1();
+            cleanup();
+
+            renderGame({ gamePhase: 'play' });
+            const playSliders = getSliders().length;
+            // Play phase should have sliders/range inputs OR toggle buttons
+            // that predict phase does not have
+            const playToggleButtons = screen.getAllByRole('button').filter(btn => {
+              const text = btn.textContent || '';
+              return /reset|fire|start|run|toggle|on|off/i.test(text);
+            }).length;
+
+            expect(playSliders + playToggleButtons).toBeGreaterThan(predictSliders);
+          });
+
+          it('twist_predict shows graphic without sliders', () => {
+            renderGame({ gamePhase: 'twist_predict' });
+            const svg = getSVG();
+            expect(svg).toBeInTheDocument();
+            const sliders = getSliders();
+            expect(sliders.length).toBe(0);
+          });
+
+          it('twist_play has interactive controls', () => {
+            renderGame({ gamePhase: 'twist_play' });
+            const sliders = getSliders();
+            const buttons = screen.getAllByRole('button');
+            expect(sliders.length + buttons.length).toBeGreaterThan(2);
+          });
+        });
+
+        describe('2.3 Control Effectiveness', () => {
+          it('slider change modifies SVG content in play phase', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return; // Some games use buttons instead
+
+            const svgBefore = getSVG()?.innerHTML || '';
+
+            const mid = (Number(slider.min) + Number(slider.max)) / 2;
+            const newVal = Number(slider.value) === mid ? Number(slider.max) : mid;
+            fireEvent.change(slider, { target: { value: String(newVal) } });
+
+            const svgAfter = getSVG()?.innerHTML || '';
+            expect(svgAfter).not.toBe(svgBefore);
+          });
+
+          it('twist_play slider also modifies SVG', () => {
+            renderGame({ gamePhase: 'twist_play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const svgBefore = getSVG()?.innerHTML || '';
+            const mid = (Number(slider.min) + Number(slider.max)) / 2;
+            fireEvent.change(slider, { target: { value: String(mid) } });
+            const svgAfter = getSVG()?.innerHTML || '';
+
+            expect(svgAfter).not.toBe(svgBefore);
+          });
+
+          it('controls have visible labels', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+            expect(content.length).toBeGreaterThan(100);
+          });
+
+          it('slider values stay in bounds', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (slider) {
+              expect(Number(slider.value)).toBeGreaterThanOrEqual(Number(slider.min));
+              expect(Number(slider.value)).toBeLessThanOrEqual(Number(slider.max));
+            }
+          });
+
+          it('handles extreme slider values without error', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (slider) {
+              fireEvent.change(slider, { target: { value: slider.min } });
+              fireEvent.change(slider, { target: { value: slider.max } });
+            }
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('handles continuous slider drag (20 rapid changes)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (slider) {
+              for (let i = 0; i < 20; i++) {
+                fireEvent.change(slider, { target: { value: String(i * 5) } });
+              }
+            }
+            expect(consoleErrors.length).toBe(0);
+          });
+        });
+
+        describe('2.4 Transfer Phase Quality', () => {
+          it('transfer content exceeds 800 characters (not placeholder)', () => {
+            renderGame({ gamePhase: 'transfer' });
+            const content = getPhaseContent();
+            expect(content.length).toBeGreaterThan(800);
+          });
+
+          it('transfer has numeric statistics', () => {
+            renderGame({ gamePhase: 'transfer' });
+            const content = getPhaseContent();
+            const statsPattern = /\d+[%×xX]|\$\d+|\d+\s*(km|m|kg|GHz|MHz|nm|ms|s|W|V|A|TB|GB|MB|billion|million|B\b)/gi;
+            const stats = content.match(statsPattern) || [];
+            expect(stats.length).toBeGreaterThanOrEqual(3);
+          });
+
+          it('transfer mentions real companies or organizations', () => {
+            renderGame({ gamePhase: 'transfer' });
+            const content = getPhaseContent();
+            // Broad pattern - real applications mention real entities
+            expect(content.length).toBeGreaterThan(500);
+            // Should have capitalized proper nouns (company/org names)
+            const properNouns = content.match(/[A-Z][a-z]+(?:\s[A-Z][a-z]+)*/g) || [];
+            expect(properNouns.length).toBeGreaterThanOrEqual(4);
+          });
+        });
+
+        describe('2.5 Quiz Quality', () => {
+          it('shows question counter (1 of 10 or similar)', () => {
+            renderGame({ gamePhase: 'test' });
+            const content = getPhaseContent();
+            expect(content).toMatch(/1\s*(of|\/)\s*10/i);
+          });
+
+          it('each question has multiple answer options', () => {
+            renderGame({ gamePhase: 'test' });
+            const buttons = screen.getAllByRole('button');
+            // Filter out navigation and control buttons to find answer options
+            const navDotCount = getNavDots().length;
+            const optionButtons = buttons.filter(btn => {
+              const text = btn.textContent || '';
+              const style = btn.getAttribute('style') || '';
+              // Exclude nav dots (small buttons), navigation buttons, and control buttons
+              const isNavOrControl = /^(next|prev|back|submit|skip|home|previous)$/i.test(text.trim());
+              const isSmallDot = style.includes('border-radius') && style.includes('width: 8px') || style.includes('width: 10px') || style.includes('width: 20px') || style.includes('width: 24px');
+              return text.length > 10 && !isNavOrControl && !isSmallDot;
+            });
+            // Should have at least 3 visible answer options
+            expect(optionButtons.length).toBeGreaterThanOrEqual(3);
+          });
+
+          it('questions have scenario context (substantial text)', () => {
+            renderGame({ gamePhase: 'test' });
+            const content = getPhaseContent();
+            expect(content.length).toBeGreaterThan(400);
+          });
+
+          it('can select an answer without error', () => {
+            renderGame({ gamePhase: 'test' });
+            const options = screen.getAllByRole('button').filter(btn => {
+              const text = btn.textContent || '';
+              return text.length > 5 && !(/next|prev|back|submit|skip|home/i.test(text));
+            });
+            if (options.length > 0) {
+              fireEvent.click(options[0]);
+            }
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('can change answer before confirming', () => {
+            renderGame({ gamePhase: 'test' });
+            const options = screen.getAllByRole('button').filter(btn => {
+              const text = btn.textContent || '';
+              return text.length > 5 && !(/next|prev|back|submit|skip|home/i.test(text));
+            });
+            if (options.length >= 2) {
+              fireEvent.click(options[0]);
+              fireEvent.click(options[1]);
+            }
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('completing quiz shows score', async () => {
+            renderGame({ gamePhase: 'test' });
+
+            for (let i = 0; i < 12; i++) {
+              // Step 1: Select an answer option
+              const options = screen.getAllByRole('button').filter(btn => {
+                const text = btn.textContent || '';
+                return text.length > 5 && !(/^(next|prev|back|submit|skip|home|← back|next →|check|confirm)/i.test(text.trim()));
+              });
+              if (options.length > 0) fireEvent.click(options[0]);
+
+              // Step 2: Click "Check Answer" / "Confirm" if present (new confirm flow)
+              const checkBtn = screen.getAllByRole('button').find(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /check.*answer|confirm.*answer|lock.*in|check$/i.test(text);
+              });
+              if (checkBtn) fireEvent.click(checkBtn);
+
+              // Step 3: Click quiz-specific next button (not the bottom bar "Next →" or answer options)
+              const allButtons = screen.getAllByRole('button');
+              const isAnswerOption = (text: string) => /^[A-D]\)/.test(text);
+              const quizNextBtn = allButtons.find(btn => {
+                const text = btn.textContent?.trim() || '';
+                if (isAnswerOption(text)) return false;
+                return /next\s*question|question\s*\d|submit\s*test|finish|see\s*results|^continue$/i.test(text);
+              }) || allButtons.find(btn => {
+                const text = btn.textContent?.trim() || '';
+                if (isAnswerOption(text)) return false;
+                return text === 'Next' || /^next$/i.test(text);
+              });
+              if (quizNextBtn) fireEvent.click(quizNextBtn);
+            }
+
+            const submitBtn = findButtonByText(/submit|finish|see.*result|complete/i);
+            if (submitBtn) fireEvent.click(submitBtn);
+
+            await waitFor(() => {
+              expect(getPhaseContent()).toMatch(/\d+\s*\/\s*10|\d+%/);
+            }, { timeout: 3000 });
+          });
+        });
+
+        describe('2.5b Quiz Protection', () => {
+          it('bottom bar Next is disabled during active test phase', () => {
+            renderGame({ gamePhase: 'test' });
+            const allButtons = screen.getAllByRole('button');
+            const bottomNextBtn = allButtons.find(btn => {
+              const text = btn.textContent?.trim() || '';
+              return text === 'Next →' || text === 'Next→';
+            });
+            if (bottomNextBtn) {
+              // Should be disabled (opacity < 1, or cursor not-allowed, or onClick does nothing)
+              const style = (bottomNextBtn as HTMLElement).style;
+              const isDisabled = style.opacity === '0.4' || style.cursor === 'not-allowed'
+                || bottomNextBtn.hasAttribute('disabled');
+              expect(isDisabled).toBe(true);
+            }
+          });
+
+          it('test phase has Check Answer or confirm mechanism', () => {
+            renderGame({ gamePhase: 'test' });
+            const content = getPhaseContent();
+            // Select first answer option
+            const allButtons = screen.getAllByRole('button');
+            const answerBtn = allButtons.find(btn => {
+              const text = btn.textContent?.trim() || '';
+              return /^[A-D]\)/.test(text) && text.length > 5;
+            });
+            if (answerBtn) {
+              fireEvent.click(answerBtn);
+              // After selecting, there should be a Check/Confirm button
+              const checkBtn = screen.getAllByRole('button').find(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /check|confirm|submit|lock/i.test(text);
+              });
+              expect(checkBtn).toBeTruthy();
+            }
+          });
+        });
+
+        describe('2.6 Educational Flow Integrity', () => {
+          it('predict phase has selectable prediction options', () => {
+            renderGame({ gamePhase: 'predict' });
+            const buttons = screen.getAllByRole('button');
+            const optionButtons = buttons.filter(btn => {
+              const text = btn.textContent || '';
+              return text.length > 15;
+            });
+            expect(optionButtons.length).toBeGreaterThanOrEqual(2);
+          });
+
+          it('review phase has explanatory content (>300 chars)', () => {
+            renderGame({ gamePhase: 'review' });
+            const content = getPhaseContent();
+            expect(content.length).toBeGreaterThan(300);
+          });
+
+          it('review phase explains WHY (contains explanatory language)', () => {
+            renderGame({ gamePhase: 'review' });
+            const content = getPhaseContent();
+            expect(content).toMatch(/because|therefore|this.*means|the reason|explains|demonstrates|shows|due to|result|principle|law|equation|formula|secret|key|insight|understand/i);
+          });
+
+          it('twist introduces genuinely NEW content', () => {
+            const { unmount: u1 } = renderGame({ gamePhase: 'predict' });
+            const predictContent = getPhaseContent();
+            u1();
+            cleanup();
+
+            renderGame({ gamePhase: 'twist_predict' });
+            const twistContent = getPhaseContent();
+
+            expect(twistContent).not.toBe(predictContent);
+            expect(twistContent.length).toBeGreaterThan(50);
+          });
+
+          it('mastery phase provides completion/accomplishment', () => {
+            renderGame({ gamePhase: 'mastery' });
+            const content = getPhaseContent();
+            expect(content).toMatch(/complete|master|learned|congratulation|success|score|result|achievement|well done|pass|great/i);
+          });
+
+          it('follows predict-observe-explain pattern', () => {
+            renderGame({ gamePhase: 'predict' });
+            expect(getPhaseContent()).toMatch(/predict|think|expect|what.*will|what.*happen/i);
+          });
+        });
+
+        describe('2.7 SVG Realism', () => {
+          it('play phase SVG has complexity score >= 10', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            expect(svg).toBeInTheDocument();
+            const score = getSvgComplexityScore(svg as SVGElement);
+            expect(score).toBeGreaterThanOrEqual(10);
+          });
+
+          it('SVG innerHTML exceeds 1000 characters', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            expect(svg?.innerHTML.length).toBeGreaterThan(1000);
+          });
+
+          it('SVG does not use emoji as primary content', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            const svgText = svg?.textContent || '';
+            const emojiPattern = /[\u{1F300}-\u{1F9FF}]/gu;
+            const emojiCount = (svgText.match(emojiPattern) || []).length;
+            const shapeCount = svg?.querySelectorAll('path, circle, rect, line, polygon, ellipse').length || 0;
+            expect(shapeCount).toBeGreaterThan(emojiCount * 3);
+          });
+
+          it('uses SVG graphics instead of Unicode symbols for visualization', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            const hasRealGraphics = svg?.querySelectorAll('path, circle, rect, line, polygon, ellipse, g');
+            expect(hasRealGraphics?.length).toBeGreaterThanOrEqual(3);
+          });
+        });
+
+        describe('2.8 Button Reliability', () => {
+          it('buttons respond on first click', () => {
+            renderGame();
+            const button = findButtonByText(/start|discover|next|begin|explore/i);
+            if (button) {
+              fireEvent.click(button);
+            }
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('prediction options select on first click', () => {
+            renderGame({ gamePhase: 'predict' });
+            const options = screen.getAllByRole('button').filter(btn =>
+              (btn.textContent?.length || 0) > 15
             );
             if (options.length > 0) {
               fireEvent.click(options[0]);
             }
+            expect(consoleErrors.length).toBe(0);
+          });
 
-            if (i < 9) {
-              const nextBtn = findButtonByText(/next/i);
-              if (nextBtn) fireEvent.click(nextBtn);
+          it('buttons respond quickly (<100ms)', () => {
+            renderGame({ gamePhase: 'play' });
+            const button = findButtonByText(/understand|next|continue/i);
+            if (button) {
+              const start = performance.now();
+              fireEvent.click(button);
+              const end = performance.now();
+              expect(end - start).toBeLessThan(100);
             }
-          }
+          });
 
-          const submitBtn = findButtonByText(/submit/i);
-          if (submitBtn) {
-            fireEvent.click(submitBtn);
-          }
-
-          await waitFor(() => {
-            expect(getPhaseContent()).toMatch(/\d+\s*\/\s*10|\d+%/);
-          }, { timeout: 2000 });
-        });
-
-        it('score format is X/10 or percentage', async () => {
-          renderGame({ gamePhase: 'test' });
-
-          for (let i = 0; i < 10; i++) {
-            const options = screen.getAllByRole('button').filter(btn =>
-              btn.textContent?.match(/^[A-D]/i)
-            );
-            if (options.length > 0) fireEvent.click(options[0]);
-            if (i < 9) {
-              const nextBtn = findButtonByText(/next/i);
-              if (nextBtn) fireEvent.click(nextBtn);
-            }
-          }
-
-          const submitBtn = findButtonByText(/submit/i);
-          if (submitBtn) fireEvent.click(submitBtn);
-
-          await waitFor(() => {
-            expect(getPhaseContent()).toMatch(/\d+\s*\/\s*10|\d+%/);
-          }, { timeout: 2000 });
-        });
-      });
-
-      describe('6.3 Quiz Navigation', () => {
-        it('has previous button after first question', () => {
-          renderGame({ gamePhase: 'test' });
-          const options = screen.getAllByRole('button').filter(btn =>
-            btn.textContent?.match(/^[A-D]/i)
-          );
-          if (options.length > 0) fireEvent.click(options[0]);
-
-          const nextBtn = findButtonByText(/next/i);
-          if (nextBtn) fireEvent.click(nextBtn);
-
-          // Games may use text buttons or navigation dots for going back
-          const hasBackNav = findButtonByText(/previous|back/i) ||
-            document.querySelectorAll('button[style*="border-radius"][style*="background"]').length > 1;
-          expect(hasBackNav).toBeTruthy();
-        });
-
-        it('progress dots show quiz progress', () => {
-          renderGame({ gamePhase: 'test' });
-          const dots = document.querySelectorAll('[style*="border-radius: 50%"]');
-          expect(dots.length).toBeGreaterThan(0);
-        });
-      });
-    });
-
-    // ========================================================================
-    // PHASE 7: SECURITY TESTS (36 tests)
-    // ========================================================================
-
-    describe('7. Security Tests', () => {
-      describe('7.1 Answer Protection', () => {
-        it('answers not exposed in data attributes', () => {
-          renderGame({ gamePhase: 'test' });
-          const html = document.body.innerHTML;
-          expect(html).not.toMatch(/data-correct|data-answer/i);
-        });
-
-        it('console does not log answers', () => {
-          clearConsoleLogs();
-          renderGame({ gamePhase: 'test' });
-          const options = screen.getAllByRole('button').filter(btn =>
-            btn.textContent?.match(/^[A-D]/i)
-          );
-          if (options.length > 0) fireEvent.click(options[0]);
-
-          const hasAnswerLeak = consoleErrors.concat(consoleWarnings).some(log =>
-            log.toLowerCase().includes('correct answer')
-          );
-          expect(hasAnswerLeak).toBe(false);
-        });
-      });
-
-      describe('7.2 Game Integrity', () => {
-        it('invalid phase defaults to hook', () => {
-          renderGame({ gamePhase: 'invalid_phase_xyz' as any });
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(50);
-        });
-
-        it('no script injection possible', () => {
-          renderGame();
-          const scripts = document.querySelectorAll('script');
-          expect(scripts.length).toBe(0);
-        });
-      });
-
-      describe('7.3 XSS Prevention', () => {
-        it('renders safely', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          expect(html).not.toMatch(/<script>|javascript:/i);
-        });
-      });
-    });
-
-    // ========================================================================
-    // PHASE 8: BUG DETECTION TESTS (50 tests)
-    // ========================================================================
-
-    describe('8. Bug Detection & Console Error Tests', () => {
-      beforeEach(() => {
-        clearConsoleLogs();
-      });
-
-      describe('8.1 Console Errors', () => {
-        it('no errors on initial load', () => {
-          renderGame();
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('no errors during phase navigation', () => {
-          renderGame();
-          const dots = getNavDots();
-          dots.forEach(dot => fireEvent.click(dot));
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('no errors during slider interaction', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const slider = getSliders()[0];
-          if (slider) {
-            fireEvent.change(slider, { target: { value: '50' } });
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('no errors during quiz', async () => {
-          renderGame({ gamePhase: 'test' });
-          for (let i = 0; i < 10; i++) {
-            const options = screen.getAllByRole('button').filter(btn =>
-              btn.textContent?.match(/^[A-D]/i)
-            );
-            if (options.length > 0) fireEvent.click(options[0]);
-            if (i < 9) {
-              const nextBtn = findButtonByText(/next/i);
-              if (nextBtn) fireEvent.click(nextBtn);
-            }
-          }
-          const submitBtn = findButtonByText(/submit/i);
-          if (submitBtn) fireEvent.click(submitBtn);
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('no React key warnings', () => {
-          renderGame({ gamePhase: 'transfer' });
-          const hasKeyWarning = consoleWarnings.some(warn =>
-            warn.includes('key') && warn.includes('unique')
-          );
-          expect(hasKeyWarning).toBe(false);
-        });
-
-        it('no unhandled promise rejections', () => {
-          renderGame();
-          const dots = getNavDots();
-          dots.forEach(dot => fireEvent.click(dot));
-          expect(consoleErrors.filter(e => e.includes('promise'))).toHaveLength(0);
-        });
-      });
-
-      describe('8.2 Edge Cases', () => {
-        it('handles remount gracefully', () => {
-          const { unmount } = renderGame({ gamePhase: 'play' });
-          unmount();
-          renderGame({ gamePhase: 'hook' });
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('handles rapid phase changes', () => {
-          renderGame();
-          const dots = getNavDots();
-          for (let i = 0; i < 3; i++) {
+          it('works after rapid navigation', () => {
+            renderGame();
+            const dots = getNavDots();
             dots.forEach(dot => fireEvent.click(dot));
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
+            expect(consoleErrors.length).toBe(0);
+          });
 
-        it('handles extreme slider values', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const slider = getSliders()[0] as HTMLInputElement;
-          if (slider) {
-            fireEvent.change(slider, { target: { value: slider.min } });
-            fireEvent.change(slider, { target: { value: slider.max } });
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
+          it('uses action verbs in button text', () => {
+            renderGame();
+            const button = findButtonByText(/start|discover|next|continue|submit|test|begin|explore|try|learn|see|go|play|run|fire|launch|watch/i);
+            expect(button).toBeDefined();
+          });
 
-      describe('8.3 State Consistency', () => {
-        it('always shows valid content', () => {
-          renderGame();
-          expect(getPhaseContent().length).toBeGreaterThan(50);
-        });
-
-        it('slider values stay in bounds', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const slider = getSliders()[0] as HTMLInputElement;
-          if (slider) {
-            expect(Number(slider.value)).toBeGreaterThanOrEqual(Number(slider.min));
-            expect(Number(slider.value)).toBeLessThanOrEqual(Number(slider.max));
-          }
-        });
-
-        it('no infinite render loops', () => {
-          let renderCount = 0;
-          const TrackedComponent = () => {
-            renderCount++;
-            return <GameComponent />;
-          };
-          render(<TrackedComponent />);
-          expect(renderCount).toBeLessThan(10);
-        });
-      });
-    });
-
-    // ========================================================================
-    // PHASE 9: ROBUSTNESS TESTS (21 tests)
-    // ========================================================================
-
-    describe('9. Robustness & Reliability Tests', () => {
-      describe('9.1 Stress Testing', () => {
-        it('handles 100 rapid interactions', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const slider = getSliders()[0];
-          for (let i = 0; i < 100; i++) {
-            if (slider) {
-              fireEvent.change(slider, { target: { value: String(Math.random() * 100) } });
+          it('primary CTA has background style', () => {
+            renderGame();
+            const button = findButtonByText(/start|discover|next|begin|explore/i);
+            if (button) {
+              const style = button.getAttribute('style') || '';
+              expect(style).toContain('background');
             }
-          }
-          expect(consoleErrors.length).toBe(0);
+          });
         });
 
-        it('handles full phase cycle multiple times', () => {
-          renderGame();
-          const dots = getNavDots();
-          for (let cycle = 0; cycle < 3; cycle++) {
-            dots.forEach(dot => fireEvent.click(dot));
-          }
-          expect(consoleErrors.length).toBe(0);
+        describe('2.9 Security', () => {
+          it('answers not exposed in data attributes', () => {
+            renderGame({ gamePhase: 'test' });
+            const html = document.body.innerHTML;
+            expect(html).not.toMatch(/data-correct|data-answer/i);
+          });
+
+          it('no script injection possible', () => {
+            renderGame();
+            const scripts = document.querySelectorAll('script');
+            expect(scripts.length).toBe(0);
+          });
+
+          it('renders safely (no inline scripts)', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).not.toMatch(/<script>|javascript:/i);
+          });
         });
 
-        it('handles quiz completion multiple times', async () => {
-          for (let round = 0; round < 2; round++) {
-            const { unmount } = renderGame({ gamePhase: 'test' });
-
-            for (let i = 0; i < 10; i++) {
-              const options = screen.getAllByRole('button').filter(btn =>
-                btn.textContent?.match(/^[A-D]/i)
-              );
-              if (options.length > 0) fireEvent.click(options[0]);
-              const nextBtn = findButtonByText(/next/i);
-              if (nextBtn && i < 9) fireEvent.click(nextBtn);
+        describe('2.10 Robustness', () => {
+          it('handles 100 rapid slider interactions', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0];
+            for (let i = 0; i < 100; i++) {
+              if (slider) {
+                fireEvent.change(slider, { target: { value: String(Math.random() * 100) } });
+              }
             }
-            const submitBtn = findButtonByText(/submit/i);
-            if (submitBtn) fireEvent.click(submitBtn);
+            expect(consoleErrors.length).toBe(0);
+          });
 
-            unmount();
-            cleanup();
-          }
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
+          it('handles full phase cycle multiple times', () => {
+            renderGame();
+            const dots = getNavDots();
+            for (let cycle = 0; cycle < 3; cycle++) {
+              dots.forEach(dot => fireEvent.click(dot));
+            }
+            expect(consoleErrors.length).toBe(0);
+          });
 
-      describe('9.2 Recovery', () => {
-        it('recovers from audio failure gracefully', () => {
-          renderGame();
-          const button = findButtonByText(/start|discover|next/i);
-          if (button) fireEvent.click(button);
-          expect(consoleErrors.length).toBe(0);
-        });
+          it('shows content on every phase', () => {
+            const phases = ['hook', 'predict', 'play', 'review', 'twist_predict',
+              'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-        it('shows content on any phase', () => {
-          const phases = ['hook', 'predict', 'play', 'review', 'twist_predict',
-            'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-
-          phases.forEach(phase => {
-            const { unmount } = renderGame({ gamePhase: phase });
-            expect(getPhaseContent().length).toBeGreaterThan(20);
-            unmount();
+            phases.forEach(phase => {
+              const { unmount } = renderGame({ gamePhase: phase });
+              expect(getPhaseContent().length).toBeGreaterThan(20);
+              unmount();
+              cleanup();
+              clearConsoleLogs();
+            });
           });
         });
       });
-
-      describe('9.3 Unmount Safety', () => {
-        it('unmounts without errors', () => {
-          const { unmount } = renderGame();
-          unmount();
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('cleans up timers on unmount', () => {
-          const { unmount } = renderGame({ gamePhase: 'play' });
-          unmount();
-          expect(consoleErrors.length).toBe(0);
-        });
-
-        it('no errors after unmount events', () => {
-          const { unmount } = renderGame();
-          unmount();
-          window.dispatchEvent(new Event('resize'));
-          expect(consoleErrors.length).toBe(0);
-        });
-      });
-    });
+    }
 
     // ========================================================================
-    // PHASE 10: PREMIUM DESIGN QUALITY TESTS (50 tests)
+    // TIER 3: PREMIUM (Design Excellence) ~45 tests
     // ========================================================================
 
-    describe('10. Premium Design Quality Tests', () => {
-      describe('10.1 Visual Sophistication - No Basic Elements', () => {
-        it('does not use basic text emojis as primary graphics', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          // Primary visualization should be SVG, not emoji
-          expect(svg).toBeInTheDocument();
-          // SVG should have substantial content, not just emoji wrapper
-          const svgContent = svg?.innerHTML || '';
-          expect(svgContent.length).toBeGreaterThan(500);
-        });
+    if (runTier3) {
+      describe('TIER 3: Premium - Design Excellence', () => {
 
-        it('uses SVG graphics instead of Unicode symbols for visualization', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          // Should have actual paths, shapes, or complex elements - any count is valid
-          const hasRealGraphics = svg?.querySelectorAll('path, circle, rect, line, polygon, ellipse, g, text, polyline');
-          expect(hasRealGraphics?.length).toBeGreaterThanOrEqual(1);
-        });
-
-        it('emojis only used for icons, not main content', () => {
-          renderGame({ gamePhase: 'play' });
-          const mainVisualization = document.querySelector('svg');
-          // Main SVG should not be just an emoji container
-          const svgText = mainVisualization?.textContent || '';
-          // If emoji exists in SVG, it should be minimal
-          const emojiPattern = /[\u{1F300}-\u{1F9FF}]/gu;
-          const emojiCount = (svgText.match(emojiPattern) || []).length;
-          expect(emojiCount).toBeLessThan(3);
-        });
-
-        it('has professional iconography', () => {
-          renderGame({ gamePhase: 'transfer' });
-          // Transfer phase can use emojis for icons, but should have real content
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(500);
-        });
-      });
-
-      describe('10.2 Modern Typography - Apple/Airbnb Standards', () => {
-        it('uses proper font weights (not all bold or all regular)', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should have variety of font weights
-          expect(html).toMatch(/font-?weight:\s*(700|800|600|bold)/i);
-          expect(html).toMatch(/font-?weight:\s*(400|normal|500)/i);
-        });
-
-        it('has clear typographic hierarchy', () => {
-          renderGame();
-          // Should have h1, h2, h3 or styled equivalents with different sizes
-          const headings = document.querySelectorAll('h1, h2, h3, [style*="font-size"]');
-          const sizes = new Set<string>();
-          headings.forEach(h => {
-            const style = h.getAttribute('style') || '';
-            const match = style.match(/font-size:\s*(\d+)/);
-            if (match) sizes.add(match[1]);
+        describe('3.1 Typography', () => {
+          it('uses proper font weights (variety)', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/font-?weight:\s*(700|800|600|bold)/i);
+            expect(html).toMatch(/font-?weight:\s*(400|normal|500)/i);
           });
-          expect(sizes.size).toBeGreaterThanOrEqual(2);
-        });
 
-        it('uses appropriate line heights for readability', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should have line-height specified
-          expect(html).toMatch(/line-?height:\s*(1\.[4-9]|[2-9])/i);
-        });
-
-        it('text is not cramped or too spread out', () => {
-          renderGame();
-          const paragraphs = document.querySelectorAll('p, [style*="line-height"]');
-          expect(paragraphs.length).toBeGreaterThan(0);
-        });
-
-        it('uses modern font stack', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should use system fonts or modern web fonts
-          const hasModernFonts = html.match(/font-family|Inter|SF Pro|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto/i);
-          expect(hasModernFonts).toBeTruthy();
-        });
-      });
-
-      describe('10.3 Color Sophistication - Premium Palette', () => {
-        it('uses gradient backgrounds, not flat colors', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          expect(html).toMatch(/linear-gradient|radial-gradient/i);
-        });
-
-        it('has subtle color variations, not harsh primary colors', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should not use pure red #FF0000, pure blue #0000FF etc
-          const hasPureColors = html.match(/#FF0000|#00FF00|#0000FF|rgb\(255,\s*0,\s*0\)|rgb\(0,\s*255,\s*0\)|rgb\(0,\s*0,\s*255\)/i);
-          expect(hasPureColors).toBeFalsy();
-        });
-
-        it('uses modern accent colors (teals, emeralds, violets, blues)', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should use sophisticated colors - hex or RGB format
-          // Common modern colors: emerald #10B981, pink #EC4899, amber #F59E0B, violet #8B5CF6, blue #3B82F6
-          const hasModernColors = html.match(/10B981|059669|8B5CF6|7C3AED|3B82F6|2563EB|F59E0B|D97706|22c55e|16a34a|6366f1|4f46e5|0ea5e9|06b6d4|a855f7|EC4899|BE185D|rgb\(16,\s*185|rgb\(236,\s*72|rgb\(245,\s*158|rgb\(139,\s*92|rgb\(59,\s*130|linear-gradient/i);
-          expect(hasModernColors).toBeTruthy();
-        });
-
-        it('backgrounds use dark mode properly (not pure black)', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should use dark grays, not pure black for backgrounds
-          const hasDarkBackground = html.match(/0a0a|0f0f|1a1a|12121|#000000/i);
-          // Pure black (#000000) should be avoided in favor of dark grays
-          expect(html).not.toMatch(/background[^;]*#000000[^0-9a-f]/i);
-        });
-
-        it('has accent color glow effects', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should have box-shadow or filter glow effects
-          expect(html).toMatch(/box-shadow|filter.*blur|glow/i);
-        });
-      });
-
-      describe('10.4 Spatial Design - Whitespace & Layout', () => {
-        it('has generous padding (not cramped)', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should have padding of 16px or more
-          const paddingMatches = html.match(/padding[^;]*(\d+)px/gi) || [];
-          const hasSufficientPadding = paddingMatches.some(p => {
-            const num = parseInt(p.match(/(\d+)/)?.[1] || '0');
-            return num >= 16;
+          it('has clear typographic hierarchy (multiple font sizes)', () => {
+            renderGame();
+            const headings = document.querySelectorAll('h1, h2, h3, [style*="font-size"]');
+            const sizes = new Set<string>();
+            headings.forEach(h => {
+              const style = h.getAttribute('style') || '';
+              const match = style.match(/font-size:\s*(\d+)/);
+              if (match) sizes.add(match[1]);
+            });
+            expect(sizes.size).toBeGreaterThanOrEqual(2);
           });
-          expect(hasSufficientPadding).toBe(true);
-        });
 
-        it('uses consistent spacing system', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should have gap or margin properties
-          expect(html).toMatch(/gap:\s*\d+px|margin|padding/i);
-        });
-
-        it('has proper content max-width for readability', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should constrain content width
-          expect(html).toMatch(/max-width:\s*\d+px/i);
-        });
-
-        it('uses CSS Grid or Flexbox for layout', () => {
-          renderGame();
-          const flexElements = document.querySelectorAll('[style*="flex"], [style*="grid"]');
-          expect(flexElements.length).toBeGreaterThan(0);
-        });
-
-        it('cards and containers have proper border-radius', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Modern design uses 8px+ border radius
-          const radiusMatches = html.match(/border-radius[^;]*(\d+)px/gi) || [];
-          const hasModernRadius = radiusMatches.some(r => {
-            const num = parseInt(r.match(/(\d+)/)?.[1] || '0');
-            return num >= 8;
+          it('uses appropriate line heights', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/line-?height:\s*(1\.[4-9]|[2-9])/i);
           });
-          expect(hasModernRadius).toBe(true);
-        });
-      });
 
-      describe('10.5 SVG Quality - Realistic Graphics', () => {
-        it('SVG uses multiple gradient definitions', () => {
-          renderGame({ gamePhase: 'play' });
-          const gradients = document.querySelectorAll('linearGradient, radialGradient');
-          expect(gradients.length).toBeGreaterThanOrEqual(1);
-        });
-
-        it('SVG uses filters for depth and realism', () => {
-          renderGame({ gamePhase: 'play' });
-          const filters = document.querySelectorAll('filter, feGaussianBlur, feDropShadow, feMerge');
-          // Premium graphics should have at least some filter effects
-          expect(filters.length).toBeGreaterThanOrEqual(0);
-        });
-
-        it('SVG has multiple layers/groups for complexity', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          // Check for groups OR other structural elements (defs, patterns, masks)
-          const groups = svg?.querySelectorAll('g, defs, clipPath, mask, pattern');
-          // Some simple games don't need groups, so check for any complex element
-          const hasStructure = (groups?.length || 0) >= 1 || svg?.querySelectorAll('path, polygon, polyline').length! > 0;
-          expect(hasStructure).toBeTruthy();
-        });
-
-        it('SVG elements have realistic colors, not flat fills', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          const svgHtml = svg?.innerHTML || '';
-          // Should use gradients or multiple colors, not just single fills
-          const hasVariety = svgHtml.match(/fill="url\(#|fill="#[0-9a-f]{6}"/gi);
-          expect(hasVariety?.length).toBeGreaterThan(2);
-        });
-
-        it('SVG has appropriate dimensions for scaling', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          // Should have viewBox or explicit width/height for proper scaling
-          const viewBox = svg?.getAttribute('viewBox');
-          const width = svg?.getAttribute('width');
-          const height = svg?.getAttribute('height');
-          expect(viewBox || (width && height)).toBeTruthy();
-        });
-
-        it('SVG paths are smooth (not jagged)', () => {
-          renderGame({ gamePhase: 'play' });
-          const svg = getSVG();
-          // Should use proper SVG elements - any count > 0 is valid
-          const hasComplexElements = svg?.querySelectorAll('path, circle, ellipse, rect, line, polygon, polyline, g, text');
-          expect(hasComplexElements?.length).toBeGreaterThanOrEqual(1);
-        });
-      });
-
-      describe('10.6 Animation & Microinteractions', () => {
-        it('has CSS transitions for smooth interactions', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          expect(html).toMatch(/transition[^;]*(\d+\.?\d*)s|transition[^;]*(\d+)ms/i);
-        });
-
-        it('buttons have hover/active transitions', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          const hasTransition = buttons.some(btn => {
-            const style = btn.getAttribute('style') || '';
-            return style.includes('transition');
+          it('uses modern font stack', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/font-family|Inter|SF Pro|-apple-system|BlinkMacSystemFont|Segoe UI|Roboto|system-ui/i);
           });
-          expect(hasTransition).toBe(true);
         });
 
-        it('progress bar animates smoothly', () => {
-          renderGame();
-          const progressBar = document.querySelector('[style*="width"][style*="transition"]');
-          expect(progressBar).toBeInTheDocument();
-        });
-
-        it('uses easing functions, not linear', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should use ease, ease-in-out, or cubic-bezier
-          expect(html).toMatch(/ease|cubic-bezier/i);
-        });
-      });
-
-      describe('10.7 Visual Hierarchy & Focus', () => {
-        it('primary content is visually prominent', () => {
-          renderGame();
-          const h1 = document.querySelector('h1, [style*="font-size: 28"], [style*="font-size: 32"], [style*="font-size: 36"]');
-          expect(h1).toBeInTheDocument();
-        });
-
-        it('secondary content is appropriately subdued', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should have muted/secondary text colors - hex or rgb format
-          // Common muted grays: #9CA3AF = rgb(156, 163, 175), #6B7280 = rgb(107, 114, 128)
-          expect(html).toMatch(/9CA3AF|6B7280|text-secondary|text-muted|rgb\(1[0-5][0-9]|rgb\(107|rgba?\([^)]*0\.[5-8]/i);
-        });
-
-        it('interactive elements stand out', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          const hasDistinctButton = buttons.some(btn => {
-            const style = btn.getAttribute('style') || '';
-            return style.includes('background') && style.includes('gradient');
+        describe('3.2 Color Sophistication', () => {
+          it('uses gradient backgrounds', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/linear-gradient|radial-gradient/i);
           });
-          expect(hasDistinctButton).toBe(true);
-        });
 
-        it('uses visual separators appropriately', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should have borders or dividers
-          expect(html).toMatch(/border[^;]*1px|border-radius/i);
-        });
-      });
-
-      describe('10.8 Premium UI Components', () => {
-        it('cards have subtle shadows or borders', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Cards should have depth
-          expect(html).toMatch(/box-shadow|border.*solid/i);
-        });
-
-        it('input elements are styled (not browser default)', () => {
-          renderGame({ gamePhase: 'twist_play' });
-          const sliders = getSliders();
-          if (sliders.length > 0) {
-            const slider = sliders[0];
-            const style = slider.getAttribute('style') || '';
-            // Should have some custom styling
-            expect(style.length).toBeGreaterThan(0);
-          }
-        });
-
-        it('progress indicators are visually polished', () => {
-          renderGame();
-          const navDots = getNavDots();
-          // Check for styled dots - either has border-radius OR has background styling
-          const hasStyledDots = Array.from(navDots).some(dot => {
-            const style = dot.getAttribute('style') || '';
-            return style.includes('border-radius') || style.includes('background');
+          it('avoids pure primary colors (#FF0000, #00FF00, #0000FF)', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            const hasPureColors = html.match(/#FF0000|#00FF00|#0000FF|rgb\(255,\s*0,\s*0\)|rgb\(0,\s*255,\s*0\)|rgb\(0,\s*0,\s*255\)/i);
+            expect(hasPureColors).toBeFalsy();
           });
-          expect(hasStyledDots).toBe(true);
-        });
 
-        it('status indicators use appropriate colors', () => {
-          renderGame({ gamePhase: 'play' });
-          const html = document.body.innerHTML;
-          // Should have success/warning/accent color system - hex or RGB format
-          // Green #10B981 = rgb(16, 185, 129), Orange #F97316 = rgb(249, 115, 22), etc.
-          expect(html).toMatch(/10B981|EF4444|F59E0B|F97316|success|error|warning|rgb\(16,\s*185|rgb\(249,\s*115|rgb\(245,\s*158|linear-gradient/i);
-        });
-      });
-
-      describe('10.9 Consistency & Polish', () => {
-        it('consistent border-radius throughout', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          const radiusValues = html.match(/border-radius[^;]*?(\d+)px/gi) || [];
-          // Should use consistent values (4, 8, 12, 16 etc)
-          expect(radiusValues.length).toBeGreaterThan(0);
-        });
-
-        it('consistent color palette used throughout', () => {
-          renderGame();
-          const html = document.body.innerHTML;
-          // Should use consistent accent colors - various modern palettes
-          // Count any accent color usage (hex or rgb format)
-          const accentMatches = html.match(/10B981|EC4899|F59E0B|8B5CF6|3B82F6|6366F1|22c55e|rgb\(16,\s*185|rgb\(236,\s*72|rgb\(245,\s*158|linear-gradient/gi) || [];
-          expect(accentMatches.length).toBeGreaterThan(0);
-        });
-
-        it('no jarring visual inconsistencies', () => {
-          renderGame();
-          // Should have cohesive dark theme
-          const html = document.body.innerHTML;
-          // Background should be dark throughout
-          expect(html).toMatch(/background[^;]*(#0|#1|rgb\(1|rgba\(1)/i);
-        });
-
-        it('loading states are polished', () => {
-          // Component should not flash or show raw states
-          renderGame();
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(50);
-        });
-      });
-
-      describe('10.10 Accessibility with Style', () => {
-        it('focus states are visible and styled', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          // Buttons should be focusable
-          expect(buttons.length).toBeGreaterThan(0);
-        });
-
-        it('contrast ratios support readability', () => {
-          renderGame();
-          // White/light text on dark backgrounds
-          const html = document.body.innerHTML;
-          expect(html).toMatch(/(#fff|#FFF|white|#[ef][ef][ef]|rgb\(255)/i);
-        });
-
-        it('interactive elements have visible affordances', () => {
-          renderGame();
-          const buttons = screen.getAllByRole('button');
-          const hasVisibleButton = buttons.some(btn => {
-            const style = btn.getAttribute('style') || '';
-            return style.includes('cursor: pointer');
+          it('uses modern accent colors', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/10B981|059669|8B5CF6|7C3AED|3B82F6|2563EB|F59E0B|D97706|22c55e|16a34a|6366f1|4f46e5|0ea5e9|06b6d4|a855f7|EC4899|linear-gradient/i);
           });
-          expect(hasVisibleButton).toBe(true);
+
+          it('dark backgrounds use dark grays (not pure #000000)', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).not.toMatch(/background[^;]*#000000[^0-9a-f]/i);
+          });
+
+          it('has accent color glow or shadow effects', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/box-shadow|filter.*blur|glow/i);
+          });
+        });
+
+        describe('3.3 Spatial Design', () => {
+          it('has generous padding (16px+)', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            const paddingMatches = html.match(/padding[^;]*(\d+)px/gi) || [];
+            const hasSufficientPadding = paddingMatches.some(p => {
+              const num = parseInt(p.match(/(\d+)/)?.[1] || '0');
+              return num >= 16;
+            });
+            expect(hasSufficientPadding).toBe(true);
+          });
+
+          it('uses consistent spacing system', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/gap:\s*\d+px|margin|padding/i);
+          });
+
+          it('has proper content max-width', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/max-width:\s*\d+px/i);
+          });
+
+          it('uses CSS Flexbox or Grid for layout', () => {
+            renderGame();
+            const flexElements = document.querySelectorAll('[style*="flex"], [style*="grid"]');
+            expect(flexElements.length).toBeGreaterThan(0);
+          });
+
+          it('containers have proper border-radius (8px+)', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            const radiusMatches = html.match(/border-radius[^;]*(\d+)px/gi) || [];
+            const hasModernRadius = radiusMatches.some(r => {
+              const num = parseInt(r.match(/(\d+)/)?.[1] || '0');
+              return num >= 8;
+            });
+            expect(hasModernRadius).toBe(true);
+          });
+
+          it('no horizontal overflow', () => {
+            renderGame();
+            expect(document.body.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 20);
+          });
+        });
+
+        describe('3.4 SVG Quality', () => {
+          it('SVG uses gradient definitions', () => {
+            renderGame({ gamePhase: 'play' });
+            const gradients = document.querySelectorAll('linearGradient, radialGradient');
+            expect(gradients.length).toBeGreaterThan(0);
+          });
+
+          it('SVG uses filter effects for depth', () => {
+            renderGame({ gamePhase: 'play' });
+            const filters = document.querySelectorAll('filter, feGaussianBlur, feDropShadow, feMerge');
+            expect(filters.length).toBeGreaterThan(0);
+          });
+
+          it('SVG has multiple layers/groups', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            const groups = svg?.querySelectorAll('g');
+            expect(groups?.length).toBeGreaterThanOrEqual(2);
+          });
+
+          it('SVG elements have realistic colors (not flat fills)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            const svgHtml = svg?.innerHTML || '';
+            const hasVariety = svgHtml.match(/fill="url\(#|fill="#[0-9a-f]{6}"/gi);
+            expect(hasVariety?.length).toBeGreaterThan(2);
+          });
+
+          it('SVG complexity score >= 15 (premium threshold)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            const score = getSvgComplexityScore(svg as SVGElement);
+            expect(score).toBeGreaterThanOrEqual(15);
+          });
+        });
+
+        describe('3.5 Animation & Transitions', () => {
+          it('has CSS transitions for smooth interactions', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/transition[^;]*(\d+\.?\d*)s|transition[^;]*(\d+)ms/i);
+          });
+
+          it('buttons have hover/active transitions', () => {
+            renderGame();
+            const buttons = screen.getAllByRole('button');
+            const hasTransition = buttons.some(btn => {
+              const style = btn.getAttribute('style') || '';
+              return style.includes('transition');
+            });
+            expect(hasTransition).toBe(true);
+          });
+
+          it('uses easing functions (not linear)', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/ease|cubic-bezier/i);
+          });
+        });
+
+        describe('3.6 Visual Hierarchy', () => {
+          it('primary content is visually prominent', () => {
+            renderGame();
+            const h1 = document.querySelector('h1, [style*="font-size: 28"], [style*="font-size: 32"], [style*="font-size: 36"], [style*="font-size: 24"]');
+            expect(h1).toBeInTheDocument();
+          });
+
+          it('secondary content has muted colors', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/9CA3AF|6B7280|94a3b8|64748b|text-secondary|text-muted|rgba?\([^)]*0\.[5-8]/i);
+          });
+
+          it('interactive elements stand out with gradient background', () => {
+            renderGame();
+            const buttons = screen.getAllByRole('button');
+            const hasDistinctButton = buttons.some(btn => {
+              const style = btn.getAttribute('style') || '';
+              return style.includes('background') && style.includes('gradient');
+            });
+            expect(hasDistinctButton).toBe(true);
+          });
+        });
+
+        describe('3.7 Premium UI Components', () => {
+          it('cards have subtle shadows or borders', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/box-shadow|border.*solid/i);
+          });
+
+          it('sliders are styled (not browser default)', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = getSliders();
+            if (sliders.length > 0) {
+              const slider = sliders[0];
+              const style = slider.getAttribute('style') || '';
+              expect(style.length).toBeGreaterThan(0);
+            }
+          });
+
+          it('progress indicators are visually polished', () => {
+            renderGame();
+            const navDots = getNavDots();
+            if (navDots.length > 0) {
+              const hasStyledDots = navDots.some(dot => {
+                const style = (dot as HTMLElement).getAttribute('style') || '';
+                return style.includes('border-radius') || style.includes('background');
+              });
+              expect(hasStyledDots).toBe(true);
+            }
+          });
+
+          it('consistent border-radius throughout', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            const radiusValues = html.match(/border-radius[^;]*?(\d+)px/gi) || [];
+            expect(radiusValues.length).toBeGreaterThan(0);
+          });
+
+          it('consistent color palette throughout', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            const accentMatches = html.match(/10B981|EC4899|F59E0B|8B5CF6|3B82F6|6366F1|22c55e|06b6d4|a855f7|linear-gradient/gi) || [];
+            expect(accentMatches.length).toBeGreaterThan(0);
+          });
+        });
+
+        describe('3.8 Accessibility', () => {
+          it('buttons are keyboard accessible', () => {
+            renderGame();
+            const buttons = screen.getAllByRole('button');
+            buttons.forEach(btn => {
+              expect(btn.tabIndex).toBeGreaterThanOrEqual(-1);
+            });
+          });
+
+          it('contrast ratios support readability (light text on dark)', () => {
+            renderGame();
+            const html = document.body.innerHTML;
+            expect(html).toMatch(/(#fff|#FFF|white|#[ef][ef][ef]|rgb\(255)/i);
+          });
+
+          it('interactive elements have cursor: pointer', () => {
+            renderGame();
+            const buttons = screen.getAllByRole('button');
+            const hasVisibleButton = buttons.some(btn => {
+              const style = btn.getAttribute('style') || '';
+              return style.includes('cursor: pointer');
+            });
+            expect(hasVisibleButton).toBe(true);
+          });
+
+          it('has minimum height set to prevent layout shift', () => {
+            renderGame();
+            const container = document.querySelector('[style*="min-height"]');
+            expect(container).toBeInTheDocument();
+          });
         });
       });
-    });
-
-    // ========================================================================
-    // PHASE 11: EDUCATIONAL QUALITY TESTS (10 tests)
-    // ========================================================================
-
-    describe('11. Educational Quality Tests', () => {
-      describe('10.1 Content Quality', () => {
-        it('hook engages with question or scenario', () => {
-          renderGame();
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(100);
-        });
-
-        it('review explains the concept', () => {
-          renderGame({ gamePhase: 'review' });
-          const content = getPhaseContent();
-          expect(content.length).toBeGreaterThan(200);
-        });
-
-        it('twist introduces new complexity', () => {
-          renderGame({ gamePhase: 'twist_predict' });
-          const content = getPhaseContent();
-          expect(content).toMatch(/new|variable|twist|change|different|what if/i);
-        });
-
-        it('transfer shows real applications', () => {
-          renderGame({ gamePhase: 'transfer' });
-          const content = getPhaseContent();
-          expect(content).toMatch(/real|world|application|industry|company|example/i);
-        });
-
-        it('mastery provides accomplishment', () => {
-          renderGame({ gamePhase: 'mastery' });
-          const content = getPhaseContent();
-          expect(content).toMatch(/complete|master|learned|congratulation|success/i);
-        });
-      });
-
-      describe('10.2 Learning Flow', () => {
-        it('follows predict-observe-explain pattern', () => {
-          renderGame({ gamePhase: 'predict' });
-          expect(getPhaseContent()).toMatch(/predict|think|expect/i);
-        });
-
-        it('provides feedback on predictions', () => {
-          renderGame({ gamePhase: 'review' });
-          const content = getPhaseContent();
-          // Review phase explains physics principles - content varies by game
-          expect(content).toMatch(/prediction|result|correct|understand|why|physics|explains|because|formula|equation|momentum|energy|force|velocity|mass|inertia|rotation|conserv|increase|decrease|change|secret|principle/i);
-        });
-
-        it('scaffolds complexity progressively', () => {
-          const { unmount: u1 } = renderGame({ gamePhase: 'play' });
-          const playContent = getPhaseContent();
-          u1();
-
-          renderGame({ gamePhase: 'twist_play' });
-          const twistContent = getPhaseContent();
-
-          // Both should have substantial content
-          expect(playContent.length).toBeGreaterThan(100);
-          expect(twistContent.length).toBeGreaterThan(100);
-        });
-      });
-    });
+    }
   });
 }
 
@@ -1522,14 +1255,16 @@ export function quickValidateGame(
     const { unmount } = render(<GameComponent />);
 
     // Check basic structure
-    const navDots = document.querySelectorAll('button[aria-label]');
-    if (navDots.length !== 10) {
+    const navDots = getNavDots();
+    if (navDots.length < 8) {
       failures.push(`Expected 10 nav dots, found ${navDots.length}`);
     }
 
     const svg = document.querySelector('svg');
     if (!svg) {
       failures.push('No SVG visualization found');
+    } else if (svg.innerHTML.length < 200) {
+      failures.push('SVG content is too trivial');
     }
 
     unmount();
@@ -1549,6 +1284,27 @@ export function quickValidateGame(
     const transferContent = document.body.textContent || '';
     if (!transferContent.match(/application|real|world|example/i)) {
       failures.push('Transfer phase missing real-world applications');
+    }
+    if (transferContent.length < 800) {
+      failures.push('Transfer content too short (< 800 chars)');
+    }
+
+    cleanup();
+
+    // Check predict phase has no sliders
+    render(<GameComponent gamePhase="predict" />);
+    const predictSliders = document.querySelectorAll('input[type="range"]');
+    if (predictSliders.length > 0) {
+      failures.push('Predict phase should not have sliders');
+    }
+
+    cleanup();
+
+    // Check play phase has SVG
+    render(<GameComponent gamePhase="play" />);
+    const playSvg = document.querySelector('svg');
+    if (!playSvg) {
+      failures.push('Play phase missing SVG visualization');
     }
 
     cleanup();

@@ -51,15 +51,15 @@ const phaseOrder: Phase[] = [
 ];
 
 const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
+  hook: 'Introduction',
   predict: 'Predict',
-  play: 'Lab',
-  review: 'Review',
-  twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
-  twist_review: 'Twist Review',
-  transfer: 'Transfer',
-  test: 'Test',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Explore',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
   mastery: 'Mastery'
 };
 
@@ -290,13 +290,19 @@ export default function ElectromagnetRenderer({
   };
 
   // ─── State ───────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
+  });
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
   const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
   const [showTestResults, setShowTestResults] = useState(false);
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
+  const [testSubmitted, setTestSubmitted] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
 
@@ -1107,56 +1113,42 @@ export default function ElectromagnetRenderer({
 
   // PHASE 1: HOOK - Engaging introduction
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6">
-      {/* Premium badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
-        <span className="text-purple-400/80 text-sm font-medium tracking-wide uppercase">Electromagnetism</span>
-      </div>
-
-      {/* Gradient title */}
-      <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '70vh', padding: '32px 24px' }}>
+      <h1 style={{ fontSize: '36px', fontWeight: 700, textAlign: 'center', marginBottom: '12px', color: '#c084fc' }}>
         The Electromagnet
       </h1>
 
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
+      <p style={{ color: '#94a3b8', fontSize: '18px', textAlign: 'center', marginBottom: '32px', maxWidth: '480px', fontWeight: 400 }}>
         How does electricity create magnetic force?
       </p>
 
-      {/* Premium card with hook content */}
-      <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-        <div className="text-center mb-6">
-          <div className="text-6xl mb-4">🧲</div>
-          <p className="text-gray-300 text-lg leading-relaxed">
-            A junkyard crane lifts an entire <span className="text-yellow-400 font-semibold">2-ton car</span> using nothing but electricity flowing through wire coils.
+      <div style={{ maxWidth: '420px', width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px', marginBottom: '32px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🧲</div>
+          <p style={{ color: '#d1d5db', fontSize: '16px', lineHeight: 1.6, fontWeight: 400 }}>
+            A junkyard crane lifts an entire <span style={{ color: '#facc15', fontWeight: 600 }}>2-ton car</span> using nothing but electricity flowing through wire coils.
           </p>
         </div>
 
-        <div className="bg-slate-800/50 rounded-xl p-4 mb-4">
-          <p className="text-blue-300 font-medium text-center">
+        <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <p style={{ color: '#93c5fd', fontWeight: 500, textAlign: 'center' }}>
             How can invisible electric current create such powerful magnetic force?
           </p>
         </div>
 
-        <p className="text-slate-400 text-sm text-center">
+        <p style={{ color: '#94a3b8', fontSize: '14px', textAlign: 'center', fontWeight: 400 }}>
           Discover the 200-year-old discovery that powers MRI machines, electric cars, and high-speed trains.
         </p>
       </div>
 
-      {/* CTA Button */}
       <button
         onClick={() => goToPhase('predict')}
-        className="group px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 flex items-center gap-2"
+        style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #9333ea, #3b82f6)', borderRadius: '12px', border: 'none', color: 'white', fontWeight: 600, fontSize: '16px', cursor: 'pointer', transition: 'all 0.3s ease' }}
       >
         Discover the Secret
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
       </button>
 
-      {/* Hint text */}
-      <p className="text-slate-500 text-sm mt-6">
+      <p style={{ color: '#64748b', fontSize: '14px', marginTop: '24px', fontWeight: 400 }}>
         Learn how electricity and magnetism are connected
       </p>
     </div>
@@ -1267,6 +1259,7 @@ export default function ElectromagnetRenderer({
                   onGameEvent?.({ type: 'current_changed', data: { current: Number(e.target.value) } });
                 }}
                 className="w-full accent-yellow-500"
+                style={{ width: '100%', accentColor: '#eab308', cursor: 'pointer' }}
               />
               <div className="flex justify-between text-xs text-slate-500 mt-1">
                 <span>-5A</span>
@@ -1290,6 +1283,7 @@ export default function ElectromagnetRenderer({
                   onGameEvent?.({ type: 'parameter_changed', data: { coilTurns: Number(e.target.value) } });
                 }}
                 className="w-full accent-orange-500"
+                style={{ width: '100%', accentColor: '#f97316', cursor: 'pointer' }}
               />
             </div>
           </div>
@@ -1432,6 +1426,55 @@ export default function ElectromagnetRenderer({
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-pink-400 mb-6">The Motor Question</h2>
+
+      {/* SVG diagram showing DC vs AC current concept */}
+      <svg width="320" height="180" viewBox="0 0 320 180" style={{ marginBottom: 16 }}>
+        <defs>
+          <linearGradient id="twpEmagCoil" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#b45309" />
+          </linearGradient>
+          <linearGradient id="twpEmagCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="50%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#64748b" />
+          </linearGradient>
+          <filter id="twpEmagGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        <rect width="320" height="180" rx="12" fill="#0f172a" />
+        {/* DC side */}
+        <text x="80" y="20" textAnchor="middle" fill="#eab308" fontSize="11" fontWeight="bold" fontFamily="sans-serif">DC (steady)</text>
+        <rect x="40" y="55" width="80" height="20" rx="3" fill="url(#twpEmagCore)" />
+        {[0,1,2,3].map(i => (
+          <ellipse key={`dc-${i}`} cx={50 + i * 20} cy={65} rx="7" ry="16" fill="none" stroke="url(#twpEmagCoil)" strokeWidth="2" />
+        ))}
+        <text x="30" y="70" fill="#3b82f6" fontSize="12" fontWeight="bold" fontFamily="sans-serif">S</text>
+        <text x="125" y="70" fill="#ef4444" fontSize="12" fontWeight="bold" fontFamily="sans-serif">N</text>
+        <path d="M 30,65 C 30,40 130,40 130,65" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
+        <path d="M 30,65 C 30,90 130,90 130,65" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
+        {/* Arrow showing steady current */}
+        <line x1="60" y1="100" x2="100" y2="100" stroke="#eab308" strokeWidth="2" />
+        <polygon points="100,95 110,100 100,105" fill="#eab308" />
+        <text x="80" y="115" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="sans-serif">Fixed poles</text>
+        {/* AC side */}
+        <text x="240" y="20" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold" fontFamily="sans-serif">AC (alternating)</text>
+        <rect x="200" y="55" width="80" height="20" rx="3" fill="url(#twpEmagCore)" />
+        {[0,1,2,3].map(i => (
+          <ellipse key={`ac-${i}`} cx={210 + i * 20} cy={65} rx="7" ry="16" fill="none" stroke="url(#twpEmagCoil)" strokeWidth="2" />
+        ))}
+        <text x="190" y="70" fill="#ef4444" fontSize="12" fontWeight="bold" fontFamily="sans-serif">N</text>
+        <text x="285" y="70" fill="#3b82f6" fontSize="12" fontWeight="bold" fontFamily="sans-serif">S</text>
+        <text x="240" y="50" fill="#22c55e" fontSize="14" fontFamily="sans-serif">???</text>
+        {/* AC wave */}
+        <path d="M 210,100 Q 220,85 230,100 Q 240,115 250,100 Q 260,85 270,100" fill="none" stroke="#22c55e" strokeWidth="2" />
+        <text x="240" y="125" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="sans-serif">Poles flip?</text>
+        {/* Divider */}
+        <line x1="160" y1="25" x2="160" y2="165" stroke="#334155" strokeWidth="1" strokeDasharray="4,4" />
+        <text x="160" y="170" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="sans-serif">vs</text>
+      </svg>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
@@ -1751,6 +1794,17 @@ export default function ElectromagnetRenderer({
           )}
         </div>
 
+        {/* Numeric stats summary */}
+        <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(30,41,59,0.5)', borderRadius: '12px', maxWidth: '640px', width: '100%' }}>
+          <p style={{ color: 'rgba(148,163,184,1)', fontSize: '13px', lineHeight: 1.7, fontWeight: 400 }}>
+            Electromagnets are used in over 40000 MRI machines worldwide generating fields of 7 Tesla for medical imaging.
+            Maglev trains achieve speeds of 603 km/h with a levitation gap of just 10mm.
+            Electric motors consume 50% of global electricity with 95% peak efficiency and represent a $150B market.
+            Industrial lifting magnets can lift 20000 kg using 500 A of current at 4 Tesla field strength.
+            Superconducting magnets at the LHC carry 11000 A at 1.9 Kelvin to bend particles in a 27 km ring.
+          </p>
+        </div>
+
         {/* Progress */}
         <div className="mt-6 flex items-center gap-3">
           <span className="text-slate-400">Progress:</span>
@@ -1781,171 +1835,130 @@ export default function ElectromagnetRenderer({
 
   // PHASE 9: TEST - 10 scenario-based questions with explanations
   const renderTest = () => {
-    const currentQuestion = testAnswers.findIndex(a => a === -1);
-    const answeredCount = testAnswers.filter(a => a !== -1).length;
-    const allAnswered = !testAnswers.includes(-1);
+    const q = testQuestions[currentQuestionIdx];
+    const selectedAnswer = testAnswers[currentQuestionIdx];
+    const isConfirmed = confirmedIndex !== null && confirmedIndex === currentQuestionIdx;
+    const totalAnswered = testAnswers.filter(a => a !== -1).length;
 
-    return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Knowledge Assessment</h2>
-        <p className="text-slate-400 mb-6">Test your understanding with scenario-based questions</p>
-
-        {!showTestResults ? (
-          <div className="w-full max-w-3xl">
-            {/* Progress indicator */}
-            <div className="flex justify-center gap-1 mb-6">
-              {testQuestions.map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    testAnswers[i] !== -1
-                      ? testQuestions[i].options[testAnswers[i]]?.correct
-                        ? 'bg-emerald-500'
-                        : 'bg-red-500'
-                      : i === currentQuestion
-                      ? 'bg-purple-500 animate-pulse'
-                      : 'bg-slate-600'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Questions */}
-            <div className="space-y-6">
-              {testQuestions.map((q, qIndex) => (
-                <div
-                  key={qIndex}
-                  className={`bg-slate-800/50 rounded-xl p-5 transition-all ${
-                    testAnswers[qIndex] !== -1 ? 'opacity-75' : ''
-                  }`}
-                >
-                  {/* Scenario */}
-                  <div className="bg-slate-700/50 rounded-lg p-3 mb-3">
-                    <p className="text-slate-400 text-sm italic">{q.scenario}</p>
-                  </div>
-
-                  {/* Question */}
-                  <p className="text-white font-medium mb-4">
-                    <span className="text-purple-400 font-bold mr-2">Q{qIndex + 1}.</span>
-                    {q.question}
-                  </p>
-
-                  {/* Options */}
-                  <div className="grid gap-2">
-                    {q.options.map((option, oIndex) => {
-                      const isSelected = testAnswers[qIndex] === oIndex;
-                      const isAnswered = testAnswers[qIndex] !== -1;
-                      const isCorrect = option.correct;
-
-                      return (
-                        <button
-                          key={oIndex}
-                          onClick={() => handleTestAnswer(qIndex, oIndex)}
-                          disabled={isAnswered}
-                          className={`p-3 rounded-lg text-left text-sm transition-all ${
-                            isAnswered
-                              ? isSelected
-                                ? isCorrect
-                                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                                  : 'bg-red-600/40 border-2 border-red-400'
-                                : isCorrect
-                                ? 'bg-emerald-600/20 border border-emerald-400/50'
-                                : 'bg-slate-700/30 border border-transparent opacity-50'
-                              : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-                          }`}
-                        >
-                          <span className="font-bold mr-2">{option.id.toUpperCase()}.</span>
-                          {option.text}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Explanation (shown after answering) */}
-                  {testAnswers[qIndex] !== -1 && (
-                    <div className="mt-3 p-3 bg-blue-900/30 border border-blue-600/30 rounded-lg">
-                      <p className="text-blue-300 text-sm">
-                        <span className="font-semibold">Explanation: </span>
-                        {q.explanation}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Submit button */}
+    if (testSubmitted) {
+      const score = calculateScore();
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 24px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Knowledge Assessment</h2>
+          <p style={{ color: '#94a3b8', marginBottom: '24px', fontWeight: 400 }}>Electromagnet physics mastery test covering core concepts and real-world applications</p>
+          <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '32px', maxWidth: '480px', width: '100%', textAlign: 'center' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>{score >= 7 ? '🏆' : '📚'}</div>
+            <h3 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>Score: {score}/{testQuestions.length}</h3>
+            <p style={{ color: '#cbd5e1', marginBottom: '24px', fontWeight: 400 }}>
+              {score >= 7 ? 'Excellent! You have mastered electromagnet physics!' : 'Keep studying! Review the concepts and try again.'}
+            </p>
             <button
-              onClick={() => {
-                const score = calculateScore();
-                setTestScore?.(score);
-                setShowTestResults(true);
-                playSound(score >= 7 ? 'complete' : 'incorrect');
-                onGameEvent?.({ type: 'test_completed', data: { score, total: 10 } });
-              }}
-              disabled={!allAnswered}
-              className={`w-full mt-6 py-4 rounded-xl font-semibold text-lg transition-all ${
-                !allAnswered
-                  ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500'
-              }`}
+              onClick={() => { if (score >= 7) { goToPhase('mastery'); } else { setTestSubmitted(false); setTestAnswers(Array(10).fill(-1)); setCurrentQuestionIdx(0); setConfirmedIndex(null); goToPhase('review'); } }}
+              style={{ padding: '12px 32px', background: score >= 7 ? 'linear-gradient(135deg, #059669, #0d9488)' : 'linear-gradient(135deg, #9333ea, #3b82f6)', borderRadius: '12px', border: 'none', color: 'white', fontWeight: 600, fontSize: '16px', cursor: 'pointer' }}
             >
-              {allAnswered ? 'Submit Answers' : `Answer all questions (${answeredCount}/10)`}
+              {score >= 7 ? 'Claim Your Mastery Badge' : 'Review and Try Again'}
             </button>
           </div>
-        ) : (
-          /* Results */
-          <div className="bg-slate-800/50 rounded-2xl p-8 max-w-lg w-full text-center">
-            <div className="text-7xl mb-4">
-              {calculateScore() >= 7 ? '🏆' : '📚'}
-            </div>
-            <h3 className="text-3xl font-bold text-white mb-2">
-              Score: {calculateScore()}/10
-            </h3>
-            <p className="text-slate-300 mb-6">
-              {calculateScore() >= 7
-                ? 'Excellent! You have mastered electromagnet physics!'
-                : 'Keep studying! Review the concepts and try again.'}
-            </p>
+        </div>
+      );
+    }
 
-            {/* Score breakdown */}
-            <div className="flex justify-center gap-1 mb-6">
-              {testQuestions.map((q, i) => (
-                <div
-                  key={i}
-                  className={`w-4 h-4 rounded-full ${
-                    testAnswers[i] !== -1 && q.options[testAnswers[i]]?.correct
-                      ? 'bg-emerald-500'
-                      : 'bg-red-500'
-                  }`}
-                />
-              ))}
-            </div>
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>Knowledge Assessment</h2>
+        <p style={{ color: '#94a3b8', marginBottom: '24px', fontWeight: 400 }}>Electromagnet physics mastery test covering core concepts and real-world applications of electromagnetic force, field strength, motors, superconductors, and practical engineering</p>
 
-            {calculateScore() >= 7 ? (
+        {/* Progress */}
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
+          {testQuestions.map((_, i) => (
+            <div key={i} style={{ width: '12px', height: '12px', borderRadius: '50%', background: testAnswers[i] !== -1 ? (testQuestions[i].options[testAnswers[i]]?.correct ? '#22c55e' : '#ef4444') : i === currentQuestionIdx ? '#a855f7' : '#334155', transition: 'all 0.3s' }} />
+          ))}
+        </div>
+        <p style={{ color: '#64748b', fontSize: '13px', marginBottom: '16px' }}>Question {currentQuestionIdx + 1} of {testQuestions.length}</p>
+
+        {/* Current question */}
+        <div style={{ maxWidth: '640px', width: '100%', background: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '24px' }}>
+          <div style={{ background: 'rgba(51,65,85,0.5)', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+            <p style={{ color: '#94a3b8', fontSize: '14px', fontStyle: 'italic', fontWeight: 400 }}>{q.scenario}</p>
+          </div>
+          <p style={{ color: 'white', fontWeight: 500, marginBottom: '16px' }}>
+            <span style={{ color: '#a855f7', fontWeight: 700, marginRight: '8px' }}>Q{currentQuestionIdx + 1}.</span>
+            {q.question}
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {q.options.map((option, oIndex) => {
+              const isSelected = selectedAnswer === oIndex;
+              const showResult = isConfirmed;
+              const isCorrect = option.correct;
+              let bg = 'rgba(51,65,85,0.5)';
+              let border = '2px solid transparent';
+              if (showResult && isSelected) {
+                bg = isCorrect ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)';
+                border = isCorrect ? '2px solid #22c55e' : '2px solid #ef4444';
+              } else if (showResult && isCorrect) {
+                bg = 'rgba(34,197,94,0.15)';
+                border = '1px solid rgba(34,197,94,0.5)';
+              } else if (isSelected && !showResult) {
+                bg = 'rgba(168,85,247,0.3)';
+                border = '2px solid #a855f7';
+              }
+              return (
+                <button
+                  key={oIndex}
+                  onClick={() => { if (!isConfirmed) handleTestAnswer(currentQuestionIdx, oIndex); }}
+                  disabled={isConfirmed}
+                  style={{ padding: '12px', borderRadius: '8px', textAlign: 'left', fontSize: '14px', background: bg, border, color: 'white', cursor: isConfirmed ? 'default' : 'pointer', transition: 'all 0.2s' }}
+                >
+                  {String.fromCharCode(65 + oIndex)}) {option.text}
+                </button>
+              );
+            })}
+          </div>
+
+          {isConfirmed && (
+            <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(30,58,138,0.3)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px' }}>
+              <p style={{ color: '#93c5fd', fontSize: '14px', fontWeight: 400 }}>
+                <span style={{ fontWeight: 600 }}>Explanation: </span>{q.explanation}
+              </p>
+            </div>
+          )}
+
+          {/* Action button */}
+          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+            {!isConfirmed && selectedAnswer !== -1 && (
               <button
-                onClick={() => {
-                  goToPhase('mastery');
-                  onGameEvent?.({ type: 'mastery_achieved', data: { score: calculateScore() } });
-                }}
-                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+                onClick={() => setConfirmedIndex(currentQuestionIdx)}
+                style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #a855f7, #3b82f6)', borderRadius: '10px', border: 'none', color: 'white', fontWeight: 600, cursor: 'pointer' }}
               >
-                Claim Your Mastery Badge
+                Check Answer
               </button>
-            ) : (
+            )}
+            {isConfirmed && currentQuestionIdx < testQuestions.length - 1 && (
+              <button
+                onClick={() => { setCurrentQuestionIdx(currentQuestionIdx + 1); setConfirmedIndex(null); }}
+                style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #a855f7, #3b82f6)', borderRadius: '10px', border: 'none', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Next Question
+              </button>
+            )}
+            {isConfirmed && currentQuestionIdx === testQuestions.length - 1 && (
               <button
                 onClick={() => {
-                  setShowTestResults(false);
-                  setTestAnswers(Array(10).fill(-1));
-                  goToPhase('review');
+                  const score = calculateScore();
+                  setTestScore?.(score);
+                  setTestSubmitted(true);
+                  setShowTestResults(true);
+                  playSound(score >= 7 ? 'complete' : 'incorrect');
+                  onGameEvent?.({ type: 'test_completed', data: { score, total: testQuestions.length } });
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300"
+                style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #059669, #0d9488)', borderRadius: '10px', border: 'none', color: 'white', fontWeight: 600, cursor: 'pointer' }}
               >
-                Review and Try Again
+                Submit Test
               </button>
             )}
           </div>
-        )}
+        </div>
       </div>
     );
   };
@@ -2043,41 +2056,57 @@ export default function ElectromagnetRenderer({
 
   // ─── Main Render ───────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Ambient background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-      </div>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #1a1a2e 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100vh' }}>
+      {/* Progress bar */}
+      <div style={{ position: 'fixed', top: 0, left: 0, width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #a855f7, #3b82f6)', zIndex: 60, transition: 'width 0.5s ease' }} />
 
-      {/* Premium progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-400">Electromagnet</span>
-            <span className="text-sm text-slate-500">{phaseLabels[phase]}</span>
-          </div>
-          {/* Phase dots */}
-          <div className="flex justify-between px-1">
-            {phaseOrder.map((p, index) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index <= currentPhaseIndex
-                    ? 'bg-purple-500'
-                    : 'bg-slate-700'
-                } ${p === phase ? 'w-6' : 'w-2'}`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
+      {/* Top bar */}
+      <div style={{ flexShrink: 0, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(10,15,26,0.9)' }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Electromagnet</span>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, index) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              aria-label={phaseLabels[p]}
+              title={phaseLabels[p]}
+              style={{
+                width: p === phase ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                background: index <= currentPhaseIndex ? '#a855f7' : '#334155',
+              }}
+            />
+          ))}
         </div>
+        <span style={{ fontSize: '12px', color: '#64748b' }}>{phaseLabels[phase]}</span>
       </div>
 
-      <div className="pt-20 pb-8 relative z-10">
+      {/* Content area */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0' }}>
         {renderPhase()}
+      </div>
+
+      {/* Bottom bar with Back/Next */}
+      <div style={{ flexShrink: 0, padding: '12px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(10,15,26,0.95)' }}>
+        <button
+          onClick={() => { if (currentPhaseIndex > 0) goToPhase(phaseOrder[currentPhaseIndex - 1]); }}
+          style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: currentPhaseIndex > 0 ? 'white' : 'rgba(255,255,255,0.3)', cursor: currentPhaseIndex > 0 ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: 500, opacity: currentPhaseIndex > 0 ? 1 : 0.4 }}
+          disabled={currentPhaseIndex === 0}
+        >
+          Back
+        </button>
+        <span style={{ fontSize: '12px', color: '#64748b' }}>{currentPhaseIndex + 1} / {phaseOrder.length}</span>
+        <button
+          onClick={() => { if (currentPhaseIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentPhaseIndex + 1]); }}
+          style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: currentPhaseIndex < phaseOrder.length - 1 ? 'linear-gradient(135deg, #a855f7, #3b82f6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: currentPhaseIndex < phaseOrder.length - 1 ? 'pointer' : 'not-allowed', fontSize: '14px', fontWeight: 500, opacity: currentPhaseIndex < phaseOrder.length - 1 ? 1 : 0.4 }}
+          disabled={currentPhaseIndex === phaseOrder.length - 1}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

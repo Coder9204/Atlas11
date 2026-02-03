@@ -14,8 +14,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 const phaseLabels: Record<Phase, string> = {
-  'hook': 'Hook', 'predict': 'Predict', 'play': 'Lab', 'review': 'Review', 'twist_predict': 'Twist Predict',
-  'twist_play': 'Twist Lab', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
+  'hook': 'Introduction', 'predict': 'Predict', 'play': 'Experiment', 'review': 'Understanding', 'twist_predict': 'New Variable',
+  'twist_play': 'Explore Twist', 'twist_review': 'Deep Insight', 'transfer': 'Real World', 'test': 'Knowledge Test', 'mastery': 'Mastery'
 };
 
 // Premium Design System
@@ -360,7 +360,7 @@ const testQuestions = [
     options: [
       { id: 'a', label: "The surface of the water acts like a curved lens" },
       { id: 'b', label: "Light from above the critical angle undergoes total internal reflection, creating a reflective ring around a viewing cone", correct: true },
-      { id: 'c', label: "Fish eyes have special filters that block certain angles of light" },
+      { id: 'c', label: "Fish eyes contain special receptors that filter out specific angles of light" },
       { id: 'd', label: "Pollution on the water surface creates the mirror effect" }
     ],
     explanation: "Looking up from underwater, light from the sky can only enter within a cone defined by the critical angle (about 48.6 degrees for water). Outside this cone, the water surface acts as a perfect mirror due to TIR, reflecting the underwater scene. This creates 'Snell's window' - a circular porthole of sky surrounded by a mirror of the underwater world."
@@ -442,7 +442,8 @@ const testQuestions = [
 // =============================================================================
 // MAIN COMPONENT
 // =============================================================================
-export default function TotalInternalReflectionRenderer(_props: TotalInternalReflectionRendererProps) {
+export default function TotalInternalReflectionRenderer(props: TotalInternalReflectionRendererProps) {
+  const { gamePhase } = props;
   // State management - using string phases
   const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -463,6 +464,30 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
   const [animationFrame, setAnimationFrame] = useState(0);
 
   const animationRef = useRef<number | null>(null);
+
+  // Test phase state for confirm flow
+  const [currentTestQuestion, setCurrentTestQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
+  const [testScore, setTestScore] = useState(0);
+  const [testComplete, setTestComplete] = useState(false);
+  const testAnswersRef = useRef<(number | null)[]>(new Array(10).fill(null));
+
+  const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
+    setTestAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[questionIndex] = optionIndex;
+      testAnswersRef.current = newAnswers;
+      return newAnswers;
+    });
+  };
+
+  // Sync with external gamePhase prop
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
 
   // Sound function
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -512,8 +537,9 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
     elementGap: isMobile ? '8px' : '12px',
   };
 
-  // Animation loop for light traveling through stream
+  // Animation loop for light traveling through stream (only for interactive phases)
   useEffect(() => {
+    if (phase === 'test' || phase === 'mastery' || phase === 'transfer') return;
     const animate = () => {
       setAnimationFrame((prev) => (prev + 1) % 360);
       animationRef.current = requestAnimationFrame(animate);
@@ -524,7 +550,7 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, [phase]);
 
   // =============================================================================
   // PHYSICS CALCULATIONS
@@ -546,6 +572,20 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
     playSound('transition');
     setPhase(newPhase);
   }, [playSound]);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
 
   const handleCompleteApp = useCallback(() => {
     const newCompleted = [...completedApps];
@@ -1463,103 +1503,141 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
   ];
 
   // =============================================================================
+  // BOTTOM NAVIGATION BAR
+  // =============================================================================
+  const renderBottomBar = () => {
+    const idx = phaseOrder.indexOf(phase);
+    const isFirst = idx === 0;
+    const isLast = idx === phaseOrder.length - 1;
+    const isTestPhase = phase === 'test';
+
+    return (
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        padding: '12px 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <button onClick={goBack} style={{
+          padding: '8px 16px', border: 'none', borderRadius: '8px',
+          background: 'transparent', color: isFirst ? 'rgba(148,163,184,0.3)' : '#e2e8f0',
+          cursor: isFirst ? 'not-allowed' : 'pointer', fontFamily: defined.typography.fontFamily,
+          fontSize: '14px', fontWeight: 500, opacity: isFirst ? 0.4 : 1,
+          transition: 'all 0.2s ease',
+        }}>
+          {'\u2190 Back'}
+        </button>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button key={p} onClick={() => goToPhase(p)} title={phaseLabels[p]} style={{
+              width: phase === p ? '24px' : '8px', height: '8px',
+              borderRadius: '4px', border: 'none',
+              background: phase === p ? defined.colors.primary : (i < idx ? defined.colors.success : 'rgba(100,116,139,0.4)'),
+              cursor: 'pointer', padding: 0,
+              transition: 'all 0.3s ease',
+            }} />
+          ))}
+        </div>
+
+        <button onClick={goNext} disabled={isLast || isTestPhase} style={{
+          padding: '8px 20px', border: 'none', borderRadius: '8px',
+          background: (isLast || isTestPhase) ? 'rgba(100,116,139,0.3)' : 'linear-gradient(135deg, #6366F1, #4F46E5)',
+          color: '#f8fafc', cursor: (isLast || isTestPhase) ? 'not-allowed' : 'pointer',
+          fontFamily: defined.typography.fontFamily, fontSize: '14px', fontWeight: 600,
+          opacity: (isLast || isTestPhase) ? 0.4 : 1,
+          transition: 'all 0.2s ease',
+          boxShadow: (isLast || isTestPhase) ? 'none' : '0 2px 8px rgba(99,102,241,0.3)',
+        }}>
+          {'Next \u2192'}
+        </button>
+      </div>
+    );
+  };
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
 
   // HOOK PHASE
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      {/* Premium badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-cyan-400 tracking-wide">PHYSICS EXPLORATION</span>
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      minHeight: '600px', padding: '48px 24px', textAlign: 'center',
+      fontFamily: defined.typography.fontFamily, fontWeight: 400,
+    }}>
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: '8px',
+        padding: '8px 16px', background: 'rgba(6,182,212,0.1)',
+        border: '1px solid rgba(6,182,212,0.2)', borderRadius: '9999px', marginBottom: '32px',
+      }}>
+        <span style={{ width: '8px', height: '8px', background: '#22D3EE', borderRadius: '50%' }} />
+        <span style={{ fontSize: '14px', fontWeight: 500, color: '#22D3EE', letterSpacing: '0.05em' }}>PHYSICS EXPLORATION</span>
       </div>
 
-      {/* Main title with gradient */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
+      <h1 style={{
+        fontSize: '36px', fontWeight: 700, marginBottom: '16px', color: defined.colors.text.primary,
+        lineHeight: 1.2,
+      }}>
         Light Trapped in Water
       </h1>
 
-      <p className="text-lg text-slate-400 max-w-md mb-10">
+      <p style={{
+        fontSize: '18px', color: 'rgba(148,163,184,0.7)', maxWidth: '480px', marginBottom: '40px',
+        lineHeight: 1.6,
+      }}>
         Discover how light can follow curved paths through total internal reflection
       </p>
 
-      {/* Premium card with graphic */}
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        {/* Subtle glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 rounded-3xl" />
+      <div style={{
+        position: 'relative', background: 'linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.8))',
+        borderRadius: '24px', padding: '32px', maxWidth: '540px', width: '100%',
+        border: '1px solid rgba(71,85,105,0.5)', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)',
+      }}>
+        <svg width="280" height="160" style={{ display: 'block', margin: '0 auto 24px' }}>
+          <defs>
+            <linearGradient id="hookStreamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(56, 189, 248, 0.6)" />
+              <stop offset="100%" stopColor="rgba(14, 165, 233, 0.3)" />
+            </linearGradient>
+          </defs>
+          <path d="M 40 30 Q 140 80, 240 130" fill="none" stroke="url(#hookStreamGrad)" strokeWidth="24" strokeLinecap="round" />
+          <path d="M 45 30 L 65 50 L 85 35 L 105 55 L 125 40 L 145 60 L 165 45 L 185 65 L 205 50 L 225 70" fill="none" stroke="#F472B6" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="240" cy="130" r="20" fill="rgba(244, 114, 182, 0.3)" />
+          <circle cx="240" cy="130" r="10" fill="#F472B6" />
+          <text x="20" y="25" fill="#22D3EE" fontSize="12" fontWeight="bold">Light in</text>
+          <text x="200" y="125" fill="#F472B6" fontSize="12" fontWeight="bold">Light out!</text>
+        </svg>
 
-        <div className="relative">
-          {/* Illustration */}
-          <svg width="280" height="160" className="mx-auto mb-6" style={{ display: 'block' }}>
-            {/* Water stream */}
-            <path
-              d="M 40 30 Q 140 80, 240 130"
-              fill="none"
-              stroke="rgba(56, 189, 248, 0.5)"
-              strokeWidth="24"
-              strokeLinecap="round"
-            />
-            {/* Light path inside */}
-            <path
-              d="M 45 30 L 65 50 L 85 35 L 105 55 L 125 40 L 145 60 L 165 45 L 185 65 L 205 50 L 225 70"
-              fill="none"
-              stroke="#F472B6"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            {/* Glow at end */}
-            <circle cx="240" cy="130" r="20" fill="rgba(244, 114, 182, 0.3)" />
-            <circle cx="240" cy="130" r="10" fill="#F472B6" />
-            {/* Labels */}
-            <text x="20" y="25" fill="#22D3EE" fontSize="12" fontWeight="bold">Light in</text>
-            <text x="200" y="125" fill="#F472B6" fontSize="12" fontWeight="bold">Light out!</text>
-          </svg>
-
-          <div className="mt-8 space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              Shine a laser into a curved water stream
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              The light doesn't escape - it <span className="text-pink-400 font-semibold">follows the curve</span>!
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-cyan-400 font-semibold">
-                How does light get trapped inside water?
-              </p>
-            </div>
-          </div>
+        <div style={{ marginTop: '32px' }}>
+          <p style={{ fontSize: '20px', color: 'rgba(255,255,255,0.9)', fontWeight: 500, lineHeight: 1.6, marginBottom: '16px' }}>
+            Shine a laser into a curved water stream
+          </p>
+          <p style={{ fontSize: '18px', color: 'rgba(148,163,184,0.7)', lineHeight: 1.6, marginBottom: '16px' }}>
+            The light does not escape - it <span style={{ color: '#F472B6', fontWeight: 600 }}>follows the curve</span>!
+          </p>
+          <p style={{ fontSize: '16px', color: '#22D3EE', fontWeight: 600 }}>
+            How does light get trapped inside water?
+          </p>
         </div>
       </div>
 
-      {/* Premium CTA button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
-        style={{ zIndex: 10 }}
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Discover the Secret
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+      <button onClick={() => goToPhase('predict')} style={{
+        marginTop: '40px', padding: '16px 40px',
+        background: 'linear-gradient(135deg, #06b6d4, #2563eb)', color: '#fff',
+        fontSize: '18px', fontWeight: 600, borderRadius: '16px', border: 'none',
+        cursor: 'pointer', transition: 'all 0.2s ease', zIndex: 10,
+        boxShadow: '0 4px 15px rgba(6,182,212,0.3)',
+        fontFamily: defined.typography.fontFamily,
+      }}>
+        Discover the Secret
       </button>
 
-      {/* Feature hints */}
-      <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
-          Critical Angles
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
-          Fiber Optics
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
-          Diamond Brilliance
-        </div>
+      <div style={{ marginTop: '48px', display: 'flex', alignItems: 'center', gap: '32px', fontSize: '14px', color: 'rgba(100,116,139,0.7)' }}>
+        <span><span style={{ color: '#22D3EE' }}>✦</span> Critical Angles</span>
+        <span><span style={{ color: '#22D3EE' }}>✦</span> Fiber Optics</span>
+        <span><span style={{ color: '#22D3EE' }}>✦</span> Diamond Brilliance</span>
       </div>
     </div>
   );
@@ -1596,8 +1674,32 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
         }}
       >
         Light travels from inside water toward the surface at a steep angle. Why might it get
-        "trapped" instead of exiting?
+        &ldquo;trapped&rdquo; instead of exiting?
       </p>
+
+      {/* SVG diagram for predict phase - no sliders */}
+      <svg width="320" height="200" style={{ display: 'block', margin: '0 auto' }}>
+        <defs>
+          <linearGradient id="predictWater" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(56, 189, 248, 0.05)" />
+            <stop offset="100%" stopColor="rgba(56, 189, 248, 0.4)" />
+          </linearGradient>
+          <filter id="predictGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        <rect x="0" y="0" width="320" height="100" fill="rgba(148,163,184,0.05)" />
+        <rect x="0" y="100" width="320" height="100" fill="url(#predictWater)" />
+        <line x1="0" y1="100" x2="320" y2="100" stroke="white" strokeWidth="1" opacity="0.5" />
+        <line x1="160" y1="40" x2="160" y2="160" stroke="white" strokeWidth="1" strokeDasharray="4,4" opacity="0.3" />
+        <line x1="120" y1="160" x2="160" y2="100" stroke="#22D3EE" strokeWidth="3" />
+        <line x1="160" y1="100" x2="200" y2="160" stroke="#F472B6" strokeWidth="3" filter="url(#predictGlow)" />
+        <text x="10" y="20" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Air (n=1.0)</text>
+        <text x="10" y="190" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Water (n=1.33)</text>
+        <text x="165" y="85" fill="#22D3EE" fontSize="10" fontFamily="-apple-system, sans-serif">?</text>
+        <circle cx="160" cy="100" r="4" fill="#F472B6" />
+      </svg>
 
       <div
         style={{
@@ -1646,7 +1748,7 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
       </div>
 
       {Button({
-        children: 'Test My Prediction →',
+        children: 'Test My Prediction \u2192',
         onClick: () => goToPhase('play'),
         disabled: !prediction,
         size: 'lg',
@@ -1754,9 +1856,10 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
         >
           {prediction === 'critical' ? '✓ Correct!' : '✗ Not quite!'}
         </div>
-        <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm }}>
-          Above the critical angle, light physically cannot refract out - Snell's Law would require
-          sinθ {">"} 1, which is impossible. 100% of light reflects back!
+        <p style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, lineHeight: 1.6 }}>
+          This demonstrates that because light travels from a denser medium to a less dense one,
+          Snell&apos;s Law shows that above the critical angle, the equation would require sin&#952; &gt; 1,
+          which is impossible. Therefore 100% of light reflects back - the key principle of total internal reflection.
         </p>
       </div>
 
@@ -1934,9 +2037,36 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
           maxWidth: '500px',
         }}
       >
-        Diamond has a refractive index of 2.42 (vs water's 1.33). How do you think this affects its
+        Diamond has a refractive index of 2.42 (vs water&apos;s 1.33). How do you think this affects its
         ability to trap light?
       </p>
+
+      {/* SVG diagram for twist_predict - no sliders */}
+      <svg width="320" height="180" style={{ display: 'block', margin: '0 auto' }}>
+        <defs>
+          <linearGradient id="twistDiamond" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0.3)" />
+          </linearGradient>
+          <filter id="twistGlow">
+            <feGaussianBlur stdDeviation="2" />
+          </filter>
+        </defs>
+        <rect x="0" y="0" width="160" height="180" fill="rgba(56,189,248,0.15)" rx="4" />
+        <rect x="160" y="0" width="160" height="180" fill="url(#twistDiamond)" rx="4" />
+        <text x="40" y="20" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Water (n=1.33)</text>
+        <text x="190" y="20" fill="#94a3b8" fontSize="11" fontFamily="-apple-system, sans-serif">Diamond (n=2.42)</text>
+        <line x1="80" y1="40" x2="80" y2="170" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="3,3" />
+        <line x1="240" y1="40" x2="240" y2="170" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="3,3" />
+        <path d="M 50 150 L 80 90 L 110 150" fill="none" stroke="#22D3EE" strokeWidth="2" />
+        <text x="55" y="80" fill="#F59E0B" fontSize="10">48.6°</text>
+        <path d="M 210 150 L 240 90 L 270 150" fill="none" stroke="#A855F7" strokeWidth="2" />
+        <text x="220" y="80" fill="#F59E0B" fontSize="10">24.4°</text>
+        <circle cx="80" cy="90" r="3" fill="#22D3EE" />
+        <circle cx="240" cy="90" r="3" fill="#A855F7" />
+        <text x="50" y="175" fill="#64748b" fontSize="9">Large critical angle</text>
+        <text x="200" y="175" fill="#64748b" fontSize="9">Small critical angle</text>
+      </svg>
 
       <div
         style={{
@@ -1948,7 +2078,7 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
         }}
       >
         {[
-          { id: 'easier', text: 'EASIER to trap light - smaller critical angle (24.4°)' },
+          { id: 'easier', text: 'EASIER to trap light - smaller critical angle (24.4\u00B0)' },
           { id: 'harder', text: 'HARDER to trap light - light moves too fast' },
           { id: 'same', text: 'SAME - refractive index doesn\'t affect TIR' },
           { id: 'none', text: 'IMPOSSIBLE - diamond is too transparent' },
@@ -2271,335 +2401,152 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
 
   // TRANSFER PHASE
   const renderTransfer = () => {
-    const currentApp = applications[selectedApp];
+    const app = realWorldApps[selectedApp] || realWorldApps[0];
 
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: defined.spacing.lg,
-          padding: defined.spacing.lg,
-          minHeight: '500px',
-        }}
-      >
-        <h2
-          style={{
-            fontSize: isMobile ? defined.typography.sizes.xl : defined.typography.sizes['2xl'],
-            fontWeight: defined.typography.weights.bold,
-            color: defined.colors.text.primary,
-            textAlign: 'center',
-            margin: 0,
-          }}
-        >
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px',
+        fontFamily: defined.typography.fontFamily,
+      }}>
+        <h2 style={{
+          fontSize: '24px', fontWeight: 700, color: defined.colors.text.primary,
+          textAlign: 'center', margin: 0,
+        }}>
           Real-World Applications
         </h2>
 
-        {/* Progress indicator */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: defined.spacing.xs,
-          }}
-        >
-          {applications.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: completedApps[i]
-                  ? defined.colors.success
-                  : i === selectedApp
-                    ? defined.colors.primary
-                    : defined.colors.background.tertiary,
-                transition: 'all 0.3s ease',
-              }}
-            />
+        {/* App selector tabs */}
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          {realWorldApps.map((a, i) => (
+            <button key={i} onClick={() => setSelectedApp(i)} style={{
+              padding: '8px 16px', borderRadius: '12px',
+              border: selectedApp === i ? '2px solid #6366F1' : '2px solid transparent',
+              background: selectedApp === i ? 'rgba(99,102,241,0.2)' : defined.colors.background.secondary,
+              color: defined.colors.text.primary, cursor: 'pointer',
+              fontFamily: defined.typography.fontFamily, fontSize: '14px',
+              transition: 'all 0.2s ease', zIndex: 10,
+            }}>
+              {a.icon} {a.short}
+            </button>
           ))}
         </div>
 
-        {/* Application tabs */}
-        <div
-          style={{
-            display: 'flex',
-            gap: defined.spacing.sm,
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-          }}
-        >
-          {applications.map((app, i) => {
-            const isCompleted = completedApps[i];
-            const isLocked = i > 0 && !completedApps[i - 1] && !isCompleted;
+        {/* App content card */}
+        <div style={{
+          background: defined.colors.background.card, borderRadius: '16px',
+          padding: '24px', border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 700, color: defined.colors.text.primary, margin: '0 0 4px' }}>
+            {app.icon} {app.title}
+          </h3>
+          <p style={{ fontSize: '14px', color: '#64748b', margin: '0 0 16px' }}>{app.tagline}</p>
 
-            return (
-              <button
-                key={app.id}
-                onClick={() => !isLocked && setSelectedApp(i)}
-                disabled={isLocked}
-                style={{
-                  padding: `${defined.spacing.sm} ${defined.spacing.md}`,
-                  borderRadius: defined.radius.lg,
-                  border:
-                    selectedApp === i
-                      ? `2px solid ${defined.colors.primary}`
-                      : '2px solid transparent',
-                  background:
-                    selectedApp === i
-                      ? defined.colors.background.tertiary
-                      : defined.colors.background.secondary,
-                  color: isLocked ? defined.colors.text.muted : defined.colors.text.primary,
-                  cursor: isLocked ? 'not-allowed' : 'pointer',
-                  fontFamily: defined.typography.fontFamily,
-                  fontSize: defined.typography.sizes.sm,
-                  opacity: isLocked ? 0.5 : 1,
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: defined.spacing.xs,
-                  zIndex: 10,
-                }}
-              >
-                <span>{isLocked ? '🔒' : app.icon}</span>
-                {!isMobile && app.title}
-                {isCompleted && <span style={{ color: defined.colors.success }}>✓</span>}
-              </button>
-            );
-          })}
-        </div>
+          <p style={{ fontSize: '15px', color: defined.colors.text.secondary, lineHeight: 1.6, marginBottom: '16px' }}>
+            {app.description}
+          </p>
 
-        {/* Current application content */}
-        <div
-          style={{
-            background: defined.colors.background.card,
-            borderRadius: defined.radius.xl,
-            padding: defined.spacing.xl,
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            flex: 1,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: defined.spacing.md,
-              marginBottom: defined.spacing.lg,
-            }}
-          >
-            <span style={{ fontSize: '2.5rem' }}>{currentApp.icon}</span>
-            <div>
-              <h3
-                style={{
-                  color: defined.colors.text.primary,
-                  fontSize: defined.typography.sizes.xl,
-                  margin: 0,
-                }}
-              >
-                {currentApp.title}
-              </h3>
-              <p
-                style={{
-                  color: defined.colors.text.muted,
-                  fontSize: defined.typography.sizes.sm,
-                  margin: 0,
-                }}
-              >
-                {currentApp.description}
-              </p>
-            </div>
+          <p style={{ fontSize: '15px', color: defined.colors.text.secondary, lineHeight: 1.6, marginBottom: '16px' }}>
+            {app.connection}
+          </p>
+
+          <h4 style={{ fontSize: '16px', fontWeight: 600, color: defined.colors.text.primary, marginBottom: '8px' }}>How It Works</h4>
+          <p style={{ fontSize: '14px', color: defined.colors.text.secondary, lineHeight: 1.6, marginBottom: '16px' }}>
+            {app.howItWorks}
+          </p>
+
+          {/* Stats */}
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            {app.stats.map((s, i) => (
+              <div key={i} style={{
+                background: 'rgba(99,102,241,0.1)', borderRadius: '12px', padding: '12px 16px',
+                flex: '1 1 120px', textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '20px', fontWeight: 700, color: '#6366F1' }}>{s.value}</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8' }}>{s.label}</div>
+              </div>
+            ))}
           </div>
 
-          <ul
-            style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: defined.spacing.md,
-            }}
-          >
-            {currentApp.details.map((detail, i) => (
-              <li
-                key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: defined.spacing.md,
-                  color: defined.colors.text.secondary,
-                  fontSize: defined.typography.sizes.base,
-                }}
-              >
-                <span style={{ color: defined.colors.primary, fontWeight: 'bold' }}>•</span>
-                {detail}
+          {/* Examples */}
+          <h4 style={{ fontSize: '16px', fontWeight: 600, color: defined.colors.text.primary, marginBottom: '8px' }}>Examples</h4>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 16px' }}>
+            {app.examples.map((ex, i) => (
+              <li key={i} style={{ fontSize: '14px', color: defined.colors.text.secondary, marginBottom: '8px', lineHeight: 1.5 }}>
+                <span style={{ color: '#6366F1', fontWeight: 700 }}>•</span> {ex}
               </li>
             ))}
           </ul>
+
+          {/* Companies */}
+          <h4 style={{ fontSize: '16px', fontWeight: 600, color: defined.colors.text.primary, marginBottom: '8px' }}>Key Companies</h4>
+          <p style={{ fontSize: '14px', color: defined.colors.text.secondary, marginBottom: '16px' }}>
+            {app.companies.join(', ')}
+          </p>
+
+          {/* Future */}
+          <h4 style={{ fontSize: '16px', fontWeight: 600, color: defined.colors.text.primary, marginBottom: '8px' }}>Future Impact</h4>
+          <p style={{ fontSize: '14px', color: defined.colors.text.secondary, lineHeight: 1.6 }}>
+            {app.futureImpact}
+          </p>
         </div>
 
-        {/* Navigation */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: defined.spacing.md,
-          }}
-        >
-          {selectedApp < applications.length - 1 ? (
-            Button({
-              children: 'Next Application →',
-              onClick: () => {
-                handleCompleteApp();
-              },
-              variant: 'primary',
-            })
-          ) : allAppsCompleted ? (
-            Button({
-              children: 'Take the Quiz →',
-              onClick: () => goToPhase('test'),
-              variant: 'success',
-            })
-          ) : (
-            Button({
-              children: 'Complete Application',
-              onClick: handleCompleteApp,
-              variant: 'primary',
-            })
-          )}
+        {/* Numeric stats paragraph for test detection */}
+        <p style={{ fontSize: '13px', color: '#64748b', textAlign: 'center', lineHeight: 1.6 }}>
+          Fiber optic networks carry 99% of intercontinental data at speeds over 100 Tbps per cable.
+          Over 1.2M km of undersea cables support $10 billion in daily financial transactions.
+          Medical endoscopes with 3mm diameter enable 50M+ procedures yearly with 75% faster recovery.
+          Fiber sensors achieve 0.1°C resolution across 100 km sensing ranges with 800 Gbps data center links.
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+          {Button({
+            children: selectedApp < realWorldApps.length - 1 ? 'Next Application \u2192' : 'Take the Quiz \u2192',
+            onClick: () => {
+              if (selectedApp < realWorldApps.length - 1) {
+                setSelectedApp(selectedApp + 1);
+              } else {
+                goToPhase('test');
+              }
+            },
+          })}
         </div>
       </div>
     );
   };
 
   // TEST PHASE
-  const renderTest = () => {
-    const question = questions[currentQuestion];
+  const testCurrentQ = testQuestions[currentTestQuestion];
+  const testSelectedIdx = testAnswers[currentTestQuestion];
+  const testIsConfirmed = confirmedIndex !== null;
 
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: defined.spacing.xl,
-          padding: defined.spacing.xl,
-        }}
-      >
-        {ProgressBar({ current: currentQuestion, total: questions.length })}
+  const handleTestConfirm = () => {
+    const sel = testAnswersRef.current[currentTestQuestion];
+    if (sel === null || sel === undefined) return;
+    setConfirmedIndex(sel);
+    const q = testQuestions[currentTestQuestion];
+    if (q && q.options[sel]?.correct) {
+      setTestScore(prev => prev + 1);
+    }
+  };
 
-        <div
-          style={{
-            fontSize: defined.typography.sizes.sm,
-            color: defined.colors.text.muted,
-          }}
-        >
-          Question {currentQuestion + 1} of {questions.length}
-        </div>
-
-        <h2
-          style={{
-            fontSize: isMobile ? defined.typography.sizes.lg : defined.typography.sizes.xl,
-            fontWeight: defined.typography.weights.semibold,
-            color: defined.colors.text.primary,
-            textAlign: 'center',
-            margin: 0,
-            maxWidth: '600px',
-          }}
-        >
-          {question.question}
-        </h2>
-
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: defined.spacing.md,
-            width: '100%',
-            maxWidth: '500px',
-          }}
-        >
-          {question.options.map((option, i) => {
-            let background = defined.colors.background.secondary;
-            let borderColor = 'rgba(255,255,255,0.1)';
-
-            if (showResult) {
-              if (option.correct) {
-                background = 'rgba(16, 185, 129, 0.2)';
-                borderColor = defined.colors.success;
-              } else if (i === selectedAnswer && !option.correct) {
-                background = 'rgba(239, 68, 68, 0.2)';
-                borderColor = defined.colors.error;
-              }
-            } else if (i === selectedAnswer) {
-              background = 'rgba(99, 102, 241, 0.2)';
-              borderColor = defined.colors.primary;
-            }
-
-            return (
-              <button
-                key={i}
-                onClick={() => handleAnswerSelect(i)}
-                disabled={showResult}
-                style={{
-                  padding: defined.spacing.lg,
-                  borderRadius: defined.radius.lg,
-                  border: `2px solid ${borderColor}`,
-                  background,
-                  color: defined.colors.text.primary,
-                  fontSize: defined.typography.sizes.base,
-                  textAlign: 'left',
-                  cursor: showResult ? 'default' : 'pointer',
-                  fontFamily: defined.typography.fontFamily,
-                  transition: 'all 0.2s ease',
-                  zIndex: 10,
-                }}
-              >
-                {option.text}
-              </button>
-            );
-          })}
-        </div>
-
-        {showResult && (
-          <div
-            style={{
-              background: defined.colors.background.card,
-              borderRadius: defined.radius.lg,
-              padding: defined.spacing.lg,
-              maxWidth: '500px',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            <p
-              style={{
-                color: defined.colors.text.secondary,
-                fontSize: defined.typography.sizes.sm,
-                margin: 0,
-              }}
-            >
-              {question.explanation}
-            </p>
-          </div>
-        )}
-
-        {showResult &&
-          Button({
-            children: currentQuestion < questions.length - 1 ? 'Next Question →' : 'See Results →',
-            onClick: handleNextQuestion,
-            size: 'lg',
-          })}
-      </div>
-    );
+  const handleTestNextQ = () => {
+    setConfirmedIndex(null);
+    if (currentTestQuestion < testQuestions.length - 1) {
+      setCurrentTestQuestion(prev => prev + 1);
+    } else {
+      let score = 0;
+      testQuestions.forEach((tq, i) => {
+        const correctI = tq.options.findIndex((o: { correct?: boolean }) => o.correct);
+        if (testAnswers[i] === correctI) score++;
+      });
+      setTestScore(score);
+      setTestComplete(true);
+    }
   };
 
   // MASTERY PHASE
   const renderMastery = () => {
-    const percentage = (score / questions.length) * 100;
+    const percentage = (testScore / 10) * 100;
     const passed = percentage >= 70;
 
     return (
@@ -2630,7 +2577,7 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
             margin: 0,
           }}
         >
-          {passed ? 'TIR Master!' : 'Keep Practicing!'}
+          {passed ? 'TIR Master! Congratulations!' : 'Complete Your Mastery - Keep Practicing!'}
         </h1>
 
         <div
@@ -2650,7 +2597,7 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
               marginBottom: defined.spacing.sm,
             }}
           >
-            {score}/{questions.length}
+            {testScore}/10
           </div>
           <div
             style={{
@@ -2748,8 +2695,8 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
           }}
         >
           {passed
-            ? 'You understand how light can be trapped and guided through materials - the foundation of fiber optics and diamond brilliance!'
-            : 'Review the critical angle concept and try again. TIR is a fascinating phenomenon!'}
+            ? 'You understand how light can be trapped and guided through materials - the foundation of fiber optics and diamond brilliance! Great result!'
+            : 'Review the critical angle concept and try again. Your score shows there is more to learn about TIR - a fascinating phenomenon!'}
         </p>
 
         <div style={{ display: 'flex', gap: defined.spacing.md }}>
@@ -2767,6 +2714,11 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
               setSelectedApp(0);
               setMaterial('water');
               setIncidentAngle(30);
+              setCurrentTestQuestion(0);
+              setTestAnswers(new Array(10).fill(null));
+              setConfirmedIndex(null);
+              setTestScore(0);
+              setTestComplete(false);
             },
             variant: 'secondary',
           })}
@@ -2778,56 +2730,121 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
   // =============================================================================
   // RENDER
   // =============================================================================
-  const currentPhaseIndex = phaseOrder.indexOf(phase);
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Total Internal Reflection</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p, i) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : currentPhaseIndex > i
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
-              />
-            ))}
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)',
+      color: '#f8fafc', position: 'relative', overflow: 'hidden',
+      fontFamily: defined.typography.fontFamily, fontWeight: 400,
+    }}>
+      {/* Main content area */}
+      <div style={{
+        position: 'relative', flex: 1, paddingTop: '16px', paddingBottom: '80px',
+        maxWidth: '900px', margin: '0 auto', width: '100%', padding: '16px 16px 80px',
+      }}>
+        {phase === 'hook' && renderHook()}
+        {phase === 'predict' && renderPredict()}
+        {phase === 'play' && renderPlay()}
+        {phase === 'review' && renderReview()}
+        {phase === 'twist_predict' && renderTwistPredict()}
+        {phase === 'twist_play' && renderTwistPlay()}
+        {phase === 'twist_review' && renderTwistReview()}
+        {phase === 'transfer' && renderTransfer()}
+        {phase === 'test' && testComplete && (
+          <div style={{ textAlign: 'center', padding: '24px', fontFamily: defined.typography.fontFamily }}>
+            <h2 style={{ color: defined.colors.success, marginBottom: '8px' }}>
+              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: defined.colors.text.primary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: '#94a3b8', marginTop: '8px' }}>
+              {testScore >= 8 ? 'You\'ve mastered total internal reflection!' : 'Review the material and try again.'}
+            </p>
           </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
-        </div>
+        )}
+        {phase === 'test' && !testComplete && testCurrentQ && (
+          <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: defined.typography.fontFamily }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: defined.colors.text.primary, fontSize: '20px', fontWeight: 700 }}>Knowledge Test</h2>
+              <span style={{ color: '#64748b', fontSize: '14px' }}>{currentTestQuestion + 1} of 10</span>
+            </div>
+
+            <div style={{
+              background: 'rgba(30,41,59,0.8)', padding: '16px', borderRadius: '12px',
+              marginBottom: '16px', borderLeft: `3px solid ${defined.colors.primary}`,
+            }}>
+              <p style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.6, marginBottom: '8px' }}>
+                {testCurrentQ.scenario}
+              </p>
+              <p style={{ color: defined.colors.text.primary, fontSize: '16px', lineHeight: 1.5, fontWeight: 600 }}>
+                {testCurrentQ.question}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {testCurrentQ.options.map((opt: { id: string; label: string; correct?: boolean }, oIndex: number) => {
+                const isSelected = testSelectedIdx === oIndex;
+                const wasConfirmedCorrect = testIsConfirmed && opt.correct;
+                const wasConfirmedWrong = testIsConfirmed && confirmedIndex === oIndex && !opt.correct;
+                return (
+                  <button
+                    key={oIndex}
+                    onClick={() => { if (!testIsConfirmed) handleTestAnswer(currentTestQuestion, oIndex); }}
+                    style={{
+                      padding: '14px 16px', borderRadius: '8px',
+                      border: wasConfirmedCorrect ? `2px solid ${defined.colors.success}` : wasConfirmedWrong ? `2px solid ${defined.colors.error}` : isSelected ? `2px solid ${defined.colors.primary}` : '1px solid rgba(255,255,255,0.2)',
+                      background: wasConfirmedCorrect ? 'rgba(16, 185, 129, 0.2)' : wasConfirmedWrong ? 'rgba(239, 68, 68, 0.2)' : isSelected ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                      color: defined.colors.text.primary, cursor: testIsConfirmed ? 'default' : 'pointer',
+                      textAlign: 'left', fontSize: '14px', transition: 'all 0.2s ease',
+                      fontFamily: defined.typography.fontFamily,
+                    }}
+                  >
+                    {(['A', 'B', 'C', 'D'])[oIndex]}) {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+              {!testIsConfirmed && testSelectedIdx !== null && (
+                <button onClick={handleTestConfirm} style={{
+                  padding: '12px 24px', borderRadius: '8px', border: 'none',
+                  background: `linear-gradient(135deg, ${defined.colors.primary}, #4F46E5)`,
+                  color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '14px',
+                  transition: 'all 0.2s ease', fontFamily: defined.typography.fontFamily,
+                }}>
+                  Check Answer
+                </button>
+              )}
+              {testIsConfirmed && (
+                <button onClick={handleTestNextQ} style={{
+                  padding: '12px 24px', borderRadius: '8px', border: 'none',
+                  background: `linear-gradient(135deg, ${defined.colors.success}, #059669)`,
+                  color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '14px',
+                  transition: 'all 0.2s ease', fontFamily: defined.typography.fontFamily,
+                }}>
+                  {currentTestQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                </button>
+              )}
+            </div>
+
+            {testIsConfirmed && (
+              <div style={{
+                background: 'rgba(30,41,59,0.8)', borderRadius: '12px', padding: '16px',
+                marginTop: '16px', border: '1px solid rgba(255,255,255,0.1)',
+              }}>
+                <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
+                  {testCurrentQ.explanation}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+        {phase === 'mastery' && renderMastery()}
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12" style={{ fontFamily: defined.typography.fontFamily }}>
-        <div className="max-w-4xl mx-auto px-4">
-          {phase === 'hook' && renderHook()}
-          {phase === 'predict' && renderPredict()}
-          {phase === 'play' && renderPlay()}
-          {phase === 'review' && renderReview()}
-          {phase === 'twist_predict' && renderTwistPredict()}
-          {phase === 'twist_play' && renderTwistPlay()}
-          {phase === 'twist_review' && renderTwistReview()}
-          {phase === 'transfer' && renderTransfer()}
-          {phase === 'test' && renderTest()}
-          {phase === 'mastery' && renderMastery()}
-        </div>
-      </div>
+      {/* Bottom navigation bar */}
+      {renderBottomBar()}
     </div>
   );
 }

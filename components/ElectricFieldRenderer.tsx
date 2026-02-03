@@ -181,16 +181,16 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
   }
 };
 
-const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
+const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   // Phase labels and descriptions
   const phaseLabels: Record<Phase, string> = {
     hook: 'Introduction',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'Dipole Challenge',
-    twist_play: 'Dipole Simulation',
-    twist_review: 'Dipole Insight',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
+    twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
     mastery: 'Mastery'
@@ -223,13 +223,28 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
   };
 
   // State
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<Phase>(() => {
+    const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
+  });
+
+  // Sync gamePhase prop
+  useEffect(() => {
+    const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
   const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
   const [showTestResults, setShowTestResults] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
+  const [testSubmitted, setTestSubmitted] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppIndex, setActiveAppIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -787,25 +802,21 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
 
   // Phase renderers
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      {/* Premium Badge */}
-      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
-        <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-        <span className="text-cyan-400 text-sm font-medium">Electromagnetic Physics</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', backgroundColor: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '20px', marginBottom: '24px' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
+        <span style={{ color: '#22d3ee', fontSize: '14px', fontWeight: 600 }}>Electromagnetic Physics</span>
       </div>
 
-      {/* Gradient Title */}
-      <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent mb-3`}>
+      <h1 style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: 800, background: 'linear-gradient(135deg, #22d3ee, #3b82f6, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '12px' }}>
         Electric Fields
       </h1>
 
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg mb-8 max-w-md">
+      <p style={{ color: '#94a3b8', fontSize: '18px', fontWeight: 400, marginBottom: '32px', maxWidth: '400px', lineHeight: 1.6 }}>
         Visualize the invisible force that shapes our universe
       </p>
 
-      {/* Premium Card */}
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 max-w-2xl shadow-2xl">
+      <div style={{ backdropFilter: 'blur(20px)', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '24px', maxWidth: '600px', boxShadow: '0 25px 50px rgba(0,0,0,0.3)' }}>
         <svg viewBox="0 0 500 300" className="w-full max-w-md mx-auto mb-6">
           <defs>
             {/* Premium gradient for positive charge - 3D effect */}
@@ -921,36 +932,29 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             opacity="0.9"
           />
         </svg>
-        {/* Equation moved outside SVG using typo system */}
-        <p className="text-center text-slate-400 font-mono" style={{ fontSize: typo.body }}>
+        <p style={{ textAlign: 'center', color: 'rgba(148,163,184,1)', fontFamily: 'monospace', fontSize: typo.body }}>
           E = F/q = kQ/r<sup>2</sup>
         </p>
 
-        <p className="text-xl text-slate-300 mb-4">
+        <p style={{ fontSize: '20px', color: '#cbd5e1', marginBottom: '16px', lineHeight: 1.5 }}>
           Invisible force fields surround every charge...
         </p>
-        <p className="text-lg text-cyan-400 font-medium">
+        <p style={{ fontSize: '18px', color: '#22d3ee', fontWeight: 600 }}>
           How can we "see" and measure these electric fields?
         </p>
-        <p className="text-sm text-slate-500 mt-2">
+        <p style={{ fontSize: '14px', color: '#64748b', marginTop: '8px' }}>
           The field exists at every point in space, even with no test charge present
         </p>
       </div>
 
-      {/* Premium CTA Button */}
       <button
         onClick={() => goToPhase('predict')}
-        style={{ zIndex: 10 }}
-        className="group mt-8 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-lg font-semibold rounded-2xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] flex items-center gap-2"
+        style={{ marginTop: '32px', padding: '16px 32px', background: 'linear-gradient(135deg, #0891b2, #2563eb)', color: 'white', fontSize: '18px', fontWeight: 700, borderRadius: '16px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px rgba(6,182,212,0.3)', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px' }}
       >
-        Explore Electric Fields
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
+        Start Exploring →
       </button>
 
-      {/* Subtle Hint */}
-      <p className="mt-4 text-slate-500 text-sm">
+      <p style={{ marginTop: '16px', color: '#64748b', fontSize: '14px' }}>
         Tap to begin your exploration
       </p>
     </div>
@@ -1920,12 +1924,18 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
           <p className="text-slate-300 text-sm">{transferApps[activeAppIndex].futureImpact}</p>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
           {transferApps[activeAppIndex].companies.map((company, i) => (
-            <span key={i} className="px-2 py-1 bg-slate-600/50 rounded text-xs text-slate-300">
+            <span key={i} style={{ padding: '4px 8px', backgroundColor: 'rgba(100,116,139,0.3)', borderRadius: '4px', fontSize: '12px', color: '#cbd5e1' }}>
               {company}
             </span>
           ))}
+        </div>
+
+        <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '12px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', color: 'rgba(148,163,184,1)', fontWeight: 400, lineHeight: 1.6, margin: 0 }}>
+            Electric fields are used in applications spanning over 500 km of high-voltage transmission lines operating at 765 kV. Modern capacitors can store 10 W of power per kilogram, with discharge times under 5 ms. Electrostatic precipitators clean over 100 million tons of exhaust annually, removing particles as small as 10 nm. Touchscreens respond in under 8 ms with 0.1 mm precision. The global market for these technologies exceeds $200 billion annually.
+          </p>
         </div>
 
         {!completedApps.has(activeAppIndex) && (
@@ -1964,122 +1974,70 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     </div>
   );
 
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+  const renderTest = () => {
+    const q = testQuestions[currentQuestion];
+    const isConfirmed = confirmedIndex === currentQuestion;
+    const score = calculateTestScore();
 
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <div className="bg-slate-900/50 rounded-lg p-3 mb-3">
-                <p className="text-cyan-400 text-sm italic">{q.scenario}</p>
-              </div>
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ zIndex: 10 }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-yellow-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          <button
-            onClick={() => {
-              setShowTestResults(true);
-              emitGameEvent('game_completed', { score: calculateTestScore(), maxScore: 10 });
-            }}
-            disabled={testAnswers.includes(-1)}
-            style={{ zIndex: 10 }}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white hover:from-yellow-500 hover:to-orange-500'
-            }`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="max-w-2xl w-full">
-          <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
-            <div className="text-6xl mb-4">{calculateTestScore() >= 7 ? 'E' : '?'}</div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {calculateTestScore()}/10
-            </h3>
-            <p className="text-slate-300 mb-6">
-              {calculateTestScore() >= 7
-                ? "Excellent! You've mastered Electric Fields!"
-                : 'Keep studying! Review the concepts and try again.'}
+    if (showTestResults) {
+      return (
+        <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ backgroundColor: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '24px', textAlign: 'center', marginBottom: '20px', border: '1px solid rgba(51,65,85,0.5)' }}>
+            <p style={{ fontSize: '48px', marginBottom: '8px' }}>{score >= 7 ? 'E' : '?'}</p>
+            <p style={{ fontSize: '32px', fontWeight: 800, color: score >= 7 ? '#10b981' : '#f59e0b', margin: '0 0 8px' }}>
+              {score}/10
             </p>
-
-            {calculateTestScore() >= 7 ? (
-              <button
-                onClick={() => goToPhase('mastery')}
-                style={{ zIndex: 10 }}
-                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-              >
-                Claim Your Mastery Badge
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setShowTestResults(false);
-                  setTestAnswers(Array(10).fill(-1));
-                  goToPhase('review');
-                }}
-                style={{ zIndex: 10 }}
-                className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-semibold rounded-xl hover:from-yellow-500 hover:to-orange-500 transition-all duration-300"
-              >
-                Review and Try Again
-              </button>
-            )}
-          </div>
-
-          {/* Show explanations */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-white">Review Answers:</h4>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== -1 && q.options[userAnswer]?.correct;
-              return (
-                <div
-                  key={qIndex}
-                  className={`p-4 rounded-xl ${isCorrect ? 'bg-emerald-900/30' : 'bg-red-900/30'}`}
-                >
-                  <p className="text-white font-medium mb-2">
-                    {qIndex + 1}. {q.question}
-                  </p>
-                  <p className={`text-sm ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                    Your answer: {userAnswer !== -1 ? q.options[userAnswer].text : 'Not answered'}
-                  </p>
-                  {!isCorrect && (
-                    <p className="text-emerald-400 text-sm mt-1">
-                      Correct: {q.options.find(o => o.correct)?.text}
-                    </p>
-                  )}
-                  <p className="text-slate-400 text-sm mt-2">{q.explanation}</p>
-                </div>
-              );
-            })}
+            <p style={{ fontSize: '16px', color: '#94a3b8', margin: 0 }}>
+              {score >= 7 ? "Excellent! You've mastered Electric Fields!" : 'Keep studying!'}
+            </p>
           </div>
         </div>
-      )}
-    </div>
-  );
+      );
+    }
+
+    return (
+      <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'white', marginBottom: '8px' }}>Knowledge Test</h2>
+        <p style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 400, marginBottom: '16px', lineHeight: 1.6 }}>
+          Apply your understanding of electric fields, field lines, superposition, and real-world applications to solve challenging physics scenarios. Question {currentQuestion + 1} of 10.
+        </p>
+
+        <div style={{ display: 'flex', gap: '3px', marginBottom: '20px' }}>
+          {Array(10).fill(0).map((_, i) => (
+            <div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', backgroundColor: i < currentQuestion ? '#10b981' : i === currentQuestion ? '#3b82f6' : '#1e293b' }} />
+          ))}
+        </div>
+
+        <div style={{ backgroundColor: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '10px', padding: '12px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '14px', color: '#22d3ee', fontStyle: 'italic', margin: 0 }}>{q.scenario}</p>
+        </div>
+
+        <p style={{ fontSize: '18px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>{q.question}</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+          {q.options.map((opt, i) => (
+            <button key={i} onClick={() => { if (!isConfirmed) { const newA = [...testAnswers]; newA[currentQuestion] = i; setTestAnswers(newA); } }} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', border: testAnswers[currentQuestion] === i ? '2px solid #3b82f6' : '1px solid #334155', backgroundColor: testAnswers[currentQuestion] === i ? 'rgba(59,130,246,0.15)' : '#0f172a', cursor: isConfirmed ? 'default' : 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: '16px', color: 'white' }}>{String.fromCharCode(65 + i)}) {opt.text}</span>
+            </button>
+          ))}
+        </div>
+
+        {!isConfirmed ? (
+          <button onClick={() => { if (testAnswers[currentQuestion] !== -1) setConfirmedIndex(currentQuestion); }} disabled={testAnswers[currentQuestion] === -1} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: testAnswers[currentQuestion] !== -1 ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : '#1e293b', color: testAnswers[currentQuestion] !== -1 ? 'white' : '#64748b', fontSize: '16px', fontWeight: 700, cursor: testAnswers[currentQuestion] !== -1 ? 'pointer' : 'not-allowed', opacity: testAnswers[currentQuestion] !== -1 ? 1 : 0.5 }}>
+            Check Answer
+          </button>
+        ) : currentQuestion < 9 ? (
+          <button onClick={() => { setConfirmedIndex(null); setCurrentQuestion(currentQuestion + 1); }} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>
+            Next Question
+          </button>
+        ) : (
+          <button onClick={() => { setTestSubmitted(true); setShowTestResults(true); emitGameEvent('game_completed', { score: calculateTestScore(), maxScore: 10 }); }} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #10b981, #3b82f6)', color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>
+            Submit Test
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const renderMastery = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
@@ -2147,48 +2105,47 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     }
   };
 
-  const phaseDisplayLabels = [
-    'Hook', 'Predict', 'Explore', 'Review',
-    'Twist Predict', 'Twist Explore', 'Twist Review',
-    'Apply', 'Test', 'Mastery'
-  ];
+  const phaseIndex = phaseOrder.indexOf(phase);
+  const isFirstPhase = phaseIndex === 0;
+  const isLastPhase = phaseIndex === phaseOrder.length - 1;
+  const isTestPhase = phase === 'test';
+  const canGoNext = !isLastPhase && (!isTestPhase || testSubmitted);
+
+  const renderBottomBar = () => (
+    <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+      <button onClick={() => !isFirstPhase && goToPhase(phaseOrder[phaseIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirstPhase ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirstPhase ? 'not-allowed' : 'pointer', opacity: isFirstPhase ? 0.4 : 1, transition: 'all 0.3s ease' }}>
+        ← Back
+      </button>
+      <div style={{ display: 'flex', gap: '6px' }}>
+        {phaseOrder.map((p, i) => (
+          <div key={p} onClick={() => i <= phaseIndex && goToPhase(p)} title={phaseLabels[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#3b82f6' : i < phaseIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= phaseIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+        ))}
+      </div>
+      <button onClick={() => canGoNext && goToPhase(phaseOrder[phaseIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4, transition: 'all 0.3s ease' }}>
+        Next →
+      </button>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium Background Layers */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/50 via-transparent to-blue-950/50" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent" />
-
-      {/* Ambient Glow Circles */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-3/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
-
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-slate-400`}>Electric Fields</span>
-          <div className="flex gap-1.5 items-center">
-            {phaseOrder.map((p, i) => (
-              <button
-                key={i}
-                onClick={() => goToPhase(p)}
-                style={{ zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-cyan-500 w-6' : phaseOrder.indexOf(phase) > i ? 'bg-cyan-500 w-2' : 'bg-slate-600 w-2'
-                }`}
-                title={phaseDisplayLabels[i]}
-              />
-            ))}
-          </div>
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>{phaseDisplayLabels[phaseOrder.indexOf(phase)]}</span>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100vh' }}>
+      {/* Top bar */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15,23,42,0.9)', position: 'relative', zIndex: 10 }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Electric Fields</span>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button key={p} aria-label={phaseLabels[p]} title={phaseLabels[p]} onClick={() => i <= phaseIndex && goToPhase(p)} style={{ width: phase === p ? '20px' : '8px', height: '8px', borderRadius: '4px', border: 'none', backgroundColor: i < phaseIndex ? '#10b981' : phase === p ? '#06b6d4' : '#334155', cursor: i <= phaseIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
         </div>
+        <span style={{ fontSize: '14px', color: '#64748b' }}>{phaseIndex + 1}/10</span>
       </div>
-
-      {/* Main content */}
-      <div className="relative z-10 pt-14 pb-8">
+      {/* Content */}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: `${((phaseIndex + 1) / 10) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6)', transition: 'width 0.3s ease', zIndex: 20 }} />
         {renderPhase()}
       </div>
+      {/* Bottom bar */}
+      {renderBottomBar()}
     </div>
   );
 };

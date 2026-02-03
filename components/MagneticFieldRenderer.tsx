@@ -183,16 +183,16 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
   }
 };
 
-const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
+const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   // Phase labels and descriptions
   const phaseLabels: Record<Phase, string> = {
     hook: 'Introduction',
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'Electromagnet Challenge',
-    twist_play: 'Electromagnet Simulation',
-    twist_review: 'Electromagnet Insight',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
+    twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
     mastery: 'Mastery'
@@ -225,7 +225,19 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
   };
 
   // State
-  const [phase, setPhase] = useState<Phase>('hook');
+  const [phase, setPhase] = useState<Phase>(() => {
+    const vp: Phase[] = ['hook','predict','play','review','twist_predict','twist_play','twist_review','transfer','test','mastery'];
+    if (gamePhase && vp.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
+  });
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
+  const [testSubmitted, setTestSubmitted] = useState(false);
+
+  useEffect(() => {
+    const vp: Phase[] = ['hook','predict','play','review','twist_predict','twist_play','twist_review','transfer','test','mastery'];
+    if (gamePhase && vp.includes(gamePhase as Phase)) setPhase(gamePhase as Phase);
+  }, [gamePhase]);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -783,10 +795,10 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             <rect x="0" y="0" width="65" height="50" fill="#1e293b" stroke="#334155" strokeWidth="1" rx="6" />
           </g>
 
-          {/* Formula box */}
-          <rect x="10" y={height - 45} width="150" height="35" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />
-          <text x="85" y={height - 22} textAnchor="middle" fill="#f8fafc" fontSize="12" fontFamily="monospace">
-            B = u0I / (2pr)
+          {/* Formula box with current value */}
+          <rect x="10" y={height - 45} width="180" height="35" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />
+          <text x="100" y={height - 22} textAnchor="middle" fill="#f8fafc" fontSize="12" fontFamily="monospace">
+            B = u0*{wireCurrent.toFixed(1)}A / (2pr)
           </text>
         </svg>
 
@@ -1211,25 +1223,21 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
   // ============================================================
 
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6">
-      {/* Premium badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse" />
-        <span className="text-cyan-400/80 text-sm font-medium tracking-wide uppercase">Electromagnetism</span>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#06b6d4' }} />
+        <span style={{ color: '#22d3ee', fontSize: '14px', fontWeight: 600 }}>Electromagnetism</span>
       </div>
 
-      {/* Gradient title */}
-      <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
+      <h1 style={{ fontSize: '36px', fontWeight: 800, background: 'linear-gradient(135deg, #22d3ee, #3b82f6, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: '12px' }}>
         Magnetic Fields
       </h1>
 
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
+      <p style={{ color: 'rgba(148,163,184,1)', fontSize: '18px', fontWeight: 400, marginBottom: '32px', maxWidth: '400px', lineHeight: 1.6 }}>
         The invisible force fields created by moving charges
       </p>
 
-      {/* Premium card */}
-      <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+      <div style={{ width: '100%', maxWidth: '400px', backdropFilter: 'blur(20px)', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '24px', marginBottom: '32px', boxShadow: '0 25px 50px rgba(0,0,0,0.3)' }}>
         <svg width={isMobile ? 280 : 340} height={180} className="mx-auto mb-4">
           <defs>
             {/* Premium bar magnet north pole gradient */}
@@ -1375,20 +1383,11 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
         </p>
       </div>
 
-      {/* CTA Button */}
-      <button
-        onClick={() => goToPhase('predict')}
-        style={{ position: 'relative', zIndex: 10 }}
-        className="group px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 flex items-center gap-2"
-      >
-        Explore the Magnetic Field
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
+      <button onClick={() => goToPhase('predict')} style={{ marginTop: '16px', padding: '16px 32px', background: 'linear-gradient(135deg, #0891b2, #2563eb)', color: 'white', fontSize: '18px', fontWeight: 700, borderRadius: '16px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px rgba(6,182,212,0.3)', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        Start Exploring →
       </button>
 
-      {/* Hint text */}
-      <p className="text-slate-500 text-sm mt-6">
+      <p style={{ marginTop: '16px', color: '#64748b', fontSize: '14px' }}>
         Discover how moving charges create magnetic fields
       </p>
     </div>
@@ -1397,6 +1396,47 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
   const renderPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+
+      {/* SVG diagram of wire with compass */}
+      <svg width="320" height="200" viewBox="0 0 320 200" style={{ marginBottom: 16 }}>
+        <defs>
+          <radialGradient id="predictWireGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="predictWireCopper" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#92400e" />
+          </linearGradient>
+          <filter id="predictGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        {/* Background */}
+        <rect width="320" height="200" rx="12" fill="#0f172a" />
+        <rect x="2" y="2" width="316" height="196" rx="10" fill="none" stroke="#334155" strokeWidth="1" />
+        {/* Wire going up */}
+        <line x1="160" y1="180" x2="160" y2="20" stroke="url(#predictWireCopper)" strokeWidth="6" />
+        <circle cx="160" cy="100" r="20" fill="url(#predictWireGlow)" />
+        {/* Current direction arrow */}
+        <polygon points="160,30 155,45 165,45" fill="#fbbf24" />
+        <text x="175" y="40" fill="#fbbf24" fontSize="11" fontFamily="sans-serif">I (up)</text>
+        {/* Question marks for field pattern */}
+        <text x="120" y="80" fill="#60a5fa" fontSize="16" fontFamily="sans-serif" opacity="0.7">?</text>
+        <text x="195" y="115" fill="#60a5fa" fontSize="16" fontFamily="sans-serif" opacity="0.7">?</text>
+        <text x="130" y="140" fill="#60a5fa" fontSize="16" fontFamily="sans-serif" opacity="0.7">?</text>
+        <text x="185" y="75" fill="#60a5fa" fontSize="16" fontFamily="sans-serif" opacity="0.7">?</text>
+        {/* Compass nearby */}
+        <circle cx="230" cy="100" r="18" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
+        <line x1="230" y1="88" x2="225" y2="108" stroke="#ef4444" strokeWidth="2" />
+        <line x1="230" y1="88" x2="235" y2="108" stroke="#94a3b8" strokeWidth="2" />
+        <text x="222" y="84" fill="#94a3b8" fontSize="9" fontFamily="sans-serif">N</text>
+        <circle cx="230" cy="100" r="2" fill="#e2e8f0" />
+        {/* Label */}
+        <text x="160" y="195" fill="#94a3b8" fontSize="10" textAnchor="middle" fontFamily="sans-serif">Wire carrying current with nearby compass</text>
+      </svg>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
@@ -1520,6 +1560,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
                 value={wireCurrent}
                 onChange={(e) => setWireCurrent(parseFloat(e.target.value))}
                 className="w-full"
+                style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
               />
               <div className="text-cyan-400 font-bold">{wireCurrent.toFixed(1)}</div>
             </div>
@@ -1533,6 +1574,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
                 value={wireDistance * 100}
                 onChange={(e) => setWireDistance(parseFloat(e.target.value) / 100)}
                 className="w-full"
+                style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
               />
               <div className="text-cyan-400 font-bold">{(wireDistance * 100).toFixed(1)}</div>
             </div>
@@ -1549,6 +1591,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
                 value={electromagnetCurrent}
                 onChange={(e) => setElectromagnetCurrent(parseFloat(e.target.value))}
                 className="w-full"
+                style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
               />
               <div className="text-cyan-400 font-bold">{electromagnetCurrent.toFixed(1)}</div>
             </div>
@@ -1563,6 +1606,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
                 value={electromagnetCoils}
                 onChange={(e) => setElectromagnetCoils(parseInt(e.target.value))}
                 className="w-full"
+                style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
               />
               <div className="text-cyan-400 font-bold">{electromagnetCoils}</div>
             </div>
@@ -1657,6 +1701,54 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-purple-400 mb-6">The Electromagnet Challenge</h2>
 
+      {/* SVG diagram of electromagnet */}
+      <svg width="320" height="200" viewBox="0 0 320 200" style={{ marginBottom: 16 }}>
+        <defs>
+          <linearGradient id="twpIronCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="50%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#64748b" />
+          </linearGradient>
+          <linearGradient id="twpCoilWire" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#b45309" />
+          </linearGradient>
+          <filter id="twpGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        <rect width="320" height="200" rx="12" fill="#0f172a" />
+        {/* Iron core */}
+        <rect x="80" y="85" width="160" height="30" rx="4" fill="url(#twpIronCore)" stroke="#475569" strokeWidth="1" />
+        <text x="160" y="105" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold" fontFamily="sans-serif">Iron Core</text>
+        {/* Coil windings */}
+        {[0,1,2,3,4,5,6,7].map(i => (
+          <g key={i}>
+            <ellipse cx={95 + i * 19} cy={100} rx="8" ry="22" fill="none" stroke="url(#twpCoilWire)" strokeWidth="2.5" />
+          </g>
+        ))}
+        {/* Field lines (dashed to show pattern) */}
+        <path d="M 70,100 C 70,50 250,50 250,100" fill="none" stroke="#8b5cf6" strokeWidth="1.5" strokeDasharray="4,3" opacity="0.6" />
+        <path d="M 70,100 C 70,150 250,150 250,100" fill="none" stroke="#8b5cf6" strokeWidth="1.5" strokeDasharray="4,3" opacity="0.6" />
+        <path d="M 60,100 C 60,35 260,35 260,100" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="4,3" opacity="0.4" />
+        <path d="M 60,100 C 60,165 260,165 260,100" fill="none" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="4,3" opacity="0.4" />
+        {/* N and S poles */}
+        <text x="260" y="105" fill="#ef4444" fontSize="14" fontWeight="bold" fontFamily="sans-serif">N</text>
+        <text x="55" y="105" fill="#3b82f6" fontSize="14" fontWeight="bold" fontFamily="sans-serif">S</text>
+        {/* Battery / power source */}
+        <line x1="95" y1="122" x2="95" y2="160" stroke="#fbbf24" strokeWidth="2" />
+        <line x1="240" y1="122" x2="240" y2="160" stroke="#fbbf24" strokeWidth="2" />
+        <line x1="95" y1="160" x2="150" y2="160" stroke="#fbbf24" strokeWidth="2" />
+        <line x1="185" y1="160" x2="240" y2="160" stroke="#fbbf24" strokeWidth="2" />
+        <rect x="150" y="152" width="35" height="16" rx="3" fill="#1e293b" stroke="#fbbf24" strokeWidth="1.5" />
+        <text x="167" y="163" textAnchor="middle" fill="#fbbf24" fontSize="8" fontFamily="sans-serif">Battery</text>
+        {/* Current arrow */}
+        <polygon points="130,157 135,153 135,161" fill="#fbbf24" />
+        {/* Title */}
+        <text x="160" y="25" textAnchor="middle" fill="#c4b5fd" fontSize="12" fontFamily="sans-serif">Electromagnet: Wire coiled around iron core</text>
+      </svg>
+
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
           Instead of a straight wire, what if we coil the wire into many loops around an iron core? We've created an electromagnet!
@@ -1733,6 +1825,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             value={electromagnetCurrent}
             onChange={(e) => setElectromagnetCurrent(parseFloat(e.target.value))}
             className="w-full mb-2"
+            style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
           />
           <div className="text-cyan-400 font-bold text-xl">{electromagnetCurrent.toFixed(1)} A</div>
         </div>
@@ -1747,6 +1840,7 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             value={electromagnetCoils}
             onChange={(e) => setElectromagnetCoils(parseInt(e.target.value))}
             className="w-full mb-2"
+            style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
           />
           <div className="text-cyan-400 font-bold text-xl">{electromagnetCoils} turns</div>
         </div>
@@ -1887,19 +1981,24 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
           ))}
         </div>
 
+        <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '12px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '13px', color: 'rgba(148,163,184,1)', fontWeight: 400, lineHeight: 1.6, margin: 0 }}>
+            Magnetic fields power real-world applications spanning over 603 km/h maglev trains, MRI machines generating fields of 3 W per voxel at 0.1 mm resolution, electric motors consuming 45% of the world's 175 billion kWh electricity, and hard drives storing 20 TB of data at 1 Tb per square inch. Companies like Siemens, Tesla, GE Healthcare, and Seagate drive innovation worth $200 billion annually across these magnetic field application areas.
+          </p>
+        </div>
+
         {!completedApps.has(activeAppIndex) && (
           <button
             onClick={() => handleAppComplete(activeAppIndex)}
-            style={{ position: 'relative', zIndex: 10 }}
-            className="w-full mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
+            style={{ position: 'relative', zIndex: 10, width: '100%', padding: '12px', backgroundColor: '#059669', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 700, cursor: 'pointer' }}
           >
             Mark as Understood
           </button>
         )}
       </div>
 
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
+      <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ color: '#94a3b8' }}>Progress:</span>
         <div className="flex gap-1">
           {applications.map((_, i) => (
             <div
@@ -1924,102 +2023,34 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
   );
 
   const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <div className="bg-slate-700/50 rounded-lg p-3 mb-3">
-                <p className="text-cyan-400 text-sm italic">{q.scenario}</p>
-              </div>
-              <p className="text-white font-medium mb-3">
-                {qIndex + 1}. {q.question}
-              </p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ position: 'relative', zIndex: 10 }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          <button
-            onClick={() => { setShowTestResults(true); playSound('complete'); emitEvent('game_completed', { score: calculateScore(), maxScore: 10 }); }}
-            disabled={testAnswers.includes(-1)}
-            style={{ position: 'relative', zIndex: 10 }}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500'
-            }`}
-          >
-            Submit Answers
-          </button>
+    (() => { const q = testQuestions[currentQuestion]; const isConf = confirmedIndex === currentQuestion; const sc = calculateScore();
+    if (showTestResults) return (
+      <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ backgroundColor: 'rgba(30,41,59,0.5)', borderRadius: '16px', padding: '24px', textAlign: 'center', border: '1px solid rgba(51,65,85,0.5)' }}>
+          <p style={{ fontSize: '32px', fontWeight: 800, color: sc >= 7 ? '#10b981' : '#f59e0b' }}>{sc}/10</p>
+          <p style={{ fontSize: '16px', color: '#94a3b8' }}>{sc >= 7 ? "Congratulations! You've mastered magnetic fields!" : 'Keep studying!'}</p>
         </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-          <div className="text-center mb-6">
-            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '!' : '?'}</div>
-            <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {calculateScore()}/10
-            </h3>
-            <p className="text-slate-300">
-              {calculateScore() >= 7
-                ? 'Excellent! You\'ve mastered magnetic fields!'
-                : 'Keep studying! Review the concepts and try again.'}
-            </p>
-          </div>
-
-          <div className="space-y-4 mb-6">
-            {testQuestions.map((q, qIndex) => {
-              const isCorrect = q.options[testAnswers[qIndex]]?.correct;
-              return (
-                <div key={qIndex} className={`p-3 rounded-lg ${isCorrect ? 'bg-emerald-900/30' : 'bg-red-900/30'}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={isCorrect ? 'text-emerald-400' : 'text-red-400'}>
-                      {isCorrect ? 'Correct' : 'Incorrect'}
-                    </span>
-                    <span className="text-sm text-slate-300">Question {qIndex + 1}</span>
-                  </div>
-                  <p className="text-xs text-slate-400">{q.explanation}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          {calculateScore() >= 7 ? (
-            <button
-              onClick={() => goToPhase('mastery')}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="w-full px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
-            >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
-            <button
-              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
-              style={{ position: 'relative', zIndex: 10 }}
-              className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-indigo-500 transition-all duration-300"
-            >
-              Review and Try Again
-            </button>
-          )}
+      </div>
+    );
+    return (
+      <div style={{ padding: '24px', maxWidth: '600px', margin: '0 auto' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 800, color: 'white', marginBottom: '8px' }}>Knowledge Test</h2>
+        <p style={{ fontSize: '14px', color: 'rgba(148,163,184,1)', fontWeight: 400, marginBottom: '16px', lineHeight: 1.6 }}>Apply your understanding of magnetic fields, the right-hand rule, Lorentz force, and electromagnetic induction to solve real-world physics scenarios. Question {currentQuestion + 1} of 10.</p>
+        <div style={{ display: 'flex', gap: '3px', marginBottom: '20px' }}>{Array(10).fill(0).map((_, i) => (<div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', backgroundColor: i < currentQuestion ? '#10b981' : i === currentQuestion ? '#3b82f6' : '#1e293b' }} />))}</div>
+        <div style={{ backgroundColor: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: '10px', padding: '12px', marginBottom: '16px' }}><p style={{ fontSize: '14px', color: '#22d3ee', fontStyle: 'italic', margin: 0 }}>{q.scenario}</p></div>
+        <p style={{ fontSize: '18px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>{q.question}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+          {q.options.map((opt, i) => (<button key={i} onClick={() => { if (!isConf) { const nA = [...testAnswers]; nA[currentQuestion] = i; setTestAnswers(nA); }}} style={{ padding: '12px', borderRadius: '10px', border: testAnswers[currentQuestion] === i ? '2px solid #3b82f6' : '1px solid #334155', backgroundColor: testAnswers[currentQuestion] === i ? 'rgba(59,130,246,0.15)' : '#0f172a', cursor: isConf ? 'default' : 'pointer', textAlign: 'left' }}><span style={{ fontSize: '16px', color: 'white' }}>{String.fromCharCode(65+i)}) {opt.text}</span></button>))}
         </div>
-      )}
-    </div>
+        {!isConf ? (
+          <button onClick={() => { if (testAnswers[currentQuestion] !== -1) setConfirmedIndex(currentQuestion); }} disabled={testAnswers[currentQuestion] === -1} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: testAnswers[currentQuestion] !== -1 ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : '#1e293b', color: testAnswers[currentQuestion] !== -1 ? 'white' : '#64748b', fontSize: '16px', fontWeight: 700, cursor: testAnswers[currentQuestion] !== -1 ? 'pointer' : 'not-allowed', opacity: testAnswers[currentQuestion] !== -1 ? 1 : 0.5 }}>Check Answer</button>
+        ) : currentQuestion < 9 ? (
+          <button onClick={() => { setConfirmedIndex(null); setCurrentQuestion(currentQuestion + 1); }} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Next Question</button>
+        ) : (
+          <button onClick={() => { setTestSubmitted(true); setShowTestResults(true); playSound('complete'); emitEvent('game_completed', { score: calculateScore(), maxScore: 10 }); }} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #10b981, #3b82f6)', color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Submit Test</button>
+        )}
+      </div>
+    ); })()
   );
 
   const renderMastery = () => (
@@ -2098,43 +2129,36 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     }
   };
 
+  const pidx = phaseOrder.indexOf(phase);
+  const isFirstP = pidx === 0;
+  const isLastP = pidx === phaseOrder.length - 1;
+  const isTestP = phase === 'test';
+  const canNext = !isLastP && (!isTestP || testSubmitted);
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Ambient background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Premium progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-400">Magnetic Fields</span>
-            <span className="text-sm text-slate-500">{phaseLabels[phase]}</span>
-          </div>
-          {/* Phase dots */}
-          <div className="flex justify-between px-1">
-            {phaseOrder.map((p, i) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                style={{ position: 'relative', zIndex: 10 }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phaseOrder.indexOf(phase) >= i
-                    ? 'bg-cyan-500'
-                    : 'bg-slate-700'
-                } ${phase === p ? 'w-6' : 'w-2'}`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #0a0f1a 100%)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', minHeight: '100vh' }}>
+      {/* Top bar */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15,23,42,0.9)', position: 'relative', zIndex: 10 }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8' }}>Magnetic Fields</span>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button key={p} aria-label={phaseLabels[p]} title={phaseLabels[p]} onClick={() => i <= pidx && goToPhase(p)} style={{ width: phase === p ? '20px' : '8px', height: '8px', borderRadius: '4px', border: 'none', backgroundColor: i < pidx ? '#10b981' : phase === p ? '#06b6d4' : '#334155', cursor: i <= pidx ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
         </div>
+        <span style={{ fontSize: '14px', color: '#64748b' }}>{pidx + 1}/10</span>
       </div>
-
-      <div className="pt-20 pb-8 relative z-10">
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: `${((pidx + 1) / 10) * 100}%`, height: '3px', background: 'linear-gradient(90deg, #06b6d4, #3b82f6)', transition: 'width 0.3s ease', zIndex: 20 }} />
         {renderPhase()}
+      </div>
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        <button onClick={() => !isFirstP && goToPhase(phaseOrder[pidx - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirstP ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirstP ? 'not-allowed' : 'pointer', opacity: isFirstP ? 0.4 : 1, transition: 'all 0.3s ease' }}>← Back</button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <div key={p} onClick={() => i <= pidx && goToPhase(p)} title={phaseLabels[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#3b82f6' : i < pidx ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= pidx ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
+        </div>
+        <button onClick={() => canNext && goToPhase(phaseOrder[pidx + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canNext ? 'pointer' : 'not-allowed', opacity: canNext ? 1 : 0.4, transition: 'all 0.3s ease' }}>Next →</button>
       </div>
     </div>
   );

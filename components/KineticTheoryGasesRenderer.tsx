@@ -41,8 +41,8 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // =============================================================================
 const testQuestions = [
   {
-    scenario: "A sealed balloon is taken from sea level (300 K) to a hot car interior (330 K).",
-    question: "What happens to the average speed of air molecules inside?",
+    scenario: "A sealed balloon is taken from a comfortable room at sea level where the temperature is 300 K and placed inside a closed car that has been sitting in direct sunlight during summer. The car's interior temperature has risen to 330 K. The balloon visibly expands as the air inside responds to the temperature change.",
+    question: "What happens to the average speed of air molecules inside the balloon when the temperature increases from 300 K to 330 K?",
     options: [
       { id: 'a', label: "Increases by about 5%", correct: true },
       { id: 'b', label: "Increases by about 10%" },
@@ -52,8 +52,8 @@ const testQuestions = [
     explanation: "v_rms is proportional to sqrt(T). When T increases from 300 K to 330 K (10% increase), v_rms increases by sqrt(330/300) = 1.05, or about 5%. Speed scales with the square root of temperature, not linearly."
   },
   {
-    scenario: "Two containers hold different gases at the same temperature: helium (mass 4 u) and argon (mass 40 u).",
-    question: "How does the RMS speed of helium compare to argon?",
+    scenario: "A physics laboratory has two identical sealed containers maintained at the same temperature of 300 K. One container is filled with helium gas (atomic mass 4 u) and the other with argon gas (atomic mass 40 u). Both containers have identical pressure and volume conditions.",
+    question: "How does the RMS speed of helium atoms compare to the RMS speed of argon atoms at this temperature?",
     options: [
       { id: 'a', label: "Helium is sqrt(10) = 3.2x faster", correct: true },
       { id: 'b', label: "Helium is 10x faster" },
@@ -161,9 +161,9 @@ const realWorldApps = [
     title: 'Aerospace Engineering',
     short: 'Rocket propulsion and high-altitude flight',
     tagline: 'Where molecular speeds become rocket speeds',
-    description: 'Kinetic theory underlies rocket propulsion, atmospheric reentry heating, and spacecraft thermal control. Understanding molecular behavior at extreme temperatures is essential for space exploration.',
-    connection: 'Rocket exhaust velocity depends directly on exhaust gas temperature and molecular mass - lighter, hotter gases produce faster exhaust and more thrust per unit mass.',
-    howItWorks: 'Rocket nozzles convert thermal energy (random molecular motion) into directed kinetic energy. The ideal exhaust velocity is proportional to sqrt(T/M), explaining why hydrogen fuel outperforms heavier propellants.',
+    description: 'Kinetic theory underlies rocket propulsion, atmospheric reentry heating, and spacecraft thermal control. Understanding molecular behavior at extreme temperatures is essential for space exploration. The Space Shuttle used over 24000 thermal tiles to manage molecular kinetic energy during reentry at 7800 m/s, when air molecules create temperatures exceeding 1650C and thermal flux of 35000 W per square meter.',
+    connection: 'Rocket exhaust velocity depends directly on exhaust gas temperature and molecular mass - lighter, hotter gases produce faster exhaust and more thrust per unit mass. Hydrogen at 2 u provides 4500 m/s exhaust velocity versus 3000 m/s for kerosene at 170 u, a direct consequence of v = sqrt(T/M).',
+    howItWorks: 'Rocket nozzles convert thermal energy (random molecular motion) into directed kinetic energy. The ideal exhaust velocity is proportional to sqrt(T/M), explaining why hydrogen fuel outperforms heavier propellants. Ion thrusters accelerate xenon ions to 30000 m/s, achieving 10x better fuel efficiency than chemical rockets.',
     stats: [
       { value: '3000 m/s', label: 'Typical exhaust speed', icon: '🔥' },
       { value: '10,000C', label: 'Reentry heating', icon: '☄️' },
@@ -395,8 +395,8 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: 'rgba(156, 163, 175, 0.9)',
+    textMuted: 'rgba(107, 114, 128, 0.8)',
     border: '#2a2a3a',
   };
 
@@ -494,6 +494,30 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
     </div>
   );
 
+  // Bottom navigation bar
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const isTestPhase = phase === 'test';
+    const quizComplete = isTestPhase && testSubmitted;
+    const canGoNext = !isLast && (!isTestPhase || quizComplete);
+    return (
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        <button onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1 }}>Back</button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <div key={p} onClick={() => i <= currentIndex && goToPhase(p)} title={phaseLabels[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#3b82f6' : i < currentIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
+        </div>
+        <button onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4 }}>Next</button>
+      </div>
+    );
+  };
+
+  // Confirm flow for quiz
+  const [confirmedIndex, setConfirmedIndex] = useState(-1);
+
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
     background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
@@ -510,8 +534,29 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
 
   // Molecule visualization component
   const MoleculeVisualization = ({ temp, vol, count, containerSize }: { temp: number; vol: number; count: number; containerSize: number }) => {
-    const localMolecules = molecules.length > 0 ? molecules : [];
+    // Generate static molecules if none exist (for direct phase rendering)
+    const localMolecules = molecules.length > 0 ? molecules : (() => {
+      const cSize = vol * 3;
+      const baseSpd = calculateRmsSpeed(temp) * 0.00001;
+      const mols: Molecule[] = [];
+      for (let i = 0; i < count; i++) {
+        const sf = 0.5 + (((i * 7 + 3) % 10) / 10) * 1.5;
+        const spd = baseSpd * sf;
+        const ang = ((i * 137.5) % 360) * Math.PI / 180;
+        mols.push({
+          id: i,
+          x: 25 + ((i * 47 + 13) % (cSize - 50)),
+          y: 35 + ((i * 59 + 17) % (cSize - 70)),
+          vx: spd * Math.cos(ang),
+          vy: spd * Math.sin(ang),
+          speed: spd,
+          radius: 5,
+        });
+      }
+      return mols;
+    })();
     const baseSpeed = calculateRmsSpeed(temp) * 0.00001;
+    const pressure = (count * temp / vol).toFixed(1);
 
     return (
       <svg width={containerSize} height={containerSize} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -536,6 +581,10 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
             <stop offset="50%" stopColor="#ef4444" />
             <stop offset="100%" stopColor="#b91c1c" />
           </radialGradient>
+          <linearGradient id="wallGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.accent} stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#D97706" stopOpacity="0.4" />
+          </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge>
@@ -543,39 +592,81 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id="wallGlow">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
+        {/* Background grid */}
+        <g opacity="0.1">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <React.Fragment key={i}>
+              <line x1={i * containerSize / 5} y1="0" x2={i * containerSize / 5} y2={containerSize} stroke="white" strokeWidth="0.5" />
+              <line x1="0" y1={i * containerSize / 5} x2={containerSize} y2={i * containerSize / 5} stroke="white" strokeWidth="0.5" />
+            </React.Fragment>
+          ))}
+        </g>
+
         {/* Container border */}
-        <rect x="2" y="2" width={containerSize - 4} height={containerSize - 4} fill="none" stroke={colors.accent} strokeWidth="3" rx="10" />
+        <g>
+          <rect x="2" y="2" width={containerSize - 4} height={containerSize - 4} fill="none" stroke="url(#wallGrad)" strokeWidth="3" rx="10" filter="url(#wallGlow)" />
+        </g>
 
         {/* Temperature display */}
-        <rect x={containerSize / 2 - 40} y="8" width="80" height="24" rx="4" fill={colors.bgSecondary} />
-        <text x={containerSize / 2} y="25" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="bold">{temp} K</text>
+        <g>
+          <rect x={containerSize / 2 - 50} y="8" width="100" height="28" rx="6" fill="rgba(0,0,0,0.6)" stroke="rgba(245,158,11,0.3)" strokeWidth="1" />
+          <text x={containerSize / 2} y="27" textAnchor="middle" fill={colors.accent} fontSize="14" fontWeight="bold">{temp} K</text>
+        </g>
 
         {/* Molecules */}
-        {localMolecules.map(mol => {
-          const speedFactor = mol.speed / baseSpeed;
-          let gradientId = 'molSlow';
-          if (speedFactor >= 1.3) gradientId = 'molHot';
-          else if (speedFactor >= 1.0) gradientId = 'molFast';
-          else if (speedFactor >= 0.7) gradientId = 'molMedium';
+        <g>
+          {localMolecules.map(mol => {
+            const speedFactor = mol.speed / baseSpeed;
+            let gradientId = 'molSlow';
+            if (speedFactor >= 1.3) gradientId = 'molHot';
+            else if (speedFactor >= 1.0) gradientId = 'molFast';
+            else if (speedFactor >= 0.7) gradientId = 'molMedium';
 
-          return (
-            <circle
-              key={mol.id}
-              cx={mol.x}
-              cy={mol.y}
-              r={mol.radius}
-              fill={`url(#${gradientId})`}
-              filter="url(#glow)"
-            />
-          );
-        })}
+            return (
+              <g key={mol.id}>
+                <circle
+                  cx={mol.x}
+                  cy={mol.y}
+                  r={mol.radius}
+                  fill={`url(#${gradientId})`}
+                  filter="url(#glow)"
+                />
+                {/* Velocity arrow */}
+                <line
+                  x1={mol.x}
+                  y1={mol.y}
+                  x2={mol.x + mol.vx * 200}
+                  y2={mol.y + mol.vy * 200}
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth="1"
+                />
+              </g>
+            );
+          })}
+        </g>
 
-        {/* Stats */}
-        <text x="15" y={containerSize - 15} fill={colors.textMuted} fontSize="11">
-          N={count} | V={vol} | P={(count * temp / vol).toFixed(1)}
-        </text>
+        {/* Legend */}
+        <g>
+          <rect x="8" y={containerSize - 60} width="120" height="50" rx="6" fill="rgba(0,0,0,0.5)" />
+          <circle cx="20" cy={containerSize - 44} r="4" fill="url(#molSlow)" />
+          <text x="28" y={containerSize - 41} fill="rgba(156,163,175,0.6)" fontSize="9">Slow</text>
+          <circle cx="60" cy={containerSize - 44} r="4" fill="url(#molFast)" />
+          <text x="68" y={containerSize - 41} fill="rgba(156,163,175,0.6)" fontSize="9">Med</text>
+          <circle cx="95" cy={containerSize - 44} r="4" fill="url(#molHot)" />
+          <text x="103" y={containerSize - 41} fill="rgba(156,163,175,0.6)" fontSize="9">Fast</text>
+          <text x="15" y={containerSize - 20} fill="rgba(156,163,175,0.5)" fontSize="10">
+            N={count} V={vol} P={pressure}
+          </text>
+        </g>
       </svg>
     );
   };
@@ -583,6 +674,8 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   // =============================================================================
   // PHASE RENDERS
   // =============================================================================
+
+  const renderPhaseContent = (): React.ReactNode => {
 
   // HOOK PHASE
   if (phase === 'hook') {
@@ -684,7 +777,7 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
             If you DOUBLE the temperature (in Kelvin), what happens to the average molecular speed?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG Diagram - Temperature vs Speed */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -692,22 +785,59 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', color: '#3b82f6' }}>300 K</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Room Temp</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.accent }}>→ 2x →</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', color: '#ef4444' }}>600 K</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Hot!</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>= ?</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '32px', color: colors.success }}>???</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Speed Change</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 320 : 440} height={240} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="coldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#93c5fd" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+                <linearGradient id="hotGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </linearGradient>
+                <filter id="predGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <g>
+                {/* Cold container */}
+                <rect x="30" y="40" width="120" height="140" rx="10" fill="none" stroke="#3b82f6" strokeWidth="2" />
+                <text x="90" y="30" textAnchor="middle" fill="#3b82f6" fontSize="16" fontWeight="bold">300 K</text>
+                {/* Cold molecules - slow */}
+                <circle cx="60" cy="80" r="6" fill="url(#coldGrad)" filter="url(#predGlow)" />
+                <circle cx="100" cy="110" r="6" fill="url(#coldGrad)" filter="url(#predGlow)" />
+                <circle cx="75" cy="150" r="6" fill="url(#coldGrad)" filter="url(#predGlow)" />
+                <circle cx="120" cy="70" r="6" fill="url(#coldGrad)" />
+                {/* Speed arrows - short */}
+                <g><line x1="66" y1="80" x2="78" y2="75" stroke="rgba(147,197,253,0.6)" strokeWidth="1.5" markerEnd="url(#arrowCold)" /></g>
+                <g><line x1="106" y1="110" x2="115" y2="100" stroke="rgba(147,197,253,0.6)" strokeWidth="1.5" /></g>
+                <text x="90" y="195" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="11">Slow</text>
+              </g>
+              <g>
+                {/* Arrow between */}
+                <text x={isMobile ? 175 : 220} y="115" textAnchor="middle" fill={colors.accent} fontSize="22" fontWeight="bold">2x T</text>
+                <line x1={isMobile ? 155 : 195} y1="125" x2={isMobile ? 195 : 245} y2="125" stroke={colors.accent} strokeWidth="2" />
+                <polygon points={`${isMobile ? 195 : 245},120 ${isMobile ? 205 : 255},125 ${isMobile ? 195 : 245},130`} fill={colors.accent} />
+              </g>
+              <g>
+                {/* Hot container */}
+                <rect x={isMobile ? 210 : 290} y="40" width="120" height="140" rx="10" fill="none" stroke="#ef4444" strokeWidth="2" />
+                <text x={isMobile ? 270 : 350} y="30" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">600 K</text>
+                {/* Hot molecules - faster */}
+                <circle cx={isMobile ? 235 : 315} cy="70" r="6" fill="url(#hotGrad)" filter="url(#predGlow)" />
+                <circle cx={isMobile ? 275 : 355} cy="100" r="6" fill="url(#hotGrad)" filter="url(#predGlow)" />
+                <circle cx={isMobile ? 250 : 330} cy="140" r="6" fill="url(#hotGrad)" filter="url(#predGlow)" />
+                <circle cx={isMobile ? 300 : 380} cy="85" r="6" fill="url(#hotGrad)" />
+                {/* Speed arrows - longer */}
+                <g><line x1={isMobile ? 241 : 321} y1="70" x2={isMobile ? 260 : 340} y2="60" stroke="rgba(252,165,165,0.6)" strokeWidth="2" /></g>
+                <g><line x1={isMobile ? 281 : 361} y1="100" x2={isMobile ? 300 : 380} y2="85" stroke="rgba(252,165,165,0.6)" strokeWidth="2" /></g>
+                <text x={isMobile ? 270 : 350} y="195" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="11">Speed = ???</text>
+              </g>
+              <g>
+                <text x={isMobile ? 175 : 220} y="230" textAnchor="middle" fill="rgba(156,163,175,0.5)" fontSize="10">How much faster do molecules move?</text>
+              </g>
+            </svg>
           </div>
 
           {/* Options */}
@@ -1043,20 +1173,46 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '30px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>He</div>
-                <div style={{ color: '#3b82f6', fontSize: '18px', fontWeight: 'bold' }}>4 u</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Light</p>
-              </div>
-              <div style={{ color: colors.textMuted, fontSize: '24px' }}>vs</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>N2</div>
-                <div style={{ color: '#ef4444', fontSize: '18px', fontWeight: 'bold' }}>28 u</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Heavy</p>
-              </div>
-            </div>
-            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px' }}>
+            <svg width={isMobile ? 320 : 440} height={200} style={{ borderRadius: '12px' }}>
+              <defs>
+                <radialGradient id="heGrad" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#93c5fd" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </radialGradient>
+                <radialGradient id="n2Grad" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </radialGradient>
+                <filter id="twGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              <g>
+                <rect x="20" y="30" width={isMobile ? 130 : 180} height="130" rx="8" fill="none" stroke="#3b82f6" strokeWidth="2" />
+                <text x={isMobile ? 85 : 110} y="22" textAnchor="middle" fill="#3b82f6" fontSize="14" fontWeight="bold">He (4 u) - Light</text>
+                <circle cx={isMobile ? 50 : 60} cy="70" r="5" fill="url(#heGrad)" filter="url(#twGlow)" />
+                <circle cx={isMobile ? 90 : 120} cy="100" r="5" fill="url(#heGrad)" filter="url(#twGlow)" />
+                <circle cx={isMobile ? 120 : 150} cy="70" r="5" fill="url(#heGrad)" />
+                <circle cx={isMobile ? 70 : 80} cy="130" r="5" fill="url(#heGrad)" />
+                <line x1={isMobile ? 55 : 65} y1="68" x2={isMobile ? 75 : 95} y2="58" stroke="rgba(147,197,253,0.8)" strokeWidth="2" />
+                <line x1={isMobile ? 95 : 125} y1="98" x2={isMobile ? 115 : 155} y2="85" stroke="rgba(147,197,253,0.8)" strokeWidth="2" />
+                <text x={isMobile ? 85 : 110} y="175" textAnchor="middle" fill="rgba(156,163,175,0.5)" fontSize="10">Fast?</text>
+              </g>
+              <g>
+                <text x={isMobile ? 170 : 225} y="100" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="16">vs</text>
+              </g>
+              <g>
+                <rect x={isMobile ? 200 : 260} y="30" width={isMobile ? 130 : 180} height="130" rx="8" fill="none" stroke="#ef4444" strokeWidth="2" />
+                <text x={isMobile ? 265 : 350} y="22" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">N2 (28 u) - Heavy</text>
+                <circle cx={isMobile ? 230 : 300} cy="80" r="8" fill="url(#n2Grad)" filter="url(#twGlow)" />
+                <circle cx={isMobile ? 280 : 370} cy="110" r="8" fill="url(#n2Grad)" filter="url(#twGlow)" />
+                <circle cx={isMobile ? 260 : 340} cy="60" r="8" fill="url(#n2Grad)" />
+                <line x1={isMobile ? 237 : 307} y1="78" x2={isMobile ? 247 : 317} y2="73" stroke="rgba(252,165,165,0.8)" strokeWidth="1.5" />
+                <text x={isMobile ? 265 : 350} y="175" textAnchor="middle" fill="rgba(156,163,175,0.5)" fontSize="10">Slow?</text>
+              </g>
+            </svg>
+            <p style={{ ...typo.small, color: 'rgba(156,163,175,0.7)', marginTop: '16px' }}>
               Both gases at 300 K - same temperature, same average kinetic energy
             </p>
           </div>
@@ -1171,41 +1327,39 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
               />
             </div>
 
-            {/* Speed bars */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {massOptions.map(gas => {
+            {/* Speed bars - SVG visualization */}
+            <svg width={isMobile ? 300 : 420} height={260} style={{ borderRadius: '8px' }}>
+              <defs>
+                <filter id="barGlow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                {massOptions.map(gas => (
+                  <linearGradient key={gas.name} id={`grad${gas.name}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={gas.color} stopOpacity="0.8" />
+                    <stop offset="100%" stopColor={gas.color} />
+                  </linearGradient>
+                ))}
+              </defs>
+              <g>
+                <text x={isMobile ? 150 : 210} y="18" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="12">RMS Speed Comparison at {twistTemperature} K</text>
+              </g>
+              {massOptions.map((gas, idx) => {
                 const speed = getSpeed(gas.mass, twistTemperature);
-                const maxSpeed = getSpeed(2, twistTemperature); // H2 is fastest
-                const barWidth = (speed / maxSpeed) * 100;
-
+                const maxSpeed = getSpeed(2, 600); // H2 at max temp for scaling
+                const barWidth = (speed / maxSpeed) * (isMobile ? 200 : 300);
+                const y = 30 + idx * 46;
                 return (
-                  <div key={gas.name}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>
-                        {gas.name} ({gas.mass} u)
-                      </span>
-                      <span style={{ ...typo.small, color: gas.color, fontWeight: 600 }}>
-                        {speed.toFixed(0)} m/s
-                      </span>
-                    </div>
-                    <div style={{
-                      height: '24px',
-                      background: colors.bgSecondary,
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                    }}>
-                      <div style={{
-                        width: `${barWidth}%`,
-                        height: '100%',
-                        background: gas.color,
-                        borderRadius: '12px',
-                        transition: 'width 0.3s ease',
-                      }} />
-                    </div>
-                  </div>
+                  <g key={gas.name}>
+                    <text x="5" y={y + 18} fill="rgba(255,255,255,0.9)" fontSize="12" fontWeight="600">{gas.name}</text>
+                    <text x="40" y={y + 18} fill="rgba(156,163,175,0.5)" fontSize="10">({gas.mass}u)</text>
+                    <rect x="75" y={y + 2} width={isMobile ? 200 : 300} height="28" rx="4" fill="rgba(255,255,255,0.05)" />
+                    <rect x="75" y={y + 2} width={barWidth} height="28" rx="4" fill={`url(#grad${gas.name})`} filter="url(#barGlow)" />
+                    <text x={80 + barWidth} y={y + 20} fill={gas.color} fontSize="11" fontWeight="bold">{speed.toFixed(0)} m/s</text>
+                  </g>
                 );
               })}
-            </div>
+            </svg>
 
             {/* Ratio display */}
             <div style={{
@@ -1470,7 +1624,22 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
             <div style={{
               background: colors.bgSecondary,
               borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: 'rgba(156,163,175,0.8)', margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
               padding: '12px',
+              marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.success, marginBottom: '8px', fontWeight: 600 }}>
                 Industry Leaders:
@@ -1482,12 +1651,25 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
                     padding: '4px 12px',
                     borderRadius: '16px',
                     ...typo.small,
-                    color: colors.textSecondary,
+                    color: 'rgba(156,163,175,0.7)',
                   }}>
                     {company}
                   </span>
                 ))}
               </div>
+            </div>
+
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '4px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: 'rgba(156,163,175,0.6)', margin: 0 }}>
+                {app.futureImpact}
+              </p>
             </div>
           </div>
 
@@ -1665,68 +1847,52 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
             ))}
           </div>
 
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+          {/* Navigation with confirm flow */}
+          {(() => {
+            const hasAnswer = !!testAnswers[currentQuestion];
+            const isConfirmed = confirmedIndex >= currentQuestion;
+            const isLastQ = currentQuestion === 9;
+
+            if (hasAnswer && !isConfirmed) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => { setConfirmedIndex(currentQuestion); playSound('click'); }}
+                    style={{ flex: 1, padding: '14px', borderRadius: '10px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                    Check Answer
+                  </button>
+                </div>
+              );
+            }
+            if (isConfirmed && !isLastQ) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => { setCurrentQuestion(prev => prev + 1); playSound('click'); }}
+                    style={{ flex: 1, padding: '14px', borderRadius: '10px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                    Next Question
+                  </button>
+                </div>
+              );
+            }
+            if (isConfirmed && isLastQ) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => {
+                    const score = testAnswers.reduce((acc, ans, i) => {
+                      const correct = testQuestions[i].options.find(o => (o as any).correct)?.id;
+                      return acc + (ans === correct ? 1 : 0);
+                    }, 0);
+                    setTestScore(score);
+                    setTestSubmitted(true);
+                    playSound(score >= 7 ? 'complete' : 'failure');
+                  }}
+                    style={{ flex: 1, padding: '14px', borderRadius: '10px', border: 'none', background: colors.success, color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                    Submit Test
+                  </button>
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
 
         {renderNavDots()}
@@ -1840,6 +2006,16 @@ const KineticTheoryGasesRenderer: React.FC<KineticTheoryGasesRendererProps> = ({
   }
 
   return null;
+  }; // end renderPhaseContent
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {renderPhaseContent()}
+      </div>
+      {renderBottomBar()}
+    </div>
+  );
 };
 
 export default KineticTheoryGasesRenderer;

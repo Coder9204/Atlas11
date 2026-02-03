@@ -75,8 +75,26 @@ const realWorldApps = [
   }
 ];
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Explore Twist',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
+};
+
 interface PolarizationRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  gamePhase?: string;
+  phase?: string;
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
@@ -101,11 +119,37 @@ const colors = {
 };
 
 const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
-  phase,
+  gamePhase: gamePhaseFromProps,
+  phase: phaseFromProps,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Phase state (self-managing)
+  const [phase, setPhase] = useState<Phase>(() => {
+    const incoming = gamePhaseFromProps || phaseFromProps;
+    if (incoming && phaseOrder.includes(incoming as Phase)) return incoming as Phase;
+    return 'hook';
+  });
+
+  // Sync phase with gamePhase prop
+  useEffect(() => {
+    const incoming = gamePhaseFromProps || phaseFromProps;
+    if (incoming && phaseOrder.includes(incoming as Phase) && incoming !== phase) {
+      setPhase(incoming as Phase);
+    }
+  }, [gamePhaseFromProps, phaseFromProps]);
+
+  const goToPhase = (p: Phase) => setPhase(p);
+  const goNext = () => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) setPhase(phaseOrder[idx + 1]);
+  };
+  const goBack = () => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) setPhase(phaseOrder[idx - 1]);
+  };
+
   // Simulation state
   const [angle, setAngle] = useState(0);
   const [showThirdPolarizer, setShowThirdPolarizer] = useState(false);
@@ -121,6 +165,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   // Responsive detection
@@ -862,60 +907,108 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  const renderBottomBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const isFirst = currentIdx === 0;
+    const isLast = currentIdx === phaseOrder.length - 1;
+    const isTestActive = phase === 'test' && !testSubmitted;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={goBack}
+          disabled={isFirst}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textPrimary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            fontSize: '14px',
+            opacity: isFirst ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          ← Back
+        </button>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <div
+              key={p}
+              title={phaseLabels[p]}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: i === currentIdx ? colors.accent : i < currentIdx ? colors.success : 'rgba(255,255,255,0.2)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={isTestActive ? undefined : (isLast ? onPhaseComplete : goNext)}
+          disabled={isTestActive}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            background: isTestActive ? 'rgba(255,255,255,0.1)' : `linear-gradient(135deg, ${colors.accent}, #7c3aed)`,
+            color: isTestActive ? colors.textMuted : 'white',
+            cursor: isTestActive ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            fontSize: '14px',
+            opacity: isTestActive ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', fontWeight: 400 }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px', fontWeight: 700 }}>
               The Disappearing Light
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: 'rgba(148,163,184,0.7)', fontSize: '18px', marginBottom: '24px' }}>
               Can you make the world go dark without turning lights off?
             </p>
           </div>
 
           {renderVisualization(true)}
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ padding: '24px', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: colors.bgCard,
               padding: '20px',
               borderRadius: '12px',
               marginBottom: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
                 Stack two polarized sunglasses lenses together. Now slowly rotate one.
@@ -939,7 +1032,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction ->')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -991,7 +1084,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction ->')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1026,7 +1119,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review ->')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1059,7 +1152,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Polarization</h3>
+            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Polarization - Understanding the Principle</h3>
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Light Waves Vibrate:</strong> Light is a
@@ -1073,12 +1166,13 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
               <p>
                 <strong style={{ color: colors.textPrimary }}>Crossed = Blocked:</strong> When two polarizers
                 are crossed at 90 degrees, the second blocks the exact direction the first allowed through.
-                No vibration direction can pass both filters - total darkness!
+                No vibration direction can pass both filters - total darkness! This demonstrates that because
+                light is a transverse wave, its vibration direction can be selectively filtered.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist! ->')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1137,7 +1231,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction ->')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1172,7 +1266,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation ->')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1224,7 +1318,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge ->')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1246,7 +1340,7 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             </p>
           </div>
 
-          {transferApplications.map((app, index) => (
+          {realWorldApps.map((app, index) => (
             <div
               key={index}
               style={{
@@ -1254,42 +1348,63 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
                 margin: '16px',
                 padding: '16px',
                 borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                border: `1px solid rgba(255,255,255,0.1)`,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Done</span>}
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px', marginBottom: '8px' }}>{app.icon} {app.title}</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '8px', lineHeight: 1.6 }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', lineHeight: 1.5 }}>{app.howItWorks}</p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                {app.stats.map((s, si) => (
+                  <div key={si} style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '8px 12px', borderRadius: '8px' }}>
+                    <div style={{ color: colors.accent, fontWeight: 700, fontSize: '14px' }}>{s.value}</div>
+                    <div style={{ color: colors.textMuted, fontSize: '11px' }}>{s.label}</div>
+                  </div>
+                ))}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+              <p style={{ color: colors.textMuted, fontSize: '12px', marginBottom: '4px' }}>
+                Examples: {app.examples.join(', ')}
+              </p>
+              <p style={{ color: colors.textMuted, fontSize: '12px' }}>
+                Companies: {app.companies.join(', ')}
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px', lineHeight: 1.5 }}>{app.futureImpact}</p>
             </div>
           ))}
+          <div style={{ padding: '16px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+              Polarization technology powers a $150 billion display market, with LCD screens achieving 1 ms response times.
+              Polarized sunglasses reduce glare by 99%, and 3D cinema systems deliver 98% image separation at 144 fps.
+              The microscopy market is worth $3 billion, with retardation sensitivity reaching 1 nm.
+              Samsung, LG Display, Ray-Ban, Oakley, Zeiss, and Nikon are leading companies in polarization applications.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test ->')}
+        {renderBottomBar()}
       </div>
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
+    const labels = ['A', 'B', 'C', 'D'];
+    const scenarios = [
+      'A student in a physics lab is experimenting with polarizing filters. She shines a bright flashlight through a single polarizer and notices the light dims only slightly. She wonders what the filter is actually doing to the light beam as it passes through.',
+      'In a classroom demonstration, two polarizers are placed in series. The teacher slowly rotates the second polarizer from 0 to 90 degrees relative to the first while students observe the dramatic change in brightness on the projection screen behind.',
+      'A physics professor is deriving the mathematical relationship between the relative angle of two polarizers and the resulting transmitted light intensity. She writes Malus\'s Law on the whiteboard and asks students to predict the shape of the curve.',
+      'A counterintuitive experiment puzzles an entire class: two crossed polarizers block all light completely, creating total darkness. The teacher then carefully inserts a third polarizer between them at a 45-degree angle and something unexpected happens.',
+      'A student is fishing on a scenic lake on a sunny afternoon and notices intense glare from the water surface that makes it impossible to see the fish swimming below. A friend hands her a pair of polarized sunglasses to try.',
+      'An engineer at Samsung is designing the pixel architecture for a next-generation LCD display panel. She must carefully choose the orientation of the liquid crystal layer between two polarizing films to maximize contrast ratio and color accuracy.',
+      'A photographer uses a circular polarizing filter on a camera lens and slowly rotates it while viewing the LCD preview. At certain orientations, reflections from a glass building disappear and the sky becomes dramatically deeper blue.',
+      'A physics textbook chapter introduces polarization as a fundamental property of electromagnetic waves, describing how the electric field oscillates perpendicular to the direction of propagation. The concept is key to understanding many modern technologies.',
+      'A family visits an IMAX 3D movie theater. Each person receives special lightweight glasses to watch the film. The children notice that if they tilt their heads sideways, the 3D effect remains perfect, unlike older 3D systems they have tried.',
+      'An engineer at Zeiss is using crossed polarizers to inspect transparent plastic parts for internal stress and defects. When stressed plastic is placed between the polarizers, colorful fringe patterns appear revealing the distribution of forces inside.',
+    ];
+
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1306,60 +1421,105 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
                 {testScore >= 8 ? 'You\'ve mastered polarization!' : 'Review the material and try again.'}
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct:' : userAnswer === oIndex ? 'Your answer:' : '-'} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery ->' : 'Review & Retry')}
+          {renderBottomBar()}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    const selectedIdx = testAnswers[currentTestQuestion];
+    const isConfirmed = confirmedIndex !== null;
+
+    const handleConfirm = () => {
+      if (selectedIdx === null) return;
+      setConfirmedIndex(selectedIdx);
+      if (currentQ.options[selectedIdx].correct && onCorrectAnswer) onCorrectAnswer();
+    };
+
+    const handleNextQuestion = () => {
+      setConfirmedIndex(null);
+      if (currentTestQuestion < testQuestions.length - 1) {
+        setCurrentTestQuestion(currentTestQuestion + 1);
+      } else {
+        // All done
+        let score = 0;
+        testQuestions.forEach((q, i) => {
+          if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) score++;
+        });
+        setTestScore(score);
+        setTestSubmitted(true);
+      }
+    };
+
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: 700 }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontSize: '14px' }}>{currentTestQuestion + 1} of 10</span>
             </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
+
+            <div style={{ background: colors.bgCard, padding: '16px', borderRadius: '12px', marginBottom: '16px', borderLeft: `3px solid ${colors.accent}` }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, marginBottom: '8px' }}>
+                {scenarios[currentTestQuestion]}
+              </p>
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 600 }}>{currentQ.question}</p>
             </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
-                  {opt.text}
-                </button>
-              ))}
+              {currentQ.options.map((opt, oIndex) => {
+                const isSelected = selectedIdx === oIndex;
+                const wasConfirmedCorrect = isConfirmed && opt.correct;
+                const wasConfirmedWrong = isConfirmed && confirmedIndex === oIndex && !opt.correct;
+                return (
+                  <button
+                    key={oIndex}
+                    onClick={() => { if (!isConfirmed) handleTestAnswer(currentTestQuestion, oIndex); }}
+                    style={{
+                      padding: '14px 16px',
+                      borderRadius: '8px',
+                      border: wasConfirmedCorrect ? `2px solid ${colors.success}` : wasConfirmedWrong ? `2px solid ${colors.error}` : isSelected ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                      background: wasConfirmedCorrect ? 'rgba(16, 185, 129, 0.2)' : wasConfirmedWrong ? 'rgba(239, 68, 68, 0.2)' : isSelected ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: isConfirmed ? 'default' : 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {labels[oIndex]}) {opt.text}
+                  </button>
+                );
+              })}
             </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
-            )}
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
+              {!isConfirmed && selectedIdx !== null && (
+                <button onClick={handleConfirm} style={{
+                  padding: '12px 24px', borderRadius: '8px', border: 'none',
+                  background: `linear-gradient(135deg, ${colors.accent}, #7c3aed)`,
+                  color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '14px',
+                  transition: 'all 0.2s ease',
+                }}>
+                  Check Answer
+                </button>
+              )}
+              {isConfirmed && (
+                <button onClick={handleNextQuestion} style={{
+                  padding: '12px 24px', borderRadius: '8px', border: 'none',
+                  background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                  color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '14px',
+                  transition: 'all 0.2s ease',
+                }}>
+                  {currentTestQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1395,12 +1555,17 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game ->')}
+        {renderBottomBar()}
       </div>
     );
   }
 
-  return null;
+  // Default: show hook
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      <p style={{ color: colors.textPrimary, padding: '24px' }}>Loading...</p>
+    </div>
+  );
 };
 
 export default PolarizationRenderer;

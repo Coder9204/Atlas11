@@ -174,7 +174,7 @@ const realWorldApps = [
     title: 'Figure Skating Spins',
     short: 'Angular momentum conservation on ice',
     tagline: 'Pulling arms in to spin faster',
-    description: 'Figure skaters demonstrate moment of inertia beautifully. By pulling their arms close to their body, they reduce moment of inertia and spin dramatically faster - the same total angular momentum distributed in a smaller radius means higher angular velocity.',
+    description: 'Figure skaters demonstrate moment of inertia beautifully. By pulling their arms close to their body, they reduce moment of inertia from about 3.5 kg m^2 to just 0.9 kg m^2, increasing spin rate by up to 4x from 1.5 rev/s to 6 rev/s. Elite skaters like Nathan Chen can achieve rotation speeds of 340 degrees per second during quadruple jumps, completing 4 full rotations in under 0.7s airtime.',
     connection: 'The simulation showed how extending arms slows rotation while tucking them speeds it up. Skaters exploit L = I*omega conservation - reducing I forces omega to increase. The physics you explored is exactly what enables triple axels.',
     howItWorks: 'Skater starts spin with arms extended (large I, moderate omega). Arms pulled tight to body dramatically reduce I. Angular momentum L = I*omega conserved. Smaller I means larger omega. Can increase spin rate 3-4x.',
     stats: [
@@ -353,8 +353,8 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: 'rgba(156, 163, 175, 0.9)',
+    textMuted: 'rgba(107, 114, 128, 0.8)',
     border: '#2a2a3a',
   };
 
@@ -374,7 +374,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Shape Race',
+    twist_play: 'Explore Shapes',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -451,6 +451,30 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
       ))}
     </div>
   );
+
+  // Bottom navigation bar
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+    const isTestPhase = phase === 'test';
+    const quizComplete = isTestPhase && testSubmitted;
+    const canGoNext = !isLast && (!isTestPhase || quizComplete);
+    return (
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        <button onClick={() => !isFirst && goToPhase(phaseOrder[currentIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1 }}>Back</button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <div key={p} onClick={() => i <= currentIndex && goToPhase(p)} title={phaseLabels[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#3b82f6' : i < currentIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= currentIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
+        </div>
+        <button onClick={() => canGoNext && goToPhase(phaseOrder[currentIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4 }}>Next</button>
+      </div>
+    );
+  };
+
+  // Confirm flow for quiz
+  const [confirmedIndex, setConfirmedIndex] = useState(-1);
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -640,6 +664,8 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
   // PHASE RENDERS
   // ---------------------------------------------------------------------------
 
+  const renderPhaseContent = (): React.ReactNode => {
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (
@@ -738,7 +764,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
             A figure skater is spinning with arms extended. She then pulls her arms in close to her body. What happens?
           </h2>
 
-          {/* Visual diagram */}
+          {/* SVG Visual diagram */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -746,18 +772,61 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>---</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Arms Extended</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.accent }}>--&gt;</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>---</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Arms Tucked</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>= ???</div>
-            </div>
+            <svg width={isMobile ? 320 : 440} height={220} style={{ borderRadius: '12px' }}>
+              <defs>
+                <linearGradient id="predSkaterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f472b6" />
+                  <stop offset="100%" stopColor="#9d174d" />
+                </linearGradient>
+                <radialGradient id="predSkinGrad" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#fde4d4" />
+                  <stop offset="100%" stopColor="#e0b090" />
+                </radialGradient>
+                <filter id="predGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
+              {/* Extended skater */}
+              <g>
+                <text x={isMobile ? 80 : 110} y="20" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="13" fontWeight="600">Arms Extended</text>
+                {/* Body */}
+                <ellipse cx={isMobile ? 80 : 110} cy="110" rx="12" ry="40" fill="url(#predSkaterGrad)" />
+                {/* Head */}
+                <circle cx={isMobile ? 80 : 110} cy="60" r="12" fill="url(#predSkinGrad)" />
+                {/* Arms extended */}
+                <line x1={isMobile ? 30 : 60} y1="95" x2={isMobile ? 130 : 160} y2="95" stroke="#f472b6" strokeWidth="4" strokeLinecap="round" />
+                {/* Legs */}
+                <line x1={isMobile ? 75 : 105} y1="150" x2={isMobile ? 65 : 95} y2="185" stroke="#f472b6" strokeWidth="3" />
+                <line x1={isMobile ? 85 : 115} y1="150" x2={isMobile ? 95 : 125} y2="185" stroke="#f472b6" strokeWidth="3" />
+                {/* Spin arrow (slow) */}
+                <path d={`M ${isMobile ? 80 : 110} 185 A 30 30 0 0 1 ${isMobile ? 110 : 140} 195`} fill="none" stroke="rgba(244,114,182,0.5)" strokeWidth="2" />
+                <text x={isMobile ? 80 : 110} y="210" textAnchor="middle" fill="rgba(156,163,175,0.5)" fontSize="11">Slow spin</text>
+              </g>
+              {/* Arrow */}
+              <g>
+                <line x1={isMobile ? 150 : 200} y1="110" x2={isMobile ? 190 : 240} y2="110" stroke={colors.accent} strokeWidth="3" />
+                <polygon points={`${isMobile ? 190 : 240},105 ${isMobile ? 200 : 250},110 ${isMobile ? 190 : 240},115`} fill={colors.accent} />
+                <text x={isMobile ? 170 : 220} y="100" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">Tuck</text>
+              </g>
+              {/* Tucked skater */}
+              <g>
+                <text x={isMobile ? 250 : 340} y="20" textAnchor="middle" fill="rgba(156,163,175,0.7)" fontSize="13" fontWeight="600">Arms Tucked</text>
+                {/* Body */}
+                <ellipse cx={isMobile ? 250 : 340} cy="110" rx="10" ry="40" fill="url(#predSkaterGrad)" />
+                {/* Head */}
+                <circle cx={isMobile ? 250 : 340} cy="60" r="12" fill="url(#predSkinGrad)" />
+                {/* Arms tucked */}
+                <line x1={isMobile ? 242 : 332} y1="90" x2={isMobile ? 240 : 330} y2="110" stroke="#f472b6" strokeWidth="4" strokeLinecap="round" />
+                <line x1={isMobile ? 258 : 348} y1="90" x2={isMobile ? 260 : 350} y2="110" stroke="#f472b6" strokeWidth="4" strokeLinecap="round" />
+                {/* Legs */}
+                <line x1={isMobile ? 246 : 336} y1="150" x2={isMobile ? 243 : 333} y2="185" stroke="#f472b6" strokeWidth="3" />
+                <line x1={isMobile ? 254 : 344} y1="150" x2={isMobile ? 257 : 347} y2="185" stroke="#f472b6" strokeWidth="3" />
+                {/* Spin arrow (fast) */}
+                <path d={`M ${isMobile ? 250 : 340} 185 A 20 20 0 1 1 ${isMobile ? 270 : 360} 185`} fill="none" stroke="rgba(244,114,182,0.8)" strokeWidth="3" filter="url(#predGlow)" />
+                <text x={isMobile ? 250 : 340} y="210" textAnchor="middle" fill="rgba(236,72,153,0.8)" fontSize="11" fontWeight="bold">??? spin</text>
+              </g>
+            </svg>
           </div>
 
           {/* Options */}
@@ -1494,6 +1563,7 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1507,6 +1577,47 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
                   <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
                 </div>
               ))}
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: 'rgba(156,163,175,0.8)', margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+              {app.examples.map((ex, i) => (
+                <span key={i} style={{
+                  background: colors.bgSecondary,
+                  padding: '4px 12px',
+                  borderRadius: '16px',
+                  ...typo.small,
+                  color: 'rgba(156,163,175,0.7)',
+                }}>
+                  {ex}
+                </span>
+              ))}
+            </div>
+
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '12px',
+            }}>
+              <h4 style={{ ...typo.small, color: app.color, marginBottom: '4px', fontWeight: 600 }}>
+                Future Impact:
+              </h4>
+              <p style={{ ...typo.small, color: 'rgba(156,163,175,0.6)', margin: 0 }}>
+                {app.futureImpact}
+              </p>
             </div>
           </div>
 
@@ -1680,68 +1791,88 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
             ))}
           </div>
 
-          {/* Navigation */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {currentQuestion > 0 && (
-              <button
-                onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.textSecondary,
-                  cursor: 'pointer',
-                }}
-              >
-                Previous
-              </button>
-            )}
-            {currentQuestion < 9 ? (
-              <button
-                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
-                disabled={!testAnswers[currentQuestion]}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
-                  color: 'white',
-                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  const score = testAnswers.reduce((acc, ans, i) => {
-                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
-                    return acc + (ans === correct ? 1 : 0);
-                  }, 0);
-                  setTestScore(score);
-                  setTestSubmitted(true);
-                  playSound(score >= 7 ? 'complete' : 'failure');
-                }}
-                disabled={testAnswers.some(a => a === null)}
-                style={{
-                  flex: 1,
-                  padding: '14px',
-                  borderRadius: '10px',
-                  border: 'none',
-                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
-                  color: 'white',
-                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
-                  fontWeight: 600,
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+          {/* Navigation - Confirm Flow */}
+          {(() => {
+            const hasAnswer = !!testAnswers[currentQuestion];
+            const isConfirmed = confirmedIndex >= currentQuestion;
+            const isLastQ = currentQuestion === 9;
+
+            if (hasAnswer && !isConfirmed) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => { setConfirmedIndex(currentQuestion); playSound('click'); }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: colors.accent,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Check Answer
+                  </button>
+                </div>
+              );
+            }
+
+            if (isConfirmed && !isLastQ) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => { setCurrentQuestion(prev => prev + 1); playSound('click'); }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: colors.accent,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Next Question
+                  </button>
+                </div>
+              );
+            }
+
+            if (isConfirmed && isLastQ) {
+              return (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      const score = testAnswers.reduce((acc, ans, i) => {
+                        const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                        return acc + (ans === correct ? 1 : 0);
+                      }, 0);
+                      setTestScore(score);
+                      setTestSubmitted(true);
+                      playSound(score >= 7 ? 'complete' : 'failure');
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      background: colors.success,
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Submit Test
+                  </button>
+                </div>
+              );
+            }
+
+            return null;
+          })()}
         </div>
 
         {renderNavDots()}
@@ -1839,6 +1970,16 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
   }
 
   return null;
+  }; // end renderPhaseContent
+
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {renderPhaseContent()}
+      </div>
+      {renderBottomBar()}
+    </div>
+  );
 };
 
 export default MomentOfInertiaRenderer;

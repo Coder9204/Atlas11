@@ -273,6 +273,7 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
   const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+  const [confirmedIndex, setConfirmedIndex] = useState<number | null>(null);
 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
@@ -631,35 +632,44 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
     </div>
   );
 
-  // Navigation dots
-  const NavigationDots = () => (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '12px' }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          aria-label={phaseLabels[p]}
-          title={phaseLabels[p]}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: '12px',
-            height: '12px',
-            borderRadius: '50%',
-            border: 'none',
-            background: phase === p ? colors.accent : phaseOrder.indexOf(phase) > i ? colors.success : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            padding: 0,
-          }}
-        />
-      ))}
-    </div>
-  );
+  // Navigation dots - bigger, only completed phases are clickable
+  const NavigationDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', padding: '12px' }}>
+        {phaseOrder.map((p, i) => {
+          const isCompleted = i < currentIndex;
+          const isActive = p === phase;
+          const canClick = isCompleted;
+          return (
+            <button
+              key={p}
+              aria-label={phaseLabels[p]}
+              title={phaseLabels[p]}
+              onClick={() => { if (canClick) goToPhase(p); }}
+              style={{
+                width: isActive ? '20px' : '10px',
+                height: '10px',
+                borderRadius: '5px',
+                border: 'none',
+                background: isActive ? colors.accent : isCompleted ? colors.success : colors.border,
+                cursor: canClick ? 'pointer' : 'default',
+                opacity: canClick || isActive ? 1 : 0.5,
+                transition: 'all 0.2s ease',
+                padding: 0,
+              }}
+            />
+          );
+        })}
+      </div>
+    );
+  };
 
-  // Progress bar
+  // Progress bar - no longer fixed, part of flex flow
   const ProgressBar = () => {
     const progress = ((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100;
     return (
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '4px', background: colors.bgSecondary, zIndex: 1000 }}>
+      <div style={{ flexShrink: 0, height: '4px', background: colors.bgSecondary }}>
         <div style={{ width: `${progress}%`, height: '100%', background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`, transition: 'width 0.3s ease' }} />
       </div>
     );
@@ -688,6 +698,70 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
   );
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // BOTTOM NAVIGATION BAR
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    // During test phase, disable Next unless quiz is submitted
+    const isTestPhaseIncomplete = phase === 'test' && !testSubmitted;
+    const nextDisabled = isLast || isTestPhaseIncomplete;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 24px',
+        borderTop: `1px solid ${colors.border}`,
+        background: colors.bgCard,
+        flexShrink: 0
+      }}>
+        <button
+          onClick={() => { if (!isFirst) goToPhase(phaseOrder[currentIndex - 1]); }}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontWeight: 600,
+            fontSize: '14px',
+            background: colors.bgSecondary,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            opacity: isFirst ? 0.3 : 1,
+            minHeight: '44px'
+          }}
+        >
+          ← Back
+        </button>
+        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+        <button
+          onClick={() => { if (!nextDisabled) nextPhase(); }}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '8px',
+            fontWeight: 700,
+            fontSize: '14px',
+            background: nextDisabled ? colors.bgSecondary : `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)`,
+            color: nextDisabled ? colors.textMuted : colors.textPrimary,
+            border: 'none',
+            cursor: nextDisabled ? 'not-allowed' : 'pointer',
+            opacity: nextDisabled ? 0.4 : 1,
+            minHeight: '44px'
+          }}
+        >
+          Next →
+        </button>
+      </div>
+    );
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // PHASE RENDERS
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -708,7 +782,6 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           The soap has no pigment. Where do these colors come from?
         </p>
       </div>
-      <PrimaryButton onClick={nextPhase}>Start Discovery</PrimaryButton>
     </div>
   );
 
@@ -748,11 +821,6 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           ))}
         </div>
       </div>
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <PrimaryButton onClick={nextPhase} disabled={!prediction}>
-          Test My Prediction
-        </PrimaryButton>
-      </div>
     </div>
   );
 
@@ -775,9 +843,6 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           <li>Change viewing angle - same thickness gives different colors!</li>
           <li>Start the draining animation to see colors flow</li>
         </ul>
-      </div>
-      <div style={{ textAlign: 'center' }}>
-        <PrimaryButton onClick={nextPhase}>Continue to Understanding</PrimaryButton>
       </div>
     </div>
   );
@@ -818,9 +883,6 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
               <strong style={{ color: colors.textPrimary }}>Why Colors Change:</strong> Different thicknesses create different path differences. A 400nm film might boost blue while canceling red. As thickness changes, so does the color!
             </p>
           </div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <PrimaryButton onClick={nextPhase}>Next: A Twist!</PrimaryButton>
         </div>
       </div>
     );
@@ -865,11 +927,6 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           ))}
         </div>
       </div>
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <PrimaryButton onClick={nextPhase} disabled={!twistPrediction}>
-          Test My Prediction
-        </PrimaryButton>
-      </div>
     </div>
   );
 
@@ -889,9 +946,6 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
           Polarizing filters reduce glare from reflections. Since thin-film colors come from reflected light, the filter can reduce the brightness of certain reflections more than others, altering the apparent intensity but not eliminating the colors entirely.
         </p>
-      </div>
-      <div style={{ textAlign: 'center' }}>
-        <PrimaryButton onClick={nextPhase}>See the Explanation</PrimaryButton>
       </div>
     </div>
   );
@@ -929,9 +983,6 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
               <strong style={{ color: colors.textPrimary }}>Colors Persist:</strong> The interference colors don't disappear because they depend on path difference, not polarization. But overall brightness and contrast can change significantly!
             </p>
           </div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <PrimaryButton onClick={nextPhase}>Apply This Knowledge</PrimaryButton>
         </div>
       </div>
     );
@@ -1047,9 +1098,6 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           <p style={{ ...typo.small, color: colors.textMuted, marginBottom: '12px' }}>
             {completedApps.filter(c => c).length}/4 applications reviewed
           </p>
-          <PrimaryButton onClick={nextPhase} disabled={!allComplete}>
-            {allComplete ? 'Continue to Test' : 'Review All Applications'}
-          </PrimaryButton>
         </div>
       </div>
     );
@@ -1077,46 +1125,133 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
             </p>
           </div>
 
-          {/* Show answers */}
+          {/* Answer review heading */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>Answer Review</h3>
+
+          {/* Show all 10 questions with right/wrong detail */}
           <div style={{ marginBottom: '20px' }}>
             {testQuestions.map((q, i) => {
               const userAnswer = testAnswers[i];
               const correctOption = q.options.find(opt => opt.correct);
               const isCorrect = userAnswer === correctOption?.id;
+              const userOption = q.options.find(o => o.id === userAnswer);
               return (
                 <div key={i} style={{
                   background: colors.bgCard,
                   padding: '16px',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   marginBottom: '12px',
                   borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                 }}>
-                  <p style={{ color: colors.textPrimary, fontWeight: '600', marginBottom: '8px' }}>
-                    {i + 1}. {q.question}
-                  </p>
-                  <p style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px' }}>
-                    {isCorrect ? '✓ Correct' : `✗ Your answer: ${q.options.find(o => o.id === userAnswer)?.label || 'None'}`}
-                  </p>
-                  {!isCorrect && (
-                    <p style={{ color: colors.success, fontSize: '14px' }}>
-                      Correct: {correctOption?.label}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: isCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      color: isCorrect ? colors.success : colors.error,
+                      fontWeight: '700',
+                      fontSize: '14px',
+                      flexShrink: 0,
+                    }}>
+                      {isCorrect ? '\u2713' : '\u2717'}
+                    </span>
+                    <p style={{ color: colors.textPrimary, fontWeight: '600', margin: 0, fontSize: '15px' }}>
+                      {i + 1}. {q.question}
                     </p>
-                  )}
+                  </div>
+
+                  <div style={{ marginLeft: '36px' }}>
+                    {isCorrect ? (
+                      <p style={{ color: colors.success, fontSize: '14px', marginBottom: '8px' }}>
+                        Your answer: {userOption?.label}
+                      </p>
+                    ) : (
+                      <>
+                        <p style={{ color: colors.error, fontSize: '14px', marginBottom: '4px' }}>
+                          Your answer: {userOption?.label || 'No answer'}
+                        </p>
+                        <p style={{ color: colors.success, fontSize: '14px', marginBottom: '8px' }}>
+                          Correct answer: {correctOption?.label}
+                        </p>
+                      </>
+                    )}
+                    <p style={{
+                      color: colors.textSecondary,
+                      fontSize: '13px',
+                      lineHeight: 1.5,
+                      background: 'rgba(139, 92, 246, 0.08)',
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      margin: 0,
+                    }}>
+                      {q.explanation}
+                    </p>
+                  </div>
                 </div>
               );
             })}
-          </div>
-
-          <div style={{ textAlign: 'center' }}>
-            <PrimaryButton onClick={nextPhase}>
-              {passed ? 'Complete Mastery' : 'Review & Continue'}
-            </PrimaryButton>
           </div>
         </div>
       );
     }
 
     const q = testQuestions[currentQuestion];
+    const isConfirmed = confirmedIndex === currentQuestion;
+    const selectedAnswer = testAnswers[currentQuestion];
+    const correctOption = q.options.find(opt => opt.correct);
+    const isAnswerCorrect = selectedAnswer === correctOption?.id;
+
+    // Determine option styling based on confirm state
+    const getOptionStyle = (opt: { id: string; label: string; correct: boolean }) => {
+      const isSelected = selectedAnswer === opt.id;
+
+      if (!isConfirmed) {
+        // Pre-confirm: just highlight the selected option
+        return {
+          padding: '16px',
+          borderRadius: '10px',
+          border: isSelected ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+          background: isSelected ? colors.accentGlow : 'transparent',
+          color: colors.textPrimary,
+          cursor: 'pointer',
+          textAlign: 'left' as const,
+          fontSize: '14px',
+          transition: 'all 0.2s ease',
+        };
+      }
+
+      // Post-confirm: show correct/wrong feedback
+      const isCorrectOption = opt.correct;
+      const isWrongSelection = isSelected && !opt.correct;
+
+      let borderColor = colors.border;
+      let bgColor = 'transparent';
+
+      if (isCorrectOption) {
+        borderColor = colors.success;
+        bgColor = 'rgba(16, 185, 129, 0.15)';
+      } else if (isWrongSelection) {
+        borderColor = colors.error;
+        bgColor = 'rgba(239, 68, 68, 0.15)';
+      }
+
+      return {
+        padding: '16px',
+        borderRadius: '10px',
+        border: `2px solid ${borderColor}`,
+        background: bgColor,
+        color: colors.textPrimary,
+        cursor: 'default',
+        textAlign: 'left' as const,
+        fontSize: '14px',
+        transition: 'all 0.2s ease',
+      };
+    };
+
     return (
       <div style={{ padding: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1126,20 +1261,22 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
 
         {/* Progress dots */}
         <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
-          {testQuestions.map((_, i) => (
-            <div
-              key={i}
-              onClick={() => setCurrentQuestion(i)}
-              style={{
-                width: '24px',
-                height: '6px',
-                borderRadius: '3px',
-                background: testAnswers[i] ? colors.accent : i === currentQuestion ? colors.textMuted : colors.border,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            />
-          ))}
+          {testQuestions.map((_, i) => {
+            const isDotConfirmed = confirmedIndex !== null && i <= confirmedIndex;
+            return (
+              <div
+                key={i}
+                style={{
+                  width: '24px',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: isDotConfirmed ? colors.success : testAnswers[i] ? colors.accent : i === currentQuestion ? colors.textMuted : colors.border,
+                  cursor: 'default',
+                  transition: 'all 0.2s ease',
+                }}
+              />
+            );
+          })}
         </div>
 
         {/* Scenario */}
@@ -1151,32 +1288,55 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         </div>
 
         {/* Options */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
           {q.options.map((opt) => (
             <button
               key={opt.id}
-              onClick={() => handleTestAnswer(opt.id)}
-              style={{
-                padding: '16px',
-                borderRadius: '10px',
-                border: testAnswers[currentQuestion] === opt.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
-                background: testAnswers[currentQuestion] === opt.id ? colors.accentGlow : 'transparent',
-                color: colors.textPrimary,
-                cursor: 'pointer',
-                textAlign: 'left',
-                fontSize: '14px',
-                transition: 'all 0.2s ease',
-              }}
+              onClick={() => { if (!isConfirmed) handleTestAnswer(opt.id); }}
+              style={getOptionStyle(opt)}
             >
-              {opt.label}
+              <span>{opt.label}</span>
+              {isConfirmed && opt.correct && (
+                <span style={{ marginLeft: '8px', color: colors.success, fontWeight: '700' }}>
+                  &#x2713; Correct!
+                </span>
+              )}
+              {isConfirmed && selectedAnswer === opt.id && !opt.correct && (
+                <span style={{ marginLeft: '8px', color: colors.error, fontWeight: '700' }}>
+                  &#x2717; Incorrect
+                </span>
+              )}
             </button>
           ))}
         </div>
 
-        {/* Navigation */}
+        {/* Explanation after confirm */}
+        {isConfirmed && (
+          <div style={{
+            background: isAnswerCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            border: `1px solid ${isAnswerCorrect ? colors.success : colors.error}`,
+            padding: '16px',
+            borderRadius: '10px',
+            marginBottom: '20px',
+          }}>
+            <p style={{ color: isAnswerCorrect ? colors.success : colors.error, fontWeight: '700', marginBottom: '6px', fontSize: '15px' }}>
+              {isAnswerCorrect ? 'Well done!' : 'Not quite.'}
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+              {q.explanation}
+            </p>
+          </div>
+        )}
+
+        {/* Check Answer / Next Question / Submit */}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <button
-            onClick={() => { playSound('click'); setCurrentQuestion(Math.max(0, currentQuestion - 1)); }}
+            onClick={() => {
+              if (currentQuestion > 0) {
+                playSound('click');
+                setCurrentQuestion(currentQuestion - 1);
+              }
+            }}
             disabled={currentQuestion === 0}
             style={{
               padding: '12px 24px',
@@ -1192,9 +1352,40 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
             Previous
           </button>
 
-          {currentQuestion < 9 ? (
+          {!isConfirmed ? (
+            /* Show "Check Answer" if an answer is selected but not yet confirmed */
             <button
-              onClick={() => { playSound('click'); setCurrentQuestion(currentQuestion + 1); }}
+              onClick={() => {
+                if (selectedAnswer) {
+                  playSound(selectedAnswer === correctOption?.id ? 'success' : 'failure');
+                  setConfirmedIndex(currentQuestion);
+                }
+              }}
+              disabled={!selectedAnswer}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: !selectedAnswer
+                  ? colors.textMuted
+                  : `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)`,
+                color: 'white',
+                cursor: !selectedAnswer ? 'not-allowed' : 'pointer',
+                fontWeight: '600',
+                transition: 'all 0.2s ease',
+                boxShadow: selectedAnswer ? `0 4px 20px ${colors.accentGlow}` : 'none',
+              }}
+            >
+              Check Answer
+            </button>
+          ) : currentQuestion < 9 ? (
+            /* After confirming, show "Next Question" */
+            <button
+              onClick={() => {
+                playSound('click');
+                setConfirmedIndex(null);
+                setCurrentQuestion(currentQuestion + 1);
+              }}
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
@@ -1206,9 +1397,10 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
                 transition: 'all 0.2s ease',
               }}
             >
-              Next
+              Next Question
             </button>
           ) : (
+            /* Last question confirmed -- submit */
             <button
               onClick={submitTest}
               disabled={testAnswers.includes(null)}
@@ -1263,21 +1455,35 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
       <ThinFilmVisualization interactive />
       <InteractiveControls />
 
-      <div style={{ marginTop: '24px' }}>
-        <PrimaryButton onClick={() => {
-          playSound('complete');
-          if (onGameEvent) {
-            onGameEvent({
-              eventType: 'game_completed',
-              gameType: 'thin-film-interference',
-              gameTitle: 'Thin Film Interference',
-              details: { finalScore: testScore },
-              timestamp: Date.now()
-            });
-          }
-        }}>
+      <div style={{ marginTop: '24px', textAlign: 'center' }}>
+        <button
+          onClick={() => {
+            playSound('complete');
+            if (onGameEvent) {
+              onGameEvent({
+                eventType: 'game_completed',
+                gameType: 'thin-film-interference',
+                gameTitle: 'Thin Film Interference',
+                details: { finalScore: testScore },
+                timestamp: Date.now()
+              });
+            }
+            window.location.href = '/';
+          }}
+          style={{
+            padding: '16px 32px',
+            borderRadius: '12px',
+            border: 'none',
+            background: `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+            color: 'white',
+            fontWeight: '700',
+            fontSize: '16px',
+            cursor: 'pointer',
+            boxShadow: `0 4px 20px rgba(16, 185, 129, 0.3)`,
+          }}
+        >
           Complete Game
-        </PrimaryButton>
+        </button>
       </div>
     </div>
   );
@@ -1301,17 +1507,25 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       background: colors.bgPrimary,
       color: colors.textPrimary,
       display: 'flex',
       flexDirection: 'column',
     }}>
-      <ProgressBar />
-      <NavigationDots />
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-        {renderPhase()}
+      {/* Top bar - not fixed, part of flex flow */}
+      <div style={{ flexShrink: 0 }}>
+        <ProgressBar />
+        <NavigationDots />
       </div>
+      {/* Scrollable content area */}
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', paddingBottom: '20px' }}>
+          {renderPhase()}
+        </div>
+      </div>
+      {/* Bottom navigation bar */}
+      {renderBottomBar()}
     </div>
   );
 };

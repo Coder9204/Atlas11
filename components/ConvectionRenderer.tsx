@@ -19,10 +19,10 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Explore',
   review: 'Review',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
+  twist_play: 'Twist Play',
   twist_review: 'Twist Review',
   transfer: 'Transfer',
   test: 'Test',
@@ -409,17 +409,26 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   // ═══════════════════════════════════════════════════════════════════════════
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    try {
+      if (typeof window !== 'undefined') {
+        audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      }
+    } catch {
+      // Audio not available
     }
     return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
+      try {
+        if (audioContextRef.current && audioContextRef.current.close) {
+          audioContextRef.current.close();
+        }
+      } catch {
+        // Audio cleanup failed silently
       }
     };
   }, []);
 
   const playSound = useCallback((type: 'bubble' | 'whoosh' | 'success' | 'click' | 'ding') => {
+    try {
     if (!audioContextRef.current) return;
 
     const ctx = audioContextRef.current;
@@ -473,6 +482,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     }
 
     onGameEvent?.({ type: 'sound_played', data: { soundType: type } });
+    } catch { /* Audio not available */ }
   }, [onGameEvent]);
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -579,14 +589,24 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   // TEST HANDLING
   // ═══════════════════════════════════════════════════════════════════════════
 
+  const [selectedTestOption, setSelectedTestOption] = useState<number | null>(null);
+  const [confirmedTestQ, setConfirmedTestQ] = useState<number | null>(null);
+  const [testCompleted, setTestCompleted] = useState(false);
+
   const handleTestAnswer = useCallback((optionIndex: number) => {
-    if (testAnswers[testIndex] !== null) return;
+    if (confirmedTestQ === testIndex) return;
+    setSelectedTestOption(optionIndex);
+  }, [testIndex, confirmedTestQ]);
+
+  const confirmTestAnswer = useCallback(() => {
+    if (selectedTestOption === null || confirmedTestQ === testIndex) return;
 
     const newAnswers = [...testAnswers];
-    newAnswers[testIndex] = optionIndex;
+    newAnswers[testIndex] = selectedTestOption;
     setTestAnswers(newAnswers);
+    setConfirmedTestQ(testIndex);
 
-    const isCorrect = testQuestions[testIndex].options[optionIndex].correct;
+    const isCorrect = testQuestions[testIndex].options[selectedTestOption].correct;
     if (isCorrect) {
       setTestScore(prev => prev + 1);
       playSound('success');
@@ -600,7 +620,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
       correct: isCorrect,
       score: isCorrect ? testScore + 1 : testScore
     }});
-  }, [testIndex, testAnswers, testScore, onGameEvent, playSound]);
+  }, [testIndex, selectedTestOption, testAnswers, testScore, onGameEvent, playSound, confirmedTestQ]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER HELPERS
@@ -1009,18 +1029,18 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   // ═══════════════════════════════════════════════════════════════════════════
 
   const renderHook = (): React.ReactNode => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '600px', padding: '48px 24px', textAlign: 'center' }}>
       {/* Badge */}
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-orange-400 tracking-wide">HEAT TRANSFER PHYSICS</span>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '9999px', marginBottom: '32px' }}>
+        <span style={{ width: '8px', height: '8px', background: '#fb923c', borderRadius: '50%' }} />
+        <span style={{ fontSize: '14px', fontWeight: 500, color: '#fb923c', letterSpacing: '0.05em' }}>HEAT TRANSFER PHYSICS</span>
       </div>
 
       {/* Title */}
-      <h1 style={{ fontSize: typo.title }} className="font-bold mb-4 bg-gradient-to-r from-white via-orange-100 to-red-200 bg-clip-text text-transparent">
+      <h1 style={{ fontSize: '36px', fontWeight: 700, marginBottom: '16px', color: 'white', lineHeight: '1.2' }}>
         The Rising Heat Mystery
       </h1>
-      <p style={{ fontSize: typo.bodyLarge }} className="text-slate-400 max-w-xl mb-8 leading-relaxed">
+      <p style={{ fontSize: '18px', color: '#94a3b8', maxWidth: '560px', marginBottom: '32px', lineHeight: '1.6', fontWeight: 400 }}>
         Have you ever wondered why hot air rises and cold air sinks? This simple phenomenon drives
         everything from a boiling pot to global weather patterns.
       </p>
@@ -1099,17 +1119,12 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
       {/* CTA button */}
       <button
         onClick={() => goToPhase('predict')}
-        className="group relative px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ padding: '16px 32px', background: 'linear-gradient(135deg, #ea580c, #dc2626)', color: 'white', fontSize: '18px', fontWeight: 600, borderRadius: '16px', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease', boxShadow: '0 10px 25px rgba(234,88,12,0.25)' }}
       >
-        <span className="relative z-10 flex items-center gap-2">
-          Explore Convection
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+        Explore Convection
       </button>
 
-      <p className="mt-6 text-sm text-slate-500">The physics formula: Q = hAΔT</p>
+      <p style={{ marginTop: '24px', fontSize: '14px', color: 'rgba(148,163,184,1)' }}>The physics formula: Q = hAΔT</p>
     </div>
   );
 
@@ -1241,7 +1256,7 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
               setHeatIntensity(Number(e.target.value));
               onGameEvent?.({ type: 'heat_intensity_changed', data: { value: Number(e.target.value) } });
             }}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+            style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: '#ef4444' }}
           />
         </div>
 
@@ -1369,10 +1384,11 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   const renderTwistPredict = (): React.ReactNode => (
     <div className="space-y-6">
       <div className="text-center space-y-3">
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">The Fan Paradox</h2>
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white">New Twist: The Fan Paradox</h2>
         <p className="text-slate-400 max-w-lg mx-auto">
           A fan blows air at you on a hot day. The air temperature is 30°C (86°F) -
           <span className="text-amber-400 font-medium"> the same temperature with or without the fan</span>.
+          What do you predict will happen?
         </p>
       </div>
 
@@ -1740,112 +1756,105 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   // ═══════════════════════════════════════════════════════════════════════════
 
   const renderTest = (): React.ReactNode => {
+    if (testCompleted) {
+      const percentage = Math.round((testScore / testQuestions.length) * 100);
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', gap: '16px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#f97316' }}>Test Complete!</h2>
+          <p style={{ fontSize: '32px', fontWeight: 700, color: 'white' }}>{testScore} / {testQuestions.length}</p>
+          <p style={{ fontSize: '18px', color: '#94a3b8' }}>{percentage}%</p>
+        </div>
+      );
+    }
+
     const question = testQuestions[testIndex];
-    const answered = testAnswers[testIndex] !== null;
+    const isConfirmed = confirmedTestQ === testIndex;
 
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-bold text-white">Knowledge Check</h2>
-          <span className="text-sm text-slate-400">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'white' }}>Knowledge Check</h2>
+          <span style={{ fontSize: '14px', color: '#94a3b8' }}>
             Question {testIndex + 1} of {testQuestions.length}
           </span>
         </div>
 
-        {/* Progress bar */}
-        <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-300"
-            style={{ width: `${((testIndex + (answered ? 1 : 0)) / testQuestions.length) * 100}%` }}
-          />
+        <div style={{ width: '100%', height: '8px', background: '#334155', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: 'linear-gradient(90deg, #f97316, #ef4444)', transition: 'width 0.3s ease', width: `${((testIndex) / testQuestions.length) * 100}%` }} />
         </div>
 
-        {/* Scenario */}
-        <div className="bg-orange-900/20 rounded-xl p-4 border border-orange-500/30">
-          <p className="text-sm text-orange-400 font-medium mb-1">Scenario:</p>
-          <p className="text-slate-300">{question.scenario}</p>
+        <div style={{ background: 'rgba(154,83,8,0.2)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(249,115,22,0.3)' }}>
+          <p style={{ fontSize: '14px', color: '#fb923c', fontWeight: 500, marginBottom: '4px' }}>Scenario:</p>
+          <p style={{ color: '#cbd5e1', lineHeight: '1.5' }}>{question.scenario}</p>
         </div>
 
-        {/* Question */}
-        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-600">
-          <p className="font-semibold text-white mb-4">{question.question}</p>
-
-          <div className="space-y-2">
+        <div style={{ background: 'rgba(30,41,59,0.5)', borderRadius: '12px', padding: '16px', border: '1px solid #475569' }}>
+          <p style={{ fontWeight: 600, color: 'white', marginBottom: '16px', lineHeight: '1.5' }}>{question.question}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {question.options.map((option, i) => {
-              const isSelected = testAnswers[testIndex] === i;
-              const isCorrect = option.correct;
-              const showResult = answered;
-
-              let bgColor = 'bg-slate-700 hover:bg-slate-600';
-              let borderColor = 'border-slate-600';
-
-              if (showResult) {
-                if (isCorrect) {
-                  bgColor = 'bg-green-900/50';
-                  borderColor = 'border-green-500';
-                } else if (isSelected) {
-                  bgColor = 'bg-red-900/50';
-                  borderColor = 'border-red-500';
-                }
-              } else if (isSelected) {
-                bgColor = 'bg-orange-900/50';
-                borderColor = 'border-orange-500';
-              }
-
+              const isSelected = selectedTestOption === i;
+              let bg = '#334155';
+              if (isConfirmed && option.correct) bg = '#166534';
+              else if (isConfirmed && isSelected && !option.correct) bg = '#991b1b';
+              else if (isSelected) bg = '#9a3412';
               return (
                 <button
                   key={i}
-                  onClick={() => !answered && handleTestAnswer(i)}
-                  disabled={answered}
-                  className={`w-full p-3 rounded-lg border-2 text-left transition-all ${bgColor} ${borderColor}`}
+                  onClick={() => handleTestAnswer(i)}
+                  style={{ width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid #475569', textAlign: 'left', cursor: isConfirmed ? 'default' : 'pointer', transition: 'all 0.3s ease', background: bg, color: 'white', fontSize: '14px', lineHeight: '1.5' }}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium ${
-                      showResult && isCorrect ? 'bg-green-500 text-white' :
-                      showResult && isSelected ? 'bg-red-500 text-white' :
-                      'bg-slate-600 text-slate-300'
-                    }`}>
-                      {showResult && isCorrect ? '✓' : showResult && isSelected ? '✗' : String.fromCharCode(65 + i)}
-                    </span>
-                    <p className="text-slate-200">{option.text}</p>
-                  </div>
+                  {String.fromCharCode(65 + i)}) {option.text}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Explanation */}
-        {showExplanation && (
-          <div className="bg-purple-900/20 rounded-xl p-4 border border-purple-500/30">
-            <h4 className="font-semibold text-purple-400 mb-2">Explanation</h4>
-            <p className="text-sm text-slate-300">{question.explanation}</p>
+        {isConfirmed && (
+          <div style={{ background: 'rgba(88,28,135,0.2)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(168,85,247,0.3)' }}>
+            <h4 style={{ fontWeight: 600, color: '#a855f7', marginBottom: '8px' }}>Explanation</h4>
+            <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.5' }}>{question.explanation}</p>
           </div>
         )}
 
-        {/* Navigation */}
-        {answered && (
-          <button
-            onClick={() => {
-              if (testIndex < testQuestions.length - 1) {
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          {!isConfirmed ? (
+            <button
+              onClick={confirmTestAnswer}
+              disabled={selectedTestOption === null}
+              style={{ padding: '12px 32px', borderRadius: '12px', border: 'none', background: selectedTestOption !== null ? 'linear-gradient(135deg, #f97316, #ef4444)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: selectedTestOption !== null ? 'pointer' : 'not-allowed', fontWeight: 600, fontSize: '16px', transition: 'all 0.3s ease', boxShadow: selectedTestOption !== null ? '0 4px 15px rgba(249,115,22,0.3)' : 'none' }}
+            >
+              Check Answer
+            </button>
+          ) : testIndex < testQuestions.length - 1 ? (
+            <button
+              onClick={() => {
                 setTestIndex(prev => prev + 1);
+                setSelectedTestOption(null);
+                setConfirmedTestQ(null);
                 setShowExplanation(false);
                 playSound('click');
-              } else {
+              }}
+              style={{ padding: '12px 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #f97316, #ef4444)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '16px', transition: 'all 0.3s ease', boxShadow: '0 4px 15px rgba(249,115,22,0.3)' }}
+            >
+              Next Question
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                setTestCompleted(true);
                 onGameEvent?.({ type: 'test_completed', data: { score: testScore, total: testQuestions.length } });
                 playSound('success');
-                goToPhase('mastery');
-              }
-            }}
-            className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold text-lg shadow-lg"
-          >
-            {testIndex < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
-          </button>
-        )}
+              }}
+              style={{ padding: '12px 32px', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '16px', transition: 'all 0.3s ease' }}
+            >
+              Submit Test
+            </button>
+          )}
+        </div>
 
-        {/* Score */}
-        <div className="text-center text-sm text-slate-400">
-          Current Score: {testScore} / {testIndex + (answered ? 1 : 0)}
+        <div style={{ textAlign: 'center', fontSize: '14px', color: '#94a3b8' }}>
+          Current Score: {testScore} / {testIndex + (isConfirmed ? 1 : 0)}
         </div>
       </div>
     );
@@ -1859,25 +1868,13 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     const percentage = Math.round((testScore / testQuestions.length) * 100);
     const passed = percentage >= 70;
 
-    // Trigger completion callback
-    useEffect(() => {
-      if (passed) {
-        onGameEvent?.({ type: 'mastery_achieved', data: { score: testScore, percentage } });
-        onComplete?.();
-      }
-    }, [passed]);
-
     return (
-      <div className="space-y-6">
-        <div className="text-center space-y-4">
-          {/* Achievement icon */}
-          <div className="text-6xl">
-            {passed ? '🔥' : '📚'}
-          </div>
-
-          <h2 className="text-2xl font-bold text-white">
-            {passed ? 'Convection Mastered!' : 'Keep Learning!'}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>
+            {passed ? 'Congratulations! Convection Mastered!' : 'Keep Learning!'}
           </h2>
+          <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.6' }}>You have successfully completed the convection module.</p>
 
           {/* Score display */}
           <div className={`inline-block text-white text-3xl font-bold px-6 py-3 rounded-xl ${
@@ -1994,26 +1991,38 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-600/3 rounded-full blur-3xl" />
+  const isFirst = currentPhaseIndex === 0;
+  const isLast = currentPhaseIndex === phaseOrder.length - 1;
+  const isTestPhase = phase === 'test';
+  const quizComplete = isTestPhase && testIndex >= testQuestions.length - 1 && testAnswers[testIndex] !== null;
+  const canGoNext = !isLast && (!isTestPhase || quizComplete);
 
-      {/* Header with progress */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-medium text-orange-400">Convection</span>
-          {renderNavDots()}
-          <span className="text-sm text-slate-400 font-medium">Phase {currentPhaseIndex + 1}/10</span>
-        </div>
+  return (
+    <div style={{ height: '100vh', minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #0f172a, #0a1628, #0f172a)', color: 'white', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+      {/* Top bar */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: '#f97316' }}>Convection</span>
+        <span style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 500 }}>{phaseLabels[phase]} ({currentPhaseIndex + 1}/{phaseOrder.length})</span>
       </div>
 
-      {/* Main content */}
-      <div className={`relative z-10 pt-16 pb-8 max-w-2xl mx-auto ${isMobile ? 'px-4' : 'px-6'}`}>
+      {/* Scrollable content */}
+      <div style={{ flex: 1, overflowY: 'auto', maxWidth: '640px', margin: '0 auto', width: '100%', padding: '16px 24px' }}>
         {renderPhase()}
+      </div>
+
+      {/* Bottom bar */}
+      <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)' }}>
+        <button onClick={() => !isFirst && goToPhase(phaseOrder[currentPhaseIndex - 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: isFirst ? 'rgba(255,255,255,0.3)' : 'white', cursor: isFirst ? 'not-allowed' : 'pointer', opacity: isFirst ? 0.4 : 1, transition: 'all 0.3s ease', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+          ← Back
+        </button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <div key={p} onClick={() => i <= currentPhaseIndex && goToPhase(p)} title={phaseLabels[p]} style={{ width: p === phase ? '20px' : '10px', height: '10px', borderRadius: '5px', background: p === phase ? '#f97316' : i < currentPhaseIndex ? '#10b981' : 'rgba(255,255,255,0.2)', cursor: i <= currentPhaseIndex ? 'pointer' : 'default', transition: 'all 0.3s ease' }} />
+          ))}
+        </div>
+        <button onClick={() => canGoNext && goToPhase(phaseOrder[currentPhaseIndex + 1])} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: canGoNext ? 'linear-gradient(135deg, #f97316, #ef4444)' : 'rgba(255,255,255,0.1)', color: 'white', cursor: canGoNext ? 'pointer' : 'not-allowed', opacity: canGoNext ? 1 : 0.4, transition: 'all 0.3s ease', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif' }}>
+          Next →
+        </button>
       </div>
     </div>
   );
