@@ -290,16 +290,15 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Animation loop
+  // Animation loop - only runs when actively animating
   useEffect(() => {
+    if (!isAnimating) return;
     const timer = setInterval(() => {
       setAnimationFrame(f => f + 1);
-      if (isAnimating) {
-        setThickness(prev => {
-          const newThickness = prev - 2;
-          return newThickness < 100 ? 800 : newThickness;
-        });
-      }
+      setThickness(prev => {
+        const newThickness = prev - 2;
+        return newThickness < 100 ? 800 : newThickness;
+      });
     }, 50);
     return () => clearInterval(timer);
   }, [isAnimating]);
@@ -497,24 +496,24 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
         {/* Background */}
         <rect width="100%" height="100%" fill="url(#tfiLabBg)" />
 
-        {/* Title */}
-        <text x={isMobile ? 170 : 250} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
+        {/* Title - positioned top-left to avoid overlap with observer/rays */}
+        <text x={15} y={20} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="start">
           Thin-Film Interference
         </text>
-        <text x={isMobile ? 170 : 250} y={42} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+        <text x={15} y={35} fill={colors.textSecondary} fontSize="11" textAnchor="start">
           Soap Film Cross-Section
         </text>
 
         {/* Light source */}
-        <g transform="translate(40, 55)">
+        <g transform="translate(40, 60)">
           <circle cx="0" cy="0" r="25" fill="url(#tfiLightGlow)" filter="url(#tfiGlow)" />
           <circle cx="0" cy="0" r="15" fill="#fef3c7" />
           <circle cx="-3" cy="-3" r="6" fill="#ffffff" opacity="0.8" />
         </g>
-        <text x={40} y={90} fill={colors.textSecondary} fontSize="10" textAnchor="middle">White Light</text>
+        <text x={40} y={95} fill={colors.textSecondary} fontSize="10" textAnchor="middle">White Light</text>
 
         {/* Incident beam */}
-        <line x1={60} y1={60} x2={filmLeft + 40} y2={filmTop + 20} stroke="url(#tfiBeam)" strokeWidth="4" filter="url(#tfiRayGlow)" />
+        <line x1={60} y1={65} x2={filmLeft + 40} y2={filmTop + 20} stroke="url(#tfiBeam)" strokeWidth="4" filter="url(#tfiRayGlow)" />
 
         {/* Soap film body */}
         <rect x={filmLeft} y={filmTop} width={filmRight - filmLeft} height={filmHeight} fill="url(#tfiFilmColors)" rx="6" stroke="#60a5fa" strokeWidth="1" opacity="0.8" />
@@ -525,27 +524,29 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
 
         {/* Ray 1 - top surface reflection */}
         <line x1={filmLeft + 40} y1={filmTop + 20} x2={filmLeft + 90} y2={filmTop - 35} stroke="url(#tfiRay1)" strokeWidth="3" filter="url(#tfiRayGlow)" />
-        <text x={filmLeft + 90} y={filmTop - 40} fill="#93c5fd" fontSize="9" textAnchor="middle">Ray 1</text>
+        <text x={filmLeft + 75} y={filmTop - 10} fill="#93c5fd" fontSize="9" textAnchor="end">Ray 1</text>
 
         {/* Light through film */}
         <line x1={filmLeft + 40} y1={filmTop + 20} x2={filmLeft + 60} y2={filmTop + filmHeight - 20} stroke="url(#tfiBeam)" strokeWidth="2" opacity="0.6" />
 
         {/* Ray 2 - bottom surface reflection */}
         <line x1={filmLeft + 60} y1={filmTop + filmHeight - 20} x2={filmLeft + 115} y2={filmTop - 35} stroke="url(#tfiRay2)" strokeWidth="3" filter="url(#tfiRayGlow)" />
-        <text x={filmLeft + 120} y={filmTop - 40} fill="#60a5fa" fontSize="9" textAnchor="middle">Ray 2</text>
+        <text x={filmLeft + 130} y={filmTop - 10} fill="#60a5fa" fontSize="9" textAnchor="start">Ray 2</text>
 
         {/* Path difference indicator */}
         <line x1={filmLeft + 70} y1={filmTop + 25} x2={filmLeft + 70} y2={filmTop + filmHeight - 25} stroke="#a855f7" strokeWidth="2" strokeDasharray="4,3" />
         <text x={filmLeft + 85} y={filmTop + filmHeight / 2} fill="#d8b4fe" fontSize="9">Path Δ</text>
 
-        {/* Observer eye */}
-        <g transform={`translate(${filmLeft + 100}, ${filmTop - 60})`}>
+        {/* Observer eye - positioned top-right corner */}
+        <g transform={`translate(${isMobile ? 300 : 430}, 30)`}>
           <ellipse cx="0" cy="0" rx="14" ry="9" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
           <circle cx="0" cy="0" r="5" fill="#0c4a6e" />
           <circle cx="0" cy="0" r="2" fill="#0f172a" />
           <circle cx="-2" cy="-1" r="1.5" fill="#ffffff" opacity="0.7" />
         </g>
-        <text x={filmLeft + 100} y={filmTop - 75} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Observer</text>
+        <text x={isMobile ? 300 : 430} y={50} fill={colors.textSecondary} fontSize="9" textAnchor="middle">Observer</text>
+        {/* Dashed line from rays to observer */}
+        <line x1={filmLeft + 115} y1={filmTop - 35} x2={isMobile ? 290 : 420} y2={30} stroke="#94a3b8" strokeWidth="1" strokeDasharray="4,3" opacity="0.5" />
 
         {/* Result color display */}
         <g transform={`translate(${filmLeft + 30}, ${filmTop + filmHeight + 25})`}>

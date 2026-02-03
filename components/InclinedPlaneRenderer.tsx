@@ -347,7 +347,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Friction Lab',
+    twist_play: 'Twist: Friction Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -655,7 +655,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{
+      <div
+        data-theme-colors="#9CA3AF #6B7280"
+        style={{
         minHeight: '100vh',
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
@@ -709,7 +711,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Discover the Physics
+          Begin Exploring
         </button>
 
         {renderNavDots()}
@@ -750,7 +752,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             To push a 100 kg box up a 30-degree ramp, how much force do you need compared to lifting it straight up (980 N)?
           </h2>
 
-          {/* Simple diagram */}
+          {/* SVG diagram showing the ramp scenario */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -758,28 +760,34 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>📦</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>100 kg Box</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-                transform: 'rotate(-15deg)',
-              }}>
-                <div style={{ fontSize: '32px', transform: 'rotate(15deg)' }}>30</div>
-                <p style={{ ...typo.small, color: colors.textPrimary, transform: 'rotate(15deg)' }}>Ramp</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>?</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Force needed</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 320 : 440} height={isMobile ? 180 : 220} style={{ display: 'block', margin: '0 auto' }}>
+              <defs>
+                <linearGradient id="predRamp" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#64748B" />
+                  <stop offset="100%" stopColor="#475569" />
+                </linearGradient>
+              </defs>
+              <rect width="100%" height="100%" fill={colors.bgCard} rx="8" />
+              {/* Ground */}
+              <rect x="0" y="170" width="440" height="50" fill="#1F2937" />
+              <line x1="0" y1="170" x2="440" y2="170" stroke="#374151" strokeWidth="2" />
+              {/* Ramp */}
+              <polygon points="60,50 380,170 380,185 60,65" fill="url(#predRamp)" stroke="#64748B" strokeWidth="1" />
+              {/* Box on ramp */}
+              <rect x="160" y="82" width="40" height="40" fill="#DC2626" rx="4" transform="rotate(17, 180, 102)" />
+              {/* Angle arc */}
+              <path d="M340 170 A 40 40 0 0 0 327 142" fill="none" stroke={colors.accent} strokeWidth="2" />
+              <text x="310" y="155" fill={colors.accent} fontSize="14" fontWeight="bold">30</text>
+              {/* Question mark */}
+              <text x="120" y="75" fill={colors.warning} fontSize="28" fontWeight="bold">?</text>
+              <text x="90" y="95" fill={colors.textSecondary} fontSize="11">Force needed</text>
+              {/* Weight arrow */}
+              <line x1="180" y1="120" x2="180" y2="165" stroke={colors.gravity} strokeWidth="2" />
+              <polygon points="180,170 175,160 185,160" fill={colors.gravity} />
+              <text x="188" y="150" fill={colors.gravity} fontSize="10">mg</text>
+              {/* Labels */}
+              <text x="220" y="30" fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="600">100 kg Box on a 30 Ramp</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -1082,6 +1090,31 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
             Real ramps have friction. When pushing a box UP a rough ramp, how does friction affect the force you need?
           </h2>
+
+          {/* SVG showing friction concept */}
+          <div style={{ background: colors.bgCard, borderRadius: '16px', padding: '16px', marginBottom: '24px', textAlign: 'center' }}>
+            <svg width={isMobile ? 300 : 400} height={isMobile ? 140 : 160} style={{ display: 'block', margin: '0 auto' }}>
+              <rect width="100%" height="100%" fill={colors.bgCard} rx="8" />
+              {/* Rough ramp surface */}
+              <polygon points="40,30 340,130 340,145 40,45" fill="#64748B" stroke="#475569" strokeWidth="1" />
+              {/* Rough texture dots */}
+              {[60,90,120,150,180,210,240,270,300].map((cx, i) => (
+                <circle key={i} cx={cx} cy={30 + (cx-40)*0.333 + 8} r="2" fill="#78716c" opacity="0.6" />
+              ))}
+              {/* Box */}
+              <rect x="140" y="52" width="35" height="35" fill="#DC2626" rx="3" transform="rotate(18, 157, 70)" />
+              {/* Friction arrow (opposing motion) */}
+              <line x1="170" y1="78" x2="130" y2="90" stroke={colors.friction} strokeWidth="3" />
+              <polygon points="127,91 137,88 133,95" fill={colors.friction} />
+              <text x="110" y="105" fill={colors.friction} fontSize="10" fontWeight="600">Friction</text>
+              {/* Push arrow */}
+              <line x1="155" y1="72" x2="195" y2="60" stroke={colors.success} strokeWidth="3" />
+              <polygon points="198,59 189,56 191,66" fill={colors.success} />
+              <text x="200" y="55" fill={colors.success} fontSize="10" fontWeight="600">Push</text>
+              {/* Label */}
+              <text x={isMobile ? 150 : 200} y="20" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Rough Surface (mu = 0.3)</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1456,6 +1489,20 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
               </p>
             </div>
 

@@ -689,11 +689,11 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             <circle cx={0} cy={0} r={27} fill="none" stroke="#374151" strokeWidth={1} />
           </g>
           {/* Light source label */}
-          <rect x={10} y={height / 2 + 38} width={60} height={30} fill="#111827" stroke="#334155" strokeWidth={1} rx={4} opacity={0.9} />
-          <text x={40} y={height / 2 + 50} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
+          <rect x={10} y={height / 2 + 36} width={60} height={34} fill="#111827" stroke="#334155" strokeWidth={1} rx={4} opacity={0.9} />
+          <text x={40} y={height / 2 + 48} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
             Unpolarized
           </text>
-          <text x={40} y={height / 2 + 62} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
+          <text x={40} y={height / 2 + 64} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
             Light Source
           </text>
 
@@ -767,24 +767,24 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             </text>
 
             {/* Label */}
-            <text x={20} y={192} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
+            <text x={20} y={190} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
               Transmitted
             </text>
-            <text x={20} y={202} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
+            <text x={20} y={205} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
               Intensity
             </text>
           </g>
 
           {/* === INFO PANEL === */}
           <g transform="translate(10, 10)">
-            <rect x={0} y={0} width={145} height={55} fill="#0f172a" stroke="#334155" strokeWidth={1} rx={6} opacity={0.95} />
+            <rect x={0} y={0} width={145} height={58} fill="#0f172a" stroke="#334155" strokeWidth={1} rx={6} opacity={0.95} />
             <text x={10} y={20} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
               Angle: {angle} deg
             </text>
-            <text x={10} y={38} fill={colors.accent} fontSize={10}>
+            <text x={10} y={36} fill={colors.accent} fontSize={10}>
               I = I0 x cos2({angle} deg)
             </text>
-            <text x={10} y={50} fill={colors.textSecondary} fontSize={9}>
+            <text x={10} y={52} fill={colors.textSecondary} fontSize={9}>
               = {intensityPercent}% transmission
             </text>
           </g>

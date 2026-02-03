@@ -553,7 +553,7 @@ const VenturiEffectRenderer: React.FC<VenturiEffectRendererProps> = ({ onGameEve
             {/* Middle pressure gauge */}
             <rect x={width/2 - 8} y="25" width="16" height="50" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />
             <rect x={width/2 - 5} y={75 - Math.max(narrowPressure, 10) * 0.4} width="10" height={Math.max(narrowPressure, 10) * 0.4} fill="#3b82f6" rx="2" />
-            <text x={width/2} y="20" fontSize="9" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
+            <text x={width/2} y="38" fontSize="9" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
 
             {/* Right pressure gauge */}
             <rect x={width - 61} y="35" width="16" height="45" rx="3" fill="#1a2a3a" stroke={colors.pressure} strokeWidth="1" />

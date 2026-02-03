@@ -536,7 +536,7 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
       }
     };
     const mediumColors = getMediumColors();
-    const arcRadius = 40;
+    const arcRadius = 60;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -567,27 +567,27 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             </linearGradient>
 
             <linearGradient id="snellAirGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={design.colors.air} stopOpacity="0.08"/>
-              <stop offset="50%" stopColor={design.colors.air} stopOpacity="0.05"/>
-              <stop offset="100%" stopColor={design.colors.air} stopOpacity="0.02"/>
+              <stop offset="0%" stopColor={design.colors.air} stopOpacity="0.12"/>
+              <stop offset="50%" stopColor={design.colors.air} stopOpacity="0.08"/>
+              <stop offset="100%" stopColor={design.colors.air} stopOpacity="0.04"/>
             </linearGradient>
 
             <linearGradient id="snellWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={design.colors.waterDark} stopOpacity="0.15"/>
-              <stop offset="50%" stopColor={design.colors.water} stopOpacity="0.25"/>
-              <stop offset="100%" stopColor={design.colors.waterLight} stopOpacity="0.35"/>
+              <stop offset="0%" stopColor={design.colors.waterDark} stopOpacity="0.25"/>
+              <stop offset="50%" stopColor={design.colors.water} stopOpacity="0.35"/>
+              <stop offset="100%" stopColor={design.colors.waterLight} stopOpacity="0.45"/>
             </linearGradient>
 
             <linearGradient id="snellOilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={design.colors.oilDark} stopOpacity="0.15"/>
-              <stop offset="50%" stopColor={design.colors.oil} stopOpacity="0.25"/>
-              <stop offset="100%" stopColor={design.colors.oilLight} stopOpacity="0.35"/>
+              <stop offset="0%" stopColor={design.colors.oilDark} stopOpacity="0.25"/>
+              <stop offset="50%" stopColor={design.colors.oil} stopOpacity="0.35"/>
+              <stop offset="100%" stopColor={design.colors.oilLight} stopOpacity="0.45"/>
             </linearGradient>
 
             <linearGradient id="snellGlassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={design.colors.glassDark} stopOpacity="0.2"/>
-              <stop offset="50%" stopColor={design.colors.glass} stopOpacity="0.3"/>
-              <stop offset="100%" stopColor={design.colors.glassLight} stopOpacity="0.4"/>
+              <stop offset="0%" stopColor={design.colors.glassDark} stopOpacity="0.3"/>
+              <stop offset="50%" stopColor={design.colors.glass} stopOpacity="0.4"/>
+              <stop offset="100%" stopColor={design.colors.glassLight} stopOpacity="0.5"/>
             </linearGradient>
 
             <linearGradient id="snellBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -643,8 +643,25 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
           </g>
 
           <g className="interface">
-            <line x1="0" y1={centerY} x2="400" y2={centerY} stroke={design.colors.textMuted} strokeWidth="2" strokeOpacity="0.5"/>
-            <line x1={centerX} y1={centerY - 120} x2={centerX} y2={centerY + 120} stroke="url(#snellNormalGrad)" strokeWidth="1.5" strokeDasharray="6,4"/>
+            <line x1="0" y1={centerY} x2="400" y2={centerY} stroke={design.colors.textMuted} strokeWidth="2.5" strokeOpacity="0.7"/>
+            <text x="370" y={centerY - 6} fill={design.colors.textMuted} fontSize="10" fontWeight="500" textAnchor="end" opacity="0.8">Surface</text>
+            <line x1={centerX} y1={centerY - 130} x2={centerX} y2={centerY + 130} stroke="url(#snellNormalGrad)" strokeWidth="2" strokeDasharray="6,4"/>
+            <text x={centerX + 6} y={centerY - 118} fill={design.colors.accentPrimary} fontSize="10" fontWeight="600" opacity="0.9">Normal</text>
+          </g>
+
+          <g className="angle-wedges">
+            {/* Filled incident angle wedge */}
+            <path
+              d={`M ${centerX} ${centerY} L ${centerX} ${centerY - arcRadius} A ${arcRadius} ${arcRadius} 0 0 0 ${centerX - Math.sin(incidentRad) * arcRadius} ${centerY - Math.cos(incidentRad) * arcRadius} Z`}
+              fill={design.colors.warning}
+              fillOpacity="0.15"
+            />
+            {/* Filled refracted angle wedge */}
+            <path
+              d={`M ${centerX} ${centerY} L ${centerX} ${centerY + arcRadius} A ${arcRadius} ${arcRadius} 0 0 1 ${centerX + Math.sin(refractedRad) * arcRadius} ${centerY + Math.cos(refractedRad) * arcRadius} Z`}
+              fill={design.colors.success}
+              fillOpacity="0.15"
+            />
           </g>
 
           <g className="arcs">
@@ -652,33 +669,57 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
               d={`M ${centerX} ${centerY - arcRadius} A ${arcRadius} ${arcRadius} 0 0 0 ${centerX - Math.sin(incidentRad) * arcRadius} ${centerY - Math.cos(incidentRad) * arcRadius}`}
               fill="none"
               stroke="url(#snellIncidentArcGrad)"
-              strokeWidth="2.5"
+              strokeWidth="3"
               filter="url(#snellArcGlow)"
             />
+            {/* Incident angle label on SVG */}
+            <text
+              x={centerX - Math.sin(incidentRad / 2) * (arcRadius + 16)}
+              y={centerY - Math.cos(incidentRad / 2) * (arcRadius + 16)}
+              fill={design.colors.warning}
+              fontSize="13"
+              fontWeight="700"
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {incidentAngle.toFixed(0)}°
+            </text>
 
             <path
               d={`M ${centerX} ${centerY + arcRadius} A ${arcRadius} ${arcRadius} 0 0 1 ${centerX + Math.sin(refractedRad) * arcRadius} ${centerY + Math.cos(refractedRad) * arcRadius}`}
               fill="none"
               stroke="url(#snellRefractedArcGrad)"
-              strokeWidth="2.5"
+              strokeWidth="3"
               filter="url(#snellArcGlow)"
             />
+            {/* Refracted angle label on SVG */}
+            <text
+              x={centerX + Math.sin(refractedRad / 2) * (arcRadius + 16)}
+              y={centerY + Math.cos(refractedRad / 2) * (arcRadius + 16)}
+              fill={design.colors.success}
+              fontSize="13"
+              fontWeight="700"
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {refractedAngle.toFixed(1)}°
+            </text>
           </g>
 
           <g className="beams">
-            <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke={design.colors.beam} strokeWidth="5" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
-            <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke="url(#snellBeamGrad)" strokeWidth="3" strokeLinecap="round"/>
+            <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke={design.colors.beam} strokeWidth="7" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
+            <line x1={incidentEndX} y1={incidentEndY} x2={centerX} y2={centerY} stroke="url(#snellBeamGrad)" strokeWidth="4" strokeLinecap="round"/>
 
-            <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke={design.colors.beam} strokeWidth="5" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
-            <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke="url(#snellBeamGrad)" strokeWidth="3" strokeLinecap="round"/>
+            <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke={design.colors.beam} strokeWidth="7" strokeLinecap="round" filter="url(#snellBeamGlow)"/>
+            <line x1={centerX} y1={centerY} x2={refractedEndX} y2={refractedEndY} stroke="url(#snellBeamGrad)" strokeWidth="4" strokeLinecap="round"/>
 
-            <circle cx={centerX} cy={centerY} r="6" fill={design.colors.beamLight} filter="url(#snellBeamGlow)"/>
-            <circle cx={centerX} cy={centerY} r="4" fill="#fff"/>
+            <circle cx={centerX} cy={centerY} r="7" fill={design.colors.beamLight} filter="url(#snellBeamGlow)"/>
+            <circle cx={centerX} cy={centerY} r="5" fill="#fff"/>
           </g>
 
           <g className="labels">
-            <text x="20" y="30" fill={design.colors.air} fontSize="12" fontWeight="600">AIR (n=1.00)</text>
-            <text x="20" y={centerY + 25} fill={mediumColors.main} fontSize="12" fontWeight="600">{medium.toUpperCase()} (n={refractiveIndices[medium].toFixed(2)})</text>
+            <text x="20" y="30" fill={design.colors.air} fontSize="13" fontWeight="700">AIR (n=1.00)</text>
+            <text x="20" y={centerY + 28} fill={mediumColors.main} fontSize="13" fontWeight="700">{medium.toUpperCase()} (n={refractiveIndices[medium].toFixed(2)})</text>
           </g>
         </svg>
 
@@ -882,9 +923,46 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             <h2 style={{ fontSize: typo.heading, fontWeight: 600, color: design.colors.textPrimary, marginBottom: '16px', lineHeight: 1.3 }}>
               Explore Snell's Law
             </h2>
-            <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '24px', fontWeight: 400, lineHeight: 1.6 }}>
+            <p style={{ fontSize: typo.body, color: design.colors.textSecondary, marginBottom: '16px', fontWeight: 400, lineHeight: 1.6 }}>
               Adjust the incident angle and observe how the refracted angle changes. Notice the relationship between them!
             </p>
+
+            <div style={{
+              background: design.colors.bgCard,
+              padding: '16px',
+              borderRadius: design.radius.md,
+              marginBottom: '20px',
+              border: `1px solid ${design.colors.accentPrimary}40`
+            }}>
+              <h3 style={{ fontSize: typo.small, fontWeight: 700, color: design.colors.accentPrimary, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Key Variables
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                  <span style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: design.colors.warning, minWidth: '24px' }}>n</span>
+                  <span style={{ fontSize: typo.small, color: design.colors.textSecondary, lineHeight: 1.5 }}>
+                    <strong style={{ color: design.colors.textPrimary }}>Refractive Index</strong> — measures how much a material slows light. Higher n = slower light = more bending. Air has n=1.00, water n=1.33, glass n=1.52.
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                  <span style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: design.colors.success, minWidth: '24px' }}>theta</span>
+                  <span style={{ fontSize: typo.small, color: design.colors.textSecondary, lineHeight: 1.5 }}>
+                    <strong style={{ color: design.colors.textPrimary }}>Angle from Normal</strong> — measured from the dashed perpendicular line, NOT the surface. theta1 is the incoming angle, theta2 is the refracted angle.
+                  </span>
+                </div>
+                <div style={{
+                  marginTop: '4px',
+                  padding: '10px 12px',
+                  background: `linear-gradient(135deg, ${design.colors.bgElevated} 0%, ${design.colors.bgHover} 100%)`,
+                  borderRadius: design.radius.sm,
+                  textAlign: 'center'
+                }}>
+                  <span style={{ fontSize: typo.body, color: design.colors.accentPrimary, fontWeight: 700 }}>
+                    Snell's Law: n1 sin(theta1) = n2 sin(theta2)
+                  </span>
+                </div>
+              </div>
+            </div>
 
             {renderVisualization()}
 
@@ -1322,8 +1400,20 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
             </div>
 
             <div style={{ textAlign: 'center', marginTop: '24px' }}>
-              {renderButton('Continue to Test', goNext)}
+              {activeApp < realWorldApps.length - 1 ? (
+                renderButton(`Next Application →`, () => {
+                  const nextApp = activeApp + 1;
+                  setActiveApp(nextApp);
+                  setCompletedApps(new Set([...completedApps, nextApp]));
+                  emitEvent('app_explored', { app: realWorldApps[nextApp].id });
+                })
+              ) : (
+                renderButton('Continue to Test', goNext)
+              )}
             </div>
+            <p style={{ textAlign: 'center', fontSize: typo.small, color: design.colors.textMuted, marginTop: '8px' }}>
+              Application {activeApp + 1} of {realWorldApps.length}
+            </p>
           </div>
         );
 
@@ -1371,6 +1461,24 @@ const SnellsLawRenderer: React.FC<SnellsLawRendererProps> = ({ onGameEvent, game
                     </div>
                   );
                 })}
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '32px', flexWrap: 'wrap' }}>
+                {renderButton('Replay Game', () => {
+                  setTestIndex(0);
+                  setAnswers(Array(10).fill(null));
+                  setShowResult(false);
+                  setConfirmedIndex(null);
+                  setPrediction(null);
+                  setTwistPrediction(null);
+                  setActiveApp(0);
+                  setCompletedApps(new Set());
+                  goToPhase('hook');
+                }, 'secondary', false, 'md')}
+                {renderButton('Return to Dashboard', () => {
+                  emitEvent('mastery_achieved', {});
+                  window.location.href = '/';
+                }, 'success', false, 'md')}
               </div>
             </div>
           );
