@@ -9,7 +9,7 @@
  * 3. Update the import path to point to your component
  * 4. Run: npm run test:run -- tests/games/YourGameRenderer.test.tsx
  *
- * This will run ALL 108 test cases against your game, validating:
+ * This will run ALL 153 test cases against your game, validating:
  * - 10-phase structure (hook → predict → play → review → twist_predict →
  *   twist_play → twist_review → transfer → test → mastery)
  * - 10 test questions with proper format
@@ -21,19 +21,20 @@
  * - Quiz functionality (mechanics, scoring)
  * - Security (answer protection, XSS prevention)
  * - Bug detection (console errors, edge cases)
+ * - Premium design quality (Apple/Airbnb standards)
  * - Educational quality (content, learning flow)
  *
  * ============================================================================
  */
 
-// ===== STEP 1: Import your game component =====
-import YourGameRenderer from '../../components/YourGameRenderer';
+// This is a template file - skip tests
+// To use: copy this file and rename it, then update the import
 
-// ===== STEP 2: Import the test factory =====
-import { createGameTestSuite } from '../utils/game-test-factory';
+import { describe, it } from 'vitest';
 
-// ===== STEP 3: Run the test suite =====
-createGameTestSuite('YourGameRenderer', YourGameRenderer);
+describe('Template - Copy and rename to use', () => {
+  it.skip('Copy this file and rename to YourGameRenderer.test.tsx', () => {});
+});
 
 /**
  * ============================================================================
