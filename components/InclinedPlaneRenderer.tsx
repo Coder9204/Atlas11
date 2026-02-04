@@ -479,25 +479,25 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
   // Inclined Plane SVG Visualization
   const InclinedPlaneVisualization = () => {
-    const width = isMobile ? 360 : 540;
-    const height = isMobile ? 260 : 340;
+    const vbWidth = isMobile ? 400 : 640;
+    const vbHeight = isMobile ? 300 : 400;
 
-    const rampLength = width - 80;
+    const rampLength = vbWidth - 80;
     const rampHeight = rampLength * Math.tan(angleRad) * 0.6;
     const rampStartX = 40;
     const rampStartY = 40;
     const rampEndX = rampStartX + rampLength;
-    const rampEndY = Math.min(rampStartY + rampHeight, height - 30);
+    const rampEndY = Math.min(rampStartY + rampHeight, vbHeight - 30);
 
     const ballProgress = ballPosition / 100;
     const ballX = rampStartX + ballProgress * (rampEndX - rampStartX);
     const ballY = rampStartY + ballProgress * (rampEndY - rampStartY);
     const ballRadius = isMobile ? 14 : 18;
 
-    const vectorScale = isMobile ? 3.5 : 5;
+    const vectorScale = isMobile ? 4.5 : 6;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg viewBox={`0 0 ${vbWidth} ${vbHeight}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <linearGradient id="rampGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#64748B" />
@@ -523,8 +523,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
         </defs>
 
         {/* Ground */}
-        <rect x={0} y={rampEndY + 5} width={width} height={height - rampEndY - 5} fill="#1F2937" />
-        <line x1={0} y1={rampEndY + 5} x2={width} y2={rampEndY + 5} stroke="#374151" strokeWidth={2} />
+        <rect x={0} y={rampEndY + 5} width={vbWidth} height={vbHeight - rampEndY - 5} fill="#1F2937" />
+        <line x1={0} y1={rampEndY + 5} x2={vbWidth} y2={rampEndY + 5} stroke="#374151" strokeWidth={2} />
 
         {/* Ramp */}
         <polygon
@@ -632,23 +632,119 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
         )}
 
         {/* Info panel */}
-        <rect x={width - 100} y={10} width={90} height={60} rx={8} fill={colors.bgSecondary} stroke={colors.border} />
-        <text x={width - 55} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize="10">Acceleration</text>
-        <text x={width - 55} y={50} textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="bold">
+        <rect x={vbWidth - 100} y={10} width={90} height={60} rx={8} fill={colors.bgSecondary} stroke={colors.border} />
+        <text x={vbWidth - 55} y={30} textAnchor="middle" fill={colors.textSecondary} fontSize="10">Acceleration</text>
+        <text x={vbWidth - 55} y={50} textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="bold">
           {netAcceleration.toFixed(2)}
         </text>
-        <text x={width - 55} y={62} textAnchor="middle" fill={colors.textMuted} fontSize="9">m/s^2</text>
+        <text x={vbWidth - 55} y={62} textAnchor="middle" fill={colors.textMuted} fontSize="9">m/s^2</text>
 
         {/* Legend */}
-        <g transform={`translate(10, ${height - 60})`}>
-          <rect x={0} y={0} width={isMobile ? 120 : 160} height={55} rx={6} fill={colors.bgSecondary} stroke={colors.border} />
-          <circle cx={12} cy={12} r={5} fill={colors.gravity} />
-          <text x={22} y={15} fill={colors.textSecondary} fontSize="12">Weight (mg)</text>
-          <circle cx={12} cy={26} r={5} fill={colors.normal} />
-          <text x={22} y={29} fill={colors.textSecondary} fontSize="12">Normal (N)</text>
-          <circle cx={12} cy={40} r={5} fill={colors.parallel} />
-          <text x={22} y={43} fill={colors.textSecondary} fontSize="12">Parallel</text>
+        <g transform={`translate(10, ${vbHeight - 90})`}>
+          <rect x={0} y={0} width={isMobile ? 260 : 340} height={85} rx={6} fill={colors.bgSecondary} stroke={colors.border} />
+          <circle cx={12} cy={14} r={5} fill={colors.gravity} />
+          <text x={24} y={17} fill={colors.textSecondary} fontSize="11">Weight (mg) — Gravity pulling straight down</text>
+          <circle cx={12} cy={32} r={5} fill={colors.normal} />
+          <text x={24} y={35} fill={colors.textSecondary} fontSize="11">Normal (N) — Surface pushes perpendicular to ramp</text>
+          <circle cx={12} cy={50} r={5} fill={colors.parallel} />
+          <text x={24} y={53} fill={colors.textSecondary} fontSize="11">Parallel (mg sin θ) — Drives acceleration down ramp</text>
+          {hasFriction && (
+            <>
+              <circle cx={12} cy={68} r={5} fill={colors.friction} />
+              <text x={24} y={71} fill={colors.textSecondary} fontSize="11">Friction (f) — Opposes motion, reduces acceleration</text>
+            </>
+          )}
         </g>
+      </svg>
+    );
+  };
+
+  // Acceleration vs Angle Graph
+  const AccelerationGraph = () => {
+    const gVal = 9.8;
+    const graphW = 440;
+    const graphH = 220;
+    const padL = 55;
+    const padR = 20;
+    const padT = 30;
+    const padB = 40;
+    const plotW = graphW - padL - padR;
+    const plotH = graphH - padT - padB;
+
+    // Generate curve points: a = g * sin(theta) for theta 0..90
+    const curvePoints: string[] = [];
+    for (let deg = 0; deg <= 90; deg += 2) {
+      const rad = (deg * Math.PI) / 180;
+      const a = gVal * Math.sin(rad);
+      const x = padL + (deg / 90) * plotW;
+      const y = padT + plotH - (a / gVal) * plotH;
+      curvePoints.push(`${x},${y}`);
+    }
+
+    // Current angle marker
+    const curX = padL + (angle / 90) * plotW;
+    const curA = gVal * Math.sin((angle * Math.PI) / 180);
+    const curY = padT + plotH - (curA / gVal) * plotH;
+
+    return (
+      <svg viewBox={`0 0 ${graphW} ${graphH}`} width="100%" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Title */}
+        <text x={graphW / 2} y={18} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="700">
+          Acceleration vs Angle
+        </text>
+
+        {/* Axes */}
+        <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={colors.border} strokeWidth={1.5} />
+        <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke={colors.border} strokeWidth={1.5} />
+
+        {/* Y-axis labels */}
+        {[0, 2.45, 4.9, 7.35, 9.8].map((val, i) => {
+          const y = padT + plotH - (val / gVal) * plotH;
+          return (
+            <g key={i}>
+              <line x1={padL - 4} y1={y} x2={padL} y2={y} stroke={colors.textMuted} strokeWidth={1} />
+              <text x={padL - 8} y={y + 4} textAnchor="end" fill={colors.textMuted} fontSize="9">{val.toFixed(1)}</text>
+              <line x1={padL} y1={y} x2={padL + plotW} y2={y} stroke={colors.border} strokeWidth={0.5} strokeDasharray="4,4" opacity={0.4} />
+            </g>
+          );
+        })}
+        <text x={12} y={padT + plotH / 2} textAnchor="middle" fill={colors.textSecondary} fontSize="10" transform={`rotate(-90, 12, ${padT + plotH / 2})`}>
+          Acceleration (m/s²)
+        </text>
+
+        {/* X-axis labels */}
+        {[0, 15, 30, 45, 60, 75, 90].map((deg, i) => {
+          const x = padL + (deg / 90) * plotW;
+          return (
+            <g key={i}>
+              <line x1={x} y1={padT + plotH} x2={x} y2={padT + plotH + 4} stroke={colors.textMuted} strokeWidth={1} />
+              <text x={x} y={padT + plotH + 16} textAnchor="middle" fill={colors.textMuted} fontSize="9">{deg}°</text>
+            </g>
+          );
+        })}
+        <text x={padL + plotW / 2} y={graphH - 4} textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+          Angle θ (degrees)
+        </text>
+
+        {/* Curve */}
+        <polyline
+          points={curvePoints.join(' ')}
+          fill="none"
+          stroke={colors.accent}
+          strokeWidth={2.5}
+        />
+
+        {/* Dashed vertical line at current angle */}
+        <line x1={curX} y1={padT} x2={curX} y2={padT + plotH} stroke={colors.warning} strokeWidth={1.5} strokeDasharray="6,4" />
+
+        {/* Current angle marker */}
+        <circle cx={curX} cy={curY} r={6} fill={colors.warning} stroke="white" strokeWidth={2} />
+        <text x={curX + 10} y={curY - 8} fill={colors.warning} fontSize="11" fontWeight="700">
+          {curA.toFixed(2)} m/s²
+        </text>
+        <text x={curX + 10} y={curY + 6} fill={colors.textMuted} fontSize="9">
+          at {angle}°
+        </text>
       </svg>
     );
   };
@@ -862,7 +958,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             Inclined Plane Simulator
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Adjust the angle and observe how forces change. Watch the block accelerate down the ramp.
+            Adjust the angle and observe how forces change on the block. Watch how acceleration increases with steeper angles.
           </p>
 
           {/* Main visualization */}
@@ -872,8 +968,13 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <div style={{ marginBottom: '24px' }}>
               <InclinedPlaneVisualization />
+            </div>
+
+            {/* Acceleration vs Angle Graph */}
+            <div style={{ marginBottom: '24px' }}>
+              <AccelerationGraph />
             </div>
 
             {/* Angle slider */}
@@ -959,10 +1060,34 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               )}
             </div>
 
-            {/* Experiment counter */}
-            <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center' }}>
-              Experiments completed: {experimentCount}
-            </p>
+            {/* Experiment progress bar */}
+            <div style={{ marginTop: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>
+                  Experiments: {Math.min(experimentCount, 3)} / 3
+                </span>
+                <span style={{ ...typo.small, color: experimentCount >= 3 ? colors.success : colors.textMuted }}>
+                  {experimentCount >= 3 ? 'Ready to continue!' : `${3 - experimentCount} more experiment${3 - experimentCount !== 1 ? 's' : ''} needed to continue`}
+                </span>
+              </div>
+              <div style={{
+                width: '100%',
+                height: '8px',
+                background: colors.bgSecondary,
+                borderRadius: '4px',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: `${Math.min((experimentCount / 3) * 100, 100)}%`,
+                  height: '100%',
+                  background: experimentCount >= 3
+                    ? `linear-gradient(90deg, ${colors.success}, #059669)`
+                    : `linear-gradient(90deg, ${colors.accent}, #0891B2)`,
+                  borderRadius: '4px',
+                  transition: 'width 0.5s ease',
+                }} />
+              </div>
+            </div>
           </div>
 
           {/* Discovery prompt */}
@@ -981,14 +1106,18 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             </div>
           )}
 
-          {experimentCount >= 3 && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Understand the Physics
-            </button>
-          )}
+          <button
+            onClick={() => { if (experimentCount >= 3) { playSound('success'); nextPhase(); } }}
+            disabled={experimentCount < 3}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              opacity: experimentCount >= 3 ? 1 : 0.4,
+              cursor: experimentCount >= 3 ? 'pointer' : 'not-allowed',
+            }}
+          >
+            {experimentCount >= 3 ? 'Understand the Physics →' : `Complete ${3 - experimentCount} More Experiment${3 - experimentCount !== 1 ? 's' : ''} to Continue`}
+          </button>
         </div>
 
         {renderNavDots()}
@@ -1226,8 +1355,13 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+            <div style={{ marginBottom: '24px' }}>
               <InclinedPlaneVisualization />
+            </div>
+
+            {/* Acceleration vs Angle Graph */}
+            <div style={{ marginBottom: '24px' }}>
+              <AccelerationGraph />
             </div>
 
             {/* Surface toggle */}
@@ -1592,6 +1726,36 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             </div>
           </div>
 
+          {/* Next Application / Continue to Test button */}
+          <div style={{ marginBottom: '12px' }}>
+            {selectedApp < realWorldApps.length - 1 ? (
+              <button
+                onClick={() => {
+                  playSound('click');
+                  const nextIdx = selectedApp + 1;
+                  setSelectedApp(nextIdx);
+                  const newCompleted = [...completedApps];
+                  newCompleted[nextIdx] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Next Application →
+              </button>
+            ) : (
+              <button
+                onClick={() => { playSound('success'); nextPhase(); }}
+                style={{ ...primaryButtonStyle, width: '100%' }}
+              >
+                Continue to Test →
+              </button>
+            )}
+          </div>
+
+          <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length}
+          </p>
+
           <button
             onClick={() => { if (allAppsCompleted) { playSound('success'); nextPhase(); } }}
             disabled={!allAppsCompleted}
@@ -1600,6 +1764,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               width: '100%',
               opacity: allAppsCompleted ? 1 : 0.4,
               cursor: allAppsCompleted ? 'pointer' : 'not-allowed',
+              background: allAppsCompleted ? `linear-gradient(135deg, ${colors.success}, #059669)` : colors.border,
             }}
           >
             {allAppsCompleted ? 'Take the Knowledge Test' : `Explore All Applications (${completedApps.filter(Boolean).length}/4)`}
@@ -1628,9 +1793,12 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
-              {passed ? 'Excellent!' : 'Keep Learning!'}
+              {passed ? 'Test Complete!' : 'Keep Learning!'}
             </h2>
-            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: '4px 0' }}>
+              You Scored
+            </p>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '8px 0' }}>
               {testScore} / 10
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
@@ -1639,12 +1807,20 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                 : 'Review the concepts and try again.'}
             </p>
 
-            {/* Answer Review */}
+            {/* Answer Review — Scrollable container */}
             <div style={{ maxWidth: '600px', margin: '0 auto 24px', textAlign: 'left' }}>
               <p style={{ ...typo.small, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>
                 Question-by-Question Review
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{
+                maxHeight: '400px',
+                overflowY: 'auto',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                paddingRight: '4px',
+              }}>
                 {testQuestions.map((q, i) => {
                   const correctOpt = q.options.find(o => o.correct);
                   const isCorrect = testAnswers[i] === correctOpt?.id;
@@ -1698,27 +1874,47 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               </div>
             </div>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Complete Lesson
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
+            {/* Navigation buttons — always visible, outside scroll area */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', paddingBottom: '24px' }}>
+              {passed ? (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={primaryButtonStyle}
+                >
+                  Complete Lesson
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(Array(10).fill(null));
+                    setCurrentQuestion(0);
+                    setTestScore(0);
+                    goToPhase('hook');
+                  }}
+                  style={primaryButtonStyle}
+                >
+                  Review and Try Again
+                </button>
+              )}
+              <a
+                href="/"
+                style={{
+                  padding: isMobile ? '14px 28px' : '16px 32px',
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  fontSize: isMobile ? '16px' : '18px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  display: 'inline-block',
                 }}
-                style={primaryButtonStyle}
               >
-                Review and Try Again
-              </button>
-            )}
+                Back to Dashboard
+              </a>
+            </div>
           </div>
           {renderNavDots()}
         </div>

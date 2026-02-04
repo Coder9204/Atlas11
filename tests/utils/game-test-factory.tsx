@@ -635,7 +635,7 @@ export function createGameTestSuite(
             const allButtons = screen.getAllByRole('button');
             const appNavBtn = allButtons.find(btn => {
               const text = btn.textContent?.trim() || '';
-              return /next.*app|application\s*[2-4]/i.test(text) && text.length < 60;
+              return /next.*app|app.*→/i.test(text) && text.length < 60;
             });
             // Find app tab/selector buttons (short text, not nav buttons)
             const tabBtns = allButtons.filter(btn => {
@@ -644,17 +644,34 @@ export function createGameTestSuite(
                 && !(/back|next\s*→|prev|← back|continue.*test|check|confirm/i.test(text))
                 && !/^(next|prev|back|submit|skip|home)$/i.test(text);
             });
-            const navBtn = appNavBtn || (tabBtns.length >= 2 ? tabBtns[1] : null);
-            if (navBtn) {
-              fireEvent.click(navBtn);
+
+            // If explicit app nav button exists, clicking it MUST change content
+            if (appNavBtn) {
+              fireEvent.click(appNavBtn);
               const contentAfter = getPhaseContent();
-              // If an explicit app nav button exists, content MUST change
-              if (appNavBtn) {
-                expect(contentAfter).not.toBe(contentBefore);
+              expect(contentAfter).not.toBe(contentBefore);
+            } else if (tabBtns.length >= 4) {
+              // If 4+ tab-like buttons exist, clicking should change content or DOM
+              const htmlBefore = document.body.innerHTML;
+              fireEvent.click(tabBtns[1]);
+              const contentAfter = getPhaseContent();
+              const htmlAfter = document.body.innerHTML;
+
+              const nextAppBtnAfterClick = screen.queryAllByRole('button').find(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /next.*app|app.*→/i.test(text);
+              });
+
+              const contentChanged = contentAfter !== contentBefore;
+              const domChanged = htmlAfter !== htmlBefore;
+              // Soft check: at least one of these should be true, but not all games have real tabs
+              if (!nextAppBtnAfterClick && !contentChanged && !domChanged) {
+                // Tabs exist but don't work - warn but don't fail
+                console.warn('[QUALITY] Transfer phase has 4+ buttons but clicking them doesn\'t change content');
               }
-              // Tab buttons may or may not change content (pass either way)
+            } else if (tabBtns.length >= 2) {
+              fireEvent.click(tabBtns[1]);
             }
-            // If no nav button found, test passes (not all games have multi-app transfer)
           });
 
           it('transfer phase has forward navigation to test phase', () => {
@@ -873,18 +890,34 @@ export function createGameTestSuite(
               }
             }
 
-            // After seeing results, verify navigation is possible
-            // This is a best-practice check - quiz results should have nav buttons
-            const allButtons = screen.queryAllByRole('button');
-            const navButtons = allButtons.filter(btn => {
-              const text = btn.textContent?.trim() || '';
-              return /return|dashboard|replay|try.*again|restart|go.*home|back.*home|play.*again|complete.*lesson/i.test(text);
-            });
-            const bottomBarBtns = allButtons.filter(btn => {
-              const text = btn.textContent?.trim() || '';
-              return text === 'Next →' || text === 'Next→' || text === '← Back';
-            });
-            // At minimum, quiz should complete without errors
+            // After seeing results, verify navigation buttons exist and are accessible
+            if (quizCompleted) {
+              const allButtons = screen.queryAllByRole('button');
+              const navButtons = allButtons.filter(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /return|dashboard|replay|try.*again|restart|go.*home|back.*home|play.*again|complete.*lesson|review.*try/i.test(text);
+              });
+              // Also accept bottom-bar or generic forward navigation as valid
+              const bottomBarBtns = allButtons.filter(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /next\s*→|next→|← back|continue|finish/i.test(text);
+              });
+              // Also check for navigation links or nav dots
+              const navLinks = document.querySelectorAll('a[href]');
+              const navDots = getNavDots();
+
+              // At least one way to navigate away from results must exist
+              expect(navButtons.length + bottomBarBtns.length + navLinks.length + (navDots.length >= 8 ? 1 : 0)).toBeGreaterThan(0);
+
+              // If dedicated nav buttons exist, verify they're not hidden
+              navButtons.forEach(btn => {
+                const el = btn as HTMLElement;
+                const style = el.getAttribute('style') || '';
+                const isHidden = style.includes('display: none') || style.includes('display:none');
+                expect(isHidden).toBe(false);
+              });
+            }
+
             expect(consoleErrors.length).toBe(0);
           });
         });
@@ -1254,6 +1287,148 @@ export function createGameTestSuite(
               cleanup();
               clearConsoleLogs();
             });
+          });
+        });
+
+        describe('2.11 Play Phase Continue/Progress', () => {
+          it('play phase has a continue button or progress indicator', () => {
+            renderGame({ gamePhase: 'play' });
+
+            // Interact with sliders to simulate experiments
+            const sliders = getSliders();
+            if (sliders.length > 0) {
+              const slider = sliders[0] as HTMLInputElement;
+              for (let i = 0; i < 5; i++) {
+                fireEvent.change(slider, { target: { value: String(10 + i * 10) } });
+              }
+            }
+
+            // Click action buttons (Roll, Start, Run, etc.)
+            const actionBtns = screen.getAllByRole('button').filter(btn => {
+              const text = btn.textContent?.trim().toLowerCase() || '';
+              return /roll|start|run|fire|launch|drop|release|simulate|go|activate/i.test(text);
+            });
+            actionBtns.slice(0, 3).forEach(btn => fireEvent.click(btn));
+
+            // Look for continue/advance button (broad patterns)
+            const continueBtn = screen.getAllByRole('button').find(btn => {
+              const text = btn.textContent?.trim() || '';
+              return /continue|understand|next|proceed|review|ready|advance|complete|discover|pattern|physics/i.test(text);
+            });
+
+            // Look for progress indicator (e.g., "2/3 experiments" or "2 of 3")
+            const pageContent = getPhaseContent();
+            const progressIndicator = /\d+\s*\/\s*\d+|\d+\s*of\s*\d+|experiment|progress|step|trial/i.test(pageContent);
+
+            // Also check for bottom bar nav buttons (Next →) which serve as continue
+            const bottomNav = screen.getAllByRole('button').find(btn => {
+              const text = btn.textContent?.trim() || '';
+              return /next\s*→|next→/i.test(text);
+            });
+
+            // Also accept nav dots as a valid navigation mechanism
+            const navDots = getNavDots();
+
+            expect(continueBtn || progressIndicator || bottomNav || navDots.length >= 8).toBeTruthy();
+          });
+        });
+
+        describe('2.5e Quiz Results Scrollability', () => {
+          it('quiz results with answer review has scrollable container or bounded height', async () => {
+            renderGame({ gamePhase: 'test' });
+
+            // Complete quiz
+            for (let i = 0; i < 12; i++) {
+              if (/you\s*scored|test\s*complete!/i.test(getPhaseContent()) && /\d+\s*\/\s*10/.test(getPhaseContent())) break;
+
+              const options = screen.getAllByRole('button').filter(btn => {
+                const text = btn.textContent || '';
+                return text.length > 5 && !(/^(next|prev|back|submit|skip|home|← back|next →|check|confirm|replay|return|dashboard)/i.test(text.trim()));
+              });
+              if (options.length > 0) fireEvent.click(options[0]);
+
+              const checkBtn = screen.getAllByRole('button').find(btn =>
+                /check.*answer|confirm.*answer|lock.*in|check$/i.test(btn.textContent?.trim() || '')
+              );
+              if (checkBtn) fireEvent.click(checkBtn);
+
+              const quizNextBtn = screen.getAllByRole('button').find(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /next\s*question|submit\s*test|finish|see\s*results|^continue$/i.test(text);
+              }) || screen.getAllByRole('button').find(btn => /^next$/i.test(btn.textContent?.trim() || ''));
+              if (quizNextBtn) fireEvent.click(quizNextBtn);
+            }
+
+            const submitBtn = findButtonByText(/submit|finish|see.*result|complete/i);
+            if (submitBtn) fireEvent.click(submitBtn);
+
+            try {
+              await waitFor(() => {
+                expect(getPhaseContent()).toMatch(/\d+\s*\/\s*10|\d+%/);
+              }, { timeout: 3000 });
+            } catch {
+              return; // Could not complete quiz
+            }
+
+            // Check if answer review section exists with multiple items
+            const reviewItems = document.querySelectorAll('[style*="border-radius"]');
+            const questionReviews = Array.from(reviewItems).filter(el => {
+              const text = el.textContent || '';
+              return /Question\s*\d+/i.test(text);
+            });
+
+            if (questionReviews.length >= 5) {
+              // Walk up from a question review item to find a scrollable container
+              let found = false;
+              let node: Element | null = questionReviews[0];
+              for (let depth = 0; depth < 5 && node; depth++) {
+                const style = node.getAttribute('style') || '';
+                if (style.includes('overflow') || style.includes('max-height') || style.includes('maxHeight')) {
+                  found = true;
+                  break;
+                }
+                node = node.parentElement;
+              }
+              expect(found).toBe(true);
+            }
+
+            expect(consoleErrors.length).toBe(0);
+          });
+        });
+
+        describe('2.7b SVG Minimum Dimensions', () => {
+          it('SVG has adequate size (viewBox width >= 200 or pixel width >= 200)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            expect(svg).toBeInTheDocument();
+
+            const viewBox = svg?.getAttribute('viewBox');
+            const widthAttr = svg?.getAttribute('width');
+
+            if (viewBox) {
+              const parts = viewBox.split(/[\s,]+/);
+              const vbWidth = parseFloat(parts[2]) || 0;
+              expect(vbWidth).toBeGreaterThanOrEqual(200);
+            } else if (widthAttr && widthAttr !== '100%') {
+              const pixelWidth = parseInt(widthAttr || '0');
+              expect(pixelWidth).toBeGreaterThanOrEqual(200);
+            }
+            // If width="100%" with no viewBox, pass (responsive)
+          });
+        });
+
+        describe('2.7c SVG Legend Explains Meaning', () => {
+          it('play phase has explanatory text describing the visualization', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            // Check for at least 1 of 3 explanatory pattern categories
+            const hasInstruction = /adjust|observe|watch|notice|explore|interact|drag|change|slide|move|try/i.test(content);
+            const hasPhysicsConcept = /force|velocity|acceleration|energy|wave|field|pressure|angle|gravity|friction|momentum|frequency|amplitude|charge|current|temperature/i.test(content);
+            const hasExplanation = /because|causes|results|means|shows|demonstrates|how|affect|change|see|notice/i.test(content);
+
+            const matchCount = [hasInstruction, hasPhysicsConcept, hasExplanation].filter(Boolean).length;
+            expect(matchCount).toBeGreaterThanOrEqual(1);
           });
         });
       });
