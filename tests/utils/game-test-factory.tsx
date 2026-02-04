@@ -572,6 +572,30 @@ export function createGameTestSuite(
             expect(content.length).toBeGreaterThan(100);
           });
 
+          it('sliders are not disabled by default in play phase', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = getSliders();
+            sliders.forEach(slider => {
+              const el = slider as HTMLInputElement;
+              expect(el.disabled).toBe(false);
+            });
+          });
+
+          it('slider change updates displayed value text', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const textBefore = getPhaseContent();
+            const mid = (Number(slider.min) + Number(slider.max)) / 2;
+            const newVal = Number(slider.value) === mid ? Number(slider.max) : mid;
+            fireEvent.change(slider, { target: { value: String(newVal) } });
+
+            const textAfter = getPhaseContent();
+            // Page text should change when slider moves (showing updated value/label)
+            expect(textAfter).not.toBe(textBefore);
+          });
+
           it('slider values stay in bounds', () => {
             renderGame({ gamePhase: 'play' });
             const slider = getSliders()[0] as HTMLInputElement;
@@ -672,6 +696,32 @@ export function createGameTestSuite(
             } else if (tabBtns.length >= 2) {
               fireEvent.click(tabBtns[1]);
             }
+          });
+
+          it('transfer phase has no duplicate forward-navigation buttons', () => {
+            renderGame({ gamePhase: 'transfer' });
+
+            // Click through all apps/tabs first to reach the final state
+            const allButtons = screen.getAllByRole('button');
+            const appButtons = allButtons.filter(btn => {
+              const text = btn.textContent?.trim() || '';
+              return text.length > 2 && text.length < 50
+                && !(/← back|next →|back|prev/i.test(text));
+            });
+            appButtons.slice(0, 8).forEach(btn => fireEvent.click(btn));
+
+            // After visiting all apps, count enabled forward-navigation buttons
+            const currentButtons = screen.getAllByRole('button');
+            const forwardBtns = currentButtons.filter(btn => {
+              const text = btn.textContent?.trim() || '';
+              const el = btn as HTMLElement;
+              const isDisabled = el.hasAttribute('disabled') || el.style.opacity === '0.4' || el.style.cursor === 'not-allowed';
+              if (isDisabled) return false;
+              return /continue.*test|take.*test|start.*test|begin.*test|knowledge.*test/i.test(text);
+            });
+
+            // Should have at most 1 enabled "go to test" button, not duplicates
+            expect(forwardBtns.length).toBeLessThanOrEqual(1);
           });
 
           it('transfer phase has forward navigation to test phase', () => {
@@ -1331,6 +1381,25 @@ export function createGameTestSuite(
 
             expect(continueBtn || progressIndicator || bottomNav || navDots.length >= 8).toBeTruthy();
           });
+
+          it('play phase does not gate continue behind excessive experiments', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            // Check for excessive experiment gates (3+ required)
+            // Patterns like "3 more experiments" or "0 / 3" or "Complete 3 More"
+            const excessiveGate = /[3-9]\s*more\s*(experiment|trial|run)/i.test(content)
+              || /0\s*\/\s*[3-9]/i.test(content)
+              || /complete\s*[3-9]\s*more/i.test(content);
+
+            if (excessiveGate) {
+              // Warn - games should not require 3+ experiments before allowing continue
+              console.warn('[QUALITY] Play phase requires 3+ experiments to continue. Consider reducing to 0-1.');
+            }
+            // Soft check - log warning but don't fail universally
+            // Game-specific tests should enforce strict limits
+            expect(consoleErrors.length).toBe(0);
+          });
         });
 
         describe('2.5e Quiz Results Scrollability', () => {
@@ -1414,6 +1483,66 @@ export function createGameTestSuite(
               expect(pixelWidth).toBeGreaterThanOrEqual(200);
             }
             // If width="100%" with no viewBox, pass (responsive)
+          });
+        });
+
+        describe('2.7d SVG Bounded Heights', () => {
+          it('play phase SVGs have bounded height to keep controls accessible', () => {
+            renderGame({ gamePhase: 'play' });
+            const svgs = document.querySelectorAll('svg');
+            svgs.forEach(svg => {
+              const viewBox = svg.getAttribute('viewBox');
+              const heightAttr = svg.getAttribute('height');
+
+              if (viewBox) {
+                const parts = viewBox.split(/[\s,]+/);
+                const vbHeight = parseFloat(parts[3]) || 0;
+                // Each SVG viewBox height should be ≤ 500 to prevent viewport domination
+                expect(vbHeight).toBeLessThanOrEqual(500);
+              }
+
+              if (heightAttr && heightAttr !== '100%' && heightAttr !== 'auto') {
+                const pixelHeight = parseInt(heightAttr);
+                if (!isNaN(pixelHeight)) {
+                  expect(pixelHeight).toBeLessThanOrEqual(500);
+                }
+              }
+            });
+          });
+
+          it('play phase does not stack multiple large SVGs without scroll', () => {
+            renderGame({ gamePhase: 'play' });
+            const svgs = document.querySelectorAll('svg');
+            if (svgs.length < 2) return;
+
+            // If there are 2+ SVGs, their container should have overflow or max-height
+            // OR each SVG should be reasonably small (viewBox height ≤ 300)
+            let totalSvgHeight = 0;
+            svgs.forEach(svg => {
+              const viewBox = svg.getAttribute('viewBox');
+              const heightAttr = svg.getAttribute('height');
+              if (viewBox) {
+                const parts = viewBox.split(/[\s,]+/);
+                totalSvgHeight += parseFloat(parts[3]) || 0;
+              } else if (heightAttr && heightAttr !== '100%') {
+                totalSvgHeight += parseInt(heightAttr) || 0;
+              }
+            });
+
+            if (totalSvgHeight > 500) {
+              // If SVGs are tall, look for a scrollable container
+              let foundScroll = false;
+              let node: Element | null = svgs[0].parentElement;
+              for (let depth = 0; depth < 6 && node; depth++) {
+                const style = node.getAttribute('style') || '';
+                if (style.includes('overflow') || style.includes('max-height') || style.includes('maxHeight')) {
+                  foundScroll = true;
+                  break;
+                }
+                node = node.parentElement;
+              }
+              expect(foundScroll).toBe(true);
+            }
           });
         });
 

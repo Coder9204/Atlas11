@@ -480,7 +480,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
   // Inclined Plane SVG Visualization
   const InclinedPlaneVisualization = () => {
     const vbWidth = isMobile ? 400 : 640;
-    const vbHeight = isMobile ? 300 : 400;
+    const vbHeight = isMobile ? 200 : 280;
 
     const rampLength = vbWidth - 80;
     const rampHeight = rampLength * Math.tan(angleRad) * 0.6;
@@ -967,6 +967,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
+            maxHeight: '600px',
+            overflowY: 'auto',
           }}>
             <div style={{ marginBottom: '24px' }}>
               <InclinedPlaneVisualization />
@@ -1060,38 +1062,10 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               )}
             </div>
 
-            {/* Experiment progress bar */}
-            <div style={{ marginTop: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary, fontWeight: 600 }}>
-                  Experiments: {Math.min(experimentCount, 3)} / 3
-                </span>
-                <span style={{ ...typo.small, color: experimentCount >= 3 ? colors.success : colors.textMuted }}>
-                  {experimentCount >= 3 ? 'Ready to continue!' : `${3 - experimentCount} more experiment${3 - experimentCount !== 1 ? 's' : ''} needed to continue`}
-                </span>
-              </div>
-              <div style={{
-                width: '100%',
-                height: '8px',
-                background: colors.bgSecondary,
-                borderRadius: '4px',
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  width: `${Math.min((experimentCount / 3) * 100, 100)}%`,
-                  height: '100%',
-                  background: experimentCount >= 3
-                    ? `linear-gradient(90deg, ${colors.success}, #059669)`
-                    : `linear-gradient(90deg, ${colors.accent}, #0891B2)`,
-                  borderRadius: '4px',
-                  transition: 'width 0.5s ease',
-                }} />
-              </div>
-            </div>
           </div>
 
           {/* Discovery prompt */}
-          {experimentCount >= 3 && (
+          {experimentCount >= 1 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -1107,16 +1081,13 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
           )}
 
           <button
-            onClick={() => { if (experimentCount >= 3) { playSound('success'); nextPhase(); } }}
-            disabled={experimentCount < 3}
+            onClick={() => { playSound('success'); nextPhase(); }}
             style={{
               ...primaryButtonStyle,
               width: '100%',
-              opacity: experimentCount >= 3 ? 1 : 0.4,
-              cursor: experimentCount >= 3 ? 'pointer' : 'not-allowed',
             }}
           >
-            {experimentCount >= 3 ? 'Understand the Physics →' : `Complete ${3 - experimentCount} More Experiment${3 - experimentCount !== 1 ? 's' : ''} to Continue`}
+            Understand the Physics →
           </button>
         </div>
 
@@ -1755,20 +1726,6 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
           <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
             Application {selectedApp + 1} of {realWorldApps.length}
           </p>
-
-          <button
-            onClick={() => { if (allAppsCompleted) { playSound('success'); nextPhase(); } }}
-            disabled={!allAppsCompleted}
-            style={{
-              ...primaryButtonStyle,
-              width: '100%',
-              opacity: allAppsCompleted ? 1 : 0.4,
-              cursor: allAppsCompleted ? 'pointer' : 'not-allowed',
-              background: allAppsCompleted ? `linear-gradient(135deg, ${colors.success}, #059669)` : colors.border,
-            }}
-          >
-            {allAppsCompleted ? 'Take the Knowledge Test' : `Explore All Applications (${completedApps.filter(Boolean).length}/4)`}
-          </button>
         </div>
 
         {renderNavDots()}
