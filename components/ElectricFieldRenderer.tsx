@@ -1229,6 +1229,11 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             <rect x="0" y="0" width="500" height="400" fill="#0a0f1a" />
             <rect x="0" y="0" width="500" height="400" fill="url(#elecPlayGrid)" />
 
+            {/* Educational labels */}
+            <text x="250" y="18" textAnchor="middle" fill="#93c5fd" fontSize="12" fontWeight="bold">Electric Field Map</text>
+            <text x="15" y="395" fill="#a78bfa" fontSize="10">E = kQ/r² (Coulomb's Law)</text>
+            <text x="485" y="395" textAnchor="end" fill="#6ee7b7" fontSize="10">Drag test charge to explore</text>
+
             {/* Charge auras (ambient glow behind charges) */}
             {sourceCharges.map(charge => (
               <circle

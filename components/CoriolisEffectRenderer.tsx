@@ -1765,7 +1765,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
       case 'mastery':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
-            <div className="text-8xl mb-6">Trophy</div>
+            <div className="text-8xl mb-6">🏆</div>
             <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 mb-4">
               Coriolis Effect Master!
             </h2>
@@ -1775,23 +1775,23 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
               </p>
               <div className="text-left text-slate-300 space-y-3">
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">Done</span>
+                  <span className="text-green-400 text-xl">✓</span>
                   <span>Coriolis is an apparent deflection in rotating frames</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">Done</span>
+                  <span className="text-green-400 text-xl">✓</span>
                   <span>Right deflection in NH, left in SH</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">Done</span>
+                  <span className="text-green-400 text-xl">✓</span>
                   <span><span className="text-sky-400 font-mono">F = 2m(omega x v)</span> - the Coriolis force</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">Done</span>
+                  <span className="text-green-400 text-xl">✓</span>
                   <span>Only significant at large scales (100+ km)</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">Done</span>
+                  <span className="text-green-400 text-xl">✓</span>
                   <span>Toilet drain myth: BUSTED!</span>
                 </p>
               </div>

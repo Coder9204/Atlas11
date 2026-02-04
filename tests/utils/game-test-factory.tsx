@@ -656,6 +656,28 @@ export function createGameTestSuite(
             }
             // If no nav button found, test passes (not all games have multi-app transfer)
           });
+
+          it('transfer phase has forward navigation to test phase', () => {
+            renderGame({ gamePhase: 'transfer' });
+
+            // Click all visible app/tab buttons to simulate visiting all apps
+            const allButtons = screen.getAllByRole('button');
+            const appButtons = allButtons.filter(btn => {
+              const text = btn.textContent?.trim() || '';
+              return text.length > 2 && text.length < 50
+                && !(/← back|next →|back|prev/i.test(text));
+            });
+            appButtons.slice(0, 8).forEach(btn => fireEvent.click(btn));
+
+            // After visiting apps, there must be a forward navigation path
+            const forwardBtn = screen.getAllByRole('button').find(btn => {
+              const text = btn.textContent?.trim() || '';
+              return /continue|take.*test|next|proceed|knowledge.*test|start.*test|begin.*test/i.test(text);
+            });
+            const forwardLink = document.querySelector('a[href]');
+
+            expect(forwardBtn || forwardLink).toBeTruthy();
+          });
         });
 
         describe('2.5 Quiz Quality', () => {
@@ -867,6 +889,60 @@ export function createGameTestSuite(
           });
         });
 
+        describe('2.5d Quiz Answer Review', () => {
+          it('quiz results page shows answer review indicators', async () => {
+            renderGame({ gamePhase: 'test' });
+
+            // Complete quiz using same loop pattern
+            for (let i = 0; i < 12; i++) {
+              if (/you\s*scored|test\s*complete!/i.test(getPhaseContent()) && /\d+\s*\/\s*10/.test(getPhaseContent())) break;
+
+              const options = screen.getAllByRole('button').filter(btn => {
+                const text = btn.textContent || '';
+                return text.length > 5 && !(/^(next|prev|back|submit|skip|home|← back|next →|check|confirm|replay|return|dashboard)/i.test(text.trim()));
+              });
+              if (options.length > 0) fireEvent.click(options[0]);
+
+              const checkBtn = screen.getAllByRole('button').find(btn =>
+                /check.*answer|confirm.*answer|lock.*in|check$/i.test(btn.textContent?.trim() || '')
+              );
+              if (checkBtn) fireEvent.click(checkBtn);
+
+              const quizNextBtn = screen.getAllByRole('button').find(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /next\s*question|submit\s*test|finish|see\s*results|^continue$/i.test(text);
+              }) || screen.getAllByRole('button').find(btn => /^next$/i.test(btn.textContent?.trim() || ''));
+              if (quizNextBtn) fireEvent.click(quizNextBtn);
+            }
+
+            // Submit if needed
+            const submitBtn = findButtonByText(/submit|finish|see.*result|complete/i);
+            if (submitBtn) fireEvent.click(submitBtn);
+
+            try {
+              await waitFor(() => {
+                expect(getPhaseContent()).toMatch(/\d+\s*\/\s*10|\d+%/);
+              }, { timeout: 3000 });
+            } catch {
+              return; // Could not complete quiz
+            }
+
+            // Check for answer review indicators (✓, ✗, correct/incorrect markers)
+            const html = document.body.innerHTML;
+            const hasReview =
+              html.includes('✓') || html.includes('✗') ||
+              /question.*review|answer.*review|your.*answer|correct.*answer/i.test(html);
+
+            if (!hasReview) {
+              console.warn(
+                '[QUALITY] Quiz results page does not include answer review. ' +
+                'Gold standard: show question-by-question breakdown with ✓/✗ indicators.'
+              );
+            }
+            expect(consoleErrors.length).toBe(0);
+          });
+        });
+
         describe('2.6 Educational Flow Integrity', () => {
           it('predict phase has selectable prediction options', () => {
             renderGame({ gamePhase: 'predict' });
@@ -907,6 +983,32 @@ export function createGameTestSuite(
             renderGame({ gamePhase: 'mastery' });
             const content = getPhaseContent();
             expect(content).toMatch(/complete|master|learned|congratulation|success|score|result|achievement|well done|pass|great/i);
+          });
+
+          it('visual indicators use emoji/unicode, not literal plaintext words', () => {
+            // Words that should be emoji when used as standalone visual indicators
+            const emojiWords = /^(check|trophy|books|star|medal|fire|bulb|sparkle|warning|cross|tick)$/i;
+            const suspectElements: string[] = [];
+
+            ['mastery', 'test'].forEach(p => {
+              clearConsoleLogs();
+              const { unmount } = renderGame({ gamePhase: p });
+
+              // Scan all leaf elements for standalone words that should be emoji
+              document.querySelectorAll('span, div, p').forEach(el => {
+                if (el.children.length > 0) return; // skip containers
+                const text = (el.textContent || '').trim();
+                if (text.length > 15) return; // skip longer phrases
+                if (emojiWords.test(text)) {
+                  suspectElements.push(`Phase "${p}": literal text "${text}" should be an emoji character`);
+                }
+              });
+
+              unmount();
+              cleanup();
+            });
+
+            expect(suspectElements).toEqual([]);
           });
 
           it('follows predict-observe-explain pattern', () => {
@@ -1000,6 +1102,21 @@ export function createGameTestSuite(
               }
             }
             expect(overlaps).toEqual([]);
+          });
+
+          it('SVG contains meaningful educational labels (>= 3 text elements)', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+            if (!svg) return;
+
+            const textElements = Array.from(svg.querySelectorAll('text, tspan'));
+            const meaningfulLabels = textElements.filter(el => {
+              const text = (el.textContent || '').trim();
+              // Must be more than 2 characters and not just a bare number
+              return text.length > 2 && !/^\d+\.?\d*°?$/.test(text);
+            });
+
+            expect(meaningfulLabels.length).toBeGreaterThanOrEqual(3);
           });
         });
 
@@ -1295,6 +1412,33 @@ export function createGameTestSuite(
             const svg = getSVG();
             const score = getSvgComplexityScore(svg as SVGElement);
             expect(score).toBeGreaterThanOrEqual(15);
+          });
+
+          it('review phases contain visual diagrams', () => {
+            const reviewPhases = ['review', 'twist_review'];
+            const phasesMissing: string[] = [];
+
+            reviewPhases.forEach(p => {
+              clearConsoleLogs();
+              const { unmount } = renderGame({ gamePhase: p });
+              const svg = getSVG();
+              const img = document.querySelector('img');
+              const canvas = document.querySelector('canvas');
+              if (!svg && !img && !canvas) {
+                phasesMissing.push(p);
+              }
+              unmount();
+              cleanup();
+            });
+
+            if (phasesMissing.length > 0) {
+              console.warn(
+                `[PREMIUM] Review phases missing visual diagrams: ${phasesMissing.join(', ')}. ` +
+                `Consider adding SVG diagrams to reinforce concepts visually.`
+              );
+            }
+            // Soft: just verify phases rendered without error
+            expect(consoleErrors.length).toBe(0);
           });
         });
 

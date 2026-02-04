@@ -591,6 +591,11 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
           </pattern>
           <rect width="500" height="320" fill="url(#faraGrid)" />
 
+          {/* Educational labels */}
+          <text x="250" y="18" textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="bold">Faraday Cage Simulation</text>
+          <text x="30" y="38" fill="#f59e0b" fontSize="10">EM Wave Source</text>
+          <text x="300" y="70" textAnchor="middle" fill="#4ade80" fontSize="10">Shielded Region</text>
+
           {/* External field source indicator */}
           <g transform="translate(30, 160)">
             {/* Source housing with metallic look */}

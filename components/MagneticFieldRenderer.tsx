@@ -795,6 +795,11 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             <rect x="0" y="0" width="65" height="50" fill="#1e293b" stroke="#334155" strokeWidth="1" rx="6" />
           </g>
 
+          {/* Educational labels */}
+          <text x={centerX} y={20} textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold">Magnetic Field Lines</text>
+          <text x={centerX + wireDistance * 1500} y={centerY - 14} textAnchor="middle" fill="#4ade80" fontSize="10">Test Point</text>
+          <text x={centerX} y={centerY + 25} textAnchor="middle" fill="#fbbf24" fontSize="9">Current-Carrying Wire</text>
+
           {/* Formula box with current value */}
           <rect x="10" y={height - 45} width="180" height="35" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />
           <text x="100" y={height - 22} textAnchor="middle" fill="#f8fafc" fontSize="12" fontFamily="monospace">
@@ -981,6 +986,11 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
           <circle cx={centerX - 95} cy={centerY} r="18" fill="url(#magfSouthPole)" filter="url(#magfPoleGlow)" opacity="0.6" />
           <text x={centerX - 95} y={centerY + 6} textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">S</text>
+
+          {/* Educational labels */}
+          <text x={centerX} y={20} textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold">Solenoid Field</text>
+          <text x={centerX} y={centerY - 45} textAnchor="middle" fill="#fbbf24" fontSize="9">Copper Coil Windings</text>
+          <text x={width - 10} y={20} textAnchor="end" fill="#a78bfa" fontSize="9">Uniform Interior Field</text>
 
           {/* Formula box */}
           <rect x="10" y={height - 55} width="170" height="45" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />

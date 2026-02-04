@@ -576,6 +576,11 @@ const MomentOfInertiaRenderer: React.FC<MomentOfInertiaRendererProps> = ({ onGam
           <rect x="-12" y="73" width="16" height="2" rx="1" fill="#a0a0a0" />
           <rect x="-2" y="73" width="16" height="2" rx="1" fill="#a0a0a0" />
         </g>
+
+        {/* Educational labels */}
+        <text x={centerX} y="15" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Angular Momentum Conservation</text>
+        <text x={centerX} y={size + 35} textAnchor="middle" fill="#64748b" fontSize="10">Rotation Axis</text>
+        <text x={centerX + 70} y={centerY - 30} textAnchor="start" fill="#EC4899" fontSize="9">Arm Extension</text>
       </svg>
     );
   };

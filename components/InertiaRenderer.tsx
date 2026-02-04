@@ -887,6 +887,14 @@ export default function InertiaRenderer({ onGameEvent, gamePhase, onComplete, on
               </line>
             </g>
           )}
+
+          {/* Educational labels */}
+          <text x="200" y="16" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Inertia Experiment</text>
+          <text x="30" y="175" fill="#64748b" fontSize="9">Applied Force</text>
+          <text x="350" y="175" textAnchor="end" fill="#64748b" fontSize="9">Displacement</text>
+          <text x="200" y="195" textAnchor="middle" fill="#94a3b8" fontSize="9">
+            {selectedMass === 'light' ? 'Mass: 1 kg (low inertia)' : 'Mass: 10 kg (high inertia)'}
+          </text>
         </svg>
       </div>
 

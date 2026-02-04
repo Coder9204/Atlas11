@@ -2536,7 +2536,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
         </div>
 
         {/* Progress */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: typo.sectionGap }}>
           <span style={{ fontSize: typo.small, color: colors.textMuted }}>Progress:</span>
           <div style={{ display: 'flex', gap: '4px' }}>
             {completedApps.map((c, i) => (
@@ -2552,6 +2552,29 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent, 
             {completedApps.filter(c => c).length}/4
           </span>
         </div>
+
+        {/* Forward navigation to test phase */}
+        <button
+          onClick={() => { if (allComplete) goNext(); }}
+          disabled={!allComplete}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: '10px',
+            border: 'none',
+            background: allComplete
+              ? `linear-gradient(135deg, ${colors.warning} 0%, ${colors.accent} 100%)`
+              : colors.bgCardLight,
+            color: allComplete ? '#fff' : colors.textMuted,
+            fontSize: typo.body,
+            fontWeight: 700,
+            cursor: allComplete ? 'pointer' : 'not-allowed',
+            opacity: allComplete ? 1 : 0.5,
+            boxShadow: allComplete ? `0 4px 20px ${colors.warning}40` : 'none'
+          }}
+        >
+          Take the Knowledge Test{!allComplete ? ` (${completedApps.filter(c => c).length}/4 complete)` : ''}
+        </button>
       </div>,
       // Bottom bar logic:
       // - If all complete: Show "Take the Test"

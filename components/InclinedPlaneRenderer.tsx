@@ -279,7 +279,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([true, false, false, false]);
 
   // Animation ref
   const animationRef = useRef<number>();
@@ -479,8 +479,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
   // Inclined Plane SVG Visualization
   const InclinedPlaneVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 220 : 280;
+    const width = isMobile ? 360 : 540;
+    const height = isMobile ? 260 : 340;
 
     const rampLength = width - 80;
     const rampHeight = rampLength * Math.tan(angleRad) * 0.6;
@@ -494,7 +494,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
     const ballY = rampStartY + ballProgress * (rampEndY - rampStartY);
     const ballRadius = isMobile ? 14 : 18;
 
-    const vectorScale = isMobile ? 2.5 : 3;
+    const vectorScale = isMobile ? 3.5 : 5;
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
@@ -551,6 +551,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
         <text x={rampEndX - 55} y={rampEndY - 15} fill={colors.accent} fontSize="14" fontWeight="bold">
           {angle}
         </text>
+        <text x={rampEndX - 48} y={rampEndY - 3} fill={colors.accent} fontSize="12" fontStyle="italic">θ</text>
 
         {/* Ball */}
         <circle
@@ -576,6 +577,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               points={`0,${mass * g * vectorScale + 8} -5,${mass * g * vectorScale} 5,${mass * g * vectorScale}`}
               fill={colors.gravity}
             />
+            <text x={8} y={mass * g * vectorScale / 2} fill={colors.gravity} fontSize="11" fontWeight="600">mg</text>
 
             {/* Normal force */}
             <g transform={`rotate(${-angle})`}>
@@ -590,6 +592,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                 points={`0,${-normalForce * vectorScale - 8} -5,${-normalForce * vectorScale} 5,${-normalForce * vectorScale}`}
                 fill={colors.normal}
               />
+              <text x={-16} y={-normalForce * vectorScale / 2} fill={colors.normal} fontSize="10" fontWeight="600">N</text>
             </g>
 
             {/* Parallel component */}
@@ -605,6 +608,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                 points={`${gravityParallel * vectorScale + 8},0 ${gravityParallel * vectorScale},-5 ${gravityParallel * vectorScale},5`}
                 fill={colors.parallel}
               />
+              <text x={gravityParallel * vectorScale / 2} y={-14} fill={colors.parallel} fontSize="10" fontWeight="600">mg sin θ</text>
 
               {/* Friction */}
               {hasFriction && frictionForce > 0 && (
@@ -620,6 +624,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                     points={`${-frictionForce * vectorScale - 8},0 ${-frictionForce * vectorScale},-5 ${-frictionForce * vectorScale},5`}
                     fill={colors.friction}
                   />
+                  <text x={-frictionForce * vectorScale / 2} y={-14} fill={colors.friction} fontSize="10" fontWeight="600">f</text>
                 </>
               )}
             </g>
@@ -636,13 +641,13 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
         {/* Legend */}
         <g transform={`translate(10, ${height - 60})`}>
-          <rect x={0} y={0} width={isMobile ? 100 : 120} height={50} rx={6} fill={colors.bgSecondary} stroke={colors.border} />
+          <rect x={0} y={0} width={isMobile ? 120 : 160} height={55} rx={6} fill={colors.bgSecondary} stroke={colors.border} />
           <circle cx={12} cy={12} r={5} fill={colors.gravity} />
-          <text x={22} y={15} fill={colors.textSecondary} fontSize="9">Weight (mg)</text>
+          <text x={22} y={15} fill={colors.textSecondary} fontSize="12">Weight (mg)</text>
           <circle cx={12} cy={26} r={5} fill={colors.normal} />
-          <text x={22} y={29} fill={colors.textSecondary} fontSize="9">Normal (N)</text>
+          <text x={22} y={29} fill={colors.textSecondary} fontSize="12">Normal (N)</text>
           <circle cx={12} cy={40} r={5} fill={colors.parallel} />
-          <text x={22} y={43} fill={colors.textSecondary} fontSize="9">Parallel</text>
+          <text x={22} y={43} fill={colors.textSecondary} fontSize="12">Parallel</text>
         </g>
       </svg>
     );
@@ -1006,6 +1011,37 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             The Mechanical Advantage of Ramps
           </h2>
 
+          {/* Force Decomposition SVG Diagram */}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <svg width={440} height={220} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}>
+              {/* Title */}
+              <text x={220} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="700">Force Decomposition on a Ramp</text>
+              {/* Ground */}
+              <rect x={0} y={180} width={440} height={40} fill="#1F2937" />
+              <line x1={0} y1={180} x2={440} y2={180} stroke="#374151" strokeWidth={2} />
+              {/* Ramp */}
+              <polygon points="60,60 380,180 380,195 60,75" fill="#64748B" stroke="#475569" strokeWidth={1} />
+              {/* Box on ramp */}
+              <rect x={180} y={92} width={36} height={36} fill="#DC2626" rx={4} transform="rotate(17, 198, 110)" />
+              {/* Angle arc */}
+              <path d="M340 180 A 40 40 0 0 0 327 152" fill="none" stroke={colors.accent} strokeWidth={2} />
+              <text x={305} y={168} fill={colors.accent} fontSize="13" fontWeight="bold">30°</text>
+              <text x={318} y={148} fill={colors.accent} fontSize="11" fontStyle="italic">θ</text>
+              {/* mg vector (straight down) */}
+              <line x1={198} y1={128} x2={198} y2={190} stroke={colors.gravity} strokeWidth={3} />
+              <polygon points="198,195 193,185 203,185" fill={colors.gravity} />
+              <text x={206} y={165} fill={colors.gravity} fontSize="12" fontWeight="700">mg</text>
+              {/* mg sin θ (along ramp, downhill) */}
+              <line x1={198} y1={110} x2={240} y2={122} stroke={colors.parallel} strokeWidth={3} />
+              <polygon points="245,124 236,118 238,128" fill={colors.parallel} />
+              <text x={218} y={106} fill={colors.parallel} fontSize="11" fontWeight="700">mg sin θ</text>
+              {/* mg cos θ (perpendicular to ramp, into surface) */}
+              <line x1={198} y1={110} x2={188} y2={144} stroke={colors.normal} strokeWidth={3} />
+              <polygon points="187,149 182,139 192,141" fill={colors.normal} />
+              <text x={160} y={140} fill={colors.normal} fontSize="11" fontWeight="700">mg cos θ</text>
+            </svg>
+          </div>
+
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -1328,16 +1364,44 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             Friction on Inclined Planes
           </h2>
 
+          {/* Friction vs Gravity SVG Diagram */}
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <svg width={400} height={160} style={{ background: colors.bgCard, borderRadius: '12px', display: 'block', margin: '0 auto' }}>
+              {/* Title */}
+              <text x={200} y={18} textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="700">Friction vs. Gravity on a Ramp</text>
+              {/* Ground */}
+              <rect x={0} y={130} width={400} height={30} fill="#1F2937" />
+              <line x1={0} y1={130} x2={400} y2={130} stroke="#374151" strokeWidth={2} />
+              {/* Rough ramp */}
+              <polygon points="40,40 350,130 350,142 40,52" fill="#64748B" stroke="#475569" strokeWidth={1} />
+              {/* Friction dots */}
+              {[60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((cx, i) => (
+                <circle key={i} cx={cx} cy={40 + (cx - 40) * 0.29 + 6} r="1.5" fill="#78716c" opacity="0.6" />
+              ))}
+              {/* Box on ramp */}
+              <rect x={155} y={62} width={30} height={30} fill="#DC2626" rx={3} transform="rotate(16, 170, 77)" />
+              {/* Friction arrow (opposing motion, pointing uphill) */}
+              <line x1={155} y1={78} x2={115} y2={90} stroke={colors.friction} strokeWidth={3} />
+              <polygon points="112,91 122,87 119,97" fill={colors.friction} />
+              <text x={80} y={105} fill={colors.friction} fontSize="10" fontWeight="700">f = μN</text>
+              {/* mg sin θ arrow (pointing downhill) */}
+              <line x1={185} y1={78} x2={225} y2={90} stroke={colors.parallel} strokeWidth={3} />
+              <polygon points="228,91 219,87 221,97" fill={colors.parallel} />
+              <text x={215} y={108} fill={colors.parallel} fontSize="10" fontWeight="700">mg sin θ</text>
+            </svg>
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
             <div style={{
-              background: colors.bgCard,
+              background: `${colors.accent}08`,
               borderRadius: '12px',
               padding: '20px',
               border: `1px solid ${colors.border}`,
+              borderLeft: `4px solid ${colors.accent}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>Formula</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Friction = mu x N = mu x mg cos(theta)</h3>
+                <span style={{ fontSize: '24px' }}>📐</span>
+                <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Friction = mu x N = mu x mg cos(theta)</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
                 Friction depends on the <span style={{ color: colors.normal }}>normal force</span>, which decreases as the angle increases (because more weight acts parallel to the ramp).
@@ -1345,14 +1409,15 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             </div>
 
             <div style={{
-              background: colors.bgCard,
+              background: `${colors.warning}08`,
               borderRadius: '12px',
               padding: '20px',
               border: `1px solid ${colors.border}`,
+              borderLeft: `4px solid ${colors.warning}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>Key Insight</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Friction Always Opposes Motion</h3>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>Friction Always Opposes Motion</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
                 When pushing UP: Friction acts DOWN (adds to required force)<br/>
@@ -1365,9 +1430,10 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               borderRadius: '12px',
               padding: '20px',
               border: `1px solid ${colors.success}33`,
+              borderLeft: `4px solid ${colors.success}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>Critical Angle</span>
+                <span style={{ fontSize: '24px' }}>📊</span>
                 <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Static Equilibrium</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1447,7 +1513,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    check
+                    ✓
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1526,14 +1592,18 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
             </div>
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          <button
+            onClick={() => { if (allAppsCompleted) { playSound('success'); nextPhase(); } }}
+            disabled={!allAppsCompleted}
+            style={{
+              ...primaryButtonStyle,
+              width: '100%',
+              opacity: allAppsCompleted ? 1 : 0.4,
+              cursor: allAppsCompleted ? 'pointer' : 'not-allowed',
+            }}
+          >
+            {allAppsCompleted ? 'Take the Knowledge Test' : `Explore All Applications (${completedApps.filter(Boolean).length}/4)`}
+          </button>
         </div>
 
         {renderNavDots()}
@@ -1555,7 +1625,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
-              {passed ? 'trophy' : 'books'}
+              {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1568,6 +1638,65 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
                 ? 'You understand inclined plane physics!'
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Answer Review */}
+            <div style={{ maxWidth: '600px', margin: '0 auto 24px', textAlign: 'left' }}>
+              <p style={{ ...typo.small, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>
+                Question-by-Question Review
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {testQuestions.map((q, i) => {
+                  const correctOpt = q.options.find(o => o.correct);
+                  const isCorrect = testAnswers[i] === correctOpt?.id;
+                  const userOpt = q.options.find(o => o.id === testAnswers[i]);
+                  return (
+                    <div key={i} style={{
+                      background: colors.bgCard,
+                      borderRadius: '10px',
+                      border: `2px solid ${isCorrect ? colors.success : colors.error}30`,
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        padding: '10px 14px',
+                        background: isCorrect ? `${colors.success}15` : `${colors.error}15`,
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                      }}>
+                        <div style={{
+                          width: '26px', height: '26px', borderRadius: '50%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '14px', fontWeight: 700,
+                          background: isCorrect ? colors.success : colors.error,
+                          color: 'white',
+                        }}>
+                          {isCorrect ? '\u2713' : '\u2717'}
+                        </div>
+                        <div>
+                          <p style={{ ...typo.small, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+                            Question {i + 1}
+                          </p>
+                          <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0 }}>
+                            {q.question.substring(0, 80)}...
+                          </p>
+                        </div>
+                      </div>
+                      {!isCorrect && (
+                        <div style={{ padding: '10px 14px' }}>
+                          <p style={{ fontSize: '11px', color: colors.error, margin: '0 0 4px', fontWeight: 600 }}>
+                            Your answer: {userOpt?.label || 'Not answered'}
+                          </p>
+                          <p style={{ fontSize: '11px', color: colors.success, margin: '0 0 6px', fontWeight: 600 }}>
+                            Correct: {correctOpt?.label}
+                          </p>
+                          <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0, lineHeight: 1.4 }}>
+                            {q.explanation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {passed ? (
               <button
@@ -1782,7 +1911,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          trophy
+          🏆
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
@@ -1813,7 +1942,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({ onGameEve
               'Real-world applications from ramps to screws',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>check</span>
+                <span style={{ color: colors.success }}>✓</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}

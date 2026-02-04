@@ -667,6 +667,11 @@ const AngularMomentumTransferRenderer: React.FC<AngularMomentumTransferRendererP
         <g filter="url(#catGlow)">
           <circle cx={size - 20} cy={20} r="8" fill="rgba(249,115,22,0.4)" />
         </g>
+
+        {/* Educational labels */}
+        <text x={12} y={16} fill="rgba(255,255,255,0.7)" fontSize="9" fontWeight="bold">Angular Momentum</text>
+        <text x={12} y={28} fill="rgba(147,197,253,0.7)" fontSize="8">L = I × omega</text>
+        <text x={size - 12} y={size - 18} textAnchor="end" fill="rgba(52,211,153,0.7)" fontSize="8">Moment of Inertia</text>
       </svg>
     );
   };

@@ -692,6 +692,11 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
           <line x1={20} y1={centerY} x2={65} y2={centerY} stroke="#f8fafc" strokeWidth={3} strokeLinecap="round" opacity={0.7} />
           <polygon points={`70,${centerY} 58,${centerY - 6} 58,${centerY + 6}`} fill="#f8fafc" opacity={0.7} />
         </g>
+
+        {/* Educational labels */}
+        <text x={15} y={20} fill="#93c5fd" fontSize="11" fontWeight="bold">Airfoil Cross-Section</text>
+        <text x={85} y={centerY + 2} fill="#f8fafc" fontSize="9" textAnchor="middle">Airflow</text>
+        <text x={centerX} y={simHeight - 10} textAnchor="middle" fill="#94a3b8" fontSize="9">Bernoulli Principle: Faster Flow = Lower Pressure</text>
       </svg>
     );
   };
@@ -853,6 +858,11 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
             />
           </g>
         )}
+
+        {/* Educational labels */}
+        <text x={15} y={20} fill="#f0abfc" fontSize="11" fontWeight="bold">Magnus Effect</text>
+        <text x={simWidth / 2} y={simHeight - 10} textAnchor="middle" fill="#94a3b8" fontSize="9">Spin creates pressure difference via Bernoulli</text>
+        <text x={simWidth - 15} y={20} textAnchor="end" fill="#fbbf24" fontSize="9">Curved Trajectory</text>
       </svg>
     );
   };

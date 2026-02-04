@@ -1308,7 +1308,9 @@ export default function DiffractionRenderer(props: { gamePhase?: string; onCorre
 
           {/* Labels inside SVG */}
           <text x={laserX + 8} y={patternTop + 15} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Laser</text>
+          <text x={slitX} y={patternTop + 15} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Slit Barrier</text>
           <text x={screenX} y={patternTop + 15} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Screen</text>
+          <text x={(slitX + screenX) / 2} y={patternTop + patternHeight + 28} fill="#64748B" fontSize="9" fontFamily="sans-serif" textAnchor="middle">Diffraction Pattern</text>
         </svg>
 
         {/* Labels moved outside SVG using typo system */}

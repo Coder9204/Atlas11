@@ -997,6 +997,12 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
             <text x="5" y="-4" textAnchor="middle" fill="#ef4444" fontSize="8">Hot</text>
             <text x="5" y="72" textAnchor="middle" fill="#3b82f6" fontSize="8">Cold</text>
           </g>
+
+          {/* Educational labels */}
+          <text x="150" y="18" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">Convection Cell</text>
+          <text x="150" y="250" textAnchor="middle" fill="#f97316" fontSize="9">Heat Source</text>
+          <text x="55" y="130" textAnchor="middle" fill="#60a5fa" fontSize="8">Cool Sinks</text>
+          <text x="245" y="130" textAnchor="middle" fill="#f97316" fontSize="8">Warm Rises</text>
         </svg>
 
         {/* Labels */}

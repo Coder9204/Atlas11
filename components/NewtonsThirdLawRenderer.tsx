@@ -860,6 +860,11 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
                 )}
               </g>
 
+              {/* Educational labels */}
+              <text x="350" y="25" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Balloon Rocket Simulation</text>
+              <text x={balloonX + 10} y="70" textAnchor="middle" fill="#fca5a5" fontSize="9">Balloon</text>
+              <text x="60" y="88" fill="#9ca3af" fontSize="8">Launch Track</text>
+
               {/* Equation */}
               <text x="350" y="190" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontFamily="monospace">
                 F_action = -F_reaction
