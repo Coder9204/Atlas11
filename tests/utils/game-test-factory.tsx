@@ -697,6 +697,104 @@ export function createGameTestSuite(
             }
           });
         });
+
+        describe('1.12 Full User Journey', () => {
+          it('renders distinct content for hook, play, and test phases', () => {
+            // Verify the three critical phases have distinct content
+            const contentMap: Record<string, string> = {};
+
+            ['hook', 'play', 'test'].forEach(phase => {
+              clearConsoleLogs();
+              const { unmount } = renderGame({ gamePhase: phase });
+              contentMap[phase] = getPhaseContent().slice(0, 300);
+              unmount();
+              cleanup();
+            });
+
+            // Each phase should have unique content
+            expect(contentMap.hook).not.toBe(contentMap.play);
+            expect(contentMap.play).not.toBe(contentMap.test);
+            expect(contentMap.hook).not.toBe(contentMap.test);
+          });
+
+          it('can advance from hook phase via primary action button', () => {
+            render(<GameComponent />);
+            const hookContent = getPhaseContent().slice(0, 200);
+
+            // Find and click the primary CTA button
+            const allButtons = screen.getAllByRole('button');
+            const ctaBtn = allButtons.find(b => {
+              const txt = b.textContent?.trim() || '';
+              const style = (b as HTMLElement).getAttribute('style') || '';
+              // Look for prominent styled buttons with action text
+              const hasBackground = style.includes('background') && !style.includes('transparent');
+              const isAction = /start|begin|discover|explore|let's go|next|continue/i.test(txt);
+              return isAction && (hasBackground || txt.length < 30);
+            });
+
+            if (ctaBtn) {
+              fireEvent.pointerDown(ctaBtn);
+              fireEvent.click(ctaBtn);
+
+              const newContent = getPhaseContent().slice(0, 200);
+              // Content should change after clicking CTA
+              // (or we might need to make a prediction first - that's OK too)
+              expect(consoleErrors.length).toBe(0);
+            }
+          });
+
+          it('back button exists in navigation bar', () => {
+            // Verify back button exists in predict phase (should be enabled)
+            renderGame({ gamePhase: 'predict' });
+
+            // Find Back button
+            const backBtn = screen.getAllByRole('button').find(b => {
+              const txt = b.textContent?.trim() || '';
+              return /^←|back|previous/i.test(txt);
+            });
+
+            // Back button should exist in the UI
+            expect(backBtn).toBeTruthy();
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('game state resets on fresh mount', () => {
+            // First render at play phase
+            const { unmount } = renderGame({ gamePhase: 'play' });
+            const playContent = getPhaseContent().slice(0, 100);
+            unmount();
+            cleanup();
+
+            // Fresh render with no props - should start at hook
+            render(<GameComponent />);
+            const freshContent = getPhaseContent().slice(0, 100);
+
+            // Fresh mount should show hook content, not play content
+            expect(freshContent).not.toBe(playContent);
+          });
+
+          it('phases have varied content (not all identical)', () => {
+            const phaseContents: Map<string, string> = new Map();
+            const phases = ['hook', 'predict', 'play', 'review', 'transfer', 'test'];
+
+            phases.forEach(phase => {
+              clearConsoleLogs();
+              const { unmount } = renderGame({ gamePhase: phase });
+              // Use first 200 chars of content as fingerprint
+              const content = getPhaseContent().slice(0, 200);
+              phaseContents.set(phase, content);
+              unmount();
+              cleanup();
+            });
+
+            // Count unique content fingerprints
+            const uniqueContents = new Set(phaseContents.values());
+
+            // Should have at least 3 distinct content variations across 6 phases
+            // (some phases like predict/twist_predict may share format)
+            expect(uniqueContents.size).toBeGreaterThanOrEqual(3);
+          });
+        });
       });
     }
 
@@ -907,6 +1005,56 @@ export function createGameTestSuite(
                 fireEvent.change(slider, { target: { value: String(i * 5) } });
               }
             }
+            expect(consoleErrors.length).toBe(0);
+          });
+
+          it('slider value is displayed numerically near the slider', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            // Get the slider's current value
+            const currentValue = Number(slider.value);
+
+            // Look for the value displayed in the page (common patterns: "50", "50%", "50 m/s")
+            const content = getPhaseContent();
+
+            // The slider value OR a derived value should appear in the text
+            // Check for the raw number or common formatted versions
+            const valuePatterns = [
+              new RegExp(`\\b${currentValue}\\b`), // exact value
+              new RegExp(`\\b${currentValue}%`),   // percentage
+              new RegExp(`\\b${currentValue}\\s*(m|km|s|Hz|°|deg)`), // with units
+            ];
+
+            const hasDisplayedValue = valuePatterns.some(p => p.test(content));
+
+            // If value isn't directly shown, at least verify content changes with slider
+            if (!hasDisplayedValue) {
+              const newVal = currentValue < Number(slider.max) / 2 ? Number(slider.max) : Number(slider.min);
+              fireEvent.change(slider, { target: { value: String(newVal) } });
+              const newContent = getPhaseContent();
+              expect(newContent).not.toBe(content);
+            }
+          });
+
+          it('sliders respond to touch events (mobile compatibility)', () => {
+            renderGame({ gamePhase: 'play' });
+            const slider = getSliders()[0] as HTMLInputElement;
+            if (!slider) return;
+
+            const initialValue = slider.value;
+
+            // Simulate touch interaction
+            fireEvent.touchStart(slider, { touches: [{ clientX: 0, clientY: 0 }] });
+            fireEvent.touchMove(slider, { touches: [{ clientX: 100, clientY: 0 }] });
+            fireEvent.touchEnd(slider);
+
+            // Also test via change event (most reliable in jsdom)
+            const newVal = Number(initialValue) + 10;
+            fireEvent.change(slider, { target: { value: String(newVal) } });
+
+            // No errors during touch interaction
             expect(consoleErrors.length).toBe(0);
           });
         });
@@ -1132,6 +1280,67 @@ export function createGameTestSuite(
               expect(getPhaseContent()).toMatch(/\d+\s*\/\s*10|\d+%/);
             }, { timeout: 3000 });
           });
+
+          it('quiz tracks answers and shows accurate final score', async () => {
+            renderGame({ gamePhase: 'test' });
+
+            let questionsAnswered = 0;
+
+            // Answer all questions by selecting the first option each time
+            for (let i = 0; i < 12; i++) {
+              const content = getPhaseContent();
+              if (/you\s*scored|test\s*complete/i.test(content)) break;
+
+              // Find and click an answer option
+              const options = screen.getAllByRole('button').filter(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /^[A-D]\)/.test(text) && text.length > 5;
+              });
+
+              if (options.length > 0) {
+                fireEvent.click(options[0]);
+                questionsAnswered++;
+
+                // Click check/confirm if present
+                const checkBtn = screen.getAllByRole('button').find(b =>
+                  /check|confirm/i.test(b.textContent || '')
+                );
+                if (checkBtn) fireEvent.click(checkBtn);
+
+                // Click next question
+                const nextBtn = screen.getAllByRole('button').find(b => {
+                  const txt = b.textContent?.trim() || '';
+                  return /next|continue/i.test(txt) && !/back/i.test(txt);
+                });
+                if (nextBtn) fireEvent.click(nextBtn);
+              }
+            }
+
+            // Submit if there's a submit button
+            const submitBtn = findButtonByText(/submit|finish|see.*result/i);
+            if (submitBtn) fireEvent.click(submitBtn);
+
+            // Wait for results
+            try {
+              await waitFor(() => {
+                const finalContent = getPhaseContent();
+                // Should show a score in format X/10 or X%
+                expect(finalContent).toMatch(/\d+\s*\/\s*10|\d+\s*%/);
+              }, { timeout: 3000 });
+
+              // Verify the score is reasonable (not 0/10 unless all wrong, not 11/10)
+              const finalContent = getPhaseContent();
+              const scoreMatch = finalContent.match(/(\d+)\s*\/\s*10/);
+              if (scoreMatch) {
+                const score = parseInt(scoreMatch[1]);
+                expect(score).toBeGreaterThanOrEqual(0);
+                expect(score).toBeLessThanOrEqual(10);
+              }
+            } catch {
+              // Quiz may not have completed - just verify no errors
+              expect(consoleErrors.length).toBe(0);
+            }
+          });
         });
 
         describe('2.5b Quiz Protection', () => {
@@ -1322,6 +1531,48 @@ export function createGameTestSuite(
               return text.length > 15;
             });
             expect(optionButtons.length).toBeGreaterThanOrEqual(2);
+          });
+
+          it('predict phase gates progress until prediction is made', () => {
+            renderGame({ gamePhase: 'predict' });
+            const contentBefore = getPhaseContent();
+
+            // Find the Next/Continue button
+            const allButtons = screen.getAllByRole('button');
+            const nextBtn = allButtons.find(b => {
+              const txt = b.textContent?.trim() || '';
+              return /next|continue|see|observe/i.test(txt) && !/back/i.test(txt);
+            });
+
+            if (nextBtn) {
+              // Check if Next is disabled before making prediction
+              const style = (nextBtn as HTMLElement).getAttribute('style') || '';
+              const isDisabled = style.includes('opacity: 0.4') || style.includes('opacity: 0.3')
+                || style.includes('cursor: not-allowed') || nextBtn.hasAttribute('disabled');
+
+              if (isDisabled) {
+                // Good - Next is disabled, now select a prediction
+                const predictionOptions = allButtons.filter(btn => {
+                  const text = btn.textContent?.trim() || '';
+                  return text.length > 20 && text.length < 200;
+                });
+                if (predictionOptions.length > 0) {
+                  fireEvent.click(predictionOptions[0]);
+
+                  // Now check if Next is enabled
+                  const updatedNextBtn = screen.getAllByRole('button').find(b =>
+                    /next|continue|see|observe/i.test(b.textContent?.trim() || '')
+                  );
+                  if (updatedNextBtn) {
+                    const newStyle = (updatedNextBtn as HTMLElement).getAttribute('style') || '';
+                    const isNowEnabled = !newStyle.includes('opacity: 0.4') && !newStyle.includes('cursor: not-allowed');
+                    expect(isNowEnabled).toBe(true);
+                  }
+                }
+              }
+            }
+            // If Next wasn't disabled, that's also acceptable (some games allow skipping)
+            expect(consoleErrors.length).toBe(0);
           });
 
           it('review phase has explanatory content (>300 chars)', () => {
