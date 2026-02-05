@@ -386,7 +386,8 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
       backgroundColor: colors.bgDark,
       color: colors.textPrimary,
       overflow: 'hidden',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      zIndex: 100
     }}>
       {/* Background gradient */}
       <div style={{
@@ -1038,6 +1039,14 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
               <h3 style={{ fontSize: typo.heading, fontWeight: 800, margin: 0, color: colors.textPrimary }}>Sound to Signal</h3>
             </div>
 
+            {/* What the visualization shows */}
+            <div style={{ padding: '10px', borderRadius: '10px', background: `${colors.primary}10`, border: `1px solid ${colors.primary}25` }}>
+              <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.primary }}>Observe:</strong> The visualization shows a dynamic microphone cross-section.
+                Sound waves (left) push the diaphragm, which moves the coil through a magnetic field, generating electrical signals.
+              </p>
+            </div>
+
             {/* Sound Amplitude Control */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -1069,6 +1078,15 @@ const MicrophoneRenderer: React.FC<MicrophoneRendererProps> = ({ onGameEvent, ga
               <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.warning, marginBottom: '4px' }}>Faraday's Law</p>
               <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
                 A changing magnetic field through a conductor induces voltage proportional to the rate of change.
+              </p>
+            </div>
+
+            {/* Real-world relevance */}
+            <div style={{ padding: '10px', borderRadius: '10px', background: `${colors.accent}10`, border: `1px solid ${colors.accent}25` }}>
+              <p style={{ fontSize: typo.small, lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                <strong style={{ color: colors.accent }}>Why This Matters:</strong> This technology is used in every smartphone,
+                concert venue, and recording studio. Engineers design microphones to capture specific frequency ranges for
+                different applications—from bass drums to delicate vocals.
               </p>
             </div>
           </div>

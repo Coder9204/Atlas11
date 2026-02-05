@@ -326,7 +326,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#cbd5e1', // Bright enough for M.1-M.3
+    textSecondary: '#e2e8f0', // Bright enough for M.1-M.3 (brightness ~230)
     textMuted: '#94a3b8', // Test factory looks for this exact color code
     border: '#2a2a3a',
     laminar: '#22D3EE',
@@ -621,7 +621,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
           <text x={width / 2} y="20" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">
             Pipe Flow Visualization
           </text>
-          <text x={width / 2} y="190" fill={colors.textMuted} fontSize="11" textAnchor="middle">
+          <text x={width / 2} y="190" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
             Flow Direction --&gt;
           </text>
         </g>
@@ -863,9 +863,27 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
         <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
           Reynolds Number Lab
         </h2>
-        <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-          Adjust velocity, diameter, and viscosity to control the flow regime.
+        <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+          Watch how changes to velocity, diameter, and viscosity affect whether flow is smooth (laminar) or chaotic (turbulent).
         </p>
+
+        {/* What you're looking at explanation */}
+        <div style={{
+          background: `${colors.accent}11`,
+          border: `1px solid ${colors.accent}33`,
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+        }}>
+          <p style={{ ...typo.small, color: colors.accent, fontWeight: 700, margin: '0 0 8px 0' }}>
+            📊 What You're Seeing
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+            The <strong style={{ color: colors.textPrimary }}>Reynolds Number (Re)</strong> is a ratio that predicts flow behavior:
+            Re = (velocity × diameter) / viscosity. When Re {'<'} 2300, viscous forces dominate → smooth laminar flow.
+            When Re {'>'} 4000, inertial forces dominate → chaotic turbulent flow.
+          </p>
+        </div>
 
         <div style={{
           background: colors.bgCard,
@@ -886,22 +904,22 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
               <div style={{ ...typo.h3, color: flowType === 'laminar' ? colors.laminar : flowType === 'turbulent' ? colors.turbulent : colors.warning }}>
                 {Re.toFixed(0)}
               </div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Reynolds Number</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>Reynolds Number</div>
             </div>
             <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
               <div style={{ ...typo.h3, color: colors.laminar }}>2300</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Laminar Limit</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>Laminar Limit</div>
             </div>
             <div style={{ background: colors.bgSecondary, borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
               <div style={{ ...typo.h3, color: colors.turbulent }}>4000</div>
-              <div style={{ ...typo.small, color: colors.textMuted }}>Turbulent Threshold</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>Turbulent Threshold</div>
             </div>
           </div>
 
           {/* Sliders with inline styles */}
           <div style={{ display: 'grid', gap: '16px' }}>
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Velocity (v)</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowVelocity.toFixed(1)} m/s</span>
               </div>
@@ -914,10 +932,13 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
                 onChange={(e) => setFlowVelocity(parseFloat(e.target.value))}
                 style={{ width: '100%', height: '8px', accentColor: colors.accent }}
               />
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                ↑ Higher velocity → Higher Re → More likely turbulent
+              </p>
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Diameter (D)</span>
                 <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{pipeDiameter.toFixed(1)} cm</span>
               </div>
@@ -930,10 +951,13 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
                 onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
                 style={{ width: '100%', height: '8px', accentColor: colors.success }}
               />
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                ↑ Larger diameter → Higher Re → More room for turbulence
+              </p>
             </div>
 
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>Fluid Viscosity (relative)</span>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{fluidViscosity.toFixed(1)}x water</span>
               </div>
@@ -946,6 +970,9 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
                 onChange={(e) => setFluidViscosity(parseFloat(e.target.value))}
                 style={{ width: '100%', height: '8px', accentColor: colors.warning }}
               />
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: '4px 0 0 0', fontStyle: 'italic' }}>
+                ↑ Higher viscosity → Lower Re → Viscous forces resist turbulence
+              </p>
             </div>
           </div>
         </div>
@@ -956,13 +983,30 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
           border: `1px solid ${colors.success}33`,
           borderRadius: '12px',
           padding: '16px',
+          marginBottom: '16px',
         }}>
           <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
             {flowType === 'laminar'
-              ? 'Laminar flow: Smooth, predictable layers. Low energy loss from friction.'
+              ? '✓ Laminar flow: Smooth, predictable layers. Low energy loss from friction.'
               : flowType === 'turbulent'
-              ? 'Turbulent flow: Chaotic mixing with eddies. Higher energy loss but better heat transfer.'
-              : 'Transition zone: Flow switches intermittently between laminar and turbulent.'}
+              ? '⚡ Turbulent flow: Chaotic mixing with eddies. Higher energy loss but better heat transfer.'
+              : '⚠️ Transition zone: Flow switches intermittently between laminar and turbulent.'}
+          </p>
+        </div>
+
+        {/* Why This Matters */}
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '12px',
+          padding: '16px',
+          borderLeft: `4px solid ${colors.accent}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.accent, fontWeight: 700, margin: '0 0 8px 0' }}>
+            🌍 Why This Matters
+          </p>
+          <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+            Engineers use the Reynolds number to design efficient pipelines, aircraft wings, and blood vessel implants.
+            Laminar flow minimizes energy loss in oil pipelines. Turbulent flow is essential for mixing chemicals and transferring heat in power plants.
           </p>
         </div>
       </div>
@@ -1344,7 +1388,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
         </div>
 
         {/* Progress indicator (P.6) */}
-        <p style={{ ...typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '16px' }}>
+        <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
           Application {selectedApp + 1} of {realWorldApps.length}
         </p>
 
@@ -1411,7 +1455,7 @@ const LaminarFlowRenderer: React.FC<LaminarFlowRendererProps> = ({ onGameEvent, 
               }}>
                 <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
                 <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                <div style={{ ...typo.small, color: colors.textSecondary }}>{stat.label}</div>
               </div>
             ))}
           </div>

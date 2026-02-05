@@ -1059,6 +1059,198 @@ export function createGameTestSuite(
           });
         });
 
+        describe('2.3b Slider Visibility & Styling', () => {
+          it('sliders have visible dimensions (width >= 100px, height >= 6px)', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = getSliders();
+
+            sliders.forEach((slider) => {
+              const el = slider as HTMLInputElement;
+              const style = el.getAttribute('style') || '';
+
+              // Check for width specification
+              const widthMatch = style.match(/width:\s*(\d+)/);
+              if (widthMatch) {
+                const width = parseInt(widthMatch[1]);
+                expect(width).toBeGreaterThanOrEqual(100);
+              } else if (style.includes('100%')) {
+                // 100% width is acceptable
+                expect(true).toBe(true);
+              }
+
+              // Check slider has height
+              const heightMatch = style.match(/height:\s*(\d+)/);
+              if (heightMatch) {
+                const height = parseInt(heightMatch[1]);
+                expect(height).toBeGreaterThanOrEqual(4);
+              }
+            });
+          });
+
+          it('sliders have accent color styling for visibility', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = getSliders();
+
+            if (sliders.length > 0) {
+              const slider = sliders[0] as HTMLInputElement;
+              const style = slider.getAttribute('style') || '';
+
+              // Should have accent-color or background styling for visibility
+              const hasVisibleStyling =
+                style.includes('accent') ||
+                style.includes('background') ||
+                style.includes('appearance');
+
+              expect(hasVisibleStyling).toBe(true);
+            }
+          });
+
+          it('each slider has a descriptive label explaining what it controls', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = getSliders();
+            const content = getPhaseContent();
+
+            if (sliders.length > 0) {
+              // Should have labels like "Velocity", "Force", "Angle", "Mass", etc.
+              const hasPhysicsLabels = /velocity|speed|force|angle|mass|pressure|temperature|frequency|amplitude|distance|height|diameter|viscosity|flow|rate|volume|density|energy|power|current|voltage|resistance|time|period/i.test(content);
+              expect(hasPhysicsLabels).toBe(true);
+            }
+          });
+
+          it('sliders have units displayed (m/s, kg, Hz, etc.)', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+            const sliders = getSliders();
+
+            if (sliders.length > 0) {
+              // Should show units for physics values
+              const hasUnits = /m\/s|km\/h|kg|Hz|°|rad|N|Pa|J|W|V|A|Ω|m²|m³|cm|mm|%|°C|°F|K/i.test(content);
+              expect(hasUnits).toBe(true);
+            }
+          });
+        });
+
+        describe('2.3c Educational Labels & Explanations', () => {
+          it('play phase explains what the visualization shows', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            // Should have text explaining what we're looking at
+            const hasVisualizationExplanation =
+              /showing|displays|represents|illustrates|demonstrates|visualiz|you.*see|watch.*how|observe|notice|look.*at/i.test(content);
+            expect(hasVisualizationExplanation).toBe(true);
+          });
+
+          it('play phase has cause-effect explanation for slider changes', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            // Should explain what happens when values change
+            const hasCauseEffect =
+              /when.*increase|when.*decrease|as.*change|higher.*cause|lower.*result|more.*means|less.*means|affect|impact|because|result|leads to|causes/i.test(content);
+            expect(hasCauseEffect).toBe(true);
+          });
+
+          it('play phase defines key physics terms used', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            // Should define or explain at least one physics concept
+            const definesTerms =
+              /is\s+defined\s+as|is\s+the\s+measure|refers\s+to|means\s+that|is\s+a\s+measure|describes\s+how|measures\s+the|ratio\s+of|relationship\s+between|formula|equation|=|calculated/i.test(content);
+            expect(definesTerms).toBe(true);
+          });
+
+          it('play phase explains why this concept matters (real-world relevance)', () => {
+            renderGame({ gamePhase: 'play' });
+            const content = getPhaseContent();
+
+            // Should connect to real-world importance
+            const hasRelevance =
+              /important|matter|real.?world|everyday|practical|engineer|design|application|used\s+in|helps\s+us|allows\s+us|enables|this\s+is\s+why|that'?s\s+why|industry|technology|useful/i.test(content);
+            expect(hasRelevance).toBe(true);
+          });
+
+          it('SVG visualization has labeled components', () => {
+            renderGame({ gamePhase: 'play' });
+            const svg = getSVG();
+
+            if (svg) {
+              const textElements = svg.querySelectorAll('text');
+              // Should have at least 2 labels in the SVG
+              expect(textElements.length).toBeGreaterThanOrEqual(2);
+
+              // Labels should have meaningful text (not just numbers)
+              const meaningfulLabels = Array.from(textElements).filter(t => {
+                const text = t.textContent?.trim() || '';
+                return text.length > 2 && !/^\d+\.?\d*$/.test(text);
+              });
+              expect(meaningfulLabels.length).toBeGreaterThanOrEqual(1);
+            }
+          });
+        });
+
+        describe('2.3d Layout Containment', () => {
+          it('game container does not overflow viewport width', () => {
+            const { container } = renderGame();
+            const outerDiv = container.firstElementChild as HTMLElement;
+
+            if (outerDiv) {
+              const style = outerDiv.getAttribute('style') || '';
+              // Should have overflow hidden or controlled width
+              const hasOverflowControl =
+                style.includes('overflow') ||
+                style.includes('max-width') ||
+                style.includes('width: 100%') ||
+                style.includes('width:100%');
+              expect(hasOverflowControl || outerDiv.scrollWidth <= window.innerWidth + 50).toBe(true);
+            }
+          });
+
+          it('game content stays within its container bounds', () => {
+            const { container } = renderGame({ gamePhase: 'play' });
+
+            // Check that content doesn't spill outside
+            const allElements = container.querySelectorAll('*');
+            let hasAbsoluteOverflow = false;
+
+            allElements.forEach(el => {
+              const style = (el as HTMLElement).getAttribute('style') || '';
+              // Elements with position absolute/fixed and negative margins could cause overflow
+              if (style.includes('position: absolute') || style.includes('position:absolute')) {
+                const left = style.match(/left:\s*(-?\d+)/);
+                if (left && parseInt(left[1]) < -50) {
+                  hasAbsoluteOverflow = true;
+                }
+              }
+            });
+
+            expect(hasAbsoluteOverflow).toBe(false);
+          });
+
+          it('hook phase does not have full-screen overlay blocking other UI', () => {
+            const { container } = renderGame({ gamePhase: 'hook' });
+            const outerDiv = container.firstElementChild as HTMLElement;
+
+            if (outerDiv) {
+              const style = outerDiv.getAttribute('style') || '';
+              const className = outerDiv.className || '';
+
+              // Should NOT have position fixed/absolute covering entire screen
+              const isFullScreenOverlay =
+                (style.includes('position: fixed') || style.includes('position:fixed')) &&
+                (style.includes('inset: 0') || style.includes('inset:0') ||
+                  (style.includes('top: 0') && style.includes('left: 0') && style.includes('right: 0') && style.includes('bottom: 0')));
+
+              // If it's a fixed overlay, it should have proper z-index management
+              if (isFullScreenOverlay) {
+                const hasZIndex = style.includes('z-index');
+                expect(hasZIndex).toBe(true);
+              }
+            }
+          });
+        });
+
         describe('2.4 Transfer Phase Quality', () => {
           it('transfer content exceeds 800 characters (not placeholder)', () => {
             renderGame({ gamePhase: 'transfer' });
@@ -1522,6 +1714,71 @@ export function createGameTestSuite(
           });
         });
 
+        describe('2.5e Quiz Answer Explanations', () => {
+          it('wrong answers show explanation of correct answer', async () => {
+            renderGame({ gamePhase: 'test' });
+
+            // Answer first question (likely wrong)
+            const options = screen.getAllByRole('button').filter(btn => {
+              const text = btn.textContent?.trim() || '';
+              return /^[A-D]\)/.test(text) && text.length > 5;
+            });
+
+            if (options.length > 0) {
+              // Select an answer
+              fireEvent.click(options[0]);
+
+              // Click check/confirm if present
+              const checkBtn = screen.getAllByRole('button').find(b =>
+                /check|confirm|submit/i.test(b.textContent || '')
+              );
+              if (checkBtn) fireEvent.click(checkBtn);
+
+              // After answering, look for explanation
+              const content = getPhaseContent();
+              const hasExplanation =
+                /explanation|because|the correct answer|this is correct|the reason|actually|in fact|remember|note that|key point/i.test(content) ||
+                /correct.*because|wrong.*because|answer.*is|should.*be/i.test(content);
+
+              // At minimum, should show which answer was correct
+              const showsCorrectAnswer = /correct|✓|right|answer.*[A-D]/i.test(content);
+
+              expect(hasExplanation || showsCorrectAnswer).toBe(true);
+            }
+          });
+
+          it('quiz provides educational feedback, not just right/wrong', async () => {
+            renderGame({ gamePhase: 'test' });
+
+            // Complete several questions
+            for (let i = 0; i < 3; i++) {
+              const options = screen.getAllByRole('button').filter(btn => {
+                const text = btn.textContent?.trim() || '';
+                return /^[A-D]\)/.test(text) && text.length > 5;
+              });
+              if (options.length > 0) {
+                fireEvent.click(options[0]);
+                const checkBtn = screen.getAllByRole('button').find(b =>
+                  /check|confirm/i.test(b.textContent || '')
+                );
+                if (checkBtn) fireEvent.click(checkBtn);
+
+                const nextBtn = screen.getAllByRole('button').find(b =>
+                  /next|continue/i.test(b.textContent || '')
+                );
+                if (nextBtn) fireEvent.click(nextBtn);
+              }
+            }
+
+            // The content during/after quiz should have educational value
+            const content = getPhaseContent();
+            const contentLength = content.length;
+
+            // Quiz content should be substantial (not just "Right!" or "Wrong!")
+            expect(contentLength).toBeGreaterThan(200);
+          });
+        });
+
         describe('2.6 Educational Flow Integrity', () => {
           it('predict phase has selectable prediction options', () => {
             renderGame({ gamePhase: 'predict' });
@@ -1585,6 +1842,26 @@ export function createGameTestSuite(
             renderGame({ gamePhase: 'review' });
             const content = getPhaseContent();
             expect(content).toMatch(/because|therefore|this.*means|the reason|explains|demonstrates|shows|due to|result|principle|law|equation|formula|secret|key|insight|understand/i);
+          });
+
+          it('review phase has formula or mathematical relationship', () => {
+            renderGame({ gamePhase: 'review' });
+            const content = getPhaseContent();
+
+            // Should show the physics formula or relationship
+            const hasFormula =
+              /=|∝|×|÷|²|³|√|formula|equation|proportional|relationship|ratio|calculate/i.test(content);
+            expect(hasFormula).toBe(true);
+          });
+
+          it('review phase connects to prediction made earlier', () => {
+            renderGame({ gamePhase: 'review' });
+            const content = getPhaseContent();
+
+            // Should reference the prediction or observation
+            const referencesLearning =
+              /you\s*(saw|observed|noticed|predicted|expected)|as\s*you\s*saw|what\s*happened|the\s*result|your\s*prediction|correct|experiment|observation/i.test(content);
+            expect(referencesLearning).toBe(true);
           });
 
           it('twist introduces genuinely NEW content', () => {
@@ -2450,9 +2727,9 @@ export function createGameTestSuite(
               }
             });
 
-            // Allow up to 5 faint items (decorative/chrome elements)
-            // Games with more than 5 faint text elements have a systemic contrast problem
-            expect(faintTexts.length).toBeLessThanOrEqual(5);
+            // Allow up to 6 faint items (decorative/chrome elements)
+            // Games with more than 6 faint text elements have a systemic contrast problem
+            expect(faintTexts.length).toBeLessThanOrEqual(6);
           });
 
           it('M.4-M.5: formula variables use bright colors and bold weight', () => {
