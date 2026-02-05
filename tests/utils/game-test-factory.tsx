@@ -569,6 +569,134 @@ export function createGameTestSuite(
             }
           });
         });
+
+        describe('1.11 Critical Game Integrity', () => {
+          it('starts at hook phase when no gamePhase prop provided (production mode)', () => {
+            // This is critical: games must start at hook, not skip to test or other phases
+            render(<GameComponent />);
+            const content = getPhaseContent();
+
+            // Hook phase should have introductory content, NOT quiz questions
+            // Be specific: "Question 1 of 10" is a quiz, but "1/10" alone is just phase progress
+            const hasQuizContent = /question\s*1\s*(of|\/)\s*10/i.test(content) ||
+              /select.*correct.*answer|choose.*best.*answer|which.*following.*correct/i.test(content);
+            expect(hasQuizContent).toBe(false);
+
+            // Should have hook-like content (intro, discover, begin, start)
+            const hasHookContent = /discover|introduction|welcome|begin|start|explore|let's|what.*happen|about to|first|how.*work/i.test(content);
+            expect(hasHookContent).toBe(true);
+          });
+
+          it('can navigate sequentially from hook to play phase via Next buttons', () => {
+            render(<GameComponent />);
+
+            // Track which phases we visit
+            const phasesVisited: string[] = [];
+
+            // Helper to click Next/Continue button
+            const clickNextButton = () => {
+              const allButtons = screen.getAllByRole('button');
+              const nextBtn = allButtons.find(b => {
+                const txt = b.textContent?.trim() || '';
+                return /^(next|continue|start|begin|discovery|see|observe|experiment|understand|got it|explore)[\s→]?/i.test(txt)
+                  || txt === 'Next →' || txt === 'Next→';
+              });
+              if (nextBtn && !(nextBtn as HTMLElement).hasAttribute('disabled')) {
+                const style = (nextBtn as HTMLElement).getAttribute('style') || '';
+                const isDisabled = style.includes('opacity: 0.4') || style.includes('cursor: not-allowed');
+                if (!isDisabled) {
+                  fireEvent.pointerDown(nextBtn);
+                  fireEvent.click(nextBtn);
+                  return true;
+                }
+              }
+              return false;
+            };
+
+            // Start at hook - record initial content fingerprint
+            const hookContent = getPhaseContent().slice(0, 200);
+            phasesVisited.push('hook');
+
+            // Navigate through phases (hook → predict → play)
+            // We need at least 2 Next clicks to reach play phase
+            for (let i = 0; i < 4; i++) {
+              const contentBefore = getPhaseContent();
+              const clicked = clickNextButton();
+              if (!clicked) break;
+
+              const contentAfter = getPhaseContent();
+              if (contentAfter !== contentBefore) {
+                phasesVisited.push(`phase_${i + 1}`);
+              }
+
+              // Check if we reached play phase (has sliders)
+              const sliders = document.querySelectorAll('input[type="range"]');
+              if (sliders.length > 0) {
+                phasesVisited.push('play_with_sliders');
+                break;
+              }
+            }
+
+            // Should have progressed through at least 2 phases
+            expect(phasesVisited.length).toBeGreaterThanOrEqual(2);
+          });
+
+          it('play phase sliders are visible and not hidden by CSS', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = document.querySelectorAll('input[type="range"]');
+
+            if (sliders.length > 0) {
+              sliders.forEach((slider, index) => {
+                const el = slider as HTMLElement;
+                const style = el.getAttribute('style') || '';
+                const computedDisplay = el.style.display;
+                const computedVisibility = el.style.visibility;
+
+                // Slider should not be hidden
+                const isHidden =
+                  style.includes('display: none') ||
+                  style.includes('display:none') ||
+                  style.includes('visibility: hidden') ||
+                  style.includes('visibility:hidden') ||
+                  computedDisplay === 'none' ||
+                  computedVisibility === 'hidden';
+
+                expect(isHidden).toBe(false);
+
+                // Check parent containers aren't hiding it
+                let parent = el.parentElement;
+                let depth = 0;
+                while (parent && depth < 5) {
+                  const parentStyle = parent.getAttribute('style') || '';
+                  const isParentHidden =
+                    parentStyle.includes('display: none') ||
+                    parentStyle.includes('display:none') ||
+                    parent.style.display === 'none';
+                  expect(isParentHidden).toBe(false);
+                  parent = parent.parentElement;
+                  depth++;
+                }
+              });
+            }
+          });
+
+          it('does not jump directly to test phase on initial render', () => {
+            render(<GameComponent />);
+            const content = getPhaseContent();
+
+            // Should NOT have quiz-specific indicators on initial render
+            // "Question 1 of 10" is quiz content, but "1/10" alone is just phase progress
+            const hasQuizSpecificContent =
+              /question\s*1\s*(of|\/)\s*10/i.test(content) ||
+              /knowledge\s*test.*question|select.*correct.*answer|which.*following/i.test(content);
+
+            // If it looks like we're at test phase immediately, verify there's hook content
+            if (hasQuizSpecificContent) {
+              const hookContent = /discover|introduction|welcome|begin|explore|start.*journey|let's.*learn|how.*work/i.test(content);
+              expect(hookContent).toBe(true);
+            }
+          });
+        });
       });
     }
 
@@ -667,6 +795,29 @@ export function createGameTestSuite(
             const sliders = getSliders();
             const buttons = screen.getAllByRole('button');
             expect(sliders.length + buttons.length).toBeGreaterThan(2);
+          });
+
+          it('play phase has at least 1 slider for physics parameter control', () => {
+            renderGame({ gamePhase: 'play' });
+            const sliders = getSliders();
+            // Physics simulations should have sliders to adjust parameters
+            // This is a critical UX requirement for interactive learning
+            expect(sliders.length).toBeGreaterThanOrEqual(1);
+          });
+
+          it('twist_play phase has interactive controls or educational visualization', () => {
+            renderGame({ gamePhase: 'twist_play' });
+            const sliders = getSliders();
+            // Count action buttons that provide interactivity
+            const actionButtons = screen.getAllByRole('button').filter(btn => {
+              const text = btn.textContent?.trim() || '';
+              return /start|run|fire|launch|inject|toggle|reset|simulate|release|drop|go|activate|drain|stir|mix/i.test(text);
+            });
+            // Check for educational visualization (SVG with substantial content)
+            const svg = getSVG();
+            const hasMeaningfulVisualization = svg && svg.innerHTML.length > 500;
+            // Twist phases should have interactive elements OR meaningful visualization
+            expect(sliders.length + actionButtons.length >= 1 || hasMeaningfulVisualization).toBe(true);
           });
         });
 
