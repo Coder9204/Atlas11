@@ -149,6 +149,10 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   const [cloudParticles, setCloudParticles] = useState<CloudParticle[]>([]);
   const [showSmoke, setShowSmoke] = useState(false);
 
+  // Quiz state - must be at component level with other hooks
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [questionConfirmed, setQuestionConfirmed] = useState(false);
+
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -361,15 +365,12 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       }, [playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 400) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
       return newAnswers;
     });
-      }, []);
+  }, []);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     const now = Date.now();
@@ -627,30 +628,30 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
     }, 0);
   };
 
+  // Generate stable particle positions - moved to component level to avoid hooks in render function
+  const smokeParticles = React.useMemo(() => {
+    return Array.from({ length: 20 }, (_, i) => ({
+      cx: 80 + ((i * 13) % 140),
+      cy: 70 + ((i * 17) % 160),
+      r: 1.5 + (i % 3),
+      opacity: 0.2 + (i % 5) * 0.1
+    }));
+  }, []);
+
+  // Generate water vapor particles
+  const vaporParticles = React.useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      cx: 90 + ((i * 11) % 120),
+      cy: 200 + ((i * 7) % 50),
+      r: 2 + (i % 2),
+      delay: i * 0.3
+    }));
+  }, []);
+
   const renderBottleVisualization = () => {
     const bottleWidth = 160;
     const bottleHeight = 220;
     const compression = isSqueezing ? 0.85 : 1;
-
-    // Generate stable particle positions using seed-based approach
-    const smokeParticles = React.useMemo(() => {
-      return Array.from({ length: 20 }, (_, i) => ({
-        cx: 80 + ((i * 13) % 140),
-        cy: 70 + ((i * 17) % 160),
-        r: 1.5 + (i % 3),
-        opacity: 0.2 + (i % 5) * 0.1
-      }));
-    }, []);
-
-    // Generate water vapor particles
-    const vaporParticles = React.useMemo(() => {
-      return Array.from({ length: 12 }, (_, i) => ({
-        cx: 90 + ((i * 11) % 120),
-        cy: 200 + ((i * 7) % 50),
-        r: 2 + (i % 2),
-        delay: i * 0.3
-      }));
-    }, []);
 
     // Status label text
     const statusText = isSqueezing
@@ -1049,6 +1050,17 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
               <path d="M245,140 L230,140 L235,135 M230,140 L235,145" stroke="#f59e0b" strokeWidth="2" opacity="0.7" />
             </g>
           )}
+
+          {/* Educational labels */}
+          <text x="150" y="18" fontSize="10" fill="#e2e8f0" textAnchor="middle" fontWeight="600">Plastic Bottle</text>
+          <text x="260" y="245" fontSize="9" fill="#60a5fa" textAnchor="middle">Water vapor</text>
+          <text x="40" y="245" fontSize="9" fill="#94a3b8" textAnchor="middle">Moist air</text>
+          {cloudDensity > 20 && (
+            <text x="150" y="125" fontSize="11" fill="#ffffff" textAnchor="middle" fontWeight="700">CLOUD!</text>
+          )}
+          {hasNuclei && cloudDensity <= 20 && (
+            <text x="150" y="75" fontSize="9" fill="#94a3b8" textAnchor="middle">Smoke particles</text>
+          )}
         </svg>
 
         {/* Status label moved outside SVG using typo system */}
@@ -1081,7 +1093,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       <h1 style={{ fontSize: isMobile ? '28px' : '40px', fontWeight: 700, marginBottom: '16px', background: 'linear-gradient(to right, #ffffff, #93c5fd, #3b82f6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
         Cloud in a Bottle
       </h1>
-      <p style={{ fontSize: '18px', color: '#94a3b8', maxWidth: '400px', marginBottom: '32px' }}>
+      <p style={{ fontSize: '18px', color: '#cbd5e1', maxWidth: '400px', marginBottom: '32px' }}>
         Can you make a <span style={{ color: '#3b82f6', fontWeight: 600 }}>cloud on command</span>?
       </p>
 
@@ -1107,7 +1119,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         <p style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '16px' }}>
           Squeeze a bottle, release it, and watch a <span style={{ color: '#3b82f6' }}>real cloud</span> form inside!
         </p>
-        <p style={{ fontSize: '14px', color: '#94a3b8' }}>
+        <p style={{ fontSize: '14px', color: '#cbd5e1' }}>
           This is the same physics that creates every cloud in the sky, from morning fog to thunderstorms.
         </p>
       </div>
@@ -1122,15 +1134,58 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
     </div>
   );
 
+  const renderPredictVisualization = () => (
+    <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px', height: 'auto' }}>
+      <defs>
+        <linearGradient id="predictBottleGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#475569" stopOpacity="0.4" />
+          <stop offset="50%" stopColor="#94a3b8" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#475569" stopOpacity="0.4" />
+        </linearGradient>
+        <linearGradient id="predictWater" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.5" />
+        </linearGradient>
+      </defs>
+      {/* Background */}
+      <rect width="300" height="200" fill="#0f172a" rx="8" />
+      {/* Bottle body */}
+      <rect x="100" y="30" width="100" height="140" fill="url(#predictBottleGlass)" stroke="#64748b" strokeWidth="2" rx="8" />
+      {/* Bottle neck */}
+      <rect x="130" y="10" width="40" height="25" fill="url(#predictBottleGlass)" stroke="#64748b" strokeWidth="2" rx="4" />
+      {/* Water at bottom */}
+      <rect x="105" y="140" width="90" height="25" fill="url(#predictWater)" rx="4" />
+      {/* Smoke particles */}
+      <circle cx="130" cy="80" r="3" fill="#94a3b8" opacity="0.5" />
+      <circle cx="150" cy="70" r="2" fill="#94a3b8" opacity="0.4" />
+      <circle cx="170" cy="85" r="2.5" fill="#94a3b8" opacity="0.45" />
+      <circle cx="140" cy="100" r="2" fill="#94a3b8" opacity="0.4" />
+      <circle cx="160" cy="95" r="2" fill="#94a3b8" opacity="0.35" />
+      {/* Question marks */}
+      <text x="50" y="110" fontSize="24" fill="#f59e0b" fontWeight="bold">?</text>
+      <text x="240" y="110" fontSize="24" fill="#f59e0b" fontWeight="bold">?</text>
+      {/* Labels */}
+      <text x="150" y="185" fontSize="11" fill="#94a3b8" textAnchor="middle">Bottle with moist air + smoke</text>
+      <text x="230" y="50" fontSize="10" fill="#cbd5e1" textAnchor="start">Squeeze</text>
+      <text x="230" y="65" fontSize="10" fill="#cbd5e1" textAnchor="start">then</text>
+      <text x="230" y="80" fontSize="10" fill="#3b82f6" textAnchor="start" fontWeight="600">Release!</text>
+    </svg>
+  );
+
   const renderPredict = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px' }}>Make Your Prediction</h2>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px', lineHeight: 1.4 }}>Make Your Prediction</h2>
+
+      {/* Visualization */}
+      <div style={{ marginBottom: '24px' }}>
+        {renderPredictVisualization()}
+      </div>
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '600px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-        <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '16px' }}>
+        <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '16px', lineHeight: 1.6 }}>
           You add a little smoke to a plastic bottle containing moist air. You squeeze the bottle hard, then quickly release it.
         </p>
-        <p style={{ fontSize: '16px', color: '#3b82f6', fontWeight: 500 }}>
+        <p style={{ fontSize: '16px', color: '#3b82f6', fontWeight: 500, lineHeight: 1.6 }}>
           What happens when you release the squeeze?
         </p>
       </div>
@@ -1174,7 +1229,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           <p style={{ color: '#22c55e', fontWeight: 600 }}>
             {selectedPrediction === 'C' ? 'Correct!' : 'Yes!'} A real cloud forms!
           </p>
-          <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '8px' }}>
+          <p style={{ color: '#cbd5e1', fontSize: '14px', marginTop: '8px' }}>
             When you release, air expands rapidly and cools. This drops temperature below the dew point, causing water to condense on smoke particles - forming a cloud!
           </p>
           <button
@@ -1191,7 +1246,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   const renderPlay = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Cloud Lab</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Squeeze and release to make clouds!</p>
+      <p style={{ color: '#cbd5e1', marginBottom: '24px' }}>Squeeze and release to make clouds!</p>
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
         {renderBottleVisualization()}
@@ -1220,17 +1275,16 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           </button>
           <button
             onPointerDown={(e) => { e.preventDefault(); handleRelease(); }}
-            disabled={!isSqueezing}
             style={{
               flex: 1,
               padding: '16px',
               borderRadius: '12px',
               fontWeight: 600,
               border: 'none',
-              cursor: !isSqueezing ? 'default' : 'pointer',
+              cursor: 'pointer',
               background: !isSqueezing ? 'rgba(59, 130, 246, 0.3)' : 'linear-gradient(to right, #3b82f6, #2563eb)',
               color: 'white',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s ease'
             }}
           >
             ✋ Release
@@ -1254,9 +1308,59 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           {hasNuclei ? '💨 Nuclei Present' : '💨 Add Smoke (Nuclei)'}
         </button>
 
+        {/* Humidity slider */}
+        <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Humidity</span>
+            <span style={{ color: '#3b82f6', fontWeight: 600, fontSize: '14px' }}>{humidity}%</span>
+          </div>
+          <input
+            type="range"
+            min="40"
+            max="100"
+            value={humidity}
+            onChange={(e) => setHumidity(Number(e.target.value))}
+            style={{
+              width: '100%',
+              height: '8px',
+              borderRadius: '4px',
+              background: `linear-gradient(to right, #3b82f6 ${(humidity - 40) / 60 * 100}%, #475569 ${(humidity - 40) / 60 * 100}%)`,
+              cursor: 'pointer',
+              WebkitAppearance: 'none',
+              appearance: 'none'
+            }}
+          />
+          <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '4px', lineHeight: 1.5 }}>Higher humidity means easier cloud formation</p>
+        </div>
+
+        {/* Temperature slider */}
+        <div style={{ padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Temperature</span>
+            <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '14px' }}>{temperature}°C</span>
+          </div>
+          <input
+            type="range"
+            min="10"
+            max="35"
+            value={temperature}
+            onChange={(e) => setTemperature(Number(e.target.value))}
+            style={{
+              width: '100%',
+              height: '8px',
+              borderRadius: '4px',
+              background: `linear-gradient(to right, #ef4444 ${(temperature - 10) / 25 * 100}%, #475569 ${(temperature - 10) / 25 * 100}%)`,
+              cursor: 'pointer',
+              WebkitAppearance: 'none',
+              appearance: 'none'
+            }}
+          />
+          <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '4px', lineHeight: 1.5 }}>Lower temperature reduces dew point margin</p>
+        </div>
+
         {/* Toggle nuclei */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
-          <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Condensation Nuclei</span>
+          <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Condensation Nuclei</span>
           <button
             onPointerDown={(e) => { e.preventDefault(); setHasNuclei(!hasNuclei); }}
             style={{
@@ -1267,7 +1371,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
               cursor: 'pointer',
               background: hasNuclei ? '#22c55e' : '#475569',
               position: 'relative',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s ease'
             }}
           >
             <div style={{
@@ -1278,7 +1382,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
               height: '20px',
               borderRadius: '50%',
               background: 'white',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s ease'
             }} />
           </button>
         </div>
@@ -1288,15 +1392,15 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', width: '100%', maxWidth: '400px', marginBottom: '24px' }}>
         <div style={{ background: 'rgba(59, 130, 246, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
           <div style={{ color: '#3b82f6', fontWeight: 700, fontSize: '20px' }}>{cloudDensity.toFixed(0)}%</div>
-          <div style={{ color: '#94a3b8', fontSize: '12px' }}>Cloud Density</div>
+          <div style={{ color: '#cbd5e1', fontSize: '12px' }}>Cloud Density</div>
         </div>
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
           <div style={{ color: '#ef4444', fontWeight: 700, fontSize: '20px' }}>{isSqueezing ? '↑' : temperature - (100 - squeezePressure) * 0.15 < 15 ? '↓' : '—'}</div>
-          <div style={{ color: '#94a3b8', fontSize: '12px' }}>Temperature</div>
+          <div style={{ color: '#cbd5e1', fontSize: '12px' }}>Temperature</div>
         </div>
         <div style={{ background: 'rgba(34, 197, 94, 0.1)', borderRadius: '12px', padding: '16px', textAlign: 'center', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
           <div style={{ color: '#22c55e', fontWeight: 700, fontSize: '20px' }}>{hasNuclei ? 'Yes' : 'No'}</div>
-          <div style={{ color: '#94a3b8', fontSize: '12px' }}>Nuclei</div>
+          <div style={{ color: '#cbd5e1', fontSize: '12px' }}>Nuclei</div>
         </div>
       </div>
 
@@ -1385,34 +1489,67 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
     </div>
   );
 
+  const renderTwistPredictVisualization = () => (
+    <svg viewBox="0 0 340 180" style={{ width: '100%', maxWidth: '340px', height: 'auto' }}>
+      <defs>
+        <linearGradient id="twistBottleGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#475569" stopOpacity="0.4" />
+          <stop offset="50%" stopColor="#94a3b8" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#475569" stopOpacity="0.4" />
+        </linearGradient>
+        <radialGradient id="twistCloud" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#e2e8f0" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {/* Background */}
+      <rect width="340" height="180" fill="#0f172a" rx="8" />
+
+      {/* Left bottle - WITH smoke */}
+      <g transform="translate(30, 20)">
+        <rect x="20" y="20" width="70" height="100" fill="url(#twistBottleGlass)" stroke="#22c55e" strokeWidth="2" rx="6" />
+        <rect x="40" y="5" width="30" height="18" fill="url(#twistBottleGlass)" stroke="#22c55e" strokeWidth="2" rx="3" />
+        {/* Smoke particles */}
+        <circle cx="45" cy="55" r="2" fill="#94a3b8" opacity="0.5" />
+        <circle cx="55" cy="50" r="1.5" fill="#94a3b8" opacity="0.4" />
+        <circle cx="65" cy="60" r="2" fill="#94a3b8" opacity="0.45" />
+        {/* Cloud forming */}
+        <ellipse cx="55" cy="55" rx="20" ry="15" fill="url(#twistCloud)" />
+        <text x="55" y="140" fontSize="10" fill="#22c55e" textAnchor="middle" fontWeight="600">With Smoke</text>
+        <text x="55" y="155" fontSize="9" fill="#94a3b8" textAnchor="middle">Cloud forms!</text>
+      </g>
+
+      {/* Arrow */}
+      <text x="170" y="90" fontSize="20" fill="#94a3b8" textAnchor="middle">vs</text>
+
+      {/* Right bottle - WITHOUT smoke */}
+      <g transform="translate(200, 20)">
+        <rect x="20" y="20" width="70" height="100" fill="url(#twistBottleGlass)" stroke="#8b5cf6" strokeWidth="2" rx="6" />
+        <rect x="40" y="5" width="30" height="18" fill="url(#twistBottleGlass)" stroke="#8b5cf6" strokeWidth="2" rx="3" />
+        {/* No smoke, no cloud - just empty */}
+        <text x="55" y="70" fontSize="16" fill="#f59e0b" textAnchor="middle" fontWeight="bold">?</text>
+        <text x="55" y="140" fontSize="10" fill="#8b5cf6" textAnchor="middle" fontWeight="600">Without Smoke</text>
+        <text x="55" y="155" fontSize="9" fill="#94a3b8" textAnchor="middle">What happens?</text>
+      </g>
+    </svg>
+  );
+
   const renderTwistPredict = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '24px' }}>The Twist: Without Smoke?</h2>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '24px', lineHeight: 1.4 }}>The Twist: Without Smoke?</h2>
+
+      {/* Visualization */}
+      <div style={{ marginBottom: '24px' }}>
+        {renderTwistPredictVisualization()}
+      </div>
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '24px', maxWidth: '600px', marginBottom: '24px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
-        <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '16px' }}>
+        <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '16px', lineHeight: 1.6 }}>
           The cloud formed beautifully with smoke particles as condensation nuclei.
         </p>
-        <p style={{ fontSize: '16px', color: '#f59e0b', fontWeight: 500, marginBottom: '16px' }}>
+        <p style={{ fontSize: '16px', color: '#f59e0b', fontWeight: 500, marginBottom: '16px', lineHeight: 1.6 }}>
           What if you try the experiment WITHOUT any smoke?
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '24px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '60px', height: '60px', background: 'rgba(34, 197, 94, 0.3)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', border: '2px solid #22c55e' }}>
-              <span style={{ fontSize: '24px' }}>💨</span>
-            </div>
-            <span style={{ color: '#22c55e', fontSize: '12px' }}>With Smoke</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ fontSize: '24px', color: '#94a3b8' }}>→</span>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '60px', height: '60px', background: 'rgba(139, 92, 246, 0.3)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px', border: '2px solid #8b5cf6' }}>
-              <span style={{ fontSize: '24px' }}>❓</span>
-            </div>
-            <span style={{ color: '#8b5cf6', fontSize: '12px' }}>Without Smoke</span>
-          </div>
-        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '500px' }}>
@@ -1454,7 +1591,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           <p style={{ color: '#22c55e', fontWeight: 600 }}>
             {twistPrediction === 'B' ? 'Exactly!' : 'Surprising result!'} The cloud is much weaker without nuclei!
           </p>
-          <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '8px' }}>
+          <p style={{ color: '#cbd5e1', fontSize: '14px', marginTop: '8px' }}>
             Without condensation nuclei, water vapor needs extreme "supersaturation" to condense. The air must get much colder before homogeneous nucleation occurs. Nuclei are essential!
           </p>
           <button
@@ -1471,7 +1608,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   const renderTwistPlay = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#8b5cf6', marginBottom: '8px' }}>With vs Without Nuclei</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Toggle nuclei and see the dramatic difference</p>
+      <p style={{ color: '#cbd5e1', marginBottom: '24px' }}>Toggle nuclei and see the dramatic difference</p>
 
       <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
         {renderBottleVisualization()}
@@ -1587,19 +1724,19 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '12px' }}>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '24px', marginBottom: '4px' }}>🏜</div>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>Dust</span>
+            <span style={{ color: '#cbd5e1', fontSize: '11px' }}>Dust</span>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '24px', marginBottom: '4px' }}>🌊</div>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>Sea Salt</span>
+            <span style={{ color: '#cbd5e1', fontSize: '11px' }}>Sea Salt</span>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '24px', marginBottom: '4px' }}>🌸</div>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>Pollen</span>
+            <span style={{ color: '#cbd5e1', fontSize: '11px' }}>Pollen</span>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
             <div style={{ fontSize: '24px', marginBottom: '4px' }}>🏭</div>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>Pollution</span>
+            <span style={{ color: '#cbd5e1', fontSize: '11px' }}>Pollution</span>
           </div>
         </div>
       </div>
@@ -1626,7 +1763,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
   const renderTransfer = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px' }}>Real-World Applications</h2>
-      <p style={{ color: '#94a3b8', marginBottom: '24px' }}>Cloud physics everywhere</p>
+      <p style={{ color: '#cbd5e1', marginBottom: '24px' }}>Cloud physics everywhere</p>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {transferApps.map((app, index) => (
@@ -1661,15 +1798,27 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           <span style={{ fontSize: '32px' }}>{transferApps[activeAppTab].icon}</span>
           <div>
             <h3 style={{ color: 'white', fontWeight: 700, fontSize: '18px' }}>{transferApps[activeAppTab].title}</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px' }}>{transferApps[activeAppTab].tagline}</p>
+            <p style={{ color: '#cbd5e1', fontSize: '14px' }}>{transferApps[activeAppTab].tagline}</p>
           </div>
         </div>
 
         <p style={{ color: '#cbd5e1', marginBottom: '16px', fontSize: '14px' }}>{transferApps[activeAppTab].description}</p>
 
         <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-          <h4 style={{ color: '#f59e0b', fontWeight: 600, marginBottom: '8px', fontSize: '14px' }}>Physics Connection</h4>
-          <p style={{ color: '#94a3b8', fontSize: '13px' }}>{transferApps[activeAppTab].connection}</p>
+          <h4 style={{ color: '#f59e0b', fontWeight: 600, marginBottom: '8px', fontSize: '14px', lineHeight: 1.5 }}>Physics Connection</h4>
+          <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: 1.6 }}>{transferApps[activeAppTab].connection}</p>
+        </div>
+
+        {/* How it works section */}
+        <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <h4 style={{ color: '#3b82f6', fontWeight: 600, marginBottom: '8px', fontSize: '14px', lineHeight: 1.5 }}>How It Works</h4>
+          <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: 1.6 }}>{transferApps[activeAppTab].howItWorks}</p>
+        </div>
+
+        {/* Future Impact section */}
+        <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <h4 style={{ color: '#22c55e', fontWeight: 600, marginBottom: '8px', fontSize: '14px', lineHeight: 1.5 }}>Future Impact</h4>
+          <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: 1.6 }}>{transferApps[activeAppTab].futureImpact}</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
@@ -1692,7 +1841,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       </div>
 
       <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ color: '#94a3b8', fontSize: '14px' }}>Progress:</span>
+        <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>Progress:</span>
         <div style={{ display: 'flex', gap: '4px' }}>
           {transferApps.map((_, i) => (
             <div
@@ -1701,77 +1850,182 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             />
           ))}
         </div>
-        <span style={{ color: '#94a3b8', fontSize: '14px' }}>{completedApps.size}/{transferApps.length}</span>
+        <span style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.5 }}>App {completedApps.size}/{transferApps.length} completed</span>
       </div>
 
-      {completedApps.size >= transferApps.length && (
-        <button
-          onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
-          style={{ marginTop: '24px', padding: '16px 32px', background: 'linear-gradient(to right, #3b82f6, #2563eb)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
-        >
-          Take the Test
-        </button>
-      )}
+      {/* Always show Continue button - enables forward navigation */}
+      <button
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        disabled={completedApps.size < transferApps.length}
+        style={{
+          marginTop: '24px',
+          padding: '16px 32px',
+          background: completedApps.size >= transferApps.length
+            ? 'linear-gradient(to right, #3b82f6, #2563eb)'
+            : 'rgba(71, 85, 105, 0.5)',
+          color: completedApps.size >= transferApps.length ? 'white' : '#94a3b8',
+          fontWeight: 600,
+          borderRadius: '12px',
+          border: 'none',
+          cursor: completedApps.size >= transferApps.length ? 'pointer' : 'not-allowed',
+          lineHeight: 1.5,
+          transition: 'all 0.2s ease'
+        }}
+      >
+        {completedApps.size >= transferApps.length ? 'Continue to Test' : `Complete ${transferApps.length - completedApps.size} more apps`}
+      </button>
     </div>
   );
 
-  const renderTest = () => (
+  const handleConfirmAnswer = useCallback(() => {
+    if (testAnswers[currentQuestionIndex] === -1) return;
+    setQuestionConfirmed(true);
+    const correctIndex = testQuestions[currentQuestionIndex].options.findIndex(opt => opt.correct);
+    if (testAnswers[currentQuestionIndex] === correctIndex) {
+      playSound('correct');
+      onCorrectAnswer?.();
+    } else {
+      playSound('incorrect');
+      onIncorrectAnswer?.();
+    }
+  }, [currentQuestionIndex, testAnswers, playSound, onCorrectAnswer, onIncorrectAnswer]);
+
+  const handleNextQuestion = useCallback(() => {
+    if (currentQuestionIndex < testQuestions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setQuestionConfirmed(false);
+    } else {
+      setShowTestResults(true);
+    }
+  }, [currentQuestionIndex]);
+
+  const renderTest = () => {
+    const q = testQuestions[currentQuestionIndex];
+    const correctIndex = q.options.findIndex(opt => opt.correct);
+    const isCorrect = testAnswers[currentQuestionIndex] === correctIndex;
+
+    return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '24px' }}>Knowledge Test</h2>
+      <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'white', marginBottom: '8px', lineHeight: 1.4 }}>Knowledge Test</h2>
+
+      {/* Question counter */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <span style={{ fontSize: '16px', color: '#3b82f6', fontWeight: 600, lineHeight: 1.5 }}>Question {currentQuestionIndex + 1} of 10</span>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {testQuestions.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: i === currentQuestionIndex
+                  ? '#3b82f6'
+                  : testAnswers[i] !== -1
+                    ? '#22c55e'
+                    : '#475569'
+              }}
+            />
+          ))}
+        </div>
+      </div>
 
       {!showTestResults ? (
         <div style={{ width: '100%', maxWidth: '600px' }}>
-          {testQuestions.map((q, qIndex) => (
-            <div key={q.id} style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '20px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
-              <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
-                <p style={{ color: '#94a3b8', fontSize: '13px', fontStyle: 'italic' }}>{q.scenario}</p>
-              </div>
-              <p style={{ color: 'white', fontWeight: 500, marginBottom: '12px' }}>{qIndex + 1}. {q.question}</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {q.options.map((opt, oIndex) => (
+          <div style={{ background: 'rgba(30, 41, 59, 0.5)', borderRadius: '12px', padding: '20px', marginBottom: '16px', border: '1px solid rgba(71, 85, 105, 0.5)' }}>
+            <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+              <p style={{ color: '#cbd5e1', fontSize: '14px', fontStyle: 'italic', lineHeight: 1.6 }}>{q.scenario}</p>
+            </div>
+            <p style={{ color: 'white', fontWeight: 600, marginBottom: '16px', fontSize: '16px', lineHeight: 1.5 }}>{q.question}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {q.options.map((opt, oIndex) => {
+                const isSelected = testAnswers[currentQuestionIndex] === oIndex;
+                const showCorrect = questionConfirmed && opt.correct;
+                const showIncorrect = questionConfirmed && isSelected && !opt.correct;
+
+                return (
                   <button
                     key={opt.id}
-                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!questionConfirmed) handleTestAnswer(currentQuestionIndex, oIndex);
+                    }}
+                    disabled={questionConfirmed}
                     style={{
-                      padding: '12px',
+                      padding: '12px 16px',
                       borderRadius: '8px',
                       textAlign: 'left',
                       fontSize: '14px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: testAnswers[qIndex] === oIndex ? 'rgba(59, 130, 246, 0.3)' : 'rgba(51, 65, 85, 0.5)',
+                      lineHeight: 1.5,
+                      border: showCorrect ? '2px solid #22c55e' : showIncorrect ? '2px solid #ef4444' : isSelected ? '2px solid #3b82f6' : '2px solid transparent',
+                      cursor: questionConfirmed ? 'default' : 'pointer',
+                      background: showCorrect ? 'rgba(34, 197, 94, 0.2)' : showIncorrect ? 'rgba(239, 68, 68, 0.2)' : isSelected ? 'rgba(59, 130, 246, 0.3)' : 'rgba(51, 65, 85, 0.5)',
                       color: '#e2e8f0',
-                      transition: 'all 0.2s'
+                      transition: 'all 0.2s ease'
                     }}
                   >
-                    {opt.text}
+                    {String.fromCharCode(65 + oIndex)}) {opt.text}
+                    {showCorrect && ' ✓'}
+                    {showIncorrect && ' ✗'}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          ))}
 
-          <button
-            onPointerDown={(e) => {
-              e.preventDefault();
-              setShowTestResults(true);
-            }}
-            disabled={testAnswers.includes(-1)}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              fontSize: '16px',
-              border: 'none',
-              cursor: testAnswers.includes(-1) ? 'not-allowed' : 'pointer',
-              background: testAnswers.includes(-1) ? 'rgba(71, 85, 105, 0.5)' : 'linear-gradient(to right, #3b82f6, #2563eb)',
-              color: testAnswers.includes(-1) ? '#64748b' : 'white',
-              marginTop: '16px'
-            }}
-          >
-            Submit Answers
-          </button>
+            {/* Explanation shown after confirming */}
+            {questionConfirmed && (
+              <div style={{ marginTop: '16px', padding: '16px', borderRadius: '8px', background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: isCorrect ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)' }}>
+                <p style={{ color: isCorrect ? '#22c55e' : '#ef4444', fontWeight: 600, marginBottom: '8px', lineHeight: 1.5 }}>
+                  {isCorrect ? 'Correct!' : 'Incorrect'}
+                </p>
+                <p style={{ color: '#cbd5e1', fontSize: '14px', lineHeight: 1.6 }}>{q.explanation}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ marginTop: '24px', display: 'flex', gap: '12px' }}>
+            {!questionConfirmed ? (
+              <button
+                onClick={(e) => { e.preventDefault(); handleConfirmAnswer(); }}
+                disabled={testAnswers[currentQuestionIndex] === -1}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  lineHeight: 1.5,
+                  border: 'none',
+                  cursor: testAnswers[currentQuestionIndex] === -1 ? 'not-allowed' : 'pointer',
+                  background: testAnswers[currentQuestionIndex] === -1 ? 'rgba(71, 85, 105, 0.5)' : 'linear-gradient(to right, #3b82f6, #2563eb)',
+                  color: testAnswers[currentQuestionIndex] === -1 ? '#64748b' : 'white',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Check Answer
+              </button>
+            ) : (
+              <button
+                onClick={(e) => { e.preventDefault(); handleNextQuestion(); }}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  borderRadius: '12px',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  lineHeight: 1.5,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+                  color: 'white',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {currentQuestionIndex < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div style={{ width: '100%', maxWidth: '600px' }}>
@@ -1780,7 +2034,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             <h3 style={{ color: 'white', fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>
               Score: {calculateScore()}/10
             </h3>
-            <p style={{ color: '#94a3b8' }}>
+            <p style={{ color: '#cbd5e1' }}>
               {calculateScore() >= 7 ? 'Excellent! You understand cloud physics!' : 'Keep learning! Review and try again.'}
             </p>
 
@@ -1808,15 +2062,15 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           {/* Show explanations */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {testQuestions.map((q, i) => {
-              const correctIndex = q.options.findIndex(opt => opt.correct);
-              const isCorrect = testAnswers[i] === correctIndex;
+              const correctIdx = q.options.findIndex(opt => opt.correct);
+              const wasCorrect = testAnswers[i] === correctIdx;
               return (
-                <div key={q.id} style={{ padding: '16px', borderRadius: '12px', background: isCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: isCorrect ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)' }}>
-                  <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '8px' }}>{i + 1}. {q.question}</p>
-                  <p style={{ color: isCorrect ? '#22c55e' : '#ef4444', fontWeight: 500, fontSize: '14px' }}>
-                    {isCorrect ? 'Correct!' : `Incorrect. Correct: ${q.options[correctIndex].text}`}
+                <div key={q.id} style={{ padding: '16px', borderRadius: '12px', background: wasCorrect ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: wasCorrect ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)' }}>
+                  <p style={{ color: '#cbd5e1', fontSize: '13px', marginBottom: '8px', lineHeight: 1.5 }}>Question {i + 1}: {q.question}</p>
+                  <p style={{ color: wasCorrect ? '#22c55e' : '#ef4444', fontWeight: 500, fontSize: '14px', lineHeight: 1.5 }}>
+                    {wasCorrect ? '✓ Correct!' : `✗ Incorrect. Correct: ${q.options[correctIdx].text}`}
                   </p>
-                  <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '8px' }}>{q.explanation}</p>
+                  <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '8px', lineHeight: 1.5 }}>{q.explanation}</p>
                 </div>
               );
             })}
@@ -1825,35 +2079,36 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       )}
     </div>
   );
+  };
 
   const renderMastery = () => (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '500px', padding: '24px', textAlign: 'center' }}>
       <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1))', borderRadius: '24px', padding: '32px', maxWidth: '500px' }}>
         <div style={{ fontSize: '64px', marginBottom: '24px' }}>☁️</div>
         <h1 style={{ color: 'white', fontSize: '28px', fontWeight: 700, marginBottom: '16px' }}>Cloud Master!</h1>
-        <p style={{ color: '#94a3b8', fontSize: '16px', marginBottom: '24px' }}>
+        <p style={{ color: '#cbd5e1', fontSize: '16px', marginBottom: '24px' }}>
           You've mastered the physics of cloud formation and atmospheric science!
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>💧</div>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>Condensation</p>
+            <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Condensation</p>
             <p style={{ color: '#3b82f6', fontSize: '14px', fontWeight: 600 }}>Physics</p>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔘</div>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>Nucleation</p>
+            <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Nucleation</p>
             <p style={{ color: '#3b82f6', fontSize: '14px', fontWeight: 600 }}>Sites</p>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>🌡</div>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>Adiabatic</p>
+            <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Adiabatic</p>
             <p style={{ color: '#3b82f6', fontSize: '14px', fontWeight: 600 }}>Cooling</p>
           </div>
           <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '12px', padding: '16px' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>🌧</div>
-            <p style={{ color: '#94a3b8', fontSize: '12px' }}>Weather</p>
+            <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Weather</p>
             <p style={{ color: '#3b82f6', fontSize: '14px', fontWeight: 600 }}>Systems</p>
           </div>
         </div>
@@ -1884,46 +2139,116 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
     }
   };
 
+  const phaseLabels: Record<PhaseType, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Complete'
+  };
+
+  const currentIndex = PHASE_ORDER.indexOf(currentPhase);
+  const canGoBack = currentIndex > 0;
+  const canGoNext = currentIndex < PHASE_ORDER.length - 1 && currentPhase !== 'test';
+  const isTestPhase = currentPhase === 'test';
+
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0a0f1a', color: 'white', position: 'relative', overflow: 'hidden' }}>
       {/* Background */}
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)' }} />
       <div style={{ position: 'absolute', top: 0, left: '25%', width: '384px', height: '384px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
       <div style={{ position: 'absolute', bottom: 0, right: '25%', width: '384px', height: '384px', background: 'rgba(139, 92, 246, 0.05)', borderRadius: '50%', filter: 'blur(48px)' }} />
 
-      {/* Fixed header */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(71, 85, 105, 0.5)' }}>
+      {/* Fixed header with progress bar */}
+      <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(71, 85, 105, 0.5)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', maxWidth: '800px', margin: '0 auto' }}>
           <span style={{ fontSize: '14px', fontWeight: 500, color: '#3b82f6' }}>Cloud in a Bottle</span>
           <div style={{ display: 'flex', gap: '6px' }}>
-            {PHASE_ORDER.map((p, index) => {
-              const currentIndex = PHASE_ORDER.indexOf(currentPhase);
-              return (
-                <div
-                  key={p}
-                  style={{
-                    height: '8px',
-                    borderRadius: '4px',
-                    transition: 'all 0.3s',
-                    width: currentPhase === p ? '24px' : '8px',
-                    background: currentPhase === p
-                      ? 'linear-gradient(to right, #3b82f6, #2563eb)'
-                      : index < currentIndex
-                        ? '#22c55e'
-                        : '#475569'
-                  }}
-                />
-              );
-            })}
+            {PHASE_ORDER.map((p, index) => (
+              <button
+                key={p}
+                aria-label={phaseLabels[p]}
+                title={phaseLabels[p]}
+                onClick={() => setCurrentPhase(p)}
+                style={{
+                  height: '8px',
+                  borderRadius: '4px',
+                  transition: 'all 0.3s ease',
+                  width: currentPhase === p ? '24px' : '8px',
+                  background: currentPhase === p
+                    ? 'linear-gradient(to right, #3b82f6, #2563eb)'
+                    : index < currentIndex
+                      ? '#22c55e'
+                      : '#475569',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              />
+            ))}
           </div>
-          <span style={{ fontSize: '14px', color: '#94a3b8' }}>{currentPhase.replace('_', ' ')}</span>
+          <span style={{ fontSize: '14px', color: '#cbd5e1' }}>{phaseLabels[currentPhase]}</span>
         </div>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div style={{ position: 'relative', zIndex: 10, paddingTop: '64px', paddingBottom: '32px' }}>
+      {/* Scrollable content area */}
+      <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 10, paddingTop: '64px', paddingBottom: '100px' }}>
         {renderPhase()}
       </div>
+
+      {/* Fixed bottom navigation bar */}
+      <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100, background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(12px)', borderTop: '1px solid rgba(71, 85, 105, 0.5)', boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', maxWidth: '800px', margin: '0 auto' }}>
+          <button
+            onClick={goToPrevPhase}
+            disabled={!canGoBack}
+            style={{
+              padding: '12px 24px',
+              minHeight: '48px',
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '16px',
+              lineHeight: 1.5,
+              border: 'none',
+              cursor: canGoBack ? 'pointer' : 'not-allowed',
+              background: canGoBack ? 'rgba(71, 85, 105, 0.5)' : 'rgba(51, 65, 85, 0.3)',
+              color: canGoBack ? '#e2e8f0' : '#64748b',
+              opacity: canGoBack ? 1 : 0.4,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Back
+          </button>
+          <span style={{ fontSize: '14px', color: '#cbd5e1' }}>
+            {currentIndex + 1} of {PHASE_ORDER.length}
+          </span>
+          <button
+            onClick={goToNextPhase}
+            disabled={!canGoNext}
+            style={{
+              padding: '12px 24px',
+              minHeight: '48px',
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '16px',
+              lineHeight: 1.5,
+              border: 'none',
+              cursor: canGoNext ? 'pointer' : 'not-allowed',
+              background: canGoNext ? 'linear-gradient(to right, #3b82f6, #2563eb)' : 'rgba(51, 65, 85, 0.3)',
+              color: canGoNext ? 'white' : '#64748b',
+              opacity: isTestPhase ? 0.4 : (canGoNext ? 1 : 0.4),
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Next
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };

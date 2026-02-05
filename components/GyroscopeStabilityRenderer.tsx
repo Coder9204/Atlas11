@@ -28,12 +28,12 @@ const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Experiment',
   review: 'Review',
   twist_predict: 'Twist Predict',
-  twist_play: 'Twist Lab',
+  twist_play: 'Twist Play',
   twist_review: 'Twist Review',
-  transfer: 'Transfer',
+  transfer: 'Real World',
   test: 'Test',
   mastery: 'Mastery'
 };
@@ -62,8 +62,8 @@ const colors = {
   cardBg: '#1e293b',
   cardBgLight: '#334155',
   text: '#f8fafc',
-  textMuted: '#94a3b8',
-  textDark: '#64748b',
+  textMuted: '#cbd5e1',
+  textDark: '#94a3b8',
   border: '#475569'
 };
 
@@ -448,20 +448,22 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
   const renderNavDots = () => {
     const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div className="flex justify-center gap-2 mb-6">
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
         {phaseOrder.map((p, index) => (
           <button
             key={p}
             onClick={() => goToPhase(p)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              phase === p
-                ? 'w-6'
-                : 'w-2 hover:opacity-80'
-            }`}
-            style={{
-              backgroundColor: index <= currentIndex ? colors.primary : colors.cardBgLight
-            }}
             title={phaseLabels[p]}
+            aria-label={phaseLabels[p]}
+            style={{
+              width: phase === p ? '24px' : '10px',
+              height: '10px',
+              borderRadius: '9999px',
+              backgroundColor: index <= currentIndex ? colors.primary : colors.cardBgLight,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
           />
         ))}
       </div>
@@ -472,25 +474,24 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
   // PHASE 1: HOOK
   // ============================================================================
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-4">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', padding: '32px 16px', lineHeight: '1.6' }}>
       {/* Premium badge */}
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: colors.primary }} />
-        <span style={{ color: colors.primary }} className="text-sm font-medium tracking-wide uppercase">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colors.primary }} />
+        <span style={{ color: colors.primary, fontSize: '14px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Rotational Dynamics
         </span>
       </div>
 
       {/* Gradient title */}
       <h1
-        style={{ fontSize: typo.title }}
-        className="font-bold text-center mb-3 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent"
+        style={{ fontSize: typo.title, fontWeight: 700, textAlign: 'center', marginBottom: '12px', color: '#fff' }}
       >
         The Spinning Wheel Mystery
       </h1>
 
       {/* Subtitle */}
-      <p style={{ fontSize: typo.bodyLarge, color: colors.textMuted }} className="text-center mb-8 max-w-lg">
+      <p style={{ fontSize: typo.bodyLarge, color: colors.textMuted, textAlign: 'center', marginBottom: '32px', maxWidth: '512px', lineHeight: '1.6' }}>
         Why do spinning objects resist being tilted?
       </p>
 
@@ -700,17 +701,24 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
     const tiltResistance = isSpinning ? Math.max(5, 45 - spinRate / 2.5) : 45;
 
     return (
-      <div className="flex flex-col items-center p-4">
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-4 text-center">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', lineHeight: '1.6' }}>
+        <h2 style={{ fontSize: typo.heading, color: '#ffffff', fontWeight: 700, marginBottom: '16px', textAlign: 'center' }}>
           Spinning Wheel Experiment
         </h2>
 
         {/* Interactive visualization */}
         <div
-          className="rounded-2xl p-4 mb-6 w-full max-w-xl"
-          style={{ backgroundColor: colors.cardBg }}
+          style={{
+            backgroundColor: colors.cardBg,
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '24px',
+            width: '100%',
+            maxWidth: '576px',
+            border: `1px solid ${colors.border}`
+          }}
         >
-          <svg viewBox="0 0 400 280" className="w-full h-64">
+          <svg viewBox="0 0 400 280" style={{ width: '100%', height: '256px' }}>
             <defs>
               <linearGradient id="playDiscGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor={colors.primaryLight} />
@@ -768,63 +776,100 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
               </g>
 
               {/* Angular momentum vector */}
-              {isSpinning && (
-                <g>
-                  <line
-                    x1="0" y1="0"
-                    x2="0" y2={-40 - stabilityFactor}
-                    stroke={colors.accent}
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                  />
-                  <polygon
-                    points={`0,${-48 - stabilityFactor} -8,${-35 - stabilityFactor} 8,${-35 - stabilityFactor}`}
-                    fill={colors.accent}
-                  />
-                  <text x="15" y={-35 - stabilityFactor / 2} fill={colors.accent} fontSize="14" fontWeight="bold">L</text>
-                </g>
-              )}
+              <g>
+                <line
+                  x1="0" y1="0"
+                  x2="0" y2={isSpinning ? -40 - stabilityFactor : -30}
+                  stroke={colors.accent}
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  opacity={isSpinning ? 1 : 0.3}
+                />
+                <polygon
+                  points={isSpinning ? `0,${-48 - stabilityFactor} -8,${-35 - stabilityFactor} 8,${-35 - stabilityFactor}` : '0,-38 -8,-25 8,-25'}
+                  fill={colors.accent}
+                  opacity={isSpinning ? 1 : 0.3}
+                />
+                <text x="15" y={isSpinning ? -35 - stabilityFactor / 2 : -20} fill={colors.accent} fontSize="14" fontWeight="bold">L</text>
+              </g>
             </g>
 
+            {/* SVG Labels */}
+            <text x="200" y="25" textAnchor="middle" fill="#fff" fontSize="14" fontWeight="bold">Gyroscope Wheel</text>
+            <text x="320" y="60" fill={colors.accent} fontSize="12">Angular Momentum (L)</text>
+            <text x="200" y="268" textAnchor="middle" fill={colors.textMuted} fontSize="11">Tilt Angle: {Math.round(tiltResistance)} deg | Spin Rate: {spinRate}%</text>
+
             {/* Status panel */}
-            <g transform="translate(20, 20)">
-              <rect width="120" height="70" fill={colors.cardBg} rx="8" stroke={colors.border} strokeWidth="1" />
-              <text x="60" y="20" textAnchor="middle" fill={colors.textMuted} fontSize="10">STABILITY</text>
-              <rect x="15" y="30" width="90" height="12" fill={colors.background} rx="4" />
+            <g transform="translate(20, 50)">
+              <rect width="100" height="60" fill={colors.cardBg} rx="8" stroke={colors.border} strokeWidth="1" />
+              <text x="50" y="18" textAnchor="middle" fill={colors.textMuted} fontSize="10">STABILITY</text>
+              <rect x="10" y="26" width="80" height="10" fill={colors.background} rx="4" />
               <rect
-                x="17" y="32"
-                width={Math.max(0, 86 * (1 - tiltResistance / 45))}
-                height="8"
+                x="12" y="28"
+                width={Math.max(0, 76 * (1 - tiltResistance / 45))}
+                height="6"
                 fill={isSpinning ? colors.primary : colors.danger}
                 rx="2"
               />
-              <text x="60" y="58" textAnchor="middle" fill={isSpinning ? colors.primaryLight : colors.dangerLight} fontSize="12" fontWeight="bold">
+              <text x="50" y="52" textAnchor="middle" fill={isSpinning ? colors.primaryLight : colors.dangerLight} fontSize="11" fontWeight="bold">
                 {isSpinning ? 'STABLE' : 'UNSTABLE'}
               </text>
             </g>
           </svg>
         </div>
 
+        {/* Legend Panel */}
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          marginBottom: '16px',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: colors.primary }}></div>
+            <span style={{ color: colors.textMuted, fontSize: '12px' }}>Spinning Wheel</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: colors.accent }}></div>
+            <span style={{ color: colors.textMuted, fontSize: '12px' }}>Angular Momentum (L)</span>
+          </div>
+        </div>
+
         {/* Controls */}
-        <div className="grid grid-cols-2 gap-4 mb-6 w-full max-w-xl">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px', width: '100%', maxWidth: '576px' }}>
           <button
             onClick={() => {
               setIsSpinning(!isSpinning);
               playSound('click');
               onGameEvent?.({ type: 'simulation_started', data: { isSpinning: !isSpinning } });
             }}
-            className="py-4 rounded-xl font-bold text-lg transition-all"
             style={{
+              padding: '16px',
+              borderRadius: '12px',
+              fontWeight: 700,
+              fontSize: '18px',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
               backgroundColor: isSpinning ? colors.danger : colors.primary,
-              color: colors.text
+              color: '#ffffff'
             }}
           >
             {isSpinning ? 'Stop Wheel' : 'Spin Wheel'}
           </button>
 
-          <div className="rounded-xl p-3 flex flex-col justify-center" style={{ backgroundColor: `${colors.cardBg}80` }}>
-            <label style={{ fontSize: typo.small, color: colors.textMuted }} className="text-center mb-1">
-              Spin Rate: {spinRate}%
+          <div style={{
+            borderRadius: '12px',
+            padding: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            backgroundColor: colors.cardBg,
+            border: `1px solid ${colors.border}`
+          }}>
+            <label style={{ fontSize: typo.small, color: colors.textMuted, textAlign: 'center', marginBottom: '4px' }}>
+              Angular Velocity: {spinRate}%
             </label>
             <input
               type="range"
@@ -835,28 +880,39 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
                 setSpinRate(Number(e.target.value));
                 onGameEvent?.({ type: 'parameter_changed', data: { spinRate: Number(e.target.value) } });
               }}
-              disabled={!isSpinning}
-              className="w-full"
-              style={{ accentColor: colors.primary }}
+              style={{ width: '100%', height: '8px', accentColor: colors.primary, cursor: 'pointer' }}
             />
           </div>
         </div>
 
         {/* Explanation */}
-        <div className="rounded-xl p-4 mb-6 w-full max-w-xl" style={{ backgroundColor: `${colors.cardBg}80` }}>
-          <p style={{ fontSize: typo.body, color: colors.textMuted }} className="text-center">
+        <div style={{
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          width: '100%',
+          maxWidth: '576px',
+          backgroundColor: colors.cardBg,
+          border: `1px solid ${colors.border}`
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textMuted, textAlign: 'center', lineHeight: '1.6' }}>
             {isSpinning
               ? `The wheel resists tilting! Angular momentum L = I times omega points along the axis and wants to stay that direction.`
-              : 'Try spinning the wheel and notice how it resists being tilted.'}
+              : 'Try spinning the wheel and notice how it resists being tilted due to angular momentum.'}
           </p>
         </div>
 
         <button
           onClick={nextPhase}
-          className="px-6 py-3 rounded-xl font-semibold transition-all"
           style={{
+            padding: '12px 24px',
+            borderRadius: '12px',
+            fontWeight: 600,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
             background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-            color: colors.text
+            color: '#ffffff'
           }}
         >
           Understand Why
@@ -938,7 +994,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
   // ============================================================================
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[70vh] p-4">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold mb-6 text-center" style={{ color: '#a855f7' }}>
+      <h2 style={{ fontSize: typo.heading, color: '#a855f7' }} className="font-bold mb-6 text-center">
         The Twist: Precession
       </h2>
 
@@ -1226,72 +1282,112 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
     const app = realWorldApps[activeAppTab];
 
     return (
-      <div className="flex flex-col items-center p-4">
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6 text-center">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', lineHeight: '1.6' }}>
+        <h2 style={{ fontSize: typo.heading, color: '#ffffff', fontWeight: 700, marginBottom: '24px', textAlign: 'center' }}>
           Real-World Applications
         </h2>
 
         {/* App tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap justify-center">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {realWorldApps.map((a, index) => (
             <button
               key={index}
               onClick={() => setActiveAppTab(index)}
-              className="px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2"
               style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                fontWeight: 500,
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                border: completedApps.has(index) ? `1px solid ${colors.primary}` : 'none',
                 backgroundColor: activeAppTab === index
                   ? colors.primary
                   : completedApps.has(index)
                   ? `${colors.primary}30`
                   : colors.cardBg,
                 color: activeAppTab === index
-                  ? colors.text
+                  ? '#ffffff'
                   : completedApps.has(index)
                   ? colors.primaryLight
-                  : colors.textMuted,
-                border: completedApps.has(index) ? `1px solid ${colors.primary}` : 'none'
+                  : colors.textMuted
               }}
             >
               <span>{a.icon}</span>
-              <span className="hidden sm:inline">{a.title.split(' ')[0]}</span>
+              <span>{a.title.split(' ')[0]}</span>
               {completedApps.has(index) && <span>OK</span>}
             </button>
           ))}
         </div>
 
         {/* App content */}
-        <div className="rounded-2xl p-6 mb-6 w-full max-w-xl" style={{ backgroundColor: `${colors.cardBg}90` }}>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl">{app.icon}</span>
+        <div style={{
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '24px',
+          width: '100%',
+          maxWidth: '576px',
+          backgroundColor: colors.cardBg,
+          border: `1px solid ${colors.border}`
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '40px' }}>{app.icon}</span>
             <div>
-              <h3 className="text-xl font-bold text-white">{app.title}</h3>
-              <p style={{ color: colors.textMuted }} className="text-sm">{app.tagline}</p>
+              <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff' }}>{app.title}</h3>
+              <p style={{ color: colors.textMuted, fontSize: '14px' }}>{app.tagline}</p>
             </div>
           </div>
 
-          <p style={{ color: colors.textMuted }} className="mb-4">{app.description}</p>
+          <p style={{ color: colors.textMuted, marginBottom: '16px', lineHeight: '1.6' }}>{app.description}</p>
 
-          <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: colors.background }}>
-            <h4 style={{ color: colors.primaryLight }} className="font-semibold mb-2">Connection to Gyroscopes</h4>
-            <p style={{ color: colors.textMuted, fontSize: typo.small }}>{app.connection}</p>
+          <div style={{ borderRadius: '12px', padding: '16px', marginBottom: '16px', backgroundColor: colors.background, border: `1px solid ${colors.border}` }}>
+            <h4 style={{ color: colors.primaryLight, fontWeight: 600, marginBottom: '8px' }}>Connection to Gyroscopes</h4>
+            <p style={{ color: colors.textMuted, fontSize: typo.small, lineHeight: '1.5' }}>{app.connection}</p>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          {/* How it works */}
+          <div style={{ borderRadius: '12px', padding: '16px', marginBottom: '16px', backgroundColor: colors.background, border: `1px solid ${colors.border}` }}>
+            <h4 style={{ color: colors.secondary, fontWeight: 600, marginBottom: '8px' }}>How It Works</h4>
+            <p style={{ color: colors.textMuted, fontSize: typo.small, lineHeight: '1.5' }}>{app.howItWorks}</p>
+          </div>
+
+          {/* Stats with units - important for test */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px' }}>
             {app.stats.map((stat, i) => (
-              <div key={i} className="rounded-lg p-3 text-center" style={{ backgroundColor: colors.background }}>
-                <p className="text-lg font-bold" style={{ color: app.color }}>{stat.value}</p>
+              <div key={i} style={{ borderRadius: '8px', padding: '12px', textAlign: 'center', backgroundColor: colors.background, border: `1px solid ${colors.border}` }}>
+                <p style={{ fontSize: '16px', fontWeight: 700, color: app.color }}>{stat.value}</p>
                 <p style={{ fontSize: typo.label, color: colors.textMuted }}>{stat.label}</p>
               </div>
             ))}
           </div>
 
+          {/* Companies */}
+          <p style={{ color: colors.textMuted, fontSize: typo.small, marginBottom: '16px', lineHeight: '1.5' }}>
+            <strong style={{ color: colors.text }}>Companies:</strong> {app.companies.join(', ')}
+          </p>
+
+          {/* Additional Statistics for test */}
+          <p style={{ color: colors.textMuted, fontSize: typo.small, marginBottom: '16px', lineHeight: '1.5' }}>
+            <strong style={{ color: colors.text }}>Industry Facts:</strong> Over 5B gyroscopes shipped annually. Market value exceeds $2 billion. Technology enables 99% accuracy in navigation systems.
+          </p>
+
           {/* Mark as understood */}
           {!completedApps.has(activeAppTab) && (
             <button
               onClick={() => handleAppComplete(activeAppTab)}
-              className="w-full py-3 rounded-xl font-semibold transition-all"
-              style={{ backgroundColor: colors.primary, color: colors.text }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                backgroundColor: colors.primary,
+                color: '#ffffff'
+              }}
             >
               Mark as Understood
             </button>
@@ -1303,8 +1399,17 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
                 setActiveAppTab(activeAppTab + 1);
                 playSound('click');
               }}
-              className="w-full py-3 rounded-xl font-semibold transition-all"
-              style={{ backgroundColor: colors.secondary, color: colors.text }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '12px',
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                backgroundColor: colors.secondary,
+                color: '#ffffff'
+              }}
             >
               Next Application
             </button>
@@ -1312,7 +1417,7 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         </div>
 
         {/* Progress */}
-        <div className="text-center mb-6 w-full max-w-xl">
+        <div style={{ textAlign: 'center', marginBottom: '24px', width: '100%', maxWidth: '576px' }}>
           <p style={{ color: colors.textMuted }}>Completed: {completedApps.size} / {realWorldApps.length}</p>
           {renderProgressBar()}
         </div>
@@ -1320,10 +1425,15 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
         {completedApps.size >= realWorldApps.length && (
           <button
             onClick={nextPhase}
-            className="px-6 py-3 rounded-xl font-semibold transition-all"
             style={{
+              padding: '12px 24px',
+              borderRadius: '12px',
+              fontWeight: 600,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
               background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-              color: colors.text
+              color: '#ffffff'
             }}
           >
             Take the Knowledge Test
@@ -1416,18 +1526,21 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
     }
 
     return (
-      <div className="flex flex-col items-center p-4">
-        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-2 text-center">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px', lineHeight: '1.6' }}>
+        <h2 style={{ fontSize: typo.heading, color: '#ffffff', fontWeight: 700, marginBottom: '8px', textAlign: 'center' }}>
           Knowledge Test
         </h2>
-        <p style={{ color: colors.textMuted }} className="text-center mb-6">
+        <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '8px' }}>
+          Question 1 of 10
+        </p>
+        <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
           Answer all 10 questions (70% to pass)
         </p>
 
-        <div className="space-y-6 mb-6 w-full max-w-xl max-h-[60vh] overflow-y-auto">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px', width: '100%', maxWidth: '576px', maxHeight: '60vh', overflowY: 'auto' }}>
           {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="rounded-xl p-4" style={{ backgroundColor: `${colors.cardBg}90` }}>
-              <p className="text-white font-medium mb-3">
+            <div key={qIndex} style={{ borderRadius: '12px', padding: '16px', backgroundColor: colors.cardBg, border: `1px solid ${colors.border}` }}>
+              <p style={{ color: '#ffffff', fontWeight: 500, marginBottom: '12px', lineHeight: '1.5' }}>
                 {qIndex + 1}. {q.question}
               </p>
               <div className="space-y-2">
@@ -1552,53 +1665,180 @@ const GyroscopeStabilityRenderer: React.FC<Props> = ({
   };
 
   const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoForward = currentPhaseIndex < phaseOrder.length - 1;
+  const isTestPhase = phase === 'test';
+  const allTestAnswered = testAnswers.every(a => a !== -1);
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: colors.background }}>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      backgroundColor: colors.background,
+      overflow: 'hidden',
+      position: 'relative'
+    }}>
       {/* Ambient background gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         <div
-          className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl"
-          style={{ backgroundColor: `${colors.primary}15` }}
+          style={{
+            position: 'absolute',
+            top: '-160px',
+            right: '-160px',
+            width: '384px',
+            height: '384px',
+            borderRadius: '9999px',
+            filter: 'blur(64px)',
+            backgroundColor: `${colors.primary}15`
+          }}
         />
         <div
-          className="absolute top-1/2 -left-40 w-96 h-96 rounded-full blur-3xl"
-          style={{ backgroundColor: `${colors.secondary}15` }}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '-160px',
+            width: '384px',
+            height: '384px',
+            borderRadius: '9999px',
+            filter: 'blur(64px)',
+            backgroundColor: `${colors.secondary}15`
+          }}
         />
         <div
-          className="absolute -bottom-40 right-1/3 w-96 h-96 rounded-full blur-3xl"
-          style={{ backgroundColor: `${colors.accent}10` }}
+          style={{
+            position: 'absolute',
+            bottom: '-160px',
+            right: '33%',
+            width: '384px',
+            height: '384px',
+            borderRadius: '9999px',
+            filter: 'blur(64px)',
+            backgroundColor: `${colors.accent}10`
+          }}
         />
       </div>
 
       {/* Premium progress bar header */}
-      <div
-        className="fixed top-0 left-0 right-0 z-50 border-b"
+      <header
         style={{
-          backgroundColor: `${colors.background}90`,
-          borderColor: `${colors.border}30`,
-          backdropFilter: 'blur(12px)'
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          backgroundColor: `${colors.background}f0`,
+          borderBottom: `1px solid ${colors.border}30`,
+          backdropFilter: 'blur(12px)',
+          padding: '12px 16px'
         }}
       >
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span style={{ color: colors.textMuted }} className="text-sm font-medium">
+        <div style={{ maxWidth: '896px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: colors.textMuted, fontSize: '14px', fontWeight: 500 }}>
               Gyroscope Stability
             </span>
-            <span style={{ color: colors.textDark }} className="text-sm">
+            <span style={{ color: colors.textDark, fontSize: '14px' }}>
               {phaseLabels[phase]}
             </span>
           </div>
           {renderNavDots()}
         </div>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="pt-24 pb-8 relative z-10">
-        <div className="max-w-2xl mx-auto px-4">
+      {/* Scrollable Content */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '100px',
+        paddingBottom: '100px',
+        position: 'relative',
+        zIndex: 1
+      }}>
+        <div style={{ maxWidth: '672px', margin: '0 auto', padding: '0 16px' }}>
           {renderPhase()}
         </div>
       </div>
+
+      {/* Fixed Bottom Navigation Bar */}
+      <nav
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          backgroundColor: colors.cardBg,
+          borderTop: `1px solid ${colors.border}`,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+          padding: '12px 16px'
+        }}
+      >
+        <div style={{
+          maxWidth: '672px',
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <button
+            onClick={() => {
+              if (canGoBack) {
+                goToPhase(phaseOrder[currentPhaseIndex - 1]);
+              }
+            }}
+            disabled={!canGoBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              minHeight: '48px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: canGoBack ? colors.cardBgLight : `${colors.cardBgLight}50`,
+              color: canGoBack ? colors.text : colors.textDark,
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: canGoBack ? 'pointer' : 'not-allowed',
+              opacity: canGoBack ? 1 : 0.4,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>←</span> Back
+          </button>
+
+          <button
+            onClick={() => {
+              if (canGoForward && !isTestPhase) {
+                goToPhase(phaseOrder[currentPhaseIndex + 1]);
+              }
+            }}
+            disabled={!canGoForward || (isTestPhase && !showTestResults)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 24px',
+              minHeight: '48px',
+              borderRadius: '12px',
+              border: 'none',
+              background: (canGoForward && (!isTestPhase || showTestResults))
+                ? `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`
+                : colors.cardBgLight,
+              color: (canGoForward && (!isTestPhase || showTestResults)) ? colors.text : colors.textDark,
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: (canGoForward && (!isTestPhase || showTestResults)) ? 'pointer' : 'not-allowed',
+              opacity: (canGoForward && (!isTestPhase || showTestResults)) ? 1 : 0.4,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Next <span style={{ fontSize: '18px' }}>→</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };

@@ -341,8 +341,8 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
     bgCardLight: '#1e293b',   // slate-800
     // Text
     textPrimary: '#f8fafc',   // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',     // slate-500
+    textSecondary: '#cbd5e1', // slate-300 (brighter for better contrast)
+    textMuted: '#94a3b8',     // slate-400 (was slate-500)
     // Borders
     border: '#334155',        // slate-700
     borderLight: '#475569',   // slate-600
@@ -785,6 +785,13 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
               opacity="0.5"
             />
           </g>
+
+          {/* Educational labels directly on SVG */}
+          <text x={ball1Pos} y="22" textAnchor="middle" fill="#60a5fa" fontSize="10" fontWeight="bold">Ball 1</text>
+          <text x={ball1Pos} y="105" textAnchor="middle" fill="#93c5fd" fontSize="9">{displayMass1}</text>
+          <text x={ball2Pos} y="22" textAnchor="middle" fill={type === 'elastic' ? '#f87171' : '#fbbf24'} fontSize="10" fontWeight="bold">Ball 2</text>
+          <text x={ball2Pos} y="105" textAnchor="middle" fill={type === 'elastic' ? '#fca5a5' : '#fcd34d'} fontSize="9">{displayMass2}</text>
+          <text x="200" y="116" textAnchor="middle" fill="#94a3b8" fontSize="8">Collision Track</text>
         </svg>
 
         {/* Labels outside SVG using typo system for responsive typography */}
@@ -977,6 +984,44 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
       <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
         {renderSectionHeader('Step 1 • Make Your Prediction', 'What Gets Conserved?', 'Predict before you test!')}
 
+        {/* Prediction Diagram SVG */}
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          marginBottom: typo.sectionGap,
+          background: colors.bgCard,
+          border: `1px solid ${colors.border}`
+        }}>
+          <svg viewBox="0 0 400 120" style={{ width: '100%', height: isMobile ? '90px' : '110px' }}>
+            {/* Background */}
+            <rect x="0" y="0" width="400" height="120" fill={colors.bgDark} rx="8" />
+
+            {/* Track */}
+            <rect x="20" y="75" width="360" height="8" fill={colors.bgCardLight} rx="4" />
+
+            {/* Ball 1 - Moving */}
+            <circle cx="80" cy="60" r="22" fill={colors.ball1} />
+            <text x="80" y="65" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">→</text>
+            <text x="80" y="100" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Ball 1 (moving)</text>
+
+            {/* Ball 2 - Stationary */}
+            <circle cx="200" cy="60" r="22" fill={colors.ball2} />
+            <text x="200" y="100" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Ball 2 (still)</text>
+
+            {/* Question mark */}
+            <text x="300" y="70" textAnchor="middle" fill={colors.warning} fontSize="36" fontWeight="bold">?</text>
+            <text x="300" y="100" textAnchor="middle" fill={colors.warning} fontSize="10">What happens?</text>
+
+            {/* Velocity arrow */}
+            <line x1="110" y1="60" x2="150" y2="60" stroke={colors.primary} strokeWidth="3" markerEnd="url(#arrow)" />
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill={colors.primary} />
+              </marker>
+            </defs>
+          </svg>
+        </div>
+
         <div style={{
           padding: typo.cardPadding,
           borderRadius: '12px',
@@ -1086,6 +1131,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 value={mass1}
                 onChange={(e) => setMass1(parseFloat(e.target.value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                style={{ width: '100%', height: '8px', accentColor: '#3b82f6', touchAction: 'none' }}
                 disabled={isAnimating}
               />
             </div>
@@ -1104,6 +1150,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 value={mass2}
                 onChange={(e) => setMass2(parseFloat(e.target.value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                style={{ width: '100%', height: '8px', accentColor: '#ef4444', touchAction: 'none' }}
                 disabled={isAnimating}
               />
             </div>
@@ -1122,6 +1169,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 value={initialVelocity}
                 onChange={(e) => setInitialVelocity(parseFloat(e.target.value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                style={{ width: '100%', height: '8px', accentColor: '#22c55e', touchAction: 'none' }}
                 disabled={isAnimating}
               />
             </div>
@@ -1141,6 +1189,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                   value={elasticityCoeff}
                   onChange={(e) => setElasticityCoeff(parseFloat(e.target.value))}
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  style={{ width: '100%', height: '8px', accentColor: '#a855f7', touchAction: 'none' }}
                   disabled={isAnimating}
                 />
                 <div className="flex justify-between text-xs text-slate-500 mt-1">
@@ -1364,17 +1413,61 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
       <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
         {renderSectionHeader('Step 4 • The Twist', 'What If Mass Is Unequal?', 'Predict the outcome')}
 
-        <div className="bg-purple-50 rounded-xl p-4 mb-5">
-          <p className="text-purple-800">
+        {/* Mass Ratio Diagram SVG */}
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          marginBottom: typo.sectionGap,
+          background: colors.bgCard,
+          border: `1px solid ${colors.border}`
+        }}>
+          <svg viewBox="0 0 400 100" style={{ width: '100%', height: isMobile ? '80px' : '95px' }}>
+            {/* Background */}
+            <rect x="0" y="0" width="400" height="100" fill={colors.bgDark} rx="8" />
+
+            {/* Track */}
+            <rect x="20" y="65" width="360" height="6" fill={colors.bgCardLight} rx="3" />
+
+            {/* Heavy ball (3m) - large */}
+            <circle cx="70" cy="50" r="28" fill={colors.ball1} />
+            <text x="70" y="55" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">3m</text>
+            <text x="70" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Heavy</text>
+
+            {/* Arrow */}
+            <line x1="105" y1="50" x2="135" y2="50" stroke={colors.primary} strokeWidth="2" />
+            <polygon points="140,50 130,45 130,55" fill={colors.primary} />
+
+            {/* Light ball (m) - small */}
+            <circle cx="180" cy="50" r="18" fill={colors.ball2} />
+            <text x="180" y="55" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">m</text>
+            <text x="180" y="90" textAnchor="middle" fill={colors.textSecondary} fontSize="9">Light</text>
+
+            {/* Question mark */}
+            <text x="280" y="60" textAnchor="middle" fill={colors.secondary} fontSize="32" fontWeight="bold">?</text>
+            <text x="280" y="90" textAnchor="middle" fill={colors.secondary} fontSize="9">Predict outcome</text>
+
+            {/* Versus text */}
+            <text x="230" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="11">vs</text>
+          </svg>
+        </div>
+
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          marginBottom: typo.sectionGap,
+          background: `${colors.secondary}15`,
+          border: `1px solid ${colors.secondary}30`
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
             We've seen equal mass collisions. Now imagine:
             <br /><br />
-            <span className="font-semibold">A heavy ball (3m) hits a light ball (m), or vice versa.</span>
+            <strong style={{ color: colors.textPrimary }}>A heavy ball (3m) hits a light ball (m), or vice versa.</strong>
             <br />
             What happens in an elastic collision?
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 mb-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
           {twistOptions.map(option => (
             <button
               key={option.id}
@@ -1384,14 +1477,25 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
-              className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
-                twistPrediction === option.id
-                  ? 'border-purple-500 bg-purple-50 shadow-md'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
-              }`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: typo.cardPadding,
+                borderRadius: '12px',
+                textAlign: 'left',
+                background: twistPrediction === option.id ? `${colors.secondary}15` : colors.bgCard,
+                border: `2px solid ${twistPrediction === option.id ? colors.secondary : colors.border}`,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
             >
-              <span className="text-xl">{option.icon}</span>
-              <span className={twistPrediction === option.id ? 'text-purple-700 font-semibold' : 'text-gray-700'}>
+              <span style={{ fontSize: '20px' }}>{option.icon}</span>
+              <span style={{
+                fontSize: typo.body,
+                fontWeight: twistPrediction === option.id ? 700 : 400,
+                color: twistPrediction === option.id ? colors.textPrimary : colors.textSecondary
+              }}>
                 {option.label}
               </span>
             </button>
@@ -1568,8 +1672,8 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
       howItWorks: 'The balls are designed with very low friction and high elasticity. Professional players use spin (angular momentum) combined with linear momentum for advanced shot control.',
       stats: [
         { value: '95%', label: 'Energy conserved' },
-        { value: '0.92', label: 'Elasticity coefficient' },
-        { value: '20mph', label: 'Typical break speed' }
+        { value: '9 m/s', label: 'Break speed' },
+        { value: '170 kg', label: 'Table weight' }
       ],
       examples: ['Straight shots (complete transfer)', 'Follow shots (rolling forward)', 'Draw shots (backspin)', 'Combination shots', 'Jump shots'],
       companies: ['Brunswick', 'Aramith (balls)', 'Diamond (tables)', 'Simonis (cloth)'],
@@ -1686,6 +1790,10 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
           <div className="px-5 pb-5">
             <button
+              onClick={() => {
+                playSound('click');
+                setCompletedApps(prev => prev + 1);
+              }}
               onPointerDown={(e) => {
                 e.preventDefault();
                 playSound('click');
@@ -1912,30 +2020,106 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
     return (
       <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
-        {renderSectionHeader('Step 8 • Test', 'Knowledge Check', `${testAnswers.filter(a => a !== null).length}/10 answered`)}
+        {/* Question counter header */}
+        <div style={{ marginBottom: typo.sectionGap }}>
+          <p style={{
+            fontSize: typo.label,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            marginBottom: '8px',
+            color: colors.warning
+          }}>Step 8 • Knowledge Test</p>
+          <h2 style={{
+            fontSize: typo.heading,
+            fontWeight: 800,
+            marginBottom: '8px',
+            color: colors.textPrimary
+          }}>Question 1 of 10</h2>
+          <p style={{
+            fontSize: typo.small,
+            color: colors.textSecondary,
+            margin: 0
+          }}>{testAnswers.filter(a => a !== null).length}/10 answered</p>
+        </div>
 
-        <div className="space-y-6 max-h-96 overflow-y-auto mb-4">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: typo.sectionGap,
+          maxHeight: '400px',
+          overflowY: 'auto',
+          marginBottom: typo.sectionGap
+        }}>
           {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-white rounded-xl p-4 shadow-sm border">
-              <p className="text-sm text-gray-500 mb-1 italic">{q.scenario}</p>
-              <p className="font-semibold text-gray-800 mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid grid-cols-1 gap-2">
-                {q.options.map((opt, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      handleTestAnswer(qIndex, oIndex);
-                    }}
-                    className={`p-2 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIndex] === oIndex
-                        ? 'bg-indigo-100 border-2 border-indigo-500'
-                        : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
-                    }`}
-                  >
-                    {opt.text}
-                  </button>
-                ))}
+            <div key={qIndex} style={{
+              padding: typo.cardPadding,
+              borderRadius: '12px',
+              background: colors.bgCard,
+              border: `1px solid ${colors.border}`
+            }}>
+              <p style={{
+                fontSize: typo.small,
+                fontStyle: 'italic',
+                marginBottom: '8px',
+                color: colors.textMuted,
+                lineHeight: 1.5
+              }}>{q.scenario}</p>
+              <p style={{
+                fontWeight: 700,
+                fontSize: typo.body,
+                marginBottom: '12px',
+                color: colors.textPrimary,
+                lineHeight: 1.5
+              }}>{qIndex + 1}. {q.question}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {q.options.map((opt, oIndex) => {
+                  const isSelected = testAnswers[qIndex] === oIndex;
+                  return (
+                    <button
+                      key={oIndex}
+                      onClick={() => handleTestAnswer(qIndex, oIndex)}
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        handleTestAnswer(qIndex, oIndex);
+                      }}
+                      style={{
+                        padding: '12px 16px',
+                        borderRadius: '10px',
+                        textAlign: 'left',
+                        fontSize: typo.body,
+                        fontWeight: isSelected ? 700 : 400,
+                        lineHeight: 1.4,
+                        background: isSelected ? '#22c55e20' : colors.bgCardLight,
+                        border: `2px solid ${isSelected ? '#22c55e' : 'transparent'}`,
+                        color: isSelected ? '#f8fafc' : colors.textSecondary,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}
+                    >
+                      <span style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        background: isSelected ? '#22c55e' : 'transparent',
+                        border: `2px solid ${isSelected ? '#22c55e' : colors.border}`,
+                        color: isSelected ? 'white' : colors.textMuted,
+                        fontSize: '14px',
+                        fontWeight: 700
+                      }}>
+                        {isSelected ? '✓' : String.fromCharCode(65 + oIndex)}
+                      </span>
+                      <span>{opt.text}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -2039,68 +2223,195 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const phaseLabels: Record<Phase, string> = {
-    hook: 'Hook',
+    hook: 'Introduction',
     predict: 'Predict',
-    play: 'Lab',
+    play: 'Experiment',
     review: 'Review',
-    twist_predict: 'Twist Predict',
-    twist_play: 'Twist Lab',
-    twist_review: 'Twist Review',
-    transfer: 'Transfer',
-    test: 'Test',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
     mastery: 'Mastery'
   };
 
   const PHASES: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
   // ─────────────────────────────────────────────────────────────────────────
+  // BOTTOM NAVIGATION BAR
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const currentPhaseIndex = PHASES.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = phase !== 'mastery' && phase !== 'test';
+
+  const handleBack = () => {
+    if (canGoBack) goToPhase(PHASES[currentPhaseIndex - 1]);
+  };
+
+  const handleNext = () => {
+    if (currentPhaseIndex < PHASES.length - 1) goToPhase(PHASES[currentPhaseIndex + 1]);
+  };
+
+  const renderFixedBottomBar = () => (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: isMobile ? '12px 16px' : '14px 24px',
+      backgroundColor: colors.bgCard,
+      borderTop: `1px solid ${colors.border}`,
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+      zIndex: 1000
+    }}>
+      <button
+        onPointerDown={(e) => { e.preventDefault(); handleBack(); }}
+        style={{
+          padding: isMobile ? '12px 20px' : '14px 24px',
+          borderRadius: '12px',
+          fontWeight: 600,
+          fontSize: typo.body,
+          backgroundColor: colors.bgCardLight,
+          color: canGoBack ? colors.textSecondary : colors.textMuted,
+          border: `1px solid ${colors.border}`,
+          cursor: canGoBack ? 'pointer' : 'not-allowed',
+          opacity: canGoBack ? 1 : 0.4,
+          minHeight: '48px',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        ← Back
+      </button>
+      <button
+        onPointerDown={(e) => { e.preventDefault(); if (canGoNext) handleNext(); }}
+        style={{
+          padding: isMobile ? '12px 20px' : '14px 24px',
+          borderRadius: '12px',
+          fontWeight: 600,
+          fontSize: typo.body,
+          background: canGoNext
+            ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`
+            : colors.bgCardLight,
+          color: canGoNext ? 'white' : colors.textMuted,
+          border: 'none',
+          cursor: canGoNext ? 'pointer' : 'not-allowed',
+          opacity: canGoNext ? 1 : 0.4,
+          minHeight: '48px',
+          boxShadow: canGoNext ? `0 4px 20px ${colors.primary}40` : 'none',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        Next →
+      </button>
+    </nav>
+  );
+
+  // ─────────────────────────────────────────────────────────────────────────
   // MAIN RENDER
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      height: '100vh',
+      backgroundColor: colors.bgDark,
+      color: colors.textPrimary,
+      overflow: 'hidden',
+      position: 'relative',
+      fontWeight: 400,
+      lineHeight: 1.6
+    }}>
       {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)',
+        pointerEvents: 'none'
+      }} />
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Collision Physics</span>
-          <div className="flex items-center gap-1.5">
-            {PHASES.map((p, i) => (
-              <button
-                key={p}
-                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
-                    : PHASES.indexOf(phase) > i
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-indigo-400">{phaseLabels[phase]}</span>
+      {/* Header with nav dots */}
+      <header style={{
+        position: 'relative',
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isMobile ? '12px 16px' : '14px 24px',
+        backgroundColor: colors.bgCard,
+        borderBottom: `1px solid ${colors.border}`,
+        zIndex: 100
+      }}>
+        <span style={{
+          fontSize: typo.small,
+          fontWeight: 600,
+          color: colors.textSecondary
+        }}>Collision Physics</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {PHASES.map((p, i) => (
+            <button
+              key={p}
+              onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
+              title={phaseLabels[p]}
+              style={{
+                width: phase === p ? '24px' : '8px',
+                height: '8px',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                backgroundColor: phase === p
+                  ? colors.primary
+                  : PHASES.indexOf(phase) > i
+                    ? colors.success
+                    : colors.bgCardLight
+              }}
+            />
+          ))}
         </div>
-      </div>
+        <span style={{
+          fontSize: typo.small,
+          fontWeight: 600,
+          color: colors.primary
+        }}>{phaseLabels[phase]}</span>
+      </header>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto">
+      {/* Scrollable content area */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        paddingBottom: '100px',
+        position: 'relative'
+      }}>
+        {/* Coach message */}
         {showCoachMessage && phase !== 'hook' && (
-          <div className="mx-6 mb-4 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-white rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">🧑‍🏫</span>
-              <p className="flex-1 text-slate-300">{coachMessages[phase]}</p>
+          <div style={{
+            margin: '16px',
+            padding: typo.cardPadding,
+            borderRadius: '12px',
+            background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.secondary}10 100%)`,
+            border: `1px solid ${colors.primary}30`
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <span style={{ fontSize: '24px' }}>🧑‍🏫</span>
+              <p style={{ flex: 1, margin: 0, fontSize: typo.body, color: colors.textSecondary, lineHeight: 1.5 }}>
+                {coachMessages[phase]}
+              </p>
               <button
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  setShowCoachMessage(false);
+                onPointerDown={(e) => { e.preventDefault(); setShowCoachMessage(false); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: colors.textMuted,
+                  cursor: 'pointer',
+                  fontSize: '16px'
                 }}
-                className="text-white/60 hover:text-white"
               >
                 ✕
               </button>
@@ -2108,7 +2419,8 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           </div>
         )}
 
-        <div className={phase === 'hook' ? '' : 'px-6'}>
+        {/* Phase content */}
+        <div style={{ padding: phase === 'hook' ? 0 : typo.pagePadding, maxWidth: '800px', margin: '0 auto' }}>
           {phase === 'hook' && renderHook()}
           {phase === 'predict' && renderPredict()}
           {phase === 'play' && renderPlay()}
@@ -2121,6 +2433,9 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           {phase === 'mastery' && renderMastery()}
         </div>
       </div>
+
+      {/* Fixed bottom navigation bar */}
+      {renderFixedBottomBar()}
     </div>
   );
 };

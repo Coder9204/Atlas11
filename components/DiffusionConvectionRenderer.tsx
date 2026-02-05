@@ -61,9 +61,9 @@ const premiumDesign = {
       card: 'rgba(255, 255, 255, 0.03)',
     },
     text: {
-      primary: '#fafaf9',
-      secondary: 'rgba(255, 255, 255, 0.7)',
-      muted: 'rgba(255, 255, 255, 0.4)',
+      primary: '#f8fafc',
+      secondary: '#e2e8f0',
+      muted: '#cbd5e1',
     },
     gradient: {
       primary: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
@@ -130,6 +130,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
   const [dyeDropped, setDyeDropped] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [waterTemp, setWaterTemp] = useState<'cold' | 'room' | 'hot'>('room');
+  const [simSpeed, setSimSpeed] = useState(50);
   const animationRef = useRef<number | null>(null);
 
   // Review phase
@@ -733,71 +734,137 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
 
   function renderHookPhase() {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '600px',
+        padding: '48px 24px',
+        textAlign: 'center',
+      }}>
         {/* Premium badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full mb-8">
-          <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-          <span className="text-sm font-medium text-purple-400 tracking-wide">PHYSICS EXPLORATION</span>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 16px',
+          background: 'rgba(168, 85, 247, 0.1)',
+          border: '1px solid rgba(168, 85, 247, 0.2)',
+          borderRadius: '9999px',
+          marginBottom: '32px',
+        }}>
+          <span style={{
+            width: '8px',
+            height: '8px',
+            background: '#c084fc',
+            borderRadius: '50%',
+          }} />
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#c084fc', letterSpacing: '0.05em' }}>
+            PHYSICS EXPLORATION
+          </span>
         </div>
 
-        {/* Main title with gradient */}
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-pink-200 bg-clip-text text-transparent">
+        {/* Main title */}
+        <h1 style={{
+          fontSize: isMobile ? '32px' : '42px',
+          fontWeight: 700,
+          color: premiumDesign.colors.text.primary,
+          marginBottom: '16px',
+          lineHeight: 1.2,
+        }}>
           Diffusion vs Convection
         </h1>
 
-        <p className="text-lg text-slate-400 max-w-md mb-10">
+        <p style={{
+          fontSize: '18px',
+          color: '#94a3b8',
+          maxWidth: '400px',
+          marginBottom: '40px',
+          lineHeight: 1.6,
+        }}>
           Discover the two hidden forces that spread substances through fluids
         </p>
 
         {/* Premium card with content */}
-        <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20 backdrop-blur-xl">
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 rounded-3xl" />
+        <div style={{
+          position: 'relative',
+          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%)',
+          borderRadius: '24px',
+          padding: '32px',
+          maxWidth: '500px',
+          width: '100%',
+          border: '1px solid rgba(71, 85, 105, 0.5)',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.2)',
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '24px' }}>&#x1F9EA;</div>
 
-          <div className="relative">
-            <div className="text-6xl mb-6">🧪</div>
-
-            <div className="space-y-4">
-              <p className="text-xl text-white/90 font-medium leading-relaxed">
-                Drop food coloring into a glass of water.
-              </p>
-              <p className="text-lg text-slate-400 leading-relaxed">
-                What happens? Does it matter if the water is hot or cold?
-              </p>
-              <div className="pt-2">
-                <p className="text-base text-purple-400 font-semibold">
-                  Discover how molecules spread through liquids!
-                </p>
-              </div>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <p style={{
+              fontSize: '20px',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontWeight: 500,
+              lineHeight: 1.6,
+            }}>
+              Drop food coloring into a glass of water.
+            </p>
+            <p style={{
+              fontSize: '18px',
+              color: '#94a3b8',
+              lineHeight: 1.6,
+            }}>
+              What happens? Does it matter if the water is hot or cold?
+            </p>
+            <p style={{
+              fontSize: '16px',
+              color: premiumDesign.colors.primary,
+              fontWeight: 600,
+              paddingTop: '8px',
+            }}>
+              Discover how molecules spread through liquids!
+            </p>
           </div>
         </div>
 
         {/* Premium CTA button */}
         <button
           onClick={() => goToPhase('predict')}
-          className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            marginTop: '40px',
+            padding: '20px 40px',
+            background: premiumDesign.colors.gradient.primary,
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: 600,
+            borderRadius: '16px',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: `0 8px 24px ${premiumDesign.colors.primary}40`,
+            transition: 'all 0.3s ease',
+          }}
         >
-          <span className="relative z-10 flex items-center gap-3">
-            Explore Diffusion
-            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </span>
+          Explore Diffusion \u2192
         </button>
 
         {/* Feature hints */}
-        <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="text-purple-400">✦</span>
+        <div style={{
+          marginTop: '48px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '32px',
+          fontSize: '14px',
+          color: '#64748b',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#c084fc' }}>\u2726</span>
             Interactive Lab
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-purple-400">✦</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#c084fc' }}>\u2726</span>
             Real-World Examples
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-purple-400">✦</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#c084fc' }}>\u2726</span>
             Knowledge Test
           </div>
         </div>
@@ -824,11 +891,46 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🤔 Make Your Prediction
+            Make Your Prediction
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             What do you think will happen when we drop dye into water at different temperatures?
           </p>
+        </div>
+
+        {/* Static visualization for predict phase */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: premiumDesign.spacing.lg }}>
+          <svg viewBox="0 0 320 160" width="100%" style={{ maxWidth: '320px' }}>
+            <defs>
+              <linearGradient id="predictCold" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.25" />
+              </linearGradient>
+              <linearGradient id="predictHot" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+            {/* Cold water beaker */}
+            <rect x="20" y="40" width="120" height="100" rx="4" fill="url(#predictCold)" stroke="#3b82f6" strokeWidth="2" />
+            <circle cx="80" cy="70" r="12" fill="#d946ef" opacity="0.8" />
+            <text x="80" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="500">Cold Water</text>
+            <text x="80" y="25" textAnchor="middle" fill="#3b82f6" fontSize="10">5C</text>
+
+            {/* Hot water beaker */}
+            <rect x="180" y="40" width="120" height="100" rx="4" fill="url(#predictHot)" stroke="#ef4444" strokeWidth="2" />
+            <circle cx="240" cy="70" r="12" fill="#d946ef" opacity="0.8" />
+            <text x="240" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="500">Hot Water</text>
+            <text x="240" y="25" textAnchor="middle" fill="#ef4444" fontSize="10">80C</text>
+
+            {/* Dye drops */}
+            <ellipse cx="80" cy="50" rx="6" ry="8" fill="#d946ef" />
+            <ellipse cx="240" cy="50" rx="6" ry="8" fill="#d946ef" />
+
+            {/* Question marks */}
+            <text x="80" y="105" textAnchor="middle" fill="#a855f7" fontSize="18" fontWeight="700">?</text>
+            <text x="240" y="105" textAnchor="middle" fill="#a855f7" fontSize="18" fontWeight="700">?</text>
+          </svg>
         </div>
 
         <div style={{
@@ -872,9 +974,9 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase('hook') },
+          { text: '\u2190 Back', onClick: () => goToPhase('hook') },
           {
-            text: 'Test My Prediction →',
+            text: 'Test My Prediction \u2192',
             onClick: goNext,
             disabled: !prediction,
           }
@@ -919,13 +1021,15 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
           <div style={{
             flex: 2,
             display: 'flex',
+            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
           }}>
             <svg
-              width="300"
-              height="250"
+              viewBox="0 0 300 250"
+              width="100%"
               style={{
+                maxWidth: '300px',
                 background: premiumDesign.colors.background.secondary,
                 borderRadius: premiumDesign.radius.xl,
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -1011,28 +1115,33 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                 </radialGradient>
               </defs>
 
-              {/* Background with subtle pattern */}
-              <rect width="300" height="250" fill="#0c0a09" />
-              <pattern id="diffLabGrid" width="15" height="15" patternUnits="userSpaceOnUse">
-                <rect width="15" height="15" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
-              </pattern>
-              <rect width="300" height="250" fill="url(#diffLabGrid)" />
+              {/* Background layer */}
+              <g id="background-layer">
+                <rect width="300" height="250" fill="#0c0a09" />
+                <pattern id="diffLabGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+                  <rect width="15" height="15" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+                </pattern>
+                <rect width="300" height="250" fill="url(#diffLabGrid)" />
+              </g>
 
-              {/* Beaker with premium glass effect */}
-              <rect
-                x="30" y="30" width="240" height="190"
-                fill={waterTemp === 'cold' ? 'url(#diffColdWater)' : waterTemp === 'hot' ? 'url(#diffHotWater)' : 'url(#diffRoomWater)'}
-                stroke="url(#diffBeakerGlass)"
-                strokeWidth="3"
-                rx="8"
-              />
+              {/* Container layer */}
+              <g id="container-layer">
+                {/* Beaker with premium glass effect */}
+                <rect
+                  x="30" y="30" width="240" height="190"
+                  fill={waterTemp === 'cold' ? 'url(#diffColdWater)' : waterTemp === 'hot' ? 'url(#diffHotWater)' : 'url(#diffRoomWater)'}
+                  stroke="url(#diffBeakerGlass)"
+                  strokeWidth="3"
+                  rx="8"
+                />
 
-              {/* Beaker highlight for glass effect */}
-              <rect
-                x="32" y="32" width="8" height="186"
-                fill="rgba(255,255,255,0.08)"
-                rx="4"
-              />
+                {/* Beaker highlight for glass effect */}
+                <rect
+                  x="32" y="32" width="8" height="186"
+                  fill="rgba(255,255,255,0.08)"
+                  rx="4"
+                />
+              </g>
 
               {/* Concentration gradient visualization when dye is dropped */}
               {dyeDropped && (
@@ -1109,6 +1218,16 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                   </path>
                 </g>
               )}
+
+              {/* Educational labels */}
+              <g id="labels-layer">
+                <text x="150" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">Diffusion Experiment</text>
+                <text x="150" y="240" textAnchor="middle" fill="#cbd5e1" fontSize="10">Water Container</text>
+                {!dyeDropped && <text x="150" y="70" textAnchor="middle" fill="#d946ef" fontSize="9">Dye Drop</text>}
+                {dyeDropped && <text x="60" y="240" textAnchor="middle" fill="#a855f7" fontSize="9">Dye Particles</text>}
+                {/* Speed indicator that updates with slider */}
+                <text x="270" y="15" textAnchor="end" fill="#94a3b8" fontSize="9">Speed: {simSpeed}%</text>
+              </g>
             </svg>
 
             {/* Temperature label outside SVG */}
@@ -1215,6 +1334,34 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
               </button>
             )}
 
+            {/* Simulation Speed Slider */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.md,
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: premiumDesign.colors.text.secondary, fontSize: '13px' }}>Speed</span>
+                <span style={{ color: premiumDesign.colors.primary, fontSize: '13px', fontWeight: 600 }}>{simSpeed}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={simSpeed}
+                onChange={(e) => setSimSpeed(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  accentColor: premiumDesign.colors.primary,
+                  cursor: 'pointer',
+                  background: premiumDesign.colors.background.tertiary,
+                  borderRadius: '4px',
+                }}
+              />
+            </div>
+
             <div style={{
               background: premiumDesign.colors.background.card,
               borderRadius: premiumDesign.radius.lg,
@@ -1249,16 +1396,16 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
     const reviewContent = [
       {
         title: "What You Observed",
-        content: `In hot water, the dye spreads much faster than in cold water. ${wasCorrect ? "Your prediction was correct!" : "This might be surprising!"} But WHY does this happen?`,
+        content: `In hot water, the dye spreads much faster than in cold water. ${wasCorrect ? "Your prediction was correct!" : "This might be surprising!"} But WHY does this happen? The temperature of the water has a dramatic effect on how quickly substances spread through it. This is one of the most important principles in heat transfer and fluid dynamics.`,
         highlight: wasCorrect,
       },
       {
         title: "The Secret: Two Different Processes",
-        content: "There are TWO ways substances spread through fluids:\n\n• DIFFUSION: Random molecular motion (slow, happens everywhere)\n• CONVECTION: Bulk fluid movement driven by temperature (fast, needs heat)",
+        content: "There are TWO ways substances spread through fluids:\n\nDIFFUSION: This is random molecular motion that happens everywhere. Molecules are always vibrating and bumping into each other, slowly spreading from areas of high concentration to low concentration.\n\nCONVECTION: This is bulk fluid movement driven by temperature differences. Hot fluid rises because it's less dense, while cold fluid sinks. This creates currents that can move substances much faster than diffusion alone.",
       },
       {
         title: "Why Hot Water Wins",
-        content: "In cold water, you see mainly DIFFUSION - slow random molecular motion. In hot water, temperature gradients create CONVECTION CURRENTS that actively carry the dye throughout the liquid - much faster!",
+        content: "In cold water, you see mainly DIFFUSION - slow random molecular motion spreading the dye gradually. In hot water, temperature gradients create powerful CONVECTION CURRENTS that actively carry the dye throughout the liquid. The hot water near the dye rises quickly, pulling fresh water in from the sides, creating a continuous mixing cycle that spreads the dye dramatically faster than molecular motion alone!",
       },
     ];
 
@@ -1361,10 +1508,10 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
 
   function renderTwistPredictPhase() {
     const predictions = [
-      { id: 'bottom', label: 'Heating from the BOTTOM will create the strongest currents', icon: '⬆️' },
-      { id: 'side', label: 'Heating from the SIDE will create the strongest currents', icon: '➡️' },
+      { id: 'bottom', label: 'Heating from the BOTTOM will create the strongest currents', icon: '\u2B06\uFE0F' },
+      { id: 'side', label: 'Heating from the SIDE will create the strongest currents', icon: '\u27A1\uFE0F' },
       { id: 'same', label: 'Both will create equally strong currents', icon: '=' },
-      { id: 'none', label: 'Neither will create currents - heat just spreads evenly', icon: '○' },
+      { id: 'none', label: 'Neither will create currents - heat just spreads evenly', icon: '\u25CB' },
     ];
 
     return (
@@ -1378,11 +1525,32 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🌀 The Twist: Heat Position
+            The Twist: Heat Position
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Does it matter WHERE we apply heat? What creates the strongest convection currents?
           </p>
+        </div>
+
+        {/* Static visualization for twist predict phase */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: premiumDesign.spacing.lg }}>
+          <svg viewBox="0 0 320 160" width="100%" style={{ maxWidth: '320px' }}>
+            {/* Bottom heat container */}
+            <rect x="20" y="30" width="120" height="100" rx="4" fill="rgba(30,41,59,0.6)" stroke="#64748b" strokeWidth="2" />
+            <rect x="20" y="115" width="120" height="15" rx="2" fill="#ef4444" opacity="0.8" />
+            <text x="80" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="10">Bottom Heat</text>
+            <text x="80" y="75" textAnchor="middle" fill="#cbd5e1" fontSize="14">?</text>
+
+            {/* Side heat container */}
+            <rect x="180" y="30" width="120" height="100" rx="4" fill="rgba(30,41,59,0.6)" stroke="#64748b" strokeWidth="2" />
+            <rect x="180" y="30" width="15" height="100" rx="2" fill="#ef4444" opacity="0.8" />
+            <text x="240" y="155" textAnchor="middle" fill="#e2e8f0" fontSize="10">Side Heat</text>
+            <text x="248" y="75" textAnchor="middle" fill="#cbd5e1" fontSize="14">?</text>
+
+            {/* Heat source labels */}
+            <text x="80" y="20" textAnchor="middle" fill="#f97316" fontSize="9">Heat Source</text>
+            <text x="240" y="20" textAnchor="middle" fill="#f97316" fontSize="9">Heat Source</text>
+          </svg>
         </div>
 
         <div style={{
@@ -1462,13 +1630,15 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
           <div style={{
             flex: 2,
             display: 'flex',
+            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
           }}>
             <svg
-              width="300"
-              height="250"
+              viewBox="0 0 300 250"
+              width="100%"
               style={{
+                maxWidth: '300px',
                 background: premiumDesign.colors.background.secondary,
                 borderRadius: premiumDesign.radius.xl,
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -1693,6 +1863,11 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                     fill="none" opacity="0.35" />
                 </g>
               )}
+
+              {/* Educational labels in SVG */}
+              <text x="150" y="15" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">Convection Currents</text>
+              <text x="150" y="240" textAnchor="middle" fill="#cbd5e1" fontSize="10">Water Container</text>
+              {heatSource !== 'none' && <text x="150" y="120" textAnchor="middle" fill="#f97316" fontSize="9">Heat rises, cold sinks</text>}
             </svg>
 
             {/* Legend outside SVG using typo system */}
@@ -2239,12 +2414,18 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
             <div style={{
               fontSize: '48px',
               fontWeight: 700,
-              background: passed ? `linear-gradient(135deg, ${premiumDesign.colors.success} 0%, #059669 100%)` : premiumDesign.colors.gradient.warm,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              marginBottom: premiumDesign.spacing.md,
+              color: passed ? premiumDesign.colors.success : premiumDesign.colors.warning,
+              marginBottom: premiumDesign.spacing.sm,
             }}>
               {testScore}/{testQuestions.length}
+            </div>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: 600,
+              color: premiumDesign.colors.text.secondary,
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              {percentage}%
             </div>
 
             <p style={{
@@ -2287,10 +2468,10 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
           marginBottom: premiumDesign.spacing.lg,
         }}>
           <span style={{ color: premiumDesign.colors.text.muted }}>
-            Question {currentQuestion + 1} of {testQuestions.length}
+            Question {currentQuestion + 1} of 10
           </span>
           <span style={{ color: premiumDesign.colors.success, fontWeight: 600 }}>
-            Score: {testScore}
+            Score: {testScore}/{testQuestions.length}
           </span>
         </div>
 
@@ -2301,6 +2482,17 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
           border: '1px solid rgba(255,255,255,0.1)',
           marginBottom: premiumDesign.spacing.lg,
         }}>
+          {/* Scenario context */}
+          <p style={{
+            fontSize: '15px',
+            color: premiumDesign.colors.text.secondary,
+            marginBottom: premiumDesign.spacing.lg,
+            lineHeight: 1.7,
+            fontStyle: 'italic',
+          }}>
+            {question.scenario}
+          </p>
+
           <h3 style={{
             fontSize: isMobile ? '18px' : '20px',
             color: premiumDesign.colors.text.primary,
@@ -2354,7 +2546,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                     color: premiumDesign.colors.text.primary,
                     fontSize: '15px',
                   }}>
-                    {option.text}
+                    {option.label}
                   </span>
                 </button>
               );
@@ -2389,13 +2581,14 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
           </div>
         )}
 
-        {renderBottomBar(
-          undefined,
-          {
-            text: showExplanation
-              ? (currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →')
-              : 'Check Answer',
-            onClick: () => {
+        {/* Quiz control button */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: premiumDesign.spacing.lg,
+        }}>
+          <button
+            onClick={() => {
               if (showExplanation) {
                 if (currentQuestion < testQuestions.length - 1) {
                   setCurrentQuestion(c => c + 1);
@@ -2410,10 +2603,31 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                 }
                 setShowExplanation(true);
               }
-            },
-            disabled: selectedAnswer === null && !showExplanation,
-          }
-        )}
+            }}
+            disabled={selectedAnswer === null && !showExplanation}
+            style={{
+              padding: '16px 32px',
+              minHeight: '48px',
+              borderRadius: premiumDesign.radius.lg,
+              border: 'none',
+              background: (selectedAnswer === null && !showExplanation)
+                ? premiumDesign.colors.background.tertiary
+                : premiumDesign.colors.gradient.primary,
+              color: (selectedAnswer === null && !showExplanation)
+                ? premiumDesign.colors.text.muted
+                : 'white',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: (selectedAnswer === null && !showExplanation) ? 'not-allowed' : 'pointer',
+              opacity: (selectedAnswer === null && !showExplanation) ? 0.5 : 1,
+              boxShadow: (selectedAnswer === null && !showExplanation) ? 'none' : `0 4px 16px ${premiumDesign.colors.primary}40`,
+            }}
+          >
+            {showExplanation
+              ? (currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results')
+              : 'Check Answer'}
+          </button>
+        </div>
       </div>
     );
   }
@@ -2535,51 +2749,144 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
 
   // ==================== MAIN RENDER ====================
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-fuchsia-500/3 rounded-full blur-3xl" />
+  const isFirst = phase === 'hook';
+  const isLast = phase === 'mastery';
+  const isTestActive = phase === 'test' && !testComplete;
+  const isNextDisabled = isLast || isTestActive;
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Diffusion vs Convection</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-purple-400 w-6 shadow-lg shadow-purple-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-purple-400">{phaseLabels[phase]}</span>
+  return (
+    <div style={{
+      minHeight: '100vh',
+      height: '100vh',
+      background: 'linear-gradient(180deg, #0f172a 0%, #0c0a09 50%, #0f172a 100%)',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      position: 'relative',
+      fontFamily: premiumDesign.typography.fontFamily,
+      color: '#f8fafc',
+    }}>
+      {/* Progress bar header */}
+      <header style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: premiumDesign.colors.background.tertiary,
+        zIndex: 100,
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+          background: premiumDesign.colors.gradient.primary,
+          transition: 'width 0.3s ease',
+        }} />
+      </header>
+
+      {/* Scrollable content area */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        paddingTop: '12px',
+        paddingBottom: '100px',
+        paddingLeft: isMobile ? '16px' : '24px',
+        paddingRight: isMobile ? '16px' : '24px',
+      }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          {phase === 'hook' && renderHookPhase()}
+          {phase === 'predict' && renderPredictPhase()}
+          {phase === 'play' && renderPlayPhase()}
+          {phase === 'review' && renderReviewPhase()}
+          {phase === 'twist_predict' && renderTwistPredictPhase()}
+          {phase === 'twist_play' && renderTwistPlayPhase()}
+          {phase === 'twist_review' && renderTwistReviewPhase()}
+          {phase === 'transfer' && renderTransferPhase()}
+          {phase === 'test' && renderTestPhase()}
+          {phase === 'mastery' && renderMasteryPhase()}
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
-        {phase === 'hook' && renderHookPhase()}
-        {phase === 'predict' && renderPredictPhase()}
-        {phase === 'play' && renderPlayPhase()}
-        {phase === 'review' && renderReviewPhase()}
-        {phase === 'twist_predict' && renderTwistPredictPhase()}
-        {phase === 'twist_play' && renderTwistPlayPhase()}
-        {phase === 'twist_review' && renderTwistReviewPhase()}
-        {phase === 'transfer' && renderTransferPhase()}
-        {phase === 'test' && renderTestPhase()}
-        {phase === 'mastery' && renderMasteryPhase()}
-      </div>
+      {/* Fixed bottom navigation bar */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)',
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <button
+          onClick={goBack}
+          style={{
+            padding: '12px 20px',
+            minHeight: '48px',
+            border: 'none',
+            borderRadius: '10px',
+            background: 'transparent',
+            color: isFirst ? 'rgba(148,163,184,0.3)' : '#e2e8f0',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontFamily: premiumDesign.typography.fontFamily,
+            fontSize: '14px',
+            fontWeight: 500,
+            opacity: isFirst ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {'\u2190 Back'}
+        </button>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              title={phaseLabels[p]}
+              aria-label={phaseLabels[p]}
+              style={{
+                width: phase === p ? '24px' : '12px',
+                height: '44px',
+                padding: '18px 0',
+                borderRadius: '4px',
+                border: 'none',
+                background: phaseOrder.indexOf(phase) >= i ? premiumDesign.colors.primary : 'rgba(255,255,255,0.2)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={goNext}
+          disabled={isNextDisabled}
+          style={{
+            padding: '12px 20px',
+            minHeight: '48px',
+            border: 'none',
+            borderRadius: '10px',
+            background: isNextDisabled ? 'rgba(148,163,184,0.2)' : premiumDesign.colors.gradient.primary,
+            color: isNextDisabled ? 'rgba(148,163,184,0.5)' : 'white',
+            cursor: isNextDisabled ? 'not-allowed' : 'pointer',
+            fontFamily: premiumDesign.typography.fontFamily,
+            fontSize: '14px',
+            fontWeight: 600,
+            opacity: isNextDisabled ? 0.4 : 1,
+            transition: 'all 0.2s ease',
+            boxShadow: isNextDisabled ? 'none' : `0 4px 12px ${premiumDesign.colors.primary}40`,
+          }}
+        >
+          {'Next \u2192'}
+        </button>
+      </nav>
     </div>
   );
 }

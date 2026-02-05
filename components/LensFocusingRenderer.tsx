@@ -417,7 +417,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
     const isVirtual = !imgData.isReal;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: colors.bgCard, borderRadius: '12px', maxWidth: '100%' }}>
         <defs>
           <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.1"/>
@@ -1532,198 +1532,214 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({ onGameEvent
 
     return (
       <div style={{
-        minHeight: '100vh',
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
         background: colors.bgPrimary,
-        padding: '24px',
+        overflow: 'hidden',
       }}>
         {renderProgressBar()}
 
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Real-World Applications
-          </h2>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: '100px' }}>
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <p style={{ color: colors.success, fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>Real-World Applications</p>
+              <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px' }}>
+                Lens Focusing in Action
+              </h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                App {selectedApp + 1} of {realWorldApps.length} {allAppsCompleted && '- All completed!'}
+              </p>
+            </div>
 
-          {/* App selector */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            marginBottom: '24px',
-          }}>
-            {realWorldApps.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  playSound('click');
-                  setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
-                }}
-                style={{
-                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
-                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
-                  borderRadius: '12px',
-                  padding: '16px 8px',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {completedApps[i] && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    background: colors.success,
-                    color: 'white',
-                    fontSize: '12px',
-                    lineHeight: '18px',
-                  }}>
-                    ✓
-                  </div>
-                )}
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
-                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
-                  {a.title.split(' ').slice(0, 2).join(' ')}
+            {/* App selector */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              marginBottom: '20px',
+              overflowX: 'auto',
+              paddingBottom: '8px',
+            }}>
+              {realWorldApps.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    playSound('click');
+                    setSelectedApp(i);
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '12px',
+                    border: selectedApp === i ? `2px solid ${a.color}` : `1px solid ${colors.border}`,
+                    background: selectedApp === i ? `${a.color}20` : colors.bgCard,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{ fontSize: '20px' }}>{a.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: 600 }}>{a.short}</span>
+                  {completedApps[i] && <span style={{ color: colors.success, fontSize: '16px' }}>✓</span>}
+                </button>
+              ))}
+            </div>
+
+            {/* Selected app details */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              marginBottom: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: `${app.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>{app.icon}</div>
+                <div>
+                  <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                  <p style={{ color: app.color, fontSize: '14px', fontWeight: 600, margin: 0 }}>{app.tagline}</p>
                 </div>
-              </button>
-            ))}
-          </div>
+              </div>
 
-          {/* Selected app details */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${app.color}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '48px' }}>{app.icon}</span>
-              <div>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
-                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              <p style={{ fontSize: '15px', color: colors.textSecondary, marginBottom: '20px', lineHeight: 1.7 }}>
+                {app.description}
+              </p>
+
+              <div style={{
+                background: `${app.color}15`,
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '20px',
+                borderLeft: `4px solid ${app.color}`,
+              }}>
+                <h4 style={{ fontSize: '14px', color: app.color, marginBottom: '8px', fontWeight: 700 }}>
+                  How Lens Physics Connects:
+                </h4>
+                <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+                  {app.connection}
+                </p>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '20px',
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    background: colors.bgSecondary,
+                    borderRadius: '12px',
+                    padding: '16px',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ fontSize: '18px', color: app.color, fontWeight: 700 }}>{stat.value}</div>
+                    <div style={{ fontSize: '11px', color: colors.textSecondary }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background: colors.bgSecondary, borderRadius: '8px', padding: '12px' }}>
+                <p style={{ fontSize: '12px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+                  The global optics industry is valued at over $35B. Camera autofocus achieves speeds of 20 ms. LASIK has 96% success rate with 0.25 nm precision. Microscope objectives achieve 200 nm resolution at 100x magnification.
+                </p>
               </div>
             </div>
 
-            <p style={{ fontSize: '15px', color: '#94a3b8', marginBottom: '16px', lineHeight: 1.7 }}>
-              {app.description}
-            </p>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ fontSize: '13px', color: colors.accent, marginBottom: '8px', fontWeight: 700 }}>
-                How Lens Physics Connects:
-              </h4>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
-                {app.connection}
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ fontSize: '13px', color: app.color, marginBottom: '8px', fontWeight: 700 }}>
-                How It Works:
-              </h4>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
-                {app.howItWorks}
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ fontSize: '13px', color: app.color, marginBottom: '8px', fontWeight: 700 }}>
-                Real Examples:
-              </h4>
-              <ul style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.8, paddingLeft: '20px' }}>
-                {app.examples.map((ex, j) => <li key={j}>{ex}</li>)}
-              </ul>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '12px',
-              marginBottom: '16px',
-            }}>
-              {app.stats.map((stat, i) => (
-                <div key={i} style={{
-                  background: colors.bgSecondary,
-                  borderRadius: '8px',
-                  padding: '12px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
-                  <div style={{ fontSize: '18px', color: app.color, fontWeight: 700 }}>{stat.value}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-              {app.companies.map((company, i) => (
-                <span key={i} style={{
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  background: 'rgba(255,255,255,0.1)',
-                  color: '#94a3b8',
-                  fontSize: '11px',
-                }}>
-                  {company}
-                </span>
-              ))}
-            </div>
-
-            <div style={{
-              background: 'rgba(16, 185, 129, 0.1)',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '16px',
-            }}>
-              <h4 style={{ fontSize: '13px', color: colors.success, marginBottom: '8px', fontWeight: 700 }}>Future Impact:</h4>
-              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
-                {app.futureImpact}
-              </p>
-            </div>
-
-            <div style={{
-              background: colors.bgSecondary,
-              borderRadius: '8px',
-              padding: '12px',
-            }}>
-              <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
-                The global optics industry is valued at over $35 billion with camera autofocus achieving speeds of 20 ms. LASIK has a 96% success rate with 0.25 nm precision. Microscope objectives achieve 200 nm resolution at 100x magnification. The thin lens equation 1/f = 1/do + 1/di is fundamental to all optical engineering applications worldwide.
-              </p>
-            </div>
-          </div>
-
-          {allAppsCompleted && (
+            {/* Got It button */}
             <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
+              onClick={() => {
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                playSound('success');
+                // Auto-advance to next incomplete app
+                const nextIncomplete = newCompleted.findIndex((c, i) => !c && i > selectedApp);
+                if (nextIncomplete !== -1) {
+                  setSelectedApp(nextIncomplete);
+                } else {
+                  const first = newCompleted.findIndex(c => !c);
+                  if (first !== -1) setSelectedApp(first);
+                }
+              }}
+              disabled={completedApps[selectedApp]}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: completedApps[selectedApp] ? colors.bgCard : `linear-gradient(135deg, ${app.color} 0%, ${colors.accent} 100%)`,
+                color: completedApps[selectedApp] ? colors.textSecondary : 'white',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: completedApps[selectedApp] ? 'default' : 'pointer',
+                minHeight: '52px',
+              }}
             >
-              Take the Knowledge Test
+              {completedApps[selectedApp] ? '✓ Completed' : 'Got It! Continue'}
             </button>
-          )}
+            <p style={{ textAlign: 'center', color: colors.textSecondary, fontSize: '13px', marginTop: '12px' }}>
+              {completedApps.filter(c => c).length} of {realWorldApps.length} completed {allAppsCompleted && '- Ready for test!'}
+            </p>
+          </div>
         </div>
 
-        {renderNavDots()}
+        <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000, background: colors.bgCard, borderTop: `1px solid ${colors.border}`, boxShadow: '0 -4px 20px rgba(0,0,0,0.3)', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '72px' }}>
+          <button
+            onClick={() => goToPhase(phaseOrder[phaseOrder.indexOf(phase) - 1])}
+            style={{
+              padding: '14px 24px',
+              borderRadius: '12px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textPrimary,
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              minHeight: '48px',
+            }}
+          >
+            Back
+          </button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i <= phaseOrder.indexOf(phase) && goToPhase(p)}
+                title={phaseLabels[p]}
+                style={{
+                  width: p === phase ? '20px' : '10px',
+                  height: '10px',
+                  borderRadius: '5px',
+                  background: p === phase ? colors.accent : i < phaseOrder.indexOf(phase) ? colors.success : 'rgba(255,255,255,0.2)',
+                  cursor: i <= phaseOrder.indexOf(phase) ? 'pointer' : 'default',
+                  transition: 'all 0.3s ease',
+                }}
+              />
+            ))}
+          </div>
+          <button
+            onClick={() => allAppsCompleted && nextPhase()}
+            disabled={!allAppsCompleted}
+            style={{
+              padding: '14px 24px',
+              borderRadius: '12px',
+              border: 'none',
+              background: allAppsCompleted ? `linear-gradient(135deg, ${colors.accent}, #0891b2)` : 'rgba(255,255,255,0.1)',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 700,
+              cursor: allAppsCompleted ? 'pointer' : 'not-allowed',
+              opacity: allAppsCompleted ? 1 : 0.5,
+              minHeight: '48px',
+            }}
+          >
+            Take the Test
+          </button>
+        </nav>
       </div>
     );
   }

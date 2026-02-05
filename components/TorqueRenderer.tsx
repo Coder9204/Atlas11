@@ -295,6 +295,12 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   const [experimentCount, setExperimentCount] = useState(0);
   const [showForceVector, setShowForceVector] = useState(true);
 
+  // Seesaw lab state (twist_play)
+  const [leftWeight, setLeftWeight] = useState(3);
+  const [leftPosition, setLeftPosition] = useState(0.4);
+  const [rightWeight, setRightWeight] = useState(2);
+  const [rightPosition, setRightPosition] = useState(0.8);
+
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
@@ -337,7 +343,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
+    textSecondary: '#B0B8C4',
     textMuted: '#6B7280',
     border: '#2a2a3a',
   };
@@ -435,13 +441,13 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{
-      position: 'fixed',
+      position: 'sticky',
       top: 0,
       left: 0,
       right: 0,
       height: '4px',
       background: colors.bgSecondary,
-      zIndex: 100,
+      zIndex: 50,
     }}>
       <div style={{
         height: '100%',
@@ -452,32 +458,89 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     </div>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+  // Fixed bottom navigation bar with Back/Next + nav dots
+  const renderNavDots = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = phase === 'mastery';
+    const isTestPhase = phase === 'test' && !testSubmitted;
+
+    return (
+      <>
+        <div style={{ height: '70px' }} />
+        <nav style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: colors.bgCard,
+          borderTop: `1px solid ${colors.border}`,
+          boxShadow: '0 -4px 12px rgba(0,0,0,0.5)',
+          padding: '12px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 100,
+        }}>
+          <button
+            onClick={() => { if (!isFirst) goToPhase(phaseOrder[currentIndex - 1]); }}
+            disabled={isFirst}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: isFirst ? colors.textMuted : colors.textSecondary,
+              cursor: isFirst ? 'default' : 'pointer',
+              fontWeight: 600,
+              opacity: isFirst ? 0.5 : 1,
+              fontSize: '14px',
+            }}
+          >
+            ← Back
+          </button>
+
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{
+                  width: phase === p ? '20px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                  cursor: 'pointer',
+                  padding: 0,
+                  transition: 'all 0.3s ease',
+                }}
+                aria-label={phaseLabels[p]}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={() => { if (!isLast && !isTestPhase) nextPhase(); }}
+            disabled={isLast || isTestPhase}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              background: (isLast || isTestPhase) ? colors.border : colors.accent,
+              color: 'white',
+              cursor: (isLast || isTestPhase) ? 'default' : 'pointer',
+              fontWeight: 600,
+              opacity: (isLast || isTestPhase) ? 0.5 : 1,
+              fontSize: '14px',
+            }}
+          >
+            Next →
+          </button>
+        </nav>
+      </>
+    );
+  };
 
   // ============================================================================
   // VISUALIZATION - Premium Door Animation
@@ -594,6 +657,17 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             <circle r={16} fill={hasFriction ? 'url(#torqFrictionPivotGrad)' : 'url(#torqPivotGrad)'} stroke="#52525b" strokeWidth={2} />
             <circle r={5} fill={hasFriction ? '#ea580c' : '#71717a'} />
           </g>
+
+          {/* Educational Labels */}
+          <text x={hingeX} y={hingeY + 30} fill="#9CA3AF" fontSize="11" textAnchor="middle" fontWeight="600">Hinge (Pivot)</text>
+          <text x={hingeX + doorLength / 2} y={hingeY - doorWidth - 8} fill="#e2e8f0" fontSize="11" textAnchor="middle">Door</text>
+          <text x={hingeX + pushX} y={20} fill="#86efac" fontSize="11" textAnchor="middle">Push Point</text>
+          {showForceVector && (
+            <>
+              <text x={hingeX + pushX + 30} y={hingeY - 40} fill="#22c55e" fontSize="11" textAnchor="start">Force (F)</text>
+              <text x={hingeX + pushX / 2} y={hingeY + 55} fill="#60a5fa" fontSize="11" textAnchor="middle">Lever Arm (r)</text>
+            </>
+          )}
         </svg>
 
         {/* Stats display */}
@@ -742,12 +816,9 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
       }}>
         {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', textAlign: 'center' }}>
 
         <div style={{
           fontSize: '64px',
@@ -793,6 +864,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         >
           Explore Torque
         </button>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -811,10 +883,12 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -839,9 +913,31 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: '80px', marginBottom: '16px' }}>🚪</div>
-            <p style={{ ...typo.body, color: colors.textSecondary }}>
-              Imagine a heavy door. The hinges are on one side. Where do you push?
+            <svg width="100%" viewBox="0 0 300 200" style={{ display: 'block', margin: '0 auto', maxWidth: '400px' }}>
+              <rect width="300" height="200" fill="#08050c" />
+              {/* Wall */}
+              <rect x="10" y="20" width="30" height="160" fill="#3f3f46" rx="2" />
+              <rect x="38" y="20" width="4" height="160" fill="#52525b" />
+              {/* Door */}
+              <rect x="42" y="50" width="210" height="100" fill="#c4956a" rx="3" />
+              {/* Hinge */}
+              <circle cx="47" cy="100" r="10" fill="#71717a" stroke="#52525b" strokeWidth="2" />
+              <circle cx="47" cy="100" r="4" fill="#52525b" />
+              {/* Handle */}
+              <circle cx="230" cy="100" r="10" fill="#f59e0b" stroke="#92400e" strokeWidth="2" />
+              <circle cx="230" cy="100" r="4" fill="#78350f" />
+              {/* Push position markers */}
+              <text x="80" y="105" fill="#A855F7" fontSize="18" textAnchor="middle" fontWeight="bold">A</text>
+              <text x="140" y="105" fill="#A855F7" fontSize="18" textAnchor="middle" fontWeight="bold">B</text>
+              <text x="210" y="105" fill="#A855F7" fontSize="18" textAnchor="middle" fontWeight="bold">C</text>
+              {/* Labels */}
+              <text x="25" y="15" fill="#9CA3AF" fontSize="11" textAnchor="middle">Wall</text>
+              <text x="47" y="190" fill="#9CA3AF" fontSize="11" textAnchor="middle">Hinge</text>
+              <text x="230" y="190" fill="#9CA3AF" fontSize="11" textAnchor="middle">Handle</text>
+              <text x="150" y="40" fill="#e2e8f0" fontSize="13" textAnchor="middle" fontWeight="600">Where should you push?</text>
+            </svg>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '16px' }}>
+              Imagine a heavy door. The hinges are on one side. Where do you push to open it with the least effort?
             </p>
           </div>
 
@@ -894,6 +990,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             </button>
           )}
         </div>
+        </div>
 
         {renderNavDots()}
       </div>
@@ -906,17 +1003,49 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Torque Laboratory
           </h2>
-          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
             Adjust where you push and see how much force is needed.
           </p>
+
+          {/* Core Formula */}
+          <div style={{
+            textAlign: 'center',
+            marginBottom: '16px',
+            padding: '12px 16px',
+            background: `${colors.accent}15`,
+            borderRadius: '10px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <span style={{ fontSize: '24px', fontWeight: 700, color: colors.accent }}>
+              τ = r × F
+            </span>
+            <span style={{ ...typo.small, color: colors.textSecondary, marginLeft: '12px' }}>
+              Torque = Lever Arm × Force
+            </span>
+          </div>
+
+          {/* Observation Guidance */}
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              Try adjusting the push position slider below. Watch how the required force changes as you move closer to or farther from the hinge. Experiment with different positions to discover the relationship between lever arm length and force!
+            </p>
+          </div>
 
           <div style={{
             background: colors.bgCard,
@@ -925,6 +1054,38 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             marginBottom: '24px',
           }}>
             {renderVisualization()}
+
+            {/* Legend */}
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '16px',
+              marginTop: '12px',
+              padding: '12px',
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#71717a' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Hinge (Pivot Point)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#22c55e' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Push Point</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '3px', background: '#3b82f6' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Lever Arm (r)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '3px', height: '12px', background: '#22c55e' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Applied Force (F)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: '#c4956a' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Door Surface</span>
+              </div>
+            </div>
 
             {/* Push position slider */}
             <div style={{ marginTop: '24px', marginBottom: '20px' }}>
@@ -957,6 +1118,9 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                 <span style={{ ...typo.small, color: colors.textMuted }}>Near hinge</span>
                 <span style={{ ...typo.small, color: colors.textMuted }}>At handle</span>
               </div>
+              <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginTop: '8px', fontStyle: 'italic' }}>
+                Closer to hinge = more force needed. Farther away = less force needed.
+              </p>
             </div>
 
             {/* Friction toggle */}
@@ -1062,6 +1226,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               I See the Pattern - Reveal the Physics!
             </button>
           )}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1276,19 +1441,20 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    const SeesawLab = () => {
-      const [leftWeight, setLeftWeight] = useState(5);
-      const [leftPosition, setLeftPosition] = useState(0.4);
-      const [rightWeight, setRightWeight] = useState(2);
-      const [rightPosition, setRightPosition] = useState(0.8);
+    const leftTorque = leftWeight * leftPosition;
+    const rightTorque = rightWeight * rightPosition;
+    const isBalanced = Math.abs(leftTorque - rightTorque) < 0.5;
+    const tilt = Math.min(15, Math.max(-15, (rightTorque - leftTorque) * 3));
 
-      const leftTorque = leftWeight * leftPosition;
-      const rightTorque = rightWeight * rightPosition;
-      const isBalanced = Math.abs(leftTorque - rightTorque) < 0.5;
-      const tilt = Math.min(15, Math.max(-15, (rightTorque - leftTorque) * 3));
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
 
-      return (
-        <div>
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Seesaw Balance Lab
           </h2>
@@ -1458,20 +1624,6 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             </button>
           )}
         </div>
-      );
-    };
-
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          <SeesawLab />
-        </div>
 
         {renderNavDots()}
       </div>
@@ -1571,14 +1723,19 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} — Explore how torque is used in the real world
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1669,6 +1826,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
+              marginBottom: '16px',
             }}>
               {app.stats.map((stat, i) => (
                 <div key={i} style={{
@@ -1683,16 +1841,107 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                 </div>
               ))}
             </div>
+
+            {/* How It Works */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.warning, marginBottom: '8px', fontWeight: 600 }}>
+                How It Works:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.howItWorks}
+              </p>
+            </div>
+
+            {/* Examples */}
+            <div style={{ marginBottom: '16px' }}>
+              <h4 style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px', fontWeight: 600 }}>
+                Real Examples:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {app.examples.map((ex, i) => (
+                  <span key={i} style={{
+                    ...typo.small,
+                    color: colors.textSecondary,
+                    background: colors.bgSecondary,
+                    padding: '4px 10px',
+                    borderRadius: '12px',
+                  }}>{ex}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Future Impact */}
+            <div style={{
+              background: `${app.color}11`,
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                <span style={{ color: app.color, fontWeight: 600 }}>Future:</span> {app.futureImpact}
+              </p>
+            </div>
+
+            {/* Got It button */}
+            {!completedApps[selectedApp] ? (
+              <button
+                onClick={() => {
+                  playSound('success');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}cc)`,
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  width: '100%',
+                }}
+              >
+                Got It!
+              </button>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>✓ Completed</span>
+              </div>
+            )}
           </div>
+
+          {selectedApp < realWorldApps.length - 1 && (
+            <button
+              onClick={() => {
+                playSound('click');
+                const nextIdx = selectedApp + 1;
+                setSelectedApp(nextIdx);
+                const newCompleted = [...completedApps];
+                newCompleted[nextIdx] = true;
+                setCompletedApps(newCompleted);
+              }}
+              style={{ ...primaryButtonStyle, width: '100%', marginBottom: '12px' }}
+            >
+              Next Application →
+            </button>
+          )}
 
           {allAppsCompleted && (
             <button
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test
+              Continue to Test
             </button>
           )}
+        </div>
         </div>
 
         {renderNavDots()}
@@ -1708,10 +1957,12 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         <div style={{
           minHeight: '100vh',
           background: colors.bgPrimary,
-          padding: '24px',
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {renderProgressBar()}
 
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🏆' : '📚'}
@@ -1722,11 +1973,65 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
             <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
               {testScore} / 10
             </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '24px' }}>
               {passed
                 ? 'You understand torque and rotational physics!'
                 : 'Review the concepts and try again.'}
             </p>
+
+            {/* Question-by-Question Review */}
+            <div style={{ maxWidth: '600px', margin: '0 auto 24px', textAlign: 'left' }}>
+              <p style={{ ...typo.small, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px' }}>
+                Question-by-Question Review
+              </p>
+              <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {testQuestions.map((q, i) => {
+                  const correctOpt = q.options.find(o => o.correct);
+                  const isCorrect = testAnswers[i] === correctOpt?.id;
+                  const userOpt = q.options.find(o => o.id === testAnswers[i]);
+                  return (
+                    <div key={i} style={{
+                      background: colors.bgCard,
+                      borderRadius: '10px',
+                      border: `2px solid ${isCorrect ? colors.success : colors.error}30`,
+                      overflow: 'hidden',
+                    }}>
+                      <div style={{
+                        padding: '10px 14px',
+                        background: isCorrect ? `${colors.success}15` : `${colors.error}15`,
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                      }}>
+                        <div style={{
+                          width: '26px', height: '26px', borderRadius: '50%',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '14px', fontWeight: 700,
+                          background: isCorrect ? colors.success : colors.error,
+                          color: 'white',
+                        }}>
+                          {isCorrect ? '\u2713' : '\u2717'}
+                        </div>
+                        <p style={{ ...typo.small, fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+                          Question {i + 1}
+                        </p>
+                      </div>
+                      {!isCorrect && (
+                        <div style={{ padding: '10px 14px' }}>
+                          <p style={{ fontSize: '12px', color: colors.error, margin: '0 0 4px', fontWeight: 600 }}>
+                            Your answer: {userOpt?.label || 'Not answered'}
+                          </p>
+                          <p style={{ fontSize: '12px', color: colors.success, margin: '0 0 6px', fontWeight: 600 }}>
+                            Correct: {correctOpt?.label}
+                          </p>
+                          <p style={{ fontSize: '11px', color: colors.textMuted, margin: 0 }}>
+                            {q.explanation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {passed ? (
               <button
@@ -1750,6 +2055,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               </button>
             )}
           </div>
+          </div>
           {renderNavDots()}
         </div>
       );
@@ -1761,11 +2067,20 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       <div style={{
         minHeight: '100vh',
         background: colors.bgPrimary,
-        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {renderProgressBar()}
 
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Knowledge Test
+          </h2>
+          <p style={{ ...typo.small, color: colors.textSecondary, textAlign: 'center', marginBottom: '20px' }}>
+            Apply your understanding of torque concepts to real-world scenarios. Each question presents a practical situation involving rotational forces.
+          </p>
+
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1914,6 +2229,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               </button>
             )}
           </div>
+        </div>
         </div>
 
         {renderNavDots()}

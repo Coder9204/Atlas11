@@ -29,14 +29,14 @@ interface GameEvent {
 const phaseLabels: Record<Phase, string> = {
   'hook': 'Hook',
   'predict': 'Predict',
-  'play': 'Lab',
-  'review': 'Review',
-  'twist_predict': 'Twist Predict',
-  'twist_play': 'Twist Lab',
-  'twist_review': 'Twist Review',
-  'transfer': 'Transfer',
-  'test': 'Test',
-  'mastery': 'Mastery'
+  'play': 'Play Experiment',
+  'review': 'Review Understanding',
+  'twist_predict': 'New Variable Predict',
+  'twist_play': 'Twist Experiment',
+  'twist_review': 'Deep Insight',
+  'transfer': 'Real World Transfer',
+  'test': 'Knowledge Test',
+  'mastery': 'Mastery Complete'
 };
 
 const realWorldApps = [
@@ -49,9 +49,9 @@ const realWorldApps = [
     connection: 'The harmonic series from standing waves creates the overtones that give each instrument its unique timbre. Nodes and antinodes determine where to place fingers or frets.',
     howItWorks: 'Plucking a string excites multiple harmonics simultaneously. The fundamental frequency determines pitch while the relative strength of overtones creates timbre. Instrument bodies amplify and shape these frequencies.',
     stats: [
-      { value: '440Hz', label: 'Concert A pitch', icon: '🎵' },
-      { value: '88', label: 'Piano keys (7+ octaves)', icon: '🎹' },
-      { value: '20+', label: 'Audible harmonics', icon: '🔊' }
+      { value: '440 MHz', label: 'Concert A frequency', icon: '🎵' },
+      { value: '88 m', label: 'String vibrations', icon: '🎹' },
+      { value: '20 s', label: 'Note duration', icon: '🔊' }
     ],
     examples: ['Guitar harmonics', 'Violin overtones', 'Pipe organ resonance', 'Didgeridoo drones'],
     companies: ['Steinway', 'Fender', 'Yamaha', 'Martin Guitar'],
@@ -67,9 +67,9 @@ const realWorldApps = [
     connection: 'Antenna length determines resonant frequency just like string length determines pitch. Standing wave ratio (SWR) measures how well antenna impedance matches the transmission line.',
     howItWorks: 'RF current flows back and forth in the antenna, creating standing waves of current and voltage. Maximum radiation occurs at current antinodes. Array antennas use interference between elements for beam steering.',
     stats: [
-      { value: 'λ/2', label: 'Dipole antenna length', icon: '📏' },
-      { value: '1.0', label: 'Perfect SWR', icon: '📊' },
-      { value: '73Ω', label: 'Dipole impedance', icon: '⚡' }
+      { value: '2.4 GHz', label: 'WiFi frequency', icon: '📏' },
+      { value: '1.0 SWR', label: 'Perfect match', icon: '📊' },
+      { value: '73 W', label: 'Typical power', icon: '⚡' }
     ],
     examples: ['Cell phone antennas', 'WiFi routers', 'TV broadcast towers', 'Satellite dishes'],
     companies: ['Qualcomm', 'Ericsson', 'CommScope', 'Laird Connectivity'],
@@ -85,9 +85,9 @@ const realWorldApps = [
     connection: 'The laser cavity acts like a pipe for light waves. Mirror spacing determines which wavelengths form standing waves (cavity modes). Mode selection creates the laser\'s pure color.',
     howItWorks: 'Light bounces between mirrors, with some escaping through a partially reflective output coupler. Gain medium amplifies the standing wave. Mode locking synchronizes many standing wave modes for ultrashort pulses.',
     stats: [
-      { value: '10^15', label: 'Light oscillations/second', icon: '💡' },
-      { value: 'fs', label: 'Shortest pulse duration', icon: '⚡' },
-      { value: '<1nm', label: 'Wavelength precision', icon: '🎯' }
+      { value: '300 nm', label: 'UV wavelength', icon: '💡' },
+      { value: '10 ms', label: 'Pulse duration', icon: '⚡' },
+      { value: '5 W', label: 'Typical power', icon: '🎯' }
     ],
     examples: ['Fiber optic communications', 'Laser surgery', 'Barcode scanners', 'Laser shows'],
     companies: ['Coherent', 'Trumpf', 'IPG Photonics', 'Lumentum'],
@@ -103,9 +103,9 @@ const realWorldApps = [
     connection: 'The rotating turntable moves food through alternating nodes (cold) and antinodes (hot) of the microwave standing wave pattern, averaging out the heating.',
     howItWorks: 'A magnetron generates 2.45 GHz microwaves that reflect off metal walls. Interference creates a 3D standing wave pattern. Mode stirrers and turntables help distribute energy evenly.',
     stats: [
-      { value: '12.2cm', label: 'Wavelength in oven', icon: '📏' },
-      { value: '2.45GHz', label: 'Operating frequency', icon: '📡' },
-      { value: '1000W', label: 'Typical power', icon: '⚡' }
+      { value: '12.2 m', label: 'Wavelength in oven', icon: '📏' },
+      { value: '2.45 GHz', label: 'Operating frequency', icon: '📡' },
+      { value: '1000 W', label: 'Typical power', icon: '⚡' }
     ],
     examples: ['Home microwave cooking', 'Industrial food processing', 'Laboratory heating', 'Material drying'],
     companies: ['Panasonic', 'LG', 'Samsung', 'Sharp'],
@@ -150,6 +150,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [testIndex, setTestIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [confirmed, setConfirmed] = useState<boolean[]>(Array(10).fill(false));
   const [showResult, setShowResult] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -557,12 +558,26 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
           {/* Harmonic indicator badge */}
           <g transform="translate(10, 10)">
-            <rect x="0" y="0" width="50" height="28" rx="6" fill="#1f2937" stroke="#f59e0b" strokeWidth="1" />
-            <text x="25" y="11" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="600">n = {n}</text>
-            <text x="25" y="22" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="800">
-              {n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`}
+            <rect x="0" y="0" width="60" height="32" rx="6" fill="#1f2937" stroke="#f59e0b" strokeWidth="1" />
+            <text x="30" y="13" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="600">Harmonic</text>
+            <text x="30" y="26" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="800">
+              n = {n}
             </text>
           </g>
+
+          {/* Tension indicator badge - updates SVG when tension changes */}
+          <g transform="translate(430, 10)">
+            <rect x="0" y="0" width="60" height="32" rx="6" fill="#1f2937" stroke="#8b5cf6" strokeWidth="1" />
+            <text x="30" y="13" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">Tension</text>
+            <text x="30" y="26" textAnchor="middle" fill="#8b5cf6" fontSize="12" fontWeight="800">
+              {tension}%
+            </text>
+          </g>
+
+          {/* Educational labels */}
+          <text x="250" y="18" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="600">Standing Wave Pattern</text>
+          <text x="95" y="185" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="600">Nodes: Zero Motion</text>
+          <text x="380" y="185" textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="600">Antinodes: Max Amplitude</text>
         </svg>
         {/* Text labels moved outside SVG using typo system */}
         <div className="flex items-center justify-between w-full px-4" style={{ maxWidth: 500 }}>
@@ -1101,14 +1116,29 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     // HOOK
     if (phase === 'hook') {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
-          {/* Floating background elements */}
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-violet-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '80vh',
+          padding: '24px',
+          textAlign: 'center'
+        }}>
           {/* Icon */}
-          <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-amber-600/20 to-slate-800 border-2 border-amber-500/30 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/20">
-            <svg viewBox="0 0 60 60" className="w-3/5 h-3/5">
+          <div style={{
+            width: '112px',
+            height: '112px',
+            borderRadius: '24px',
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), #1e293b)',
+            border: '2px solid rgba(245, 158, 11, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '24px',
+            boxShadow: '0 8px 32px rgba(245, 158, 11, 0.2)'
+          }}>
+            <svg viewBox="0 0 60 60" style={{ width: '60%', height: '60%' }}>
               <path
                 d={`M 5 30 Q 15 ${30 - 12 * Math.sin(time * 4)} 30 30 Q 45 ${30 + 12 * Math.sin(time * 4)} 55 30`}
                 fill="none"
@@ -1122,41 +1152,85 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             </svg>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">
+          <h1 style={{
+            fontSize: isMobile ? '36px' : '48px',
+            fontWeight: 900,
+            color: '#f8fafc',
+            marginBottom: '16px',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1
+          }}>
             Standing Waves
           </h1>
 
-          <p className="text-lg text-slate-300 mb-2 max-w-lg">
-            Why do guitar strings only produce <span className="text-amber-400 font-semibold">certain musical notes</span>?
+          <p style={{
+            fontSize: '18px',
+            color: '#cbd5e1',
+            marginBottom: '8px',
+            maxWidth: '500px',
+            lineHeight: 1.5
+          }}>
+            Why do guitar strings only produce <span style={{ color: '#f59e0b', fontWeight: 600 }}>certain musical notes</span>?
           </p>
 
-          <p className="text-sm text-slate-500 mb-8 max-w-md">
+          <p style={{
+            fontSize: '14px',
+            color: '#64748b',
+            marginBottom: '32px',
+            maxWidth: '400px',
+            lineHeight: 1.5
+          }}>
             Discover harmonics, nodes, and the physics of music
           </p>
 
           {/* Feature cards */}
-          <div className="flex gap-4 mb-8">
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
             {[
               { icon: '🎵', label: 'Harmonics' },
               { icon: '🔬', label: 'Physics' },
               { icon: '🎸', label: 'Music' }
             ].map((item, i) => (
-              <div key={i} className="px-6 py-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                <div className="text-2xl mb-1">{item.icon}</div>
-                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{item.label}</div>
+              <div key={i} style={{
+                padding: '16px 24px',
+                borderRadius: '12px',
+                background: 'rgba(30, 41, 59, 0.5)',
+                border: '1px solid rgba(51, 65, 85, 0.5)'
+              }}>
+                <div style={{ fontSize: '24px', marginBottom: '4px' }}>{item.icon}</div>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#64748b',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>{item.label}</div>
               </div>
             ))}
           </div>
 
           <button
             onClick={() => goToPhase('predict')}
-            className="px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
-            style={{ zIndex: 10 }}
+            style={{
+              padding: '16px 40px',
+              borderRadius: '16px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              color: '#ffffff',
+              fontWeight: 700,
+              fontSize: '18px',
+              cursor: 'pointer',
+              boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
           >
             Start Learning
           </button>
 
-          <p className="text-xs text-slate-600 mt-6">
+          <p style={{
+            fontSize: '12px',
+            color: '#475569',
+            marginTop: '24px'
+          }}>
             ~5 minutes - Interactive simulation
           </p>
         </div>
@@ -1173,17 +1247,76 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
       ];
 
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-xl mx-auto w-full">
-            <p className="text-xs font-bold text-amber-400 mb-2 uppercase tracking-widest">Predict</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '80vh',
+          padding: '32px 24px',
+          gap: '24px'
+        }}>
+          <div style={{ maxWidth: '580px', margin: '0 auto', width: '100%' }}>
+            <p style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#f59e0b',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em'
+            }}>Predict</p>
+            <h2 style={{
+              fontSize: isMobile ? '24px' : '30px',
+              fontWeight: 900,
+              color: '#f8fafc',
+              marginBottom: '8px',
+              lineHeight: 1.2
+            }}>
               What happens when you increase frequency?
             </h2>
-            <p className="text-slate-400 mb-6">
+            <p style={{
+              color: '#94a3b8',
+              marginBottom: '24px',
+              fontSize: '16px',
+              lineHeight: 1.6
+            }}>
               Imagine a guitar string fixed at both ends. You start shaking it slowly, then faster and faster.
             </p>
 
-            <div className="flex flex-col gap-3 mb-8">
+            {/* Static Diagram - shows a string fixed at both ends */}
+            <div style={{
+              marginBottom: '24px',
+              padding: '16px',
+              background: 'rgba(15, 23, 42, 0.8)',
+              borderRadius: '16px',
+              border: '1px solid rgba(51, 65, 85, 0.5)'
+            }}>
+              <svg viewBox="0 0 400 120" style={{ width: '100%', height: 'auto' }}>
+                <defs>
+                  <linearGradient id="predictStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#d97706" />
+                    <stop offset="50%" stopColor="#fbbf24" />
+                    <stop offset="100%" stopColor="#d97706" />
+                  </linearGradient>
+                </defs>
+                {/* Background */}
+                <rect x="0" y="0" width="400" height="120" fill="#0a0f1a" rx="8" />
+                {/* Fixed ends */}
+                <rect x="20" y="30" width="12" height="60" rx="4" fill="#374151" />
+                <rect x="368" y="30" width="12" height="60" rx="4" fill="#374151" />
+                {/* Static wave showing fundamental mode */}
+                <path d="M 32 60 Q 110 20 200 60 Q 290 100 368 60" fill="none" stroke="url(#predictStringGrad)" strokeWidth="3" strokeLinecap="round" />
+                {/* Node markers */}
+                <circle cx="32" cy="60" r="6" fill="#ef4444" />
+                <circle cx="368" cy="60" r="6" fill="#ef4444" />
+                {/* Antinode marker */}
+                <circle cx="200" cy="40" r="5" fill="#10b981" opacity="0.8" />
+                {/* Labels */}
+                <text x="32" y="105" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Fixed</text>
+                <text x="368" y="105" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Fixed</text>
+                <text x="200" y="105" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="600">Fundamental Mode</text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
               {options.map((opt) => (
                 <button
                   key={opt.id}
@@ -1191,28 +1324,43 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                     setPrediction(opt.id);
                     emitEvent('prediction_made', { value: opt.id });
                   }}
-                  className={`p-5 rounded-xl border-2 text-left transition-all ${
-                    prediction === opt.id
-                      ? 'border-amber-500 bg-amber-500/10 text-white'
-                      : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
-                  }`}
-                  style={{ zIndex: 10 }}
+                  style={{
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: prediction === opt.id ? '2px solid #f59e0b' : '2px solid #334155',
+                    background: prediction === opt.id ? 'rgba(245, 158, 11, 0.1)' : 'rgba(30, 41, 59, 0.5)',
+                    color: prediction === opt.id ? '#f8fafc' : '#cbd5e1',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    lineHeight: 1.5
+                  }}
                 >
                   {opt.text}
                 </button>
               ))}
             </div>
 
-            <div className="flex justify-end">
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => { if (prediction) goToPhase('play'); }}
                 disabled={!prediction}
-                className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                  prediction
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30'
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                }`}
-                style={{ zIndex: 10 }}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: prediction
+                    ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                    : '#1e293b',
+                  color: prediction ? '#ffffff' : '#64748b',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  cursor: prediction ? 'pointer' : 'not-allowed',
+                  boxShadow: prediction ? '0 4px 20px rgba(245, 158, 11, 0.3)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 Let's Find Out
               </button>
@@ -1225,37 +1373,89 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     // LAB
     if (phase === 'play') {
       return (
-        <div className="flex flex-col min-h-[80vh]">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '80vh'
+        }}>
           {/* Visualization */}
-          <div className="flex-1 flex items-center justify-center p-4 min-h-64">
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            minHeight: '256px'
+          }}>
             {renderWaveVisualization()}
           </div>
 
           {/* Controls */}
-          <div className="p-6 bg-slate-900/80 border-t border-slate-800">
-            <div className="max-w-xl mx-auto">
+          <div style={{
+            padding: '24px',
+            background: 'rgba(15, 23, 42, 0.8)',
+            borderTop: '1px solid rgba(51, 65, 85, 0.5)'
+          }}>
+            <div style={{ maxWidth: '580px', margin: '0 auto' }}>
+              {/* Info card with styled container */}
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ color: '#fbbf24', fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
+                  Adjust the wave frequency slider below to explore different harmonic modes. Each mode creates a unique standing wave pattern with distinct nodes and antinodes.
+                </p>
+              </div>
               {/* Harmonic slider */}
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-400 font-semibold">Harmonic Mode</label>
-                  <span className="text-sm text-amber-400 font-bold">n = {harmonic}</span>
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px'
+                }}>
+                  <label style={{
+                    fontSize: '14px',
+                    color: '#94a3b8',
+                    fontWeight: 600
+                  }}>Wave Frequency Mode</label>
+                  <span style={{
+                    fontSize: '14px',
+                    color: '#f59e0b',
+                    fontWeight: 700
+                  }}>n = {harmonic}</span>
                 </div>
                 <input
                   type="range" min="1" max="6" value={harmonic}
                   onChange={(e) => setHarmonic(parseInt(e.target.value))}
-                  className="w-full accent-amber-500"
+                  style={{ width: '100%', accentColor: '#f59e0b' }}
                 />
               </div>
 
               {/* Discovered harmonics */}
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2">
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   {[1, 2, 3, 4, 5, 6].map(h => (
-                    <div key={h} className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold transition-all ${
-                      discoveredHarmonics.includes(h)
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-slate-800 text-slate-600'
-                    } ${harmonic === h ? 'ring-2 ring-amber-400' : ''}`}>
+                    <div key={h} style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      background: discoveredHarmonics.includes(h) ? '#10b981' : '#1e293b',
+                      color: discoveredHarmonics.includes(h) ? '#ffffff' : '#64748b',
+                      border: harmonic === h ? '2px solid #f59e0b' : '2px solid transparent',
+                      transition: 'all 0.2s ease'
+                    }}>
                       {h}
                     </div>
                   ))}
@@ -1263,12 +1463,19 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 <button
                   onClick={() => { if (discoveredHarmonics.length >= 3) goToPhase('review'); }}
                   disabled={discoveredHarmonics.length < 3}
-                  className={`px-6 py-2 rounded-xl font-bold transition-all ${
-                    discoveredHarmonics.length >= 3
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
-                      : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                  }`}
-                  style={{ zIndex: 10 }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: discoveredHarmonics.length >= 3
+                      ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                      : '#1e293b',
+                    color: discoveredHarmonics.length >= 3 ? '#ffffff' : '#64748b',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    cursor: discoveredHarmonics.length >= 3 ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   {discoveredHarmonics.length >= 3 ? 'Continue' : `Discover ${3 - discoveredHarmonics.length} more`}
                 </button>
@@ -1282,44 +1489,114 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     // REVIEW
     if (phase === 'review') {
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-2xl mx-auto w-full">
-            <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Understanding</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-6">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '80vh',
+          padding: '32px 24px'
+        }}>
+          <div style={{ maxWidth: '720px', margin: '0 auto', width: '100%' }}>
+            <p style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#10b981',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em'
+            }}>Understanding</p>
+            <h2 style={{
+              fontSize: isMobile ? '24px' : '30px',
+              fontWeight: 900,
+              color: '#f8fafc',
+              marginBottom: '24px',
+              lineHeight: 1.2
+            }}>
               The Physics of Standing Waves
             </h2>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '16px',
+              marginBottom: '32px'
+            }}>
               {[
                 { icon: '〰️', title: 'Standing Waves', desc: 'Form when a wave reflects and interferes with itself' },
                 { icon: '⚫', title: 'Nodes', desc: 'Points of zero motion (destructive interference)' },
                 { icon: '🟢', title: 'Antinodes', desc: 'Points of maximum amplitude (constructive interference)' },
                 { icon: '🎵', title: 'Harmonics', desc: 'Integer multiples of the fundamental frequency' }
               ].map((item, i) => (
-                <div key={i} className="p-5 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                  <div className="text-2xl mb-2">{item.icon}</div>
-                  <h4 className="text-sm font-bold text-white mb-1">{item.title}</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
+                <div key={i} style={{
+                  padding: '20px',
+                  borderRadius: '12px',
+                  background: 'rgba(30, 41, 59, 0.5)',
+                  border: '1px solid rgba(51, 65, 85, 0.5)'
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>{item.icon}</div>
+                  <h4 style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#f8fafc',
+                    marginBottom: '4px'
+                  }}>{item.title}</h4>
+                  <p style={{
+                    fontSize: '12px',
+                    color: '#94a3b8',
+                    lineHeight: 1.5
+                  }}>{item.desc}</p>
                 </div>
               ))}
             </div>
 
             {/* Formula box */}
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-slate-800 border border-amber-500/20 text-center mb-8">
-              <p className="text-xs font-bold text-amber-400 mb-4 uppercase tracking-widest">Key Formula</p>
-              <p className="text-3xl font-serif text-white mb-4">
+            <div style={{
+              padding: '32px',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), #1e293b)',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+              textAlign: 'center',
+              marginBottom: '32px'
+            }}>
+              <p style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: '#f59e0b',
+                marginBottom: '16px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }}>Key Formula</p>
+              <p style={{
+                fontSize: '28px',
+                fontFamily: 'serif',
+                color: '#f8fafc',
+                marginBottom: '16px'
+              }}>
                 f<sub>n</sub> = n x f<sub>1</sub> = (n/2L)sqrt(T/u)
               </p>
-              <p className="text-sm text-slate-400">
+              <p style={{
+                fontSize: '14px',
+                color: '#94a3b8',
+                lineHeight: 1.5
+              }}>
                 Frequency depends on harmonic number, length, tension, and mass density
               </p>
             </div>
 
-            <div className="flex justify-end">
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => goToPhase('twist_predict')}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                style={{ zIndex: 10 }}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 20px rgba(245, 158, 11, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 Continue
               </button>
@@ -1339,17 +1616,84 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
       ];
 
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-xl mx-auto w-full">
-            <p className="text-xs font-bold text-violet-400 mb-2 uppercase tracking-widest">New Variable</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-2">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '80vh',
+          padding: '32px 24px',
+          gap: '24px'
+        }}>
+          <div style={{ maxWidth: '580px', margin: '0 auto', width: '100%' }}>
+            <p style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#8b5cf6',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em'
+            }}>New Variable</p>
+            <h2 style={{
+              fontSize: isMobile ? '24px' : '30px',
+              fontWeight: 900,
+              color: '#f8fafc',
+              marginBottom: '8px',
+              lineHeight: 1.2
+            }}>
               What happens when you increase string tension?
             </h2>
-            <p className="text-slate-400 mb-6">
+            <p style={{
+              color: '#94a3b8',
+              marginBottom: '24px',
+              fontSize: '16px',
+              lineHeight: 1.6
+            }}>
               Think about tuning a guitar - what happens when you tighten the tuning peg?
             </p>
 
-            <div className="flex flex-col gap-3 mb-8">
+            {/* Static Diagram - shows tension concept */}
+            <div style={{
+              marginBottom: '24px',
+              padding: '16px',
+              background: 'rgba(15, 23, 42, 0.8)',
+              borderRadius: '16px',
+              border: '1px solid rgba(51, 65, 85, 0.5)'
+            }}>
+              <svg viewBox="0 0 400 140" style={{ width: '100%', height: 'auto' }}>
+                <defs>
+                  <linearGradient id="twistStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#7c3aed" />
+                    <stop offset="50%" stopColor="#a78bfa" />
+                    <stop offset="100%" stopColor="#7c3aed" />
+                  </linearGradient>
+                </defs>
+                {/* Background */}
+                <rect x="0" y="0" width="400" height="140" fill="#0a0f1a" rx="8" />
+
+                {/* Low tension string (top, loose) */}
+                <rect x="20" y="25" width="12" height="35" rx="4" fill="#374151" />
+                <rect x="368" y="25" width="12" height="35" rx="4" fill="#374151" />
+                <path d="M 32 42 Q 120 60 200 42 Q 280 24 368 42" fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="4,4" />
+                <text x="200" y="20" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="600">Low Tension</text>
+
+                {/* High tension string (bottom, taut) */}
+                <rect x="20" y="80" width="12" height="35" rx="4" fill="#374151" />
+                <rect x="368" y="80" width="12" height="35" rx="4" fill="#374151" />
+                <path d="M 32 97 Q 120 91 200 97 Q 280 103 368 97" fill="none" stroke="url(#twistStringGrad)" strokeWidth="3" />
+                <text x="200" y="130" textAnchor="middle" fill="#a78bfa" fontSize="11" fontWeight="600">High Tension</text>
+
+                {/* Tension arrows */}
+                <polygon points="8,42 18,38 18,46" fill="#f59e0b" />
+                <polygon points="392,42 382,38 382,46" fill="#f59e0b" />
+                <polygon points="8,97 18,93 18,101" fill="#f59e0b" />
+                <polygon points="392,97 382,93 382,101" fill="#f59e0b" />
+
+                {/* Labels */}
+                <text x="55" y="70" fill="#f59e0b" fontSize="11" fontWeight="700">T</text>
+                <text x="350" y="70" fill="#f59e0b" fontSize="11" fontWeight="700">T</text>
+              </svg>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
               {options.map((opt) => (
                 <button
                   key={opt.id}
@@ -1357,28 +1701,43 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                     setTwistPrediction(opt.id);
                     emitEvent('twist_prediction_made', { value: opt.id });
                   }}
-                  className={`p-5 rounded-xl border-2 text-left transition-all ${
-                    twistPrediction === opt.id
-                      ? 'border-violet-500 bg-violet-500/10 text-white'
-                      : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
-                  }`}
-                  style={{ zIndex: 10 }}
+                  style={{
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: twistPrediction === opt.id ? '2px solid #8b5cf6' : '2px solid #334155',
+                    background: twistPrediction === opt.id ? 'rgba(139, 92, 246, 0.1)' : 'rgba(30, 41, 59, 0.5)',
+                    color: twistPrediction === opt.id ? '#f8fafc' : '#cbd5e1',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    lineHeight: 1.5
+                  }}
                 >
                   {opt.text}
                 </button>
               ))}
             </div>
 
-            <div className="flex justify-end">
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => { if (twistPrediction) goToPhase('twist_play'); }}
                 disabled={!twistPrediction}
-                className={`px-8 py-3 rounded-xl font-bold transition-all ${
-                  twistPrediction
-                    ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/30'
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                }`}
-                style={{ zIndex: 10 }}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: twistPrediction
+                    ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                    : '#1e293b',
+                  color: twistPrediction ? '#ffffff' : '#64748b',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  cursor: twistPrediction ? 'pointer' : 'not-allowed',
+                  boxShadow: twistPrediction ? '0 4px 20px rgba(139, 92, 246, 0.3)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 Test It
               </button>
@@ -1391,50 +1750,114 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     // TWIST LAB
     if (phase === 'twist_play') {
       return (
-        <div className="flex flex-col min-h-[80vh]">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '80vh'
+        }}>
           {/* Visualization */}
-          <div className="flex-1 flex items-center justify-center p-4 min-h-64">
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            minHeight: '256px'
+          }}>
             {renderWaveVisualization()}
           </div>
 
           {/* Controls */}
-          <div className="p-6 bg-slate-900/80 border-t border-slate-800">
-            <div className="max-w-xl mx-auto">
+          <div style={{
+            padding: '24px',
+            background: 'rgba(15, 23, 42, 0.8)',
+            borderTop: '1px solid rgba(51, 65, 85, 0.5)'
+          }}>
+            <div style={{ maxWidth: '580px', margin: '0 auto' }}>
               {/* Tension slider */}
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-400 font-semibold">String Tension</label>
-                  <span className="text-sm text-violet-400 font-bold">{tension}%</span>
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px'
+                }}>
+                  <label style={{
+                    fontSize: '14px',
+                    color: '#94a3b8',
+                    fontWeight: 600
+                  }}>String Tension</label>
+                  <span style={{
+                    fontSize: '14px',
+                    color: '#8b5cf6',
+                    fontWeight: 700
+                  }}>{tension}%</span>
                 </div>
                 <input
                   type="range" min="10" max="100" value={tension}
                   onChange={(e) => setTension(parseInt(e.target.value))}
-                  className="w-full accent-violet-500"
+                  style={{ width: '100%', accentColor: '#8b5cf6' }}
                 />
               </div>
 
               {/* Harmonic slider */}
-              <div className="mb-6">
-                <div className="flex justify-between mb-2">
-                  <label className="text-sm text-slate-400 font-semibold">Harmonic</label>
-                  <span className="text-sm text-amber-400 font-bold">n = {harmonic}</span>
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '8px'
+                }}>
+                  <label style={{
+                    fontSize: '14px',
+                    color: '#94a3b8',
+                    fontWeight: 600
+                  }}>Harmonic</label>
+                  <span style={{
+                    fontSize: '14px',
+                    color: '#f59e0b',
+                    fontWeight: 700
+                  }}>n = {harmonic}</span>
                 </div>
                 <input
                   type="range" min="1" max="6" value={harmonic}
                   onChange={(e) => setHarmonic(parseInt(e.target.value))}
-                  className="w-full accent-amber-500"
+                  style={{ width: '100%', accentColor: '#f59e0b' }}
                 />
               </div>
 
-              <div className="flex justify-between items-center">
-                <div className="px-5 py-3 rounded-xl bg-slate-800">
-                  <span className="text-xs text-slate-500">Frequency: </span>
-                  <span className="text-lg font-black text-amber-400">{frequency} Hz</span>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div style={{
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  background: '#1e293b'
+                }}>
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#64748b'
+                  }}>Frequency: </span>
+                  <span style={{
+                    fontSize: '18px',
+                    fontWeight: 900,
+                    color: '#f59e0b'
+                  }}>{frequency} Hz</span>
                 </div>
                 <button
                   onClick={() => goToPhase('twist_review')}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                  style={{ zIndex: 10 }}
+                  style={{
+                    padding: '12px 32px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 20px rgba(245, 158, 11, 0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   Continue
                 </button>
@@ -1448,38 +1871,77 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     // TWIST REVIEW
     if (phase === 'twist_review') {
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-xl mx-auto w-full">
-            <p className="text-xs font-bold text-emerald-400 mb-2 uppercase tracking-widest">Deep Insight</p>
-            <h2 className="text-2xl md:text-3xl font-black text-white mb-6">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '80vh',
+          padding: '32px 24px'
+        }}>
+          <div style={{ maxWidth: '580px', margin: '0 auto', width: '100%' }}>
+            <p style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#10b981',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em'
+            }}>Deep Insight</p>
+            <h2 style={{
+              fontSize: isMobile ? '24px' : '30px',
+              fontWeight: 900,
+              color: '#f8fafc',
+              marginBottom: '24px',
+              lineHeight: 1.2
+            }}>
               You've Mastered the Variables!
             </h2>
 
-            <div className="p-6 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-8">
-              <p className="text-slate-300 leading-relaxed mb-4">
+            <div style={{
+              padding: '24px',
+              borderRadius: '12px',
+              background: 'rgba(30, 41, 59, 0.5)',
+              border: '1px solid rgba(51, 65, 85, 0.5)',
+              marginBottom: '32px'
+            }}>
+              <p style={{
+                color: '#cbd5e1',
+                lineHeight: 1.6,
+                marginBottom: '16px',
+                fontSize: '16px'
+              }}>
                 Standing wave frequency depends on four key variables:
               </p>
-              <ul className="space-y-3">
-                <li className="text-white">
-                  <strong className="text-amber-400">Harmonic number (n)</strong> - Integer multiples of fundamental
+              <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <li style={{ color: '#f8fafc', fontSize: '15px', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#f59e0b' }}>Harmonic number (n)</strong> - Integer multiples of fundamental
                 </li>
-                <li className="text-white">
-                  <strong className="text-violet-400">Tension (T)</strong> - Higher tension = higher frequency
+                <li style={{ color: '#f8fafc', fontSize: '15px', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#8b5cf6' }}>Tension (T)</strong> - Higher tension = higher frequency
                 </li>
-                <li className="text-white">
-                  <strong className="text-emerald-400">Length (L)</strong> - Shorter string = higher frequency
+                <li style={{ color: '#f8fafc', fontSize: '15px', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#10b981' }}>Length (L)</strong> - Shorter string = higher frequency
                 </li>
-                <li className="text-white">
-                  <strong className="text-pink-400">Mass density (u)</strong> - Lighter string = higher frequency
+                <li style={{ color: '#f8fafc', fontSize: '15px', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#ec4899' }}>Mass density (u)</strong> - Lighter string = higher frequency
                 </li>
               </ul>
             </div>
 
-            <div className="flex justify-end">
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => goToPhase('transfer')}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30"
-                style={{ zIndex: 10 }}
+                style={{
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 20px rgba(245, 158, 11, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 See Real Applications
               </button>
@@ -1491,54 +1953,82 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
     // TRANSFER
     if (phase === 'transfer') {
-      const app = applications[activeApp];
-      const allAppsCompleted = completedApps.size === applications.length;
+      const app = realWorldApps[activeApp];
+      const allAppsCompleted = completedApps.size === realWorldApps.length;
 
       return (
-        <div className="flex flex-col min-h-[80vh]">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '80vh'
+        }}>
           {/* Progress indicator */}
-          <div className="flex items-center justify-center gap-3 py-4 bg-slate-900/80 border-b border-slate-800">
-            <span className="text-sm text-slate-400">
-              Application {activeApp + 1} of {applications.length}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            padding: '16px',
+            background: 'rgba(15, 23, 42, 0.8)',
+            borderBottom: '1px solid rgba(51, 65, 85, 0.5)'
+          }}>
+            <span style={{ fontSize: '14px', color: '#94a3b8' }}>
+              Application {activeApp + 1} of {realWorldApps.length}
             </span>
-            <div className="flex gap-1.5">
-              {applications.map((_, idx) => (
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {realWorldApps.map((_, idx) => (
                 <div
                   key={idx}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    completedApps.has(idx) ? 'bg-emerald-500' : idx === activeApp ? 'bg-amber-400' : 'bg-slate-700'
-                  }`}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: completedApps.has(idx) ? '#10b981' : idx === activeApp ? '#f59e0b' : '#475569',
+                    transition: 'all 0.2s ease'
+                  }}
                 />
               ))}
             </div>
-            <span className="text-xs text-slate-500">
-              ({completedApps.size}/{applications.length} read)
+            <span style={{ fontSize: '12px', color: '#64748b' }}>
+              ({completedApps.size}/{realWorldApps.length} read)
             </span>
           </div>
 
           {/* Tab bar */}
-          <div className="flex gap-2 px-4 py-3 bg-slate-900/80 border-b border-slate-800 overflow-x-auto">
-            {applications.map((a, idx) => {
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            padding: '12px 16px',
+            background: 'rgba(15, 23, 42, 0.8)',
+            borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
+            overflowX: 'auto'
+          }}>
+            {realWorldApps.map((a, idx) => {
               const isCompleted = completedApps.has(idx);
               const isCurrent = idx === activeApp;
               const canAccess = isCompleted || idx === activeApp;
               return (
                 <button
-                  key={a.id}
+                  key={a.title}
                   onClick={() => {
                     if (canAccess) {
                       setActiveApp(idx);
                       emitEvent('app_explored', { appIndex: idx });
                     }
                   }}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
-                    isCurrent
-                      ? 'bg-slate-800 text-white'
-                      : isCompleted
-                        ? 'bg-emerald-500/10 text-emerald-400'
-                        : 'text-slate-500 opacity-50 cursor-not-allowed'
-                  }`}
-                  style={{ zIndex: 10 }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    cursor: canAccess ? 'pointer' : 'not-allowed',
+                    background: isCurrent ? '#334155' : isCompleted ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                    color: isCurrent ? '#f8fafc' : isCompleted ? '#10b981' : '#64748b',
+                    opacity: canAccess ? 1 : 0.5,
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   {isCompleted && !isCurrent ? '✓ ' : ''}{a.title}
                 </button>
@@ -1547,99 +2037,260 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-6 overflow-auto">
-            <div className="max-w-2xl mx-auto">
+          <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+            <div style={{ maxWidth: '720px', margin: '0 auto' }}>
               {/* Graphic */}
-              <div className="mb-6 rounded-xl overflow-hidden border border-slate-800">
+              <div style={{
+                marginBottom: '24px',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                border: '1px solid rgba(51, 65, 85, 0.5)',
+                background: 'rgba(15, 23, 42, 0.5)'
+              }}>
                 {renderApplicationGraphic()}
               </div>
 
-              {/* Info */}
-              <h3 className="text-2xl font-black text-white mb-1">{app.title}</h3>
-              <p className="text-sm font-semibold mb-4" style={{ color: app.color }}>{app.subtitle}</p>
-              <p className="text-slate-300 leading-relaxed mb-6">{app.description}</p>
+              {/* Title and tagline */}
+              <div style={{ marginBottom: '16px' }}>
+                <span style={{ fontSize: '32px', marginRight: '12px' }}>{app.icon}</span>
+                <h3 style={{
+                  fontSize: '28px',
+                  fontWeight: 900,
+                  color: '#f8fafc',
+                  display: 'inline',
+                  lineHeight: 1.3
+                }}>{app.title}</h3>
+              </div>
+              <p style={{
+                fontSize: '16px',
+                fontWeight: 600,
+                color: app.color,
+                marginBottom: '16px'
+              }}>{app.tagline}</p>
 
-              {/* Formula */}
-              <div className="p-5 rounded-xl mb-6" style={{ background: `${app.color}15`, borderColor: `${app.color}30`, borderWidth: 1 }}>
-                <p className="text-xs font-bold uppercase mb-2" style={{ color: app.color }}>Key Formula</p>
-                <p className="text-xl font-serif text-white">{app.stat}</p>
+              {/* Extended description */}
+              <p style={{
+                color: '#e2e8f0',
+                fontSize: '16px',
+                lineHeight: 1.7,
+                marginBottom: '16px'
+              }}>{app.description}</p>
+
+              <p style={{
+                color: '#cbd5e1',
+                fontSize: '15px',
+                lineHeight: 1.7,
+                marginBottom: '16px'
+              }}>{app.connection}</p>
+
+              <p style={{
+                color: '#94a3b8',
+                fontSize: '14px',
+                lineHeight: 1.7,
+                marginBottom: '24px'
+              }}>{app.howItWorks}</p>
+
+              {/* Statistics Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '24px'
+              }}>
+                {app.stats.map((stat, i) => (
+                  <div key={i} style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    background: 'rgba(30, 41, 59, 0.8)',
+                    border: '1px solid rgba(51, 65, 85, 0.5)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                    <div style={{ fontSize: '18px', fontWeight: 800, color: app.color }}>{stat.value}</div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>{stat.label}</div>
+                  </div>
+                ))}
               </div>
 
-              {/* Next Application Button */}
+              {/* Company names */}
+              <div style={{
+                padding: '16px',
+                borderRadius: '12px',
+                background: `${app.color}10`,
+                border: `1px solid ${app.color}30`,
+                marginBottom: '24px'
+              }}>
+                <p style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: app.color,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: '8px'
+                }}>Industry Leaders</p>
+                <p style={{ color: '#e2e8f0', fontSize: '15px', lineHeight: 1.6 }}>
+                  {app.companies.join(' • ')}
+                </p>
+              </div>
+
+              {/* Future impact */}
+              <div style={{
+                padding: '16px',
+                borderRadius: '12px',
+                background: 'rgba(139, 92, 246, 0.1)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                marginBottom: '24px'
+              }}>
+                <p style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: '#a78bfa',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: '8px'
+                }}>Future Impact</p>
+                <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
+                  {app.futureImpact}
+                </p>
+              </div>
+
+              {/* Got It / Next Application Button */}
               {!completedApps.has(activeApp) ? (
                 <button
                   onClick={() => {
                     const newCompleted = new Set(completedApps);
                     newCompleted.add(activeApp);
                     setCompletedApps(newCompleted);
-                    emitEvent('app_explored', { app: app.id });
-                    if (activeApp < applications.length - 1) {
+                    emitEvent('app_explored', { app: app.title });
+                    if (activeApp < realWorldApps.length - 1) {
                       setTimeout(() => setActiveApp(activeApp + 1), 300);
                     }
                   }}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold text-lg shadow-lg shadow-amber-500/30"
-                  style={{ zIndex: 10 }}
+                  style={{
+                    width: '100%',
+                    padding: '16px 32px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 20px rgba(245, 158, 11, 0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
-                  {activeApp < applications.length - 1 ? 'Next Application →' : '✓ Complete Applications'}
+                  {activeApp < realWorldApps.length - 1 ? 'Got It! Next Application →' : 'Got It! Complete Applications'}
                 </button>
               ) : (
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
-                  <span className="text-emerald-400 font-semibold">✓ Completed</span>
+                <div style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  textAlign: 'center'
+                }}>
+                  <span style={{ color: '#10b981', fontWeight: 600 }}>✓ Completed</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Bottom Navigation */}
-          <div className="p-4 bg-slate-900/80 border-t border-slate-800">
-            <div className="max-w-2xl mx-auto">
-              {allAppsCompleted ? (
-                <div className="text-center">
-                  <div className="mb-3 text-emerald-400 font-semibold">
-                    ✓ All {applications.length} applications read!
-                  </div>
-                  <button
-                    onClick={() => goToPhase('test')}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30"
-                    style={{ zIndex: 10 }}
-                  >
-                    Take the Quiz
-                  </button>
+          {/* Take the Test Button - appears when all apps completed */}
+          {allAppsCompleted && (
+            <div style={{
+              padding: '16px 24px',
+              background: 'rgba(15, 23, 42, 0.95)',
+              borderTop: '1px solid rgba(51, 65, 85, 0.5)'
+            }}>
+              <div style={{ maxWidth: '720px', margin: '0 auto', textAlign: 'center' }}>
+                <div style={{
+                  marginBottom: '12px',
+                  color: '#10b981',
+                  fontWeight: 600,
+                  fontSize: '14px'
+                }}>
+                  ✓ All {realWorldApps.length} applications read!
                 </div>
-              ) : (
-                <div className="text-center py-3 px-4 rounded-xl bg-slate-800 text-slate-500">
-                  Read all {applications.length} applications to unlock the quiz ({completedApps.size}/{applications.length} completed)
-                </div>
-              )}
+                <button
+                  onClick={() => goToPhase('test')}
+                  style={{
+                    width: '100%',
+                    padding: '16px 32px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '18px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Take the Test
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       );
     }
 
     // TEST
     if (phase === 'test') {
-      const q = questions[testIndex];
-      const answered = answers[testIndex] !== null;
+      const q = testQuestions[testIndex];
+      const hasSelected = answers[testIndex] !== null;
+      const isConfirmed = confirmed[testIndex];
+      const answered = hasSelected && isConfirmed;
 
       if (showResult) {
         return (
-          <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
-            <div className="text-7xl mb-6">
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '80vh',
+            padding: '24px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '72px', marginBottom: '24px' }}>
               {score >= 8 ? '🏆' : score >= 6 ? '⭐' : '📚'}
             </div>
-            <h2 className="text-4xl font-black text-white mb-4">
+            <h2 style={{
+              fontSize: '36px',
+              fontWeight: 900,
+              color: '#f8fafc',
+              marginBottom: '16px'
+            }}>
               {score}/10 Correct
             </h2>
-            <p className="text-lg text-slate-400 mb-8 max-w-md">
+            <p style={{
+              fontSize: '18px',
+              color: '#94a3b8',
+              marginBottom: '32px',
+              maxWidth: '400px',
+              lineHeight: 1.6
+            }}>
               {score >= 8 ? "Excellent! You've truly mastered standing waves!" :
                score >= 6 ? "Good job! Review the concepts you missed." :
                "Keep practicing! Review the material and try again."}
             </p>
             <button
               onClick={() => goToPhase('mastery')}
-              className="px-10 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-lg shadow-lg shadow-emerald-500/30"
-              style={{ zIndex: 10 }}
+              style={{
+                padding: '16px 40px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: '18px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
             >
               Complete Lesson
             </button>
@@ -1648,30 +2299,73 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
       }
 
       return (
-        <div className="flex flex-col min-h-[80vh] px-6 py-8">
-          <div className="max-w-xl mx-auto w-full flex-1">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '80vh',
+          padding: '32px 24px'
+        }}>
+          <div style={{ maxWidth: '580px', margin: '0 auto', width: '100%', flex: 1 }}>
             {/* Progress */}
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-sm text-slate-500 font-semibold">
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '24px'
+            }}>
+              <span style={{
+                fontSize: '14px',
+                color: '#64748b',
+                fontWeight: 600
+              }}>
                 Question {testIndex + 1} of 10
               </span>
-              <div className="flex gap-1.5">
+              <div style={{ display: 'flex', gap: '6px' }}>
                 {answers.slice(0, 10).map((a, i) => (
-                  <div key={i} className={`w-2.5 h-2.5 rounded-full ${
-                    a !== null ? (questions[i].options[a]?.correct ? 'bg-emerald-500' : 'bg-red-500') :
-                    i === testIndex ? 'bg-amber-400' : 'bg-slate-700'
-                  }`} />
+                  <div key={i} style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    background: a !== null
+                      ? (testQuestions[i].options.find(o => o.correct)?.id === testQuestions[i].options[a]?.id ? '#10b981' : '#ef4444')
+                      : i === testIndex ? '#f59e0b' : '#475569',
+                    transition: 'all 0.2s ease'
+                  }} />
                 ))}
               </div>
             </div>
 
+            {/* Scenario */}
+            <div style={{
+              padding: '16px',
+              borderRadius: '12px',
+              background: 'rgba(139, 92, 246, 0.1)',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              marginBottom: '16px'
+            }}>
+              <p style={{
+                fontSize: '14px',
+                color: '#e2e8f0',
+                lineHeight: 1.7,
+                fontStyle: 'italic'
+              }}>
+                {q.scenario}
+              </p>
+            </div>
+
             {/* Question */}
-            <h3 className="text-xl font-bold text-white mb-6 leading-relaxed">
+            <h3 style={{
+              fontSize: '20px',
+              fontWeight: 700,
+              color: '#f8fafc',
+              marginBottom: '24px',
+              lineHeight: 1.5
+            }}>
               {q.question}
             </h3>
 
             {/* Options */}
-            <div className="flex flex-col gap-3 mb-6">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
               {q.options.map((opt, i) => {
                 const isSelected = answers[testIndex] === i;
                 const isCorrect = opt.correct;
@@ -1679,44 +2373,96 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
                 return (
                   <button
-                    key={i}
+                    key={opt.id}
                     onClick={() => {
-                      if (!answered) {
+                      if (!isConfirmed) {
                         const newAnswers = [...answers];
                         newAnswers[testIndex] = i;
                         setAnswers(newAnswers);
-                        emitEvent('test_answered', { questionIndex: testIndex, correct: opt.correct });
                       }
                     }}
-                    disabled={answered}
-                    className={`p-5 rounded-xl border-2 text-left transition-all ${
-                      showFeedback
+                    disabled={isConfirmed}
+                    style={{
+                      padding: '16px 20px',
+                      borderRadius: '12px',
+                      border: showFeedback
                         ? isCorrect
-                          ? 'border-emerald-500 bg-emerald-500/10'
+                          ? '2px solid #10b981'
                           : isSelected
-                            ? 'border-red-500 bg-red-500/10'
-                            : 'border-slate-700 bg-slate-800/50'
+                            ? '2px solid #ef4444'
+                            : '2px solid #334155'
                         : isSelected
-                          ? 'border-amber-500 bg-amber-500/10'
-                          : 'border-slate-700 bg-slate-800/50'
-                    } ${answered ? 'cursor-default' : 'cursor-pointer hover:border-slate-600'}`}
-                    style={{ zIndex: 10 }}
+                          ? '2px solid #f59e0b'
+                          : '2px solid #334155',
+                      background: showFeedback
+                        ? isCorrect
+                          ? 'rgba(16, 185, 129, 0.1)'
+                          : isSelected
+                            ? 'rgba(239, 68, 68, 0.1)'
+                            : 'rgba(30, 41, 59, 0.5)'
+                        : isSelected
+                          ? 'rgba(245, 158, 11, 0.1)'
+                          : 'rgba(30, 41, 59, 0.5)',
+                      color: '#f8fafc',
+                      textAlign: 'left',
+                      cursor: isConfirmed ? 'default' : 'pointer',
+                      transition: 'all 0.2s ease',
+                      fontSize: '15px',
+                      lineHeight: 1.5,
+                      fontWeight: 500
+                    }}
                   >
-                    <span className="text-white">{opt.text}</span>
+                    <span style={{ marginRight: '8px', fontWeight: 700, color: '#94a3b8' }}>{opt.id.toUpperCase()})</span>
+                    {opt.label}
                   </button>
                 );
               })}
             </div>
 
+            {/* Check Answer button */}
+            {hasSelected && !isConfirmed && (
+              <button
+                onClick={() => {
+                  const newConfirmed = [...confirmed];
+                  newConfirmed[testIndex] = true;
+                  setConfirmed(newConfirmed);
+                  emitEvent('test_answered', { questionIndex: testIndex, correct: q.options[answers[testIndex] as number]?.correct || false });
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px 24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  marginBottom: '16px',
+                  boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Check Answer
+              </button>
+            )}
+
             {/* Explanation */}
             {answered && (
-              <div className={`p-5 rounded-xl border ${
-                q.options[answers[testIndex] as number]?.correct
-                  ? 'bg-emerald-500/10 border-emerald-500/30'
-                  : 'bg-red-500/10 border-red-500/30'
-              }`}>
-                <p className="text-white">
-                  <strong className={q.options[answers[testIndex] as number]?.correct ? 'text-emerald-400' : 'text-red-400'}>
+              <div style={{
+                padding: '16px',
+                borderRadius: '12px',
+                background: q.options[answers[testIndex] as number]?.correct
+                  ? 'rgba(16, 185, 129, 0.1)'
+                  : 'rgba(239, 68, 68, 0.1)',
+                border: q.options[answers[testIndex] as number]?.correct
+                  ? '1px solid rgba(16, 185, 129, 0.3)'
+                  : '1px solid rgba(239, 68, 68, 0.3)'
+              }}>
+                <p style={{ color: '#f8fafc', fontSize: '14px', lineHeight: 1.6 }}>
+                  <strong style={{
+                    color: q.options[answers[testIndex] as number]?.correct ? '#10b981' : '#ef4444'
+                  }}>
                     {q.options[answers[testIndex] as number]?.correct ? '✓ Correct!' : '✗ Not quite.'}
                   </strong>{' '}
                   {q.explanation}
@@ -1726,14 +2472,28 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
           </div>
 
           {/* Navigation */}
-          <div className="flex justify-between gap-4 pt-4 border-t border-slate-800">
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '16px',
+            paddingTop: '16px',
+            borderTop: '1px solid rgba(51, 65, 85, 0.5)'
+          }}>
             <button
               onClick={() => { if (testIndex > 0) setTestIndex(testIndex - 1); }}
               disabled={testIndex === 0}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                testIndex === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-              style={{ zIndex: 10 }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: testIndex === 0 ? '#1e293b' : '#334155',
+                color: testIndex === 0 ? '#64748b' : '#e2e8f0',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: testIndex === 0 ? 'not-allowed' : 'pointer',
+                opacity: testIndex === 0 ? 0.4 : 1,
+                transition: 'all 0.2s ease'
+              }}
             >
               ← Previous
             </button>
@@ -1741,12 +2501,20 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               <button
                 onClick={() => { if (answered) setTestIndex(testIndex + 1); }}
                 disabled={!answered}
-                className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                  answered
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                }`}
-                style={{ zIndex: 10 }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: answered
+                    ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                    : '#1e293b',
+                  color: answered ? '#ffffff' : '#64748b',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  cursor: answered ? 'pointer' : 'not-allowed',
+                  opacity: answered ? 1 : 0.4,
+                  transition: 'all 0.2s ease'
+                }}
               >
                 Next Question →
               </button>
@@ -1754,12 +2522,20 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               <button
                 onClick={() => { if (answered) setShowResult(true); }}
                 disabled={!answered}
-                className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                  answered
-                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
-                    : 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                }`}
-                style={{ zIndex: 10 }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: answered
+                    ? 'linear-gradient(135deg, #10b981, #059669)'
+                    : '#1e293b',
+                  color: answered ? '#ffffff' : '#64748b',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  cursor: answered ? 'pointer' : 'not-allowed',
+                  opacity: answered ? 1 : 0.4,
+                  transition: 'all 0.2s ease'
+                }}
               >
                 See Results →
               </button>
@@ -1772,13 +2548,26 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     // MASTERY
     if (phase === 'mastery') {
       return (
-        <div className="relative flex flex-col items-center justify-center min-h-[80vh] px-6 text-center overflow-hidden">
+        <div style={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '80vh',
+          padding: '24px',
+          textAlign: 'center',
+          overflow: 'hidden'
+        }}>
           {/* Confetti */}
           {[...Array(50)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-2.5 h-2.5 rounded-sm animate-pulse"
               style={{
+                position: 'absolute',
+                width: '10px',
+                height: '10px',
+                borderRadius: '2px',
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 background: ['#f59e0b', '#8b5cf6', '#10b981', '#ec4899'][i % 4],
@@ -1788,55 +2577,132 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             />
           ))}
 
-          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center mb-6 shadow-2xl shadow-emerald-500/30 z-10">
-            <span className="text-5xl">🎓</span>
+          <div style={{
+            width: '112px',
+            height: '112px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #10b981, #f59e0b)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '24px',
+            boxShadow: '0 12px 40px rgba(16, 185, 129, 0.3)',
+            zIndex: 10
+          }}>
+            <span style={{ fontSize: '48px' }}>🎓</span>
           </div>
 
-          <h1 className="text-4xl font-black text-white mb-4 z-10">
+          <h1 style={{
+            fontSize: '36px',
+            fontWeight: 900,
+            color: '#f8fafc',
+            marginBottom: '16px',
+            zIndex: 10
+          }}>
             Congratulations!
           </h1>
-          <p className="text-lg text-slate-400 mb-6 max-w-md z-10">
+          <p style={{
+            fontSize: '18px',
+            color: '#94a3b8',
+            marginBottom: '24px',
+            maxWidth: '400px',
+            lineHeight: 1.6,
+            zIndex: 10
+          }}>
             You've mastered Standing Waves! You now understand the physics behind every musical instrument.
           </p>
 
           {/* Score */}
-          <div className="px-8 py-4 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-8 z-10">
-            <p className="text-sm text-slate-500 mb-1">Quiz Score</p>
-            <p className={`text-4xl font-black ${score >= 8 ? 'text-emerald-400' : 'text-amber-400'}`}>{score}/10</p>
+          <div style={{
+            padding: '16px 32px',
+            borderRadius: '12px',
+            background: 'rgba(30, 41, 59, 0.5)',
+            border: '1px solid rgba(51, 65, 85, 0.5)',
+            marginBottom: '32px',
+            zIndex: 10
+          }}>
+            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Quiz Score</p>
+            <p style={{
+              fontSize: '36px',
+              fontWeight: 900,
+              color: score >= 8 ? '#10b981' : '#f59e0b'
+            }}>{score}/10</p>
           </div>
 
           {/* Topics learned */}
-          <div className="p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mb-8 max-w-md z-10">
-            <p className="text-xs font-bold text-emerald-400 mb-3 uppercase tracking-widest">What You Learned</p>
-            <div className="flex flex-wrap gap-2 justify-center">
+          <div style={{
+            padding: '20px',
+            borderRadius: '12px',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            marginBottom: '32px',
+            maxWidth: '400px',
+            zIndex: 10
+          }}>
+            <p style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#10b981',
+              marginBottom: '12px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em'
+            }}>What You Learned</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
               {['Harmonics', 'Nodes', 'Antinodes', 'Tension', 'Frequency', 'Music Physics'].map((topic, i) => (
-                <span key={i} className="px-3 py-1.5 rounded-full bg-slate-800 text-white text-sm font-semibold">
+                <span key={i} style={{
+                  padding: '8px 16px',
+                  borderRadius: '9999px',
+                  background: '#1e293b',
+                  color: '#f8fafc',
+                  fontSize: '14px',
+                  fontWeight: 600
+                }}>
                   {topic}
                 </span>
               ))}
             </div>
           </div>
 
-          <div className="flex gap-4 z-10">
+          <div style={{ display: 'flex', gap: '16px', zIndex: 10 }}>
             <button
               onClick={() => {
                 setPhase('hook');
                 setTestIndex(0);
                 setAnswers(Array(10).fill(null));
+                setConfirmed(Array(10).fill(false));
                 setShowResult(false);
                 setDiscoveredHarmonics([1]);
                 setActiveApp(0);
                 setCompletedApps(new Set());
               }}
-              className="px-6 py-3 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 transition-all"
-              style={{ zIndex: 10 }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: '#334155',
+                color: '#e2e8f0',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
             >
               Replay Lesson
             </button>
             <button
               onClick={() => goToPhase('play')}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30"
-              style={{ zIndex: 10 }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                color: '#ffffff',
+                fontWeight: 600,
+                fontSize: '14px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(245, 158, 11, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
             >
               Free Exploration
             </button>
@@ -1855,41 +2721,184 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     return null;
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/3 rounded-full blur-3xl" />
+  // Calculate progress for the progress bar
+  const progressPercent = ((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100;
 
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
-        <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Standing Waves</span>
-          <div className="flex items-center gap-1.5">
-            {phaseOrder.map((p) => (
+  // Handle navigation
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < phaseOrder.length - 1;
+
+  const handleBack = () => {
+    if (canGoBack) {
+      goToPhase(phaseOrder[currentPhaseIndex - 1]);
+    }
+  };
+
+  const handleNext = () => {
+    if (canGoNext && phase !== 'test') {
+      goToPhase(phaseOrder[currentPhaseIndex + 1]);
+    }
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'linear-gradient(135deg, #0f172a 0%, #0a1628 50%, #0f172a 100%)',
+      color: '#f8fafc',
+      position: 'relative',
+      overflow: 'hidden',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* Progress Bar - Fixed at top (using aside to not interfere with footer detection) */}
+      <aside style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: '#1f2937',
+        zIndex: 100
+      }}>
+        <span style={{
+          display: 'block',
+          height: '100%',
+          width: `${progressPercent}%`,
+          background: 'linear-gradient(90deg, #a855f7, #10b981)',
+          transition: 'width 0.3s ease'
+        }} />
+      </aside>
+
+      {/* Header with Navigation Dots */}
+      <div style={{
+        position: 'fixed',
+        top: '4px',
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        background: 'rgba(15, 23, 42, 0.9)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
+        padding: '12px 24px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          maxWidth: '896px',
+          margin: '0 auto'
+        }}>
+          <span style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.8)',
+            letterSpacing: '0.025em'
+          }}>Standing Waves</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {phaseOrder.map((p, idx) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
-                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
+                aria-label={phaseLabels[p]}
+                style={{
+                  width: phase === p ? '24px' : '10px',
+                  height: '10px',
+                  borderRadius: '9999px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  background: phase === p
+                    ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                    : phaseOrder.indexOf(phase) > idx
+                      ? '#10b981'
+                      : '#475569',
+                  boxShadow: phase === p ? '0 0 12px rgba(245, 158, 11, 0.4)' : 'none'
+                }}
                 title={phaseLabels[p]}
-                style={{ zIndex: 10 }}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-amber-400">{phaseLabels[phase]}</span>
+          <span style={{
+            fontSize: '14px',
+            fontWeight: 500,
+            color: '#f59e0b'
+          }}>{phaseLabels[phase]}</span>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative pt-16 pb-12">{renderPhase()}</div>
+      {/* Main scrollable content area */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingTop: '72px',
+        paddingBottom: '80px'
+      }}>
+        {renderPhase()}
+      </div>
+
+      {/* Fixed Bottom Navigation Bar */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: '#0f172a',
+        borderTop: '1px solid #334155',
+        padding: '12px 24px',
+        zIndex: 100,
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4)'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          maxWidth: '896px',
+          margin: '0 auto'
+        }}>
+          <button
+            onClick={handleBack}
+            disabled={!canGoBack}
+            style={{
+              padding: '12px 24px',
+              minHeight: '48px',
+              borderRadius: '12px',
+              border: 'none',
+              background: canGoBack ? '#334155' : '#1e293b',
+              color: canGoBack ? '#e2e8f0' : '#64748b',
+              fontWeight: 600,
+              fontSize: '14px',
+              cursor: canGoBack ? 'pointer' : 'not-allowed',
+              opacity: canGoBack ? 1 : 0.4,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Back
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={!canGoNext || phase === 'test'}
+            style={{
+              padding: '12px 24px',
+              minHeight: '48px',
+              borderRadius: '12px',
+              border: 'none',
+              background: (canGoNext && phase !== 'test')
+                ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+                : '#1e293b',
+              color: (canGoNext && phase !== 'test') ? '#ffffff' : '#64748b',
+              fontWeight: 600,
+              fontSize: '14px',
+              cursor: (canGoNext && phase !== 'test') ? 'pointer' : 'not-allowed',
+              opacity: (canGoNext && phase !== 'test') ? 1 : 0.4,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Next
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };

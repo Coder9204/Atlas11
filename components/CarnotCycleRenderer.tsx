@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
 // CARNOT CYCLE RENDERER - THERMODYNAMIC EFFICIENCY & HEAT ENGINES
-// Premium 10-phase educational game with premium design
+// Premium 10-phase educational game with inline styles for test compliance
 // ============================================================================
 
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -12,16 +12,16 @@ type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_p
 const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 const phaseLabels: Record<Phase, string> = {
-  hook: 'Hook',
-  predict: 'Predict',
-  play: 'Lab',
-  review: 'Review',
-  twist_predict: 'Twist',
-  twist_play: 'Explore',
-  twist_review: 'Deep Dive',
-  transfer: 'Apply',
-  test: 'Test',
-  mastery: 'Mastery'
+  hook: 'Introduction',
+  predict: 'Make Prediction',
+  play: 'Experiment Lab',
+  review: 'Review Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Explore Further',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Complete'
 };
 
 type GameEventType =
@@ -52,6 +52,8 @@ interface GameEvent {
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
   currentPhase?: Phase;
+  gamePhase?: Phase;
+  phase?: Phase;
   onPhaseComplete?: (phase: Phase) => void;
   onBack?: () => void;
 }
@@ -62,8 +64,8 @@ interface Props {
 
 const predictions = {
   initial: {
-    question: "In 1824, Sadi Carnot asked: What determines the MAXIMUM possible efficiency of ANY heat engine?",
-    context: "A heat engine takes in heat Q_H from a hot source, converts some to useful work W, and dumps waste heat Q_C to a cold sink.",
+    question: "What determines the MAXIMUM possible efficiency of ANY heat engine?",
+    context: "In 1824, Sadi Carnot asked this fundamental question. A heat engine takes in heat Q_H from a hot source, converts some to useful work W, and dumps waste heat Q_C to a cold sink.",
     options: [
       { id: 'A', text: 'The type of working fluid (gas, steam, etc.)' },
       { id: 'B', text: 'The temperature difference between hot and cold reservoirs' },
@@ -71,7 +73,7 @@ const predictions = {
       { id: 'D', text: 'The size and design of the engine cylinders' }
     ],
     correct: 'B',
-    explanation: "Carnot's revolutionary discovery: ONLY the temperatures matter! No matter how perfectly you engineer an engine, its maximum efficiency is determined solely by the hot and cold reservoir temperatures. This is the Carnot efficiency: η = 1 - T_C/T_H"
+    explanation: "Carnot's revolutionary discovery: ONLY the temperatures matter! No matter how perfectly you engineer an engine, its maximum efficiency is determined solely by the hot and cold reservoir temperatures. This is the Carnot efficiency: eta = 1 - T_C/T_H"
   },
   twist: {
     question: "What happens if we run the Carnot cycle BACKWARDS - putting work IN instead of getting work out?",
@@ -94,8 +96,8 @@ const realWorldApplications = [
     icon: '🏭',
     short: 'Power',
     tagline: 'Why we waste 60% of our fuel',
-    description: 'Every thermal power plant - coal, nuclear, gas - is limited by Carnot efficiency. With steam at 550°C (823K) and cooling water at 30°C (303K), the theoretical maximum is only 63%. Real plants achieve 35-45%.',
-    connection: 'Carnot efficiency η = 1 - T_C/T_H sets the absolute ceiling. Engineers spend billions trying to raise T_H (supercritical steam) or lower T_C (better cooling) to squeeze out a few more percent.',
+    description: 'Every thermal power plant - coal, nuclear, gas - is limited by Carnot efficiency. With steam at 550 degrees C (823K) and cooling water at 30 degrees C (303K), the theoretical maximum is only 63%. Real plants achieve 35-45%.',
+    connection: 'Carnot efficiency eta = 1 - T_C/T_H sets the absolute ceiling. Engineers spend billions trying to raise T_H (supercritical steam) or lower T_C (better cooling) to squeeze out a few more percent.',
     howItWorks: 'Fuel heats water to superheated steam (high T_H). Steam expands through turbines, doing work. Spent steam condenses in cooling towers (low T_C). The temperature difference drives everything.',
     stats: [
       { value: '63%', label: 'Carnot limit' },
@@ -105,13 +107,12 @@ const realWorldApplications = [
     ],
     examples: [
       'Nuclear reactors (33% efficient due to safety-limited temperatures)',
-      'Supercritical coal plants (45% with 600°C steam)',
+      'Supercritical coal plants (45% with 600 degree C steam)',
       'Combined cycle gas turbines (62% using exhaust heat twice)',
       'Geothermal plants (10-20% due to low source temperature)'
     ],
     companies: ['GE Vernova', 'Siemens Energy', 'Mitsubishi Power', 'Westinghouse'],
-    futureImpact: 'Supercritical CO₂ cycles operating at 700°C could push thermal efficiency beyond 50%, saving billions in fuel costs and reducing emissions by 20%.',
-    color: 'from-orange-600 to-red-600'
+    futureImpact: 'Supercritical CO2 cycles operating at 700 degrees C could push thermal efficiency beyond 50%, saving billions in fuel costs and reducing emissions by 20%.'
   },
   {
     id: 'heat_pumps',
@@ -120,23 +121,22 @@ const realWorldApplications = [
     short: 'Heat Pumps',
     tagline: '300-500% heating efficiency',
     description: 'Heat pumps are reversed Carnot cycles. Instead of converting heat to work, they use work to MOVE heat from cold outside to warm inside. COP of 3-5 means 3-5 kW of heat for every 1 kW of electricity!',
-    connection: 'Heat pump COP = T_H/(T_H - T_C). With indoor 20°C (293K) and outdoor 5°C (278K), ideal COP = 293/15 = 19.5! Real systems achieve 3-5 due to irreversibilities.',
-    howItWorks: 'Refrigerant absorbs heat from cold outdoor air (yes, even at -15°C!), compressor raises its temperature, then it releases heat inside. The cycle reverses for cooling in summer.',
+    connection: 'Heat pump COP = T_H/(T_H - T_C). With indoor 20 degrees C (293K) and outdoor 5 degrees C (278K), ideal COP = 293/15 = 19.5! Real systems achieve 3-5 due to irreversibilities.',
+    howItWorks: 'Refrigerant absorbs heat from cold outdoor air (yes, even at -15 degrees C!), compressor raises its temperature, then it releases heat inside. The cycle reverses for cooling in summer.',
     stats: [
       { value: '3-5x', label: 'COP vs electric heat' },
       { value: '50%', label: 'Energy savings' },
-      { value: '-25°C', label: 'Modern cold limit' },
+      { value: '-25C', label: 'Modern cold limit' },
       { value: '$150B', label: 'Market by 2030' }
     ],
     examples: [
       'Air-source heat pumps (most common, COP 3-4)',
       'Ground-source/geothermal (COP 4-5, stable temps)',
       'Heat pump water heaters (COP 3-4)',
-      'Industrial heat pumps (up to 150°C output)'
+      'Industrial heat pumps (up to 150 degrees C output)'
     ],
     companies: ['Daikin', 'Mitsubishi Electric', 'Carrier', 'Bosch'],
-    futureImpact: 'Heat pumps could eliminate 40% of building emissions globally. New refrigerants and compressors are pushing cold-climate performance to -30°C with COP above 2.',
-    color: 'from-emerald-600 to-teal-600'
+    futureImpact: 'Heat pumps could eliminate 40% of building emissions globally. New refrigerants and compressors are pushing cold-climate performance to -30 degrees C with COP above 2.'
   },
   {
     id: 'car_engines',
@@ -144,8 +144,8 @@ const realWorldApplications = [
     icon: '🚗',
     short: 'Cars',
     tagline: 'Why 70% of your gas becomes heat',
-    description: 'Your car engine burns fuel at 2000°C but only converts 25-30% to motion. The rest is waste heat - radiator, exhaust, friction. Carnot explains why: the effective temperature ratio limits efficiency.',
-    connection: 'Although combustion reaches 2000°C, the working gas averages only ~600K effective T_H. With exhaust at ~350K, Carnot limit is 42%. Real engines achieve 60-70% of this.',
+    description: 'Your car engine burns fuel at 2000 degrees C but only converts 25-30% to motion. The rest is waste heat - radiator, exhaust, friction. Carnot explains why: the effective temperature ratio limits efficiency.',
+    connection: 'Although combustion reaches 2000 degrees C, the working gas averages only ~600K effective T_H. With exhaust at ~350K, Carnot limit is 42%. Real engines achieve 60-70% of this.',
     howItWorks: 'Fuel-air mixture compresses (raises T_H), spark ignites it, hot gas expands doing work, exhaust removes waste heat (T_C). The Otto cycle approximates Carnot with discrete strokes.',
     stats: [
       { value: '25-30%', label: 'Gasoline efficiency' },
@@ -160,8 +160,7 @@ const realWorldApplications = [
       'Turbochargers (use exhaust heat for more power)'
     ],
     companies: ['Toyota', 'BMW', 'Mercedes-Benz', 'Honda'],
-    futureImpact: 'EVs bypass heat engine limits entirely with 85-90% drivetrain efficiency. For remaining combustion engines, variable compression and waste heat recovery push toward 50%.',
-    color: 'from-slate-600 to-zinc-600'
+    futureImpact: 'EVs bypass heat engine limits entirely with 85-90% drivetrain efficiency. For remaining combustion engines, variable compression and waste heat recovery push toward 50%.'
   },
   {
     id: 'refrigeration',
@@ -170,46 +169,45 @@ const realWorldApplications = [
     short: 'Cooling',
     tagline: 'Moving heat the "wrong" way',
     description: 'Refrigerators, air conditioners, and cryogenic systems all use reversed heat engine cycles. They pump heat from cold to hot using work input - seemingly violating thermodynamics but actually obeying Carnot.',
-    connection: 'Refrigerator COP = T_C/(T_H - T_C). For a fridge at 5°C (278K) and kitchen at 25°C (298K), ideal COP = 278/20 = 13.9. Real fridges achieve 2-4.',
+    connection: 'Refrigerator COP = T_C/(T_H - T_C). For a fridge at 5 degrees C (278K) and kitchen at 25 degrees C (298K), ideal COP = 278/20 = 13.9. Real fridges achieve 2-4.',
     howItWorks: 'Liquid refrigerant evaporates inside (absorbs heat, gets cold), compressor raises pressure and temperature, condenser releases heat outside, expansion valve drops pressure for next cycle.',
     stats: [
       { value: '2-4', label: 'Fridge COP' },
       { value: '15%', label: 'Home electricity use' },
-      { value: '-269°C', label: 'LNG temperature' },
+      { value: '-269C', label: 'LNG temperature' },
       { value: '4K', label: 'Liquid helium' }
     ],
     examples: [
       'Home refrigerators and freezers',
       'Air conditioning (same principle, larger scale)',
       'Cryogenic cooling for MRI and quantum computers',
-      'LNG ships (cool natural gas to -162°C)'
+      'LNG ships (cool natural gas to -162 degrees C)'
     ],
     companies: ['Carrier', 'Daikin', 'Linde', 'Air Liquide'],
-    futureImpact: 'Magnetic and elastocaloric cooling may replace vapor compression, eliminating HFC refrigerants while improving efficiency by 30%. Critical for sustainable cooling as global temps rise.',
-    color: 'from-blue-600 to-cyan-600'
+    futureImpact: 'Magnetic and elastocaloric cooling may replace vapor compression, eliminating HFC refrigerants while improving efficiency by 30%. Critical for sustainable cooling as global temps rise.'
   }
 ];
 
 const testQuestions = [
   {
-    scenario: "A coal power plant operates with steam at 550°C (823K) and cooling water at 30°C (303K). The plant manager wants to know the theoretical efficiency limit.",
+    scenario: "A coal power plant operates with steam at 550 degrees C (823K) and cooling water at 30 degrees C (303K). The plant manager wants to know the theoretical efficiency limit.",
     question: "What is the maximum possible (Carnot) efficiency?",
     options: [
-      { text: "About 37% - limited by turbine design", correct: false },
-      { text: "About 63% - set by temperature ratio", correct: true },
-      { text: "About 85% - modern plants are very efficient", correct: false },
-      { text: "100% is possible with perfect insulation", correct: false }
+      { text: "A) About 37% - limited by turbine design", correct: false },
+      { text: "B) About 63% - set by temperature ratio", correct: true },
+      { text: "C) About 85% - modern plants are very efficient", correct: false },
+      { text: "D) 100% is possible with perfect insulation", correct: false }
     ],
-    explanation: "Carnot efficiency η = 1 - T_C/T_H = 1 - 303/823 = 63.2%. This is the absolute maximum regardless of engineering. Real plants achieve 35-45% due to friction, heat losses, and other irreversibilities."
+    explanation: "Carnot efficiency eta = 1 - T_C/T_H = 1 - 303/823 = 63.2%. This is the absolute maximum regardless of engineering. Real plants achieve 35-45% due to friction, heat losses, and other irreversibilities."
   },
   {
     scenario: "An inventor claims to have built a heat engine that operates between 600K and 300K reservoirs with 60% efficiency.",
     question: "Is this claim possible according to physics?",
     options: [
-      { text: "Yes - 60% is achievable with good engineering", correct: false },
-      { text: "No - it exceeds the Carnot limit of 50%", correct: true },
-      { text: "Yes - newer materials allow higher efficiency", correct: false },
-      { text: "Need more information about the engine type", correct: false }
+      { text: "A) Yes - 60% is achievable with good engineering", correct: false },
+      { text: "B) No - it exceeds the Carnot limit of 50%", correct: true },
+      { text: "C) Yes - newer materials allow higher efficiency", correct: false },
+      { text: "D) Need more information about the engine type", correct: false }
     ],
     explanation: "Carnot limit = 1 - 300/600 = 50%. Since 60% > 50%, this engine violates the Second Law of Thermodynamics. No amount of clever engineering can exceed the Carnot limit - it's a fundamental law of nature."
   },
@@ -217,43 +215,43 @@ const testQuestions = [
     scenario: "During isothermal expansion in the Carnot cycle, gas absorbs heat Q_H from the hot reservoir while expanding and doing work.",
     question: "Why does the temperature stay constant during this process?",
     options: [
-      { text: "The gas is perfectly insulated", correct: false },
-      { text: "Heat absorbed equals work done, so internal energy is unchanged", correct: true },
-      { text: "The volume doesn't actually change", correct: false },
-      { text: "Temperature can't change during expansion", correct: false }
+      { text: "A) The gas is perfectly insulated", correct: false },
+      { text: "B) Heat absorbed equals work done, so internal energy is unchanged", correct: true },
+      { text: "C) The volume doesn't actually change", correct: false },
+      { text: "D) Temperature can't change during expansion", correct: false }
     ],
-    explanation: "For an ideal gas, internal energy U depends only on temperature. During isothermal expansion: Q_in = W_out, so ΔU = Q - W = 0. Temperature stays constant because all incoming heat is immediately converted to work output."
+    explanation: "For an ideal gas, internal energy U depends only on temperature. During isothermal expansion: Q_in = W_out, so Delta U = Q - W = 0. Temperature stays constant because all incoming heat is immediately converted to work output."
   },
   {
-    scenario: "A heat pump heats a house (20°C inside, 0°C outside). An electric heater is 100% efficient at converting electricity to heat.",
+    scenario: "A heat pump heats a house (20 degrees C inside, 0 degrees C outside). An electric heater is 100% efficient at converting electricity to heat.",
     question: "How can a heat pump have 'efficiency' greater than 100%?",
     options: [
-      { text: "It violates energy conservation temporarily", correct: false },
-      { text: "It MOVES heat rather than creating it - COP measures heat delivered per work input", correct: true },
-      { text: "The 100% heater measurement is wrong", correct: false },
-      { text: "Heat pumps create energy from temperature differences", correct: false }
+      { text: "A) It violates energy conservation temporarily", correct: false },
+      { text: "B) It MOVES heat rather than creating it - COP measures heat delivered per work input", correct: true },
+      { text: "C) The 100% heater measurement is wrong", correct: false },
+      { text: "D) Heat pumps create energy from temperature differences", correct: false }
     ],
     explanation: "Heat pumps don't create heat - they move it. COP = Q_H/W can exceed 1 because you're measuring heat delivered vs work input. With COP = 4, you get 4 kW of heating for 1 kW of electricity. Energy is conserved: Q_H = W + Q_C."
   },
   {
-    scenario: "An engineer wants to improve a power plant's efficiency. She can either increase T_H by 100K or decrease T_C by 100K. Current: T_H = 800K, T_C = 300K (η = 62.5%).",
+    scenario: "An engineer wants to improve a power plant's efficiency. She can either increase T_H by 100K or decrease T_C by 100K. Current: T_H = 800K, T_C = 300K (eta = 62.5%).",
     question: "Which change gives a LARGER efficiency improvement?",
     options: [
-      { text: "Increasing T_H to 900K (new η = 66.7%)", correct: false },
-      { text: "Decreasing T_C to 200K (new η = 75.0%)", correct: true },
-      { text: "Both give exactly the same improvement", correct: false },
-      { text: "Neither significantly affects efficiency", correct: false }
+      { text: "A) Increasing T_H to 900K (new eta = 66.7%)", correct: false },
+      { text: "B) Decreasing T_C to 200K (new eta = 75.0%)", correct: true },
+      { text: "C) Both give exactly the same improvement", correct: false },
+      { text: "D) Neither significantly affects efficiency", correct: false }
     ],
-    explanation: "Lowering T_C has more impact! With T_H = 900K: η = 1 - 300/900 = 66.7% (+4.2%). With T_C = 200K: η = 1 - 200/800 = 75.0% (+12.5%). T_C appears in the ratio, so reducing it has outsized effect. This is why cold sinks (deep ocean, cold climates) are valuable for power plants."
+    explanation: "Lowering T_C has more impact! With T_H = 900K: eta = 1 - 300/900 = 66.7% (+4.2%). With T_C = 200K: eta = 1 - 200/800 = 75.0% (+12.5%). T_C appears in the ratio, so reducing it has outsized effect. This is why cold sinks (deep ocean, cold climates) are valuable for power plants."
   },
   {
-    scenario: "A refrigerator maintains 5°C (278K) inside while the kitchen is 30°C (303K). It removes 100W of heat from the food compartment.",
+    scenario: "A refrigerator maintains 5 degrees C (278K) inside while the kitchen is 30 degrees C (303K). It removes 100W of heat from the food compartment.",
     question: "What is the minimum power required to run this refrigerator?",
     options: [
-      { text: "About 9W (Carnot COP = 11.1)", correct: true },
-      { text: "At least 100W (you can't move heat for free)", correct: false },
-      { text: "About 50W (half the cooling load)", correct: false },
-      { text: "Zero - once cold, it stays cold", correct: false }
+      { text: "A) About 9W (Carnot COP = 11.1)", correct: true },
+      { text: "B) At least 100W (you can't move heat for free)", correct: false },
+      { text: "C) About 50W (half the cooling load)", correct: false },
+      { text: "D) Zero - once cold, it stays cold", correct: false }
     ],
     explanation: "Refrigerator COP = T_C/(T_H - T_C) = 278/(303-278) = 278/25 = 11.1. This means ideally, moving 100W of heat requires only W = Q_C/COP = 100/11.1 = 9W. Real fridges need more (COP ~3), so actual power is ~30-40W for this cooling load."
   },
@@ -261,21 +259,21 @@ const testQuestions = [
     scenario: "During adiabatic expansion in the Carnot cycle, the gas does work but no heat enters or leaves the system.",
     question: "Where does the energy for this work come from?",
     options: [
-      { text: "From the hot reservoir through delayed heat transfer", correct: false },
-      { text: "From the internal energy of the gas - temperature drops", correct: true },
-      { text: "From potential energy stored in the piston", correct: false },
-      { text: "From the cold reservoir in advance", correct: false }
+      { text: "A) From the hot reservoir through delayed heat transfer", correct: false },
+      { text: "B) From the internal energy of the gas - temperature drops", correct: true },
+      { text: "C) From potential energy stored in the piston", correct: false },
+      { text: "D) From the cold reservoir in advance", correct: false }
     ],
-    explanation: "In adiabatic processes, Q = 0, so the First Law gives ΔU = -W. The gas does positive work (expands), so internal energy decreases. For an ideal gas, U ∝ T, so temperature drops. The gas literally cools itself by doing work - trading thermal energy for mechanical work."
+    explanation: "In adiabatic processes, Q = 0, so the First Law gives Delta U = -W. The gas does positive work (expands), so internal energy decreases. For an ideal gas, U is proportional to T, so temperature drops. The gas literally cools itself by doing work - trading thermal energy for mechanical work."
   },
   {
-    scenario: "A geothermal plant uses hot water at 150°C (423K) from underground. Cooling is to 25°C (298K) ambient air.",
+    scenario: "A geothermal plant uses hot water at 150 degrees C (423K) from underground. Cooling is to 25 degrees C (298K) ambient air.",
     question: "Why is geothermal efficiency (10-15%) so much lower than coal plants (40%)?",
     options: [
-      { text: "Geothermal heat is lower quality than combustion heat", correct: false },
-      { text: "The source temperature T_H is much lower, reducing Carnot limit", correct: true },
-      { text: "Water is a worse working fluid than steam", correct: false },
-      { text: "Geothermal plants use older technology", correct: false }
+      { text: "A) Geothermal heat is lower quality than combustion heat", correct: false },
+      { text: "B) The source temperature T_H is much lower, reducing Carnot limit", correct: true },
+      { text: "C) Water is a worse working fluid than steam", correct: false },
+      { text: "D) Geothermal plants use older technology", correct: false }
     ],
     explanation: "Carnot limit = 1 - 298/423 = 29.5%, compared to coal's 63% (with 823K steam). Lower T_H means lower maximum efficiency. Geothermal compensates with free fuel (Earth's heat), but physics limits conversion efficiency. Binary cycle plants improve this slightly."
   },
@@ -283,23 +281,23 @@ const testQuestions = [
     scenario: "Your car's engine radiator and exhaust together reject about 70% of the fuel's energy as waste heat.",
     question: "Why can't engineers design an engine that wastes less heat?",
     options: [
-      { text: "They could with better materials, but it's too expensive", correct: false },
-      { text: "The Carnot limit fundamentally requires waste heat for any heat engine", correct: true },
-      { text: "Regulations require waste heat for emissions control", correct: false },
-      { text: "The heat is needed to keep the engine warm", correct: false }
+      { text: "A) They could with better materials, but it's too expensive", correct: false },
+      { text: "B) The Carnot limit fundamentally requires waste heat for any heat engine", correct: true },
+      { text: "C) Regulations require waste heat for emissions control", correct: false },
+      { text: "D) The heat is needed to keep the engine warm", correct: false }
     ],
-    explanation: "Carnot's theorem proves that ALL heat engines must reject some heat to the cold reservoir. With effective T_H ≈ 600K and T_C ≈ 350K, the maximum efficiency is only ~42%. The remaining 58%+ MUST be rejected as heat - it's physics, not engineering. This is why EVs are fundamentally more efficient."
+    explanation: "Carnot's theorem proves that ALL heat engines must reject some heat to the cold reservoir. With effective T_H ~ 600K and T_C ~ 350K, the maximum efficiency is only ~42%. The remaining 58%+ MUST be rejected as heat - it's physics, not engineering. This is why EVs are fundamentally more efficient."
   },
   {
     scenario: "Two Carnot engines operate in series: Engine A between 1000K and 500K, Engine B uses A's waste heat between 500K and 300K.",
     question: "What is the combined efficiency of this two-stage system?",
     options: [
-      { text: "The sum of individual efficiencies: 50% + 40% = 90%", correct: false },
-      { text: "Same as a single engine from 1000K to 300K: 70%", correct: true },
-      { text: "Lower due to losses at the interface between stages", correct: false },
-      { text: "Higher because two engines work together", correct: false }
+      { text: "A) The sum of individual efficiencies: 50% + 40% = 90%", correct: false },
+      { text: "B) Same as a single engine from 1000K to 300K: 70%", correct: true },
+      { text: "C) Lower due to losses at the interface between stages", correct: false },
+      { text: "D) Higher because two engines work together", correct: false }
     ],
-    explanation: "Engine A: η_A = 1 - 500/1000 = 50%. Engine B: η_B = 1 - 300/500 = 40%. Combined: η = 1 - (1-0.5)(1-0.4) = 1 - 0.3 = 70%. This equals 1 - 300/1000, the same as one engine across the full range! Carnot efficiency depends only on the extreme temperatures, not intermediate stages."
+    explanation: "Engine A: eta_A = 1 - 500/1000 = 50%. Engine B: eta_B = 1 - 300/500 = 40%. Combined: eta = 1 - (1-0.5)(1-0.4) = 1 - 0.3 = 70%. This equals 1 - 300/1000, the same as one engine across the full range! Carnot efficiency depends only on the extreme temperatures, not intermediate stages."
   }
 ];
 
@@ -307,9 +305,19 @@ const testQuestions = [
 // MAIN COMPONENT
 // ============================================================================
 
-const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete, onBack }) => {
+const CarnotCycleRenderer: React.FC<Props> = ({
+  onGameEvent,
+  currentPhase,
+  gamePhase,
+  phase: phaseProp,
+  onPhaseComplete,
+  onBack
+}) => {
+  // Determine initial phase from props (support multiple prop names)
+  const initialPhase = gamePhase ?? currentPhase ?? phaseProp ?? 'hook';
+
   // Phase and navigation state
-  const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
+  const [phase, setPhase] = useState<Phase>(initialPhase as Phase);
   const [isMobile, setIsMobile] = useState(false);
 
   // Prediction states
@@ -330,44 +338,16 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Test states
+  const [currentQuestion, setCurrentQuestion] = useState(0);
   const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [answerConfirmed, setAnswerConfirmed] = useState(false);
   const [showTestResults, setShowTestResults] = useState(false);
 
   // Refs for debouncing
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
-
-  // ============================================================================
-  // DESIGN SYSTEM
-  // ============================================================================
-
-  const colors = {
-    primary: '#ef4444',
-    primaryDark: '#dc2626',
-    accent: '#3b82f6',
-    secondary: '#f97316',
-    success: '#10b981',
-    warning: '#f59e0b',
-    bgDark: '#020617',
-    bgCard: '#0f172a',
-    bgCardLight: '#1e293b',
-    textPrimary: '#f8fafc',
-    textSecondary: '#94a3b8',
-    textMuted: '#64748b',
-    border: '#334155',
-    hot: '#ef4444',
-    cold: '#3b82f6',
-    work: '#22c55e',
-  };
-
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-  };
 
   // ============================================================================
   // EFFECTS
@@ -380,11 +360,13 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Sync with external phase control
   useEffect(() => {
-    if (currentPhase && currentPhase !== phase) {
-      setPhase(currentPhase);
+    const externalPhase = gamePhase ?? currentPhase ?? phaseProp;
+    if (externalPhase && externalPhase !== phase && PHASE_ORDER.includes(externalPhase as Phase)) {
+      setPhase(externalPhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, currentPhase, phaseProp, phase]);
 
   // Animation loop for cycle
   useEffect(() => {
@@ -463,12 +445,21 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     setTimeout(() => { navigationLockRef.current = false; }, 300);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
-  const goToNextPhase = useCallback(() => {
-    const idx = PHASE_ORDER.indexOf(phase);
-    if (idx < PHASE_ORDER.length - 1) {
-      goToPhase(PHASE_ORDER[idx + 1]);
+  const currentPhaseIndex = PHASE_ORDER.indexOf(phase);
+  const canGoBack = currentPhaseIndex > 0;
+  const canGoNext = currentPhaseIndex < PHASE_ORDER.length - 1 && phase !== 'test';
+
+  const handleBack = () => {
+    if (canGoBack) {
+      goToPhase(PHASE_ORDER[currentPhaseIndex - 1]);
     }
-  }, [phase, goToPhase]);
+  };
+
+  const handleNext = () => {
+    if (canGoNext && phase !== 'test') {
+      goToPhase(PHASE_ORDER[currentPhaseIndex + 1]);
+    }
+  };
 
   // ============================================================================
   // CALCULATIONS
@@ -478,13 +469,13 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
   const wasteHeat = (100 - parseFloat(efficiency)).toFixed(1);
 
   const cycleStages = [
-    { name: 'Isothermal Expansion', color: '#ef4444', symbol: '1→2', desc: 'Absorb Q_H at T_H, gas expands' },
-    { name: 'Adiabatic Expansion', color: '#f59e0b', symbol: '2→3', desc: 'No heat transfer, T drops to T_C' },
-    { name: 'Isothermal Compression', color: '#3b82f6', symbol: '3→4', desc: 'Reject Q_C at T_C, gas compresses' },
-    { name: 'Adiabatic Compression', color: '#8b5cf6', symbol: '4→1', desc: 'No heat transfer, T rises to T_H' }
+    { name: 'Isothermal Expansion', color: '#ef4444', symbol: '1 to 2', desc: 'Absorb Q_H at T_H, gas expands' },
+    { name: 'Adiabatic Expansion', color: '#f59e0b', symbol: '2 to 3', desc: 'No heat transfer, T drops to T_C' },
+    { name: 'Isothermal Compression', color: '#3b82f6', symbol: '3 to 4', desc: 'Reject Q_C at T_C, gas compresses' },
+    { name: 'Adiabatic Compression', color: '#8b5cf6', symbol: '4 to 1', desc: 'No heat transfer, T rises to T_H' }
   ];
 
-  const calculateScore = () => testAnswers.reduce((s, a, i) => s + (testQuestions[i].options[a]?.correct ? 1 : 0), 0);
+  const calculateScore = () => testAnswers.reduce((s, a, i) => s + (testQuestions[i]?.options[a]?.correct ? 1 : 0), 0);
 
   // ============================================================================
   // HANDLERS
@@ -508,13 +499,30 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     emitEvent('twist_predicted', { prediction: id, correct });
   };
 
-  const handleTestAnswer = (qIdx: number, aIdx: number) => {
-    setTestAnswers(prev => {
-      const next = [...prev];
-      next[qIdx] = aIdx;
-      return next;
-    });
-    emitEvent('test_answered', { question: qIdx, answer: aIdx });
+  const handleAnswerSelect = (optionIndex: number) => {
+    if (answerConfirmed) return;
+    setSelectedAnswer(optionIndex);
+  };
+
+  const handleCheckAnswer = () => {
+    if (selectedAnswer === null) return;
+    setAnswerConfirmed(true);
+    const newAnswers = [...testAnswers];
+    newAnswers[currentQuestion] = selectedAnswer;
+    setTestAnswers(newAnswers);
+    emitEvent('test_answered', { question: currentQuestion, answer: selectedAnswer });
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestion < testQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+      setSelectedAnswer(null);
+      setAnswerConfirmed(false);
+    } else {
+      setShowTestResults(true);
+      playSound('complete');
+      emitEvent('test_completed', { score: calculateScore(), total: testQuestions.length });
+    }
   };
 
   const handleAppComplete = (idx: number) => {
@@ -524,44 +532,207 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
   };
 
   // ============================================================================
-  // RENDER HELPERS
+  // STYLES
+  // ============================================================================
+
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      minHeight: '100vh',
+      height: '100vh',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
+      color: '#f8fafc',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      overflow: 'hidden',
+      position: 'relative' as const
+    },
+    header: {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      background: 'rgba(15, 23, 42, 0.95)',
+      backdropFilter: 'blur(12px)',
+      borderBottom: '1px solid #334155',
+      padding: '12px 24px',
+      zIndex: 200,
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+    },
+    headerContent: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      maxWidth: '896px',
+      margin: '0 auto',
+      gap: '16px'
+    },
+    title: {
+      fontSize: '16px',
+      fontWeight: 700,
+      color: '#ef4444',
+      margin: 0
+    },
+    navDots: {
+      display: 'flex',
+      gap: '8px',
+      alignItems: 'center'
+    },
+    phaseLabel: {
+      fontSize: '14px',
+      fontWeight: 500,
+      color: '#ef4444'
+    },
+    mainContent: {
+      flex: 1,
+      overflowY: 'auto' as const,
+      paddingTop: '72px',
+      paddingBottom: '80px'
+    },
+    bottomNav: {
+      position: 'fixed' as const,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: '#0f172a',
+      borderTop: '1px solid #334155',
+      padding: '12px 24px',
+      zIndex: 100,
+      boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4)'
+    },
+    bottomNavContent: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      maxWidth: '896px',
+      margin: '0 auto'
+    },
+    card: {
+      background: 'rgba(30, 41, 59, 0.8)',
+      borderRadius: '16px',
+      padding: '24px',
+      margin: '16px',
+      maxWidth: '800px',
+      marginLeft: 'auto',
+      marginRight: 'auto',
+      border: '1px solid #334155',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+    },
+    button: {
+      padding: '12px 24px',
+      minHeight: '48px',
+      borderRadius: '12px',
+      border: 'none',
+      fontWeight: 600,
+      fontSize: '14px',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '8px'
+    },
+    primaryButton: {
+      background: 'linear-gradient(135deg, #ef4444, #f97316)',
+      color: '#ffffff',
+      boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)'
+    },
+    secondaryButton: {
+      background: '#334155',
+      color: '#e2e8f0'
+    },
+    disabledButton: {
+      background: '#1e293b',
+      color: '#cbd5e1',
+      cursor: 'not-allowed',
+      opacity: 0.4
+    },
+    heading: {
+      fontSize: '28px',
+      fontWeight: 700,
+      color: '#f8fafc',
+      marginBottom: '16px',
+      lineHeight: 1.4
+    },
+    subheading: {
+      fontSize: '20px',
+      fontWeight: 600,
+      color: '#e2e8f0',
+      marginBottom: '12px',
+      lineHeight: 1.4
+    },
+    paragraph: {
+      fontSize: '16px',
+      color: '#cbd5e1',
+      lineHeight: 1.6,
+      marginBottom: '16px'
+    },
+    highlight: {
+      color: '#ef4444',
+      fontWeight: 600
+    },
+    slider: {
+      width: '100%',
+      height: '8px',
+      background: '#1e293b',
+      borderRadius: '4px',
+      appearance: 'none' as const,
+      cursor: 'pointer',
+      touchAction: 'none' as const
+    }
+  };
+
+  // ============================================================================
+  // RENDER PROGRESS BAR
   // ============================================================================
 
   const renderProgressBar = () => (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-b border-slate-700/50">
-      <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-        <div className="flex items-center gap-3">
+    <header style={styles.header}>
+      <div style={styles.headerContent}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {onBack && (
-            <button onClick={onBack} className="text-slate-400 hover:text-white transition-colors">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <button
+              onClick={onBack}
+              style={{ ...styles.button, padding: '8px', minHeight: '36px', background: 'transparent', color: '#cbd5e1' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 19l-7-7 7-7" />
               </svg>
             </button>
           )}
-          <span className="text-sm font-semibold text-red-400">Carnot Cycle</span>
+          <h1 style={styles.title}>Carnot Cycle</h1>
         </div>
-        <div className="flex gap-1.5">
-          {PHASE_ORDER.map((p, i) => {
-            const currentIdx = PHASE_ORDER.indexOf(phase);
-            const isActive = p === phase;
-            const isComplete = i < currentIdx;
-            return (
-              <button
-                key={p}
-                onClick={() => goToPhase(p)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  isActive ? 'w-6 bg-gradient-to-r from-red-400 to-orange-400 shadow-lg shadow-red-500/50' :
-                  isComplete ? 'w-2 bg-emerald-500' : 'w-2 bg-slate-600 hover:bg-slate-500'
-                }`}
-                title={phaseLabels[p]}
-              />
-            );
-          })}
+        <div style={styles.navDots}>
+          {PHASE_ORDER.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              aria-label={phaseLabels[p]}
+              title={phaseLabels[p]}
+              style={{
+                width: phase === p ? '24px' : '10px',
+                height: '10px',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                background: phase === p
+                  ? 'linear-gradient(90deg, #ef4444, #f97316)'
+                  : currentPhaseIndex > i
+                    ? '#10b981'
+                    : '#475569',
+                boxShadow: phase === p ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'none'
+              }}
+            />
+          ))}
         </div>
-        <span className="text-sm text-slate-400 font-medium min-w-[70px] text-right">{phaseLabels[phase]}</span>
+        <span style={styles.phaseLabel}>{phaseLabels[phase]}</span>
       </div>
-    </div>
+    </header>
   );
+
+  // ============================================================================
+  // RENDER PV DIAGRAM
+  // ============================================================================
 
   const renderPVDiagram = () => {
     const size = isMobile ? 260 : 300;
@@ -582,8 +753,8 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
     const dotY = pts[cycleStep].y + (pts[next].y - pts[cycleStep].y) * prog;
 
     return (
-      <div className="relative inline-block">
-        <svg width={size} height={size}>
+      <div style={{ position: 'relative', display: 'inline-block' }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: '100%' }}>
           <defs>
             <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#0f172a" />
@@ -601,19 +772,28 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
               <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
               <stop offset="100%" stopColor="#10b981" stopOpacity="0.1" />
             </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
           </defs>
 
           <rect width={size} height={size} fill="url(#bgGrad)" rx="16" />
 
           {/* Grid */}
-          {[1,2,3,4].map(i => (
-            <React.Fragment key={i}>
-              <line x1={pad + w*i/5} y1={pad} x2={pad + w*i/5} y2={size-pad} stroke="#334155" strokeWidth="0.5" opacity="0.4" />
-              <line x1={pad} y1={pad + h*i/5} x2={size-pad} y2={pad + h*i/5} stroke="#334155" strokeWidth="0.5" opacity="0.4" />
-            </React.Fragment>
-          ))}
+          <g opacity="0.3">
+            {[1,2,3,4].map(i => (
+              <React.Fragment key={i}>
+                <line x1={pad + w*i/5} y1={pad} x2={pad + w*i/5} y2={size-pad} stroke="#334155" strokeWidth="0.5" />
+                <line x1={pad} y1={pad + h*i/5} x2={size-pad} y2={pad + h*i/5} stroke="#334155" strokeWidth="0.5" />
+              </React.Fragment>
+            ))}
+          </g>
 
-          {/* Work area */}
+          {/* Work area (shaded region) */}
           <path
             d={`M${pts[0].x},${pts[0].y} Q${(pts[0].x+pts[1].x)/2},${pts[0].y+15} ${pts[1].x},${pts[1].y} Q${pts[1].x+30},${(pts[1].y+pts[2].y)/2} ${pts[2].x},${pts[2].y} Q${(pts[2].x+pts[3].x)/2},${pts[2].y+10} ${pts[3].x},${pts[3].y} Q${pts[3].x-20},${(pts[3].y+pts[0].y)/2} ${pts[0].x},${pts[0].y} Z`}
             fill="url(#workGrad)"
@@ -624,10 +804,12 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
           <line x1={pad-5} y1={size-pad} x2={size-pad+5} y2={size-pad} stroke="#64748b" strokeWidth="2" />
 
           {/* Cycle paths */}
-          <path d={`M${pts[0].x},${pts[0].y} Q${(pts[0].x+pts[1].x)/2},${pts[0].y+15} ${pts[1].x},${pts[1].y}`} fill="none" stroke="#ef4444" strokeWidth="3" />
-          <path d={`M${pts[1].x},${pts[1].y} Q${pts[1].x+30},${(pts[1].y+pts[2].y)/2} ${pts[2].x},${pts[2].y}`} fill="none" stroke="#f59e0b" strokeWidth="3" />
-          <path d={`M${pts[2].x},${pts[2].y} Q${(pts[2].x+pts[3].x)/2},${pts[2].y+10} ${pts[3].x},${pts[3].y}`} fill="none" stroke="#3b82f6" strokeWidth="3" />
-          <path d={`M${pts[3].x},${pts[3].y} Q${pts[3].x-20},${(pts[3].y+pts[0].y)/2} ${pts[0].x},${pts[0].y}`} fill="none" stroke="#8b5cf6" strokeWidth="3" />
+          <g filter="url(#glow)">
+            <path d={`M${pts[0].x},${pts[0].y} Q${(pts[0].x+pts[1].x)/2},${pts[0].y+15} ${pts[1].x},${pts[1].y}`} fill="none" stroke="#ef4444" strokeWidth="3" />
+            <path d={`M${pts[1].x},${pts[1].y} Q${pts[1].x+30},${(pts[1].y+pts[2].y)/2} ${pts[2].x},${pts[2].y}`} fill="none" stroke="#f59e0b" strokeWidth="3" />
+            <path d={`M${pts[2].x},${pts[2].y} Q${(pts[2].x+pts[3].x)/2},${pts[2].y+10} ${pts[3].x},${pts[3].y}`} fill="none" stroke="#3b82f6" strokeWidth="3" />
+            <path d={`M${pts[3].x},${pts[3].y} Q${pts[3].x-20},${(pts[3].y+pts[0].y)/2} ${pts[0].x},${pts[0].y}`} fill="none" stroke="#8b5cf6" strokeWidth="3" />
+          </g>
 
           {/* State points */}
           {pts.map((p, i) => (
@@ -645,13 +827,11 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
           )}
 
           {/* Labels */}
-          <text x={pad - 8} y={size/2} fill="#94a3b8" fontSize="11" textAnchor="middle" transform={`rotate(-90, ${pad-8}, ${size/2})`}>Pressure</text>
-          <text x={size/2} y={size - pad + 20} fill="#94a3b8" fontSize="11" textAnchor="middle">Volume</text>
+          <text x={pad - 8} y={size/2} fill="#cbd5e1" fontSize="11" textAnchor="middle" transform={`rotate(-90, ${pad-8}, ${size/2})`}>Pressure (P)</text>
+          <text x={size/2} y={size - pad + 25} fill="#cbd5e1" fontSize="11" textAnchor="middle">Volume (V)</text>
+          <text x={size - 30} y={pad + 10} fill="#ef4444" fontSize="10" fontWeight="bold">T_H = {hotTemp}K</text>
+          <text x={size - 30} y={size - pad - 5} fill="#3b82f6" fontSize="10" fontWeight="bold">T_C = {coldTemp}K</text>
         </svg>
-
-        {/* Temperature labels */}
-        <div className="absolute top-2 right-2 text-xs font-semibold text-red-400">T_H = {hotTemp}K</div>
-        <div className="absolute bottom-8 right-2 text-xs font-semibold text-blue-400">T_C = {coldTemp}K</div>
       </div>
     );
   };
@@ -661,23 +841,44 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
   // ============================================================================
 
   const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-red-400 tracking-wide">THERMODYNAMICS</span>
+    <div style={{ ...styles.card, textAlign: 'center' as const }}>
+      <div style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '8px 16px',
+        background: 'rgba(239, 68, 68, 0.1)',
+        border: '1px solid rgba(239, 68, 68, 0.2)',
+        borderRadius: '9999px',
+        marginBottom: '24px'
+      }}>
+        <span style={{ width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%' }} />
+        <span style={{ fontSize: '12px', fontWeight: 600, color: '#ef4444', letterSpacing: '0.05em' }}>THERMODYNAMICS</span>
       </div>
 
-      <h1 style={{ fontSize: typo.title }} className="font-bold mb-4 bg-gradient-to-r from-white via-red-100 to-orange-200 bg-clip-text text-transparent">
-        The Perfect Engine
-      </h1>
-      <p className="text-lg text-slate-400 max-w-xl mb-8">
+      <h1 style={{ ...styles.heading, fontSize: '32px' }}>The Perfect Engine</h1>
+      <p style={{ ...styles.paragraph, fontSize: '18px', color: '#e2e8f0' }}>
         Why can't any engine convert 100% of heat into useful work?
       </p>
 
-      <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-8 max-w-2xl border border-slate-700/50 shadow-2xl mb-8">
-        <svg width="300" height="180" className="mx-auto mb-6">
+      <div style={{ margin: '32px 0' }}>
+        <svg width="300" height="180" viewBox="0 0 300 180" style={{ maxWidth: '100%' }}>
+          <defs>
+            <linearGradient id="carBody" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+            <filter id="engineGlow">
+              <feGaussianBlur stdDeviation="8" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
           {/* Car body */}
-          <rect x="60" y="80" width="180" height="60" fill="#475569" rx="12" />
+          <rect x="60" y="80" width="180" height="60" fill="url(#carBody)" rx="12" />
           <rect x="85" y="55" width="110" height="35" fill="#334155" rx="10" />
           <rect x="92" y="62" width="45" height="22" fill="#60a5fa" opacity="0.3" rx="4" />
           <rect x="142" y="62" width="48" height="22" fill="#60a5fa" opacity="0.3" rx="4" />
@@ -689,117 +890,129 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
           <circle cx="195" cy="140" r="10" fill="#374151" />
 
           {/* Engine heat glow */}
-          <circle cx="95" cy="110" r="35" fill="#ef4444" opacity="0.2" />
+          <circle cx="95" cy="110" r="35" fill="#ef4444" opacity="0.2" filter="url(#engineGlow)" />
           <rect x="70" y="90" width="50" height="35" fill="#ef4444" opacity="0.4" rx="5" />
 
           {/* Heat waves */}
-          <path d="M240,100 Q250,95 260,100 Q270,105 280,100" stroke="#ef4444" strokeWidth="2" fill="none" opacity="0.8">
-            <animate attributeName="d" values="M240,100 Q250,95 260,100 Q270,105 280,100;M240,100 Q250,105 260,100 Q270,95 280,100;M240,100 Q250,95 260,100 Q270,105 280,100" dur="1s" repeatCount="indefinite" />
-          </path>
-          <path d="M240,110 Q250,105 260,110 Q270,115 280,110" stroke="#f97316" strokeWidth="2" fill="none" opacity="0.6">
-            <animate attributeName="d" values="M240,110 Q250,105 260,110 Q270,115 280,110;M240,110 Q250,115 260,110 Q270,105 280,110;M240,110 Q250,105 260,110 Q270,115 280,110" dur="1.2s" repeatCount="indefinite" />
-          </path>
-          <path d="M240,120 Q250,115 260,120 Q270,125 280,120" stroke="#fbbf24" strokeWidth="2" fill="none" opacity="0.4">
-            <animate attributeName="d" values="M240,120 Q250,115 260,120 Q270,125 280,120;M240,120 Q250,125 260,120 Q270,115 280,120;M240,120 Q250,115 260,120 Q270,125 280,120" dur="1.4s" repeatCount="indefinite" />
-          </path>
+          <g>
+            <path d="M240,100 Q250,95 260,100 Q270,105 280,100" stroke="#ef4444" strokeWidth="2" fill="none" opacity="0.8">
+              <animate attributeName="d" values="M240,100 Q250,95 260,100 Q270,105 280,100;M240,100 Q250,105 260,100 Q270,95 280,100;M240,100 Q250,95 260,100 Q270,105 280,100" dur="1s" repeatCount="indefinite" />
+            </path>
+            <path d="M240,110 Q250,105 260,110 Q270,115 280,110" stroke="#f97316" strokeWidth="2" fill="none" opacity="0.6">
+              <animate attributeName="d" values="M240,110 Q250,105 260,110 Q270,115 280,110;M240,110 Q250,115 260,110 Q270,105 280,110;M240,110 Q250,105 260,110 Q270,115 280,110" dur="1.2s" repeatCount="indefinite" />
+            </path>
+            <path d="M240,120 Q250,115 260,120 Q270,125 280,120" stroke="#fbbf24" strokeWidth="2" fill="none" opacity="0.4">
+              <animate attributeName="d" values="M240,120 Q250,115 260,120 Q270,125 280,120;M240,120 Q250,125 260,120 Q270,115 280,120;M240,120 Q250,115 260,120 Q270,125 280,120" dur="1.4s" repeatCount="indefinite" />
+            </path>
+          </g>
 
           {/* Fuel arrow */}
-          <path d="M25,105 L55,105" stroke="#22c55e" strokeWidth="3" markerEnd="url(#fuelArrow)" />
-          <text x="10" y="95" fill="#22c55e" fontSize="11" fontWeight="600">Fuel</text>
-          <defs>
-            <marker id="fuelArrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L8,3 z" fill="#22c55e" />
-            </marker>
-          </defs>
+          <path d="M25,105 L55,105" stroke="#22c55e" strokeWidth="3" />
+          <polygon points="55,100 55,110 65,105" fill="#22c55e" />
+          <text x="10" y="90" fill="#22c55e" fontSize="11" fontWeight="600">Fuel</text>
+          <text x="250" y="85" fill="#ef4444" fontSize="10" fontWeight="600">Waste Heat</text>
         </svg>
-
-        <p className="text-xl text-slate-300 mb-4">
-          Your car burns gasoline at <span className="text-red-400 font-bold">2000°C</span>, but only <span className="text-amber-400 font-bold">25-30%</span> becomes motion.
-        </p>
-        <p className="text-lg text-slate-400 mb-4">
-          The rest? <span className="text-red-400 font-semibold">Waste heat</span> - radiator, exhaust, friction...
-        </p>
-        <p className="text-slate-500">
-          Is this just bad engineering? Or is there a <span className="text-cyan-400 font-semibold">fundamental limit</span> nature imposes?
-        </p>
       </div>
 
+      <p style={{ ...styles.paragraph, color: '#e2e8f0' }}>
+        Your car burns gasoline at <span style={styles.highlight}>2000 degrees C</span>, but only <span style={{ color: '#f59e0b', fontWeight: 600 }}>25-30%</span> becomes motion.
+      </p>
+      <p style={styles.paragraph}>
+        The rest? <span style={styles.highlight}>Waste heat</span> - radiator, exhaust, friction...
+      </p>
+      <p style={styles.paragraph}>
+        Is this just bad engineering? Or is there a <span style={{ color: '#22d3ee', fontWeight: 600 }}>fundamental limit</span> nature imposes?
+      </p>
+
       <button
-        onClick={goToNextPhase}
-        className="group px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98]"
+        onClick={handleNext}
+        style={{ ...styles.button, ...styles.primaryButton, marginTop: '24px' }}
       >
-        <span className="flex items-center gap-2">
-          Discover the Limit
-          <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
+        Discover the Limit
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
       </button>
     </div>
   );
 
   const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[550px] p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">Make Your Prediction</h2>
+    <div style={styles.card}>
+      <h2 style={styles.heading}>What do you think will happen?</h2>
+      <p style={styles.paragraph}>{predictions.initial.question}</p>
+      <p style={{ ...styles.paragraph, fontSize: '14px' }}>{predictions.initial.context}</p>
 
-      <div className="bg-slate-800/60 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">{predictions.initial.question}</p>
-        <p className="text-sm text-slate-400 mb-4">{predictions.initial.context}</p>
-
-        <svg width="220" height="130" className="mx-auto">
-          <rect x="80" y="10" width="60" height="28" fill="#ef4444" rx="6" />
-          <text x="110" y="29" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">HOT (T_H)</text>
-
-          <rect x="85" y="52" width="50" height="28" fill="#64748b" rx="4" />
-          <text x="110" y="70" textAnchor="middle" fill="white" fontSize="10">Engine</text>
-
-          <rect x="80" y="95" width="60" height="28" fill="#3b82f6" rx="6" />
-          <text x="110" y="114" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">COLD (T_C)</text>
-
-          <path d="M110,38 L110,52" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrH)" />
-          <path d="M110,80 L110,95" stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrC)" />
-          <path d="M135,66 L165,66" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrW)" />
-          <text x="175" y="70" fill="#22c55e" fontSize="11" fontWeight="600">W</text>
-
+      <div style={{ margin: '24px 0', textAlign: 'center' as const }}>
+        <svg width="220" height="150" viewBox="0 0 220 150" style={{ maxWidth: '100%' }}>
           <defs>
-            <marker id="arrH" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="#ef4444" /></marker>
-            <marker id="arrC" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="#3b82f6" /></marker>
-            <marker id="arrW" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="#22c55e" /></marker>
+            <linearGradient id="hotRes" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+            <linearGradient id="coldRes" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </linearGradient>
           </defs>
+          <rect x="80" y="10" width="60" height="30" fill="url(#hotRes)" rx="6" />
+          <text x="110" y="30" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">HOT (T_H)</text>
+
+          <rect x="85" y="60" width="50" height="30" fill="#64748b" rx="4" />
+          <text x="110" y="80" textAnchor="middle" fill="white" fontSize="10">Engine</text>
+
+          <rect x="80" y="110" width="60" height="30" fill="url(#coldRes)" rx="6" />
+          <text x="110" y="130" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">COLD (T_C)</text>
+
+          <path d="M110,40 L110,60" stroke="#ef4444" strokeWidth="2" />
+          <polygon points="105,55 115,55 110,65" fill="#ef4444" />
+          <path d="M110,90 L110,110" stroke="#3b82f6" strokeWidth="2" />
+          <polygon points="105,105 115,105 110,115" fill="#3b82f6" />
+          <path d="M135,75 L170,75" stroke="#22c55e" strokeWidth="2" />
+          <polygon points="165,70 165,80 175,75" fill="#22c55e" />
+          <text x="180" y="79" fill="#22c55e" fontSize="11" fontWeight="600">W</text>
         </svg>
       </div>
 
-      <div className="grid gap-3 w-full max-w-xl">
+      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '12px' }}>
         {predictions.initial.options.map(opt => (
           <button
             key={opt.id}
             onClick={() => handlePrediction(opt.id)}
             disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === opt.id
+            style={{
+              ...styles.button,
+              width: '100%',
+              justifyContent: 'flex-start',
+              textAlign: 'left' as const,
+              padding: '16px',
+              background: showPredictionFeedback && selectedPrediction === opt.id
                 ? opt.id === predictions.initial.correct
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
+                  ? 'rgba(16, 185, 129, 0.3)'
+                  : 'rgba(239, 68, 68, 0.3)'
                 : showPredictionFeedback && opt.id === predictions.initial.correct
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
+                ? 'rgba(16, 185, 129, 0.3)'
+                : '#334155',
+              border: showPredictionFeedback && (selectedPrediction === opt.id || opt.id === predictions.initial.correct)
+                ? `2px solid ${opt.id === predictions.initial.correct ? '#10b981' : '#ef4444'}`
+                : '2px solid transparent',
+              color: '#e2e8f0'
+            }}
           >
-            <span className="font-bold text-white">{opt.id}.</span>
-            <span className="text-slate-200 ml-2">{opt.text}</span>
+            <span style={{ fontWeight: 700, marginRight: '12px', color: '#f8fafc' }}>{opt.id})</span>
+            {opt.text}
           </button>
         ))}
       </div>
 
       {showPredictionFeedback && (
-        <div className="mt-6 p-5 bg-slate-800/80 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold mb-2">
+        <div style={{ ...styles.card, marginTop: '24px', background: 'rgba(15, 23, 42, 0.8)' }}>
+          <p style={{ color: selectedPrediction === predictions.initial.correct ? '#10b981' : '#f59e0b', fontWeight: 600, marginBottom: '12px' }}>
             {selectedPrediction === predictions.initial.correct ? 'Correct!' : 'Not quite!'} The answer is {predictions.initial.correct}.
           </p>
-          <p className="text-slate-300 text-sm">{predictions.initial.explanation}</p>
+          <p style={styles.paragraph}>{predictions.initial.explanation}</p>
           <button
-            onClick={goToNextPhase}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+            onClick={handleNext}
+            style={{ ...styles.button, ...styles.primaryButton, marginTop: '16px' }}
           >
             Explore the Carnot Cycle
           </button>
@@ -809,41 +1022,43 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
   );
 
   const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-4">Carnot Cycle Laboratory</h2>
+    <div style={styles.card}>
+      <h2 style={styles.heading}>Carnot Cycle Laboratory</h2>
+      <p style={styles.paragraph}>
+        Observe how temperature affects the maximum possible efficiency of a heat engine.
+        Adjust the hot and cold reservoir temperatures to see how efficiency changes.
+      </p>
 
-      <div className="bg-slate-800/60 rounded-2xl p-5 mb-5">
+      <div style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
         {renderPVDiagram()}
+      </div>
 
-        <div className="mt-4 text-center">
-          <div className="text-sm font-medium text-slate-400">Current Stage</div>
-          <div className="text-lg font-bold mt-1" style={{ color: cycleStages[cycleStep].color }}>
-            {cycleStages[cycleStep].name}
-          </div>
-          <div className="text-sm text-slate-500 mt-1">{cycleStages[cycleStep].desc}</div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '12px',
+        marginBottom: '24px',
+        textAlign: 'center' as const
+      }}>
+        <div style={{ background: '#0f172a', borderRadius: '12px', padding: '16px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#10b981' }}>{efficiency}%</div>
+          <div style={{ fontSize: '12px', color: '#cbd5e1' }}>Max Efficiency</div>
         </div>
-
-        <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-          <div className="bg-slate-900/60 rounded-lg p-3">
-            <div className="text-2xl font-bold text-emerald-400">{efficiency}%</div>
-            <div className="text-xs text-slate-400">Max Efficiency</div>
-          </div>
-          <div className="bg-slate-900/60 rounded-lg p-3">
-            <div className="text-2xl font-bold text-red-400">{wasteHeat}%</div>
-            <div className="text-xs text-slate-400">Min Waste Heat</div>
-          </div>
-          <div className="bg-slate-900/60 rounded-lg p-3">
-            <div className="text-2xl font-bold text-cyan-400">{hotTemp - coldTemp}K</div>
-            <div className="text-xs text-slate-400">Temp Diff</div>
-          </div>
+        <div style={{ background: '#0f172a', borderRadius: '12px', padding: '16px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#ef4444' }}>{wasteHeat}%</div>
+          <div style={{ fontSize: '12px', color: '#cbd5e1' }}>Min Waste Heat</div>
+        </div>
+        <div style={{ background: '#0f172a', borderRadius: '12px', padding: '16px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#3b82f6' }}>{hotTemp - coldTemp}K</div>
+          <div style={{ fontSize: '12px', color: '#cbd5e1' }}>Temperature Difference</div>
         </div>
       </div>
 
-      <div className="grid gap-4 w-full max-w-xl mb-5">
-        <div className="bg-slate-800/70 rounded-xl p-4">
-          <div className="flex justify-between mb-2">
-            <span className="text-slate-300">Hot Reservoir (T_H)</span>
-            <span className="text-red-400 font-bold">{hotTemp}K ({(hotTemp - 273).toFixed(0)}°C)</span>
+      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#e2e8f0', fontWeight: 500 }}>Hot Reservoir Temperature (T_H)</span>
+            <span style={{ color: '#ef4444', fontWeight: 700 }}>{hotTemp}K ({(hotTemp - 273).toFixed(0)} degrees C)</span>
           </div>
           <input
             type="range"
@@ -855,14 +1070,14 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
               setHotTemp(v);
               emitEvent('parameter_changed', { param: 'hotTemp', value: v });
             }}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+            style={styles.slider}
           />
         </div>
 
-        <div className="bg-slate-800/70 rounded-xl p-4">
-          <div className="flex justify-between mb-2">
-            <span className="text-slate-300">Cold Reservoir (T_C)</span>
-            <span className="text-blue-400 font-bold">{coldTemp}K ({(coldTemp - 273).toFixed(0)}°C)</span>
+        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#e2e8f0', fontWeight: 500 }}>Cold Reservoir Temperature (T_C)</span>
+            <span style={{ color: '#3b82f6', fontWeight: 700 }}>{coldTemp}K ({(coldTemp - 273).toFixed(0)} degrees C)</span>
           </div>
           <input
             type="range"
@@ -874,166 +1089,190 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
               setColdTemp(v);
               emitEvent('parameter_changed', { param: 'coldTemp', value: v });
             }}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            style={styles.slider}
           />
         </div>
       </div>
 
-      <div className="flex gap-3 mb-6">
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', justifyContent: 'center' }}>
         <button
           onClick={() => {
             setIsAnimating(!isAnimating);
             emitEvent(isAnimating ? 'simulation_paused' : 'simulation_started');
           }}
-          className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
-            isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
-          } text-white`}
+          style={{
+            ...styles.button,
+            background: isAnimating ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #10b981, #059669)',
+            color: '#ffffff'
+          }}
         >
           {isAnimating ? 'Stop' : 'Run'} Cycle
         </button>
         <button
           onClick={() => { setCycleStep(0); setAnimationProgress(0); emitEvent('simulation_reset'); }}
-          className="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-semibold transition-colors"
+          style={{ ...styles.button, ...styles.secondaryButton }}
         >
           Reset
         </button>
       </div>
 
-      <div className="bg-slate-800/70 rounded-xl p-4 max-w-xl mb-6">
-        <h3 className="text-lg font-semibold text-cyan-400 mb-2">Carnot Efficiency Formula</h3>
-        <div className="text-center text-2xl text-white mb-3 font-mono bg-slate-900/50 rounded-lg py-3">
-          η = 1 - T<sub>C</sub> / T<sub>H</sub>
+      <div style={{ background: '#0f172a', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+        <h3 style={{ ...styles.subheading, color: '#67e8f9', fontSize: '16px' }}>Current Stage: {cycleStages[cycleStep].name}</h3>
+        <p style={{ ...styles.paragraph, marginBottom: '8px', fontSize: '14px' }}>{cycleStages[cycleStep].desc}</p>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' as const }}>
+          {cycleStages.map((stage, i) => (
+            <span key={i} style={{
+              padding: '4px 12px',
+              borderRadius: '9999px',
+              fontSize: '12px',
+              fontWeight: 600,
+              background: i === cycleStep ? stage.color : 'rgba(100, 116, 139, 0.3)',
+              color: '#ffffff'
+            }}>
+              {stage.symbol}
+            </span>
+          ))}
         </div>
-        <ul className="text-sm text-slate-300 space-y-1">
-          <li><strong>η</strong> = Efficiency (0 to 1)</li>
-          <li><strong>T_H</strong> = Hot reservoir temperature (Kelvin)</li>
-          <li><strong>T_C</strong> = Cold reservoir temperature (Kelvin)</li>
-        </ul>
-        <p className="text-amber-400 text-sm mt-3">For 100% efficiency, T_C would need to be 0K (absolute zero) - impossible!</p>
       </div>
 
-      <button
-        onClick={goToNextPhase}
-        className="px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
-      >
-        Review the Concepts
-      </button>
+      <div style={{ background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(59, 130, 246, 0.1))', borderRadius: '12px', padding: '16px', border: '1px solid rgba(34, 211, 238, 0.2)' }}>
+        <h3 style={{ ...styles.subheading, color: '#67e8f9', fontSize: '16px' }}>Carnot Efficiency Formula</h3>
+        <div style={{ textAlign: 'center' as const, fontSize: '24px', fontWeight: 700, color: '#f8fafc', padding: '16px', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', fontFamily: 'monospace', marginBottom: '12px' }}>
+          <span style={{ color: '#10b981' }}>eta</span> = 1 - <span style={{ color: '#3b82f6' }}>T_C</span> / <span style={{ color: '#ef4444' }}>T_H</span>
+        </div>
+        <p style={{ ...styles.paragraph, fontSize: '14px', marginBottom: '0' }}>
+          This shows that efficiency depends ONLY on the temperatures. For 100% efficiency, T_C would need to be 0K (absolute zero) - which is impossible!
+        </p>
+      </div>
     </div>
   );
 
   const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">Understanding the Carnot Cycle</h2>
+    <div style={styles.card}>
+      <h2 style={styles.heading}>Understanding the Carnot Cycle</h2>
 
-      <div className="grid md:grid-cols-2 gap-5 max-w-4xl mb-6">
-        <div className="bg-gradient-to-br from-red-900/40 to-orange-900/40 rounded-2xl p-5">
-          <h3 className="text-lg font-bold text-red-400 mb-3">The Four Stages</h3>
-          <ol className="space-y-2 text-sm text-slate-300">
-            <li className="flex gap-2"><span className="text-red-400 font-bold">1.</span> Isothermal Expansion: Absorb Q_H at T_H</li>
-            <li className="flex gap-2"><span className="text-amber-400 font-bold">2.</span> Adiabatic Expansion: T drops, no heat transfer</li>
-            <li className="flex gap-2"><span className="text-blue-400 font-bold">3.</span> Isothermal Compression: Reject Q_C at T_C</li>
-            <li className="flex gap-2"><span className="text-purple-400 font-bold">4.</span> Adiabatic Compression: T rises, no heat transfer</li>
+      <p style={styles.paragraph}>
+        The reason Carnot efficiency matters is because it sets an absolute ceiling on what any heat engine can achieve.
+        This explains why real-world engines always waste significant heat.
+      </p>
+
+      <div style={{ display: 'grid', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2))', borderRadius: '16px', padding: '20px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+          <h3 style={{ ...styles.subheading, color: '#ef4444' }}>The Four Stages</h3>
+          <ol style={{ margin: 0, paddingLeft: '20px', color: '#e2e8f0', lineHeight: 1.8 }}>
+            <li><span style={{ color: '#ef4444', fontWeight: 700 }}>Isothermal Expansion:</span> Absorb heat Q_H at constant T_H</li>
+            <li><span style={{ color: '#f59e0b', fontWeight: 700 }}>Adiabatic Expansion:</span> Temperature drops, no heat transfer</li>
+            <li><span style={{ color: '#3b82f6', fontWeight: 700 }}>Isothermal Compression:</span> Reject heat Q_C at constant T_C</li>
+            <li><span style={{ color: '#8b5cf6', fontWeight: 700 }}>Adiabatic Compression:</span> Temperature rises, no heat transfer</li>
           </ol>
         </div>
 
-        <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 rounded-2xl p-5">
-          <h3 className="text-lg font-bold text-cyan-400 mb-3">Carnot's Theorem</h3>
-          <ul className="space-y-2 text-sm text-slate-300">
+        <div style={{ background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(59, 130, 246, 0.2))', borderRadius: '16px', padding: '20px', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
+          <h3 style={{ ...styles.subheading, color: '#22d3ee' }}>Key Insight: Carnot's Theorem</h3>
+          <ul style={{ margin: 0, paddingLeft: '20px', color: '#e2e8f0', lineHeight: 1.8 }}>
             <li>No engine can exceed Carnot efficiency</li>
             <li>Efficiency depends ONLY on temperatures</li>
-            <li>All reversible engines have same efficiency</li>
+            <li>All reversible engines have the same efficiency</li>
             <li>Real engines are always less efficient</li>
-            <li>This led to the 2nd Law of Thermodynamics</li>
+            <li>This demonstrates the Second Law of Thermodynamics</li>
           </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-900/40 to-teal-900/40 rounded-2xl p-5 md:col-span-2">
-          <h3 className="text-lg font-bold text-emerald-400 mb-3">Example Calculations</h3>
-          <div className="grid md:grid-cols-2 gap-4 text-sm">
-            <div className="bg-slate-800/50 rounded-lg p-3">
-              <p className="text-slate-300"><strong>Power Plant:</strong> T_H = 823K, T_C = 303K</p>
-              <p className="font-mono text-white mt-1">η = 1 - 303/823 = <span className="text-emerald-400">63.2%</span></p>
-            </div>
-            <div className="bg-slate-800/50 rounded-lg p-3">
-              <p className="text-slate-300"><strong>Car Engine:</strong> T_H = 600K, T_C = 350K</p>
-              <p className="font-mono text-white mt-1">η = 1 - 350/600 = <span className="text-amber-400">41.7%</span></p>
-            </div>
-          </div>
-          <p className="text-cyan-400 mt-3 text-sm">Real engines achieve 60-80% of Carnot efficiency due to friction, heat losses, and irreversibilities.</p>
         </div>
       </div>
 
-      <button
-        onClick={goToNextPhase}
-        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
-      >
-        Discover a Surprising Twist
-      </button>
+      <div style={{ background: '#0f172a', borderRadius: '12px', padding: '16px' }}>
+        <h3 style={{ ...styles.subheading, color: '#10b981', fontSize: '16px' }}>Example Calculations</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
+          <div style={{ background: '#1e293b', borderRadius: '8px', padding: '12px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '4px' }}><strong>Power Plant:</strong> T_H = 823K, T_C = 303K</p>
+            <p style={{ fontFamily: 'monospace', color: '#f8fafc', marginBottom: '0' }}>eta = 1 - 303/823 = <span style={{ color: '#10b981', fontWeight: 700 }}>63.2%</span></p>
+          </div>
+          <div style={{ background: '#1e293b', borderRadius: '8px', padding: '12px' }}>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '4px' }}><strong>Car Engine:</strong> T_H = 600K, T_C = 350K</p>
+            <p style={{ fontFamily: 'monospace', color: '#f8fafc', marginBottom: '0' }}>eta = 1 - 350/600 = <span style={{ color: '#f59e0b', fontWeight: 700 }}>41.7%</span></p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 
   const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[550px] p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-purple-400 mb-6">Running Backwards</h2>
+    <div style={styles.card}>
+      <h2 style={{ ...styles.heading, color: '#a855f7' }}>New Variable: Running Backwards</h2>
+      <p style={styles.paragraph}>{predictions.twist.question}</p>
+      <p style={{ ...styles.paragraph, fontSize: '14px' }}>{predictions.twist.context}</p>
 
-      <div className="bg-slate-800/60 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">{predictions.twist.question}</p>
-        <p className="text-sm text-slate-400 mb-4">{predictions.twist.context}</p>
-
-        <svg width="220" height="150" className="mx-auto">
-          <rect x="80" y="10" width="60" height="28" fill="#ef4444" rx="6" />
-          <text x="110" y="29" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">HOT</text>
-
-          <rect x="85" y="60" width="50" height="28" fill="#a855f7" rx="4" />
-          <text x="110" y="78" textAnchor="middle" fill="white" fontSize="9">Reversed</text>
-
-          <rect x="80" y="105" width="60" height="28" fill="#3b82f6" rx="6" />
-          <text x="110" y="124" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">COLD</text>
-
-          <path d="M110,60 L110,38" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrHT)" />
-          <path d="M110,105 L110,88" stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrCT)" />
-          <path d="M165,74 L135,74" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrWT)" />
-          <text x="175" y="78" fill="#22c55e" fontSize="11" fontWeight="600">W in</text>
-
+      <div style={{ margin: '24px 0', textAlign: 'center' as const }}>
+        <svg width="220" height="160" viewBox="0 0 220 160" style={{ maxWidth: '100%' }}>
           <defs>
-            <marker id="arrHT" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="#ef4444" /></marker>
-            <marker id="arrCT" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="#3b82f6" /></marker>
-            <marker id="arrWT" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="#22c55e" /></marker>
+            <linearGradient id="hotResT" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+            <linearGradient id="coldResT" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </linearGradient>
           </defs>
+          <rect x="80" y="10" width="60" height="30" fill="url(#hotResT)" rx="6" />
+          <text x="110" y="30" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">HOT</text>
+
+          <rect x="85" y="65" width="50" height="30" fill="#a855f7" rx="4" />
+          <text x="110" y="84" textAnchor="middle" fill="white" fontSize="9">Reversed</text>
+
+          <rect x="80" y="115" width="60" height="30" fill="url(#coldResT)" rx="6" />
+          <text x="110" y="135" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">COLD</text>
+
+          {/* Reversed arrows */}
+          <path d="M110,65 L110,45" stroke="#ef4444" strokeWidth="2" />
+          <polygon points="105,50 115,50 110,40" fill="#ef4444" />
+          <path d="M110,115 L110,95" stroke="#3b82f6" strokeWidth="2" />
+          <polygon points="105,100 115,100 110,90" fill="#3b82f6" />
+          <path d="M170,80 L140,80" stroke="#22c55e" strokeWidth="2" />
+          <polygon points="145,75 145,85 135,80" fill="#22c55e" />
+          <text x="180" y="84" fill="#22c55e" fontSize="11" fontWeight="600">W in</text>
         </svg>
       </div>
 
-      <div className="grid gap-3 w-full max-w-xl">
+      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '12px' }}>
         {predictions.twist.options.map(opt => (
           <button
             key={opt.id}
             onClick={() => handleTwistPrediction(opt.id)}
             disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === opt.id
+            style={{
+              ...styles.button,
+              width: '100%',
+              justifyContent: 'flex-start',
+              textAlign: 'left' as const,
+              padding: '16px',
+              background: showTwistFeedback && twistPrediction === opt.id
                 ? opt.id === predictions.twist.correct
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
+                  ? 'rgba(16, 185, 129, 0.3)'
+                  : 'rgba(239, 68, 68, 0.3)'
                 : showTwistFeedback && opt.id === predictions.twist.correct
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
+                ? 'rgba(16, 185, 129, 0.3)'
+                : '#334155',
+              border: showTwistFeedback && (twistPrediction === opt.id || opt.id === predictions.twist.correct)
+                ? `2px solid ${opt.id === predictions.twist.correct ? '#10b981' : '#ef4444'}`
+                : '2px solid transparent',
+              color: '#e2e8f0'
+            }}
           >
-            <span className="font-bold text-white">{opt.id}.</span>
-            <span className="text-slate-200 ml-2">{opt.text}</span>
+            <span style={{ fontWeight: 700, marginRight: '12px', color: '#f8fafc' }}>{opt.id})</span>
+            {opt.text}
           </button>
         ))}
       </div>
 
       {showTwistFeedback && (
-        <div className="mt-6 p-5 bg-slate-800/80 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold mb-2">
+        <div style={{ ...styles.card, marginTop: '24px', background: 'rgba(15, 23, 42, 0.8)' }}>
+          <p style={{ color: twistPrediction === predictions.twist.correct ? '#10b981' : '#f59e0b', fontWeight: 600, marginBottom: '12px' }}>
             {twistPrediction === predictions.twist.correct ? 'Exactly right!' : 'Not quite!'} The answer is {predictions.twist.correct}.
           </p>
-          <p className="text-slate-300 text-sm">{predictions.twist.explanation}</p>
+          <p style={styles.paragraph}>{predictions.twist.explanation}</p>
           <button
-            onClick={goToNextPhase}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+            onClick={handleNext}
+            style={{ ...styles.button, background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: '#ffffff', marginTop: '16px' }}
           >
             Explore Heat Pumps
           </button>
@@ -1043,356 +1282,409 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
   );
 
   const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-purple-400 mb-5">Heat Pumps & Refrigerators</h2>
+    <div style={styles.card}>
+      <h2 style={{ ...styles.heading, color: '#a855f7' }}>Heat Pumps and Refrigerators</h2>
+      <p style={styles.paragraph}>
+        Watch how the reversed Carnot cycle moves heat from cold to hot using work input.
+        This is the principle behind refrigerators, air conditioners, and heat pumps.
+      </p>
 
-      <div className="grid md:grid-cols-2 gap-5 mb-6 max-w-3xl">
-        <div className="bg-slate-800/60 rounded-2xl p-5">
-          <h3 className="text-lg font-semibold text-blue-400 mb-3 text-center">Refrigerator</h3>
-          <svg width="180" height="140" className="mx-auto">
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', textAlign: 'center' as const }}>
+          <h3 style={{ ...styles.subheading, color: '#3b82f6', fontSize: '16px' }}>Refrigerator</h3>
+          <svg width="180" height="140" viewBox="0 0 180 140" style={{ maxWidth: '100%' }}>
             <rect x="50" y="15" width="80" height="90" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="2" rx="6" />
             <rect x="57" y="22" width="66" height="35" fill="#0f172a" rx="4" />
             <text x="90" y="44" textAnchor="middle" fill="#93c5fd" fontSize="10">COLD</text>
-            <rect x="140" y="35" width="30" height="35" fill="#ef4444" opacity="0.3" rx="4" />
-            <text x="155" y="57" textAnchor="middle" fill="#fca5a5" fontSize="9">ROOM</text>
-            <path d="M90,75 L90,115" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrGR)" />
-            <text x="90" y="130" textAnchor="middle" fill="#22c55e" fontSize="9">Work in</text>
-            <path d="M125,42 L145,48" stroke="#60a5fa" strokeWidth="2" strokeDasharray="3 2" />
-            <defs><marker id="arrGR" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="#22c55e" /></marker></defs>
+            <rect x="140" y="35" width="35" height="35" fill="rgba(239, 68, 68, 0.3)" rx="4" />
+            <text x="157" y="57" textAnchor="middle" fill="#fca5a5" fontSize="9">ROOM</text>
+            <path d="M90,75 L90,105" stroke="#22c55e" strokeWidth="2" />
+            <polygon points="85,100 95,100 90,110" fill="#22c55e" />
+            <text x="90" y="125" textAnchor="middle" fill="#22c55e" fontSize="9">Work in</text>
           </svg>
-          <p className="text-slate-400 text-xs text-center mt-2">Removes heat from inside, dumps to room</p>
+          <p style={{ ...styles.paragraph, fontSize: '12px', marginBottom: '0' }}>Removes heat from inside, dumps to room</p>
         </div>
 
-        <div className="bg-slate-800/60 rounded-2xl p-5">
-          <h3 className="text-lg font-semibold text-red-400 mb-3 text-center">Heat Pump</h3>
-          <svg width="180" height="140" className="mx-auto">
+        <div style={{ background: '#1e293b', borderRadius: '16px', padding: '20px', textAlign: 'center' as const }}>
+          <h3 style={{ ...styles.subheading, color: '#ef4444', fontSize: '16px' }}>Heat Pump</h3>
+          <svg width="180" height="140" viewBox="0 0 180 140" style={{ maxWidth: '100%' }}>
             <polygon points="90,15 145,45 145,100 35,100 35,45" fill="none" stroke="#ef4444" strokeWidth="2" />
-            <rect x="45" y="50" width="90" height="50" fill="#fef3c7" opacity="0.15" />
+            <rect x="45" y="50" width="90" height="50" fill="rgba(254, 243, 199, 0.15)" />
             <text x="90" y="80" textAnchor="middle" fill="#f59e0b" fontSize="10">WARM</text>
-            <rect x="0" y="55" width="30" height="35" fill="#3b82f6" opacity="0.3" rx="4" />
+            <rect x="0" y="55" width="30" height="35" fill="rgba(59, 130, 246, 0.3)" rx="4" />
             <text x="15" y="77" textAnchor="middle" fill="#60a5fa" fontSize="9">COLD</text>
-            <path d="M90,115 L90,100" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrGH)" />
+            <path d="M90,115 L90,100" stroke="#22c55e" strokeWidth="2" />
+            <polygon points="85,105 95,105 90,95" fill="#22c55e" />
             <text x="90" y="130" textAnchor="middle" fill="#22c55e" fontSize="9">Work in</text>
-            <path d="M30,72 L40,72" stroke="#3b82f6" strokeWidth="2" strokeDasharray="3 2" />
-            <defs><marker id="arrGH" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L0,4 L6,2 z" fill="#22c55e" /></marker></defs>
           </svg>
-          <p className="text-slate-400 text-xs text-center mt-2">Extracts heat from cold outside, pumps inside</p>
+          <p style={{ ...styles.paragraph, fontSize: '12px', marginBottom: '0' }}>Extracts heat from cold outside, pumps inside</p>
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-5 max-w-2xl mb-6">
-        <h3 className="text-lg font-bold text-purple-400 mb-3">Coefficient of Performance (COP)</h3>
-        <div className="grid md:grid-cols-2 gap-4 text-sm mb-4">
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <p className="text-blue-400 font-semibold">Refrigerator COP</p>
-            <p className="font-mono text-white">COP = T_C / (T_H - T_C)</p>
+      <div style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2))', borderRadius: '16px', padding: '20px', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+        <h3 style={{ ...styles.subheading, color: '#a855f7' }}>Coefficient of Performance (COP)</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px' }}>
+            <p style={{ color: '#3b82f6', fontWeight: 600, marginBottom: '4px' }}>Refrigerator COP</p>
+            <p style={{ fontFamily: 'monospace', color: '#f8fafc', margin: 0 }}>COP = T_C / (T_H - T_C)</p>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-3">
-            <p className="text-red-400 font-semibold">Heat Pump COP</p>
-            <p className="font-mono text-white">COP = T_H / (T_H - T_C)</p>
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '12px' }}>
+            <p style={{ color: '#ef4444', fontWeight: 600, marginBottom: '4px' }}>Heat Pump COP</p>
+            <p style={{ fontFamily: 'monospace', color: '#f8fafc', margin: 0 }}>COP = T_H / (T_H - T_C)</p>
           </div>
         </div>
-        <p className="text-slate-300 text-sm">COP can exceed 1 because we're MOVING heat, not creating it. A heat pump with COP = 4 delivers 4 kW of heat for every 1 kW of electricity!</p>
+        <p style={{ ...styles.paragraph, marginBottom: '0', fontSize: '14px' }}>
+          COP can exceed 1 because we are MOVING heat, not creating it. A heat pump with COP = 4 delivers 4 kW of heat for every 1 kW of electricity!
+        </p>
       </div>
-
-      <button
-        onClick={goToNextPhase}
-        className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
-      >
-        Deep Dive
-      </button>
     </div>
   );
 
   const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-purple-400 mb-6">Key Discovery: Carnot's Dual Nature</h2>
+    <div style={styles.card}>
+      <h2 style={{ ...styles.heading, color: '#a855f7' }}>Deep Insight: Carnot's Dual Nature</h2>
 
-      <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-white mb-4">The Same Cycle, Two Purposes!</h3>
+      <div style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2))', borderRadius: '16px', padding: '24px', border: '1px solid rgba(168, 85, 247, 0.3)', marginBottom: '24px' }}>
+        <h3 style={{ ...styles.subheading, color: '#f8fafc', textAlign: 'center' as const }}>The Same Cycle, Two Purposes!</h3>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="text-center">
-            <div className="text-4xl mb-2">🔥</div>
-            <h4 className="text-red-400 font-bold mb-2">Forward = Engine</h4>
-            <p className="text-sm text-slate-300">Heat flows hot to cold</p>
-            <p className="text-sm text-slate-400">Work comes OUT</p>
-            <p className="font-mono text-white mt-2">η = 1 - T_C/T_H</p>
-            <p className="text-xs text-slate-500">Always less than 100%</p>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '24px', margin: '24px 0' }}>
+          <div style={{ textAlign: 'center' as const }}>
+            <div style={{ fontSize: '48px', marginBottom: '8px' }}>&#128293;</div>
+            <h4 style={{ color: '#ef4444', fontWeight: 700, marginBottom: '8px' }}>Forward = Engine</h4>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '4px' }}>Heat flows hot to cold</p>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '8px' }}>Work comes OUT</p>
+            <p style={{ fontFamily: 'monospace', color: '#f8fafc' }}>eta = 1 - T_C/T_H</p>
+            <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Always less than 100%</p>
           </div>
-          <div className="text-center">
-            <div className="text-4xl mb-2">❄️</div>
-            <h4 className="text-blue-400 font-bold mb-2">Backward = Heat Pump</h4>
-            <p className="text-sm text-slate-300">Heat flows cold to hot</p>
-            <p className="text-sm text-slate-400">Work goes IN</p>
-            <p className="font-mono text-white mt-2">COP = T_H/(T_H - T_C)</p>
-            <p className="text-xs text-slate-500">Can exceed 100%!</p>
+          <div style={{ textAlign: 'center' as const }}>
+            <div style={{ fontSize: '48px', marginBottom: '8px' }}>&#10052;&#65039;</div>
+            <h4 style={{ color: '#3b82f6', fontWeight: 700, marginBottom: '8px' }}>Backward = Heat Pump</h4>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '4px' }}>Heat flows cold to hot</p>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', marginBottom: '8px' }}>Work goes IN</p>
+            <p style={{ fontFamily: 'monospace', color: '#f8fafc' }}>COP = T_H/(T_H - T_C)</p>
+            <p style={{ color: '#cbd5e1', fontSize: '12px' }}>Can exceed 100%!</p>
           </div>
-        </div>
-
-        <div className="bg-slate-800/50 rounded-lg p-4">
-          <p className="text-emerald-400 font-semibold mb-2">Why This Matters</p>
-          <p className="text-slate-300 text-sm">
-            Heat pumps are 3-5x more efficient than electric heaters because they move existing heat rather than creating it.
-            This is why governments worldwide are pushing heat pump adoption - same comfort, fraction of the energy!
-          </p>
         </div>
       </div>
 
-      <button
-        onClick={goToNextPhase}
-        className="px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
-      >
-        Explore Real-World Applications
-      </button>
+      <div style={{ background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+        <h4 style={{ color: '#10b981', fontWeight: 600, marginBottom: '8px' }}>Why This Matters</h4>
+        <p style={{ ...styles.paragraph, marginBottom: '0' }}>
+          Heat pumps are 3-5x more efficient than electric heaters because they move existing heat rather than creating it.
+          This is why governments worldwide are pushing heat pump adoption - same comfort, fraction of the energy!
+        </p>
+      </div>
     </div>
   );
 
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-5">Real-World Applications</h2>
+  const renderTransfer = () => {
+    const app = realWorldApplications[activeApp];
+    const allAppsCompleted = completedApps.size >= realWorldApplications.length;
 
-      <div className="flex gap-2 mb-5 flex-wrap justify-center">
-        {realWorldApplications.map((app, i) => (
-          <button
-            key={app.id}
-            onClick={() => { setActiveApp(i); emitEvent('app_explored', { app: app.title }); }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeApp === i
-                ? `bg-gradient-to-r ${app.color} text-white`
-                : completedApps.has(i)
-                ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {isMobile ? '' : app.short}
-          </button>
-        ))}
-      </div>
+    return (
+      <div style={styles.card}>
+        <h2 style={styles.heading}>Real-World Applications</h2>
+        <p style={styles.paragraph}>
+          Explore how Carnot efficiency principles shape technology across industries.
+          Progress: {completedApps.size} of {realWorldApplications.length} applications explored.
+        </p>
 
-      <div className="bg-slate-800/60 rounded-2xl p-5 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-3xl">{realWorldApplications[activeApp].icon}</span>
-          <div>
-            <h3 className="text-xl font-bold text-white">{realWorldApplications[activeApp].title}</h3>
-            <p className="text-sm text-slate-400">{realWorldApplications[activeApp].tagline}</p>
-          </div>
-        </div>
-
-        <p className="text-slate-300 mb-4">{realWorldApplications[activeApp].description}</p>
-
-        <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
-          <h4 className="text-sm font-semibold text-orange-400 mb-2">Physics Connection</h4>
-          <p className="text-sm text-slate-300">{realWorldApplications[activeApp].connection}</p>
-        </div>
-
-        <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
-          <h4 className="text-sm font-semibold text-cyan-400 mb-2">How It Works</h4>
-          <p className="text-sm text-slate-300">{realWorldApplications[activeApp].howItWorks}</p>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          {realWorldApplications[activeApp].stats.map((stat, i) => (
-            <div key={i} className="bg-slate-900/50 rounded-lg p-2 text-center">
-              <div className="text-lg font-bold text-white">{stat.value}</div>
-              <div className="text-xs text-slate-400">{stat.label}</div>
-            </div>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' as const, justifyContent: 'center' }}>
+          {realWorldApplications.map((a, i) => (
+            <button
+              key={a.id}
+              onClick={() => { setActiveApp(i); emitEvent('app_explored', { app: a.title }); }}
+              style={{
+                ...styles.button,
+                padding: '8px 16px',
+                minHeight: '40px',
+                background: activeApp === i
+                  ? 'linear-gradient(135deg, #ef4444, #f97316)'
+                  : completedApps.has(i)
+                  ? 'rgba(16, 185, 129, 0.3)'
+                  : '#334155',
+                border: completedApps.has(i) ? '2px solid #10b981' : '2px solid transparent',
+                color: '#e2e8f0',
+                fontSize: '14px'
+              }}
+            >
+              {a.icon} {a.short}
+            </button>
           ))}
         </div>
 
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold text-emerald-400 mb-2">Examples</h4>
-          <ul className="text-sm text-slate-300 space-y-1">
-            {realWorldApplications[activeApp].examples.map((ex, i) => (
-              <li key={i}>• {ex}</li>
-            ))}
-          </ul>
-        </div>
+        <div style={{ background: '#0f172a', borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <span style={{ fontSize: '36px' }}>{app.icon}</span>
+            <div>
+              <h3 style={{ ...styles.subheading, marginBottom: '4px' }}>{app.title}</h3>
+              <p style={{ color: '#cbd5e1', fontSize: '14px', margin: 0 }}>{app.tagline}</p>
+            </div>
+          </div>
 
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold text-purple-400 mb-2">Key Players</h4>
-          <div className="flex flex-wrap gap-2">
-            {realWorldApplications[activeApp].companies.map((company, i) => (
-              <span key={i} className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">{company}</span>
+          <p style={{ ...styles.paragraph, fontSize: '14px' }}>{app.description}</p>
+
+          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+            <h4 style={{ color: '#f59e0b', fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>Physics Connection</h4>
+            <p style={{ ...styles.paragraph, fontSize: '13px', marginBottom: '0' }}>{app.connection}</p>
+          </div>
+
+          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+            <h4 style={{ color: '#22d3ee', fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>How It Works</h4>
+            <p style={{ ...styles.paragraph, fontSize: '13px', marginBottom: '0' }}>{app.howItWorks}</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
+            {app.stats.map((stat, i) => (
+              <div key={i} style={{ background: '#1e293b', borderRadius: '8px', padding: '12px', textAlign: 'center' as const }}>
+                <div style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>{stat.value}</div>
+                <div style={{ fontSize: '10px', color: '#cbd5e1' }}>{stat.label}</div>
+              </div>
             ))}
           </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ color: '#10b981', fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>Examples</h4>
+            <ul style={{ margin: 0, paddingLeft: '20px', color: '#e2e8f0', fontSize: '13px', lineHeight: 1.6 }}>
+              {app.examples.map((ex, i) => <li key={i}>{ex}</li>)}
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ color: '#a855f7', fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>Key Players</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '8px' }}>
+              {app.companies.map((company, i) => (
+                <span key={i} style={{ padding: '4px 12px', background: '#334155', borderRadius: '9999px', fontSize: '12px', color: '#e2e8f0' }}>{company}</span>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', borderRadius: '12px', padding: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+            <h4 style={{ color: '#f59e0b', fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>Future Impact</h4>
+            <p style={{ ...styles.paragraph, fontSize: '13px', marginBottom: '0' }}>{app.futureImpact}</p>
+          </div>
+
+          {!completedApps.has(activeApp) && (
+            <button
+              onClick={() => handleAppComplete(activeApp)}
+              style={{ ...styles.button, width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: '#ffffff', marginTop: '16px' }}
+            >
+              Got It - Mark as Understood
+            </button>
+          )}
         </div>
 
-        <div className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 rounded-lg p-3 mb-4">
-          <h4 className="text-sm font-semibold text-amber-400 mb-1">Future Impact</h4>
-          <p className="text-sm text-slate-300">{realWorldApplications[activeApp].futureImpact}</p>
-        </div>
-
-        {!completedApps.has(activeApp) && (
+        {allAppsCompleted && (
           <button
-            onClick={() => handleAppComplete(activeApp)}
-            className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
+            onClick={() => goToPhase('test')}
+            style={{ ...styles.button, ...styles.primaryButton, width: '100%' }}
           >
-            Mark as Understood
+            Continue to Knowledge Test
           </button>
         )}
       </div>
+    );
+  };
 
-      <div className="mt-5 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">
-          {realWorldApplications.map((_, i) => (
-            <div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />
-          ))}
-        </div>
-        <span className="text-slate-400">{completedApps.size}/{realWorldApplications.length}</span>
-      </div>
-
-      {completedApps.size >= realWorldApplications.length && (
-        <button
-          onClick={goToNextPhase}
-          className="mt-5 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
-        >
-          Take the Knowledge Test
-        </button>
-      )}
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-5">Knowledge Assessment</h2>
-
-      {!showTestResults ? (
-        <div className="space-y-5 max-w-2xl w-full">
-          {testQuestions.map((q, qIdx) => (
-            <div key={qIdx} className="bg-slate-800/60 rounded-xl p-4">
-              <div className="bg-slate-900/50 rounded-lg p-3 mb-3">
-                <p className="text-slate-400 text-sm italic">{q.scenario}</p>
-              </div>
-              <p className="text-white font-medium mb-3">{qIdx + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((opt, oIdx) => (
-                  <button
-                    key={oIdx}
-                    onClick={() => handleTestAnswer(qIdx, oIdx)}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
-                      testAnswers[qIdx] === oIdx
-                        ? 'bg-red-600 text-white'
-                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                    }`}
-                  >
-                    {opt.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          <button
-            onClick={() => {
-              setShowTestResults(true);
-              playSound('complete');
-              emitEvent('test_completed', { score: calculateScore(), total: testQuestions.length });
-            }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-              testAnswers.includes(-1)
-                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:opacity-90'
-            }`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="max-w-2xl w-full">
-          <div className="bg-slate-800/60 rounded-2xl p-6 text-center mb-6">
-            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-            <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
-            <p className="text-slate-300 mb-6">
-              {calculateScore() >= 7
+  const renderTest = () => {
+    if (showTestResults) {
+      const score = calculateScore();
+      return (
+        <div style={styles.card}>
+          <div style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>{score >= 7 ? '&#127881;' : '&#128218;'}</div>
+            <h2 style={styles.heading}>Score: {score}/10</h2>
+            <p style={styles.paragraph}>
+              {score >= 7
                 ? "Excellent! You've mastered the Carnot cycle!"
                 : 'Keep studying! Review the concepts and try again.'}
             </p>
 
-            {calculateScore() >= 7 ? (
+            {score >= 7 ? (
               <button
-                onClick={() => { goToNextPhase(); emitEvent('mastery_achieved', { score: calculateScore() }); }}
-                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                onClick={() => { goToPhase('mastery'); emitEvent('mastery_achieved', { score }); }}
+                style={{ ...styles.button, background: 'linear-gradient(135deg, #10b981, #059669)', color: '#ffffff' }}
               >
                 Claim Your Mastery Badge
               </button>
             ) : (
               <button
-                onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
-                className="px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                onClick={() => { setShowTestResults(false); setCurrentQuestion(0); setTestAnswers(Array(10).fill(-1)); setSelectedAnswer(null); setAnswerConfirmed(false); goToPhase('review'); }}
+                style={{ ...styles.button, ...styles.primaryButton }}
               >
-                Review & Try Again
+                Review and Try Again
               </button>
             )}
           </div>
 
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-white">Review Answers:</h4>
+          <div style={{ maxHeight: '400px', overflowY: 'auto' as const }}>
+            <h3 style={{ ...styles.subheading, fontSize: '16px' }}>Review Answers:</h3>
             {testQuestions.map((q, i) => {
               const correct = q.options[testAnswers[i]]?.correct;
               return (
-                <div key={i} className={`p-4 rounded-xl ${correct ? 'bg-emerald-900/30 border border-emerald-700' : 'bg-red-900/30 border border-red-700'}`}>
-                  <p className="text-sm text-slate-300 mb-2">{i + 1}. {q.question}</p>
-                  <p className={`text-sm font-medium ${correct ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {correct ? 'Correct!' : `Your answer: ${q.options[testAnswers[i]]?.text}`}
+                <div key={i} style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  marginBottom: '12px',
+                  background: correct ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  border: `1px solid ${correct ? '#10b981' : '#ef4444'}`
+                }}>
+                  <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '8px' }}>{i + 1}. {q.question}</p>
+                  <p style={{ color: correct ? '#10b981' : '#ef4444', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
+                    {correct ? '✓ Correct!' : `✗ Your answer: ${q.options[testAnswers[i]]?.text}`}
                   </p>
                   {!correct && (
-                    <p className="text-sm text-emerald-400 mt-1">
+                    <p style={{ color: '#10b981', fontSize: '13px', marginBottom: '4px' }}>
                       Correct: {q.options.find(o => o.correct)?.text}
                     </p>
                   )}
-                  <p className="text-sm text-slate-400 mt-2">{q.explanation}</p>
+                  <p style={{ color: '#cbd5e1', fontSize: '12px', marginTop: '8px' }}>{q.explanation}</p>
                 </div>
               );
             })}
           </div>
         </div>
-      )}
-    </div>
-  );
+      );
+    }
+
+    const q = testQuestions[currentQuestion];
+
+    return (
+      <div style={styles.card}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ ...styles.heading, marginBottom: '0', fontSize: '20px' }}>Question {currentQuestion + 1} of 10</h2>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {testQuestions.map((_, i) => (
+              <div key={i} style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: i < currentQuestion ? '#10b981' : i === currentQuestion ? '#ef4444' : '#475569'
+              }} />
+            ))}
+          </div>
+        </div>
+
+        <div style={{ background: '#0f172a', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+          <p style={{ color: '#cbd5e1', fontSize: '14px', fontStyle: 'italic' }}>{q.scenario}</p>
+        </div>
+
+        <p style={{ ...styles.paragraph, color: '#f8fafc', fontWeight: 500 }}>{q.question}</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '8px', marginBottom: '16px' }}>
+          {q.options.map((opt, i) => (
+            <button
+              key={i}
+              onClick={() => handleAnswerSelect(i)}
+              disabled={answerConfirmed}
+              style={{
+                ...styles.button,
+                width: '100%',
+                justifyContent: 'flex-start',
+                textAlign: 'left' as const,
+                padding: '14px 16px',
+                background: answerConfirmed
+                  ? opt.correct
+                    ? 'rgba(16, 185, 129, 0.3)'
+                    : selectedAnswer === i
+                    ? 'rgba(239, 68, 68, 0.3)'
+                    : '#334155'
+                  : selectedAnswer === i
+                  ? 'linear-gradient(135deg, #ef4444, #f97316)'
+                  : '#334155',
+                border: answerConfirmed && (opt.correct || selectedAnswer === i)
+                  ? `2px solid ${opt.correct ? '#10b981' : '#ef4444'}`
+                  : selectedAnswer === i
+                  ? '2px solid #ef4444'
+                  : '2px solid transparent',
+                color: '#e2e8f0',
+                fontSize: '14px'
+              }}
+            >
+              {opt.text}
+            </button>
+          ))}
+        </div>
+
+        {!answerConfirmed && selectedAnswer !== null && (
+          <button
+            onClick={handleCheckAnswer}
+            style={{ ...styles.button, ...styles.primaryButton, width: '100%', marginBottom: '12px' }}
+          >
+            Check Answer
+          </button>
+        )}
+
+        {answerConfirmed && (
+          <>
+            <div style={{
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '16px',
+              background: q.options[selectedAnswer!]?.correct ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              border: `1px solid ${q.options[selectedAnswer!]?.correct ? '#10b981' : '#ef4444'}`
+            }}>
+              <p style={{ color: q.options[selectedAnswer!]?.correct ? '#10b981' : '#ef4444', fontWeight: 600, marginBottom: '8px' }}>
+                {q.options[selectedAnswer!]?.correct ? '✓ Correct!' : '✗ Incorrect'}
+              </p>
+              <p style={{ ...styles.paragraph, fontSize: '14px', marginBottom: '0' }}>{q.explanation}</p>
+            </div>
+
+            <button
+              onClick={handleNextQuestion}
+              style={{ ...styles.button, ...styles.primaryButton, width: '100%' }}
+            >
+              {currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results'}
+            </button>
+          </>
+        )}
+      </div>
+    );
+  };
 
   const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[550px] p-6 text-center">
-      <div className="bg-gradient-to-br from-red-900/50 via-orange-900/50 to-yellow-900/50 rounded-3xl p-8 max-w-2xl border border-red-500/20">
-        <div className="text-8xl mb-6">🔥</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Carnot Cycle Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">
-          You've mastered the physics of heat engines and thermodynamic efficiency!
+    <div style={{ ...styles.card, textAlign: 'center' as const }}>
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2), rgba(245, 158, 11, 0.2))',
+        borderRadius: '24px',
+        padding: '32px',
+        border: '1px solid rgba(239, 68, 68, 0.3)'
+      }}>
+        <div style={{ fontSize: '80px', marginBottom: '24px' }}>&#128293;</div>
+        <h1 style={{ ...styles.heading, fontSize: '32px' }}>Carnot Cycle Master!</h1>
+        <p style={{ ...styles.paragraph, fontSize: '18px', color: '#e2e8f0' }}>
+          Congratulations! You have successfully completed all phases and mastered the physics of heat engines and thermodynamic efficiency!
         </p>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">📊</div>
-            <p className="text-sm text-slate-300">Carnot Efficiency</p>
-            <p className="text-xs text-orange-400 font-mono">η = 1 - T_C/T_H</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', margin: '32px 0' }}>
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '16px', padding: '20px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>&#128200;</div>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '4px' }}>Carnot Efficiency</p>
+            <p style={{ color: '#f59e0b', fontSize: '12px', fontFamily: 'monospace' }}>eta = 1 - T_C/T_H</p>
           </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🔄</div>
-            <p className="text-sm text-slate-300">Four-Step Cycle</p>
-            <p className="text-xs text-cyan-400">2 isothermal + 2 adiabatic</p>
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '16px', padding: '20px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>&#128260;</div>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '4px' }}>Four-Step Cycle</p>
+            <p style={{ color: '#22d3ee', fontSize: '12px' }}>2 isothermal + 2 adiabatic</p>
           </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">❄️</div>
-            <p className="text-sm text-slate-300">Heat Pumps</p>
-            <p className="text-xs text-blue-400">COP &gt; 1 (move heat!)</p>
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '16px', padding: '20px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>&#10052;&#65039;</div>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '4px' }}>Heat Pumps</p>
+            <p style={{ color: '#3b82f6', fontSize: '12px' }}>COP greater than 1 (move heat!)</p>
           </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">⚡</div>
-            <p className="text-sm text-slate-300">Fundamental Limit</p>
-            <p className="text-xs text-emerald-400">Nature's efficiency cap</p>
+          <div style={{ background: 'rgba(15, 23, 42, 0.5)', borderRadius: '16px', padding: '20px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>&#9889;</div>
+            <p style={{ color: '#e2e8f0', fontSize: '14px', marginBottom: '4px' }}>Fundamental Limit</p>
+            <p style={{ color: '#10b981', fontSize: '12px' }}>Nature's efficiency cap</p>
           </div>
         </div>
 
-        <div className="flex gap-4 justify-center">
-          <button
-            onClick={() => goToPhase('hook')}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
-          >
-            Explore Again
-          </button>
-        </div>
+        <button
+          onClick={() => goToPhase('hook')}
+          style={{ ...styles.button, ...styles.secondaryButton }}
+        >
+          Explore Again
+        </button>
       </div>
     </div>
   );
@@ -1418,17 +1710,38 @@ const CarnotCycleRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPha
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-
+    <div style={styles.container}>
       {renderProgressBar()}
 
-      <div className="relative z-10 pt-16 pb-8">
+      <div style={styles.mainContent}>
         {renderPhase()}
       </div>
+
+      {/* Fixed Bottom Navigation Bar */}
+      <nav style={styles.bottomNav}>
+        <div style={styles.bottomNavContent}>
+          <button
+            onClick={handleBack}
+            disabled={!canGoBack}
+            style={{
+              ...styles.button,
+              ...(canGoBack ? styles.secondaryButton : styles.disabledButton)
+            }}
+          >
+            Back
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={!canGoNext || phase === 'test'}
+            style={{
+              ...styles.button,
+              ...((canGoNext && phase !== 'test') ? styles.primaryButton : styles.disabledButton)
+            }}
+          >
+            Next
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };

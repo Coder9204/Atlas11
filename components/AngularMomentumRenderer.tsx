@@ -378,8 +378,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
     error: '#EF4444',
     warning: '#F59E0B',
     textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
+    textSecondary: '#cbd5e1',
+    textMuted: '#94a3b8',
     border: '#2a2a3a',
     pink: '#EC4899',
   };
@@ -397,14 +397,14 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   const phaseLabels: Record<Phase, string> = {
     hook: 'Introduction',
     predict: 'Predict',
-    play: 'Experiment',
-    review: 'Understanding',
+    play: 'Play Experiment',
+    review: 'Review Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Mass Effects',
-    twist_review: 'Deep Insight',
+    twist_play: 'Explore Effects',
+    twist_review: 'Deep Review',
     transfer: 'Real World',
     test: 'Knowledge Test',
-    mastery: 'Mastery'
+    mastery: 'Mastery Complete'
   };
 
   const goToPhase = useCallback((p: Phase) => {
@@ -445,7 +445,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
     const weightSize = hasWeights ? 14 : 5;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <radialGradient id="spinGlow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={colors.accent} stopOpacity="0.6" />
@@ -554,17 +554,36 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           )}
         </g>
 
-        {/* Labels and values */}
+        {/* Educational Labels */}
         <text x={width / 2} y={height - 20} textAnchor="middle" fill={colors.textMuted} fontSize="12">
           Arm position: {armExtension < 0.3 ? 'Tucked' : armExtension > 0.7 ? 'Extended' : 'Mid'}
         </text>
+
+        {/* Legend panel */}
+        <g transform={`translate(${width - 120}, 20)`}>
+          <rect x="0" y="0" width="110" height="80" fill={colors.bgSecondary} rx="6" opacity="0.9" />
+          <text x="10" y="18" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Legend</text>
+          <circle cx="18" cy="35" r="6" fill={colors.accent} />
+          <text x="30" y="39" fill={colors.textSecondary} fontSize="10">Angular Momentum L</text>
+          <circle cx="18" cy="55" r="6" fill={colors.pink} />
+          <text x="30" y="59" fill={colors.textSecondary} fontSize="10">Weights (mass)</text>
+          <line x1="12" y1="70" x2="24" y2="70" stroke={colors.success} strokeWidth="2" />
+          <text x="30" y="74" fill={colors.textSecondary} fontSize="10">Rotation axis</text>
+        </g>
+
+        {/* Direct labels on objects */}
+        <text x={centerX + 80} y={centerY + 105} fill={colors.textSecondary} fontSize="11">Spinning Platform</text>
+        <text x={centerX - 100} y={centerY - 60} fill={colors.textSecondary} fontSize="11">Rotation Center</text>
+        {hasWeights && (
+          <text x={centerX} y={centerY + 60} textAnchor="middle" fill={colors.pink} fontSize="11">Mass = {weightMass} kg</text>
+        )}
       </svg>
     );
   };
 
   // Progress bar component
   const renderProgressBar = () => (
-    <div style={{
+    <header style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -579,35 +598,114 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
         background: `linear-gradient(90deg, ${colors.accent}, ${colors.pink})`,
         transition: 'width 0.3s ease',
       }} />
-    </div>
+    </header>
   );
 
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
+  // Previous phase helper
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  // Bottom navigation bar with dots, back and next buttons
+  const renderBottomNav = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    return (
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: colors.bgCard,
+        borderTop: `1px solid ${colors.border}`,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.3)',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 100,
+      }}>
+        {/* Back button */}
         <button
-          key={p}
-          onClick={() => goToPhase(p)}
+          onClick={prevPhase}
+          disabled={isFirst}
           style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+            minHeight: '48px',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: `1px solid ${colors.border}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textSecondary,
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isFirst ? 0.5 : 1,
           }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
+        >
+          Back
+        </button>
+
+        {/* Navigation dots */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '4px',
+        }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => goToPhase(p)}
+              style={{
+                width: '44px',
+                height: '44px',
+                minHeight: '44px',
+                borderRadius: '22px',
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
+              aria-label={phaseLabels[p]}
+            >
+              <span style={{
+                width: phase === p ? '20px' : '8px',
+                height: '8px',
+                borderRadius: '4px',
+                background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+                transition: 'all 0.3s ease',
+              }} />
+            </button>
+          ))}
+        </div>
+
+        {/* Next button */}
+        <button
+          onClick={nextPhase}
+          disabled={isLast}
+          style={{
+            minHeight: '48px',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            border: 'none',
+            background: isLast ? colors.border : colors.accent,
+            color: 'white',
+            cursor: isLast ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isLast ? 0.5 : 1,
+          }}
+        >
+          Next
+        </button>
+      </nav>
+    );
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -689,16 +787,25 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   if (phase === 'hook') {
     return (
       <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        position: 'fixed',
+        inset: 0,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          paddingBottom: '100px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '64px',
@@ -713,7 +820,9 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           The Spinning Secret
         </h1>
 
-        <p style={{
+        <p
+          className="text-secondary-muted"
+          style={{
           ...typo.body,
           color: colors.textSecondary,
           maxWidth: '600px',
@@ -744,8 +853,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
         >
           Discover the Physics
         </button>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -761,12 +870,20 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
             background: `${colors.accent}22`,
@@ -784,7 +901,7 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             WHY does pulling arms in make a skater spin faster?
           </h2>
 
-          {/* Visual diagram */}
+          {/* Static SVG visualization for predict phase */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
@@ -792,19 +909,51 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             marginBottom: '24px',
             textAlign: 'center',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🙆</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Arms Extended</p>
-                <p style={{ ...typo.small, color: colors.warning }}>Slow Spin</p>
-              </div>
-              <div style={{ fontSize: '32px', color: colors.accent }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🧘</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Arms Tucked</p>
-                <p style={{ ...typo.small, color: colors.success }}>Fast Spin!</p>
-              </div>
-            </div>
+            <svg width={isMobile ? 320 : 400} height={200} viewBox="0 0 400 200" style={{ margin: '0 auto' }}>
+              <defs>
+                <radialGradient id="predictBodyGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#64748b" />
+                  <stop offset="100%" stopColor="#334155" />
+                </radialGradient>
+                <radialGradient id="predictWeightGrad" cx="30%" cy="25%" r="65%">
+                  <stop offset="0%" stopColor="#f9a8d4" />
+                  <stop offset="50%" stopColor="#ec4899" />
+                  <stop offset="100%" stopColor="#9d174d" />
+                </radialGradient>
+              </defs>
+
+              {/* Extended arms figure - slow */}
+              <g transform="translate(100, 100)">
+                <ellipse cx="0" cy="10" rx="18" ry="28" fill="url(#predictBodyGrad)" />
+                <circle cx="0" cy="-22" r="15" fill="#94a3b8" />
+                <line x1="-16" y1="0" x2="-60" y2="0" stroke="#64748b" strokeWidth="7" strokeLinecap="round" />
+                <line x1="16" y1="0" x2="60" y2="0" stroke="#64748b" strokeWidth="7" strokeLinecap="round" />
+                <circle cx="-60" cy="0" r="10" fill="url(#predictWeightGrad)" />
+                <circle cx="60" cy="0" r="10" fill="url(#predictWeightGrad)" />
+                <text x="0" y="65" textAnchor="middle" fill={colors.warning} fontSize="12">Slow Spin</text>
+                <text x="0" y="80" textAnchor="middle" fill={colors.textMuted} fontSize="11">High Moment of Inertia</text>
+              </g>
+
+              {/* Arrow */}
+              <text x="200" y="100" textAnchor="middle" fill={colors.accent} fontSize="24">→</text>
+
+              {/* Tucked arms figure - fast */}
+              <g transform="translate(300, 100)">
+                <ellipse cx="0" cy="10" rx="18" ry="28" fill="url(#predictBodyGrad)" />
+                <circle cx="0" cy="-22" r="15" fill="#94a3b8" />
+                <line x1="-16" y1="0" x2="-25" y2="0" stroke="#64748b" strokeWidth="7" strokeLinecap="round" />
+                <line x1="16" y1="0" x2="25" y2="0" stroke="#64748b" strokeWidth="7" strokeLinecap="round" />
+                <circle cx="-25" cy="0" r="10" fill="url(#predictWeightGrad)" />
+                <circle cx="25" cy="0" r="10" fill="url(#predictWeightGrad)" />
+                {/* Rotation indicator */}
+                <ellipse cx="0" cy="0" rx="40" ry="10" fill="none" stroke={colors.accent} strokeWidth="2" strokeDasharray="4 4" opacity="0.5" />
+                <text x="0" y="65" textAnchor="middle" fill={colors.success} fontSize="12">Fast Spin!</text>
+                <text x="0" y="80" textAnchor="middle" fill={colors.textMuted} fontSize="11">Low Moment of Inertia</text>
+              </g>
+
+              {/* Legend */}
+              <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">Angular Momentum Conservation</text>
+            </svg>
           </div>
 
           {/* Options */}
@@ -853,8 +1002,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -863,12 +1012,20 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   if (phase === 'play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Spinning Chair Lab
@@ -916,9 +1073,9 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
                 onChange={(e) => setArmExtension(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '24px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${armExtension * 100}%, ${colors.border} ${armExtension * 100}%)`,
+                  accentColor: colors.accent,
                   cursor: 'pointer',
                 }}
               />
@@ -1007,8 +1164,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             Understand the Physics
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1017,12 +1174,20 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   if (phase === 'review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Conservation of Angular Momentum
@@ -1087,8 +1252,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             Explore the Mass Effect
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1104,12 +1269,20 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
             background: `${colors.warning}22`,
@@ -1130,6 +1303,58 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
           <p style={{ ...typo.body, color: colors.accent, marginBottom: '24px' }}>
             Will the speed increase when pulling arms in be bigger, smaller, or the same?
           </p>
+
+          {/* Static SVG for twist predict */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <svg width={isMobile ? 320 : 400} height={160} viewBox="0 0 400 160" style={{ margin: '0 auto' }}>
+              <defs>
+                <radialGradient id="twistBodyGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#64748b" />
+                  <stop offset="100%" stopColor="#334155" />
+                </radialGradient>
+                <radialGradient id="twistWeightGrad" cx="30%" cy="25%" r="65%">
+                  <stop offset="0%" stopColor="#f9a8d4" />
+                  <stop offset="50%" stopColor="#ec4899" />
+                  <stop offset="100%" stopColor="#9d174d" />
+                </radialGradient>
+              </defs>
+
+              {/* With heavy weights */}
+              <g transform="translate(100, 80)">
+                <ellipse cx="0" cy="8" rx="15" ry="24" fill="url(#twistBodyGrad)" />
+                <circle cx="0" cy="-18" r="12" fill="#94a3b8" />
+                <line x1="-14" y1="0" x2="-45" y2="0" stroke="#64748b" strokeWidth="6" strokeLinecap="round" />
+                <line x1="14" y1="0" x2="45" y2="0" stroke="#64748b" strokeWidth="6" strokeLinecap="round" />
+                <circle cx="-45" cy="0" r="12" fill="url(#twistWeightGrad)" />
+                <circle cx="45" cy="0" r="12" fill="url(#twistWeightGrad)" />
+                <text x="0" y="55" textAnchor="middle" fill={colors.pink} fontSize="11" fontWeight="bold">Heavy Weights</text>
+                <text x="0" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="10">Large mass at radius</text>
+              </g>
+
+              {/* vs text */}
+              <text x="200" y="85" textAnchor="middle" fill={colors.textSecondary} fontSize="16" fontWeight="bold">VS</text>
+
+              {/* Arms only */}
+              <g transform="translate(300, 80)">
+                <ellipse cx="0" cy="8" rx="15" ry="24" fill="url(#twistBodyGrad)" />
+                <circle cx="0" cy="-18" r="12" fill="#94a3b8" />
+                <line x1="-14" y1="0" x2="-40" y2="0" stroke="#64748b" strokeWidth="6" strokeLinecap="round" />
+                <line x1="14" y1="0" x2="40" y2="0" stroke="#64748b" strokeWidth="6" strokeLinecap="round" />
+                <circle cx="-40" cy="0" r="5" fill="#64748b" />
+                <circle cx="40" cy="0" r="5" fill="#64748b" />
+                <text x="0" y="55" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">Arms Only</text>
+                <text x="0" y="70" textAnchor="middle" fill={colors.textMuted} fontSize="10">Small mass at radius</text>
+              </g>
+
+              <text x="200" y="20" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Mass Distribution Comparison</text>
+            </svg>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1175,8 +1400,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1185,12 +1410,20 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   if (phase === 'twist_play') {
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Compare With/Without Weights
@@ -1263,8 +1496,9 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
                 onChange={(e) => setArmExtension(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
-                  height: '8px',
+                  height: '24px',
                   borderRadius: '4px',
+                  accentColor: colors.accent,
                   cursor: 'pointer',
                 }}
               />
@@ -1315,8 +1549,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             Understand Why
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1325,12 +1559,20 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   if (phase === 'twist_review') {
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Mass Distribution is Key!
@@ -1406,8 +1648,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             See Real-World Applications
           </button>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1419,16 +1661,27 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Application {selectedApp + 1} of {realWorldApps.length} - Explore all to continue
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1572,6 +1825,40 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
                 {app.companies.join(' | ')}
               </p>
             </div>
+
+            {/* Got It button for current app */}
+            <button
+              onClick={() => {
+                playSound('click');
+                const newCompleted = [...completedApps];
+                newCompleted[selectedApp] = true;
+                setCompletedApps(newCompleted);
+                // Auto-advance to next incomplete app
+                const nextIncomplete = newCompleted.findIndex((c, i) => !c && i > selectedApp);
+                if (nextIncomplete !== -1) {
+                  setSelectedApp(nextIncomplete);
+                } else {
+                  const firstIncomplete = newCompleted.findIndex(c => !c);
+                  if (firstIncomplete !== -1) {
+                    setSelectedApp(firstIncomplete);
+                  }
+                }
+              }}
+              style={{
+                width: '100%',
+                marginTop: '16px',
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: completedApps[selectedApp] ? colors.success : colors.accent,
+                color: 'white',
+                fontWeight: 600,
+                cursor: 'pointer',
+                minHeight: '48px',
+              }}
+            >
+              {completedApps[selectedApp] ? 'Completed' : 'Got It - Next Application'}
+            </button>
           </div>
 
           {allAppsCompleted && (
@@ -1583,8 +1870,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             </button>
           )}
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1595,12 +1882,20 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
       const passed = testScore >= 7;
       return (
         <div style={{
-          minHeight: '100vh',
+          position: 'fixed',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
           background: colors.bgPrimary,
-          padding: '24px',
         }}>
           {renderProgressBar()}
-
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '24px',
+            paddingBottom: '100px',
+          }}>
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
@@ -1642,7 +1937,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
               </button>
             )}
           </div>
-          {renderNavDots()}
+          </div>
+          {renderBottomNav()}
         </div>
       );
     }
@@ -1651,12 +1947,20 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
 
     return (
       <div style={{
-        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: colors.bgPrimary,
-        padding: '24px',
       }}>
         {renderProgressBar()}
-
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px',
+          paddingBottom: '100px',
+        }}>
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           {/* Progress */}
           <div style={{
@@ -1807,8 +2111,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             )}
           </div>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }
@@ -1817,16 +2121,25 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
   if (phase === 'mastery') {
     return (
       <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        position: 'fixed',
+        inset: 0,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
+        overflow: 'hidden',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
       }}>
         {renderProgressBar()}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          paddingBottom: '100px',
+          textAlign: 'center',
+        }}>
 
         <div style={{
           fontSize: '100px',
@@ -1921,8 +2234,8 @@ const AngularMomentumRenderer: React.FC<AngularMomentumRendererProps> = ({ onGam
             Return to Dashboard
           </a>
         </div>
-
-        {renderNavDots()}
+        </div>
+        {renderBottomNav()}
       </div>
     );
   }

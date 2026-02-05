@@ -178,9 +178,9 @@ const realWorldApps = [
     connection: 'The F = mv^2/r equation you explored determines whether riders stay in their seats during inversions. At the top of a loop, the track must provide centripetal force even against gravity, requiring precise speed control.',
     howItWorks: 'Modern coasters use clothoid (teardrop) loops rather than perfect circles because they provide consistent g-forces throughout the loop. The tighter radius at the top means lower speed is needed, while the larger radius at entry prevents dangerous g-spikes.',
     stats: [
-      { value: '6g', label: 'Peak force on riders', icon: '💪' },
-      { value: '149 mph', label: 'Fastest coaster speed', icon: '⚡' },
-      { value: '456 ft', label: 'Tallest coaster drop', icon: '📏' }
+      { value: '6g', label: 'Peak rider force', icon: '💪' },
+      { value: '240 km/h', label: 'Fastest coaster', icon: '⚡' },
+      { value: '139 m', label: 'Tallest drop', icon: '📏' }
     ],
     examples: ['Formula Rossa (Abu Dhabi)', 'Kingda Ka (New Jersey)', 'Steel Vengeance (Ohio)', 'Taron (Germany)'],
     companies: ['Intamin', 'Bolliger & Mabillard', 'Rocky Mountain Construction', 'Vekoma'],
@@ -191,14 +191,14 @@ const realWorldApps = [
     icon: '🛰️',
     title: 'Satellite Orbital Mechanics',
     short: 'Gravity as the ultimate centripetal force',
-    tagline: 'Falling around Earth at 17,500 mph',
-    description: 'Every satellite in orbit is experiencing continuous circular motion maintained by Earth\'s gravity. From GPS satellites at 12,500 miles to the ISS at 250 miles, each orbit balances gravitational centripetal force with orbital velocity.',
+    tagline: 'Falling around Earth at 28,000 km/h',
+    description: 'Every satellite in orbit is experiencing continuous circular motion maintained by Earth\'s gravity. From GPS satellites at 20,000 km to the ISS at 400 km, each orbit balances gravitational centripetal force with orbital velocity.',
     connection: 'Orbital mechanics directly applies F = mv^2/r where gravity provides the centripetal force. The relationship GMm/r^2 = mv^2/r determines the exact speed needed for any orbital altitude - too slow and the satellite falls, too fast and it escapes.',
     howItWorks: 'Satellites don\'t need engines to stay in orbit because gravity constantly pulls them toward Earth. Their horizontal velocity is so great that as they fall, the Earth\'s surface curves away beneath them. The result is a continuous circular path around the planet.',
     stats: [
       { value: '7.66 km/s', label: 'ISS orbital velocity', icon: '🚀' },
       { value: '90 min', label: 'ISS orbit period', icon: '⏱️' },
-      { value: '4,500+', label: 'Active satellites', icon: '🛰️' }
+      { value: '4,500', label: 'Active satellites', icon: '🛰️' }
     ],
     examples: ['GPS Navigation Constellation', 'Starlink Internet Network', 'Hubble Space Telescope', 'Geostationary Weather Satellites'],
     companies: ['SpaceX', 'NASA', 'ESA', 'Roscosmos', 'ISRO'],
@@ -209,13 +209,13 @@ const realWorldApps = [
     icon: '🧬',
     title: 'Medical Centrifuges',
     short: 'Separating blood components by density',
-    tagline: 'Spinning at 100,000+ RPM to analyze microscopic structures',
+    tagline: 'Spinning at 100,000 RPM to analyze microscopic structures',
     description: 'Medical and research centrifuges use extreme centripetal acceleration to separate biological samples by density. Blood components, DNA, viruses, and proteins can all be isolated through controlled high-speed spinning.',
     connection: 'In a centrifuge, all particles rotate together but denser particles need more centripetal force. Since the container provides limited force, dense particles migrate outward while lighter components stay near the center.',
-    howItWorks: 'When blood spins at 3,000 RPM, red blood cells (densest) collect at the bottom, then white blood cells and platelets form a thin layer, with plasma (lightest) on top. Ultracentrifuges spinning at 100,000+ RPM can separate individual proteins and viruses.',
+    howItWorks: 'When blood spins at 3,000 RPM, red blood cells (densest) collect at the bottom, then white blood cells and platelets form a thin layer, with plasma (lightest) on top. Ultracentrifuges spinning at 100,000 RPM can separate individual proteins and viruses.',
     stats: [
-      { value: '100,000+ g', label: 'Ultracentrifuge force', icon: '🔬' },
-      { value: '< 15 min', label: 'Blood separation time', icon: '⏱️' },
+      { value: '100,000 g', label: 'Ultracentrifuge force', icon: '🔬' },
+      { value: '15 min', label: 'Blood separation', icon: '⏱️' },
       { value: '$50B', label: 'Global market value', icon: '💰' }
     ],
     examples: ['Blood banking and transfusions', 'DNA extraction and sequencing', 'Vaccine purification', 'Cancer cell isolation'],
@@ -230,11 +230,11 @@ const realWorldApps = [
     tagline: 'Where physics meets high-speed competition',
     description: 'Race tracks are precisely engineered to allow maximum cornering speeds through banked curves. From NASCAR ovals to Formula 1 circuits, banking angles are calculated to provide centripetal force through the track itself, not just tire friction.',
     connection: 'On a banked curve, the normal force has a horizontal component pointing toward the turn center. Combined with friction, this allows much higher speeds than flat curves - the banking literally pushes cars toward the center.',
-    howItWorks: 'At the optimal "design speed," a car could navigate a banked curve with no friction at all. Below this speed, friction prevents sliding inward; above it, friction prevents sliding outward. NASCAR tracks bank up to 33 degrees, enabling 180+ mph turns.',
+    howItWorks: 'At the optimal "design speed," a car could navigate a banked curve with no friction at all. Below this speed, friction prevents sliding inward; above it, friction prevents sliding outward. NASCAR tracks bank up to 33 degrees, enabling 290 km/h turns.',
     stats: [
-      { value: '33°', label: 'Maximum NASCAR banking', icon: '📐' },
-      { value: '200+ mph', label: 'Turn speeds achieved', icon: '🏁' },
-      { value: '3-5g', label: 'Cornering forces', icon: '💪' }
+      { value: '33 deg', label: 'Maximum NASCAR bank', icon: '📐' },
+      { value: '320 km/h', label: 'Turn speeds achieved', icon: '🏁' },
+      { value: '5g', label: 'Cornering forces', icon: '💪' }
     ],
     examples: ['Daytona International Speedway', 'Monaco Grand Prix Circuit', 'Indianapolis Motor Speedway', 'Nurburgring Nordschleife'],
     companies: ['International Speedway Corp', 'Liberty Media (F1)', 'Circuit of the Americas', 'Dorna Sports (MotoGP)'],
@@ -284,6 +284,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
   // Transfer state
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+  const [currentAppRead, setCurrentAppRead] = useState(false);
 
   // Navigation ref
   const isNavigating = useRef(false);
@@ -323,20 +324,20 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
   const maxFriction = 8; // Maximum friction force available (simplified)
   const isSliding = centripetalForce > maxFriction;
 
-  // Premium design colors
+  // Premium design colors - using brighter colors for text contrast
   const colors = {
-    bgPrimary: '#0a0a0f',
-    bgSecondary: '#12121a',
-    bgCard: '#1a1a24',
+    bgPrimary: '#0f172a',
+    bgSecondary: '#1e293b',
+    bgCard: '#1e293b',
     accent: '#8B5CF6', // Violet for circular motion
     accentGlow: 'rgba(139, 92, 246, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
-    textPrimary: '#FFFFFF',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
-    border: '#2a2a3a',
+    textPrimary: '#f8fafc',
+    textSecondary: '#e2e8f0',
+    textMuted: '#cbd5e1',
+    border: '#334155',
     velocity: '#22D3EE', // Cyan for velocity
     force: '#EF4444', // Red for force
   };
@@ -355,14 +356,18 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     hook: 'Introduction',
     predict: 'Predict',
     play: 'Experiment',
-    review: 'Understanding',
+    review: 'Review',
     twist_predict: 'New Variable',
-    twist_play: 'String Release',
+    twist_play: 'Explore',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
-    mastery: 'Mastery'
+    mastery: 'Complete'
   };
+
+  const currentIndex = phaseOrder.indexOf(phase);
+  const canGoBack = currentIndex > 0;
+  const canGoNext = currentIndex < phaseOrder.length - 1 && phase !== 'test';
 
   const goToPhase = useCallback((p: Phase) => {
     if (isNavigating.current) return;
@@ -385,6 +390,13 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const prevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase, phaseOrder]);
 
@@ -425,7 +437,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     const trailAngles = [1, 2, 3, 4, 5].map(i => carAngle - i * 10);
 
     return (
-      <svg width={size} height={size} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <radialGradient id="trackGradient" cx="50%" cy="50%" r="60%">
             <stop offset="0%" stopColor="#1e293b" />
@@ -455,34 +467,47 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
           </marker>
         </defs>
 
-        {/* Track background */}
-        <circle cx={centerX} cy={centerY} r={displayRadius + 18} fill="url(#trackGradient)" />
-        <circle cx={centerX} cy={centerY} r={displayRadius - 18} fill={colors.bgPrimary} />
+        {/* Background group */}
+        <g id="background-layer">
+          {/* Track background */}
+          <circle cx={centerX} cy={centerY} r={displayRadius + 18} fill="url(#trackGradient)" />
+          <circle cx={centerX} cy={centerY} r={displayRadius - 18} fill={colors.bgPrimary} />
+        </g>
 
-        {/* Track path */}
-        <circle cx={centerX} cy={centerY} r={displayRadius} fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="10 5" />
+        {/* Track group */}
+        <g id="track-layer">
+          {/* Track path */}
+          <circle cx={centerX} cy={centerY} r={displayRadius} fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="10 5" />
+          <text x={centerX} y={size - 8} fill="#fbbf24" fontSize="10" textAnchor="middle" fontWeight="bold">Circular Track</text>
+        </g>
 
-        {/* Motion trail */}
-        {trailAngles.map((angle, i) => (
-          <circle
-            key={i}
-            cx={centerX + Math.cos(angle * Math.PI / 180) * displayRadius}
-            cy={centerY + Math.sin(angle * Math.PI / 180) * displayRadius}
-            r={5 - i * 0.8}
-            fill={isSliding ? colors.error : colors.accent}
-            opacity={0.4 - i * 0.06}
-          />
-        ))}
+        {/* Motion trail group */}
+        <g id="trail-layer">
+          {trailAngles.map((angle, i) => (
+            <circle
+              key={i}
+              cx={centerX + Math.cos(angle * Math.PI / 180) * displayRadius}
+              cy={centerY + Math.sin(angle * Math.PI / 180) * displayRadius}
+              r={5 - i * 0.8}
+              fill={isSliding ? colors.error : colors.accent}
+              opacity={0.4 - i * 0.06}
+            />
+          ))}
+        </g>
 
-        {/* Car body */}
-        <g transform={`translate(${carX}, ${carY}) rotate(${carAngle + 90})`}>
+        {/* Car group */}
+        <g id="car-layer" transform={`translate(${carX}, ${carY}) rotate(${carAngle + 90})`}>
           <rect x="-8" y="-12" width="16" height="24" rx="3" fill={isSliding ? colors.error : colors.accent} filter="url(#glow)" />
           <rect x="-6" y="-8" width="12" height="8" rx="2" fill="#93C5FD" opacity="0.8" />
         </g>
 
-        {/* Vectors */}
+        {/* Labels on car */}
+        <text x={carX + 20} y={carY - 20} fill={colors.textPrimary} fontSize="11" fontWeight="bold">Car</text>
+        <text x={carX + 20} y={carY - 8} fill={colors.textSecondary} fontSize="10">m = {mass.toFixed(1)} kg</text>
+
+        {/* Vectors group */}
         {showVec && (
-          <>
+          <g id="vectors-layer">
             {/* Velocity vector */}
             <line
               x1={carX}
@@ -507,16 +532,23 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             />
             {/* Center point */}
             <circle cx={centerX} cy={centerY} r="6" fill="#fbbf24" filter="url(#glow)" />
-          </>
+            <text x={centerX + 10} y={centerY + 4} fill="#fbbf24" fontSize="11" fontWeight="bold">Center</text>
+          </g>
         )}
 
-        {/* Vector labels */}
+        {/* Vector labels group */}
         {showVec && (
-          <>
-            <text x={carX + velX * 1.2} y={carY + velY * 1.2} fill={colors.velocity} fontSize="12" fontWeight="bold" textAnchor="middle">v</text>
-            <text x={carX + forceX * 1.3} y={carY + forceY * 1.3 - 8} fill={colors.force} fontSize="12" fontWeight="bold" textAnchor="middle">Fc</text>
-          </>
+          <g id="labels-layer">
+            <text x={carX + velX * 1.3} y={carY + velY * 1.3} fill={colors.velocity} fontSize="12" fontWeight="bold" textAnchor="middle">v (velocity)</text>
+            <text x={carX + forceX * 1.6} y={carY + forceY * 1.6 - 12} fill={colors.force} fontSize="12" fontWeight="bold" textAnchor="middle">Fc (force)</text>
+          </g>
         )}
+
+        {/* Radius indicator group */}
+        <g id="radius-layer">
+          <line x1={centerX} y1={centerY} x2={centerX + displayRadius * 0.7} y2={centerY} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4 2" />
+          <text x={centerX + displayRadius * 0.35} y={centerY + 18} fill={colors.textSecondary} fontSize="10" textAnchor="middle">r = {(radius/10).toFixed(1)} m</text>
+        </g>
 
         {/* Sliding warning */}
         {isSliding && (
@@ -535,7 +567,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     const ballY = centerY + Math.sin(carAngle * Math.PI / 180) * simRadius;
 
     return (
-      <svg width={size} height={size} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ background: colors.bgCard, borderRadius: '12px' }}>
         <defs>
           <radialGradient id="ballGrad" cx="35%" cy="35%" r="65%">
             <stop offset="0%" stopColor="#93C5FD" />
@@ -554,19 +586,28 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
           </filter>
         </defs>
 
-        {/* Circular path indicator */}
-        <circle cx={centerX} cy={centerY} r={simRadius} fill="none" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5 3" />
+        {/* Background group */}
+        <g id="bg-group">
+          {/* Circular path indicator */}
+          <circle cx={centerX} cy={centerY} r={simRadius} fill="none" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5 3" />
+          <text x={centerX} y={centerY - simRadius - 10} fill={colors.textSecondary} fontSize="10" textAnchor="middle">Circular Path</text>
+        </g>
 
-        {/* Center pivot */}
-        <circle cx={centerX} cy={centerY} r="8" fill="#fbbf24" filter="url(#ballGlow)" />
+        {/* Center pivot group */}
+        <g id="pivot-group">
+          <circle cx={centerX} cy={centerY} r="8" fill="#fbbf24" filter="url(#ballGlow)" />
+          <text x={centerX} y={centerY + 24} fill="#fbbf24" fontSize="10" textAnchor="middle" fontWeight="bold">Pivot</text>
+        </g>
 
         {!stringBroken ? (
-          <>
+          <g id="attached-state">
             {/* String */}
             <line x1={centerX} y1={centerY} x2={ballX} y2={ballY} stroke={colors.textSecondary} strokeWidth="3" />
+            <text x={(centerX + ballX) / 2 - 15} y={(centerY + ballY) / 2 - 5} fill={colors.textSecondary} fontSize="10">String</text>
 
             {/* Ball */}
             <circle cx={ballX} cy={ballY} r="14" fill="url(#ballGrad)" filter="url(#ballGlow)" />
+            <text x={ballX + 18} y={ballY - 5} fill={colors.textPrimary} fontSize="11" fontWeight="bold">Ball</text>
 
             {/* Velocity vector */}
             <line
@@ -583,27 +624,30 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               x={ballX + Math.cos((carAngle + 90) * Math.PI / 180) * 50}
               y={ballY + Math.sin((carAngle + 90) * Math.PI / 180) * 50}
               fill={colors.velocity}
-              fontSize="14"
+              fontSize="11"
               fontWeight="bold"
-            >v</text>
-          </>
+            >v (tangent)</text>
+          </g>
         ) : (
-          <>
+          <g id="released-state">
             {/* Broken string pieces */}
             <line x1={centerX} y1={centerY} x2={centerX + 12} y2={centerY + 8} stroke={colors.error} strokeWidth="3" />
             <line x1={centerX} y1={centerY} x2={centerX - 10} y2={centerY + 6} stroke={colors.error} strokeWidth="3" />
+            <text x={centerX - 35} y={centerY + 20} fill={colors.error} fontSize="10">Broken!</text>
 
             {/* Trail of released ball */}
-            {[1, 2, 3, 4].map(i => (
-              <circle
-                key={i}
-                cx={ballX + ballPosition.x - Math.cos(releaseAngle) * 6 * i}
-                cy={ballY + ballPosition.y - Math.sin(releaseAngle) * 6 * i}
-                r={10 - i * 2}
-                fill={colors.error}
-                opacity={0.4 - i * 0.08}
-              />
-            ))}
+            <g id="trail-group">
+              {[1, 2, 3, 4].map(i => (
+                <circle
+                  key={i}
+                  cx={ballX + ballPosition.x - Math.cos(releaseAngle) * 6 * i}
+                  cy={ballY + ballPosition.y - Math.sin(releaseAngle) * 6 * i}
+                  r={10 - i * 2}
+                  fill={colors.error}
+                  opacity={0.4 - i * 0.08}
+                />
+              ))}
+            </g>
 
             {/* Released ball */}
             <circle
@@ -613,6 +657,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               fill="url(#ballReleasedGrad)"
               filter="url(#ballGlow)"
             />
+            <text x={ballX + ballPosition.x + 18} y={ballY + ballPosition.y - 5} fill={colors.error} fontSize="11" fontWeight="bold">Ball</text>
 
             {/* Tangent path line */}
             <line
@@ -624,10 +669,12 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               strokeWidth="2"
               strokeDasharray="6 3"
             />
+            <text x={ballX + Math.cos(releaseAngle) * 60} y={ballY + Math.sin(releaseAngle) * 60 - 8} fill={colors.success} fontSize="10" fontWeight="bold">Straight Line Path</text>
 
             {/* Release point marker */}
             <circle cx={ballX} cy={ballY} r="5" fill={colors.success} opacity="0.5" />
-          </>
+            <text x={ballX - 30} y={ballY + 20} fill={colors.success} fontSize="10">Release Point</text>
+          </g>
         )}
 
         {stringBroken && (
@@ -639,155 +686,67 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
     );
   };
 
-  // Progress bar component
-  const renderProgressBar = () => (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: '4px',
-      background: colors.bgSecondary,
-      zIndex: 100,
-    }}>
-      <div style={{
-        height: '100%',
-        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
-        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
-        transition: 'width 0.3s ease',
-      }} />
-    </div>
-  );
-
-  // Navigation dots
-  const renderNavDots = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      gap: '8px',
-      padding: '16px 0',
-    }}>
-      {phaseOrder.map((p, i) => (
-        <button
-          key={p}
-          onClick={() => goToPhase(p)}
-          style={{
-            width: phase === p ? '24px' : '8px',
-            height: '8px',
-            borderRadius: '4px',
-            border: 'none',
-            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          aria-label={phaseLabels[p]}
-        />
-      ))}
-    </div>
-  );
-
-  // Primary button style
-  const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
-    color: 'white',
-    border: 'none',
-    padding: isMobile ? '14px 28px' : '16px 32px',
-    borderRadius: '12px',
-    fontSize: isMobile ? '16px' : '18px',
-    fontWeight: 700,
-    cursor: 'pointer',
-    boxShadow: `0 4px 20px ${colors.accentGlow}`,
-    transition: 'all 0.2s ease',
-  };
-
   // ═══════════════════════════════════════════════════════════════════════════
-  // PHASE RENDERS
+  // RENDER PHASE CONTENT
   // ═══════════════════════════════════════════════════════════════════════════
 
-  // HOOK PHASE
-  if (phase === 'hook') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
-        {renderProgressBar()}
+  const renderPhaseContent = () => {
+    // HOOK PHASE
+    if (phase === 'hook') {
+      return (
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            animation: 'spin 3s linear infinite',
+          }}>
+            🚗
+          </div>
+          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
-        <div style={{
-          fontSize: '64px',
-          marginBottom: '24px',
-          animation: 'spin 3s linear infinite',
-        }}>
-          🚗
-        </div>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+            Centripetal Force
+          </h1>
 
-        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Centripetal Force
-        </h1>
-
-        <p style={{
-          ...typo.body,
-          color: colors.textSecondary,
-          maxWidth: '600px',
-          marginBottom: '32px',
-        }}>
-          "When a car turns, you feel pushed toward the outside door. But is there really an <span style={{ color: colors.accent }}>outward force</span>, or is something else going on?"
-        </p>
-
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.border}`,
-        }}>
-          <CircularMotionSVG showVec={true} size={isMobile ? 260 : 300} />
-          <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px', fontStyle: 'italic' }}>
-            "Every object moving in a circle requires a force pointing toward the center. Without it, objects would travel in straight lines forever."
+          <p style={{
+            ...typo.body,
+            color: colors.textSecondary,
+            maxWidth: '600px',
+            margin: '0 auto 32px',
+          }}>
+            "When a car turns, you feel pushed toward the outside door. But is there really an <span style={{ color: colors.accent, fontWeight: 600 }}>outward force</span>, or is something else going on?"
           </p>
-          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Newton's Laws of Motion
-          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+            border: `1px solid ${colors.border}`,
+          }}>
+            <CircularMotionSVG showVec={true} size={isMobile ? 260 : 300} />
+            <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '16px', fontStyle: 'italic' }}>
+              "Every object moving in a circle requires a force pointing toward the center. Without it, objects would travel in straight lines forever."
+            </p>
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+              — Newton's Laws of Motion
+            </p>
+          </div>
         </div>
+      );
+    }
 
-        <button
-          onClick={() => { playSound('click'); nextPhase(); }}
-          style={primaryButtonStyle}
-        >
-          Explore Circular Motion
-        </button>
+    // PREDICT PHASE
+    if (phase === 'predict') {
+      const options = [
+        { id: 'a', text: 'Forward, in the direction the car is moving' },
+        { id: 'b', text: 'Toward the center of the circular path', correct: true },
+        { id: 'c', text: 'Outward, away from the center (centrifugal)' },
+        { id: 'd', text: 'No net force - it\'s moving at constant speed' },
+      ];
 
-        {renderNavDots()}
-      </div>
-    );
-  }
-
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    const options = [
-      { id: 'a', text: 'Forward, in the direction the car is moving' },
-      { id: 'b', text: 'Toward the center of the circular path', correct: true },
-      { id: 'c', text: 'Outward, away from the center (centrifugal)' },
-      { id: 'd', text: 'No net force - it\'s moving at constant speed' },
-    ];
-
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+      return (
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.accent}22`,
             borderRadius: '12px',
@@ -795,7 +754,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             marginBottom: '24px',
             border: `1px solid ${colors.accent}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0, fontWeight: 600 }}>
               Make Your Prediction
             </p>
           </div>
@@ -852,33 +811,14 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               </button>
             ))}
           </div>
-
-          {prediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
+      );
+    }
 
-        {renderNavDots()}
-      </div>
-    );
-  }
-
-  // PLAY PHASE - Interactive Circular Motion Lab
-  if (phase === 'play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+    // PLAY PHASE - Interactive Circular Motion Lab
+    if (phase === 'play') {
+      return (
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Centripetal Force Lab
           </h2>
@@ -892,15 +832,38 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <CircularMotionSVG showVec={showVectors} size={isMobile ? 280 : 320} />
             </div>
 
+            {/* Legend panel */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '24px',
+              marginBottom: '20px',
+              flexWrap: 'wrap',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '4px', background: colors.velocity, borderRadius: '2px' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Velocity (v)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '16px', height: '4px', background: colors.force, borderRadius: '2px' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Centripetal Force (Fc)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '12px', height: '12px', background: '#fbbf24', borderRadius: '50%' }} />
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Center</span>
+              </div>
+            </div>
+
             {/* Mass slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Mass (m)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Mass (m) - controls inertia</span>
                 <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{mass.toFixed(1)} kg</span>
               </div>
               <input
@@ -910,14 +873,14 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 step="0.1"
                 value={mass}
                 onChange={(e) => setMass(parseFloat(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: colors.accent, touchAction: 'pan-y' }}
               />
             </div>
 
             {/* Speed slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Speed (v)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Speed (v) - affects force quadratically</span>
                 <span style={{ ...typo.small, color: colors.velocity, fontWeight: 600 }}>{speed.toFixed(1)} m/s</span>
               </div>
               <input
@@ -927,14 +890,14 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 step="0.5"
                 value={speed}
                 onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: colors.velocity, touchAction: 'pan-y' }}
               />
             </div>
 
             {/* Radius slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>Radius (r)</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Radius (r) - inversely affects force</span>
                 <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{(radius / 10).toFixed(1)} m</span>
               </div>
               <input
@@ -943,7 +906,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 max="100"
                 value={radius}
                 onChange={(e) => setRadius(parseInt(e.target.value))}
-                style={{ width: '100%', cursor: 'pointer' }}
+                style={{ width: '100%', height: '8px', cursor: 'pointer', accentColor: colors.warning, touchAction: 'pan-y' }}
               />
             </div>
 
@@ -953,6 +916,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 onClick={() => setIsAnimating(!isAnimating)}
                 style={{
                   padding: '10px 20px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: isAnimating ? colors.error : colors.success,
@@ -967,6 +931,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 onClick={() => setShowVectors(!showVectors)}
                 style={{
                   padding: '10px 20px',
+                  minHeight: '44px',
                   borderRadius: '8px',
                   border: 'none',
                   background: showVectors ? colors.accent : colors.bgSecondary,
@@ -990,17 +955,19 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 borderRadius: '10px',
                 padding: '14px',
                 textAlign: 'center',
+                border: `1px solid ${colors.border}`,
               }}>
                 <div style={{ ...typo.h3, color: isSliding ? colors.error : colors.force }}>{centripetalForce.toFixed(2)} N</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Required F_c</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Required Fc</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
                 borderRadius: '10px',
                 padding: '14px',
                 textAlign: 'center',
+                border: `1px solid ${colors.border}`,
               }}>
-                <div style={{ ...typo.h3, color: colors.warning }}>{centripetalAccel.toFixed(2)} m/s^2</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{centripetalAccel.toFixed(2)} m/s²</div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Acceleration</div>
               </div>
               <div style={{
@@ -1008,6 +975,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 borderRadius: '10px',
                 padding: '14px',
                 textAlign: 'center',
+                border: `1px solid ${colors.border}`,
               }}>
                 <div style={{ ...typo.h3, color: isSliding ? colors.error : colors.success }}>
                   {isSliding ? 'SLIDING' : 'GRIPPING'}
@@ -1023,43 +991,25 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             border: `1px solid ${colors.accent}33`,
             borderRadius: '12px',
             padding: '16px',
-            marginBottom: '24px',
             textAlign: 'center',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '8px' }}>
-              F_c = mv^2/r
+              <span style={{ fontWeight: 800 }}>F</span><sub>c</sub> = <span style={{ fontWeight: 800 }}>m</span><span style={{ fontWeight: 800 }}>v</span>²/<span style={{ fontWeight: 800 }}>r</span>
             </h3>
             <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
-              <span style={{ color: colors.velocity }}>v</span> (velocity) is tangent to the circle.{' '}
-              <span style={{ color: colors.force }}>F_c</span> points toward the center.{' '}
-              Double the speed = 4x the force!
+              <span style={{ color: colors.velocity, fontWeight: 700 }}>v</span> (velocity) is tangent to the circle.{' '}
+              <span style={{ color: colors.force, fontWeight: 700 }}>Fc</span> points toward the center.{' '}
+              <span style={{ fontWeight: 700 }}>Double the speed = 4x the force!</span>
             </p>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Physics
-          </button>
         </div>
+      );
+    }
 
-        {renderNavDots()}
-      </div>
-    );
-  }
-
-  // REVIEW PHASE
-  if (phase === 'review') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    // REVIEW PHASE
+    if (phase === 'review') {
+      return (
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Understanding Centripetal Force
           </h2>
@@ -1077,7 +1027,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               </h3>
               <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
                 <li>Always points toward the center of the circular path</li>
-                <li>Formula: F = mv^2/r</li>
+                <li>Formula: F = mv²/r</li>
                 <li>Changes direction of velocity, not speed</li>
                 <li>Provided by friction, tension, gravity, or normal force</li>
               </ul>
@@ -1113,49 +1063,32 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               </h3>
               <div style={{ ...typo.body, color: colors.textSecondary }}>
                 <p style={{ marginBottom: '8px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Centripetal acceleration:</strong> a = v^2/r (always toward center)
+                  <strong style={{ color: colors.textPrimary }}>Centripetal acceleration:</strong> a = v²/r (always toward center)
                 </p>
                 <p style={{ marginBottom: '8px' }}>
-                  <strong style={{ color: colors.textPrimary }}>Newton's 2nd Law:</strong> F = ma = mv^2/r
+                  <strong style={{ color: colors.textPrimary }}>Newton's 2nd Law:</strong> F = ma = mv²/r
                 </p>
                 <p style={{ margin: 0 }}>
-                  <strong style={{ color: colors.textPrimary }}>Speed doubled?</strong> Force quadruples! (v^2 relationship)
+                  <strong style={{ color: colors.textPrimary }}>Speed doubled?</strong> Force quadruples! (v² relationship)
                 </p>
               </div>
             </div>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Discover a Surprising Twist
-          </button>
         </div>
+      );
+    }
 
-        {renderNavDots()}
-      </div>
-    );
-  }
+    // TWIST PREDICT PHASE
+    if (phase === 'twist_predict') {
+      const options = [
+        { id: 'a', text: 'The ball spirals outward away from the center' },
+        { id: 'b', text: 'The ball flies off in a straight line tangent to the circle', correct: true },
+        { id: 'c', text: 'The ball flies directly away from the center' },
+        { id: 'd', text: 'The ball falls straight down due to gravity' },
+      ];
 
-  // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
-    const options = [
-      { id: 'a', text: 'The ball spirals outward away from the center' },
-      { id: 'b', text: 'The ball flies off in a straight line tangent to the circle', correct: true },
-      { id: 'c', text: 'The ball flies directly away from the center' },
-      { id: 'd', text: 'The ball falls straight down due to gravity' },
-    ];
-
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+      return (
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <div style={{
             background: `${colors.warning}22`,
             borderRadius: '12px',
@@ -1163,7 +1096,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             marginBottom: '24px',
             border: `1px solid ${colors.warning}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0, fontWeight: 600 }}>
               New Variable: What Happens When Centripetal Force Disappears?
             </p>
           </div>
@@ -1172,20 +1105,83 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             A ball swings in a circle on a string. The string suddenly breaks. What path does the ball follow?
           </h2>
 
+          {/* Diagram - Add SVG here for twist_predict */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
-            textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'center',
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-              <span style={{ animation: 'spin 2s linear infinite', display: 'inline-block' }}>&#9898;</span>
-              ----&#9899;
-            </div>
-            <p style={{ ...typo.small, color: colors.textMuted }}>
-              Ball rotating on a string... then the string snaps!
-            </p>
+            <svg width={isMobile ? 260 : 300} height={isMobile ? 260 : 300} viewBox="0 0 300 300" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+              <defs>
+                <radialGradient id="ballGradPredict" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#93C5FD" />
+                  <stop offset="100%" stopColor="#3B82F6" />
+                </radialGradient>
+                <filter id="glowPredict">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Background */}
+              <g id="bg-layer">
+                <rect x="0" y="0" width="300" height="300" fill={colors.bgCard} />
+              </g>
+
+              {/* Circular path */}
+              <g id="path-layer">
+                <circle cx="150" cy="150" r="80" fill="none" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="5 3" />
+                <text x="150" y="55" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Circular Path</text>
+              </g>
+
+              {/* Question marks showing possible paths */}
+              <g id="question-layer">
+                {/* Tangent path option */}
+                <line x1="230" y1="150" x2="280" y2="150" stroke={colors.accent} strokeWidth="2" strokeDasharray="4 2" opacity="0.5" />
+                <text x="255" y="140" fill={colors.accent} fontSize="14" textAnchor="middle">?</text>
+
+                {/* Outward spiral option */}
+                <line x1="230" y1="150" x2="270" y2="180" stroke={colors.warning} strokeWidth="2" strokeDasharray="4 2" opacity="0.5" />
+                <text x="260" y="195" fill={colors.warning} fontSize="14" textAnchor="middle">?</text>
+
+                {/* Radially outward option */}
+                <line x1="230" y1="150" x2="280" y2="150" stroke={colors.error} strokeWidth="2" strokeDasharray="4 2" opacity="0.5" transform="rotate(30, 230, 150)" />
+                <text x="270" y="120" fill={colors.error} fontSize="14" textAnchor="middle">?</text>
+              </g>
+
+              {/* Center pivot */}
+              <g id="pivot-layer">
+                <circle cx="150" cy="150" r="8" fill="#fbbf24" filter="url(#glowPredict)" />
+                <text x="150" y="175" fill="#fbbf24" fontSize="10" textAnchor="middle" fontWeight="bold">Pivot</text>
+              </g>
+
+              {/* String */}
+              <g id="string-layer">
+                <line x1="150" y1="150" x2="230" y2="150" stroke={colors.textSecondary} strokeWidth="3" />
+                <text x="190" y="140" fill={colors.textSecondary} fontSize="10">String</text>
+              </g>
+
+              {/* Ball */}
+              <g id="ball-layer">
+                <circle cx="230" cy="150" r="14" fill="url(#ballGradPredict)" filter="url(#glowPredict)" />
+                <text x="230" y="125" fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">Ball</text>
+              </g>
+
+              {/* Velocity arrow */}
+              <g id="velocity-layer">
+                <line x1="230" y1="150" x2="230" y2="100" stroke={colors.velocity} strokeWidth="3" markerEnd="url(#arrowVel)" />
+                <text x="245" y="105" fill={colors.velocity} fontSize="10" fontWeight="bold">v</text>
+              </g>
+
+              {/* Explanation text */}
+              <text x="150" y="285" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Which direction when string breaks?</text>
+            </svg>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1222,33 +1218,14 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               </button>
             ))}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={primaryButtonStyle}
-            >
-              See What Happens
-            </button>
-          )}
         </div>
+      );
+    }
 
-        {renderNavDots()}
-      </div>
-    );
-  }
-
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+    // TWIST PLAY PHASE
+    if (phase === 'twist_play') {
+      return (
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Tangential Release Simulation
           </h2>
@@ -1261,6 +1238,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
+            border: `1px solid ${colors.border}`,
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
               <StringReleaseSVG size={isMobile ? 280 : 320} />
@@ -1272,6 +1250,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                   onClick={breakString}
                   style={{
                     padding: '14px 28px',
+                    minHeight: '48px',
                     borderRadius: '10px',
                     border: 'none',
                     background: colors.error,
@@ -1288,6 +1267,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                   onClick={resetTwistSim}
                   style={{
                     padding: '14px 28px',
+                    minHeight: '48px',
                     borderRadius: '10px',
                     border: 'none',
                     background: colors.accent,
@@ -1309,7 +1289,6 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             border: `1px solid ${colors.warning}33`,
             borderRadius: '12px',
             padding: '20px',
-            marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
               What You're Observing:
@@ -1318,34 +1297,17 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               <li>The ball moves in a circle because the string pulls it toward the center</li>
               <li>Velocity is always TANGENT to the circle (perpendicular to the string)</li>
               <li>When the string breaks, there's no more centripetal force</li>
-              <li>Without a force to change its direction, the ball travels in a STRAIGHT LINE!</li>
+              <li><strong style={{ color: colors.textPrimary }}>Without a force to change its direction, the ball travels in a STRAIGHT LINE!</strong></li>
             </ul>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Understand the Deep Physics
-          </button>
         </div>
+      );
+    }
 
-        {renderNavDots()}
-      </div>
-    );
-  }
-
-  // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+    // TWIST REVIEW PHASE
+    if (phase === 'twist_review') {
+      return (
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
             Newton's First Law in Action
           </h2>
@@ -1358,7 +1320,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>&#128161;</span>
+                <span style={{ fontSize: '24px' }}>💡</span>
                 <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>The Common Misconception</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1374,7 +1336,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>&#9989;</span>
+                <span style={{ fontSize: '24px' }}>✅</span>
                 <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>The Truth</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1390,7 +1352,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               border: `1px solid ${colors.accent}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>&#127919;</span>
+                <span style={{ fontSize: '24px' }}>🎯</span>
                 <h3 style={{ ...typo.h3, color: colors.accent, margin: 0 }}>Key Insight</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
@@ -1405,7 +1367,6 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             background: colors.bgCard,
             borderRadius: '12px',
             padding: '20px',
-            marginBottom: '24px',
           }}>
             <h4 style={{ ...typo.h3, color: colors.warning, marginBottom: '12px' }}>
               Real-World Examples:
@@ -1417,37 +1378,24 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               <li>A car that loses traction slides tangentially, not radially outward</li>
             </ul>
           </div>
-
-          <button
-            onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
-          >
-            Explore Real-World Applications
-          </button>
         </div>
+      );
+    }
 
-        {renderNavDots()}
-      </div>
-    );
-  }
+    // TRANSFER PHASE
+    if (phase === 'transfer') {
+      const app = realWorldApps[selectedApp];
+      const allAppsCompleted = completedApps.every(c => c);
+      const completedCount = completedApps.filter(c => c).length;
 
-  // TRANSFER PHASE
-  if (phase === 'transfer') {
-    const app = realWorldApps[selectedApp];
-    const allAppsCompleted = completedApps.every(c => c);
-
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
-          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+      return (
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
             Real-World Applications
           </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            App {selectedApp + 1} of {realWorldApps.length}
+          </p>
 
           {/* App selector */}
           <div style={{
@@ -1462,9 +1410,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 onClick={() => {
                   playSound('click');
                   setSelectedApp(i);
-                  const newCompleted = [...completedApps];
-                  newCompleted[i] = true;
-                  setCompletedApps(newCompleted);
+                  setCurrentAppRead(false);
                 }}
                 style={{
                   background: selectedApp === i ? `${a.color}22` : colors.bgCard,
@@ -1489,7 +1435,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    &#10003;
+                    ✓
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1591,6 +1537,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
               borderRadius: '8px',
               padding: '12px',
               border: `1px solid ${app.color}33`,
+              marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: app.color, marginBottom: '4px', fontWeight: 600 }}>
                 Future Impact:
@@ -1599,41 +1546,59 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 {app.futureImpact}
               </p>
             </div>
+
+            {/* Got It button for marking app as read */}
+            {!completedApps[selectedApp] && (
+              <button
+                onClick={() => {
+                  playSound('success');
+                  const newCompleted = [...completedApps];
+                  newCompleted[selectedApp] = true;
+                  setCompletedApps(newCompleted);
+                  setCurrentAppRead(true);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px 28px',
+                  minHeight: '48px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${app.color}, ${app.color}dd)`,
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Got It! ✓
+              </button>
+            )}
           </div>
 
-          {allAppsCompleted && (
-            <button
-              onClick={() => { playSound('success'); nextPhase(); }}
-              style={{ ...primaryButtonStyle, width: '100%' }}
-            >
-              Take the Knowledge Test
-            </button>
-          )}
+          {/* Progress indicator */}
+          <div style={{
+            textAlign: 'center',
+            color: colors.textSecondary,
+            ...typo.small,
+            marginBottom: '16px',
+          }}>
+            {completedCount} of {realWorldApps.length} applications explored
+          </div>
         </div>
+      );
+    }
 
-        {renderNavDots()}
-      </div>
-    );
-  }
-
-  // TEST PHASE
-  if (phase === 'test') {
-    if (testSubmitted) {
-      const passed = testScore >= 7;
-      return (
-        <div style={{
-          minHeight: '100vh',
-          background: colors.bgPrimary,
-          padding: '24px',
-        }}>
-          {renderProgressBar()}
-
-          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+    // TEST PHASE
+    if (phase === 'test') {
+      if (testSubmitted) {
+        const passed = testScore >= 7;
+        return (
+          <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
             <div style={{
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? '&#127881;' : '&#128218;'}
+              {passed ? '🎉' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1647,44 +1612,91 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 : 'Review the concepts and try again to improve your understanding.'}
             </p>
 
-            {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
-                Claim Your Mastery Badge
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setTestSubmitted(false);
-                  setTestAnswers(Array(10).fill(null));
-                  setCurrentQuestion(0);
-                  setTestScore(0);
-                  goToPhase('hook');
+            {/* Answer review */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'left',
+              maxHeight: '200px',
+              overflowY: 'auto',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.textPrimary, marginBottom: '12px', fontWeight: 600 }}>
+                Answer Review:
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {testAnswers.map((ans, i) => {
+                  const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                  const isCorrect = ans === correct;
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: isCorrect ? colors.success : colors.error,
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {isCorrect ? '✓' : '✗'}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {passed && (
+                <button
+                  onClick={() => { playSound('complete'); nextPhase(); }}
+                  style={{
+                    padding: '16px 32px',
+                    minHeight: '48px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: `linear-gradient(135deg, ${colors.success}, #059669)`,
+                    color: 'white',
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Claim Your Mastery Badge
+                </button>
+              )}
+              <a
+                href="/"
+                style={{
+                  padding: '16px 32px',
+                  minHeight: '48px',
+                  borderRadius: '12px',
+                  background: passed ? 'rgba(71, 85, 105, 0.5)' : `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
+                  color: 'white',
+                  fontSize: '18px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
-                style={primaryButtonStyle}
               >
-                Review & Try Again
-              </button>
-            )}
+                Return to Dashboard
+              </a>
+            </div>
           </div>
-          {renderNavDots()}
-        </div>
-      );
-    }
+        );
+      }
 
-    const question = testQuestions[currentQuestion];
+      const question = testQuestions[currentQuestion];
 
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.bgPrimary,
-        padding: '24px',
-      }}>
-        {renderProgressBar()}
-
-        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+      return (
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
           {/* Progress */}
           <div style={{
             display: 'flex',
@@ -1779,6 +1791,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 style={{
                   flex: 1,
                   padding: '14px',
+                  minHeight: '48px',
                   borderRadius: '10px',
                   border: `1px solid ${colors.border}`,
                   background: 'transparent',
@@ -1796,6 +1809,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 style={{
                   flex: 1,
                   padding: '14px',
+                  minHeight: '48px',
                   borderRadius: '10px',
                   border: 'none',
                   background: testAnswers[currentQuestion] ? colors.accent : colors.border,
@@ -1804,7 +1818,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                   fontWeight: 600,
                 }}
               >
-                Next
+                Next Question
               </button>
             ) : (
               <button
@@ -1821,6 +1835,7 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
                 style={{
                   flex: 1,
                   padding: '14px',
+                  minHeight: '48px',
                   borderRadius: '10px',
                   border: 'none',
                   background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
@@ -1834,127 +1849,275 @@ const CentripetalForceRenderer: React.FC<CentripetalForceRendererProps> = ({ onG
             )}
           </div>
         </div>
+      );
+    }
 
-        {renderNavDots()}
-      </div>
-    );
-  }
+    // MASTERY PHASE
+    if (phase === 'mastery') {
+      return (
+        <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            fontSize: '100px',
+            marginBottom: '24px',
+            animation: 'bounce 1s infinite',
+          }}>
+            🏆
+          </div>
+          <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        textAlign: 'center',
-      }}>
-        {renderProgressBar()}
+          <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+            Circular Motion Master!
+          </h1>
 
-        <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
-          &#127942;
-        </div>
-        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+          <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', margin: '0 auto 32px' }}>
+            You've mastered centripetal force and understand why objects move in circles.
+            From roller coasters to satellites, you now see circular motion everywhere!
+          </p>
 
-        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Circular Motion Master!
-        </h1>
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '32px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+              What You've Mastered:
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              {[
+                { icon: '🔄', text: 'F = mv²/r formula' },
+                { icon: '🚀', text: 'Satellite orbits' },
+                { icon: '🎢', text: 'Roller coaster loops' },
+                { icon: '🚗', text: 'Banked curves' },
+                { icon: '🔬', text: 'Centrifuge separation' },
+                { icon: '🎯', text: 'Tangential release' },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}>
+                  <span style={{ fontSize: '24px' }}>{item.icon}</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You've mastered centripetal force and understand why objects move in circles.
-          From roller coasters to satellites, you now see circular motion everywhere!
-        </p>
+          <div style={{
+            background: `${colors.accent}11`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '32px',
+            border: `1px solid ${colors.accent}33`,
+          }}>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              <strong style={{ color: colors.accent }}>Key Insight:</strong> There is no "centrifugal force" -
+              objects want to go straight, and centripetal force curves their path. Remove the force,
+              and they fly off tangentially!
+            </p>
+          </div>
 
-        <div style={{
-          background: colors.bgCard,
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          width: '100%',
-        }}>
-          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
-            What You've Mastered:
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-            {[
-              { icon: '&#128336;', text: 'F = mv^2/r formula' },
-              { icon: '&#128640;', text: 'Satellite orbits' },
-              { icon: '&#127906;', text: 'Roller coaster loops' },
-              { icon: '&#128663;', text: 'Banked curves' },
-              { icon: '&#128257;', text: 'Centrifuge separation' },
-              { icon: '&#127919;', text: 'Tangential release' },
-            ].map((item, i) => (
-              <div key={i} style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                display: 'flex',
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{
+                padding: '14px 28px',
+                minHeight: '48px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: colors.textSecondary,
+                cursor: 'pointer',
+              }}
+            >
+              Explore Again
+            </button>
+            <a
+              href="/"
+              style={{
+                padding: '14px 28px',
+                minHeight: '48px',
+                borderRadius: '10px',
+                background: `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
+                color: 'white',
+                textDecoration: 'none',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '10px',
-              }}>
-                <span style={{ fontSize: '24px' }} dangerouslySetInnerHTML={{ __html: item.icon }} />
-                <span style={{ ...typo.small, color: colors.textSecondary }}>{item.text}</span>
-              </div>
-            ))}
+                fontWeight: 700,
+              }}
+            >
+              Return to Dashboard
+            </a>
           </div>
         </div>
+      );
+    }
 
+    return null;
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MAIN RENDER WITH PROPER LAYOUT STRUCTURE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      background: colors.bgPrimary,
+      color: colors.textPrimary,
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Background gradient */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: `linear-gradient(135deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 50%, ${colors.bgPrimary} 100%)`,
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '25%',
+        width: '384px',
+        height: '384px',
+        background: 'rgba(139, 92, 246, 0.05)',
+        borderRadius: '50%',
+        filter: 'blur(48px)',
+      }} />
+
+      {/* Fixed header with progress bar */}
+      <header style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        background: 'rgba(15, 23, 42, 0.9)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(71, 85, 105, 0.5)',
+      }}>
         <div style={{
-          background: `${colors.accent}11`,
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '32px',
-          maxWidth: '500px',
-          border: `1px solid ${colors.accent}33`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          maxWidth: '800px',
+          margin: '0 auto',
         }}>
-          <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-            <strong style={{ color: colors.accent }}>Key Insight:</strong> There is no "centrifugal force" -
-            objects want to go straight, and centripetal force curves their path. Remove the force,
-            and they fly off tangentially!
-          </p>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: colors.accent }}>Centripetal Force</span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, index) => (
+              <button
+                key={p}
+                aria-label={phaseLabels[p]}
+                title={phaseLabels[p]}
+                onClick={() => goToPhase(p)}
+                style={{
+                  height: '8px',
+                  borderRadius: '4px',
+                  transition: 'all 0.3s ease',
+                  width: phase === p ? '24px' : '8px',
+                  background: phase === p
+                    ? `linear-gradient(to right, ${colors.accent}, #7C3AED)`
+                    : index < currentIndex
+                      ? colors.success
+                      : colors.border,
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '14px', color: colors.textSecondary }}>{phaseLabels[phase]}</span>
         </div>
+      </header>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => goToPhase('hook')}
-            style={{
-              padding: '14px 28px',
-              borderRadius: '10px',
-              border: `1px solid ${colors.border}`,
-              background: 'transparent',
-              color: colors.textSecondary,
-              cursor: 'pointer',
-            }}
-          >
-            Explore Again
-          </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
-            Return to Dashboard
-          </a>
-        </div>
-
-        {renderNavDots()}
+      {/* Scrollable content area */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 10,
+        paddingTop: '64px',
+        paddingBottom: '100px',
+      }}>
+        {renderPhaseContent()}
       </div>
-    );
-  }
 
-  return null;
+      {/* Fixed bottom navigation bar */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        background: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(12px)',
+        borderTop: '1px solid rgba(71, 85, 105, 0.5)',
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          maxWidth: '800px',
+          margin: '0 auto',
+        }}>
+          <button
+            onClick={prevPhase}
+            disabled={!canGoBack}
+            style={{
+              padding: '12px 24px',
+              minHeight: '48px',
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '16px',
+              lineHeight: 1.5,
+              border: 'none',
+              cursor: canGoBack ? 'pointer' : 'not-allowed',
+              background: canGoBack ? 'rgba(71, 85, 105, 0.5)' : 'rgba(51, 65, 85, 0.3)',
+              color: canGoBack ? colors.textSecondary : '#64748b',
+              opacity: canGoBack ? 1 : 0.4,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            ← Back
+          </button>
+          <span style={{ fontSize: '14px', color: colors.textSecondary }}>
+            {currentIndex + 1} of {phaseOrder.length}
+          </span>
+          <button
+            onClick={nextPhase}
+            disabled={!canGoNext}
+            style={{
+              padding: '12px 24px',
+              minHeight: '48px',
+              borderRadius: '12px',
+              fontWeight: 600,
+              fontSize: '16px',
+              lineHeight: 1.5,
+              border: 'none',
+              cursor: canGoNext ? 'pointer' : 'not-allowed',
+              background: canGoNext ? `linear-gradient(to right, ${colors.accent}, #7C3AED)` : 'rgba(51, 65, 85, 0.3)',
+              color: canGoNext ? 'white' : '#64748b',
+              opacity: phase === 'test' ? 0.4 : (canGoNext ? 1 : 0.4),
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Next →
+          </button>
+        </div>
+      </nav>
+    </div>
+  );
 };
 
 export default CentripetalForceRenderer;
