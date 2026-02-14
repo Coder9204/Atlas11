@@ -538,7 +538,10 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
   const contentStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    padding: '16px',
+    paddingTop: '48px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
+    paddingBottom: '16px',
     maxWidth: '800px',
     margin: '0 auto',
     width: '100%',
@@ -687,45 +690,45 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
           <rect width="400" height="280" fill="url(#boilLabBg)" />
 
           {/* === PRESSURE GAUGE (LEFT) === */}
-          <g transform="translate(20, 15)">
-            <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
-            <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
-            <path d="M 20 42 A 25 25 0 0 1 70 42" fill="none" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
+          <g>
+            <rect x="20" y="15" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
+            <rect x="23" y="18" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
+            <path d="M 40 57 A 25 25 0 0 1 90 57" fill="none" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
             <path
-              d={`M 20 42 A 25 25 0 0 1 ${20 + 50 * Math.min(pres / 3, 1)} ${42 - 20 * Math.sin(Math.PI * Math.min(pres / 3, 1))}`}
+              d={`M 40 57 A 25 25 0 0 1 ${40 + 50 * Math.min(pres / 3, 1)} ${57 - 20 * Math.sin(Math.PI * Math.min(pres / 3, 1))}`}
               fill="none"
               stroke="#22d3ee"
               strokeWidth="3"
               strokeLinecap="round"
             />
-            <circle cx="45" cy="42" r="4" fill="#475569" />
-            <circle cx="45" cy="42" r="2" fill="#22d3ee" />
-            <text x="45" y="12" textAnchor="middle" fill={colors.textSecondary} fontSize="8">Pressure</text>
-            <text x="45" y="52" textAnchor="middle" fill={colors.primary} fontSize="10" fontWeight="bold">{pres.toFixed(2)} atm</text>
+            <circle cx="65" cy="57" r="4" fill="#475569" />
+            <circle cx="65" cy="57" r="2" fill="#22d3ee" />
+            <text x="65" y="26" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Pressure</text>
+            <text x="65" y="67" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="bold">{pres.toFixed(2)} atm</text>
           </g>
 
           {/* === TEMPERATURE GAUGE (RIGHT) === */}
-          <g transform="translate(290, 15)">
-            <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
-            <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
-            <rect x="15" y="20" width="60" height="8" rx="4" fill="#1f2937" />
-            <rect x="15" y="20" width={Math.min((temp / 150) * 60, 60)} height="8" rx="4" fill={isBoiling ? '#fb923c' : '#f97316'} />
-            <text x="45" y="12" textAnchor="middle" fill={colors.textSecondary} fontSize="8">Temperature</text>
-            <text x="45" y="45" textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="bold">{temp.toFixed(0)}C</text>
+          <g>
+            <rect x="290" y="15" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
+            <rect x="293" y="18" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
+            <rect x="305" y="35" width="60" height="8" rx="4" fill="#1f2937" />
+            <rect x="305" y="35" width={Math.min((temp / 150) * 60, 60)} height="8" rx="4" fill={isBoiling ? '#fb923c' : '#f97316'} />
+            <text x="335" y="26" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Temperature</text>
+            <text x="335" y="63" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">{temp.toFixed(0)}C</text>
           </g>
 
           {/* === BOILING POINT DISPLAY (CENTER) === */}
-          <g transform="translate(155, 15)">
-            <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
-            <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
-            <circle cx="45" cy="28" r="12" fill="none" stroke={isBoiling ? '#f87171' : '#475569'} strokeWidth="2" />
+          <g>
+            <rect x="155" y="15" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
+            <rect x="158" y="18" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
+            <circle cx="200" cy="43" r="12" fill="none" stroke={isBoiling ? '#f87171' : '#475569'} strokeWidth="2" />
             {isBoiling && (
-              <circle cx="45" cy="28" r="8" fill="#f87171" opacity="0.6">
+              <circle cx="200" cy="43" r="8" fill="#f87171" opacity="0.6">
                 <animate attributeName="opacity" values="0.6;1;0.6" dur="0.5s" repeatCount="indefinite" />
               </circle>
             )}
-            <text x="45" y="12" textAnchor="middle" fill={colors.textSecondary} fontSize="8">Boils at</text>
-            <text x="45" y="50" textAnchor="middle" fill={colors.danger} fontSize="10" fontWeight="bold">{boilingPoint.toFixed(0)}C</text>
+            <text x="200" y="26" textAnchor="middle" fill={colors.textSecondary} fontSize="11">Boils at</text>
+            <text x="200" y="67" textAnchor="middle" fill={colors.danger} fontSize="11" fontWeight="bold">{boilingPoint.toFixed(0)}C</text>
           </g>
 
           {/* === PREMIUM GLASS BEAKER === */}
@@ -1051,6 +1054,136 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
     </div>
   );
 
+  // Generate pressure-temperature curve data points
+  const renderPTCurve = (currentPressure: number) => {
+    const chartW = 450;
+    const chartH = 280;
+    const padL = 55;
+    const padR = 20;
+    const padT = 30;
+    const padB = 40;
+    const plotW = chartW - padL - padR;
+    const plotH = chartH - padT - padB;
+
+    // Generate 20 data points along the pressure axis
+    const numPoints = 20;
+    const points: { px: number; py: number; pres: number; bp: number }[] = [];
+    for (let i = 0; i < numPoints; i++) {
+      const p = 0.1 + (3.0 - 0.1) * (i / (numPoints - 1));
+      const bp = getBoilingPoint(p);
+      const px = padL + (p - 0.1) / (3.0 - 0.1) * plotW;
+      const py = padT + plotH - ((bp - 7) / (131 - 7)) * plotH;
+      points.push({ px, py, pres: p, bp });
+    }
+
+    const pathD = points.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.px.toFixed(1)} ${pt.py.toFixed(1)}`).join(' ');
+
+    // Area fill path (under the curve)
+    const areaD = pathD + ` L ${points[points.length - 1].px.toFixed(1)} ${padT + plotH} L ${points[0].px.toFixed(1)} ${padT + plotH} Z`;
+
+    // Current point on curve
+    const curBp = getBoilingPoint(currentPressure);
+    const curX = padL + (currentPressure - 0.1) / (3.0 - 0.1) * plotW;
+    const curY = padT + plotH - ((curBp - 7) / (131 - 7)) * plotH;
+
+    // Reference point at 1.0 atm (sea level baseline)
+    const refBp = getBoilingPoint(1.0);
+    const refX = padL + (1.0 - 0.1) / (3.0 - 0.1) * plotW;
+    const refY = padT + plotH - ((refBp - 7) / (131 - 7)) * plotH;
+
+    // Grid lines (horizontal) - skip values that would overlap with axis labels
+    const gridYValues = [20, 50, 80, 120];
+    const gridLines = gridYValues.map(temp => ({
+      y: padT + plotH - ((temp - 7) / (131 - 7)) * plotH,
+      label: `${temp}°C`
+    }));
+
+    // Grid lines (vertical)
+    const gridXValues = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+    const gridVLines = gridXValues.map(p => ({
+      x: padL + (p - 0.1) / (3.0 - 0.1) * plotW,
+      label: `${p}`
+    }));
+
+    // Avoid overlapping baseline label with current value label
+    const isNearBaseline = Math.abs(currentPressure - 1.0) < 0.2;
+    const baselineLabelY = isNearBaseline ? refY + 18 : refY - 8;
+
+    return (
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto' }}>
+        <defs>
+          <linearGradient id="chartCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#06b6d4" />
+            <stop offset="100%" stopColor="#f97316" />
+          </linearGradient>
+          <linearGradient id="chartAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.02" />
+          </linearGradient>
+          <filter id="chartGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <radialGradient id="chartPointGrad" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#0891b2" />
+          </radialGradient>
+        </defs>
+
+        <rect width={chartW} height={chartH} fill="#0f172a" rx="8" />
+
+        {/* Temperature zone indicators */}
+        <rect x={padL} y={padT} width={plotW} height={plotH * 0.3} fill="#EF4444" fillOpacity="0.05" />
+        <rect x={padL} y={padT + plotH * 0.7} width={plotW} height={plotH * 0.3} fill="#3B82F6" fillOpacity="0.05" />
+
+        {/* Chart title */}
+        <text x={chartW / 2} y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">Pressure vs Boiling Point</text>
+
+        {/* Horizontal grid lines */}
+        {gridLines.map((g, i) => (
+          <g key={`hg-${i}`}>
+            <line x1={padL} y1={g.y} x2={chartW - padR} y2={g.y} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+            <text x={padL - 6} y={g.y + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">{g.label}</text>
+          </g>
+        ))}
+
+        {/* Vertical grid lines */}
+        {gridVLines.map((g, i) => (
+          <g key={`vg-${i}`}>
+            <line x1={g.x} y1={padT} x2={g.x} y2={chartH - padB} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+            <text x={g.x} y={chartH - padB + 16} textAnchor="middle" fill={colors.textMuted} fontSize="11">{g.label}</text>
+          </g>
+        ))}
+
+        {/* Axes */}
+        <line x1={padL} y1={padT} x2={padL} y2={chartH - padB} stroke={colors.textMuted} strokeWidth="1.5" />
+        <line x1={padL} y1={chartH - padB} x2={chartW - padR} y2={chartH - padB} stroke={colors.textMuted} strokeWidth="1.5" />
+
+        {/* Axis label - Pressure */}
+        <text x={padL + plotW / 2} y={chartH - 4} textAnchor="middle" fill={colors.textSecondary} fontSize="12">Pressure (atm)</text>
+
+        {/* Area fill under curve */}
+        <path d={areaD} fill="url(#chartAreaGrad)" />
+
+        {/* Curve path with gradient */}
+        <path d={pathD} fill="none" stroke="url(#chartCurveGrad)" strokeWidth="2.5" strokeLinejoin="round" />
+
+        {/* Reference baseline at 1.0 atm */}
+        <line x1={refX} y1={padT} x2={refX} y2={chartH - padB} stroke="#9ca3af" strokeDasharray="6 3" opacity="0.5" />
+        <circle cx={refX} cy={refY} r="5" fill="#9ca3af" opacity="0.6" />
+        <text x={refX + 8} y={baselineLabelY} fill="#9ca3af" fontSize="11">Baseline 100°C</text>
+
+        {/* Current interactive point with glow */}
+        <circle cx={curX} cy={curY} r="8" fill="url(#chartPointGrad)" stroke="#ffffff" strokeWidth="2" filter="url(#chartGlow)" />
+        <text x={curX > chartW - 100 ? curX - 10 : curX + 12} y={curY - 14} fill={colors.accent} fontSize="12" fontWeight="bold" textAnchor={curX > chartW - 100 ? 'end' : 'start'}>{curBp.toFixed(0)}°C</text>
+      </svg>
+    );
+  };
+
   // Render play phase
   const renderPlay = () => {
     const boilingPoint = getBoilingPoint(pressure);
@@ -1065,8 +1198,13 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
 
           {/* Observation guidance */}
           <p style={{ color: colors.textSecondary, fontSize: typo.body, textAlign: 'center', marginBottom: '16px' }}>
-            <strong>Observe</strong> how changing pressure affects the boiling point. <strong>Try</strong> adjusting the slider below and <strong>notice</strong> when bubbles appear! <strong>Experiment</strong> with different pressures and <strong>see what happens</strong> to the boiling temperature.
+            <strong>Observe</strong> how changing pressure affects the boiling point. <strong>Try</strong> adjusting the slider below and <strong>notice</strong> when bubbles appear! <strong>Experiment</strong> with different pressures and <strong>see what happens</strong> to the boiling temperature. Compare the current value to the reference baseline.
           </p>
+
+          {/* Pressure-Temperature chart */}
+          <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+            {renderPTCurve(pressure)}
+          </div>
 
           <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
             {renderBeaker(temperature, pressure, bubbles)}
@@ -1085,7 +1223,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
                   setPressure(Number(e.target.value));
                   setTemperature(25);
                 }}
-                style={{ width: '100%', accentColor: colors.primary }}
+                style={{ width: '100%', accentColor: colors.primary, touchAction: 'pan-y' as const, height: '20px' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>
                 <span>Vacuum (0.1)</span>
@@ -1098,6 +1236,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
               <p style={{ color: colors.textSecondary }}>
                 At <span style={{ color: colors.primary, fontWeight: 'bold' }}>{pressure.toFixed(2)} atm</span>, water boils at{' '}
                 <span style={{ color: colors.accent, fontWeight: 'bold' }}>{boilingPoint.toFixed(0)}C</span>
+                {' '}(reference: 100°C at sea level)
               </p>
             </div>
 
@@ -1377,6 +1516,121 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
     </div>
   );
 
+  // Render altitude comparison SVG for twist_play
+  const renderAltitudeChart = (location: 'sea' | 'denver' | 'everest') => {
+    const locations = [
+      { id: 'sea', name: 'Sea Level', alt: 0, pressure: 1.0 },
+      { id: 'denver', name: 'Denver', alt: 1600, pressure: 0.83 },
+      { id: 'everest', name: 'Everest', alt: 5400, pressure: 0.33 },
+    ];
+
+    const chartW = 450;
+    const chartH = 280;
+    const padL = 55;
+    const padR = 20;
+    const padT = 30;
+    const padB = 40;
+    const plotW = chartW - padL - padR;
+    const plotH = chartH - padT - padB;
+
+    // Y-axis range: 70-105°C (tight to curve range for better utilization)
+    const yMin = 70;
+    const yMax = 105;
+    const yRange = yMax - yMin;
+
+    const currentLoc = locations.find(l => l.id === location) || locations[0];
+    const currentBp = getBoilingPoint(currentLoc.pressure);
+
+    // Generate 20 data points along altitude axis (0 to 6000m)
+    const numPts = 20;
+    const altPoints: { px: number; py: number; alt: number; bp: number }[] = [];
+    for (let i = 0; i < numPts; i++) {
+      const alt = (6000 * i) / (numPts - 1);
+      // Approximate pressure at altitude: P = 1.0 * exp(-alt/8500)
+      const pAtAlt = Math.exp(-alt / 8500);
+      const bp = getBoilingPoint(pAtAlt);
+      const px = padL + (alt / 6000) * plotW;
+      const py = padT + plotH - ((bp - yMin) / yRange) * plotH;
+      altPoints.push({ px, py, alt, bp });
+    }
+    const curvePath = altPoints.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.px.toFixed(1)} ${pt.py.toFixed(1)}`).join(' ');
+
+    // Current point
+    const curX = padL + (currentLoc.alt / 6000) * plotW;
+    const curBpCalc = getBoilingPoint(currentLoc.pressure);
+    const curY = padT + plotH - ((curBpCalc - yMin) / yRange) * plotH;
+
+    // Horizontal grid lines
+    const hGridVals = [75, 85, 95, 100];
+    // Vertical grid lines
+    const vGridVals = [1000, 2000, 3000, 4000, 5000];
+
+    return (
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} style={{ width: '100%', height: 'auto' }}>
+        <rect width={chartW} height={chartH} fill="#0f172a" rx="8" />
+
+        {/* Horizontal grid */}
+        {hGridVals.map((v, i) => {
+          const y = padT + plotH - ((v - yMin) / yRange) * plotH;
+          return (
+            <g key={`hg-${i}`}>
+              <line x1={padL} y1={y} x2={chartW - padR} y2={y} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+              <text x={padL - 8} y={y + 4} textAnchor="end" fill={colors.textMuted} fontSize="11">{v}°C</text>
+            </g>
+          );
+        })}
+
+        {/* Vertical grid */}
+        {vGridVals.map((v, i) => {
+          const x = padL + (v / 6000) * plotW;
+          return (
+            <g key={`vg-${i}`}>
+              <line x1={x} y1={padT} x2={x} y2={chartH - padB} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+              <text x={x} y={chartH - padB + 18} textAnchor="middle" fill={colors.textMuted} fontSize="11">{v}m</text>
+            </g>
+          );
+        })}
+
+        {/* Axes */}
+        <line x1={padL} y1={padT} x2={padL} y2={chartH - padB} stroke={colors.textMuted} strokeWidth="1.5" />
+        <line x1={padL} y1={chartH - padB} x2={chartW - padR} y2={chartH - padB} stroke={colors.textMuted} strokeWidth="1.5" />
+
+        {/* Axis labels */}
+        <text x={padL + plotW / 2} y={chartH - 5} textAnchor="middle" fill={colors.textSecondary} fontSize="12">Altitude (m)</text>
+        <text x="12" y={padT + 6} fill={colors.textSecondary} fontSize="11">°C</text>
+
+        {/* Curve */}
+        <path d={curvePath} fill="none" stroke={colors.warning} strokeWidth="2.5" strokeLinejoin="round" />
+
+        {/* Sea level reference line */}
+        {location !== 'sea' && (() => {
+          const refLineY = padT + plotH - ((100 - yMin) / yRange) * plotH;
+          return (
+            <>
+              <line x1={padL} y1={refLineY} x2={chartW - padR} y2={refLineY} stroke="#9ca3af" strokeDasharray="6 3" opacity="0.5" />
+              <text x={chartW - padR - 5} y={refLineY - 6} textAnchor="end" fill="#9ca3af" fontSize="11">Baseline 100°C</text>
+            </>
+          );
+        })()}
+
+        {/* Current interactive point */}
+        <circle cx={curX} cy={curY} r="8" fill={colors.warning} stroke="#ffffff" strokeWidth="2" filter="url(#boilBubbleGlow)" />
+        <text x={curX + 12} y={curY - 10} fill={colors.accent} fontSize="12" fontWeight="bold">{curBpCalc.toFixed(0)}°C</text>
+
+        {/* Location markers */}
+        {locations.map(loc => {
+          const lx = padL + (loc.alt / 6000) * plotW;
+          const lbp = getBoilingPoint(loc.pressure);
+          const ly = padT + plotH - ((lbp - yMin) / yRange) * plotH;
+          if (loc.id === location) return null;
+          return (
+            <circle key={loc.id} cx={lx} cy={ly} r="4" fill="#9ca3af" opacity="0.5" />
+          );
+        })}
+      </svg>
+    );
+  };
+
   // Render twist play phase
   const renderTwistPlay = () => {
     const twistPressure = getLocationPressure(twistLocation);
@@ -1394,6 +1648,11 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
           <p style={{ color: colors.textSecondary, fontSize: typo.body, textAlign: 'center', marginBottom: '16px' }}>
             Observe how altitude affects boiling temperature. Adjust the altitude slider or select different locations below!
           </p>
+
+          {/* Altitude-Temperature chart */}
+          <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+            {renderAltitudeChart(twistLocation)}
+          </div>
 
           <div style={{ background: colors.bgCardLight, borderRadius: '16px', padding: '16px' }}>
             {/* Altitude slider control */}
@@ -1414,7 +1673,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete, gameP
                   setTwistTemp(25);
                   setTwistHeating(false);
                 }}
-                style={{ width: '100%', accentColor: colors.primary }}
+                style={{ width: '100%', accentColor: colors.primary, touchAction: 'pan-y' as const, height: '20px' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: typo.small, color: colors.textMuted, marginTop: '4px' }}>
                 <span>Sea Level (0m)</span>
