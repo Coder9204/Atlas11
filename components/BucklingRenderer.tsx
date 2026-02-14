@@ -43,7 +43,7 @@ const PHASES: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', '
 const phaseLabels: Record<Phase, string> = {
   hook: 'Hook',
   predict: 'Predict',
-  play: 'Lab',
+  play: 'Play',
   review: 'Review',
   twist_predict: 'Twist',
   twist_play: 'Twist Lab',
@@ -972,8 +972,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 playSound('click');
                 console.debug('prediction', { prediction: option.id });
               }}
-              role="option"
-              aria-selected={prediction === option.id}
+              aria-pressed={prediction === option.id}
               className={`rounded-xl border-2 transition-all text-left flex items-center ${
                 prediction === option.id
                   ? 'border-indigo-500 bg-indigo-500/20 shadow-md'
@@ -1073,9 +1072,6 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           {/* Applied Force Arrow with glow effect */}
           <g transform={`translate(150, ${40})`} filter="url(#buckForceGlow)">
             <rect x="-45" y="-28" width="90" height="28" fill="url(#buckForceArrow)" rx="5" />
-            <text x="0" y="-10" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
-              {appliedForce >= 1000 ? `${(appliedForce / 1000).toFixed(1)} kN` : `${appliedForce.toFixed(0)} N`}
-            </text>
             {/* Multiple force arrows for depth */}
             <polygon points="0,8 -12,-4 12,-4" fill="url(#buckForceArrow)" />
             <polygon points="-18,4 -25,-6 -11,-6" fill="url(#buckForceArrow)" opacity="0.7" />
@@ -1085,6 +1081,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             <line x1="-18" y1="4" x2="-18" y2="14" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
             <line x1="18" y1="4" x2="18" y2="14" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
           </g>
+          <text x="150" y="11" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+            {appliedForce >= 1000 ? `${(appliedForce / 1000).toFixed(1)} kN` : `${appliedForce.toFixed(0)} N`}
+          </text>
 
           {/* Column with premium gradients and stress visualization */}
           <g transform={`translate(150, ${280 - columnVisualHeight})`} filter={stressFilter}>
@@ -1183,10 +1182,10 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
               fill={isBuckled ? '#dc2626' : loadRatio > 0.8 ? '#f59e0b' : '#10b981'}
               rx="12"
             />
-            <text x="0" y="5" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
-              {isBuckled ? 'BUCKLED!' : loadRatio > 0.8 ? 'NEAR CRITICAL!' : 'STABLE'}
-            </text>
           </g>
+          <text x="150" y="25" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+            {isBuckled ? 'BUCKLED!' : loadRatio > 0.8 ? 'NEAR CRITICAL!' : 'STABLE'}
+          </text>
 
           {/* Critical Load Indicator Line with enhanced styling */}
           <g transform={`translate(255, ${280 - columnVisualHeight})`}>
@@ -1194,37 +1193,34 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             <circle cx="0" cy="0" r="3" fill="#ef4444" />
             <circle cx="0" cy={columnVisualHeight} r="3" fill="#ef4444" />
             <rect x="5" y={columnVisualHeight / 2 - 12} width="40" height="24" fill="rgba(239,68,68,0.2)" rx="4" />
-            <text x="25" y={columnVisualHeight / 2 + 3} textAnchor="middle" fill="#ef4444" fontSize="8" fontWeight="bold">
-              P_cr
-            </text>
           </g>
 
           {/* Safety Factor Display with premium styling */}
           <g transform="translate(40, 65)">
             <rect x="-32" y="-18" width="64" height="56" fill="rgba(0,0,0,0.4)" rx="10" stroke="#334155" strokeWidth="1" />
-            <text x="0" y="-2" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">SAFETY</text>
-            <text x="0" y="18" textAnchor="middle" fill={safetyFactor > 2 ? '#10b981' : safetyFactor > 1 ? '#f59e0b' : '#ef4444'} fontSize="18" fontWeight="bold">
-              {safetyFactor === Infinity ? '∞' : safetyFactor.toFixed(1)}
-            </text>
-            <text x="0" y="32" textAnchor="middle" fill="#64748b" fontSize="8">FACTOR</text>
           </g>
+          <text x="40" y="62" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Factor</text>
+          <text x="40" y="83" textAnchor="middle" fill={safetyFactor > 2 ? '#10b981' : safetyFactor > 1 ? '#f59e0b' : '#ef4444'} fontSize="18" fontWeight="bold">
+            {safetyFactor === Infinity ? '∞' : safetyFactor.toFixed(1)}
+          </text>
 
           {/* Moment of Inertia Display with premium styling */}
           <g transform="translate(260, 65)">
             <rect x="-32" y="-18" width="64" height="56" fill="rgba(0,0,0,0.4)" rx="10" stroke="#334155" strokeWidth="1" />
-            <text x="0" y="-2" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">INERTIA</text>
-            <text x="0" y="18" textAnchor="middle" fill="#6366f1" fontSize="14" fontWeight="bold">
-              {(getMomentOfInertia(columnRadius) * 1e9).toFixed(2)}
-            </text>
-            <text x="0" y="32" textAnchor="middle" fill="#64748b" fontSize="8">×10⁻⁹ m⁴</text>
           </g>
+          <text x="260" y="63" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">Inertia</text>
+          <text x="260" y="83" textAnchor="middle" fill="#6366f1" fontSize="14" fontWeight="bold">
+            {(getMomentOfInertia(columnRadius) * 1e9).toFixed(2)}
+          </text>
+
+          {/* Axis labels for educational clarity */}
+          <text x="150" y="296" textAnchor="middle" fill="#94a3b8" fontSize="11">Force (N)</text>
+          <text x="12" y="180" textAnchor="middle" fill="#94a3b8" fontSize="11" transform="rotate(-90, 12, 180)">Height (m)</text>
 
           {/* Enhanced info text */}
-          <g transform="translate(150, 305)">
-            <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="500">
-              L = <tspan fill="#6366f1" fontWeight="bold">{columnLengthContinuous.toFixed(2)}m</tspan> | r = <tspan fill="#8b5cf6" fontWeight="bold">{(columnRadius * 100).toFixed(1)}cm</tspan> | P_cr = <tspan fill="#ef4444" fontWeight="bold">{criticalLoadKN.toFixed(1)} kN</tspan>
-            </text>
-          </g>
+          <text x="150" y="312" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="500">
+            L={columnLengthContinuous.toFixed(2)}m r={(columnRadius * 100).toFixed(1)}cm P_cr={criticalLoadKN.toFixed(1)}kN
+          </text>
         </svg>
       );
     };
@@ -1264,7 +1260,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 setAppliedForce(0); // Reset force when changing parameters
               }}
               className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
-              style={{ zIndex: 10, accentColor: '#6366f1', appearance: 'auto', background: '#334155' }}
+              style={{ zIndex: 10, accentColor: '#6366f1', appearance: 'auto', background: '#334155', width: '100%', height: '20px', touchAction: 'pan-y' }}
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
               <span>0.5m (short)</span>
@@ -1289,7 +1285,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 setAppliedForce(0); // Reset force when changing parameters
               }}
               className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
-              style={{ zIndex: 10, accentColor: '#8b5cf6', appearance: 'auto', background: '#334155' }}
+              style={{ zIndex: 10, accentColor: '#8b5cf6', appearance: 'auto', background: '#334155', width: '100%', height: '20px', touchAction: 'pan-y' }}
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
               <span>1cm (thin)</span>
@@ -1320,7 +1316,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 }
               }}
               className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
-              style={{ zIndex: 10, accentColor: '#3b82f6', appearance: 'auto', background: '#334155' }}
+              style={{ zIndex: 10, accentColor: '#3b82f6', appearance: 'auto', background: '#334155', width: '100%', height: '20px', touchAction: 'pan-y' }}
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
               <span>0</span>
@@ -1896,7 +1892,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 setTwistAppliedForce(0);
               }}
               className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
-              style={{ zIndex: 10, accentColor: '#6366f1', appearance: 'auto', background: '#334155' }}
+              style={{ zIndex: 10, accentColor: '#6366f1', appearance: 'auto', background: '#334155', width: '100%', height: '20px', touchAction: 'pan-y' }}
             />
           </div>
 
@@ -1923,7 +1919,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 }
               }}
               className="w-full h-3 bg-slate-700 rounded-lg cursor-pointer"
-              style={{ zIndex: 10, accentColor: '#3b82f6', appearance: 'auto', background: '#334155' }}
+              style={{ zIndex: 10, accentColor: '#3b82f6', appearance: 'auto', background: '#334155', width: '100%', height: '20px', touchAction: 'pan-y' }}
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
               <span>0</span>
@@ -2522,7 +2518,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             Buckling & Columns
           </span>
           <div className="flex items-center" style={{ display: 'flex', gap: '6px' }}>
-            {PHASES.map((p) => (
+            {PHASES.map((p, idx) => (
               <button
                 key={p}
                 onClick={() => goToPhase(p)}
@@ -2542,9 +2538,12 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                   cursor: 'pointer',
                   zIndex: 10,
                   transition: 'all 0.3s ease',
-                  border: 'none'
+                  border: 'none',
+                  fontSize: 0,
+                  overflow: 'hidden',
+                  color: 'transparent'
                 }}
-              />
+              >{idx}</button>
             ))}
           </div>
           <span
@@ -2587,7 +2586,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       {/* Main content */}
       <div
         className="relative pt-16 pb-12"
-        style={{ position: 'relative', paddingTop: '64px', paddingBottom: '48px', flex: 1, overflowY: 'auto' }}
+        style={{ position: 'relative', paddingTop: '48px', paddingBottom: '100px', flex: 1, overflowY: 'auto' }}
       >
         {renderPhase()}
       </div>
