@@ -263,7 +263,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
 
   // Wrapper function for phase content
   const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
-    <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary, color: colors.textPrimary }}>
       {/* Phase identifier for content uniqueness - helps tests distinguish phases */}
       <span data-testid="phase-marker" style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>
         PHASE:{phase}:CONTENT_START
@@ -279,7 +279,7 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
       <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
-      <div className="phase-content" style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+      <div className="phase-content" style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '100px' }}>
         {content}
       </div>
       {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
@@ -524,100 +524,97 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         {/* Background */}
         <rect width="500" height="420" fill="url(#bgGrad)" rx="12" filter="url(#shadow)" />
 
-        {/* Decorative circles for visual depth */}
-        <circle cx="450" cy="50" r="80" fill="rgba(139, 92, 246, 0.05)" />
-        <circle cx="50" cy="380" r="60" fill="rgba(245, 158, 11, 0.05)" />
-        <ellipse cx="250" cy="210" rx="200" ry="150" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
+        {/* Decorative elements for visual depth */}
+        <circle cx="460" cy="40" r="60" fill="rgba(139, 92, 246, 0.04)" />
+        <circle cx="40" cy="390" r="50" fill="rgba(245, 158, 11, 0.04)" />
+        <ellipse cx="250" cy="210" rx="180" ry="130" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
+
+        {/* Grid lines for visual reference */}
+        <g>
+          <line x1="30" y1="50" x2="470" y2="50" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="30" y1="130" x2="470" y2="130" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="30" y1="210" x2="470" y2="210" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="30" y1="290" x2="470" y2="290" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+          <line x1="30" y1="365" x2="470" y2="365" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        </g>
 
         {/* Title */}
-        <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle" filter="url(#glow)">
+        <text x="250" y="28" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle" filter="url(#glow)">
           LLM Inference Pipeline
         </text>
 
-        {/* Connecting lines for flow */}
-        <path d="M 130 85 L 130 130" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="4,4" />
-        <path d="M 130 180 L 130 210" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="4,4" />
-        <polygon points="130,210 125,200 135,200" fill="rgba(255,255,255,0.3)" />
-
-        {/* Prefill Phase */}
-        <g transform="translate(30, 50)">
-          <text x="0" y="0" fill="#8b5cf6" fontSize="12" fontWeight="bold">1. Prefill Phase</text>
-          <rect x="0" y="10" width="200" height="50" fill="url(#prefillGrad)" rx="6" opacity="0.3" />
-          <rect x="0" y="10" width={Math.min(200, metrics.prefillTime / 2)} height="50" fill="url(#prefillGrad)" rx="6" />
-          <text x="100" y="40" fill="#f8fafc" fontSize="10" textAnchor="middle">
-            Process {sequenceLength} input tokens
-          </text>
-          <text x="210" y="40" fill="#8b5cf6" fontSize="11">{metrics.prefillTime}ms</text>
+        {/* Y-axis label */}
+        <g transform="translate(14, 210) rotate(-90)">
+          <text x="0" y="0" fill="rgba(148, 163, 184, 0.7)" fontSize="11" textAnchor="middle">Latency (ms)</text>
         </g>
+
+        {/* Connecting lines for flow */}
+        <g>
+          <path d="M 130 95 L 130 128" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="4,4" />
+          <path d="M 130 195 L 130 208" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="4,4" />
+          <polygon points="130,208 125,200 135,200" fill="rgba(255,255,255,0.3)" />
+        </g>
+
+        {/* Prefill Phase - using absolute coordinates for text */}
+        <text x="30" y="58" fill="#8b5cf6" fontSize="12" fontWeight="bold">1. Prefill Phase</text>
+        <rect x="30" y="66" width="200" height="40" fill="url(#prefillGrad)" rx="6" opacity="0.3" />
+        <rect x="30" y="66" width={Math.min(200, metrics.prefillTime / 2)} height="40" fill="url(#prefillGrad)" rx="6" />
+        <text x="130" y="90" fill="#f8fafc" fontSize="11" textAnchor="middle">
+          Process {sequenceLength} tokens
+        </text>
+        <text x="245" y="90" fill="#8b5cf6" fontSize="11">{metrics.prefillTime}ms</text>
 
         {/* Decode Phase */}
-        <g transform="translate(30, 130)">
-          <text x="0" y="0" fill="#f59e0b" fontSize="12" fontWeight="bold">2. Decode Phase (per token)</text>
-
-          {/* Token generation visualization */}
-          <g transform="translate(0, 20)">
-            {[0, 1, 2, 3, 4].map(i => (
-              <g key={i}>
-                <rect
-                  x={i * 42}
-                  y="0"
-                  width="38"
-                  height="30"
-                  fill={i < tokensGenerated % 5 ? '#f59e0b' : '#334155'}
-                  rx="4"
-                />
-                <text x={i * 42 + 19} y="20" fill="#f8fafc" fontSize="8" textAnchor="middle">
-                  {i < tokensGenerated % 5 ? 'tok' : '...'}
-                </text>
-              </g>
-            ))}
-          </g>
-
-          <text x="230" y="35" fill="#f59e0b" fontSize="11">{metrics.decodeLatency}ms/token</text>
-        </g>
+        <text x="30" y="142" fill="#f59e0b" fontSize="12" fontWeight="bold">2. Decode Phase (per token)</text>
+        {/* Token generation boxes */}
+        {[0, 1, 2, 3, 4].map(i => (
+          <React.Fragment key={`tok-${i}`}>
+            <rect
+              x={30 + i * 42}
+              y="155"
+              width="38"
+              height="30"
+              fill={i < tokensGenerated % 5 ? '#f59e0b' : '#334155'}
+              rx="4"
+            />
+          </React.Fragment>
+        ))}
+        <text x="265" y="175" fill="#f59e0b" fontSize="11">{metrics.decodeLatency}ms/token</text>
 
         {/* KV Cache Visualization */}
-        <g transform="translate(30, 210)">
-          <text x="0" y="0" fill="#22c55e" fontSize="12" fontWeight="bold">KV Cache</text>
-          <rect x="0" y="10" width="180" height="40" fill={kvCacheEnabled ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'} rx="6" stroke={kvCacheEnabled ? '#22c55e' : '#ef4444'} strokeWidth="1" />
-          <text x="90" y="35" fill={kvCacheEnabled ? '#22c55e' : '#ef4444'} fontSize="10" textAnchor="middle">
-            {kvCacheEnabled ? `Saves ${metrics.kvCacheSavings}% recomputation` : 'DISABLED - Recomputing all attention'}
-          </text>
-        </g>
+        <text x="30" y="222" fill="#22c55e" fontSize="12" fontWeight="bold">KV Cache</text>
+        <rect x="30" y="230" width="180" height="35" fill={kvCacheEnabled ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'} rx="6" stroke={kvCacheEnabled ? '#22c55e' : '#ef4444'} strokeWidth="1" />
+        <text x="120" y="252" fill={kvCacheEnabled ? '#22c55e' : '#ef4444'} fontSize="11" textAnchor="middle">
+          {kvCacheEnabled ? `Saves ${metrics.kvCacheSavings}%` : 'DISABLED'}
+        </text>
 
         {/* Memory vs Compute indicator */}
-        <g transform="translate(250, 210)">
-          <text x="0" y="0" fill="#e2e8f0" fontSize="12" fontWeight="bold">Bottleneck</text>
-          <rect x="0" y="10" width="120" height="40" fill={metrics.memoryBound ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)'} rx="6" />
-          <text x="60" y="35" fill={metrics.memoryBound ? '#ef4444' : '#3b82f6'} fontSize="10" textAnchor="middle">
-            {metrics.memoryBound ? 'Memory Bandwidth' : 'Compute'}
-          </text>
-        </g>
+        <text x="260" y="222" fill="#e2e8f0" fontSize="12" fontWeight="bold">Bottleneck</text>
+        <rect x="260" y="230" width="120" height="35" fill={metrics.memoryBound ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)'} rx="6" />
+        <text x="320" y="252" fill={metrics.memoryBound ? '#ef4444' : '#3b82f6'} fontSize="11" textAnchor="middle">
+          {metrics.memoryBound ? 'Memory' : 'Compute'}
+        </text>
 
         {/* Generated Text Display */}
-        <g transform="translate(30, 280)">
-          <text x="0" y="0" fill="#f8fafc" fontSize="12" fontWeight="bold">Generated Output:</text>
-          <rect x="0" y="10" width="440" height="50" fill="#1e293b" rx="6" />
-          <text x="10" y="40" fill="#22c55e" fontSize="12">
-            {generatedText.join(' ')}
-            {isGenerating && <tspan fill="#f59e0b">|</tspan>}
-          </text>
-        </g>
+        <text x="30" y="300" fill="#f8fafc" fontSize="12" fontWeight="bold">Generated Output:</text>
+        <rect x="30" y="308" width="440" height="40" fill="#1e293b" rx="6" />
+        <text x="40" y="333" fill="#22c55e" fontSize="12">
+          {generatedText.join(' ')}
+          {isGenerating && <tspan fill="#f59e0b">|</tspan>}
+        </text>
 
         {/* Metrics Summary */}
-        <g transform="translate(30, 360)">
-          <rect x="0" y="0" width="140" height="50" fill="rgba(139, 92, 246, 0.1)" rx="6" />
-          <text x="70" y="20" fill="#8b5cf6" fontSize="10" textAnchor="middle">Throughput</text>
-          <text x="70" y="40" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">{metrics.throughput} tok/s</text>
+        <rect x="30" y="365" width="140" height="45" fill="rgba(139, 92, 246, 0.1)" rx="6" />
+        <text x="100" y="382" fill="#8b5cf6" fontSize="11" textAnchor="middle">Throughput</text>
+        <text x="100" y="400" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">{metrics.throughput} tok/s</text>
 
-          <rect x="160" y="0" width="140" height="50" fill="rgba(245, 158, 11, 0.1)" rx="6" />
-          <text x="230" y="20" fill="#f59e0b" fontSize="10" textAnchor="middle">Mode</text>
-          <text x="230" y="40" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">{batchMode === 'stream' ? 'Streaming' : 'Batched'}</text>
+        <rect x="180" y="365" width="140" height="45" fill="rgba(245, 158, 11, 0.1)" rx="6" />
+        <text x="250" y="382" fill="#f59e0b" fontSize="11" textAnchor="middle">Mode</text>
+        <text x="250" y="400" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">{batchMode === 'stream' ? 'Streaming' : 'Batched'}</text>
 
-          <rect x="320" y="0" width="140" height="50" fill="rgba(34, 197, 94, 0.1)" rx="6" />
-          <text x="390" y="20" fill="#22c55e" fontSize="10" textAnchor="middle">Latency</text>
-          <text x="390" y="40" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">{metrics.effectiveLatency}ms</text>
-        </g>
+        <rect x="330" y="365" width="140" height="45" fill="rgba(34, 197, 94, 0.1)" rx="6" />
+        <text x="400" y="382" fill="#22c55e" fontSize="11" textAnchor="middle">Latency</text>
+        <text x="400" y="400" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">{metrics.effectiveLatency}ms</text>
       </svg>
     );
   };
@@ -635,8 +632,12 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
           step="10"
           value={sequenceLength}
           onChange={(e) => setSequenceLength(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent, background: 'linear-gradient(to right, #334155, #475569)' }}
+          style={{ width: '100%', accentColor: colors.accent, background: 'linear-gradient(to right, #334155, #475569)', touchAction: 'pan-y', height: '20px' }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
+          <span>10</span>
+          <span>200</span>
+        </div>
       </div>
 
       <div>
@@ -650,8 +651,12 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
           step="8"
           value={modelLayers}
           onChange={(e) => setModelLayers(parseInt(e.target.value))}
-          style={{ width: '100%', accentColor: colors.accent, background: 'linear-gradient(to right, #334155, #475569)' }}
+          style={{ width: '100%', accentColor: colors.accent, background: 'linear-gradient(to right, #334155, #475569)', touchAction: 'pan-y', height: '20px' }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'rgba(148, 163, 184, 0.7)', marginTop: '4px' }}>
+          <span>8</span>
+          <span>96</span>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '16px' }}>
@@ -831,36 +836,38 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
         </linearGradient>
       </defs>
       <rect width="500" height="280" fill="#0f172a" rx="12" />
-      <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
+
+      {/* Grid lines */}
+      <line x1="30" y1="45" x2="470" y2="45" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+      <line x1="30" y1="115" x2="470" y2="115" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+      <line x1="30" y1="185" x2="470" y2="185" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+
+      <text x="250" y="28" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
         LLM Token Generation
       </text>
-      {/* Input tokens */}
-      <g transform="translate(30, 50)">
-        <text x="0" y="0" fill="#8b5cf6" fontSize="12" fontWeight="bold">Input Processing</text>
-        <rect x="0" y="10" width="200" height="40" fill="url(#predictPrefillGrad)" rx="6" opacity="0.7" />
-        <text x="100" y="35" fill="#f8fafc" fontSize="10" textAnchor="middle">Process all input tokens</text>
-      </g>
-      {/* Output tokens generated one by one */}
-      <g transform="translate(30, 120)">
-        <text x="0" y="0" fill="#f59e0b" fontSize="12" fontWeight="bold">Output Generation (one at a time)</text>
-        {[0, 1, 2, 3, 4].map(i => (
-          <g key={i}>
-            <rect x={i * 45} y="15" width="40" height="35" fill="url(#predictDecodeGrad)" rx="4" opacity={0.3 + i * 0.15} />
-            <text x={i * 45 + 20} y="38" fill="#f8fafc" fontSize="9" textAnchor="middle">Token {i + 1}</text>
-          </g>
-        ))}
-        <text x="240" y="35" fill="#e2e8f0" fontSize="10">...</text>
-      </g>
-      {/* Memory vs Compute illustration */}
-      <g transform="translate(30, 190)">
-        <text x="0" y="0" fill="#e2e8f0" fontSize="12" fontWeight="bold">What limits speed?</text>
-        <rect x="0" y="15" width="100" height="50" fill="rgba(59, 130, 246, 0.2)" rx="6" stroke="#3b82f6" strokeWidth="1" />
-        <text x="50" y="45" fill="#3b82f6" fontSize="10" textAnchor="middle">Compute?</text>
-        <rect x="120" y="15" width="100" height="50" fill="rgba(239, 68, 68, 0.2)" rx="6" stroke="#ef4444" strokeWidth="1" />
-        <text x="170" y="45" fill="#ef4444" fontSize="10" textAnchor="middle">Memory?</text>
-        <rect x="240" y="15" width="100" height="50" fill="rgba(245, 158, 11, 0.2)" rx="6" stroke="#f59e0b" strokeWidth="1" />
-        <text x="290" y="45" fill="#f59e0b" fontSize="10" textAnchor="middle">Network?</text>
-      </g>
+
+      {/* Input tokens - absolute coords */}
+      <text x="30" y="58" fill="#8b5cf6" fontSize="12" fontWeight="bold">Input Processing</text>
+      <rect x="30" y="66" width="200" height="35" fill="url(#predictPrefillGrad)" rx="6" opacity="0.7" />
+      <text x="130" y="88" fill="#f8fafc" fontSize="11" textAnchor="middle">Process all input tokens</text>
+
+      {/* Output tokens generated one by one - absolute coords */}
+      <text x="30" y="125" fill="#f59e0b" fontSize="12" fontWeight="bold">Output Generation</text>
+      {[0, 1, 2, 3, 4].map(i => (
+        <React.Fragment key={`pred-tok-${i}`}>
+          <rect x={30 + i * 45} y="135" width="40" height="35" fill="url(#predictDecodeGrad)" rx="4" opacity={0.3 + i * 0.15} />
+        </React.Fragment>
+      ))}
+      <text x="280" y="157" fill="rgba(148, 163, 184, 0.7)" fontSize="11">one at a time...</text>
+
+      {/* Memory vs Compute illustration - absolute coords */}
+      <text x="30" y="200" fill="#e2e8f0" fontSize="12" fontWeight="bold">What limits speed?</text>
+      <rect x="30" y="212" width="120" height="45" fill="rgba(59, 130, 246, 0.2)" rx="6" stroke="#3b82f6" strokeWidth="1" />
+      <text x="90" y="240" fill="#3b82f6" fontSize="11" textAnchor="middle">Compute?</text>
+      <rect x="170" y="212" width="120" height="45" fill="rgba(239, 68, 68, 0.2)" rx="6" stroke="#ef4444" strokeWidth="1" />
+      <text x="230" y="240" fill="#ef4444" fontSize="11" textAnchor="middle">Memory?</text>
+      <rect x="310" y="212" width="120" height="45" fill="rgba(245, 158, 11, 0.2)" rx="6" stroke="#f59e0b" strokeWidth="1" />
+      <text x="370" y="240" fill="#f59e0b" fontSize="11" textAnchor="middle">Network?</text>
     </svg>
   );
 
@@ -985,30 +992,33 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   const renderReviewDiagram = () => (
     <svg width="100%" height="180" viewBox="0 0 500 180" style={{ maxWidth: '600px' }}>
       <rect width="500" height="180" fill="#0f172a" rx="12" />
+
+      {/* Grid lines */}
+      <line x1="40" y1="45" x2="460" y2="45" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+      <line x1="40" y1="105" x2="460" y2="105" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+
       <text x="250" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
         Autoregressive Generation Flow
       </text>
-      {/* Token dependency chain */}
-      <g transform="translate(40, 50)">
-        {[0, 1, 2, 3, 4].map(i => (
-          <g key={i}>
-            <rect x={i * 85} y="0" width="70" height="35" fill={i === 4 ? '#f59e0b' : '#22c55e'} rx="4" opacity="0.8" />
-            <text x={i * 85 + 35} y="22" fill="#fff" fontSize="10" textAnchor="middle">Token {i + 1}</text>
-            {i < 4 && (
-              <path d={`M${i * 85 + 70} 17 L${(i + 1) * 85} 17`} stroke="#e2e8f0" strokeWidth="2" markerEnd="url(#arrowhead)" />
-            )}
-          </g>
-        ))}
-      </g>
-      {/* Memory/Compute labels */}
-      <g transform="translate(40, 110)">
-        <rect x="0" y="0" width="200" height="50" fill="rgba(239, 68, 68, 0.2)" rx="6" stroke="#ef4444" strokeWidth="1" />
-        <text x="100" y="20" fill="#ef4444" fontSize="11" textAnchor="middle" fontWeight="bold">Memory Bandwidth</text>
-        <text x="100" y="38" fill="#e2e8f0" fontSize="10" textAnchor="middle">Loading model weights</text>
-        <rect x="220" y="0" width="200" height="50" fill="rgba(34, 197, 94, 0.2)" rx="6" stroke="#22c55e" strokeWidth="1" />
-        <text x="320" y="20" fill="#22c55e" fontSize="11" textAnchor="middle" fontWeight="bold">KV Cache</text>
-        <text x="320" y="38" fill="#e2e8f0" fontSize="10" textAnchor="middle">Saves recomputation</text>
-      </g>
+
+      {/* Token dependency chain - absolute coords */}
+      {[0, 1, 2, 3, 4].map(i => (
+        <React.Fragment key={`rev-tok-${i}`}>
+          <rect x={40 + i * 85} y="50" width="70" height="35" fill={i === 4 ? '#f59e0b' : '#22c55e'} rx="4" opacity="0.8" />
+          {i < 4 && (
+            <path d={`M${40 + i * 85 + 70} 67 L${40 + (i + 1) * 85} 67`} stroke="#e2e8f0" strokeWidth="2" markerEnd="url(#arrowhead)" />
+          )}
+        </React.Fragment>
+      ))}
+
+      {/* Memory/Compute labels - absolute coords */}
+      <rect x="40" y="110" width="200" height="50" fill="rgba(239, 68, 68, 0.2)" rx="6" stroke="#ef4444" strokeWidth="1" />
+      <text x="140" y="132" fill="#ef4444" fontSize="11" textAnchor="middle" fontWeight="bold">Memory Bandwidth</text>
+      <text x="140" y="148" fill="#e2e8f0" fontSize="11" textAnchor="middle">Loading weights</text>
+      <rect x="260" y="110" width="200" height="50" fill="rgba(34, 197, 94, 0.2)" rx="6" stroke="#22c55e" strokeWidth="1" />
+      <text x="360" y="132" fill="#22c55e" fontSize="11" textAnchor="middle" fontWeight="bold">KV Cache</text>
+      <text x="360" y="148" fill="#e2e8f0" fontSize="11" textAnchor="middle">Saves recomputation</text>
+
       <defs>
         <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
           <polygon points="0 0, 10 3.5, 0 7" fill="#e2e8f0" />
@@ -1125,31 +1135,34 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   const renderTwistStaticVisualization = () => (
     <svg width="100%" height="200" viewBox="0 0 500 200" style={{ maxWidth: '600px' }}>
       <rect width="500" height="200" fill="#0f172a" rx="12" />
+
+      {/* Grid lines */}
+      <line x1="30" y1="45" x2="470" y2="45" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+      <line x1="30" y1="110" x2="470" y2="110" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+
       <text x="250" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
         Streaming vs Batching
       </text>
-      {/* Streaming visualization */}
-      <g transform="translate(30, 50)">
-        <text x="0" y="0" fill="#f59e0b" fontSize="11" fontWeight="bold">Streaming (one at a time)</text>
-        <rect x="0" y="10" width="180" height="30" fill="rgba(245, 158, 11, 0.2)" rx="4" stroke="#f59e0b" strokeWidth="1" />
-        {[0, 1, 2, 3, 4].map(i => (
-          <rect key={i} x={10 + i * 35} y="15" width="30" height="20" fill="#f59e0b" rx="3" opacity={0.4 + i * 0.15} />
-        ))}
-        <text x="200" y="30" fill="#e2e8f0" fontSize="10">Low latency per user</text>
-      </g>
-      {/* Batching visualization */}
-      <g transform="translate(30, 120)">
-        <text x="0" y="0" fill="#3b82f6" fontSize="11" fontWeight="bold">Batching (multiple together)</text>
-        <rect x="0" y="10" width="180" height="50" fill="rgba(59, 130, 246, 0.2)" rx="4" stroke="#3b82f6" strokeWidth="1" />
-        {[0, 1, 2].map(row => (
-          <g key={row}>
-            {[0, 1, 2, 3, 4].map(i => (
-              <rect key={i} x={10 + i * 35} y={15 + row * 15} width="30" height="12" fill="#3b82f6" rx="2" opacity="0.7" />
-            ))}
-          </g>
-        ))}
-        <text x="200" y="40" fill="#e2e8f0" fontSize="10">Higher throughput</text>
-      </g>
+
+      {/* Streaming visualization - absolute coords */}
+      <text x="30" y="58" fill="#f59e0b" fontSize="12" fontWeight="bold">Streaming</text>
+      <rect x="30" y="66" width="180" height="30" fill="rgba(245, 158, 11, 0.2)" rx="4" stroke="#f59e0b" strokeWidth="1" />
+      {[0, 1, 2, 3, 4].map(i => (
+        <rect key={`s-${i}`} x={40 + i * 35} y="71" width="30" height="20" fill="#f59e0b" rx="3" opacity={0.4 + i * 0.15} />
+      ))}
+      <text x="230" y="85" fill="rgba(148, 163, 184, 0.7)" fontSize="11">Low latency per user</text>
+
+      {/* Batching visualization - absolute coords */}
+      <text x="30" y="122" fill="#3b82f6" fontSize="12" fontWeight="bold">Batching</text>
+      <rect x="30" y="130" width="180" height="50" fill="rgba(59, 130, 246, 0.2)" rx="4" stroke="#3b82f6" strokeWidth="1" />
+      {[0, 1, 2].map(row => (
+        <React.Fragment key={`br-${row}`}>
+          {[0, 1, 2, 3, 4].map(i => (
+            <rect key={`b-${row}-${i}`} x={40 + i * 35} y={135 + row * 15} width="30" height="12" fill="#3b82f6" rx="2" opacity="0.7" />
+          ))}
+        </React.Fragment>
+      ))}
+      <text x="230" y="160" fill="rgba(148, 163, 184, 0.7)" fontSize="11">Higher throughput</text>
     </svg>
   );
 
@@ -1262,25 +1275,28 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
   const renderTwistReviewDiagram = () => (
     <svg width="100%" height="160" viewBox="0 0 500 160" style={{ maxWidth: '600px' }}>
       <rect width="500" height="160" fill="#0f172a" rx="12" />
+
+      {/* Grid lines */}
+      <line x1="30" y1="45" x2="470" y2="45" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+      <line x1="30" y1="100" x2="470" y2="100" stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+
       <text x="250" y="25" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
         Streaming vs Batching Tradeoff
       </text>
-      {/* Streaming side */}
-      <g transform="translate(30, 50)">
-        <rect x="0" y="0" width="200" height="90" fill="rgba(245, 158, 11, 0.1)" rx="8" stroke="#f59e0b" strokeWidth="1" />
-        <text x="100" y="25" fill="#f59e0b" fontSize="12" fontWeight="bold" textAnchor="middle">Streaming</text>
-        <text x="100" y="50" fill="#e2e8f0" fontSize="10" textAnchor="middle">Low perceived latency</text>
-        <text x="100" y="68" fill="#e2e8f0" fontSize="10" textAnchor="middle">Best for interactive chat</text>
-        <text x="100" y="86" fill="#22c55e" fontSize="10" textAnchor="middle">User Experience</text>
-      </g>
-      {/* Batching side */}
-      <g transform="translate(270, 50)">
-        <rect x="0" y="0" width="200" height="90" fill="rgba(59, 130, 246, 0.1)" rx="8" stroke="#3b82f6" strokeWidth="1" />
-        <text x="100" y="25" fill="#3b82f6" fontSize="12" fontWeight="bold" textAnchor="middle">Batching</text>
-        <text x="100" y="50" fill="#e2e8f0" fontSize="10" textAnchor="middle">High throughput</text>
-        <text x="100" y="68" fill="#e2e8f0" fontSize="10" textAnchor="middle">Best for API services</text>
-        <text x="100" y="86" fill="#22c55e" fontSize="10" textAnchor="middle">Efficiency</text>
-      </g>
+
+      {/* Streaming side - absolute coords */}
+      <rect x="30" y="50" width="200" height="90" fill="rgba(245, 158, 11, 0.1)" rx="8" stroke="#f59e0b" strokeWidth="1" />
+      <text x="130" y="75" fill="#f59e0b" fontSize="12" fontWeight="bold" textAnchor="middle">Streaming</text>
+      <text x="130" y="95" fill="#e2e8f0" fontSize="11" textAnchor="middle">Low perceived latency</text>
+      <text x="130" y="115" fill="#e2e8f0" fontSize="11" textAnchor="middle">Interactive chat</text>
+      <text x="130" y="135" fill="#22c55e" fontSize="11" textAnchor="middle">User Experience</text>
+
+      {/* Batching side - absolute coords */}
+      <rect x="270" y="50" width="200" height="90" fill="rgba(59, 130, 246, 0.1)" rx="8" stroke="#3b82f6" strokeWidth="1" />
+      <text x="370" y="75" fill="#3b82f6" fontSize="12" fontWeight="bold" textAnchor="middle">Batching</text>
+      <text x="370" y="95" fill="#e2e8f0" fontSize="11" textAnchor="middle">High throughput</text>
+      <text x="370" y="115" fill="#e2e8f0" fontSize="11" textAnchor="middle">API services</text>
+      <text x="370" y="135" fill="#22c55e" fontSize="11" textAnchor="middle">Efficiency</text>
     </svg>
   );
 
