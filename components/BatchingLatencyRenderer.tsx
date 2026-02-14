@@ -448,8 +448,8 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     }
   }, [batchSize, requestRate, processingTime, dynamicBatching, batchTimeout, phase]);
 
-  // Batching Visualization Component
-  const BatchingVisualization = () => {
+  // Batching Visualization render function (NOT a component - prevents remounting)
+  const renderBatchingVisualization = () => {
     const width = isMobile ? 320 : 500;
     const height = isMobile ? 200 : 250;
 
@@ -520,7 +520,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
             />
           ))}
           {queue.length > maxVisibleRequests && (
-            <text x="80" y={height - 50} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+            <text x="80" y={height - 50} fill={colors.textMuted} fontSize="11" textAnchor="middle">
               +{queue.length - maxVisibleRequests} more
             </text>
           )}
@@ -578,18 +578,37 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
           </text>
         </g>
 
-        {/* Info layer */}
+        {/* Utilization indicator bar - color changes from blue to green/red based on batch size */}
+        <rect
+          x="20"
+          y={height - 42}
+          width={Math.min(1, batchSize / 32) * (width - 40)}
+          height="6"
+          rx="3"
+          fill={batchSize <= 4 ? '#3B82F6' : batchSize <= 10 ? '#10B981' : '#EF4444'}
+        />
+
+        {/* Grid lines for visual reference */}
+        <line x1="20" y1={height * 0.25} x2={width - 20} y2={height * 0.25} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="20" y1={height * 0.5} x2={width - 20} y2={height * 0.5} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+        <line x1="20" y1={height * 0.75} x2={width - 20} y2={height * 0.75} stroke="#334155" strokeDasharray="4 4" opacity="0.3" />
+
+        {/* Axis labels */}
+        <text x={25} y={height - 3} fill={colors.textSecondary} fontSize="11" textAnchor="start">Time (processing rate)</text>
+        <text x={10} y={60} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, 10, 60)`}>Throughput (rate)</text>
+
+        {/* Info layer with formula */}
         <g className="info-layer">
-          <text x={20 + queueWidth + 50 + gpuWidth / 2} y={height - 30} fill={colors.accent} fontSize="11" textAnchor="middle">
-            Batch Size: {batchSize}
+          <text x={width / 2} y={height - 28} fill={colors.accent} fontSize="11" textAnchor="middle">
+            Batch: {batchSize} | Rate: {requestRate} req/s | Throughput = BatchSize {'\u00D7'} (1/T) = {metrics.throughput.toFixed(0)} req/s
           </text>
         </g>
       </svg>
     );
   };
 
-  // Latency vs Throughput Chart
-  const LatencyThroughputChart = () => {
+  // Latency vs Throughput Chart render function (NOT a component - prevents remounting)
+  const renderLatencyThroughputChart = () => {
     const width = isMobile ? 320 : 400;
     const height = isMobile ? 180 : 220;
     const padding = { top: 30, right: 40, bottom: 40, left: 50 };
@@ -621,8 +640,9 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               y1={padding.top + frac * plotHeight}
               x2={padding.left + plotWidth}
               y2={padding.top + frac * plotHeight}
-              stroke={colors.border}
-              strokeDasharray="3,3"
+              stroke="#334155"
+              strokeDasharray="4 4"
+              opacity="0.3"
             />
           </g>
         ))}
@@ -655,7 +675,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
           return (
             <g key={i}>
               <circle cx={x} cy={y} r="6" fill={colors.bgCard} stroke={colors.accent} strokeWidth="2" />
-              <text x={x} y={y - 10} fill={colors.textMuted} fontSize="9" textAnchor="middle">b={pt.batchSize}</text>
+              <text x={x} y={y - 12} fill={colors.textMuted} fontSize="11" textAnchor="middle">b={pt.batchSize}</text>
             </g>
           );
         })}
@@ -674,7 +694,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
           x={padding.left + (currentTp / maxThroughput) * plotWidth + 12}
           y={padding.top + plotHeight - (currentLat / maxLatency) * plotHeight - 5}
           fill={colors.success}
-          fontSize="10"
+          fontSize="11"
           fontWeight="600"
         >
           Current
@@ -682,8 +702,8 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
 
         {/* Legend */}
         <g transform={`translate(${padding.left + 10}, ${padding.top + 5})`}>
-          <text fill={colors.textMuted} fontSize="10">Higher is better (Throughput)</text>
-          <text y="12" fill={colors.textMuted} fontSize="10">Lower is better (Latency)</text>
+          <text fill={colors.textMuted} fontSize="11">Higher is better (Throughput)</text>
+          <text y="14" fill={colors.textMuted} fontSize="11">Lower is better (Latency)</text>
         </g>
       </svg>
     );
@@ -708,6 +728,17 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       }} />
     </div>
   );
+
+  // Common slider style for all range inputs
+  const sliderStyle: React.CSSProperties = {
+    width: '100%',
+    height: '20px',
+    touchAction: 'pan-y',
+    WebkitAppearance: 'none',
+    accentColor: '#3b82f6',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  };
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
@@ -811,8 +842,8 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     </div>
   );
 
-  // Scrollable content wrapper
-  const ScrollableContent: React.FC<{ children: React.ReactNode; paddingTop?: string }> = ({ children, paddingTop = '60px' }) => (
+  // Scrollable content wrapper render function (NOT a component - prevents remounting)
+  const renderScrollableContent = (children: React.ReactNode, paddingTop: string = '60px') => (
     <div style={{
       height: '100vh',
       overflow: 'hidden',
@@ -831,8 +862,8 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
     </div>
   );
 
-  // Static batching visualization for predict phase
-  const StaticBatchingVisualization = () => {
+  // Static batching visualization render function (NOT a component - prevents remounting)
+  const renderStaticBatchingVisualization = () => {
     const width = isMobile ? 320 : 500;
     const height = isMobile ? 200 : 250;
 
@@ -875,7 +906,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
         <text x={width - 60} y={height / 2} fill={colors.success} fontSize="20" fontWeight="bold" textAnchor="middle">?</text>
 
         {/* Labels */}
-        <text x={width / 2} y={height - 15} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+        <text x={width / 2} y={height - 15} fill={colors.textMuted} fontSize="11" textAnchor="middle">
           How does batch size affect latency?
         </text>
       </svg>
@@ -892,7 +923,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -940,7 +971,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </p>
             </div>
           </div>
-        </ScrollableContent>
+        )}
         {renderFooter(undefined, 'Start Exploring', () => { playSound('click'); nextPhase(); }, false)}
       </div>
     );
@@ -958,7 +989,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             {/* Progress indicator */}
             <div style={{
@@ -997,7 +1028,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               display: 'flex',
               justifyContent: 'center',
             }}>
-              <StaticBatchingVisualization />
+              {renderStaticBatchingVisualization()}
             </div>
 
             {/* Options */}
@@ -1038,7 +1069,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               ))}
             </div>
           </div>
-        </ScrollableContent>
+        )}
         {renderFooter('Back', prediction ? 'See What Happens' : undefined, prediction ? () => { playSound('success'); nextPhase(); } : undefined)}
       </div>
     );
@@ -1050,7 +1081,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Batching Simulation
@@ -1068,7 +1099,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                 What to Watch: Observe how increasing batch size affects both throughput (good) and latency (tradeoff). Try sliding the batch size to see the effect.
               </p>
               <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px', margin: '8px 0 0 0' }}>
-                <strong>Throughput</strong> is the measure of requests processed per second. <strong>Latency</strong> is the measure of time from request arrival to response. This is important for real-world ML systems that need to balance cost efficiency with user experience.
+                <strong>Throughput</strong> = BatchSize {'\u00D7'} (1/ProcessingTime) measures requests processed per second. <strong>Latency</strong> is the measure of time from request arrival to response. This is important for real-world ML systems that need to balance cost efficiency with user experience.
               </p>
             </div>
 
@@ -1080,13 +1111,13 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <BatchingVisualization />
+                {renderBatchingVisualization()}
               </div>
 
               {/* Batch size slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Batch Size</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Batch Size (request rate)</span>
                   <span data-testid="batch-size-value" style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize} requests</span>
                 </div>
                 <div>
@@ -1097,22 +1128,21 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                     step="1"
                     value={batchSize}
                     onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                    onInput={(e) => setBatchSize(parseInt((e.target as HTMLInputElement).value))}
                     aria-label="Batch Size"
-                    style={{
-                      width: '100%',
-                      height: '8px',
-                      borderRadius: '4px',
-                      background: `linear-gradient(to right, ${colors.accent} ${(batchSize / 16) * 100}%, ${colors.border} ${(batchSize / 16) * 100}%)`,
-                      cursor: 'pointer',
-                    }}
+                    style={sliderStyle}
                   />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>1 (low)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>16 (high)</span>
+                  </div>
                 </div>
               </div>
 
               {/* Request rate slider */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Request Rate</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Rate (acceleration period)</span>
                   <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
                 </div>
                 <input
@@ -1122,20 +1152,20 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                   step="5"
                   value={requestRate}
                   onChange={(e) => setRequestRate(parseInt(e.target.value))}
+                  onInput={(e) => setRequestRate(parseInt((e.target as HTMLInputElement).value))}
                   aria-label="Request Rate"
-                  style={{
-                    width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
+                  style={sliderStyle}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>5 (slow)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>100 (fast)</span>
+                </div>
               </div>
 
               {/* Processing time slider */}
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Time per Batch</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Time (latency period)</span>
                   <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{processingTime} ms</span>
                 </div>
                 <input
@@ -1145,14 +1175,14 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                   step="10"
                   value={processingTime}
                   onChange={(e) => setProcessingTime(parseInt(e.target.value))}
+                  onInput={(e) => setProcessingTime(parseInt((e.target as HTMLInputElement).value))}
                   aria-label="Processing Time"
-                  style={{
-                    width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
+                  style={sliderStyle}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>20 (low)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>200 (high)</span>
+                </div>
               </div>
 
               {/* Simulation controls */}
@@ -1244,7 +1274,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </div>
             )}
           </div>
-        </ScrollableContent>
+        )}
         {renderFooter('Back', 'Understand Why', () => { playSound('success'); setIsSimulationRunning(false); nextPhase(); })}
       </div>
     );
@@ -1256,7 +1286,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               The Batching-Latency Tradeoff
@@ -1282,7 +1312,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               marginBottom: '24px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <LatencyThroughputChart />
+                {renderLatencyThroughputChart()}
               </div>
 
               <div style={{ ...typo.body, color: colors.textSecondary }}>
@@ -1316,7 +1346,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </p>
             </div>
           </div>
-        </ScrollableContent>
+        )}
         {renderFooter('Back', 'Explore Dynamic Batching', () => { playSound('success'); nextPhase(); })}
       </div>
     );
@@ -1334,7 +1364,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             {/* Progress indicator */}
             <div style={{
@@ -1373,7 +1403,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               display: 'flex',
               justifyContent: 'center',
             }}>
-              <StaticBatchingVisualization />
+              {renderStaticBatchingVisualization()}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1412,7 +1442,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               ))}
             </div>
           </div>
-        </ScrollableContent>
+        )}
         {renderFooter('Back', twistPrediction ? 'Explore Dynamic Batching' : undefined, twistPrediction ? () => { playSound('success'); nextPhase(); } : undefined)}
       </div>
     );
@@ -1424,7 +1454,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Dynamic Batching with Timeout
@@ -1451,7 +1481,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
             }}>
               {/* Visualization */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                <BatchingVisualization />
+                {renderBatchingVisualization()}
               </div>
 
               {/* Dynamic batching toggle */}
@@ -1497,7 +1527,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               {dynamicBatching && (
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ ...typo.small, color: colors.textSecondary }}>Max Wait Time (Timeout)</span>
+                    <span style={{ ...typo.small, color: colors.textSecondary }}>Max Wait Time (latency period)</span>
                     <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{batchTimeout} ms</span>
                   </div>
                   <input
@@ -1507,17 +1537,13 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                     step="10"
                     value={batchTimeout}
                     onChange={(e) => setBatchTimeout(parseInt(e.target.value))}
+                    onInput={(e) => setBatchTimeout(parseInt((e.target as HTMLInputElement).value))}
                     aria-label="Max Wait Time"
-                    style={{
-                      width: '100%',
-                      height: '8px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
+                    style={sliderStyle}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>Low latency (10ms)</span>
-                    <span style={{ ...typo.small, color: colors.textMuted }}>High throughput (500ms)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>10 (low)</span>
+                    <span style={{ ...typo.small, color: colors.textMuted }}>500 (high)</span>
                   </div>
                 </div>
               )}
@@ -1525,7 +1551,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               {/* Other sliders */}
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Max Batch Size</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Max Batch Size (rate)</span>
                   <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize}</span>
                 </div>
                 <input
@@ -1535,19 +1561,19 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                   step="1"
                   value={batchSize}
                   onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                  onInput={(e) => setBatchSize(parseInt((e.target as HTMLInputElement).value))}
                   aria-label="Max Batch Size"
-                  style={{
-                    width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
+                  style={sliderStyle}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>1 (low)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>32 (high)</span>
+                </div>
               </div>
 
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ ...typo.small, color: colors.textSecondary }}>Request Rate</span>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Rate (acceleration period)</span>
                   <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
                 </div>
                 <input
@@ -1557,14 +1583,14 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                   step="5"
                   value={requestRate}
                   onChange={(e) => setRequestRate(parseInt(e.target.value))}
+                  onInput={(e) => setRequestRate(parseInt((e.target as HTMLInputElement).value))}
                   aria-label="Request Rate"
-                  style={{
-                    width: '100%',
-                    height: '8px',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                  }}
+                  style={sliderStyle}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>5 (slow)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>200 (fast)</span>
+                </div>
               </div>
 
               {/* Metrics display */}
@@ -1610,7 +1636,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </div>
             )}
           </div>
-        </ScrollableContent>
+        )}
         {renderFooter('Back', 'Understand the Strategies', () => { playSound('success'); nextPhase(); })}
       </div>
     );
@@ -1622,7 +1648,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
               Advanced Batching Strategies
@@ -1690,7 +1716,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </div>
             </div>
           </div>
-        </ScrollableContent>
+        )}
         {renderFooter('Back', 'See Real-World Applications', () => { playSound('success'); nextPhase(); })}
       </div>
     );
@@ -1706,7 +1732,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
             <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '16px', textAlign: 'center' }}>
               Real-World Applications
@@ -1858,7 +1884,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </button>
             </div>
           </div>
-        </ScrollableContent>
+        )}
         {renderFooter('Back', 'Continue to Take the Knowledge Test', () => { playSound('success'); nextPhase(); })}
       </div>
     );
@@ -1872,7 +1898,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
           {renderNavBar()}
           {renderProgressBar()}
-          <ScrollableContent>
+          {renderScrollableContent(
             <div style={{ maxWidth: '600px', margin: '0 auto', padding: '24px', textAlign: 'center' }}>
               <div style={{
                 fontSize: '80px',
@@ -1892,7 +1918,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
                   : 'Review the concepts and try again.'}
               </p>
             </div>
-          </ScrollableContent>
+          )}
           {passed ? (
             renderFooter('Back', 'Complete Lesson', () => { playSound('complete'); nextPhase(); })
           ) : (
@@ -1914,7 +1940,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
             {/* Progress */}
             <div style={{
@@ -2069,7 +2095,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               )}
             </div>
           </div>
-        </ScrollableContent>
+        )}
       </div>
     );
   }
@@ -2080,7 +2106,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
         {renderNavBar()}
         {renderProgressBar()}
-        <ScrollableContent>
+        {renderScrollableContent(
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -2160,7 +2186,7 @@ const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGam
               </a>
             </div>
           </div>
-        </ScrollableContent>
+        )}
       </div>
     );
   }
