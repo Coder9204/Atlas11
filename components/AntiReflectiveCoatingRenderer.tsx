@@ -484,23 +484,45 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     const result = calculateReflectivity();
     const coating = coatings[coatingMaterial];
 
-    // Reflectivity spectrum graph
+    // Reflectivity spectrum graph - using absolute coordinates (no g transform offsets)
     const graphX = 40;
-    const graphY = 60;
+    const graphY = 55;
     const graphWidth = 280;
-    const graphHeight = 150;
+    const graphHeight = 195;
 
     // Scale factors
     const wlScale = graphWidth / (1100 - 350);
     const rScale = graphHeight / 0.4; // 0-40% reflectivity
 
-    // Create spectrum path
+    // Create spectrum path with space-separated coords for test parsing
     const spectrumPath = result.spectrum
       .map((p, i) => `${i === 0 ? 'M' : 'L'} ${graphX + (p.wavelength - 350) * wlScale} ${graphY + graphHeight - p.reflectivity * rScale}`)
       .join(' ');
 
     // Create filled area under spectrum curve
     const spectrumAreaPath = spectrumPath + ` L ${graphX + graphWidth} ${graphY + graphHeight} L ${graphX} ${graphY + graphHeight} Z`;
+
+    // Thin film diagram offsets (absolute)
+    const tfX = 370;
+    const tfY = 55;
+
+    // Performance metrics offsets (absolute)
+    const pmX = 40;
+    const pmY = 290;
+
+    // Gain bar offsets (absolute)
+    const gbX = 370;
+    const gbY = 290;
+
+    // Wavelength indicator offsets (absolute)
+    const wlX = 40;
+    const wlY = 400;
+
+    // Interactive point: current thickness position on the spectrum curve
+    const currentWl = coatingMaterial === 'none' ? 550 : targetWavelength;
+    const currentR = result.spectrum.find(p => Math.abs(p.wavelength - currentWl) < 10)?.reflectivity || result.avgReflectivity / 100;
+    const pointCx = graphX + (currentWl - 350) * wlScale;
+    const pointCy = graphY + graphHeight - currentR * rScale;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -533,7 +555,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </linearGradient>
 
             {/* === METALLIC AND GLASS GRADIENTS === */}
-            {/* Premium silicon wafer gradient with depth */}
             <linearGradient id="arcSiliconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#64748b" />
               <stop offset="20%" stopColor="#475569" />
@@ -542,7 +563,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
 
-            {/* Silicon nitride coating - blue metallic */}
             <linearGradient id="arcSiNxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#60a5fa" />
               <stop offset="25%" stopColor="#3b82f6" />
@@ -551,7 +571,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               <stop offset="100%" stopColor="#1e40af" />
             </linearGradient>
 
-            {/* Titanium dioxide coating - purple metallic */}
             <linearGradient id="arcTiO2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#c084fc" />
               <stop offset="25%" stopColor="#a855f7" />
@@ -560,7 +579,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               <stop offset="100%" stopColor="#6d28d9" />
             </linearGradient>
 
-            {/* Magnesium fluoride coating - cyan glass */}
             <linearGradient id="arcMgF2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#67e8f9" />
               <stop offset="25%" stopColor="#22d3ee" />
@@ -569,7 +587,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               <stop offset="100%" stopColor="#0e7490" />
             </linearGradient>
 
-            {/* Glass surface reflection gradient */}
             <linearGradient id="arcGlassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
               <stop offset="20%" stopColor="#ffffff" stopOpacity="0.1" />
@@ -577,7 +594,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
             </linearGradient>
 
             {/* === RADIAL GRADIENTS FOR 3D EFFECTS === */}
-            {/* Light source glow */}
             <radialGradient id="arcLightSourceGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
               <stop offset="30%" stopColor="#fde047" stopOpacity="0.8" />
@@ -585,55 +601,29 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
             </radialGradient>
 
-            {/* Incident light beam radial */}
-            <radialGradient id="arcIncidentBeamGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
-              <stop offset="40%" stopColor="#fde68a" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Reflected ray glow - red */}
-            <radialGradient id="arcReflectedGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
-              <stop offset="40%" stopColor="#f87171" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Transmitted ray glow - green */}
-            <radialGradient id="arcTransmittedGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
-              <stop offset="40%" stopColor="#4ade80" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Optimal point marker glow */}
             <radialGradient id="arcOptimalGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
               <stop offset="50%" stopColor="#10b981" stopOpacity="0.5" />
               <stop offset="100%" stopColor="#059669" stopOpacity="0" />
             </radialGradient>
 
-            {/* Graph area fill gradient */}
             <linearGradient id="arcGraphAreaFill" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor={coating.color} stopOpacity="0.4" />
               <stop offset="100%" stopColor={coating.color} stopOpacity="0.05" />
             </linearGradient>
 
-            {/* Performance bar gradient */}
             <linearGradient id="arcPerformanceBar" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#059669" />
               <stop offset="50%" stopColor="#10b981" />
               <stop offset="100%" stopColor="#34d399" />
             </linearGradient>
 
-            {/* Card background gradient */}
             <linearGradient id="arcCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
               <stop offset="100%" stopColor="#0f172a" stopOpacity="0.95" />
             </linearGradient>
 
             {/* === GLOW FILTERS === */}
-            {/* Soft glow filter for light rays */}
             <filter id="arcSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
               <feMerge>
@@ -642,7 +632,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               </feMerge>
             </filter>
 
-            {/* Strong glow for light source */}
             <filter id="arcStrongGlow" x="-100%" y="-100%" width="300%" height="300%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
               <feMerge>
@@ -652,14 +641,6 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               </feMerge>
             </filter>
 
-            {/* Subtle inner glow for panels */}
-            <filter id="arcInnerGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-              <feOffset in="blur" dx="0" dy="1" result="offsetBlur" />
-              <feComposite in="SourceGraphic" in2="offsetBlur" operator="over" />
-            </filter>
-
-            {/* Spectrum line glow */}
             <filter id="arcSpectrumGlow" x="-10%" y="-50%" width="120%" height="200%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
               <feMerge>
@@ -668,7 +649,14 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               </feMerge>
             </filter>
 
-            {/* Drop shadow for cards */}
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
             <filter id="arcDropShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000000" floodOpacity="0.3" />
             </filter>
@@ -678,15 +666,12 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
             </pattern>
 
-            {/* Arrowhead marker */}
             <marker id="arcArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
               <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
             </marker>
-
             <marker id="arcArrowheadRed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
               <polygon points="0 0, 8 3, 0 6" fill="#ef4444" />
             </marker>
-
             <marker id="arcArrowheadGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
               <polygon points="0 0, 8 3, 0 6" fill="#22c55e" />
             </marker>
@@ -700,242 +685,198 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
           <text x={width / 2} y={30} fill="#f8fafc" fontSize={18} fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
             Anti-Reflective Coating - Thin Film Interference
           </text>
-          <text x={width / 2} y={48} fill="#e2e8f0" fontSize={11} textAnchor="middle">
+          <text x={width / 2} y={48} fill="#e2e8f0" fontSize={12} textAnchor="middle">
             Quarter-wave optical coating simulation
           </text>
 
           {/* === REFLECTIVITY SPECTRUM GRAPH === */}
-          <g transform="translate(0, 10)">
-            {/* Graph panel with shadow */}
-            <rect x={graphX - 5} y={graphY - 5} width={graphWidth + 10} height={graphHeight + 50} rx={8} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
-            <rect x={graphX - 5} y={graphY - 5} width={graphWidth + 10} height={graphHeight + 50} rx={8} fill="none" stroke="#334155" strokeWidth={1} />
+          {/* Graph panel */}
+          <rect x={graphX - 5} y={graphY - 5} width={graphWidth + 10} height={graphHeight + 50} rx={8} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
+          <rect x={graphX - 5} y={graphY - 5} width={graphWidth + 10} height={graphHeight + 50} rx={8} fill="none" stroke="#334155" strokeWidth={1} />
+          <rect x={graphX} y={graphY} width={graphWidth} height={graphHeight} fill="#0f172a" rx={4} />
 
-            {/* Graph area background */}
-            <rect x={graphX} y={graphY} width={graphWidth} height={graphHeight} fill="#0f172a" rx={4} />
+          {/* Grid lines */}
+          {[0.1, 0.2, 0.3].map(frac => (
+            <line key={`grid-${frac}`} x1={graphX} y1={graphY + graphHeight - frac * rScale} x2={graphX + graphWidth} y2={graphY + graphHeight - frac * rScale} stroke="#334155" strokeWidth={1} strokeDasharray="4,4" />
+          ))}
 
-            {/* Grid lines with subtle styling */}
-            {[0.1, 0.2, 0.3].map(frac => (
-              <g key={`grid-${frac}`}>
-                <line x1={graphX} y1={graphY + graphHeight - frac * rScale} x2={graphX + graphWidth} y2={graphY + graphHeight - frac * rScale} stroke="#334155" strokeWidth={1} strokeDasharray="4,4" />
-                <text x={graphX - 8} y={graphY + graphHeight - frac * rScale + 4} fill="#64748b" fontSize={9} textAnchor="end" fontWeight="600">{(frac * 100).toFixed(0)}%</text>
-              </g>
-            ))}
-
-            {/* Bare silicon reference line with glow */}
-            <line x1={graphX} y1={graphY + graphHeight - 0.31 * rScale} x2={graphX + graphWidth} y2={graphY + graphHeight - 0.31 * rScale} stroke="#ef4444" strokeWidth={2} strokeDasharray="8,4" filter="url(#arcSoftGlow)" />
-            <rect x={graphX + graphWidth + 5} y={graphY + graphHeight - 0.31 * rScale - 10} width={55} height={18} rx={4} fill="#7f1d1d" />
-            <text x={graphX + graphWidth + 32} y={graphY + graphHeight - 0.31 * rScale + 3} fill="#fca5a5" fontSize={9} textAnchor="middle" fontWeight="bold">Bare Si 31%</text>
-
-            {/* Filled area under curve */}
-            <path d={spectrumAreaPath} fill="url(#arcGraphAreaFill)" />
-
-            {/* Reflectivity spectrum line with glow */}
-            <path d={spectrumPath} fill="none" stroke={coating.color} strokeWidth={3} filter="url(#arcSpectrumGlow)" />
-
-            {/* Spectrum color bar with glass effect */}
-            <rect x={graphX} y={graphY + graphHeight + 8} width={graphWidth} height={12} fill="url(#arcSpectrumGrad)" rx={6} />
-            <rect x={graphX} y={graphY + graphHeight + 8} width={graphWidth} height={6} fill="url(#arcGlassReflection)" rx={3} />
-
-            {/* Axes */}
-            <line x1={graphX} y1={graphY + graphHeight} x2={graphX + graphWidth} y2={graphY + graphHeight} stroke="#475569" strokeWidth={2} />
-            <line x1={graphX} y1={graphY} x2={graphX} y2={graphY + graphHeight} stroke="#475569" strokeWidth={2} />
-
-            {/* Labels */}
-            <text x={graphX + graphWidth / 2} y={graphY + graphHeight + 35} fill="#e2e8f0" fontSize={11} textAnchor="middle" fontWeight="600">Wavelength (nm)</text>
-            <text x={graphX + 15} y={graphY + graphHeight + 25} fill="#a78bfa" fontSize={9} fontWeight="bold">UV</text>
-            <text x={graphX + graphWidth - 15} y={graphY + graphHeight + 25} fill="#f87171" fontSize={9} fontWeight="bold">IR</text>
-
-            {/* Optimal point marker with animated glow */}
-            {coatingMaterial !== 'none' && (
-              <g>
-                <circle cx={graphX + (result.minPoint.wavelength - 350) * wlScale} cy={graphY + graphHeight - result.minPoint.R * rScale} r={12} fill="url(#arcOptimalGlow)">
-                  <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
-                </circle>
-                <circle cx={graphX + (result.minPoint.wavelength - 350) * wlScale} cy={graphY + graphHeight - result.minPoint.R * rScale} r={5} fill="#10b981" stroke="#fff" strokeWidth={2} />
-                <rect x={graphX + (result.minPoint.wavelength - 350) * wlScale - 25} y={graphY + graphHeight - result.minPoint.R * rScale - 28} width={50} height={18} rx={4} fill="#065f46" />
-                <text x={graphX + (result.minPoint.wavelength - 350) * wlScale} y={graphY + graphHeight - result.minPoint.R * rScale - 15} fill="#6ee7b7" fontSize={10} textAnchor="middle" fontWeight="bold">{result.minPoint.wavelength}nm</text>
-              </g>
-            )}
+          {/* Y-axis label (rotated) */}
+          <g transform={`translate(${graphX - 30}, ${graphY + graphHeight / 2}) rotate(-90)`}>
+            <text x={0} y={0} fill="#94a3b8" fontSize={11} textAnchor="middle" fontWeight="600">Reflectivity (%)</text>
           </g>
 
-          {/* === THIN FILM DIAGRAM === */}
-          <g transform="translate(370, 60)">
-            {/* Panel background */}
+          {/* Y-axis tick labels - positioned far left to avoid overlap */}
+          <text x={graphX - 6} y={graphY + graphHeight - 0.1 * rScale + 4} fill="#94a3b8" fontSize={11} textAnchor="end">10</text>
+          <text x={graphX - 6} y={graphY + graphHeight - 0.2 * rScale + 4} fill="#94a3b8" fontSize={11} textAnchor="end">20</text>
+          <text x={graphX - 6} y={graphY + graphHeight - 0.3 * rScale + 4} fill="#94a3b8" fontSize={11} textAnchor="end">30</text>
+
+          {/* Bare silicon reference line */}
+          <line x1={graphX} y1={graphY + graphHeight - 0.31 * rScale} x2={graphX + graphWidth} y2={graphY + graphHeight - 0.31 * rScale} stroke="#ef4444" strokeWidth={2} strokeDasharray="8,4" filter="url(#arcSoftGlow)" />
+          <rect x={graphX + graphWidth + 5} y={graphY + graphHeight - 0.31 * rScale - 10} width={60} height={18} rx={4} fill="#7f1d1d" />
+          <text x={graphX + graphWidth + 35} y={graphY + graphHeight - 0.31 * rScale + 3} fill="#fca5a5" fontSize={11} textAnchor="middle" fontWeight="bold">Bare 31%</text>
+
+          {/* Filled area under curve */}
+          <path d={spectrumAreaPath} fill="url(#arcGraphAreaFill)" />
+
+          {/* Reflectivity spectrum line with glow */}
+          <path d={spectrumPath} fill="none" stroke={coating.color} strokeWidth={3} filter="url(#arcSpectrumGlow)" />
+
+          {/* Interactive point that responds to slider */}
+          <circle cx={pointCx} cy={pointCy} r={8} fill={coating.color} filter="url(#glow)" stroke="#fff" strokeWidth={2} />
+
+          {/* Spectrum color bar */}
+          <rect x={graphX} y={graphY + graphHeight + 8} width={graphWidth} height={12} fill="url(#arcSpectrumGrad)" rx={6} />
+          <rect x={graphX} y={graphY + graphHeight + 8} width={graphWidth} height={6} fill="url(#arcGlassReflection)" rx={3} />
+
+          {/* Axes */}
+          <line x1={graphX} y1={graphY + graphHeight} x2={graphX + graphWidth} y2={graphY + graphHeight} stroke="#475569" strokeWidth={2} />
+          <line x1={graphX} y1={graphY} x2={graphX} y2={graphY + graphHeight} stroke="#475569" strokeWidth={2} />
+
+          {/* X-axis labels - absolute coords */}
+          <text x={graphX + graphWidth / 2} y={graphY + graphHeight + 35} fill="#e2e8f0" fontSize={11} textAnchor="middle" fontWeight="600">Wavelength (nm)</text>
+          <text x={graphX + 5} y={graphY + graphHeight + 25} fill="#a78bfa" fontSize={11} fontWeight="bold">UV</text>
+          <text x={graphX + graphWidth - 5} y={graphY + graphHeight + 25} fill="#f87171" fontSize={11} fontWeight="bold" textAnchor="end">IR</text>
+
+          {/* Optimal point marker */}
+          {coatingMaterial !== 'none' && (
+            <g>
+              <circle cx={graphX + (result.minPoint.wavelength - 350) * wlScale} cy={graphY + graphHeight - result.minPoint.R * rScale} r={12} fill="url(#arcOptimalGlow)">
+                <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={graphX + (result.minPoint.wavelength - 350) * wlScale} cy={graphY + graphHeight - result.minPoint.R * rScale} r={5} fill="#10b981" stroke="#fff" strokeWidth={2} />
+              <rect x={graphX + (result.minPoint.wavelength - 350) * wlScale - 25} y={graphY + graphHeight - result.minPoint.R * rScale - 28} width={50} height={18} rx={4} fill="#065f46" />
+              <text x={graphX + (result.minPoint.wavelength - 350) * wlScale} y={graphY + graphHeight - result.minPoint.R * rScale - 15} fill="#6ee7b7" fontSize={11} textAnchor="middle" fontWeight="bold">{result.minPoint.wavelength}nm</text>
+            </g>
+          )}
+
+          {/* === THIN FILM DIAGRAM === (non-text elements in group, text absolute) */}
+          <g transform={`translate(${tfX}, ${tfY})`}>
             <rect x="0" y="0" width="300" height="200" rx={10} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
             <rect x="0" y="0" width="300" height="200" rx={10} fill="none" stroke="#334155" strokeWidth={1} />
 
-            <text x="150" y="22" fill="#e2e8f0" fontSize={13} fontWeight="bold" textAnchor="middle">Thin Film Structure</text>
-
-            {/* Light source with animated glow */}
-            <g transform="translate(30, 55)">
-              <circle cx="0" cy="0" r="20" fill="url(#arcLightSourceGlow)" filter="url(#arcStrongGlow)">
-                <animate attributeName="r" values="18;22;18" dur="1.5s" repeatCount="indefinite" />
-              </circle>
-              <circle cx="0" cy="0" r="10" fill="#fef08a" />
-              <text x="0" y="35" fill="#fbbf24" fontSize={9} textAnchor="middle" fontWeight="bold">Light Source</text>
-            </g>
+            {/* Light source */}
+            <circle cx="30" cy="55" r="20" fill="url(#arcLightSourceGlow)" filter="url(#arcStrongGlow)">
+              <animate attributeName="r" values="18;22;18" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="30" cy="55" r="10" fill="#fef08a" />
 
             {/* Air layer */}
             <rect x="70" y="40" width="180" height="30" fill="transparent" stroke="#475569" strokeWidth={1} strokeDasharray="4,3" />
-            <text x="160" y="58" fill="#64748b" fontSize={10} textAnchor="middle">Air (n = 1.0)</text>
 
-            {/* AR Coating layer with premium gradient */}
+            {/* AR Coating layer */}
             <rect x="70" y="70" width="180" height={coatingMaterial === 'none' ? 8 : 40}
               fill={coatingMaterial === 'sin' ? 'url(#arcSiNxGrad)' : coatingMaterial === 'tio2' ? 'url(#arcTiO2Grad)' : coatingMaterial === 'mgf2' ? 'url(#arcMgF2Grad)' : '#374151'}
-              opacity={coatingMaterial === 'none' ? 0.3 : 1}
-              rx={2}
-            />
-            {/* Glass reflection on coating */}
+              opacity={coatingMaterial === 'none' ? 0.3 : 1} rx={2} />
             {coatingMaterial !== 'none' && (
               <rect x="70" y="70" width="180" height="15" fill="url(#arcGlassReflection)" rx={2} />
             )}
-            {coatingMaterial !== 'none' && (
-              <text x="160" y="95" fill="#ffffff" fontSize={10} textAnchor="middle" fontWeight="bold" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{coating.name.split(' ')[0]} (n = {coating.n})</text>
-            )}
 
-            {/* Silicon substrate with metallic gradient */}
+            {/* Silicon substrate */}
             <rect x="70" y={coatingMaterial === 'none' ? 78 : 110} width="180" height="70" fill="url(#arcSiliconGrad)" rx={2} />
             <rect x="70" y={coatingMaterial === 'none' ? 78 : 110} width="180" height="25" fill="url(#arcGlassReflection)" rx={2} />
-            <text x="160" y={coatingMaterial === 'none' ? 118 : 150} fill="#94a3b8" fontSize={10} textAnchor="middle" fontWeight="bold">Silicon (n = 3.5)</text>
 
-            {/* === ANIMATED LIGHT RAYS === */}
-            {/* Incident ray with glow */}
+            {/* Incident ray */}
             <g filter="url(#arcSoftGlow)">
-              <line x1="45" y1="50" x2="100" y2="70" stroke="#fbbf24" strokeWidth={4} markerEnd="url(#arcArrowhead)">
-                <animate attributeName="stroke-opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
-              </line>
-              <line x1="45" y1="50" x2="100" y2="70" stroke="#fef3c7" strokeWidth={2}>
-                <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
-              </line>
+              <line x1="45" y1="50" x2="100" y2="70" stroke="#fbbf24" strokeWidth={4} markerEnd="url(#arcArrowhead)" />
+              <line x1="45" y1="50" x2="100" y2="70" stroke="#fef3c7" strokeWidth={2} />
             </g>
-            <text x="55" y="45" fill="#fbbf24" fontSize={9} fontWeight="bold">Incident</text>
 
-            {/* R1 - First surface reflection */}
+            {/* R1 reflection */}
             <g filter="url(#arcSoftGlow)">
-              <line x1="100" y1="70" x2="55" y2="42" stroke="#ef4444" strokeWidth={3} strokeDasharray="6,3" markerEnd="url(#arcArrowheadRed)">
-                <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
-              </line>
+              <line x1="100" y1="70" x2="55" y2="42" stroke="#ef4444" strokeWidth={3} strokeDasharray="6,3" markerEnd="url(#arcArrowheadRed)" />
             </g>
-            <rect x="68" y="48" width="22" height="14" rx={3} fill="#7f1d1d" />
-            <text x="79" y="58" fill="#fca5a5" fontSize={8} textAnchor="middle" fontWeight="bold">R1</text>
+            <rect x="89" y="28" width="22" height="14" rx={3} fill="#7f1d1d" />
 
-            {/* R2 - Second surface reflection (coating-silicon interface) */}
+            {/* R2 reflection */}
             {coatingMaterial !== 'none' && (
               <g>
-                <line x1="140" y1="70" x2="140" y2="110" stroke="#fbbf24" strokeWidth={2} opacity={0.6}>
-                  <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
-                </line>
+                <line x1="140" y1="70" x2="140" y2="110" stroke="#fbbf24" strokeWidth={2} opacity={0.6} />
                 <g filter="url(#arcSoftGlow)">
-                  <line x1="140" y1="110" x2="95" y2="42" stroke="#ef4444" strokeWidth={3} strokeDasharray="6,3" markerEnd="url(#arcArrowheadRed)">
-                    <animate attributeName="stroke-opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" begin="0.5s" />
-                  </line>
+                  <line x1="140" y1="110" x2="95" y2="42" stroke="#ef4444" strokeWidth={3} strokeDasharray="6,3" markerEnd="url(#arcArrowheadRed)" />
                 </g>
                 <rect x="115" y="78" width="22" height="14" rx={3} fill="#7f1d1d" />
-                <text x="126" y="88" fill="#fca5a5" fontSize={8} textAnchor="middle" fontWeight="bold">R2</text>
-
-                {/* Phase shift indicator */}
-                <text x="85" y="35" fill="#f87171" fontSize={8} fontWeight="bold">180deg phase shift</text>
-              </g>
-            )}
-
-            {/* Transmitted ray with glow */}
-            <g filter="url(#arcSoftGlow)">
-              <line x1="180" y1="70" x2="220" y2={coatingMaterial === 'none' ? 148 : 180} stroke="#22c55e" strokeWidth={4} markerEnd="url(#arcArrowheadGreen)">
-                <animate attributeName="stroke-opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
-              </line>
-              <line x1="180" y1="70" x2="220" y2={coatingMaterial === 'none' ? 148 : 180} stroke="#86efac" strokeWidth={2}>
-                <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
-              </line>
-            </g>
-            <text x="235" y={coatingMaterial === 'none' ? 155 : 185} fill="#22c55e" fontSize={9} fontWeight="bold">Transmitted</text>
-
-            {/* Thickness annotation */}
-            {coatingMaterial !== 'none' && (
-              <g>
                 <line x1="260" y1="70" x2="260" y2="110" stroke="#f59e0b" strokeWidth={2} />
                 <line x1="255" y1="70" x2="265" y2="70" stroke="#f59e0b" strokeWidth={2} />
                 <line x1="255" y1="110" x2="265" y2="110" stroke="#f59e0b" strokeWidth={2} />
-                <text x="275" y="95" fill="#fbbf24" fontSize={9} fontWeight="bold">{coatingThickness}nm</text>
               </g>
             )}
+
+            {/* Transmitted ray */}
+            <g filter="url(#arcSoftGlow)">
+              <line x1="180" y1="70" x2="220" y2={coatingMaterial === 'none' ? 148 : 180} stroke="#22c55e" strokeWidth={4} markerEnd="url(#arcArrowheadGreen)" />
+              <line x1="180" y1="70" x2="220" y2={coatingMaterial === 'none' ? 148 : 180} stroke="#86efac" strokeWidth={2} />
+            </g>
           </g>
 
-          {/* === PERFORMANCE METRICS PANEL === */}
-          <g transform="translate(40, 290)">
-            <rect x="0" y="0" width="290" height="110" rx={10} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
-            <rect x="0" y="0" width="290" height="110" rx={10} fill="none" stroke={coating.color} strokeWidth={2} />
+          {/* Thin film text labels - absolute coords to avoid overlap */}
+          <text x={tfX + 150} y={tfY + 22} fill="#e2e8f0" fontSize={13} fontWeight="bold" textAnchor="middle">Thin Film Structure</text>
+          <text x={tfX + 30} y={tfY + 100} fill="#fbbf24" fontSize={11} textAnchor="middle" fontWeight="bold">Light</text>
+          <text x={tfX + 160} y={tfY + 58} fill="#94a3b8" fontSize={11} textAnchor="middle">Air (n=1.0)</text>
+          {coatingMaterial !== 'none' && (
+            <text x={tfX + 160} y={tfY + 95} fill="#ffffff" fontSize={11} textAnchor="middle" fontWeight="bold">{coating.name.split(' ')[0]} (n={coating.n})</text>
+          )}
+          <text x={tfX + 160} y={coatingMaterial === 'none' ? tfY + 118 : tfY + 150} fill="#94a3b8" fontSize={11} textAnchor="middle" fontWeight="bold">Silicon (n=3.5)</text>
+          <text x={tfX + 38} y={tfY + 42} fill="#fbbf24" fontSize={11} fontWeight="bold">Incident</text>
+          <text x={tfX + 100} y={tfY + 40} fill="#fca5a5" fontSize={11} textAnchor="middle" fontWeight="bold">R1</text>
+          {coatingMaterial !== 'none' && (
+            <>
+              <text x={tfX + 126} y={tfY + 78} fill="#fca5a5" fontSize={11} textAnchor="middle" fontWeight="bold">R2</text>
+              <text x={tfX + 275} y={tfY + 95} fill="#fbbf24" fontSize={11} fontWeight="bold">{coatingThickness}nm</text>
+            </>
+          )}
+          <text x={tfX + 235} y={coatingMaterial === 'none' ? tfY + 155 : tfY + 192} fill="#22c55e" fontSize={11} fontWeight="bold">Transmitted</text>
 
-            {/* Material name header */}
-            <rect x="0" y="0" width="290" height="28" rx={10} fill={coating.color} opacity={0.2} />
-            <rect x="0" y="14" width="290" height="14" fill={coating.color} opacity={0.2} />
-            <text x="145" y="20" fill={coating.color} fontSize={13} fontWeight="bold" textAnchor="middle">{coating.name}</text>
-
-            {/* Metrics with improved styling */}
-            <text x="15" y="48" fill="#94a3b8" fontSize={11}>Coating Thickness:</text>
-            <text x="275" y="48" fill="#f8fafc" fontSize={12} fontWeight="bold" textAnchor="end">{coatingThickness} nm</text>
-
-            {coatingMaterial !== 'none' && (
-              <>
-                <text x="15" y="66" fill="#94a3b8" fontSize={11}>Optimal for {targetWavelength}nm:</text>
-                <text x="275" y="66" fill="#10b981" fontSize={12} fontWeight="bold" textAnchor="end">{result.optimalThickness.toFixed(0)} nm</text>
-              </>
-            )}
-
-            <text x="15" y="86" fill="#94a3b8" fontSize={11}>Average Reflectivity:</text>
-            <text x="275" y="86" fill={result.avgReflectivity < 10 ? '#10b981' : '#f59e0b'} fontSize={15} fontWeight="bold" textAnchor="end">{result.avgReflectivity.toFixed(1)}%</text>
-
-            <text x="15" y="104" fill="#94a3b8" fontSize={11}>Current Gain vs Bare:</text>
-            <text x="275" y="104" fill="#10b981" fontSize={15} fontWeight="bold" textAnchor="end">+{result.currentGain.toFixed(1)}%</text>
+          {/* === PERFORMANCE METRICS PANEL === (non-text in group, text absolute) */}
+          <g transform={`translate(${pmX}, ${pmY})`}>
+            <rect x="0" y="0" width="290" height="100" rx={10} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
+            <rect x="0" y="0" width="290" height="100" rx={10} fill="none" stroke={coating.color} strokeWidth={2} />
+            <rect x="0" y="0" width="290" height="24" rx={10} fill={coating.color} opacity={0.2} />
+            <rect x="0" y="12" width="290" height="12" fill={coating.color} opacity={0.2} />
           </g>
+          <text x={pmX + 145} y={pmY + 18} fill={coating.color} fontSize={13} fontWeight="bold" textAnchor="middle">{coating.name}</text>
+          <text x={pmX + 15} y={pmY + 40} fill="#94a3b8" fontSize={11}>Coating Thickness:</text>
+          <text x={pmX + 275} y={pmY + 40} fill="#f8fafc" fontSize={12} fontWeight="bold" textAnchor="end">{coatingThickness} nm</text>
+          {coatingMaterial !== 'none' && (
+            <>
+              <text x={pmX + 15} y={pmY + 56} fill="#94a3b8" fontSize={11}>Optimal for {targetWavelength}nm:</text>
+              <text x={pmX + 275} y={pmY + 56} fill="#10b981" fontSize={12} fontWeight="bold" textAnchor="end">{result.optimalThickness.toFixed(0)} nm</text>
+            </>
+          )}
+          <text x={pmX + 15} y={pmY + 73} fill="#94a3b8" fontSize={11}>Average Reflectivity:</text>
+          <text x={pmX + 275} y={pmY + 73} fill={result.avgReflectivity < 10 ? '#10b981' : '#f59e0b'} fontSize={15} fontWeight="bold" textAnchor="end">{result.avgReflectivity.toFixed(1)}%</text>
+          <text x={pmX + 15} y={pmY + 92} fill="#94a3b8" fontSize={11}>Current Gain vs Bare:</text>
+          <text x={pmX + 275} y={pmY + 92} fill="#10b981" fontSize={15} fontWeight="bold" textAnchor="end">+{result.currentGain.toFixed(1)}%</text>
 
-          {/* === GAIN PERFORMANCE BAR === */}
-          <g transform="translate(370, 290)">
-            <rect x="0" y="0" width="300" height="110" rx={10} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
-            <rect x="0" y="0" width="300" height="110" rx={10} fill="none" stroke="#10b981" strokeWidth={2} />
-
-            <text x="150" y="22" fill="#10b981" fontSize={13} fontWeight="bold" textAnchor="middle">Performance Gain</text>
-
-            {/* Animated performance bar */}
-            <rect x="20" y="38" width="260" height="30" rx={6} fill="#1e293b" />
-            <rect x="20" y="38" width={260 * Math.min(result.currentGain / 35, 1)} height="30" rx={6} fill="url(#arcPerformanceBar)">
+          {/* === GAIN PERFORMANCE BAR === (non-text in group, text absolute) */}
+          <g transform={`translate(${gbX}, ${gbY})`}>
+            <rect x="0" y="0" width="300" height="100" rx={10} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
+            <rect x="0" y="0" width="300" height="100" rx={10} fill="none" stroke="#10b981" strokeWidth={2} />
+            <rect x="20" y="32" width="260" height="28" rx={6} fill="#1e293b" />
+            <rect x="20" y="32" width={260 * Math.min(result.currentGain / 35, 1)} height="28" rx={6} fill="url(#arcPerformanceBar)">
               <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
             </rect>
-            <rect x="20" y="38" width={260 * Math.min(result.currentGain / 35, 1)} height="10" rx={3} fill="url(#arcGlassReflection)" />
-            <text x="150" y="58" fill="#ffffff" fontSize={16} fontWeight="bold" textAnchor="middle" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-              +{result.currentGain.toFixed(1)}%
-            </text>
-
-            {/* Performance rating */}
-            <rect x="80" y="78" width="140" height="22" rx={6} fill={result.currentGain > 25 ? '#065f46' : result.currentGain > 15 ? '#854d0e' : result.currentGain > 5 ? '#78350f' : '#7f1d1d'} />
-            <text x="150" y="93" fill={result.currentGain > 25 ? '#6ee7b7' : result.currentGain > 15 ? '#fcd34d' : result.currentGain > 5 ? '#fdba74' : '#fca5a5'} fontSize={11} fontWeight="bold" textAnchor="middle">
-              {result.currentGain > 25 ? 'EXCELLENT' : result.currentGain > 15 ? 'GOOD' : result.currentGain > 5 ? 'MODERATE' : 'POOR'} AR Performance
-            </text>
+            <rect x="20" y="32" width={260 * Math.min(result.currentGain / 35, 1)} height="10" rx={3} fill="url(#arcGlassReflection)" />
+            <rect x="80" y="70" width="140" height="22" rx={6} fill={result.currentGain > 25 ? '#065f46' : result.currentGain > 15 ? '#854d0e' : result.currentGain > 5 ? '#78350f' : '#7f1d1d'} />
           </g>
+          <text x={gbX + 150} y={gbY + 20} fill="#10b981" fontSize={13} fontWeight="bold" textAnchor="middle">Performance Gain</text>
+          <text x={gbX + 150} y={gbY + 52} fill="#ffffff" fontSize={16} fontWeight="bold" textAnchor="middle">+{result.currentGain.toFixed(1)}%</text>
+          <text x={gbX + 150} y={gbY + 86} fill={result.currentGain > 25 ? '#6ee7b7' : result.currentGain > 15 ? '#fcd34d' : result.currentGain > 5 ? '#fdba74' : '#fca5a5'} fontSize={11} fontWeight="bold" textAnchor="middle">
+            {result.currentGain > 25 ? 'EXCELLENT' : result.currentGain > 15 ? 'GOOD' : result.currentGain > 5 ? 'MODERATE' : 'POOR'} AR Performance
+          </text>
 
-          {/* === WAVELENGTH INDICATOR === */}
-          <g transform="translate(40, 420)">
-            <rect x="0" y="0" width="630" height="80" rx={10} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
-            <rect x="0" y="0" width="630" height="80" rx={10} fill="none" stroke="#334155" strokeWidth={1} />
-
-            <text x="20" y="22" fill="#e2e8f0" fontSize={12} fontWeight="bold">Target Wavelength: <tspan fill={wavelengthToColor(targetWavelength)}>{targetWavelength}nm</tspan></text>
-
-            {/* Spectrum bar with interactive indicator */}
-            <rect x="20" y="35" width="590" height="14" rx={7} fill="url(#arcSpectrumGrad)" />
-            <rect x="20" y="35" width="590" height="7" rx={3.5} fill="url(#arcGlassReflection)" />
-
-            {/* Animated wavelength indicator */}
-            <g transform={`translate(${20 + ((targetWavelength - 350) / 750) * 590}, 42)`}>
-              <circle cx="0" cy="0" r="14" fill={wavelengthToColor(targetWavelength)} opacity="0.4">
-                <animate attributeName="r" values="12;16;12" dur="1.5s" repeatCount="indefinite" />
-              </circle>
-              <circle cx="0" cy="0" r="10" fill={wavelengthToColor(targetWavelength)} stroke="#ffffff" strokeWidth={3} />
-            </g>
-
-            <text x="20" y="70" fill="#a78bfa" fontSize={10} fontWeight="bold">350nm (UV)</text>
-            <text x="315" y="70" fill="#22c55e" fontSize={10} fontWeight="bold" textAnchor="middle">Visible</text>
-            <text x="610" y="70" fill="#f87171" fontSize={10} fontWeight="bold" textAnchor="end">1100nm (IR)</text>
+          {/* === WAVELENGTH INDICATOR === (non-text in group, text absolute) */}
+          <g transform={`translate(${wlX}, ${wlY})`}>
+            <rect x="0" y="0" width="630" height="70" rx={10} fill="url(#arcCardBg)" filter="url(#arcDropShadow)" />
+            <rect x="0" y="0" width="630" height="70" rx={10} fill="none" stroke="#334155" strokeWidth={1} />
+            <rect x="20" y="25" width="590" height="14" rx={7} fill="url(#arcSpectrumGrad)" />
+            <rect x="20" y="25" width="590" height="7" rx={3.5} fill="url(#arcGlassReflection)" />
+            <circle cx={20 + ((targetWavelength - 350) / 750) * 590} cy={32} r="10" fill={wavelengthToColor(targetWavelength)} stroke="#ffffff" strokeWidth={3} />
           </g>
+          <text x={wlX + 20} y={wlY + 18} fill="#e2e8f0" fontSize={12} fontWeight="bold">Target: {targetWavelength}nm</text>
+          <text x={wlX + 20} y={wlY + 58} fill="#a78bfa" fontSize={11} fontWeight="bold">350nm UV</text>
+          <text x={wlX + 315} y={wlY + 58} fill="#22c55e" fontSize={11} fontWeight="bold" textAnchor="middle">Visible</text>
+          <text x={wlX + 610} y={wlY + 58} fill="#f87171" fontSize={11} fontWeight="bold" textAnchor="end">1100nm IR</text>
         </svg>
       </div>
     );
@@ -983,8 +924,12 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               step="5"
               value={coatingThickness}
               onChange={(e) => setCoatingThickness(parseInt(e.target.value))}
-              style={{ width: '100%', accentColor: coatings[coatingMaterial].color }}
+              style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: coatings[coatingMaterial].color }}
             />
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: colors.textMuted, fontSize: '12px' }}>20</span>
+              <span style={{ color: colors.textMuted, fontSize: '12px' }}>200</span>
+            </div>
           </div>
 
           <div>
@@ -998,8 +943,12 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               step="10"
               value={targetWavelength}
               onChange={(e) => setTargetWavelength(parseInt(e.target.value))}
-              style={{ width: '100%', accentColor: wavelengthToColor(targetWavelength) }}
+              style={{ width: '100%', height: '20px', touchAction: 'pan-y', accentColor: wavelengthToColor(targetWavelength) }}
             />
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: colors.textMuted, fontSize: '12px' }}>400</span>
+              <span style={{ color: colors.textMuted, fontSize: '12px' }}>900</span>
+            </div>
           </div>
         </>
       )}
@@ -1306,15 +1255,15 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
 
               {/* Air layer */}
               <rect x="50" y="40" width="200" height="30" fill="transparent" stroke="#475569" strokeDasharray="4,3" />
-              <text x="150" y="58" fill="#94a3b8" fontSize="10" textAnchor="middle">Air (n=1.0)</text>
+              <text x="150" y="58" fill="#94a3b8" fontSize="11" textAnchor="middle">Air (n=1.0)</text>
 
               {/* Coating */}
               <rect x="50" y="70" width="200" height="40" fill="url(#reviewCoatingGrad)" rx="2" />
-              <text x="150" y="95" fill="#fff" fontSize="10" textAnchor="middle">AR Coating (n=2.0)</text>
+              <text x="150" y="95" fill="#fff" fontSize="11" textAnchor="middle">AR Coating (n=2.0)</text>
 
               {/* Silicon */}
               <rect x="50" y="110" width="200" height="50" fill="url(#reviewSiliconGrad)" rx="2" />
-              <text x="150" y="140" fill="#94a3b8" fontSize="10" textAnchor="middle">Silicon (n=3.5)</text>
+              <text x="150" y="140" fill="#94a3b8" fontSize="11" textAnchor="middle">Silicon (n=3.5)</text>
 
               {/* Light rays */}
               <line x1="80" y1="35" x2="120" y2="70" stroke="#fbbf24" strokeWidth="3" />
@@ -1513,10 +1462,10 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
               <rect x="50" y="106" width="200" height="8" fill="#22d3ee" rx="2" />
               <rect x="50" y="116" width="200" height="40" fill="#475569" rx="2" />
 
-              <text x="150" y="88" fill="#fff" fontSize="9" textAnchor="middle">Layer 1 - Blue optimized</text>
-              <text x="150" y="102" fill="#fff" fontSize="9" textAnchor="middle">Layer 2 - Green</text>
-              <text x="150" y="112" fill="#fff" fontSize="8" textAnchor="middle">Layer 3 - Red</text>
-              <text x="150" y="140" fill="#94a3b8" fontSize="10" textAnchor="middle">Silicon</text>
+              <text x="55" y="89" fill="#fff" fontSize="11" textAnchor="end">Layer 1</text>
+              <text x="260" y="100" fill="#fff" fontSize="11">Layer 2</text>
+              <text x="55" y="112" fill="#fff" fontSize="11" textAnchor="end">Layer 3</text>
+              <text x="150" y="142" fill="#94a3b8" fontSize="11" textAnchor="middle">Silicon</text>
 
               <text x="150" y="170" fill="#10b981" fontSize="11" textAnchor="middle">Broadband AR: &lt;1% reflection across spectrum</text>
             </svg>
